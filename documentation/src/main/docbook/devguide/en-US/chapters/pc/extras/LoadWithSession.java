@@ -1,0 +1,1 @@
+session.get( Author.class, authorId );

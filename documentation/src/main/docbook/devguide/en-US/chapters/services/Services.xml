@@ -1091,7 +1091,7 @@
                 relational models.
             </para>
 
-            <example>
+            <example id="registering-listeners-example">
                 <title>Registering event listeners</title>
                 <programlisting role="JAVA"><xi:include href="extras/register-event-listeners-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>

@@ -1,0 +1,1 @@
+assert entityManager.contains( cat );

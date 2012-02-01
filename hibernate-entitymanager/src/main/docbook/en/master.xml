@@ -99,7 +99,7 @@
     Hibernate native APIs, or if required, even to native JDBC and SQL.</para>
   </preface>
 
-  <xi:include href="modules/architecture.xml"
+  <xi:include href="modules/non-migrated/architecture.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/migrated/configuration.xml"
@@ -114,7 +114,7 @@
   <xi:include href="modules/migrated/transactions.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/listeners.xml"
+  <xi:include href="modules/migrated/listeners.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/migrated/batch.xml"

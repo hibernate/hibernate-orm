@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
+<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
 %BOOK_ENTITIES;
 ]>
 <chapter>
@@ -66,20 +66,8 @@
 
         <example>
             <title>Example of making an entity persistent</title>
-            <programlisting>
-<![CDATA[DomesticCat fritz = new DomesticCat();
-fritz.setColor(Color.GINGER);
-fritz.setSex('M');
-fritz.setName("Fritz");
-session.save(fritz);]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[DomesticCat fritz = new DomesticCat();
-fritz.setColor(Color.GINGER);
-fritz.setSex('M');
-fritz.setName("Fritz");
-entityManager.persist(fritz);]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
 
         <para>
@@ -104,12 +92,8 @@ entityManager.persist(fritz);]]>
         </para>
         <example>
             <title>Example of deleting an entity</title>
-            <programlisting>
-<![CDATA[session.delete( anAuthor );]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[entityManager.remove( anAuthor );]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
         <para>
             It is important to note that Hibernate itself can handle deleting detached state.  JPA, however, disallows
@@ -129,20 +113,14 @@ entityManager.persist(fritz);]]>
         </para>
         <example>
             <title>Example of obtaining an entity reference without initializing its data</title>
-            <programlisting>
-<![CDATA[Book book = new Book();
-book.setAuthor( session.load( Author.class, authorId ) );]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[Book book = new Book();
-book.setAuthor( entityManager.getReference( Author.class, authorId ) );]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/GetReferenceWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/GetReferenceWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
         <para>
             The above works on the assumption that the entity is defined to allow lazy loading, generally through
             use of runtime proxies.  For more information see <xref linkend="devguide-mappingEntities"/>.  In both
             cases an exception will be thrown later if the given entity does not refer to actual database state if and
-            when the application attempts to use the returned proxy.
+            when the application attempts to use the returned proxy in any way that requires access to its data.
         </para>
     </section>
 
@@ -154,12 +132,8 @@ book.setAuthor( entityManager.getReference( Author.class, authorId ) );]]>
         </para>
         <example>
             <title>Example of obtaining an entity reference with its data initialized</title>
-            <programlisting>
-<![CDATA[return session.get( Author.class, authorId );]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[return entityManager.find( Author.class, authorId );]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/LoadWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/LoadWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
         <para>
             In both cases null is returned if no matching database row was found.
@@ -175,16 +149,8 @@ book.setAuthor( entityManager.getReference( Author.class, authorId ) );]]>
 
         <example>
             <title>Example of refreshing entity state</title>
-            <programlisting>
-<![CDATA[Cat cat = session.get( Cat.class, catId );
-...
-session.refresh( cat );]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[Cat cat = entityManager.find( Cat.class, catId );
-...
-entityManager.refresh( cat );]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/RefreshWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/RefreshWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
 
         <para>
@@ -213,16 +179,8 @@ entityManager.refresh( cat );]]>
 
         <example>
             <title>Example of modifying managed state</title>
-            <programlisting>
-<![CDATA[Cat cat = session.get( Cat.class, catId );
-cat.setName( "Garfield" );
-session.flush(); // generally this is not explicitly needed]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[Cat cat = entityManager.find( Cat.class, catId );
-cat.setName( "Garfield" );
-entityManager.flush(); // generally this is not explicitly needed]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
     </section>
 
@@ -256,18 +214,16 @@ entityManager.flush(); // generally this is not explicitly needed]]>
             </important>
             <example>
                 <title>Example of reattaching a detached entity</title>
-                <programlisting>
-    <![CDATA[session.update( someDetachedCat );]]>
-                </programlisting>
-                <programlisting>
-    <![CDATA[session.saveOrUpdate( someDetachedCat );]]>
-                </programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession1.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 The method name <methodname>update</methodname> is a bit misleading here.  It does not mean that an
-                <literal>SQL</literal> <literal>UPDATE</literal> is immediately performed.  It does, however, mean that an
-                <literal>SQL</literal> <literal>UPDATE</literal> will be performed when the persistence context is flushed
-                since Hibernate does not know its previous state against which to compare for changes.
+                <literal>SQL</literal> <literal>UPDATE</literal> is immediately performed.  It does, however, mean that
+                an <literal>SQL</literal> <literal>UPDATE</literal> will be performed when the persistence context is
+                flushed since Hibernate does not know its previous state against which to compare for changes.  Unless
+                the entity is mapped with <literal>select-before-update</literal>, in which case Hibernate will
+                pull the current state from the database and see if an update is needed.
             </para>
             <para>
                 Provided the entity is detached, <methodname>update</methodname> and <methodname>saveOrUpdate</methodname>
@@ -283,25 +239,15 @@ entityManager.flush(); // generally this is not explicitly needed]]>
             </para>
             <example>
                 <title>Visualizing merge</title>
-                <programlisting>
-<![CDATA[Object detached = ...;
-Object managed = entityManager.find( detached.getClass(), detached.getId() );
-managed.setXyz( detached.getXyz() );
-...
-return managed;]]>
-                </programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/VisualizingMerge.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 That is not exactly what happens, but its a good visualization.
             </para>
             <example>
                 <title>Example of merging a detached entity</title>
-                <programlisting>
-<![CDATA[Cat theManagedInstance = session.merge( someDetachedCat );]]>
-                </programlisting>
-                <programlisting>
-<![CDATA[Cat theManagedInstance = entityManager.merge( someDetachedCat );]]>
-                </programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -316,34 +262,13 @@ return managed;]]>
         </para>
         <example>
             <title>Examples of verifying managed state</title>
-            <programlisting><![CDATA[assert session.contains( cat );]]></programlisting>
-            <programlisting><![CDATA[assert entityManager.contains( cat );]]></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
         <example>
             <title>Examples of verifying laziness</title>
-            <programlisting>
-<![CDATA[if ( Hibernate.isInitialized( customer.getAddress() ) {
-    //display address if loaded
-}
-if ( Hibernate.isInitialized( customer.getOrders ) ) {
-    //display orders if loaded
-}
-if (Hibernate.isPropertyInitialized(customer, "detailedBio") ) {
-    //display property detailedBio if loaded
-}]]>
-            </programlisting>
-            <programlisting>
-<![CDATA[javax.persistence.PersistenceUnitUtil jpaUtil = entityManager.getEntityManagerFactory().getPersistenceUnitUtil();
-if ( jpaUtil.isLoaded( customer.getAddress() ) {
-    //display address if loaded
-}
-if ( jpaUtil.isLoaded( customer.getOrders ) ) {
-    //display orders if loaded
-}
-if (jpaUtil.isLoaded(customer, "detailedBio") ) {
-    //display property detailedBio if loaded
-}]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithHibernate.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
         <para>
             In JPA there is an alternative means to check laziness using the following
@@ -352,18 +277,7 @@ if (jpaUtil.isLoaded(customer, "detailedBio") ) {
         </para>
         <example>
             <title>Alternative JPA means to verify laziness</title>
-            <programlisting>
-<![CDATA[javax.persistence.PersistenceUtil jpaUtil = javax.persistence.Persistence.getPersistenceUtil();
-if ( jpaUtil.isLoaded( customer.getAddress() ) {
-    //display address if loaded
-}
-if ( jpaUtil.isLoaded( customer.getOrders ) ) {
-    //display orders if loaded
-}
-if (jpaUtil.isLoaded(customer, "detailedBio") ) {
-    //display property detailedBio if loaded
-}]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
 
     </section>
@@ -375,10 +289,7 @@ if (jpaUtil.isLoaded(customer, "detailedBio") ) {
         </para>
         <example>
             <title>Usage of EntityManager.unwrap</title>
-            <programlisting>
-<![CDATA[Session session = entityManager.unwrap( Session.class );
-SessionImplementor sessionImplementor = entityManager.unwrap( SessionImplementor.class );]]>
-            </programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/UnwrapWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
         </example>
     </section>
 </chapter>

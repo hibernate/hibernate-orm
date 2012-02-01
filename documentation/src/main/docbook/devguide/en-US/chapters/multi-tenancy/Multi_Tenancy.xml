@@ -162,7 +162,8 @@
                 <listitem>
                     <para>
                         Correlates to the partitioned (discriminator) approach.  It is an error to attempt to open a
-                        session without a tenant identifier using this strategy.
+                        session without a tenant identifier using this strategy.  This strategy is not yet implemented
+                        in Hibernate as of 4.0 and 4.1.  Its support is planned for 5.0.
                     </para>
                 </listitem>
             </varlistentry>

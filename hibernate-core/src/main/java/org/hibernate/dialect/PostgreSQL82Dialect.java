@@ -23,17 +23,14 @@
  */
 package org.hibernate.dialect;
 
-
 /**
- * An SQL dialect for Postgres
- * <p/>
- * For discussion of BLOB support in Postgres, as of 8.4, have a peek at
- * <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
- * For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
- *
- * @author Gavin King
- * @deprecated use {@link PostgreSQL82Dialect} instead
+ * An SQL dialect for Postgres 8.2 and later, adds support for "if exists" when dropping tables
+ * 
+ * @author edalquist
  */
-@Deprecated
-public class PostgreSQLDialect extends PostgreSQL82Dialect {
+public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
+	@Override
+    public boolean supportsIfExistsBeforeTableName() {
+        return true;
+    }
 }

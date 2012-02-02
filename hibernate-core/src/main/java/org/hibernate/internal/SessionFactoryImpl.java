@@ -350,26 +350,29 @@ public final class SessionFactoryImpl
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
-			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
-					model,
-					accessStrategy,
-					this,
-					mapping
-			);
-			entityPersisters.put( model.getEntityName(), cp );
-			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 			
-			if ( cp.hasNaturalIdentifier() && model.getNaturalIdCacheRegionName() != null ) {
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
+			if ( model.hasNaturalId() && model.getNaturalIdCacheRegionName() != null ) {
 				final String naturalIdCacheRegionName = cacheRegionPrefix + model.getNaturalIdCacheRegionName();
-				NaturalIdRegionAccessStrategy naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
+				naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
 				
 				if ( naturalIdAccessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
-					final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( cp ) );
+					final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
 					entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
 					allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
 				}
 			}
+			
+			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+					model,
+					accessStrategy,
+					naturalIdAccessStrategy,
+					this,
+					mapping
+			);
+			entityPersisters.put( model.getEntityName(), cp );
+			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 

@@ -252,6 +252,8 @@ public final class EntityEntry implements Serializable {
 		previousStatus = status;
 		status = Status.GONE;
 		existsInDatabase = false;
+		
+		notifyLoadedStateDeleted();
 	}
 	
 	/**
@@ -260,6 +262,8 @@ public final class EntityEntry implements Serializable {
 	 */
 	public void postInsert() {
 		existsInDatabase = true;
+		
+		notifyLoadedStateInserted();
 	}
 	
 	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
@@ -376,6 +380,22 @@ public final class EntityEntry implements Serializable {
 		}
 
 		persistenceContext.loadedStateUpdatedNotification( this );
+	}
+	
+	private void notifyLoadedStateInserted() {
+		if ( persistenceContext == null ) {
+			throw new HibernateException( "PersistenceContext was null on attempt to insert loaded state" );
+		}
+
+		persistenceContext.loadedStateInsertedNotification( this );
+	}
+
+	private void notifyLoadedStateDeleted() {
+		if ( persistenceContext == null ) {
+			throw new HibernateException( "PersistenceContext was null on attempt to delete loaded state" );
+		}
+
+		persistenceContext.loadedStateDeletedNotification( this );
 	}
 
 	/**

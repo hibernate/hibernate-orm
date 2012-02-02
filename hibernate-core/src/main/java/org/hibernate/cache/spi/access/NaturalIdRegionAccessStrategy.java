@@ -23,6 +23,7 @@
  */
 package org.hibernate.cache.spi.access;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
 
 /**
@@ -34,12 +35,16 @@ import org.hibernate.cache.spi.NaturalIdRegion;
  * There is another usage pattern that is used to invalidate entries
  * after performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
+ * <p/>
+ * NaturalIds are not versioned so null will always be passed to the version parameter for
+ * {@link #putFromLoad(Object, Object, long, Object)}, {@link #putFromLoad(Object, Object, long, Object, boolean)},
+ * and {@link #lockItem(Object, Object)}
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Eric Dalquist
  */
-public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy{
+public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 
 	/**
 	 * Get the wrapped naturalId cache region
@@ -47,4 +52,53 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy{
 	 * @return The underlying region
 	 */
 	public NaturalIdRegion getRegion();
+
+	/**
+	 * Called after an item has been inserted (before the transaction completes),
+	 * instead of calling evict().
+	 * This method is used by "synchronous" concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean insert(Object key, Object value) throws CacheException;
+
+	/**
+	 * Called after an item has been inserted (after the transaction completes),
+	 * instead of calling release().
+	 * This method is used by "asynchronous" concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean afterInsert(Object key, Object value) throws CacheException;
+
+	/**
+	 * Called after an item has been updated (before the transaction completes),
+	 * instead of calling evict(). This method is used by "synchronous" concurrency
+	 * strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean update(Object key, Object value) throws CacheException;
+
+	/**
+	 * Called after an item has been updated (after the transaction completes),
+	 * instead of calling release().  This method is used by "asynchronous"
+	 * concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @param lock The lock previously obtained from {@link #lockItem}
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException;
 }

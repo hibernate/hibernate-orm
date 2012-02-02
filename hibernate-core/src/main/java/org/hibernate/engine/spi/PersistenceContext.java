@@ -684,10 +684,25 @@ public interface PersistenceContext {
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 
 	public void loadedStateUpdatedNotification(EntityEntry entityEntry);
+	
+	public void loadedStateInsertedNotification(EntityEntry entityEntry);
+	
+	public void loadedStateDeletedNotification(EntityEntry entityEntry);
 
 	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
 
 	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalId);
 
-	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId);
+	/**
+	 * The type of action the cache call is originating from
+	 */
+	public enum CachedNaturalIdValueSource {
+		LOAD,
+		INSERT,
+		UPDATE
+	}
+	
+	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId, CachedNaturalIdValueSource valueSource);
+	
+	public void evictNaturalIdResolution(EntityPersister persister, final Serializable pk, Object[] naturalIdValues );
 }

@@ -1,6 +1,5 @@
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
@@ -13,16 +12,19 @@ import org.infinispan.context.InvocationContext;
  */
 public class EvictAllCommand extends BaseRpcCommand {
 
-   private InfinispanRegionFactory regionFactory;
+   private final BaseRegion region;
 
-   public EvictAllCommand(String regionName, InfinispanRegionFactory regionFactory) {
+   public EvictAllCommand(String regionName, BaseRegion region) {
       super(regionName); // region name and cache names are the same...
-      this.regionFactory = regionFactory;
+      this.region = region;
+   }
+
+   public EvictAllCommand(String regionName) {
+      this(regionName, null);
    }
 
    @Override
    public Object perform(InvocationContext ctx) throws Throwable {
-      BaseRegion region = regionFactory.getRegion(cacheName);
       region.invalidateRegion();
       return null;
    }

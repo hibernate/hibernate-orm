@@ -8,13 +8,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
-import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CollectionRegion;
@@ -36,7 +33,6 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.infinispan.AdvancedCache;
 import org.infinispan.config.Configuration;
-import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -164,9 +160,6 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    private TransactionManager transactionManager;
    
-   private ConcurrentMap<String, BaseRegion> allRegions =
-         new ConcurrentHashMap<String, BaseRegion>();
-
    /**
     * Create a new instance using the default configuration.
     */
@@ -299,7 +292,8 @@ public class InfinispanRegionFactory implements RegionFactory {
     * {@inheritDoc}
     */
    public void stop() {
-      log.debug("Stopping Infinispan CacheManager");
+      log.debug("Clear region references and stop Infinispan cache manager");
+      getCacheCommandFactory(manager.getCache().getAdvancedCache()).clearRegions();
       manager.stop();
    }
    
@@ -315,10 +309,6 @@ public class InfinispanRegionFactory implements RegionFactory {
    
    public Set<String> getDefinedConfigurations() {
       return Collections.unmodifiableSet(definedConfigurations);
-   }
-
-   public BaseRegion getRegion(String regionName) {
-      return allRegions.get(regionName);
    }
 
    protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
@@ -337,7 +327,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    }
 
    private void startRegion(BaseRegion region, String regionName) {
-      allRegions.put(regionName, region);
+      getCacheCommandFactory(region.getCacheAdapter().getCache().getAdvancedCache())
+            .addRegion(regionName, region);
    }
 
    private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
@@ -441,13 +432,14 @@ public class InfinispanRegionFactory implements RegionFactory {
       if (!cache.getStatus().allowInvocations()) {
          cache.start();
       }
-      ComponentRegistry cr = cache.getComponentRegistry();
-      cr.getComponent(CacheCommandInitializer.class).setRegionFactory(this);
+      return createCacheWrapper(cache);
+   }
+
+   private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
       GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
       // TODO: This is a hack, make it easier to retrieve in Infinispan!
-      ((CacheCommandFactory) ((Map) globalCr.getComponent("org.infinispan.modules.command.factories"))
-            .values().iterator().next()).setRegionFactory(this);
-      return createCacheWrapper(cache);
+      return (CacheCommandFactory) ((Map) globalCr.getComponent("org.infinispan.modules.command.factories"))
+            .values().iterator().next();
    }
 
    protected AdvancedCache createCacheWrapper(AdvancedCache cache) {

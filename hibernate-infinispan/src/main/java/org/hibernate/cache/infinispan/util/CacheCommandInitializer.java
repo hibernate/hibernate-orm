@@ -1,6 +1,5 @@
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 
@@ -12,14 +11,12 @@ import org.infinispan.commands.module.ModuleCommandInitializer;
  */
 public class CacheCommandInitializer implements ModuleCommandInitializer {
 
-   private InfinispanRegionFactory regionFactory;
-
-   public void setRegionFactory(InfinispanRegionFactory regionFactory) {
-      this.regionFactory = regionFactory;
-   }
-
    public EvictAllCommand buildEvictAllCommand(String regionName) {
-      return new EvictAllCommand(regionName, regionFactory);
+      // No need to pass region factory because no information on that object
+      // is sent around the cluster. However, when the command factory builds
+      // and evict all command remotely, it does need to initialize it with
+      // the right region factory so that it can call it back.
+      return new EvictAllCommand(regionName);
    }
 
    @Override

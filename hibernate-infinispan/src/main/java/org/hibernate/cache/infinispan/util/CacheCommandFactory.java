@@ -1,12 +1,15 @@
 package org.hibernate.cache.infinispan.util;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ExtendedModuleCommandFactory;
 import org.infinispan.commands.remote.CacheRpcCommand;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Command factory
@@ -16,10 +19,15 @@ import java.util.Map;
  */
 public class CacheCommandFactory implements ExtendedModuleCommandFactory {
 
-   private InfinispanRegionFactory regionFactory;
+   private ConcurrentMap<String, BaseRegion> allRegions =
+         new ConcurrentHashMap<String, BaseRegion>();
 
-   public void setRegionFactory(InfinispanRegionFactory regionFactory) {
-      this.regionFactory = regionFactory;
+   public void addRegion(String regionName, BaseRegion region) {
+      allRegions.put(regionName, region);
+   }
+
+   public void clearRegions() {
+      allRegions.clear();
    }
 
    @Override
@@ -34,7 +42,7 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
       CacheRpcCommand c;
       switch (commandId) {
          case CacheCommandIds.EVICT_ALL:
-            c = new EvictAllCommand(cacheName, regionFactory);
+            c = new EvictAllCommand(cacheName, allRegions.get(cacheName));
             break;
          default:
             throw new IllegalArgumentException("Not registered to handle command id " + commandId);

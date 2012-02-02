@@ -94,8 +94,8 @@ public enum LockMode {
 	OPTIMISTIC( 6 ),
 
 	/**
-	 * Optimisticly assume that transaction will not experience contention for entities.
-	 * The entity version will be verified and incremented near the transaction end.
+	 * Optimisticly assume that transaction will not experience contention for
+	 * entities.  The entity version will be verified and incremented near the transaction end.
 	 */
 	OPTIMISTIC_FORCE_INCREMENT( 7 ),
 

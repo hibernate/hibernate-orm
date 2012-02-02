@@ -93,23 +93,24 @@ public class StandardQueryCache implements QueryCache {
 			List result,
 			boolean isNaturalKeyLookup,
 			SessionImplementor session) throws HibernateException {
-		if ( isNaturalKeyLookup && result.size() == 0 ) {
+		if ( isNaturalKeyLookup && result.isEmpty() ) {
 			return false;
 		}
-		Long ts = session.getFactory().getSettings().getRegionFactory().nextTimestamp();
+		long ts = cacheRegion.nextTimestamp();
 
 		LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
 
 		List cacheable = new ArrayList( result.size() + 1 );
 		logCachedResultDetails( key, null, returnTypes, cacheable );
 		cacheable.add( ts );
+		final boolean singleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {
-			if ( returnTypes.length == 1 ) {
-				cacheable.add( returnTypes[0].disassemble( aResult, session, null ) );
-			}
-			else {
-				cacheable.add( TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null ) );
-			}
+			Serializable cacheItem = singleResult ? returnTypes[0].disassemble(
+					aResult,
+					session,
+					null
+			) : TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
+			cacheable.add( cacheItem );
 			logCachedResultRowDetails( returnTypes, aResult );
 		}
 
@@ -141,8 +142,9 @@ public class StandardQueryCache implements QueryCache {
 		}
 
 		LOG.debug( "Returning cached query results" );
+		final boolean singleResult = returnTypes.length == 1;
 		for ( int i = 1; i < cacheable.size(); i++ ) {
-			if ( returnTypes.length == 1 ) {
+			if ( singleResult ) {
 				returnTypes[0].beforeAssemble( (Serializable) cacheable.get( i ), session );
 			}
 			else {
@@ -152,7 +154,7 @@ public class StandardQueryCache implements QueryCache {
 		List result = new ArrayList( cacheable.size() - 1 );
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			try {
-				if ( returnTypes.length == 1 ) {
+				if ( singleResult ) {
 					result.add( returnTypes[0].assemble( (Serializable) cacheable.get( i ), session, null ) );
 				}
 				else {

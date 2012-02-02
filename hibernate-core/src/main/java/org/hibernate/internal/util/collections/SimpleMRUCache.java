@@ -27,8 +27,6 @@ package org.hibernate.internal.util.collections;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.commons.collections.map.LRUMap;
-
 /**
  * Cache following a "Most Recently Used" (MRU) algorithm for maintaining a
  * bounded in-memory size; the "Least Recently Used" (LRU) entry is the first

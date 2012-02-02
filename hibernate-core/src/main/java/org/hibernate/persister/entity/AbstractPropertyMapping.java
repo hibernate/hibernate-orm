@@ -292,11 +292,6 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	private static String extendPath(String path, String property) {
-		if ( path==null || "".equals(path) ) {
-			return property;
-		}
-		else {
-			return StringHelper.qualify(path, property);
-		}
+		return StringHelper.isEmpty( path ) ? property : StringHelper.qualify( path, property );
 	}
 }

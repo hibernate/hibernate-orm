@@ -238,7 +238,7 @@ public abstract class Loader {
 			return sql;
 		}
 		else {
-			return new StringBuffer( comment.length() + sql.length() + 5 )
+			return new StringBuilder( comment.length() + sql.length() + 5 )
 					.append( "/* " )
 					.append( comment )
 					.append( " */ " )
@@ -819,7 +819,7 @@ public abstract class Loader {
 
 		final RowSelection selection = queryParameters.getRowSelection();
 		final int maxRows = hasMaxRows( selection ) ?
-				selection.getMaxRows().intValue() :
+				selection.getMaxRows() :
 				Integer.MAX_VALUE;
 
 		final int entitySpan = getEntityPersisters().length;
@@ -841,18 +841,12 @@ public abstract class Loader {
 		final List results = new ArrayList();
 
 		try {
-
 			handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
-
 			EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
-
 			LOG.trace( "Processing result set" );
-
 			int count;
 			for ( count = 0; count < maxRows && rs.next(); count++ ) {
-
 				LOG.debugf( "Result set row: %s", count );
-
 				Object result = getRowFromResultSet(
 						rs,
 						session,
@@ -865,12 +859,10 @@ public abstract class Loader {
 						forcedResultTransformer
 				);
 				results.add( result );
-
 				if ( createSubselects ) {
 					subselectResultKeys.add(keys);
 					keys = new EntityKey[entitySpan]; //can't reuse in this case
 				}
-
 			}
 
 			LOG.tracev( "Done processing result set ({0} rows)", count );
@@ -879,12 +871,9 @@ public abstract class Loader {
 		finally {
 			st.close();
 		}
-
 		initializeEntitiesAndCollections( hydratedObjects, rs, session, queryParameters.isReadOnly( session ) );
-
 		if ( createSubselects ) createSubselects( subselectResultKeys, queryParameters, session );
-
-		return results; //getResultList(results);
+		return results;
 
 	}
 
@@ -1662,12 +1651,7 @@ public abstract class Loader {
 	}
 
 	private static int getFirstRow(RowSelection selection) {
-		if ( selection == null || selection.getFirstRow() == null ) {
-			return 0;
-		}
-		else {
-			return selection.getFirstRow().intValue();
-		}
+		return ( selection == null || selection.getFirstRow() == null ) ? 0 : selection.getFirstRow();
 	}
 
 	private int interpretFirstRow(int zeroBasedFirstResult) {
@@ -1733,10 +1717,7 @@ public abstract class Loader {
 
 		sql = preprocessSQL( sql, queryParameters, dialect );
 
-		PreparedStatement st = null;
-
-
-		st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
+		PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 				sql,
 				callable,
 				scrollMode
@@ -1765,10 +1746,10 @@ public abstract class Loader {
 
 			if ( selection != null ) {
 				if ( selection.getTimeout() != null ) {
-					st.setQueryTimeout( selection.getTimeout().intValue() );
+					st.setQueryTimeout( selection.getTimeout() );
 				}
 				if ( selection.getFetchSize() != null ) {
-					st.setFetchSize( selection.getFetchSize().intValue() );
+					st.setFetchSize( selection.getFetchSize() );
 				}
 			}
 
@@ -1776,9 +1757,17 @@ public abstract class Loader {
 			LockOptions lockOptions = queryParameters.getLockOptions();
 			if ( lockOptions != null ) {
 				if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
-                    if (!dialect.supportsLockTimeouts()) LOG.debugf("Lock timeout [%s] requested but dialect reported to not support lock timeouts",
-                                                                    lockOptions.getTimeOut());
-                    else if (dialect.isLockTimeoutParameterized()) st.setInt(col++, lockOptions.getTimeOut());
+					if ( !dialect.supportsLockTimeouts() ) {
+						if ( LOG.isDebugEnabled() ) {
+							LOG.debugf(
+									"Lock timeout [%s] requested but dialect reported to not support lock timeouts",
+									lockOptions.getTimeOut()
+							);
+						}
+					}
+					else if ( dialect.isLockTimeoutParameterized() ) {
+						st.setInt( col++, lockOptions.getTimeOut() );
+					}
 				}
 			}
 
@@ -1807,13 +1796,8 @@ public abstract class Loader {
 	 */
 	private static int getMaxOrLimit(final RowSelection selection, final Dialect dialect) {
 		final int firstRow = dialect.convertToFirstRowValue( getFirstRow( selection ) );
-		final int lastRow = selection.getMaxRows().intValue();
-		if ( dialect.useMaxForLimit() ) {
-			return lastRow + firstRow;
-		}
-		else {
-			return lastRow;
-		}
+		final int lastRow = selection.getMaxRows();
+		return dialect.useMaxForLimit() ? lastRow + firstRow : lastRow;
 	}
 
 	/**
@@ -1854,7 +1838,7 @@ public abstract class Loader {
 			final PreparedStatement st,
 			final RowSelection selection) throws SQLException {
 		if ( hasMaxRows( selection ) ) {
-			st.setMaxRows( selection.getMaxRows().intValue() + interpretFirstRow( getFirstRow( selection ) ) );
+			st.setMaxRows( selection.getMaxRows() + interpretFirstRow( getFirstRow( selection ) ) );
 		}
 	}
 

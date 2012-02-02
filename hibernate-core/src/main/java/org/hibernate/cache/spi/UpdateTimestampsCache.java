@@ -75,7 +75,7 @@ public class UpdateTimestampsCache {
 		try {
 			Long ts = region.nextTimestamp() + region.getTimeout();
 			for ( Serializable space : spaces ) {
-				LOG.debugf( "Pre-invalidating space [%s]", space );
+				LOG.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );

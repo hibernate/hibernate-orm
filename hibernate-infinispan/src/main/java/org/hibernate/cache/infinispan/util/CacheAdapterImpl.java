@@ -219,8 +219,12 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    @Override
    public void broadcastEvictAll() {
-      EvictAllCommand cmd = cacheCmdInitializer.buildEvictAllCommand(cache.getName());
-      cache.getRpcManager().broadcastRpcCommand(cmd, isSync);
+      RpcManager rpcManager = cache.getRpcManager();
+      if (rpcManager != null) {
+         // Only broadcast evict all if it's clustered
+         EvictAllCommand cmd = cacheCmdInitializer.buildEvictAllCommand(cache.getName());
+         rpcManager.broadcastRpcCommand(cmd, isSync);
+      }
    }
 
    @Override

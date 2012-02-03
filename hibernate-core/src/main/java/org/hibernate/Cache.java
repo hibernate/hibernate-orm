@@ -98,6 +98,27 @@ public interface Cache {
 	public void evictEntityRegions();
 
 	/**
+	 * Evicts all naturalId data from the given region (i.e. for all entities of
+	 * type).
+	 *
+	 * @param naturalIdClass The naturalId class.
+	 */
+	public void evictNaturalIdRegion(Class naturalIdClass);
+
+	/**
+	 * Evicts all naturalId data from the given region (i.e. for all entities of
+	 * type).
+	 *
+	 * @param naturalIdName The naturalId name.
+	 */
+	public void evictNaturalIdRegion(String naturalIdName);
+
+	/**
+	 * Evict data from all naturalId regions.
+	 */
+	public void evictNaturalIdRegions();
+
+	/**
 	 * Determine whether the cache contains data for the given collection.
 	 * <p/>
 	 * The semantic here is whether the cache contains data visible for the

@@ -1487,6 +1487,26 @@ public final class SessionFactoryImpl
 			}
 		}
 
+		public void evictNaturalIdRegion(Class entityClass) {
+			evictNaturalIdRegion( entityClass.getName() );
+		}
+
+		public void evictNaturalIdRegion(String entityName) {
+			EntityPersister p = getEntityPersister( entityName );
+			if ( p.hasNaturalIdCache() ) {
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
+				}
+				p.getNaturalIdCacheAccessStrategy().evictAll();
+			}
+		}
+
+		public void evictNaturalIdRegions() {
+			for ( String s : entityPersisters.keySet() ) {
+				evictNaturalIdRegion( s );
+			}
+		}
+
 		public boolean containsCollection(String role, Serializable ownerIdentifier) {
 			CollectionPersister p = getCollectionPersister( role );
 			return p.hasCache() &&

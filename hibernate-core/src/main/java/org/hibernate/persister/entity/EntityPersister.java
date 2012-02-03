@@ -476,6 +476,11 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public CacheEntryStructure getCacheEntryStructure();
 	
 	/**
+	 * Does this class have a natural id cache
+	 */
+	public boolean hasNaturalIdCache();
+	
+	/**
 	 * Get the NaturalId cache (optional operation)
 	 */
 	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy();

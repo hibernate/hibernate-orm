@@ -90,4 +90,37 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		//throw new UnsupportedOperationException("Can't write to a readonly object");
 	}
+
+	/**
+	 * This cache is asynchronous hence a no-op
+	 */
+	public boolean insert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean afterInsert(Object key, Object value ) throws CacheException {
+		region.put( key, value );
+		return true;
+	}
+
+	/**
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
+	 */
+	public boolean update(Object key, Object value ) throws UnsupportedOperationException {
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	}
+
+	/**
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
+	 */
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws UnsupportedOperationException {
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	}
 }

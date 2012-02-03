@@ -72,36 +72,22 @@ public class DefaultResolveNaturalIdEventListener
 	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
 		final EntityPersister persister = event.getEntityPersister();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Attempting to resolve: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled )
+			LOG.tracev( "Attempting to resolve: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
-		Serializable entityId = resolveFromSessionCache( event );
+		Serializable entityId = resolveFromCache( event );
 		if ( entityId != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace(
-						"Resolved object in session cache: " +
-								MessageHelper.infoString(
-										persister, event.getNaturalIdValues(), event.getSession().getFactory()
-								)
-				);
-			}
+			if ( traceEnabled )
+				LOG.tracev( "Resolved object in cache: {0}",
+						MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 			return entityId;
 		}
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Object not resolved in any cache: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		if ( traceEnabled )
+			LOG.tracev( "Object not resolved in any cache: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
 		return loadFromDatasource( event );
 	}
@@ -111,9 +97,9 @@ public class DefaultResolveNaturalIdEventListener
 	 * 
 	 * @param event The load event
 	 *
-	 * @return The entity from the session-level cache, or null.
+	 * @return The entity from the cache, or null.
 	 */
-	protected Serializable resolveFromSessionCache(final ResolveNaturalIdEvent event) {
+	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContext().findCachedNaturalIdResolution(
 				event.getEntityPersister(),
 				event.getOrderedNaturalIdValues()

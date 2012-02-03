@@ -87,6 +87,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public NoopEntityPersister(org.hibernate.mapping.PersistentClass persistentClass,
 								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+								   NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 								   SessionFactoryImplementor sf,
 								   Mapping mapping) {
 			throw new GoofyException(NoopEntityPersister.class);
@@ -383,6 +384,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 		
+		@Override
+		public boolean hasNaturalIdCache() {
+			return false;
+		}
+
 		@Override
 		public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
 			return null;

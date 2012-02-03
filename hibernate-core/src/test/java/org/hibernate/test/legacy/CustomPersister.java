@@ -47,6 +47,7 @@ public class CustomPersister implements EntityPersister {
 	public CustomPersister(
 			PersistentClass model,
 			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			SessionFactoryImplementor factory,
 			Mapping mapping) {
 		this.factory = factory;
@@ -443,6 +444,10 @@ public class CustomPersister implements EntityPersister {
 		return null;
 	}
 	
+	public boolean hasNaturalIdCache() {
+		return false;
+	}
+
 	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
 		return null;
 	}

@@ -90,6 +90,36 @@ public class NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	/**
+	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
+	 */
+	public boolean insert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	/**
+	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
+	 */
+	public boolean afterInsert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	/**
+	 * Removes the entry since this is a non-strict read/write cache strategy.
+	 */
+	public boolean update(Object key, Object value ) throws CacheException {
+		remove( key );
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+		unlockItem( key, lock );
+		return false;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override

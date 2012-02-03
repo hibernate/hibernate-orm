@@ -53,6 +53,50 @@ public class NonstopAwareNaturalIdRegionAccessStrategy implements NaturalIdRegio
 		this.actualStrategy = actualStrategy;
 		this.hibernateNonstopExceptionHandler = hibernateNonstopExceptionHandler;
 	}
+	
+	@Override
+	public boolean insert(Object key, Object value) throws CacheException {
+		try {
+			return actualStrategy.insert( key, value );
+		}
+		catch ( NonStopCacheException nonStopCacheException ) {
+			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
+			return false;
+		}
+	}
+
+	@Override
+	public boolean afterInsert(Object key, Object value) throws CacheException {
+		try {
+			return actualStrategy.afterInsert( key, value );
+		}
+		catch ( NonStopCacheException nonStopCacheException ) {
+			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
+			return false;
+		}
+	}
+
+	@Override
+	public boolean update(Object key, Object value) throws CacheException {
+		try {
+			return actualStrategy.update( key, value );
+		}
+		catch ( NonStopCacheException nonStopCacheException ) {
+			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
+			return false;
+		}
+	}
+
+	@Override
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+		try {
+			return actualStrategy.afterUpdate( key, value, lock );
+		}
+		catch ( NonStopCacheException nonStopCacheException ) {
+			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
+			return false;
+		}
+	}
 
 	/**
 	 * {@inheritDoc}

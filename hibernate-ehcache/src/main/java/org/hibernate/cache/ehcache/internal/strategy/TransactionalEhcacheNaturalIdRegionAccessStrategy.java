@@ -58,6 +58,20 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 		this.ehcache = ehcache;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean afterInsert(Object key, Object value ) {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) {
+		return false;
+	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -77,6 +91,20 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	 */
 	public NaturalIdRegion getRegion() {
 		return region;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean insert(Object key, Object value ) throws CacheException {
+		//OptimisticCache? versioning?
+		try {
+			ehcache.put( new Element( key, value ) );
+			return true;
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
 	}
 
 	/**
@@ -122,6 +150,19 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	 */
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		// no-op
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean update(Object key, Object value ) throws CacheException {
+		try {
+			ehcache.put( new Element( key, value ) );
+			return true;
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
 	}
 
 }

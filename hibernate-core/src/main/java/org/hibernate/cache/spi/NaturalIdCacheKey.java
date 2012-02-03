@@ -24,9 +24,10 @@
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
 /**
@@ -38,7 +39,7 @@ import org.hibernate.type.Type;
  */
 public class NaturalIdCacheKey implements Serializable {
 	private final Serializable[] naturalId;
-	private final Type[] types;
+	private final Type[] naturalIdTypes;
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
@@ -50,54 +51,70 @@ public class NaturalIdCacheKey implements Serializable {
 	 * name, not a subclass entity name.
 	 *
 	 * @param naturalId The naturalId associated with the cached data
-	 * @param types The Hibernate type mappings
-	 * @param entityOrRoleName The entity name.
-	 * @param tenantId The tenant identifier associated this data.
-	 * @param factory The session factory for which we are caching
+	 * @param persister The persister for the entity
+	 * @param session The session for which we are caching
 	 */
 	public NaturalIdCacheKey(
-			final Serializable[] naturalId,
-			final Type[] types,
-			final String entityOrRoleName,
-			final String tenantId,
-			final SessionFactoryImplementor factory) {
+			final Object[] naturalId,
+			final EntityPersister persister,
+			final SessionImplementor session) {
 		
-		this.naturalId = naturalId;
-		this.types = types;
-		this.entityName = entityOrRoleName;
-		this.tenantId = tenantId;
+		this.entityName = persister.getEntityName();
+		this.tenantId = session.getTenantIdentifier();
 		
-		this.hashCode = this.generateHashCode( this.naturalId, this.types, factory );
-		this.toString = entityOrRoleName + "##NaturalId" + Arrays.toString( this.naturalId );
-	}
-	
-	private int generateHashCode(final Serializable[] naturalId, final Type[] types,
-			final SessionFactoryImplementor factory) {
+		final Serializable[] disassembledNaturalId = new Serializable[naturalId.length];
+		final Type[] naturalIdTypes = new Type[naturalId.length];
+		final StringBuilder str = new StringBuilder(entityName).append( "##NaturalId[" );
 		
+		
+		final SessionFactoryImplementor factory = session.getFactory();
+		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+		final Type[] propertyTypes = persister.getPropertyTypes();
+
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ( ( entityName == null ) ? 0 : entityName.hashCode() );
-		result = prime * result + ( ( tenantId == null ) ? 0 : tenantId.hashCode() );
+		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
+		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
 		for ( int i = 0; i < naturalId.length; i++ ) {
-			result = prime * result + types[i].getHashCode( naturalId[i], factory );
+			final Type type = propertyTypes[naturalIdPropertyIndexes[i]];
+			final Object value = naturalId[i];
+			
+			result = prime * result + type.getHashCode( value, factory );
+			
+			disassembledNaturalId[i] = type.disassemble( value, session, null );
+			
+			naturalIdTypes[i] = type;
+			
+			str.append( type.toLoggableString( value, factory ) );
+			if (i + 1 < naturalId.length) {
+				str.append( ", " );
+			}
 		}
-		return result;
+		str.append( "]" );
+		
+		this.naturalId = disassembledNaturalId;
+		this.naturalIdTypes = naturalIdTypes;
+		this.hashCode = result;
+		this.toString = str.toString();
 	}
 
-	@Override
-	public String toString() {
-		// Mainly for OSCache
-		return this.toString;
+	public String getEntityName() {
+		return entityName;
+	}
+	
+	public String getTenantId() {
+		return tenantId;
 	}
 	
 	public Serializable[] getNaturalId() {
 		return naturalId;
 	}
 
-	public Type[] getTypes() {
-		return types;
+	@Override
+	public String toString() {
+		return this.toString;
 	}
-
+	
 	@Override
 	public int hashCode() {
 		return this.hashCode;
@@ -112,17 +129,11 @@ public class NaturalIdCacheKey implements Serializable {
 		if ( getClass() != obj.getClass() )
 			return false;
 		NaturalIdCacheKey other = (NaturalIdCacheKey) obj;
-		if (this.hashCode != other.hashCode) {
-			//Short circuit on hashCode, if they aren't equal there is no chance the keys are equal
-			return false;
-		}
 		if ( entityName == null ) {
 			if ( other.entityName != null )
 				return false;
 		}
 		else if ( !entityName.equals( other.entityName ) )
-			return false;
-		if ( !Arrays.equals( naturalId, other.naturalId ) )
 			return false;
 		if ( tenantId == null ) {
 			if ( other.tenantId != null )
@@ -130,18 +141,18 @@ public class NaturalIdCacheKey implements Serializable {
 		}
 		else if ( !tenantId.equals( other.tenantId ) )
 			return false;
-		
-		for ( int i = 0; i < naturalId.length; i++ ) {
-			if ( !types[i].isEqual( naturalId[i], other.naturalId[i] ) ) {
+		if ( naturalId == other.naturalId )
+			return true;
+		if ( naturalId == null || other.naturalId == null )
+			return false;
+		int length = naturalId.length;
+		if ( other.naturalId.length != length )
+			return false;
+		for ( int i = 0; i < length; i++ ) {
+			if ( !this.naturalIdTypes[i].isEqual( naturalId[i], other.naturalId[i] ) ) {
 				return false;
 			}
 		}
-		
 		return true;
 	}
-
-	public String getEntityOrRoleName() {
-		return entityName;
-	}
-
 }

@@ -25,8 +25,10 @@ package org.hibernate.testing.cache;
 
 import java.util.Comparator;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * @author Eric Dalquist
@@ -38,6 +40,63 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 	ReadWriteNaturalIdRegionAccessStrategy(NaturalIdRegionImpl region) {
 		this.region = region;
+	}
+
+	@Override
+	public boolean insert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	@Override
+	public boolean update(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	@Override
+	public boolean afterInsert(Object key, Object value ) throws CacheException {
+
+		try {
+			writeLock.lock();
+			Lockable item = (Lockable) region.get( key );
+			if ( item == null ) {
+				region.put( key, new Item( value, null, region.nextTimestamp() ) );
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		finally {
+			writeLock.unlock();
+		}
+	}
+
+
+	@Override
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+		try {
+			writeLock.lock();
+			Lockable item = (Lockable) region.get( key );
+
+			if ( item != null && item.isUnlockable( lock ) ) {
+				Lock lockItem = (Lock) item;
+				if ( lockItem.wasLockedConcurrently() ) {
+					decrementLock( key, lockItem );
+					return false;
+				}
+				else {
+					region.put( key, new Item( value, null, region.nextTimestamp() ) );
+					return true;
+				}
+			}
+			else {
+				handleLockExpiry( key, item );
+				return false;
+			}
+		}
+		finally {
+			writeLock.unlock();
+		}
 	}
 
 	@Override

@@ -3902,6 +3902,10 @@ public abstract class AbstractEntityPersister
 		return cacheEntryStructure;
 	}
 	
+	public boolean hasNaturalIdCache() {
+		return naturalIdRegionAccessStrategy != null;
+	}
+	
 	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
 		return naturalIdRegionAccessStrategy;
 	}

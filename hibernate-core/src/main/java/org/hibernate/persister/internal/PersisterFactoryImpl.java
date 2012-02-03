@@ -63,6 +63,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
 			EntityRegionAccessStrategy.class,
+			NaturalIdRegionAccessStrategy.class,
 			SessionFactoryImplementor.class,
 			Mapping.class
 	};

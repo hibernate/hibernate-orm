@@ -831,14 +831,14 @@ public class EntityBinder {
 		}
 	}
 	
-	public void setNaturalIdCache(NaturalIdCache naturalIdCacheAnn) {
+	public void setNaturalIdCache(XClass clazzToProcess, NaturalIdCache naturalIdCacheAnn) {
 		if ( naturalIdCacheAnn != null ) {
 			if ( BinderHelper.isEmptyAnnotationValue( naturalIdCacheAnn.region() ) ) {
 				if (cacheRegion != null) {
 					naturalIdCacheRegion = cacheRegion + NATURAL_ID_CACHE_SUFFIX;
 				}
 				else {
-					naturalIdCacheRegion = persistentClass.getEntityName() + NATURAL_ID_CACHE_SUFFIX;
+					naturalIdCacheRegion = clazzToProcess.getName() + NATURAL_ID_CACHE_SUFFIX;
 				}
 			}
 			else {

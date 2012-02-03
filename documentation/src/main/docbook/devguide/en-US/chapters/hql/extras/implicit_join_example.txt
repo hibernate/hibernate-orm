@@ -1,0 +1,9 @@
+select c
+from Customer c
+where c.chiefExecutive.age < 25
+
+// same as
+select c
+from Customer c
+    inner join c.chiefExecutive ceo
+where ceo.age < 25

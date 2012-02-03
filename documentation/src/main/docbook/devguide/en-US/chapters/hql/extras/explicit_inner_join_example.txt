@@ -1,0 +1,10 @@
+select c
+from Customer c
+    join c.chiefExecutive ceo
+where ceo.age < 25
+
+// same query but specifying join type as 'inner' explicitly
+select c
+from Customer c
+    inner join c.chiefExecutive ceo
+where ceo.age < 25

@@ -1,0 +1,34 @@
+// numeric comparison
+select c
+from Customer c
+where c.chiefExecutive.age < 30
+
+// string comparison
+select c
+from Customer c
+where c.name = 'Acme'
+
+// datetime comparison
+select c
+from Customer c
+where c.inceptionDate < {d '2000-01-01'}
+
+// enum comparison
+select c
+from Customer c
+where c.chiefExecutive.gender = com.acme.Gender.MALE
+
+// boolean comparison
+select c
+from Customer c
+where c.sendEmail = true
+
+// entity type comparison
+select p
+from Payment p
+where type(p) = WireTransferPayment
+
+// entity value comparison
+select c
+from Customer c
+where c.chiefExecutive = c.chiefTechnologist

@@ -1,0 +1,9 @@
+// select all players that scored at least 3 points
+// in every game.
+select p
+from Player p
+where 3 > all (
+    select spg.points
+    from StatsPerGame spg
+    where spg.player = p
+)

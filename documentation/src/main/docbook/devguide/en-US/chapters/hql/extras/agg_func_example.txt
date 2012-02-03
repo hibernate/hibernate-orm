@@ -1,0 +1,10 @@
+select count(*), sum( o.total ), avg( o.total ), min( o.total ), max( o.total )
+from Order o
+
+select count( distinct c.name )
+from Customer c
+
+select c.id, c.name, sum( o.total )
+from Customer c
+    left join c.orders o
+group by c.id, c.name

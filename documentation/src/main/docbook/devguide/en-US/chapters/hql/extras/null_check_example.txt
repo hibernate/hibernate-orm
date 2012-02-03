@@ -1,0 +1,9 @@
+// select everyone with an associated address
+select p
+from Person p
+where p.address is not null
+
+// select everyone without an associated address
+select p
+from Person p
+where p.address is null

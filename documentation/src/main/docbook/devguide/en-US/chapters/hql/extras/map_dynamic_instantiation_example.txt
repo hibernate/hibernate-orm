@@ -1,0 +1,7 @@
+select new map( mother as mother, offspr as offspr, mate as mate )
+from DomesticCat as mother
+    inner join mother.mate as mate
+    left outer join mother.kittens as offspr
+
+select new map( max(c.bodyWeight) as max, min(c.bodyWeight) as min, count(*) as n )
+from Cat c

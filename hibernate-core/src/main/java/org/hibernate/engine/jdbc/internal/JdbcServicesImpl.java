@@ -51,9 +51,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
-import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -208,21 +206,12 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 		SQLExceptionConverter sqlExceptionConverter = dialect.buildSQLExceptionConverter();
 		if ( sqlExceptionConverter == null ) {
-			final Dialect finalDialect = dialect;
-			final ConversionContext conversionContext = new ConversionContext() {
-				private final ViolatedConstraintNameExtracter extracter = finalDialect.getViolatedConstraintNameExtracter();
-
-				@Override
-				public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-					return extracter;
-				}
-			};
 			final StandardSQLExceptionConverter converter = new StandardSQLExceptionConverter();
 			sqlExceptionConverter = converter;
-			converter.addDelegate( new SQLExceptionTypeDelegate( conversionContext ) );
+			converter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
+			converter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
 			// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
-			converter.addDelegate( new SQLStateConversionDelegate( conversionContext ) );
-			// todo : add Dialect#getSQLExceptionConversionDelegate method and add result here if non-null
+			converter.addDelegate( new SQLStateConversionDelegate( dialect ) );
 		}
 		this.sqlExceptionHelper = new SqlExceptionHelper( sqlExceptionConverter );
 	}

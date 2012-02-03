@@ -46,8 +46,8 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.exception.internal.CacheSQLStateConverter;
-import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
@@ -662,8 +662,12 @@ public class Cache71Dialect extends Dialect {
 		return " default values";
 	}
 
-	public SQLExceptionConverter buildSQLExceptionConverter() {
-		return new CacheSQLStateConverter( EXTRACTER );
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new CacheSQLExceptionConversionDelegate( this );
+	}
+
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
 	}
 
 	public static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {

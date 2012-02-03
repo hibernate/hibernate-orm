@@ -61,6 +61,8 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.internal.SQLStateConverter;
+import org.hibernate.exception.spi.ConversionContext;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
@@ -94,7 +96,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Gavin King, David Channon
  */
-public abstract class Dialect {
+public abstract class Dialect implements ConversionContext {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Dialect.class.getName());
 
@@ -1499,21 +1501,61 @@ public abstract class Dialect {
 
 	/**
 	 * Build an instance of the SQLExceptionConverter preferred by this dialect for
-	 * converting SQLExceptions into Hibernate's JDBCException hierarchy.  The default
-	 * Dialect implementation simply returns a converter based on X/Open SQLState codes.
+	 * converting SQLExceptions into Hibernate's JDBCException hierarchy.
+	 * <p/>
+	 * The preferred method is to not override this method; if possible,
+	 * {@link #buildSQLExceptionConversionDelegate()} should be overridden
+	 * instead.
+	 *
+	 * If this method is not overridden, the default SQLExceptionConverter
+	 * implementation executes 3 SQLException converter delegates:
+	 * <ol>
+	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
+	 *     <li>the vendor-specific delegate returned by {@link #buildSQLExceptionConversionDelegate()};
+	 *         (it is strongly recommended that specific Dialect implementations
+	 *         override {@link #buildSQLExceptionConversionDelegate()})</li>
+	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
+	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
+	 * </ol>
+	 * <p/>
+	 * If this method is overridden, it is strongly recommended that the
+	 * returned {@link SQLExceptionConverter} interpret SQL errors based on
+	 * vendor-specific error codes rather than the SQLState since the
+	 * interpretation is more accurate when using vendor-specific ErrorCodes.
+	 *
+	 * @return The Dialect's preferred SQLExceptionConverter, or null to
+	 * indicate that the default {@link SQLExceptionConverter} should be used.
+	 *
+	 * @see {@link #buildSQLExceptionConversionDelegate()} should be
+	 * overridden instead.
+	 */
+	public SQLExceptionConverter buildSQLExceptionConverter() {
+		return null;
+	}
+
+	/**
+	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
+	 * interpreting dialect-specific error or SQLState codes.
+	 * <p/>
+	 * When {@link #buildSQLExceptionConverter} returns null, the default 
+	 * {@link SQLExceptionConverter} is used to interpret SQLState and
+	 * error codes. If this method is overridden to return a non-null value,
+	 * the default {@link SQLExceptionConverter} will use the returned
+	 * {@link SQLExceptionConversionDelegate} in addition to the following 
+	 * standard delegates:
+	 * <ol>
+	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
+	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
+	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
+	 * </ol>
 	 * <p/>
 	 * It is strongly recommended that specific Dialect implementations override this
 	 * method, since interpretation of a SQL error is much more accurate when based on
-	 * the ErrorCode rather than the SQLState.  Unfortunately, the ErrorCode is a vendor-
-	 * specific approach.
-	 *
-	 * @return The Dialect's preferred SQLExceptionConverter.
+	 * the a vendor-specific ErrorCode rather than the SQLState.
+	 * <p/>
+	 * Specific Dialects may override to return whatever is most appropriate for that vendor.
 	 */
-	public SQLExceptionConverter buildSQLExceptionConverter() {
-		// The default SQLExceptionConverter for all dialects is based on SQLState
-		// since SQLErrorCode is extremely vendor-specific.  Specific Dialects
-		// may override to return whatever is most appropriate for that vendor.
-//		return new SQLStateConverter( getViolatedConstraintNameExtracter() );
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return null;
 	}
 

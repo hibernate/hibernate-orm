@@ -24,33 +24,32 @@
 package org.hibernate.exception.internal;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import org.hibernate.JDBCException;
-import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.PessimisticLockException;
+import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.ConversionContext;
 
 /**
- * @author Steve Ebersole
+ * A {@link org.hibernate.exception.spi.SQLExceptionConversionDelegate}
+ * implementation specific to Oracle.
+ *
+ * @author Gail Badner
  */
-public class StandardSQLExceptionConverter implements SQLExceptionConverter {
-	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>();
+public class OracleSQLExceptionConversionDelegate extends AbstractSQLExceptionConversionDelegate {
+	private static final int PESSIMISTIC_LOCK_ERROR_CODE = 30006;
 
-	public void addDelegate(SQLExceptionConversionDelegate delegate) {
-		if ( delegate != null ) {
-			this.delegates.add( delegate );
-		}
+	public OracleSQLExceptionConversionDelegate(ConversionContext conversionContext) {
+		super( conversionContext );
 	}
 
 	@Override
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		for ( SQLExceptionConversionDelegate delegate : delegates ) {
-			final JDBCException jdbcException = delegate.convert( sqlException, message, sql );
-			if ( jdbcException != null ) {
-				return jdbcException;
-			}
+		if ( sqlException.getErrorCode() == PESSIMISTIC_LOCK_ERROR_CODE ) {
+			return new PessimisticLockException( message, sqlException, sql );
 		}
-		return new GenericJDBCException( message, sqlException, sql );
+		else {
+			return null; // allow other delegates the chance to look
+		}
 	}
 }

@@ -120,7 +120,7 @@
   <xi:include href="modules/migrated/batch.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/query_ejbql.xml"
+  <xi:include href="modules/migrated/query_ejbql.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/query_criteria.xml"

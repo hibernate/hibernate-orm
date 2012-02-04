@@ -1321,18 +1321,119 @@
                 <programlisting><xi:include href="extras/member_of_collection_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
+
+        <section>
+            <title>NOT predicate operator</title>
+            <para>
+                The <literal>NOT</literal> operator is used to negate the predicate that follows it.  If that
+                following predicate is true, the NOT resolves to false.  If the predicate is true, NOT resolves to
+                false.  If the predicate is unknown, the NOT resolves to unknown as well.
+            </para>
+        </section>
+
+        <section>
+            <title>AND predicate operator</title>
+            <para>
+                The <literal>AND</literal> operator is used to combine 2 predicate expressions.  The result of the
+                AND expression is true if and only if both predicates resolve to true.  If either predicate resolves
+                to unknown, the AND expression resolves to unknown as well.  Otherwise, the result is false.
+            </para>
+        </section>
+
+        <section>
+            <title>OR predicate operator</title>
+            <para>
+                The <literal>OR</literal> operator is used to combine 2 predicate expressions.  The result of the
+                OR expression is true if either predicate resolves to true.  If both predicates resolve to unknown, the
+                OR expression resolves to unknown.  Otherwise, the result is false.
+            </para>
+        </section>
     </section>
 
     <section id="ql-where-clause">
         <title>The <literal>WHERE</literal> clause</title>
+        <para>
+            The <literal>WHERE</literal> clause of a query is made up of predicates which assert whether values in
+            each potential row match the predicated checks.  Thus, the where clause restricts the results returned
+            from a select query and limits the scope of update and delete queries.
+        </para>
     </section>
 
     <section id="ql-grouping">
         <title>Grouping</title>
+        <para>
+            The <literal>GROUP BY</literal> clause allows building aggregated results for various value groups.  As an
+            example, consider the following queries:
+        </para>
+        <example id="group_by_illustration">
+            <title>Group-by illustration</title>
+            <programlisting><xi:include href="extras/group_by_illustration.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            The first query retrieves the complete total of all orders.  The second retrieves the total for each
+            customer; grouped by each customer.
+        </para>
+        <para>
+            In a grouped query, the where clause applies to the non aggregated values (essentially it determines whether
+            rows will make it into the aggregation).  The <literal>HAVING</literal> clause also restricts results,
+            but it operates on the aggregated values.  In the <xref linkend="group_by_illustration"/> example,
+            we retrieved order totals for all customers.  If that ended up being too much data to deal with,
+            we might want to restrict the results to focus only on customers with a summed order total of more than
+            $10,000.00:
+        </para>
+        <example id="having_illustration">
+            <title>Having illustration</title>
+            <programlisting><xi:include href="extras/having_illustration.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            The HAVING clause follows the same rules as the WHERE clause and is also made up of predicates.  HAVING is
+            applied after the groupings and aggregations have been done; WHERE is applied before.
+        </para>
     </section>
 
     <section id="ql-ordering">
         <title>Ordering</title>
+        <para>
+            The results of the query can also be ordered.  The <literal>ORDER BY</literal> clause is used to specify
+            the selected values to be used to order the result.  The types of expressions considered valid as part
+             of the order-by clause include:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    state fields
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    component/embeddable attributes
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    scalar expressions such as arithmetic operations, functions, etc.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    identification variable declared in the select clause for any of the previous expression types
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>
+            Additionally, JPQL says that all values referenced in the order-by clause must be named in the select
+            clause.  HQL does not mandate that restriction, but applications desiring database portability should be
+            aware that not all databases support referencing values in the order-by clause that are not referenced
+            in the select clause.
+        </para>
+        <para>
+            Individual expressions in the order-by can be qualified with either <literal>ASC</literal> (ascending) or
+            <literal>DESC</literal> (descending) to indicated the desired ordering direction.
+        </para>
+        <example>
+            <title>Order-by examples</title>
+            <programlisting><xi:include href="extras/order_by_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
     </section>
 
     <section id="ql-api">

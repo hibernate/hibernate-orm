@@ -1,0 +1,8 @@
+in_expression ::= single_valued_expression
+            [NOT] IN single_valued_list
+
+single_valued_list ::= constructor_expression |
+            (subquery) |
+            collection_valued_input_parameter
+
+constructor_expression ::= (expression[, expression]*)

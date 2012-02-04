@@ -64,7 +64,7 @@
             <para>
                 The BNF for <literal>SELECT</literal> statements in HQL is:
             </para>
-            <programlisting><xi:include href="extras/select_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/statement_select_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             <para>
                 The simplest possible HQL <literal>SELECT</literal> statement is of the form:
             </para>
@@ -86,7 +86,7 @@
             <para>
                 The BNF for <literal>UPDATE</literal> statements is the same in HQL and JPQL:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/update_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_update_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             <para>
                 <literal>UPDATE</literal> statements, by default, do not effect the <literal>version</literal>
                 or the <literal>timestamp</literal> attribute values for the affected entities. However,
@@ -112,9 +112,9 @@
             </para>
             <example>
                 <title>Example UPDATE query statements</title>
-                <programlisting role="JAVA"><xi:include href="extras/update_statement_hql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/update_statement_jpql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/versioned_update_statement_hql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_jpql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql_versioned.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -130,7 +130,7 @@
             <para>
                 The BNF for <literal>DELETE</literal> statements is the same in HQL and JPQL:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/delete_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_delete_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             <para>
                 A <literal>DELETE</literal> statement is also executed using the <methodname>executeUpdate</methodname>
                 method of either <interfacename>org.hibernate.Query</interfacename> or
@@ -144,7 +144,7 @@
                 HQL adds the ability to define <literal>INSERT</literal> statements as well.  There is no JPQL
                 equivalent to this.  The BNF for an HQL <literal>INSERT</literal> statement is:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/insert_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_insert_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             <para>
                 The <literal>attribute_list</literal> is analogous to the <literal>column specification</literal> in the
                 SQL <literal>INSERT</literal> statement.  For entities involved in mapped inheritance, only attributes
@@ -179,7 +179,7 @@
             </para>
             <example>
                 <title>Example INSERT query statements</title>
-                <programlisting role="JAVA"><xi:include href="extras/insert_statement_named_id.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_insert_example_named_id.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
     </section>
@@ -260,11 +260,11 @@
             </para>
             <example>
                 <title>Explicit inner join examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/explicit_inner_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_inner.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <example>
                 <title>Explicit left (outer) join examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/explicit_outer_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_outer.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 An important use case for explicit joins is to define <literal>FETCH JOINS</literal> which override
@@ -273,7 +273,7 @@
             </para>
             <example>
                 <title>Fetch join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/fetch_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_fetch.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 As you can see from the example, a fetch join is specified by injecting the keyword <literal>fetch</literal>
@@ -304,7 +304,7 @@
             </para>
             <example>
                 <title>with-clause join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/with_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_with.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 The important distinction is that in the generated SQL the conditions of the
@@ -329,7 +329,7 @@
             </para>
             <example>
                 <title>Simple implicit join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/implicit_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_implicit.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 An implicit join always starts from an <literal>identification variable</literal>, followed by
@@ -355,7 +355,7 @@
             </para>
             <example>
                 <title>Reused implicit join</title>
-                <programlisting><xi:include href="extras/reused_implicit_join_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/join_example_implicit_reused.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 Just as with explicit joins, implicit joins may reference association or component/embedded attributes.
@@ -533,7 +533,7 @@
             </para>
 
             <para>
-                Entity names can also be used as literal.  See entity type expressions below.
+                Entity names can also be used as literal.  See <xref linkend="ql-entity-type-exp"/>.
             </para>
 
             <para>
@@ -1032,7 +1032,7 @@
             </para>
         </section>
 
-        <section>
+        <section id="ql-entity-type-exp">
             <title>Entity type</title>
             <para>
                 We can also refer to the type of an entity as an expression.  This is mainly useful when dealing
@@ -1158,24 +1158,24 @@
     </section>
 
     <section id="ql-conditional-expressions">
-        <title>Conditional expressions</title>
+        <title>Predicates</title>
         <para>
-            Conditional expressions form the basis of the where clause, the having clause and searched case expressions.
+            Predicates form the basis of the where clause, the having clause and searched case expressions.
             They are expressions which resolve to a truth value, generally <literal>TRUE</literal> or
             <literal>FALSE</literal>, although boolean comparisons involving NULLs generally resolve to
             <literal>UNKNOWN</literal>.
         </para>
 
         <section>
-            <title>Comparison expressions</title>
+            <title>Relational comparisons</title>
             <para>
                 Comparisons involve one of the comparison operators - <![CDATA[=, >, >=, <, <=, <>]>.  HQL also defines
-                <![CDATA[!=]]> as a comparison operator, equivalent to <![CDATA[<>]]>.  The operands should be
+                <![CDATA[!=]]> as a comparison operator synonymous with <![CDATA[<>]]>.  The operands should be
                 of the same type.
             </para>
             <example>
-                <title>Comparison expression examples</title>
-                <programlisting><xi:include href="extras/comparison_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <title>Relational comparison examples</title>
+                <programlisting><xi:include href="extras/predicate_comparison_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 Comparisons can also involve subquery qualifiers - <literal>ALL</literal>, <literal>ANY</literal>,
@@ -1187,7 +1187,7 @@
             </para>
             <example>
                 <title>ALL subquery comparison qualifier example</title>
-                <programlisting><xi:include href="extras/comparison_using_all_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_comparison_example_using_all.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
                 The ANY/SOME qualifier resolves to true if the comparison is true for some of (at least one of) the
@@ -1196,23 +1196,23 @@
         </section>
 
         <section>
-            <title>Null check expressions</title>
+            <title>Nullness predicate</title>
             <para>
                 Check a value for nullness.  Can be applied to basic attribute references, entity references and
                 parameters.  HQL additionally allows it to be applied to component/embeddable types.
             </para>
             <example>
-                <title>Nullness check expression examples</title>
-                <programlisting><xi:include href="extras/null_check_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <title>Nullness checking examples</title>
+                <programlisting><xi:include href="extras/predicate_nullness_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
 
         <section>
-            <title>Like expressions</title>
+            <title>Like predicate</title>
             <para>
                 Performs a like comparison on string values.  The syntax is:
             </para>
-            <programlisting><xi:include href="extras/like_exp_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/predicate_like_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             <para>
                 The semantics follow that of the SQL like expression.  The <literal>pattern_value</literal> is the
                 pattern to attempt to match in the <literal>string_expression</literal>.  Just like SQL,
@@ -1227,29 +1227,70 @@
                 <quote>_</quote> or <quote>%</quote>
             </para>
             <example>
-                <title>Like expression examples</title>
-                <programlisting><xi:include href="extras/like_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <title>Like predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_like_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
 
         <section>
-            <title>Between expressions</title>
+            <title>Between predicate</title>
             <para>
                 Analogous to the SQL between expression.  Perform a evaluation that a value is within the range
                 of 2 other values.  All the operands should have comparable types.
             </para>
             <example>
-                <title>Between expression examples</title>
-                <programlisting><xi:include href="extras/between_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <title>Between predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_between_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
 
         <section>
-            <title>In expressions</title>
+            <title>In predicate</title>
+            <para>
+                <literal>IN</literal> predicates performs a check that a particular value is in a list of values.
+                Its syntax is:
+            </para>
+            <programlisting><xi:include href="extras/predicate_in_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <para>
+                The types of the <literal>single_valued_expression</literal> and the individual values in the
+                <literal>single_valued_list</literal> must be consistent.    JPQL limits the valid types here
+                to string, numeric, date, time, timestamp, and enum types.  In JPQL,
+                <literal>single_valued_expression</literal> can only refer to:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <quote>state fields</quote>, which is its term for simple attributes.  Specifically this
+                        excludes association and component/embedded attributes.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        entity type expressions.  See <xref linkend="ql-entity-type-exp"/>
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>
+                In HQL, <literal>single_valued_expression</literal> can refer to a far more broad set of expression
+                types.  Single-valued association are allowed.  So are component/embedded attributes, although that
+                feature depends on the level of support for tuple or <quote>row value constructor syntax</quote> in
+                the underlying database.  Additionally, HQL does not limit the value type in any way, though
+                application developers should be aware that different types may incur limited support based on
+                the underlying database vendor.  This is largely the reason for the JPQL limitations.
+            </para>
+            <para>
+                The list of values can come from a number of different sources.  In the
+                <literal>constructor_expression</literal> and <literal>collection_valued_input_parameter</literal>, the
+                list of values must not be empty; it must contain at least one value.
+            </para>
+            <example>
+                <title>In predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_in_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
         </section>
 
         <section>
-            <title>Exists expressions</title>
+            <title>Exists predicate</title>
             <para>
                 Exists expressions test the existence of results from a subquery.  The affirmative form returns true
                 if the subquery result contains values.  The negated form returns true if the subquery
@@ -1258,7 +1299,7 @@
         </section>
 
         <section>
-            <title>Empty collection expressions</title>
+            <title>Empty collection predicate</title>
             <para>
                 The <literal>IS [NOT] EMPTY</literal> expression applies to collection-valued path expressions.  It
                 checks whether the particular collection has any associated values.
@@ -1270,7 +1311,7 @@
         </section>
 
         <section>
-            <title>Member-of collection expressions</title>
+            <title>Member-of collection predicate</title>
             <para>
                 The <literal>[NOT] MEMBER [OF]</literal> expression applies to collection-valued path expressions.  It
                 checks whether a value is a member of the specified collection.

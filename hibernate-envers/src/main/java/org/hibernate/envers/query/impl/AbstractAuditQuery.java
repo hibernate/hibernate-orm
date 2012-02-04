@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.impl;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -81,7 +82,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 		versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
 				entityName);
 
-		qb = new QueryBuilder(versionsEntityName, "e");
+		qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
 	}
     
     protected Query buildQuery() {
@@ -220,7 +221,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         if (cacheMode != null) query.setCacheMode(cacheMode);
         if (timeout != null) query.setTimeout(timeout);
         if (lockOptions != null && lockOptions.getLockMode() != LockMode.NONE) {
-			  query.setLockMode("e", lockOptions.getLockMode());
+			  query.setLockMode(REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode());
 		  }
     }
 }

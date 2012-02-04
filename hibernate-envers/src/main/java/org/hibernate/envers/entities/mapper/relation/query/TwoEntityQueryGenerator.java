@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.query;
-import java.util.Collections;
 
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
+import java.util.Collections;
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -87,25 +88,25 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
         String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
-        String eeOriginalIdPropertyPath = "ee." + originalIdPropertyName;
+        String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 
         // SELECT new list(ee) FROM middleEntity ee
-        QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, "ee");
-        qb.addFrom(referencedIdData.getAuditEntityName(), "e");
-        qb.addProjection("new list", "ee, e", false, false);
+        QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, MIDDLE_ENTITY_ALIAS);
+        qb.addFrom(referencedIdData.getAuditEntityName(), REFERENCED_ENTITY_ALIAS);
+        qb.addProjection("new list", MIDDLE_ENTITY_ALIAS + ", " + REFERENCED_ENTITY_ALIAS, false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();
         // ee.id_ref_ed = e.id_ref_ed
         referencedIdData.getPrefixedMapper().addIdsEqualToQuery(rootParameters, eeOriginalIdPropertyPath,
-                referencedIdData.getOriginalMapper(), "e." + originalIdPropertyName);
+        		referencedIdData.getOriginalMapper(), REFERENCED_ENTITY_ALIAS + "." + originalIdPropertyName);
         // ee.originalId.id_ref_ing = :id_ref_ing
         referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(rootParameters, originalIdPropertyName, true);
 
         // (selecting e entities at revision :revision)
         // --> based on auditStrategy (see above)
-        auditStrategy.addEntityAtRevisionRestriction(globalCfg, qb, "e." + revisionPropertyPath,
-        		"e." + verEntCfg.getRevisionEndFieldName(), false,
-        		referencedIdData, revisionPropertyPath, originalIdPropertyName, "e", "e2");
+        auditStrategy.addEntityAtRevisionRestriction(globalCfg, qb, REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
+        		REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(), false,
+        		referencedIdData, revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
 
         // (with ee association at revision :revision)
         // --> based on auditStrategy (see above)
@@ -114,9 +115,9 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
         		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
 
         // ee.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", "delrevisiontype");
+        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
         // e.revision_type != DEL
-        rootParameters.addWhereWithNamedParam("e." + verEntCfg.getRevisionTypePropName(), false, "!=", "delrevisiontype");
+        rootParameters.addWhereWithNamedParam(REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
@@ -125,8 +126,8 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
 
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter("revision", revision);
-        query.setParameter("delrevisiontype", RevisionType.DEL);
+        query.setParameter(REVISION_PARAMETER, revision);
+        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

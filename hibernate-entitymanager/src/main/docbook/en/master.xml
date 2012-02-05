@@ -108,7 +108,7 @@
   <xi:include href="modules/migrated/entitymanagerapi.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/metamodel.xml"
+  <xi:include href="modules/non-migrated/metamodel.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/migrated/transactions.xml"
@@ -123,7 +123,7 @@
   <xi:include href="modules/migrated/query_ejbql.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/query_criteria.xml"
+  <xi:include href="modules/migrated/query_criteria.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/query_native.xml"

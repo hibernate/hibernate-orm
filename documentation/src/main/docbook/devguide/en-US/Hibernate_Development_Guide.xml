@@ -17,13 +17,12 @@
   <xi:include href="Mapping_Entities.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Mapping_Association.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="chapters/hql/HQL_JPQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/criteria/Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/native-sql/Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/multi-tenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/multi_tenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <index />
+  <xi:include href="appendices/legacy_criteria/Legacy_Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </book>
 

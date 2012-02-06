@@ -1,9 +1,18 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-        %BOOK_ENTITIES;
-        ]>
+<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
+%BOOK_ENTITIES;
+]>
+
 <chapter>
-    <title>Native-SQL</title>
-    <para></para>
+    <title>Native SQL Queries</title>
+
+    <para>
+        You may also express queries in the native SQL dialect of your database. This is useful if you
+        want to utilize database specific features such as query hints or the CONNECT BY option in Oracle.
+        It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/JPA.
+        Hibernate also allows you to specify handwritten SQL (including stored procedures) for all
+        create, update, delete, and load operations.
+    </para>
+    
 </chapter>

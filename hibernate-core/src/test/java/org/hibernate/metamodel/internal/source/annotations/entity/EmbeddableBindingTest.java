@@ -80,7 +80,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		// todo - is this really correct? Does the path start w/ the class name
 		assertEquals(
 				"Wrong path",
-				"org.hibernate.metamodel.source.annotations.entity.EmbeddableBindingTest$User.phone",
+				EmbeddableBindingTest.User.class.getName() + ".phone",
 				componentBinding.getPathBase()
 		);
 

@@ -86,7 +86,7 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 			);
 			assertEquals(
 					"Wrong error origin",
-					"org.hibernate.metamodel.source.annotations.entity.MapsIdTest$Dependent",
+					MapsIdTest.Dependent.class.getName(),
 					e.getOrigin().getName()
 			);
 		}

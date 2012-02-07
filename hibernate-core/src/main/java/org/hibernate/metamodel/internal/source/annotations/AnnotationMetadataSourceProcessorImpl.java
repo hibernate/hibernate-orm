@@ -38,7 +38,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.Binder;
+import org.hibernate.metamodel.internal.source.Binder;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;

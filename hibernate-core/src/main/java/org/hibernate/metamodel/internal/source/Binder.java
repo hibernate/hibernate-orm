@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal;
+package org.hibernate.metamodel.internal.source;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;

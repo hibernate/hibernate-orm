@@ -35,6 +35,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
@@ -849,9 +850,7 @@ public class Binder {
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
-			AttributeJavaTypeDeterminerDelegate delegate = new AttributeJavaTypeDeterminerDelegate( attribute.getName() );
-			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
-			return delegate.javaType;
+			return ReflectHelper.reflectedPropertyClass( ownerClass, attribute.getName() );
 		}
 		catch ( Exception ignore ) {
 			// todo : log it?
@@ -873,63 +872,6 @@ public class Binder {
 			// todo : log it?
 		}
 		return null;
-	}
-
-	private class PluralAttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
-		private final Class<?> ownerClass;
-		private final String attributeName;
-
-		private Class<?> javaType = null;
-
-		private PluralAttributeJavaTypeDeterminerDelegate(Class<?> ownerClass, String attributeName) {
-			this.ownerClass = ownerClass;
-			this.attributeName = attributeName;
-		}
-
-		@Override
-		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-				if ( propertyDescriptor.getName().equals( attributeName ) ) {
-					javaType = extractCollectionComponentType( beanInfo, propertyDescriptor );
-					break;
-				}
-			}
-		}
-
-		@SuppressWarnings( { "unchecked" })
-		private Class<?> extractCollectionComponentType(BeanInfo beanInfo, PropertyDescriptor propertyDescriptor) {
-			final java.lang.reflect.Type collectionAttributeType;
-			if ( propertyDescriptor.getReadMethod() != null ) {
-				collectionAttributeType = propertyDescriptor.getReadMethod().getGenericReturnType();
-			}
-			else if ( propertyDescriptor.getWriteMethod() != null ) {
-				collectionAttributeType = propertyDescriptor.getWriteMethod().getGenericParameterTypes()[0];
-			}
-			else {
-				// we need to look for the field and look at it...
-				try {
-					collectionAttributeType = ownerClass.getField( propertyDescriptor.getName() ).getGenericType();
-				}
-				catch ( Exception e ) {
-					return null;
-				}
-			}
-
-			if ( ParameterizedType.class.isInstance( collectionAttributeType ) ) {
-				final java.lang.reflect.Type[] types = ( (ParameterizedType) collectionAttributeType ).getActualTypeArguments();
-				if ( types == null ) {
-					return null;
-				}
-				else if ( types.length == 1 ) {
-					return (Class<?>) types[0];
-				}
-				else if ( types.length == 2 ) {
-					// Map<K,V>
-					return (Class<?>) types[1];
-				}
-			}
-			return null;
-		}
 	}
 
 	private void resolveToOneInformation(ToOneAttributeSource attributeSource, ManyToOneAttributeBinding attributeBinding) {
@@ -1137,11 +1079,14 @@ public class Binder {
 		// todo : process the entity-local fetch-profile declaration
 	}
 
-	private static class AttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
+	private class PluralAttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
+		private final Class<?> ownerClass;
 		private final String attributeName;
+
 		private Class<?> javaType = null;
 
-		private AttributeJavaTypeDeterminerDelegate(String attributeName) {
+		private PluralAttributeJavaTypeDeterminerDelegate(Class<?> ownerClass, String attributeName) {
+			this.ownerClass = ownerClass;
 			this.attributeName = attributeName;
 		}
 
@@ -1149,10 +1094,46 @@ public class Binder {
 		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
 			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
 				if ( propertyDescriptor.getName().equals( attributeName ) ) {
-					javaType = propertyDescriptor.getPropertyType();
+					javaType = extractCollectionComponentType( beanInfo, propertyDescriptor );
 					break;
 				}
 			}
 		}
+
+		@SuppressWarnings( { "unchecked" })
+		private Class<?> extractCollectionComponentType(BeanInfo beanInfo, PropertyDescriptor propertyDescriptor) {
+			final java.lang.reflect.Type collectionAttributeType;
+			if ( propertyDescriptor.getReadMethod() != null ) {
+				collectionAttributeType = propertyDescriptor.getReadMethod().getGenericReturnType();
+			}
+			else if ( propertyDescriptor.getWriteMethod() != null ) {
+				collectionAttributeType = propertyDescriptor.getWriteMethod().getGenericParameterTypes()[0];
+			}
+			else {
+				// we need to look for the field and look at it...
+				try {
+					collectionAttributeType = ownerClass.getField( propertyDescriptor.getName() ).getGenericType();
+				}
+				catch ( Exception e ) {
+					return null;
+				}
+			}
+
+			if ( ParameterizedType.class.isInstance( collectionAttributeType ) ) {
+				final java.lang.reflect.Type[] types = ( (ParameterizedType) collectionAttributeType ).getActualTypeArguments();
+				if ( types == null ) {
+					return null;
+				}
+				else if ( types.length == 1 ) {
+					return (Class<?>) types[0];
+				}
+				else if ( types.length == 2 ) {
+					// Map<K,V>
+					return (Class<?>) types[1];
+				}
+			}
+			return null;
+		}
 	}
+
 }

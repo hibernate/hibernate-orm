@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,49 +24,46 @@
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
 /**
- * Allows multiple entity classes / collection roles to be
- * stored in the same cache region. Also allows for composite
- * keys which do not properly implement equals()/hashCode().
+ * Defines a key for caching natural identifier resolutions into the second level cache.
  *
- * @author Gavin King
+ * @author Eric Dalquist
+ * @author Steve Ebersole
  */
 public class NaturalIdCacheKey implements Serializable {
-	private final Serializable[] naturalId;
-	private final Type[] naturalIdTypes;
+	private final Serializable[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
 	private final String toString;
 
 	/**
-	 * Construct a new key for a collection or entity instance.
-	 * Note that an entity name should always be the root entity
-	 * name, not a subclass entity name.
+	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
+	 * Note that an entity name should always be the root entity name, not a subclass entity name.
 	 *
-	 * @param naturalId The naturalId associated with the cached data
+	 * @param naturalIdValues The naturalIdValues associated with the cached data
 	 * @param persister The persister for the entity
-	 * @param session The session for which we are caching
+	 * @param session The originating session
 	 */
 	public NaturalIdCacheKey(
-			final Object[] naturalId,
+			final Object[] naturalIdValues,
 			final EntityPersister persister,
 			final SessionImplementor session) {
-		
-		this.entityName = persister.getEntityName();
+
+		this.entityName = persister.getRootEntityName();
 		this.tenantId = session.getTenantIdentifier();
-		
-		final Serializable[] disassembledNaturalId = new Serializable[naturalId.length];
-		final Type[] naturalIdTypes = new Type[naturalId.length];
-		final StringBuilder str = new StringBuilder(entityName).append( "##NaturalId[" );
-		
-		
+
+		final Serializable[] disassembledNaturalId = new Serializable[naturalIdValues.length];
+		final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
+
 		final SessionFactoryImplementor factory = session.getFactory();
 		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
 		final Type[] propertyTypes = persister.getPropertyTypes();
@@ -75,39 +72,39 @@ public class NaturalIdCacheKey implements Serializable {
 		int result = 1;
 		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
 		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
-		for ( int i = 0; i < naturalId.length; i++ ) {
+		for ( int i = 0; i < naturalIdValues.length; i++ ) {
 			final Type type = propertyTypes[naturalIdPropertyIndexes[i]];
-			final Object value = naturalId[i];
+			final Object value = naturalIdValues[i];
 			
 			result = prime * result + type.getHashCode( value, factory );
 			
 			disassembledNaturalId[i] = type.disassemble( value, session, null );
 			
-			naturalIdTypes[i] = type;
-			
-			str.append( type.toLoggableString( value, factory ) );
-			if (i + 1 < naturalId.length) {
-				str.append( ", " );
+			toStringBuilder.append( type.toLoggableString( value, factory ) );
+			if (i + 1 < naturalIdValues.length) {
+				toStringBuilder.append( ", " );
 			}
 		}
-		str.append( "]" );
+		toStringBuilder.append( "]" );
 		
-		this.naturalId = disassembledNaturalId;
-		this.naturalIdTypes = naturalIdTypes;
+		this.naturalIdValues = disassembledNaturalId;
 		this.hashCode = result;
-		this.toString = str.toString();
+		this.toString = toStringBuilder.toString();
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public String getEntityName() {
 		return entityName;
 	}
-	
+
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public String getTenantId() {
 		return tenantId;
 	}
-	
-	public Serializable[] getNaturalId() {
-		return naturalId;
+
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public Serializable[] getNaturalIdValues() {
+		return naturalIdValues;
 	}
 
 	@Override
@@ -121,38 +118,18 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if ( this == obj )
+	public boolean equals(Object o) {
+		if ( this == o ) {
 			return true;
-		if ( obj == null )
-			return false;
-		if ( getClass() != obj.getClass() )
-			return false;
-		NaturalIdCacheKey other = (NaturalIdCacheKey) obj;
-		if ( entityName == null ) {
-			if ( other.entityName != null )
-				return false;
 		}
-		else if ( !entityName.equals( other.entityName ) )
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
-		if ( tenantId == null ) {
-			if ( other.tenantId != null )
-				return false;
 		}
-		else if ( !tenantId.equals( other.tenantId ) )
-			return false;
-		if ( naturalId == other.naturalId )
-			return true;
-		if ( naturalId == null || other.naturalId == null )
-			return false;
-		int length = naturalId.length;
-		if ( other.naturalId.length != length )
-			return false;
-		for ( int i = 0; i < length; i++ ) {
-			if ( !this.naturalIdTypes[i].isEqual( naturalId[i], other.naturalId[i] ) ) {
-				return false;
-			}
-		}
-		return true;
+
+		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
+		return entityName.equals( other.entityName )
+				&& EqualsHelper.equals( tenantId, other.tenantId )
+				&& Arrays.equals( naturalIdValues, other.naturalIdValues );
+
 	}
 }

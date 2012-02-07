@@ -30,13 +30,12 @@ import org.hibernate.engine.spi.TypedValue;
 
 /**
  * @author Gavin King
- * @deprecated Use {@link Session#byNaturalId(Class)}
+ *
  * @see Session#byNaturalId(Class)
  * @see Session#byNaturalId(String)
  * @see Session#bySimpleNaturalId(Class)
  * @see Session#bySimpleNaturalId(String)
  */
-@Deprecated
 public class NaturalIdentifier implements Criterion {
 		
 	private Junction conjunction = new Conjunction();

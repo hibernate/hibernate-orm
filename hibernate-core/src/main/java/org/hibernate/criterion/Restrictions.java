@@ -385,13 +385,14 @@ public class Restrictions {
 	}
 
 	/**
-	 * @deprecated Use {@link Session#byNaturalId(Class)}
+	 * Consider using any of the natural id based loading stuff from session instead, especially in cases
+	 * where the restriction is the full set of natural id values.
+	 *
 	 * @see Session#byNaturalId(Class)
 	 * @see Session#byNaturalId(String)
 	 * @see Session#bySimpleNaturalId(Class)
 	 * @see Session#bySimpleNaturalId(String)
 	 */
-	@Deprecated
 	public static NaturalIdentifier naturalId() {
 		return new NaturalIdentifier();
 	}

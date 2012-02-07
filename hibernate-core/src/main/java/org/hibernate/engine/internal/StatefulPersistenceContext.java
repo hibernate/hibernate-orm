@@ -1785,22 +1785,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public boolean equals(Object obj) {
-			if ( this == obj )
+			if ( this == obj ) {
 				return true;
-			if ( obj == null )
-				return false;
-			if ( getClass() != obj.getClass() )
-				return false;
-			LocalNaturalIdCacheKey other = (LocalNaturalIdCacheKey) obj;
-			if ( persister == null ) {
-				if ( other.persister != null )
-					return false;
 			}
-			else if ( !persister.equals( other.persister ) )
+			if ( obj == null ) {
 				return false;
-			if ( !Arrays.equals( values, other.values ) )
+			}
+			if ( getClass() != obj.getClass() ) {
 				return false;
-			return true;
+			}
+
+			final LocalNaturalIdCacheKey other = (LocalNaturalIdCacheKey) obj;
+			return persister.equals( other.persister )
+					&& Arrays.equals( values, other.values );
 		}
 	}
 
@@ -1858,11 +1855,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// Found in session cache
 			if ( pk != null ) {
-				if ( LOG.isTraceEnabled() )
-					LOG.tracev(
-							"Resolved primary key in session cache: {0}",
-							MessageHelper.infoString( persister, Arrays.toString( naturalIdValues ),
-									session.getFactory() ) );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace(
+							"Resolved natural key -> primary key resolution in session cache: " +
+									persister.getRootEntityName() + "#[" +
+									Arrays.toString( naturalIdValues ) + "]"
+					);
+				}
 
 				return pk;
 			}
@@ -1884,12 +1883,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( pk != null ) {
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor().naturalIdCacheHit(
-						naturalIdCacheAccessStrategy.getRegion().getName() );
+						naturalIdCacheAccessStrategy.getRegion().getName()
+				);
 			}
 
 			if ( LOG.isTraceEnabled() )
-				LOG.tracev( "Resolved primary key in second-level cache: {0}",
-						MessageHelper.infoString( persister, naturalIdCacheKey.getNaturalId(), session.getFactory() ) );
+				LOG.trace(
+						"Resolved natural key -> primary key resolution in second-level cache: " +
+								persister.getRootEntityName() + "#[" +
+								Arrays.toString( naturalIdValues ) + "]"
+				);
 
 			if ( entityNaturalIdResolutionCache == null ) {
 				entityNaturalIdResolutionCache = new NaturalIdResolutionCache( persister );
@@ -1929,54 +1932,60 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final SessionFactoryImplementor factory = getSession().getFactory();
 			
 			switch ( valueSource ) {
-			case LOAD: {
-				final boolean put = naturalIdCacheAccessStrategy.putFromLoad( naturalIdCacheKey, pk, session.getTimestamp(), null );
+				case LOAD: {
+					final boolean put = naturalIdCacheAccessStrategy.putFromLoad(
+							naturalIdCacheKey,
+							pk,
+							session.getTimestamp(),
+							null
+					);
 
-				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatisticsImplementor().naturalIdCachePut(
-							naturalIdCacheAccessStrategy.getRegion().getName() );
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor()
+								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+					}
+
+					break;
 				}
+				case INSERT: {
+					naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, pk );
 
-				break;
-			}
-			case INSERT: {
-				naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, pk );
+					( (EventSource) this.session ).getActionQueue().registerProcess(
+							new AfterTransactionCompletionProcess() {
+								@Override
+								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+									final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, pk );
 
-				( (EventSource) this.session ).getActionQueue().registerProcess(
-						new AfterTransactionCompletionProcess() {
-							@Override
-							public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-								final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, pk );
-
-								if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-									factory.getStatisticsImplementor().naturalIdCachePut(
-											naturalIdCacheAccessStrategy.getRegion().getName() );
+									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+										factory.getStatisticsImplementor().naturalIdCachePut(
+												naturalIdCacheAccessStrategy.getRegion().getName() );
+									}
 								}
 							}
-						} );
+					);
 
-				break;
-			}
-			case UPDATE: {
-				final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
+					break;
+				}
+				case UPDATE: {
+					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
+					naturalIdCacheAccessStrategy.update( naturalIdCacheKey, pk );
 
-				naturalIdCacheAccessStrategy.update( naturalIdCacheKey, pk );
+					( (EventSource) this.session ).getActionQueue().registerProcess(
+							new AfterTransactionCompletionProcess() {
+								@Override
+								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, pk, lock );
 
-				( (EventSource) this.session ).getActionQueue().registerProcess(
-						new AfterTransactionCompletionProcess() {
-							@Override
-							public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-								final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, pk, lock );
-								
-								if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-									factory.getStatisticsImplementor().naturalIdCachePut(
-											naturalIdCacheAccessStrategy.getRegion().getName() );
+									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+										factory.getStatisticsImplementor().naturalIdCachePut(
+												naturalIdCacheAccessStrategy.getRegion().getName() );
+									}
 								}
 							}
-						} );
+					);
 
-				break;
-			}
+					break;
+				}
 			}
 		}
 	}

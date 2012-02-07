@@ -103,6 +103,7 @@ public interface Cache {
 	 *
 	 * @param naturalIdClass The naturalId class.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public void evictNaturalIdRegion(Class naturalIdClass);
 
 	/**
@@ -131,6 +132,7 @@ public interface Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean containsCollection(String role, Serializable ownerIdentifier);
 
 	/**
@@ -143,7 +145,7 @@ public interface Cache {
 
 	/**
 	 * Evicts all entity data from the given region (i.e. evicts cached data
-	 * for all of the specified c9ollection role).
+	 * for all of the specified collection role).
 	 *
 	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
 	 */
@@ -164,6 +166,7 @@ public interface Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean containsQuery(String regionName);
 
 	/**

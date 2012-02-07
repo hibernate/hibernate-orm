@@ -16,9 +16,9 @@
   <xi:include href="Data_Categorizations.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Mapping_Entities.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Mapping_Association.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/hql/HQL_JPQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/criteria/Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/native-sql/Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/query_ql/HQL_JPQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/query_criteria/Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/query_native/Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="chapters/multi_tenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

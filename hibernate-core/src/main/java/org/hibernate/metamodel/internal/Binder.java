@@ -37,72 +37,73 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.AttributeBindingContainer;
-import org.hibernate.metamodel.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.binding.Cascadeable;
-import org.hibernate.metamodel.binding.Fetchable;
-import org.hibernate.metamodel.binding.PluralAttributeElementNature;
-import org.hibernate.metamodel.binding.CollectionLaziness;
-import org.hibernate.metamodel.binding.ComponentAttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityDiscriminator;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.binding.IdGenerator;
-import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
-import org.hibernate.metamodel.binding.MetaAttribute;
-import org.hibernate.metamodel.binding.SimpleValueBinding;
-import org.hibernate.metamodel.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.binding.TypeDef;
-import org.hibernate.metamodel.domain.Component;
-import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.domain.PluralAttribute;
-import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.Identifier;
-import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.relational.Tuple;
-import org.hibernate.metamodel.relational.UniqueKey;
-import org.hibernate.metamodel.source.spi.LocalBindingContext;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.metamodel.source.internal.hbm.Helper;
-import org.hibernate.metamodel.source.spi.AttributeSource;
-import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.source.spi.ColumnSource;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
-import org.hibernate.metamodel.source.spi.ConstraintSource;
-import org.hibernate.metamodel.source.spi.DerivedValueSource;
-import org.hibernate.metamodel.source.spi.DiscriminatorSource;
-import org.hibernate.metamodel.source.spi.EntityHierarchy;
-import org.hibernate.metamodel.source.spi.EntitySource;
-import org.hibernate.metamodel.source.spi.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.source.spi.MetaAttributeSource;
-import org.hibernate.metamodel.source.spi.Orderable;
-import org.hibernate.metamodel.source.spi.PluralAttributeElementSource;
-import org.hibernate.metamodel.source.spi.PluralAttributeNature;
-import org.hibernate.metamodel.source.spi.PluralAttributeSource;
-import org.hibernate.metamodel.source.spi.RelationalValueSource;
-import org.hibernate.metamodel.source.spi.RelationalValueSourceContainer;
-import org.hibernate.metamodel.source.spi.RootEntitySource;
-import org.hibernate.metamodel.source.spi.SimpleIdentifierSource;
-import org.hibernate.metamodel.source.spi.SingularAttributeNature;
-import org.hibernate.metamodel.source.spi.SingularAttributeSource;
-import org.hibernate.metamodel.source.spi.Sortable;
-import org.hibernate.metamodel.source.spi.SubclassEntityContainer;
-import org.hibernate.metamodel.source.spi.SubclassEntitySource;
-import org.hibernate.metamodel.source.spi.TableSource;
-import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
-import org.hibernate.metamodel.source.spi.UniqueConstraintSource;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
+import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.Fetchable;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.MetaAttribute;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.CollectionLaziness;
+import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.TypeDef;
+import org.hibernate.metamodel.spi.domain.Component;
+import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.PluralAttribute;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Tuple;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.source.DerivedValueSource;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.internal.source.hbm.Helper;
+import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
+import org.hibernate.metamodel.spi.source.ConstraintSource;
+import org.hibernate.metamodel.spi.source.DiscriminatorSource;
+import org.hibernate.metamodel.spi.source.Orderable;
+import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeNature;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
+import org.hibernate.metamodel.spi.source.RootEntitySource;
+import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeNature;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.Sortable;
+import org.hibernate.metamodel.spi.source.SubclassEntityContainer;
+import org.hibernate.metamodel.spi.source.SubclassEntitySource;
+import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -373,7 +374,7 @@ public class Binder {
 				.getEntityIdentifier()
 				.setIdGenerator( generator );
 
-		final org.hibernate.metamodel.relational.Value relationalValue = idAttributeBinding.getValue();
+		final Value relationalValue = idAttributeBinding.getValue();
 
 		if ( SimpleValue.class.isInstance( relationalValue ) ) {
 			if ( !Column.class.isInstance( relationalValue ) ) {
@@ -595,7 +596,7 @@ public class Binder {
 	private void bindCollectionTable(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
-		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.source.spi.PluralAttributeElementNature.ONE_TO_MANY ) {
+		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY ) {
 			return;
 		}
 
@@ -668,7 +669,7 @@ public class Binder {
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
 		final PluralAttributeElementSource elementSource = attributeSource.getElementSource();
-		if ( elementSource.getNature() == org.hibernate.metamodel.source.spi.PluralAttributeElementNature.BASIC ) {
+		if ( elementSource.getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.BASIC ) {
 			final BasicPluralAttributeElementSource basicElementSource = (BasicPluralAttributeElementSource) elementSource;
 			final BasicPluralAttributeElementBinding basicCollectionElement = (BasicPluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding();
 			resolveTypeInformation(
@@ -726,7 +727,7 @@ public class Binder {
 		attributeBinding.setIncludedInOptimisticLocking( attributeSource.isIncludedInOptimisticLocking() );
 	}
 
-	private PluralAttributeElementNature convert(org.hibernate.metamodel.source.spi.PluralAttributeElementNature pluralAttributeElementNature) {
+	private PluralAttributeElementNature convert(org.hibernate.metamodel.spi.source.PluralAttributeElementNature pluralAttributeElementNature) {
 		return PluralAttributeElementNature.valueOf( pluralAttributeElementNature.name() );
 	}
 

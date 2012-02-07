@@ -31,7 +31,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**

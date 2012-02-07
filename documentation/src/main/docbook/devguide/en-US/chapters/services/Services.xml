@@ -1067,7 +1067,7 @@
             <para>
                 There is a 3rd method defined on <interfacename>org.hibernate.integrator.spi.Integrator</interfacename>,
                 an overloaded form of <methodname>integrate</methodname> accepting a
-                <interfacename>org.hibernate.metamodel.source.spi.MetadataImplementor</interfacename> instead of
+                <interfacename>org.hibernate.metamodel.spi.source.MetadataImplementor</interfacename> instead of
                 <classname>org.hibernate.cfg.Configuration</classname>.  This form is intended for use with the new
                 metamodel code scheduled for completion in 5.0
             </para>

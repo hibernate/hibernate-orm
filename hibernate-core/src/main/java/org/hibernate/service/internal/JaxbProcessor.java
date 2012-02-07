@@ -46,8 +46,8 @@ import org.xml.sax.SAXException;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.XsdException;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**

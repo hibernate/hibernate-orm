@@ -35,7 +35,7 @@ import java.util.HashMap;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**

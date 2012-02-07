@@ -28,8 +28,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
+import org.hibernate.metamodel.source.internal.annotations.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.xml.PseudoJpaDotNames;
 
 import static org.junit.Assert.assertEquals;
 

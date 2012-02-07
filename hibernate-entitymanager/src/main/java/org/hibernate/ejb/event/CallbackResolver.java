@@ -42,7 +42,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.binder.JpaCallbackClass;
+import org.hibernate.metamodel.source.spi.JpaCallbackClass;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**

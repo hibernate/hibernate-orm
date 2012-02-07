@@ -32,7 +32,7 @@ import org.junit.runners.model.Statement;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

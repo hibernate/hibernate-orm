@@ -41,8 +41,8 @@ import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.binder.JpaCallbackClass;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.JpaCallbackClass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 

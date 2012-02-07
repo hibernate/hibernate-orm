@@ -39,7 +39,7 @@ import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -49,15 +49,15 @@ import org.hibernate.type.TypeFactory;
  *
  * @author Gail Badner
  */
-class HibernateTypeResolver {
+public class HibernateTypeResolver {
 
 	private final MetadataImplementor metadata;
 
-	HibernateTypeResolver(MetadataImplementor metadata) {
+	public HibernateTypeResolver(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
-	void resolve() {
+	public void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			if ( entityBinding.getHierarchyDetails().getEntityDiscriminator() != null ) {
 				resolveDiscriminatorTypeInformation( entityBinding.getHierarchyDetails().getEntityDiscriminator() );

@@ -46,10 +46,10 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
+import org.hibernate.metamodel.internal.JaxbHelper;
+import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MappingNotFoundException;
-import org.hibernate.metamodel.source.internal.JaxbHelper;
-import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 

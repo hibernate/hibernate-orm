@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
+import org.hibernate.metamodel.source.internal.annotations.xml.mocker.IndexBuilder;
+
 import org.junit.Test;
 
 /**

@@ -26,7 +26,7 @@ package org.hibernate.metamodel.binding;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * Common contract for {@link EntityBinding} and {@link ComponentAttributeBinding} in so far as they are both

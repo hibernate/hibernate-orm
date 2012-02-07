@@ -35,9 +35,10 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContextImpl;
+import org.hibernate.metamodel.source.internal.annotations.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.global.FetchProfileProcessor;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
@@ -77,7 +78,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
+		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -91,7 +92,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	@Test
 	public void testFetchProfiles() {
 		Index index = JandexHelper.indexForClass( service, FooBar.class );
-		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
+		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -128,7 +129,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
+		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 	}
 
 	@FetchProfiles( {

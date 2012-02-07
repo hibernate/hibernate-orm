@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.source.internal;
 
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.source.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
 
 /**
  * Represents a "nested level" in the mapping defaults stack.

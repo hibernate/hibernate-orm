@@ -36,8 +36,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
-import org.hibernate.metamodel.source.annotations.entity.EmbeddableHierarchy;
+import org.hibernate.metamodel.source.internal.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.source.internal.annotations.entity.EmbeddableHierarchy;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;

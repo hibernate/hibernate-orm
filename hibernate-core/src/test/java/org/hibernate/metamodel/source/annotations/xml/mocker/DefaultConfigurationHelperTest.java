@@ -19,7 +19,10 @@ import org.jboss.jandex.Index;
 import org.junit.Test;
 
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.xml.mocker.DefaultConfigurationHelper;
+import org.hibernate.metamodel.source.internal.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.source.internal.annotations.xml.mocker.SchemaAware;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

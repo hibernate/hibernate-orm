@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple;
+
 import java.lang.reflect.Constructor;
 
 import org.hibernate.EntityMode;
@@ -38,12 +38,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
+import org.hibernate.metamodel.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
@@ -207,7 +207,7 @@ public class PropertyFactory {
 		boolean lazy = lazyAvailable && property.isLazy();
 
 		final CascadeStyle cascadeStyle = property.isAssociation()
-				? ( (AssociationAttributeBinding) property ).getCascadeStyle()
+				? ( (SingularAssociationAttributeBinding) property ).getCascadeStyle()
 				: CascadeStyle.NONE;
 
 		return new VersionProperty(
@@ -291,10 +291,10 @@ public class PropertyFactory {
 		if ( property.getAttribute().isSingular() ) {
 			final SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) property;
 			final CascadeStyle cascadeStyle = singularAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
+					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
 					: CascadeStyle.NONE;
 			final FetchMode fetchMode = singularAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
+					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
 					: FetchMode.DEFAULT;
 
 			return new StandardProperty(

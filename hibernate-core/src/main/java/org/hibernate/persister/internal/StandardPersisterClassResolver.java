@@ -126,7 +126,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	@Override
 	public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
-		return metadata.getPluralAttributeElementBinding().getCollectionElementNature() == PluralAttributeElementNature.ONE_TO_MANY
+		return metadata.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.ONE_TO_MANY
 				? oneToManyPersister()
 				: basicCollectionPersister();
 	}

@@ -26,19 +26,19 @@ package org.hibernate.metamodel.source.internal;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SingularAssociationAttributeBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * @author Gail Badner
  */
-class AssociationResolver {
+public class AssociationResolver {
 	private final MetadataImplementor metadata;
 
-	AssociationResolver(MetadataImplementor metadata) {
+	public AssociationResolver(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
-	void resolve() {
+	public void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			for ( SingularAssociationAttributeBinding attributeBinding : entityBinding.getEntityReferencingAttributeBindings() ) {
 				resolve( attributeBinding );

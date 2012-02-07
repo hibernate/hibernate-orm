@@ -52,13 +52,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 
 import org.junit.After;

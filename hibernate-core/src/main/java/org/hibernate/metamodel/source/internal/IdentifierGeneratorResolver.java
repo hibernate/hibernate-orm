@@ -31,7 +31,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.config.spi.ConfigurationService;
 
 /**
@@ -41,14 +41,14 @@ public class IdentifierGeneratorResolver {
 
 	private final MetadataImplementor metadata;
 
-	IdentifierGeneratorResolver(MetadataImplementor metadata) {
+	public IdentifierGeneratorResolver(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
 	// IdentifierGeneratorResolver.resolve() must execute after AttributeTypeResolver.resolve()
 	// to ensure that identifier type is resolved.
 	@SuppressWarnings( {"unchecked"} )
-	void resolve() {
+	public void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			if ( entityBinding.isRoot() ) {
 				Properties properties = new Properties( );

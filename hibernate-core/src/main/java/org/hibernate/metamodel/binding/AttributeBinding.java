@@ -26,7 +26,7 @@ package org.hibernate.metamodel.binding;
 import java.util.Set;
 
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * The basic contract for binding a {@link #getAttribute() attribute} from the domain model to the relational model.

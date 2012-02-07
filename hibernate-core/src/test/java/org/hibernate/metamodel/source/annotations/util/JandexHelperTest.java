@@ -43,9 +43,9 @@ import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;

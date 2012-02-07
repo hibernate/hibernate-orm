@@ -34,7 +34,7 @@ import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * TODO : javadoc

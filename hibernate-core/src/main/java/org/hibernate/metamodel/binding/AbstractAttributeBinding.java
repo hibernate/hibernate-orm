@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * Basic support for {@link AttributeBinding} implementors

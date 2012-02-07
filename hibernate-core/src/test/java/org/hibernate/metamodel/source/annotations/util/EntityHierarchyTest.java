@@ -36,9 +36,9 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.binder.EntityHierarchy;
-import org.hibernate.metamodel.source.binder.RootEntitySource;
-import org.hibernate.metamodel.source.binder.SubclassEntitySource;
+import org.hibernate.metamodel.source.spi.EntityHierarchy;
+import org.hibernate.metamodel.source.spi.RootEntitySource;
+import org.hibernate.metamodel.source.spi.SubclassEntitySource;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

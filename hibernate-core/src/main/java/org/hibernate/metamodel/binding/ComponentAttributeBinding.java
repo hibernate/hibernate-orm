@@ -32,7 +32,7 @@ import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Steve Ebersole

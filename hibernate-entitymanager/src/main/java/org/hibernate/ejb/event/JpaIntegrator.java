@@ -37,7 +37,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.secure.internal.JACCPreDeleteEventListener;
 import org.hibernate.secure.internal.JACCPreInsertEventListener;
 import org.hibernate.secure.internal.JACCPreLoadEventListener;
@@ -168,7 +168,7 @@ public class JpaIntegrator implements Integrator {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.source.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
+	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.source.spi.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
 	 */
 	@Override
 	public void integrate( MetadataImplementor metadata,

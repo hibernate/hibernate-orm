@@ -25,6 +25,15 @@
             with different database schema definitions and JDBC setups.
         </para>
 
+        <note>
+            <para>
+                Each approach has pros and cons as well as specific techniques and considerations.  Such
+                topics are beyond the scope of this documentation.  Many resources exist which delve into these
+                other topics.  One example is <ulink url=" http://msdn.microsoft.com/en-us/library/aa479086.aspx"/>
+                which does a great job of covering these topics.
+            </para>
+        </note>
+
         <section>
             <title>Separate database</title>
 

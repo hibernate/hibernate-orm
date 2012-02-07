@@ -34,19 +34,19 @@ import org.hibernate.metamodel.MetadataSources;
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {
-		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
 	}
 
 	public void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
-		sources.addResource( "org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleVersionedEntity.hbm.xml" );
 	}
 
 	public void addSourcesForManyToOne(MetadataSources sources) {
-		sources.addResource( "org/hibernate/metamodel/binding/ManyToOneEntity.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/ManyToOneEntity.hbm.xml" );
 	}
 
 	public void addSourcesForComponentBinding(MetadataSources sources) {
-		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntityWithSimpleComponent.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntityWithSimpleComponent.hbm.xml" );
 	}
 
 	@Test

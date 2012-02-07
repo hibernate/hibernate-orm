@@ -67,7 +67,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 	private void doTest(MetadataSourceProcessingOrder processingOrder) {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
 //		sources.addAnnotatedClass( EntityWithBasicCollections.class );
-		sources.addResource( "org/hibernate/metamodel/binding/EntityWithBasicCollections.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithBasicCollections.hbm.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
 
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithBasicCollections.class.getName() );

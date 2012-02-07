@@ -32,9 +32,11 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -42,10 +44,9 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Strong Liu
  */
 public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
-	private final MappedAttribute mappedAttribute;
+	private final BasicAttribute mappedAttribute;
 	private final boolean isMapKey;
-
-	public TemporalTypeResolver(MappedAttribute mappedAttribute) {
+	public TemporalTypeResolver(BasicAttribute mappedAttribute) {
 		if ( mappedAttribute == null ) {
 			throw new AssertionFailure( "MappedAttribute is null" );
 		}
@@ -57,12 +58,16 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 	public String resolveHibernateTypeName(AnnotationInstance temporalAnnotation) {
 
 		if ( isTemporalType( mappedAttribute.getAttributeType() ) ) {
+			if ( mappedAttribute.isVersioned() && mappedAttribute.getVersionSourceType() != null ) {
+				return mappedAttribute.getVersionSourceType().typeName();
+			}
 			if ( temporalAnnotation == null ) {
 				//SPEC 11.1.47 The Temporal annotation must be specified for persistent fields or properties of type java.util.Date and java.util.Calendar.
+				//todo actually the legacy mapping doesn't require this
 				throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is a Temporal type, but no @Temporal annotation found." );
 			}
-			TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
-			boolean isDate = Date.class.isAssignableFrom( mappedAttribute.getAttributeType() );
+			final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
+			final boolean isDate = Date.class.isAssignableFrom( mappedAttribute.getAttributeType() );
 			String type;
 			switch ( temporalType ) {
 				case DATE:

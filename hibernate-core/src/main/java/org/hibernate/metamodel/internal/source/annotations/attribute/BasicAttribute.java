@@ -36,6 +36,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -69,6 +70,9 @@ public class BasicAttribute extends MappedAttribute {
 	 * Is this a versioned property (annotated w/ {@code @Version}.
 	 */
 	private final boolean isVersioned;
+
+
+	private final SourceType versionSourceType;
 
 	/**
 	 * Is this property lazy loaded (see {@link javax.persistence.Basic}).
@@ -109,6 +113,22 @@ public class BasicAttribute extends MappedAttribute {
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
+
+		if ( isVersioned ) {
+			AnnotationInstance sourceAnnotation = JandexHelper.getSingleAnnotation(
+					annotations,
+					HibernateDotNames.SOURCE
+			);
+			if ( sourceAnnotation != null ) {
+				versionSourceType = JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class );
+			}
+			else {
+				versionSourceType = null;
+			}
+		}
+		else {
+			versionSourceType = null;
+		}
 
 		if ( isId() ) {
 			// an id must be unique and cannot be nullable
@@ -169,6 +189,11 @@ public class BasicAttribute extends MappedAttribute {
 	public IdGenerator getIdGenerator() {
 		return idGenerator;
 	}
+
+	public SourceType getVersionSourceType() {
+		return versionSourceType;
+	}
+
 
 	@Override
 	public String toString() {

@@ -100,7 +100,7 @@ public final class CollectionKey implements Serializable {
 	}
 
 	public String toString() {
-		return "CollectionKey" +
+		return "PluralAttributeKeyBinding" +
 		       MessageHelper.collectionInfoString( factory.getCollectionPersister(role), key, factory );
 	}
 
@@ -124,7 +124,7 @@ public final class CollectionKey implements Serializable {
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param session The session being deserialized.
-	 * @return The deserialized CollectionKey
+	 * @return The deserialized PluralAttributeKeyBinding
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */

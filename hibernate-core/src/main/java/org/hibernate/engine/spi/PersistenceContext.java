@@ -408,7 +408,7 @@ public interface PersistenceContext {
 			PersistentCollection collection, Serializable id) throws HibernateException;
 
 	/**
-	 * Get the collection instance associated with the <tt>CollectionKey</tt>
+	 * Get the collection instance associated with the <tt>PluralAttributeKeyBinding</tt>
 	 */
 	public PersistentCollection getCollection(CollectionKey collectionKey);
 

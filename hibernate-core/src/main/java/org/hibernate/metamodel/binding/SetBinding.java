@@ -36,8 +36,8 @@ public class SetBinding extends AbstractPluralAttributeBinding {
 	protected SetBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			CollectionElementNature collectionElementNature) {
-		super( container, attribute, collectionElementNature );
+			PluralAttributeElementNature pluralAttributeElementNature) {
+		super( container, attribute, pluralAttributeElementNature );
 	}
 
 	public Comparator getComparator() {

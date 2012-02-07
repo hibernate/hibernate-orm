@@ -24,21 +24,18 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * Describes plural attributes of {@link PluralAttributeElementNature#COMPOSITE} elements
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class BasicCollectionElement extends AbstractCollectionElement {
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-
-	public BasicCollectionElement(AbstractPluralAttributeBinding binding) {
+public class CompositePluralAttributeElementBinding extends AbstractPluralAttributeElementBinding {
+	public CompositePluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
 	}
 
-	public CollectionElementNature getCollectionElementNature() {
-		return CollectionElementNature.BASIC;
-	}
-
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
+	@Override
+	public PluralAttributeElementNature getPluralAttributeElementNature() {
+		return PluralAttributeElementNature.COMPOSITE;
 	}
 }

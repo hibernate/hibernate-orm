@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,18 +23,14 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.relational.Value;
+
 /**
+ * De
  * @author Steve Ebersole
- * @author Gail Badner
  */
-public class OneToManyCollectionElement extends AbstractCollectionElement {
-
-	OneToManyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding );
-	}
-
-	@Override
-	public CollectionElementNature getCollectionElementNature() {
-		return CollectionElementNature.ONE_TO_MANY;
-	}
+public interface PluralAttributeIndexBinding {
+	public PluralAttributeBinding getPluralAttributeBinding();
+	public Value getIndexRelationalValue();
+	public HibernateTypeDescriptor getHibernateTypeDescriptor();
 }

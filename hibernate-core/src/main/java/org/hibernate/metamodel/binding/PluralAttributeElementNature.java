@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,15 +23,45 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.domain.PluralAttribute;
-
 /**
- * TODO : javadoc
+ * Describes the nature of plural attribute elements in terms of relational implications.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BagBinding extends AbstractPluralAttributeBinding {
-	protected BagBinding(AttributeBindingContainer container, PluralAttribute attribute, PluralAttributeElementNature nature) {
-		super( container, attribute, nature );
+public enum PluralAttributeElementNature {
+	/**
+	 * The collection elements are basic, simple values.
+	 */
+	BASIC( false ),
+	/**
+	 * The collection elements are compositions.
+	 */
+	COMPOSITE( false ),
+	/**
+	 * The collection elements represent entity's in a one-to-many association.
+	 */
+	ONE_TO_MANY,
+	/**
+	 * The collection elements represent entity's in a many-to-many association.
+	 */
+	MANY_TO_MANY,
+	/**
+	 * The collection elements represent entity's in a multi-valued ANY mapping.
+	 */
+	MANY_TO_ANY;
+
+	private final boolean isAssociation;
+
+	private PluralAttributeElementNature() {
+		this( true );
+	}
+
+	private PluralAttributeElementNature(boolean association) {
+		this.isAssociation = association;
+	}
+
+	public boolean isAssociation() {
+		return isAssociation;
 	}
 }

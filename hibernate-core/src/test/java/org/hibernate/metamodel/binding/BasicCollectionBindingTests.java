@@ -77,14 +77,14 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertNotNull( bagBinding );
 		assertSame( bagBinding, entityBinding.locateAttributeBinding( "theBag" ) );
 		assertNotNull( bagBinding.getCollectionTable() );
-		assertEquals( CollectionElementNature.BASIC, bagBinding.getCollectionElement().getCollectionElementNature() );
-		assertEquals( String.class.getName(), ( (BasicCollectionElement) bagBinding.getCollectionElement() ).getHibernateTypeDescriptor().getJavaTypeName() );
+		assertEquals( PluralAttributeElementNature.BASIC, bagBinding.getPluralAttributeElementBinding().getCollectionElementNature() );
+		assertEquals( String.class.getName(), ( (BasicPluralAttributeElementBinding) bagBinding.getPluralAttributeElementBinding() ).getHibernateTypeDescriptor().getJavaTypeName() );
 
 		PluralAttributeBinding setBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" );
 		assertNotNull( setBinding );
 		assertSame( setBinding, entityBinding.locateAttributeBinding( "theSet" ) );
 		assertNotNull( setBinding.getCollectionTable() );
-		assertEquals( CollectionElementNature.BASIC, setBinding.getCollectionElement().getCollectionElementNature() );
-		assertEquals( String.class.getName(), ( (BasicCollectionElement) setBinding.getCollectionElement() ).getHibernateTypeDescriptor().getJavaTypeName() );
+		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getCollectionElementNature() );
+		assertEquals( String.class.getName(), ( (BasicPluralAttributeElementBinding) setBinding.getPluralAttributeElementBinding() ).getHibernateTypeDescriptor().getJavaTypeName() );
 	}
 }

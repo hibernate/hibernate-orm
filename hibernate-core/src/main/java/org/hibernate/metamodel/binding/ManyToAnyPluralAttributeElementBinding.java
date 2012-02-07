@@ -24,17 +24,18 @@
 package org.hibernate.metamodel.binding;
 
 /**
- * Describes the nature of persistent collection elements.
+ * Describes plural attributes of {@link PluralAttributeElementNature#MANY_TO_ANY} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
- *
- * @todo Merge with {@link org.hibernate.metamodel.source.binder.PluralAttributeNature} ?  package separation kept me from doing that initially
  */
-public enum CollectionElementNature {
-	BASIC,
-	COMPOSITE,
-	ONE_TO_MANY,
-	MANY_TO_MANY,
-	MANY_TO_ANY
+public class ManyToAnyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding {
+	ManyToAnyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
+		super( binding );
+	}
+
+	@Override
+	public PluralAttributeElementNature getPluralAttributeElementNature() {
+		return PluralAttributeElementNature.MANY_TO_ANY;
+	}
 }

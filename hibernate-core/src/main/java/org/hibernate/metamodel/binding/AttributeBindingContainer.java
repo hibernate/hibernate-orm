@@ -100,7 +100,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature);
+	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature);
 
 	/**
 	 * Factory method for bag attribute bindings.
@@ -110,7 +110,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, CollectionElementNature nature);
+	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature);
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.

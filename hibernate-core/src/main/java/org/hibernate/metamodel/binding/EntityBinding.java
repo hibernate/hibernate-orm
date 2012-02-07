@@ -517,7 +517,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
-	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding( this, attribute, nature );
 		registerAttributeBinding( attribute.getName(), binding );
@@ -525,7 +525,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
-	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding( this, attribute, nature );
 		registerAttributeBinding( attribute.getName(), binding );

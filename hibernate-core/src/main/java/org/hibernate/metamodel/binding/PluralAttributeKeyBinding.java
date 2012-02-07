@@ -28,26 +28,61 @@ import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.TableSpecification;
 
 /**
- * TODO : javadoc
+ * Describes the binding information pertaining to the plural attribute foreign key.
  *
  * @author Steve Ebersole
  */
-public class CollectionKey {
+public class PluralAttributeKeyBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 
 	private ForeignKey foreignKey;
 	private boolean inverse;
+	// may need notion of "boolean updatable"
+
+	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private HibernateTypeDescriptor hibernateTypeDescriptor;
+	// in which case add this...
+	// SingularAttributeBinding referencedAttributeBinding;
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
 //	private BasicAttributeBinding otherSide;
 
-	public CollectionKey(AbstractPluralAttributeBinding pluralAttributeBinding) {
+
+	public PluralAttributeKeyBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
 	}
 
+	/**
+	 * Identifies the plural attribute binding whose foreign key this class is describing.
+	 *
+	 * @return The plural attribute whose foreign key is being described
+	 */
 	public AbstractPluralAttributeBinding getPluralAttributeBinding() {
 		return pluralAttributeBinding;
+	}
+
+	/**
+	 * The foreign key that defines the scope of this relationship.
+	 *
+	 * @return The foreign key being bound to.
+	 */
+	public ForeignKey getForeignKey() {
+		return foreignKey;
+	}
+
+	/**
+	 * Is the plural attribute considered inverse?
+	 * <p/>
+	 * NOTE: The "inverse-ness" of a plural attribute logically applies to it key.
+	 *
+	 * @return {@code true} indicates the plural attribute is inverse; {@code false} indicates is not.
+	 */
+	public boolean isInverse() {
+		return inverse;
+	}
+
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 
 	public void prepareForeignKey(String foreignKeyName, String targetTableName) {
@@ -68,7 +103,4 @@ public class CollectionKey {
 		foreignKey = collectionTable.createForeignKey( targetTable, foreignKeyName );
 	}
 
-	public ForeignKey getForeignKey() {
-		return foreignKey;
-	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,29 +23,16 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.relational.Value;
-
 /**
- * Basic contract describing the commonality between the various types of collection element mappings.
+ * Specialization of plural attribute binding for indexed collections (maps and lists).
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionElement {
-	private final AbstractPluralAttributeBinding collectionBinding;
-
-	private Value elementValue;
-
-	AbstractCollectionElement(AbstractPluralAttributeBinding collectionBinding) {
-		this.collectionBinding = collectionBinding;
-	}
-
-	public abstract CollectionElementNature getCollectionElementNature();
-
-	public AbstractPluralAttributeBinding getCollectionBinding() {
-		return collectionBinding;
-	}
-
-	public Value getElementValue() {
-		return elementValue;
-	}
+public interface IndexedPluralAttributeBinding extends PluralAttributeBinding {
+	/**
+	 * Retrieve the binding descriptor pertaining to the plural attribute's index value.
+	 *
+	 * @return The index binding descriptor
+	 */
+	public PluralAttributeIndexBinding getPluralAttributeIndexBinding();
 }

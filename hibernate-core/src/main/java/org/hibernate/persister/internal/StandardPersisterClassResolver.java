@@ -31,7 +31,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.metamodel.binding.CollectionElementNature;
+import org.hibernate.metamodel.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.BasicCollectionPersister;
@@ -126,7 +126,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	@Override
 	public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
-		return metadata.getCollectionElement().getCollectionElementNature() == CollectionElementNature.ONE_TO_MANY
+		return metadata.getPluralAttributeElementBinding().getCollectionElementNature() == PluralAttributeElementNature.ONE_TO_MANY
 				? oneToManyPersister()
 				: basicCollectionPersister();
 	}

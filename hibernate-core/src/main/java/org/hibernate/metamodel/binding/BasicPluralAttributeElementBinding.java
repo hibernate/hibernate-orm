@@ -23,44 +23,20 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
-
 /**
- * Contract describing a binding for attributes which model associations.
+ * Describes plural attributes of {@link PluralAttributeElementNature#BASIC} elements
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface AssociationAttributeBinding extends AttributeBinding {
-	/**
-	 * Obtain the cascade style in effect for this association.
-	 *
-	 * @return The (potentially aggregated) cascade style.
-	 */
-	public CascadeStyle getCascadeStyle();
+public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeElementBinding {
 
-	/**
-	 * Set the cascade styles in effect for this association.
-	 *
-	 * @param cascadeStyles The cascade styles.
-	 */
-	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
+	public BasicPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
+		super( binding );
+	}
 
-	public FetchTiming getFetchTiming();
-	public void setFetchTiming(FetchTiming fetchTiming);
-
-	public FetchStyle getFetchStyle();
-	public void setFetchStyle(FetchStyle fetchStyle);
-
-
-	/**
-	 * Temporary.  Needed for integration with legacy org.hibernate.mapping configuration of persisters.
-	 *
-	 * @deprecated
-	 */
-	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
-	public FetchMode getFetchMode();
+	@Override
+	public PluralAttributeElementNature getPluralAttributeElementNature() {
+		return PluralAttributeElementNature.BASIC;
+	}
 }

@@ -30,17 +30,39 @@ import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
+ * Describes the binding of a plural attribute.
+ *
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends  AssociationAttributeBinding {
-	// todo : really it is the element (and/or index) that can be associative not the collection itself...
-
+public interface PluralAttributeBinding extends AttributeBinding {
+	/**
+	 * Retrieve the plural attribute being bound.
+	 *
+	 * @return The plural attribute descriptor
+	 */
 	@Override
 	public PluralAttribute getAttribute();
 
-	public CollectionKey getCollectionKey();
+	/**
+	 * Retrieve the binding information pertaining to the collection (foreign) key.
+	 *
+	 * @return The key binding descriptor
+	 */
+	public PluralAttributeKeyBinding getPluralAttributeKeyBinding();
 
-	public AbstractCollectionElement getCollectionElement();
+	/**
+	 * Retrieve the binding information pertaining to the collection elements.
+	 *
+	 * @return The element binding descriptor
+	 */
+	public PluralAttributeElementBinding getPluralAttributeElementBinding();
+
+
+
+
+
+
+
 
 	public TableSpecification getCollectionTable();
 
@@ -59,8 +81,6 @@ public interface PluralAttributeBinding extends  AssociationAttributeBinding {
 	public CustomSQL getCustomSqlDelete();
 
 	public CustomSQL getCustomSqlDeleteAll();
-
-	public boolean isOrphanDelete();
 
 	String getWhere();
 

@@ -46,7 +46,7 @@ public interface SessionStatistics {
 	 */
 	public Set getEntityKeys();
 	/**
-	 * Get the set of all <tt>CollectionKey</tt>s
+	 * Get the set of all <tt>PluralAttributeKeyBinding</tt>s
 	 * @see org.hibernate.engine.spi.CollectionKey
 	 */
 	public Set getCollectionKeys();

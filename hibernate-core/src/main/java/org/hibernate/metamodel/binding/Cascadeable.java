@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,17 +23,13 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.engine.spi.CascadeStyle;
+
 /**
  * @author Steve Ebersole
- * @author Gail Badner
  */
-public class ManyToAnyCollectionElement extends AbstractCollectionElement {
-	ManyToAnyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding );
-	}
+public interface Cascadeable {
+	public CascadeStyle getCascadeStyle();
 
-	@Override
-	public CollectionElementNature getCollectionElementNature() {
-		return CollectionElementNature.MANY_TO_ANY;
-	}
+	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
 }

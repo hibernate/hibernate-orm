@@ -23,15 +23,34 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.relational.Value;
 
 /**
- * TODO : javadoc
+ * Basic contract describing the commonality between the various types of collection element mappings.
  *
  * @author Steve Ebersole
  */
-public class BagBinding extends AbstractPluralAttributeBinding {
-	protected BagBinding(AttributeBindingContainer container, PluralAttribute attribute, PluralAttributeElementNature nature) {
-		super( container, attribute, nature );
+public abstract class AbstractPluralAttributeElementBinding implements PluralAttributeElementBinding {
+	private final AbstractPluralAttributeBinding pluralAttributeBinding;
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
+	private Value relationalValue;
+
+	AbstractPluralAttributeElementBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
+		this.pluralAttributeBinding = pluralAttributeBinding;
+	}
+
+	@Override
+	public AbstractPluralAttributeBinding getPluralAttributeBinding() {
+		return pluralAttributeBinding;
+	}
+
+	@Override
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
+	}
+
+	@Override
+	public Value getRelationalValue() {
+		return relationalValue;
 	}
 }

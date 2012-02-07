@@ -115,7 +115,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// Identity map of CollectionEntry instances, by the collection wrapper
 	private IdentityMap<PersistentCollection, CollectionEntry> collectionEntries;
 
-	// Collection wrappers, by the CollectionKey
+	// Collection wrappers, by the PluralAttributeKeyBinding
 	private Map<CollectionKey, PersistentCollection> collectionsByKey;
 
 	// Set of EntityKeys of deleted objects
@@ -905,7 +905,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Get the collection instance associated with the <tt>CollectionKey</tt>
+	 * Get the collection instance associated with the <tt>PluralAttributeKeyBinding</tt>
 	 */
 	@Override
 	public PersistentCollection getCollection(CollectionKey collectionKey) {

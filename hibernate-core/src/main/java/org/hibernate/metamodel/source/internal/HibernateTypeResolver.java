@@ -26,11 +26,11 @@ package org.hibernate.metamodel.source.internal;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.binding.AbstractCollectionElement;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeElementBinding;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.BasicCollectionElement;
-import org.hibernate.metamodel.binding.CollectionElementNature;
+import org.hibernate.metamodel.binding.BasicPluralAttributeElementBinding;
+import org.hibernate.metamodel.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
@@ -160,8 +160,8 @@ class HibernateTypeResolver {
 									getTypeParameters( attributeBinding.getHibernateTypeDescriptor() ),
 									attributeBinding.getAttribute().getName(),
 									attributeBinding.getReferencedPropertyName(),
-									attributeBinding.getCollectionElement().getCollectionElementNature() ==
-											CollectionElementNature.COMPOSITE
+									attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() ==
+											PluralAttributeElementNature.COMPOSITE
 							);
 		}
 		else {
@@ -173,7 +173,7 @@ class HibernateTypeResolver {
 					null,
 					resolvedType );
 		}
-		resolveCollectionElementTypeInformation( attributeBinding.getCollectionElement() );
+		resolveCollectionElementTypeInformation( attributeBinding.getPluralAttributeElementBinding() );
 	}
 
 	private Type determineDefaultCollectionInformation(AbstractPluralAttributeBinding attributeBinding) {
@@ -183,15 +183,15 @@ class HibernateTypeResolver {
 				return typeFactory.set(
 						attributeBinding.getAttribute().getName(),
 						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getCollectionElement().getCollectionElementNature() == CollectionElementNature.COMPOSITE
+						attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
 				);
 			}
 			case BAG: {
 				return typeFactory.bag(
 						attributeBinding.getAttribute().getName(),
 						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getCollectionElement()
-								.getCollectionElementNature() == CollectionElementNature.COMPOSITE
+						attributeBinding.getPluralAttributeElementBinding()
+								.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
 				);
 			}
 			default: {
@@ -202,30 +202,33 @@ class HibernateTypeResolver {
 		}
 	}
 
-	private void resolveCollectionElementTypeInformation(AbstractCollectionElement collectionElement) {
-		switch ( collectionElement.getCollectionElementNature() ) {
+	private void resolveCollectionElementTypeInformation(AbstractPluralAttributeElementBinding pluralAttributeElementBinding) {
+		switch ( pluralAttributeElementBinding.getPluralAttributeElementNature() ) {
 			case BASIC: {
-				resolveBasicCollectionElement( BasicCollectionElement.class.cast( collectionElement ) );
+				resolveBasicCollectionElement( BasicPluralAttributeElementBinding.class.cast(
+						pluralAttributeElementBinding
+				) );
 				break;
 			}
 			case COMPOSITE:
 			case ONE_TO_MANY:
 			case MANY_TO_MANY:
 			case MANY_TO_ANY: {
-				throw new UnsupportedOperationException( "Collection element nature not supported yet: " + collectionElement.getCollectionElementNature() );
+				throw new UnsupportedOperationException( "Collection element nature not supported yet: " + pluralAttributeElementBinding
+						.getPluralAttributeElementNature() );
 			}
 			default: {
-				throw new AssertionFailure( "Unknown collection element nature : " + collectionElement.getCollectionElementNature() );
+				throw new AssertionFailure( "Unknown collection element nature : " + pluralAttributeElementBinding.getPluralAttributeElementNature() );
 			}
 		}
 	}
 
-	private void resolveBasicCollectionElement(BasicCollectionElement basicCollectionElement) {
+	private void resolveBasicCollectionElement(BasicPluralAttributeElementBinding basicCollectionElement) {
 		Type resolvedHibernateType = determineSingularTypeFromDescriptor( basicCollectionElement.getHibernateTypeDescriptor() );
 		if ( resolvedHibernateType != null ) {
 			pushHibernateTypeInformationDownIfNeeded(
 					basicCollectionElement.getHibernateTypeDescriptor(),
-					basicCollectionElement.getElementValue(),
+					basicCollectionElement.getRelationalValue(),
 					resolvedHibernateType
 			);
 		}

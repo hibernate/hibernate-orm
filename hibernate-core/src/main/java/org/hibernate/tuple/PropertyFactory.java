@@ -42,6 +42,7 @@ import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
@@ -316,10 +317,10 @@ public class PropertyFactory {
 		else {
 			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
 			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
-					? pluralAttributeBinding.getCascadeStyle()
+					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCascadeStyle()
 					: CascadeStyle.NONE;
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
-					? pluralAttributeBinding.getFetchMode()
+					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getFetchMode()
 					: FetchMode.DEFAULT;
 
 			return new StandardProperty(

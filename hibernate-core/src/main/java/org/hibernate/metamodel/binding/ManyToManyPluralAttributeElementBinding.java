@@ -28,44 +28,24 @@ import java.util.HashMap;
 import org.dom4j.Element;
 
 /**
+ * Describes plural attributes of {@link PluralAttributeElementNature#MANY_TO_MANY} elements
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class ManyToManyCollectionElement extends AbstractCollectionElement {
-
+public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding {
 	private final java.util.Map manyToManyFilters = new HashMap();
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 
 
-	ManyToManyCollectionElement(AbstractPluralAttributeBinding binding) {
+	ManyToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
 	}
 
 	@Override
-	public CollectionElementNature getCollectionElementNature() {
-		return CollectionElementNature.MANY_TO_MANY;
-	}
-
-	public void fromHbmXml(Element node){
-	/*
-    <!ELEMENT many-to-many (meta*,(column|formula)*,filter*)>
-   	<!ATTLIST many-to-many class CDATA #IMPLIED>
-	<!ATTLIST many-to-many node CDATA #IMPLIED>
-	<!ATTLIST many-to-many embed-xml (true|false) "true">
-	<!ATTLIST many-to-many entity-name CDATA #IMPLIED>
-	<!ATTLIST many-to-many column CDATA #IMPLIED>
-	<!ATTLIST many-to-many formula CDATA #IMPLIED>
-	<!ATTLIST many-to-many not-found (exception|ignore) "exception">
-	<!ATTLIST many-to-many outer-join (true|false|auto) #IMPLIED>
-	<!ATTLIST many-to-many fetch (join|select) #IMPLIED>
-	<!ATTLIST many-to-many lazy (false|proxy) #IMPLIED>
-	<!ATTLIST many-to-many foreign-key CDATA #IMPLIED>
-	<!ATTLIST many-to-many unique (true|false) "false">
-	<!ATTLIST many-to-many where CDATA #IMPLIED>
-	<!ATTLIST many-to-many order-by CDATA #IMPLIED>
-	<!ATTLIST many-to-many property-ref CDATA #IMPLIED>
-    */
+	public PluralAttributeElementNature getPluralAttributeElementNature() {
+		return PluralAttributeElementNature.MANY_TO_MANY;
 	}
 
 	public String getManyToManyWhere() {

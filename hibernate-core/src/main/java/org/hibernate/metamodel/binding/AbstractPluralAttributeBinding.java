@@ -23,17 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
@@ -45,17 +39,12 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBinding implements PluralAttributeBinding {
-	private final CollectionKey collectionKey;
-	private final AbstractCollectionElement collectionElement;
+	private final PluralAttributeKeyBinding pluralAttributeKeyBinding;
+	private final AbstractPluralAttributeElementBinding pluralAttributeElementBinding;
 
 	private Table collectionTable;
 
-	private FetchTiming fetchTiming;
-	private FetchStyle fetchStyle;
 	private int batchSize = -1;
-
-	private CascadeStyle cascadeStyle;
-	private boolean orphanDelete;
 
 	private Caching caching;
 
@@ -84,31 +73,31 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			CollectionElementNature collectionElementNature) {
+			PluralAttributeElementNature pluralAttributeElementNature) {
 		super( container, attribute );
-		this.collectionKey = new CollectionKey( this );
-		this.collectionElement = interpretNature( collectionElementNature );
+		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this );
+		this.pluralAttributeElementBinding = interpretNature( pluralAttributeElementNature );
 	}
 
-	private AbstractCollectionElement interpretNature(CollectionElementNature collectionElementNature) {
-		switch ( collectionElementNature ) {
+	private AbstractPluralAttributeElementBinding interpretNature(PluralAttributeElementNature pluralAttributeElementNature) {
+		switch ( pluralAttributeElementNature ) {
 			case BASIC: {
-				return new BasicCollectionElement( this );
+				return new BasicPluralAttributeElementBinding( this );
 			}
 			case COMPOSITE: {
-				return new CompositeCollectionElement( this );
+				return new CompositePluralAttributeElementBinding( this );
 			}
 			case ONE_TO_MANY: {
-				return new OneToManyCollectionElement( this );
+				return new OneToManyPluralAttributeElementBinding( this );
 			}
 			case MANY_TO_MANY: {
-				return new ManyToManyCollectionElement( this );
+				return new ManyToManyPluralAttributeElementBinding( this );
 			}
 			case MANY_TO_ANY: {
-				return new ManyToAnyCollectionElement( this );
+				return new ManyToAnyPluralAttributeElementBinding( this );
 			}
 			default: {
-				throw new AssertionFailure( "Unknown collection element nature : " + collectionElementNature );
+				throw new AssertionFailure( "Unknown collection element nature : " + pluralAttributeElementNature );
 			}
 		}
 	}
@@ -117,8 +106,8 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 //		super.initialize( state );
 //		fetchMode = state.getFetchMode();
 //		extraLazy = state.isExtraLazy();
-//		collectionElement.setNodeName( state.getElementNodeName() );
-//		collectionElement.setTypeName( state.getElementTypeName() );
+//		pluralAttributeElementBinding.setNodeName( state.getElementNodeName() );
+//		pluralAttributeElementBinding.setTypeName( state.getElementTypeName() );
 //		inverse = state.isInverse();
 //		mutable = state.isMutable();
 //		subselectLoadable = state.isSubselectLoadable();
@@ -154,9 +143,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	@Override
 	public boolean isAssociation() {
-		return collectionElement.getCollectionElementNature() == CollectionElementNature.MANY_TO_ANY
-				|| collectionElement.getCollectionElementNature() == CollectionElementNature.MANY_TO_MANY
-				|| collectionElement.getCollectionElementNature() == CollectionElementNature.ONE_TO_MANY;
+		return pluralAttributeElementBinding.getPluralAttributeElementNature().isAssociation();
 	}
 
 	@Override
@@ -169,79 +156,13 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 
 	@Override
-	public CollectionKey getCollectionKey() {
-		return collectionKey;
+	public PluralAttributeKeyBinding getPluralAttributeKeyBinding() {
+		return pluralAttributeKeyBinding;
 	}
 
 	@Override
-	public AbstractCollectionElement getCollectionElement() {
-		return collectionElement;
-	}
-
-	@Override
-	public CascadeStyle getCascadeStyle() {
-		return cascadeStyle;
-	}
-
-	@Override
-	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles) {
-		List<CascadeStyle> cascadeStyleList = new ArrayList<CascadeStyle>();
-		for ( CascadeStyle style : cascadeStyles ) {
-			if ( style != CascadeStyle.NONE ) {
-				cascadeStyleList.add( style );
-			}
-			if ( style == CascadeStyle.DELETE_ORPHAN ||
-					style == CascadeStyle.ALL_DELETE_ORPHAN ) {
-				orphanDelete = true;
-			}
-		}
-
-		if ( cascadeStyleList.isEmpty() ) {
-			cascadeStyle = CascadeStyle.NONE;
-		}
-		else if ( cascadeStyleList.size() == 1 ) {
-			cascadeStyle = cascadeStyleList.get( 0 );
-		}
-		else {
-			cascadeStyle = new CascadeStyle.MultipleCascadeStyle(
-					cascadeStyleList.toArray( new CascadeStyle[ cascadeStyleList.size() ] )
-			);
-		}
-	}
-
-	@Override
-	public boolean isOrphanDelete() {
-		return orphanDelete;
-	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		if ( getFetchStyle() == FetchStyle.JOIN ) {
-			return FetchMode.JOIN;
-		}
-		else {
-			return FetchMode.SELECT;
-		}
-	}
-
-	@Override
-	public FetchTiming getFetchTiming() {
-		return fetchTiming;
-	}
-
-	@Override
-	public void setFetchTiming(FetchTiming fetchTiming) {
-		this.fetchTiming = fetchTiming;
-	}
-
-	@Override
-	public FetchStyle getFetchStyle() {
-		return fetchStyle;
-	}
-
-	@Override
-	public void setFetchStyle(FetchStyle fetchStyle) {
-		this.fetchStyle = fetchStyle;
+	public AbstractPluralAttributeElementBinding getPluralAttributeElementBinding() {
+		return pluralAttributeElementBinding;
 	}
 
 	@Override

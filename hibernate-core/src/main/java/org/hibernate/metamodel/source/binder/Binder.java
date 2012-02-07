@@ -41,8 +41,10 @@ import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.binding.BasicCollectionElement;
-import org.hibernate.metamodel.binding.CollectionElementNature;
+import org.hibernate.metamodel.binding.BasicPluralAttributeElementBinding;
+import org.hibernate.metamodel.binding.Cascadeable;
+import org.hibernate.metamodel.binding.Fetchable;
+import org.hibernate.metamodel.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.binding.CollectionLaziness;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -497,9 +499,13 @@ public class Binder {
 	}
 
 	private void doBasicPluralAttributeBinding(PluralAttributeSource source, AbstractPluralAttributeBinding binding) {
-		binding.setFetchTiming( source.getFetchTiming() );
-		binding.setFetchStyle( source.getFetchStyle() );
-		binding.setCascadeStyles( source.getCascadeStyles() );
+		if ( binding.isAssociation() ) {
+			final Cascadeable cascadeable = (Cascadeable) binding.getPluralAttributeElementBinding();
+			cascadeable.setCascadeStyles( source.getCascadeStyles() );
+			final Fetchable fetchable = (Fetchable) binding.getPluralAttributeElementBinding();
+			fetchable.setFetchTiming( source.getFetchTiming() );
+			fetchable.setFetchStyle( source.getFetchStyle() );
+		}
 
 		binding.setCaching( source.getCaching() );
 
@@ -561,7 +567,7 @@ public class Binder {
 	private void bindCollectionTable(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
-		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementNature.ONE_TO_MANY ) {
+		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.source.binder.PluralAttributeElementNature.ONE_TO_MANY ) {
 			return;
 		}
 
@@ -620,11 +626,11 @@ public class Binder {
 	private void bindCollectionKey(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
-		pluralAttributeBinding.getCollectionKey().prepareForeignKey(
+		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
 				attributeSource.getKeySource().getExplicitForeignKeyName(),
 				null  // todo : handle secondary table names
 		);
-		pluralAttributeBinding.getCollectionKey().getForeignKey().setDeleteRule(
+		pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().setDeleteRule(
 				attributeSource.getKeySource().getOnDeleteAction()
 		);
 		// todo : need to bind "relational values", account for property-ref
@@ -634,9 +640,9 @@ public class Binder {
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
 		final PluralAttributeElementSource elementSource = attributeSource.getElementSource();
-		if ( elementSource.getNature() == PluralAttributeElementNature.BASIC ) {
+		if ( elementSource.getNature() == org.hibernate.metamodel.source.binder.PluralAttributeElementNature.BASIC ) {
 			final BasicPluralAttributeElementSource basicElementSource = (BasicPluralAttributeElementSource) elementSource;
-			final BasicCollectionElement basicCollectionElement = (BasicCollectionElement) pluralAttributeBinding.getCollectionElement();
+			final BasicPluralAttributeElementBinding basicCollectionElement = (BasicPluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding();
 			resolveTypeInformation(
 					basicElementSource.getExplicitHibernateTypeSource(),
 					pluralAttributeBinding.getAttribute(),
@@ -692,8 +698,8 @@ public class Binder {
 		attributeBinding.setIncludedInOptimisticLocking( attributeSource.isIncludedInOptimisticLocking() );
 	}
 
-	private CollectionElementNature convert(PluralAttributeElementNature pluralAttributeElementNature) {
-		return CollectionElementNature.valueOf( pluralAttributeElementNature.name() );
+	private PluralAttributeElementNature convert(org.hibernate.metamodel.source.binder.PluralAttributeElementNature pluralAttributeElementNature) {
+		return PluralAttributeElementNature.valueOf( pluralAttributeElementNature.name() );
 	}
 
 	private BasicAttributeBinding doBasicSingularAttributeBindingCreation(
@@ -769,7 +775,7 @@ public class Binder {
 	private void resolveTypeInformation(
 			ExplicitHibernateTypeSource typeSource,
 			PluralAttribute attribute,
-			BasicCollectionElement collectionElement) {
+			BasicPluralAttributeElementBinding collectionElement) {
 		final Class<?> attributeJavaType = determineJavaType( attribute );
 		resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
 	}

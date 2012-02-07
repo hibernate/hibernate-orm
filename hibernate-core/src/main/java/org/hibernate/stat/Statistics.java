@@ -131,6 +131,18 @@ public interface Statistics {
      * Get the global number of cacheable queries put in cache
      */
 	public long getQueryCachePutCount();
+	/**
+	 * Get the global number of naturalId queries executed against the database
+	 */
+	public long getNaturalIdQueryExecutionCount();
+	/**
+	 * Get the global maximum query time for naturalId queries executed against the database
+	 */
+	public long getNaturalIdQueryExecutionMaxTime();
+	/**
+	 * Get the region for the maximum naturalId query time 
+	 */
+	public String getNaturalIdQueryExecutionMaxTimeRegion();
     /**
      * Get the global number of cached naturalId lookups successfully retrieved from cache
      */

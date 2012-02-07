@@ -244,6 +244,21 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public long getNaturalIdCachePutCount() {
 		return stats.getNaturalIdCachePutCount();
 	}
+	
+	@Override
+	public long getNaturalIdQueryExecutionCount() {
+		return stats.getNaturalIdQueryExecutionCount();
+	}
+
+	@Override
+	public long getNaturalIdQueryExecutionMaxTime() {
+		return stats.getNaturalIdQueryExecutionMaxTime();
+	}
+
+	@Override
+	public String getNaturalIdQueryExecutionMaxTimeRegion() {
+		return stats.getNaturalIdQueryExecutionMaxTimeRegion();
+	}
 
 	/**
 	 * @see StatisticsServiceMBean#getSessionCloseCount()

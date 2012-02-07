@@ -64,25 +64,22 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
-
+		
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = ( State ) s.load( State.class, 2 );
 		Criteria criteria = s.createCriteria( Citizen.class );
-		criteria.add(
-				Restrictions.naturalId().set( "ssn", "1234" ).set(
-						"state",
-						france
-				)
-		);
+		criteria.add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", france ) );
 		criteria.setCacheable( true );
+		
+		s.getSessionFactory().getCache().evictNaturalIdRegions();
 
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 
 		// first query
@@ -90,22 +87,34 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, results.size() );
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 		assertEquals(
 				"First query should be a miss", 1, stats
-						.getQueryCacheMissCount()
+						.getNaturalIdCacheMissCount()
 		);
 		assertEquals(
 				"Query result should be added to cache", 1, stats
-						.getQueryCachePutCount()
+						.getNaturalIdCachePutCount()
+		);
+		assertEquals(
+				"Query execution count should be one", 1, stats
+						.getNaturalIdQueryExecutionCount()
 		);
 
-		// query a second time - result should be cached
+		// query a second time - result should be cached in session
 		criteria.list();
 		assertEquals(
-				"Cache hits should be empty", 1, stats
-						.getQueryCacheHitCount()
+				"Cache hits should be empty", 0, stats
+						.getNaturalIdCacheHitCount()
+		);
+		assertEquals(
+				"Second query should not be a miss", 1, stats
+						.getNaturalIdCacheMissCount()
+		);
+		assertEquals(
+				"Query execution count should be one", 1, stats
+						.getNaturalIdQueryExecutionCount()
 		);
 
 		// cleanup
@@ -130,7 +139,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		stats.clear();
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 
 		// first query
@@ -183,7 +192,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		stats.clear();
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 
 		// first query
@@ -222,13 +231,15 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 				)
 		);
 		criteria.setCacheable( false );
+		
+		s.getSessionFactory().getCache().evictNaturalIdRegions();
 
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 
 		// first query
@@ -236,18 +247,26 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, results.size() );
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
 		);
 		assertEquals(
-				"Query result should be added to cache", 0, stats
-						.getQueryCachePutCount()
+				"Query execution count should be one", 1, stats
+						.getNaturalIdQueryExecutionCount()
 		);
 
-		// query a second time
+		// query a second time - result should be cached in session
 		criteria.list();
 		assertEquals(
 				"Cache hits should be empty", 0, stats
-						.getQueryCacheHitCount()
+						.getNaturalIdCacheHitCount()
+		);
+		assertEquals(
+				"Second query should not be a miss", 1, stats
+						.getNaturalIdCacheMissCount()
+		);
+		assertEquals(
+				"Query execution count should be one", 1, stats
+						.getNaturalIdQueryExecutionCount()
 		);
 
 		// cleanup

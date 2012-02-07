@@ -195,6 +195,14 @@ public interface StatisticsImplementor extends Statistics, Service {
 	public void naturalIdCacheMiss(String regionName);
 
 	/**
+	 * Callback indicating execution of a natural id query
+	 *
+	 * @param regionName The name of the cache region
+	 * @param time execution time
+	 */
+	public void naturalIdQueryExecuted(String regionName, long time);
+
+	/**
 	 * Callback indicating a put into the query cache.
 	 *
 	 * @param hql The query

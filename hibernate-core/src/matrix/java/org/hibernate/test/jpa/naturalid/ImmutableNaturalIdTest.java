@@ -155,9 +155,9 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCachePutCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryExecutionCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 0, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCachePutCount() );
 
 		s = openSession();
 		s.beginTransaction();
@@ -173,13 +173,13 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
 		assertNotNull( u );
 		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
 		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
 		assertNotNull( u );
 		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
 		s.getTransaction().commit();
 		s.close();
 
@@ -211,9 +211,9 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCachePutCount() );//1: no stats since hbm.xml can't enable NaturalId caching
 
 		s = openSession();
 		s.beginTransaction();
@@ -231,15 +231,15 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );//0: no stats since hbm.xml can't enable NaturalId caching
 		u = ( User ) s.createCriteria( User.class )
 				.add( Restrictions.naturalId().set( "userName", "steve" ) )
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );//0: no stats since hbm.xml can't enable NaturalId caching
 		s.getTransaction().commit();
 		s.close();
 
@@ -271,9 +271,9 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCachePutCount() );//0: no stats since hbm.xml can't enable NaturalId caching
 
 		sessionFactory().getStatistics().clear();
 
@@ -284,8 +284,8 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );//1: incorrect stats since hbm.xml can't enable NaturalId caching
 
 		s.delete( u );
 
@@ -324,9 +324,9 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.uniqueResult();
 		assertNotNull( u );
 
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCachePutCount() );//1: no stats since hbm.xml can't enable NaturalId caching
 
 		sessionFactory().getStatistics().clear();
 		s.getTransaction().commit();
@@ -338,8 +338,8 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );//1: incorrect stats since hbm.xml can't enable NaturalId caching
 
 		s.delete( u );
 

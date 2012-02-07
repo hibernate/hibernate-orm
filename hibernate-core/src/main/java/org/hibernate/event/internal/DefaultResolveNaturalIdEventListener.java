@@ -26,7 +26,9 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.PersistenceContext.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreMessageLogger;
@@ -115,17 +117,38 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
+		final SessionFactoryImplementor factory = event.getSession().getFactory();
+		final boolean stats = factory.getStatistics().isStatisticsEnabled();
+		long startTime = 0;
+		if ( stats ) {
+			startTime = System.currentTimeMillis();
+		}
+		
 		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
 		);
-		event.getSession().getPersistenceContext().cacheNaturalIdResolution(
-				event.getEntityPersister(),
-				pk,
-				event.getOrderedNaturalIdValues(),
-				CachedNaturalIdValueSource.LOAD
-		);
+		
+		if ( stats ) {
+			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = event.getEntityPersister().getNaturalIdCacheAccessStrategy();
+			final String regionName = naturalIdCacheAccessStrategy == null ? null : naturalIdCacheAccessStrategy.getRegion().getName();
+			
+			factory.getStatisticsImplementor().naturalIdQueryExecuted(
+					regionName,
+					System.currentTimeMillis() - startTime );
+		}
+		
+		//PK can be null if the entity doesn't exist
+		if (pk != null) {
+			event.getSession().getPersistenceContext().cacheNaturalIdResolution(
+					event.getEntityPersister(),
+					pk,
+					event.getOrderedNaturalIdValues(),
+					CachedNaturalIdValueSource.LOAD
+			);
+		}
+		
 		return pk;
 	}
 }

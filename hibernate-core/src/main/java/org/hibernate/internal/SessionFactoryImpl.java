@@ -39,10 +39,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -66,12 +65,14 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -143,6 +144,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -171,7 +173,7 @@ import org.hibernate.type.TypeResolver;
 public final class SessionFactoryImpl
 		implements SessionFactoryImplementor {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
@@ -348,9 +350,24 @@ public final class SessionFactoryImpl
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
+			
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
+			if ( model.hasNaturalId() && model.getNaturalIdCacheRegionName() != null ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + model.getNaturalIdCacheRegionName();
+				naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
+				
+				if ( naturalIdAccessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
+					final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
+					naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
+					entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+					allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+				}
+			}
+			
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
 					model,
 					accessStrategy,
+					naturalIdAccessStrategy,
 					this,
 					mapping
 			);
@@ -1470,6 +1487,26 @@ public final class SessionFactoryImpl
 			}
 		}
 
+		public void evictNaturalIdRegion(Class entityClass) {
+			evictNaturalIdRegion( entityClass.getName() );
+		}
+
+		public void evictNaturalIdRegion(String entityName) {
+			EntityPersister p = getEntityPersister( entityName );
+			if ( p.hasNaturalIdCache() ) {
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
+				}
+				p.getNaturalIdCacheAccessStrategy().evictAll();
+			}
+		}
+
+		public void evictNaturalIdRegions() {
+			for ( String s : entityPersisters.keySet() ) {
+				evictNaturalIdRegion( s );
+			}
+		}
+
 		public boolean containsCollection(String role, Serializable ownerIdentifier) {
 			CollectionPersister p = getCollectionPersister( role );
 			return p.hasCache() &&
@@ -1617,6 +1654,10 @@ public final class SessionFactoryImpl
 	}
 
 	public Region getSecondLevelCacheRegion(String regionName) {
+		return allCacheRegions.get( regionName );
+	}
+
+	public Region getNaturalIdCacheRegion(String regionName) {
 		return allCacheRegions.get( regionName );
 	}
 

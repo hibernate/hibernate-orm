@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
@@ -194,7 +195,13 @@ public class InfinispanRegionFactory implements RegionFactory {
       startRegion(region, regionName);
       return region;
    }
-
+   
+   @Override
+   public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+         throws CacheException {
+      throw new UnsupportedOperationException(); //TODO
+   }
+	
    /**
     * {@inheritDoc}
     */

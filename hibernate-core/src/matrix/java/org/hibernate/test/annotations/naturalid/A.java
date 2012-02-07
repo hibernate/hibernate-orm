@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -35,12 +36,14 @@ import javax.persistence.Version;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 
 /**
  * @author Guenther Demetz
  */
 @Entity
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@NaturalIdCache
 public class A {
 
 	@Id

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.Session;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
 
@@ -383,6 +384,14 @@ public class Restrictions {
 		return new SizeExpression(propertyName, size, ">=");
 	}
 
+	/**
+	 * @deprecated Use {@link Session#byNaturalId(Class)}
+	 * @see Session#byNaturalId(Class)
+	 * @see Session#byNaturalId(String)
+	 * @see Session#bySimpleNaturalId(Class)
+	 * @see Session#bySimpleNaturalId(String)
+	 */
+	@Deprecated
 	public static NaturalIdentifier naturalId() {
 		return new NaturalIdentifier();
 	}

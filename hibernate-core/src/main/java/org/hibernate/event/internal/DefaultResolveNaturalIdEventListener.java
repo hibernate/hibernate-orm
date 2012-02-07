@@ -25,14 +25,14 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PersistenceContext.CachedNaturalIdValueSource;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -72,49 +72,22 @@ public class DefaultResolveNaturalIdEventListener
 	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
 		final EntityPersister persister = event.getEntityPersister();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Attempting to resolve: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled )
+			LOG.tracev( "Attempting to resolve: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
-		Serializable entityId = resolveFromSessionCache( event );
+		Serializable entityId = resolveFromCache( event );
 		if ( entityId != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace(
-						"Resolved object in session cache: " +
-								MessageHelper.infoString(
-										persister, event.getNaturalIdValues(), event.getSession().getFactory()
-								)
-				);
-			}
+			if ( traceEnabled )
+				LOG.tracev( "Resolved object in cache: {0}",
+						MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 			return entityId;
 		}
 
-		entityId = loadFromSecondLevelCache( event );
-		if ( entityId != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace(
-						"Resolved object in second-level cache: " +
-								MessageHelper.infoString(
-										persister, event.getNaturalIdValues(), event.getSession().getFactory()
-								)
-				);
-			}
-			return entityId;
-		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Object not resolved in any cache: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		if ( traceEnabled )
+			LOG.tracev( "Object not resolved in any cache: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
 		return loadFromDatasource( event );
 	}
@@ -124,66 +97,13 @@ public class DefaultResolveNaturalIdEventListener
 	 * 
 	 * @param event The load event
 	 *
-	 * @return The entity from the session-level cache, or null.
+	 * @return The entity from the cache, or null.
 	 */
-	protected Serializable resolveFromSessionCache(final ResolveNaturalIdEvent event) {
+	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContext().findCachedNaturalIdResolution(
 				event.getEntityPersister(),
 				event.getOrderedNaturalIdValues()
 		);
-	}
-
-	/**
-	 * Attempts to load the entity from the second-level cache.
-	 * 
-	 * @param event The event
-	 *
-	 * @return The entity from the second-level cache, or null.
-	 */
-	protected Serializable loadFromSecondLevelCache(final ResolveNaturalIdEvent event) {
-
-		// final SessionImplementor source = event.getSession();
-		//
-		// final boolean useCache = persister.hasCache()
-		// && source.getCacheMode().isGetEnabled();
-		//
-		// if ( useCache ) {
-		//
-		// final SessionFactoryImplementor factory = source.getFactory();
-		//
-		// final CacheKey ck = source.generateCacheKey(
-		// event.getNaturalIdValues(),
-		// persister.getIdentifierType(),
-		// persister.getRootEntityName()
-		// );
-		// Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
-		// if ( factory.getStatistics().isStatisticsEnabled() ) {
-		// if ( ce == null ) {
-		// factory.getStatisticsImplementor().secondLevelCacheMiss(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// else {
-		// factory.getStatisticsImplementor().secondLevelCacheHit(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// }
-		//
-		// if ( ce != null ) {
-		// CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-		//
-		// // Entity was found in second-level cache...
-		// return assembleCacheEntry(
-		// entry,
-		// event.getEntityId(),
-		// persister,
-		// event
-		// );
-		// }
-		// }
-
-		return null;
 	}
 
 	/**
@@ -203,7 +123,8 @@ public class DefaultResolveNaturalIdEventListener
 		event.getSession().getPersistenceContext().cacheNaturalIdResolution(
 				event.getEntityPersister(),
 				pk,
-				event.getOrderedNaturalIdValues()
+				event.getOrderedNaturalIdValues(),
+				CachedNaturalIdValueSource.LOAD
 		);
 		return pk;
 	}

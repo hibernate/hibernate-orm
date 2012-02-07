@@ -107,6 +107,20 @@ public interface RegionFactory extends Service {
 			throws CacheException;
 
 	/**
+	 * Build a cache region specialized for storing NaturalId to Primary Key mappings.
+	 *
+	 * @param regionName The name of the region.
+	 * @param properties Configuration properties.
+	 * @param metadata Information regarding the type of data to be cached
+	 *
+	 * @return The built region
+	 *
+	 * @throws CacheException Indicates problems building the region.
+	 */
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException;
+
+	/**
 	 * Build a cache region specialized for storing collection data.
 	 *
 	 * @param regionName The name of the region.

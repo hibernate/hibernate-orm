@@ -55,6 +55,11 @@ public class Subclass extends PersistentClass {
 		return subclassId;
 	}
 	
+	@Override
+	public String getNaturalIdCacheRegionName() {
+		return getSuperclass().getNaturalIdCacheRegionName();
+	}
+
 	public String getCacheConcurrencyStrategy() {
 		return getSuperclass().getCacheConcurrencyStrategy();
 	}

@@ -25,6 +25,7 @@ package org.hibernate.stat.spi;
 
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
+import org.hibernate.stat.internal.ConcurrentSecondLevelCacheStatisticsImpl;
 
 /**
  * Statistics SPI for the Hibernate core.  This is essentially the "statistic collector" API, its the contract
@@ -171,6 +172,27 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @param regionName The name of the cache region
 	 */
 	public void secondLevelCacheMiss(String regionName);
+	
+	/**
+	 * Callback indicating a put into natural id cache.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCachePut(String regionName);
+	
+	/**
+	 * Callback indicating a get from natural id cache resulted in a hit.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCacheHit(String regionName);
+	
+	/**
+	 * Callback indicating a get from natural id cache resulted in a miss.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCacheMiss(String regionName);
 
 	/**
 	 * Callback indicating a put into the query cache.

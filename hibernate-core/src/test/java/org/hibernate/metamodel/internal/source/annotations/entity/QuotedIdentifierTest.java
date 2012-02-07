@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  * @author Strong Liu
  */
 public class QuotedIdentifierTest extends BaseAnnotationBindingTestCase {
-	private final String ormPath = "org/hibernate/metamodel/source/annotations/xml/orm-quote-identifier.xml";
+	private final String ormPath = "org/hibernate/metamodel/internal/source/annotations/xml/orm-quote-identifier.xml";
 
 	@Test
 	@Resources(annotatedClasses = { Item.class, Item2.class, Item3.class, Item4.class }, ormXmlPath = ormPath)

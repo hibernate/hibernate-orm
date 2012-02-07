@@ -56,7 +56,5 @@ public class EntityListenerTest extends AbstractMockerTest {
 		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
 		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_PRE_PERSIST );
 		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_POST_PERSIST );
-
-
 	}
 }

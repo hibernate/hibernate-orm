@@ -41,7 +41,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test
 	public void testSimpleOrmVersion2() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm-father.xml" );
+		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-father.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		EntityBinding binding = metadata.getEntityBinding( Father.class.getName() );
@@ -51,7 +51,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test
 	public void testSimpleOrmVersion1() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm-star.xml" );
+		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-star.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		EntityBinding binding = metadata.getEntityBinding( Star.class.getName() );
@@ -61,7 +61,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test(expected = MappingException.class)
 	public void testInvalidOrmXmlThrowsException() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm-invalid.xml" );
+		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-invalid.xml" );
 		sources.buildMetadata();
 	}
 }

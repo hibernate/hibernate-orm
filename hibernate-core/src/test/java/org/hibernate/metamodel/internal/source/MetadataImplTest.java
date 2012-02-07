@@ -32,9 +32,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.SessionFactoryBuilderImpl;
+import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -72,7 +72,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 	@Test
 	public void testAddingPackageName() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addPackage( "org.hibernate.metamodel.source.internal" );
+		sources.addPackage( MetadataImplTest.class.getPackage().getName() );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		assertFetchProfile( metadata );
@@ -81,7 +81,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 	@Test
 	public void testAddingPackageNameWithTrailingDot() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addPackage( "org.hibernate.metamodel.source.internal." );
+		sources.addPackage( MetadataImplTest.class.getPackage().getName() + "." );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		assertFetchProfile( metadata );

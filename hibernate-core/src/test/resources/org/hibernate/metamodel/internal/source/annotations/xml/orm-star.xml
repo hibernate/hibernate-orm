@@ -4,7 +4,7 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  version="1.0">
     <!-- use orm_1_0 on purpose to test backward compatibility -->
-    <package>org.hibernate.metamodel.source.annotations.xml</package>
+    <package>org.hibernate.metamodel.internal.source.annotations.xml</package>
     <entity class="Star" access="FIELD" metadata-complete="false">
         <attributes>
             <id name="id">

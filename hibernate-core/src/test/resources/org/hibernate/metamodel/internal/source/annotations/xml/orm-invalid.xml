@@ -3,14 +3,12 @@
 <entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  version="2.0">
-    <package>org.hibernate.metamodel.source.annotations.xml</package>
-
-    <entity class="Father">
+    <package>org.hibernate.metamodel.internal.source.annotations.xml</package>
+    <entity class="Star" access="FIELD" metadata-complete="false" foo="bar">
         <attributes>
             <id name="id">
-                <generated-value strategy="AUTO"/>
+                <column name="STAR_ID"/>
             </id>
-            <basic name="name"/>
         </attributes>
     </entity>
 </entity-mappings>

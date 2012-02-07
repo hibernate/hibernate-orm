@@ -35,6 +35,8 @@ import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 
 /**
+ * Type Resolver which checks {@link org.hibernate.annotations.Type} to find the type info.
+ *
  * @author Strong Liu
  */
 public class AttributeTypeResolverImpl extends AbstractAttributeTypeResolver {
@@ -46,11 +48,7 @@ public class AttributeTypeResolverImpl extends AbstractAttributeTypeResolver {
 
 	@Override
 	protected String resolveHibernateTypeName(AnnotationInstance typeAnnotation) {
-		String typeName = null;
-		if ( typeAnnotation != null ) {
-			typeName = JandexHelper.getValue( typeAnnotation, "type", String.class );
-		}
-		return typeName;
+		return typeAnnotation != null ?  JandexHelper.getValue( typeAnnotation, "type", String.class ) : null;
 	}
 
 	@Override

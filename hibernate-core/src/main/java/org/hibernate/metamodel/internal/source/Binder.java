@@ -1082,7 +1082,6 @@ public class Binder {
 	private class PluralAttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
 		private final Class<?> ownerClass;
 		private final String attributeName;
-
 		private Class<?> javaType = null;
 
 		private PluralAttributeJavaTypeDeterminerDelegate(Class<?> ownerClass, String attributeName) {
@@ -1092,48 +1091,43 @@ public class Binder {
 
 		@Override
 		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-				if ( propertyDescriptor.getName().equals( attributeName ) ) {
-					javaType = extractCollectionComponentType( beanInfo, propertyDescriptor );
-					break;
-				}
-			}
-		}
-
-		@SuppressWarnings( { "unchecked" })
-		private Class<?> extractCollectionComponentType(BeanInfo beanInfo, PropertyDescriptor propertyDescriptor) {
-			final java.lang.reflect.Type collectionAttributeType;
-			if ( propertyDescriptor.getReadMethod() != null ) {
-				collectionAttributeType = propertyDescriptor.getReadMethod().getGenericReturnType();
-			}
-			else if ( propertyDescriptor.getWriteMethod() != null ) {
-				collectionAttributeType = propertyDescriptor.getWriteMethod().getGenericParameterTypes()[0];
+			java.lang.reflect.Type collectionAttributeType = null;
+			if ( beanInfo.getPropertyDescriptors() == null || beanInfo.getPropertyDescriptors().length == 0 ) {
+				// we need to look for the field and look at it...
+				collectionAttributeType = ownerClass.getField( attributeName ).getGenericType();
 			}
 			else {
-				// we need to look for the field and look at it...
-				try {
-					collectionAttributeType = ownerClass.getField( propertyDescriptor.getName() ).getGenericType();
-				}
-				catch ( Exception e ) {
-					return null;
-				}
-			}
-
-			if ( ParameterizedType.class.isInstance( collectionAttributeType ) ) {
-				final java.lang.reflect.Type[] types = ( (ParameterizedType) collectionAttributeType ).getActualTypeArguments();
-				if ( types == null ) {
-					return null;
-				}
-				else if ( types.length == 1 ) {
-					return (Class<?>) types[0];
-				}
-				else if ( types.length == 2 ) {
-					// Map<K,V>
-					return (Class<?>) types[1];
+				for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+					if ( propertyDescriptor.getName().equals( attributeName ) ) {
+						if ( propertyDescriptor.getReadMethod() != null ) {
+							collectionAttributeType = propertyDescriptor.getReadMethod().getGenericReturnType();
+						}
+						else if ( propertyDescriptor.getWriteMethod() != null ) {
+							collectionAttributeType = propertyDescriptor.getWriteMethod().getGenericParameterTypes()[0];
+						}
+					}
 				}
 			}
-			return null;
+			if ( collectionAttributeType != null ) {
+				if ( ParameterizedType.class.isInstance( collectionAttributeType ) ) {
+					final java.lang.reflect.Type[] types = ( (ParameterizedType) collectionAttributeType ).getActualTypeArguments();
+					if ( types == null ) {
+						return;
+					}
+					else if ( types.length == 1 ) {
+						javaType = (Class<?>) types[0];
+					}
+					else if ( types.length == 2 ) {
+						// Map<K,V>
+						javaType = (Class<?>) types[1];
+					}
+				}
+				else {
+					javaType = (Class<?>) collectionAttributeType;
+				}
+			}
 		}
+
 	}
 
 }

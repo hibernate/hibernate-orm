@@ -5,8 +5,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 
 @Entity
+@NaturalIdCache
 /**
  * Test case for NaturalId annotation - ANN-750
  * 

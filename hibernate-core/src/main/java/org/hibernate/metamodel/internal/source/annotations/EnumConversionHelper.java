@@ -31,6 +31,7 @@ import javax.persistence.GenerationType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -102,6 +103,23 @@ public class EnumConversionHelper {
 				// todo - is this correct? can the conversion be made w/o any additional information, eg
 				// todo - association nature
 				return FetchMode.SELECT;
+			}
+			default: {
+				throw new AssertionFailure( "Unknown fetch mode" );
+			}
+		}
+	}
+
+	public static FetchStyle annotationFetchModeToFetchStyle(org.hibernate.annotations.FetchMode annotationFetchMode) {
+		switch ( annotationFetchMode ) {
+			case JOIN: {
+				return FetchStyle.JOIN;
+			}
+			case SELECT: {
+				return FetchStyle.SELECT;
+			}
+			case SUBSELECT: {
+				return FetchStyle.SUBSELECT;
 			}
 			default: {
 				throw new AssertionFailure( "Unknown fetch mode" );

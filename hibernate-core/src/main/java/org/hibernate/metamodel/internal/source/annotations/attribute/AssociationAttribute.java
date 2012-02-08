@@ -36,8 +36,8 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.internal.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
@@ -46,12 +46,12 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.type.Attrib
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
 
 /**
  * Represents an association attribute.
  *
  * @author Hardy Ferentschik
- * @todo Check whether we need further subclasses for different association types. Needs to evolve during development (HF)
  */
 public class AssociationAttribute extends MappedAttribute {
 	private final AttributeNature associationNature;
@@ -62,7 +62,9 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean isOptional;
 	private final boolean isLazy;
 	private final boolean isOrphanRemoval;
+	// todo FetchMode is currently used in the persisters. This will probably get replaced bt FetchStyle and FetchTiming
 	private final FetchMode fetchMode;
+	private final FetchStyle fetchStyle;
 	private final boolean mapsId;
 	private final String referencedIdAttributeName;
 
@@ -110,6 +112,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 
 		this.fetchMode = determineFetchMode();
+		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
 	}
@@ -140,6 +143,10 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public FetchMode getFetchMode() {
 		return fetchMode;
+	}
+
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
 	}
 
 	public String getReferencedIdAttributeName() {
@@ -290,6 +297,22 @@ public class AssociationAttribute extends MappedAttribute {
 		}
 
 		return mode;
+	}
+
+	private FetchStyle determineFetchStyle() {
+		FetchStyle style = FetchStyle.SELECT;
+
+		AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.FETCH );
+		if ( fetchAnnotation != null ) {
+			org.hibernate.annotations.FetchMode annotationFetchMode = JandexHelper.getEnumValue(
+					fetchAnnotation,
+					"value",
+					org.hibernate.annotations.FetchMode.class
+			);
+			style = EnumConversionHelper.annotationFetchModeToFetchStyle( annotationFetchMode );
+		}
+
+		return style;
 	}
 
 	private String determineMapsId() {

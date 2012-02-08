@@ -73,14 +73,16 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public FetchTiming getFetchTiming() {
-		  // todo : implement
-		return FetchTiming.IMMEDIATE;
+		if(associationAttribute.isLazy()) {
+			return FetchTiming.DELAYED;
+		}  else {
+			return FetchTiming.IMMEDIATE;
+		}
 	}
 
 	@Override
 	public FetchStyle getFetchStyle() {
-		// todo : implement
-		return FetchStyle.JOIN;
+		return associationAttribute.getFetchStyle();
 	}
 }
 

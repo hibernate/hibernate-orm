@@ -39,12 +39,12 @@ public interface EventListenerRegistry extends Service, Serializable {
 
 	public void addDuplicationStrategy(DuplicationStrategy strategy);
 
-	public <T> void setListeners(EventType<T> type, Class<T>... listeners);
+	public <T> void setListeners(EventType<T> type, Class<? extends T>... listeners);
 	public <T> void setListeners(EventType<T> type, T... listeners);
 
-	public <T> void appendListeners(EventType<T> type, Class<T>... listeners);
+	public <T> void appendListeners(EventType<T> type, Class<? extends T>... listeners);
 	public <T> void appendListeners(EventType<T> type, T... listeners);
 
-	public <T> void prependListeners(EventType<T> type, Class<T>... listeners);
+	public <T> void prependListeners(EventType<T> type, Class<? extends T>... listeners);
 	public <T> void prependListeners(EventType<T> type, T... listeners);
 }

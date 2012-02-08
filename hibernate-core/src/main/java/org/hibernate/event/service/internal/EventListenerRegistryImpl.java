@@ -115,12 +115,12 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public <T> void setListeners(EventType<T> type, Class<T>... listenerClasses) {
+	public <T> void setListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	private <T> T[] resolveListenerInstances(EventType<T> type, Class<T>... listenerClasses) {
+	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
 		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
 			listeners[i] = resolveListenerInstance( listenerClasses[i] );
@@ -162,7 +162,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public <T> void appendListeners(EventType<T> type, Class<T>... listenerClasses) {
+	public <T> void appendListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		appendListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
@@ -172,7 +172,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public <T> void prependListeners(EventType<T> type, Class<T>... listenerClasses) {
+	public <T> void prependListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		prependListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 

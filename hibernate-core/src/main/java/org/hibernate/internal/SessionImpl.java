@@ -1496,68 +1496,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			dontFlushFromFind--;
 		}
 	}
-	
-	/**
-	 * Checks to see if the CriteriaImpl is a naturalId lookup that can be done via
-	 * NaturalIdLoadAccess
-	 * 
-	 * @return A fully configured NaturalIdLoadAccess or null, if null is returned the standard CriteriaImpl execution
-	 *         should be performed
-	 */
-	private NaturalIdLoadAccess tryNaturalIdLoadAccess(CriteriaImpl criteria) {
-		// See if the criteria lookup is by naturalId
-		if ( !criteria.isLookupByNaturalKey() ) {
-			return null;
-		}
-		
-		final String entityName = criteria.getEntityOrClassName();
-		final EntityPersister entityPersister = factory.getEntityPersister( entityName );
-
-		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
-		// queries did no natural id validation
-		if ( !entityPersister.hasNaturalIdentifier() ) {
-			return null;
-		}
-		
-		// Since isLookupByNaturalKey is true there can be only one CriterionEntry and getCriterion() will 
-		// return an instanceof NaturalIdentifier
-		final CriterionEntry criterionEntry = (CriterionEntry) criteria.iterateExpressionEntries().next();
-		final NaturalIdentifier naturalIdentifier = (NaturalIdentifier) criterionEntry.getCriterion();
-
-		final Map<String, Object> naturalIdValues = naturalIdentifier.getNaturalIdValues();
-		final int[] naturalIdentifierProperties = entityPersister.getNaturalIdentifierProperties();
-
-		// Verify the NaturalIdentifier criterion includes all naturalId properties, first check that the property counts match
-		if ( naturalIdentifierProperties.length != naturalIdValues.size() ) {
-			return null;
-		}
-
-		final String[] propertyNames = entityPersister.getPropertyNames();
-		final NaturalIdLoadAccess naturalIdLoader = this.byNaturalId( entityName );
-
-		// Build NaturalIdLoadAccess and in the process verify all naturalId properties were specified
-		for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
-			final String naturalIdProperty = propertyNames[naturalIdentifierProperties[i]];
-			final Object naturalIdValue = naturalIdValues.get( naturalIdProperty );
-
-			if ( naturalIdValue == null ) {
-				// A NaturalId property is missing from the critera query, can't use NaturalIdLoadAccess
-				return null;
-			}
-
-			naturalIdLoader.using( naturalIdProperty, naturalIdValue );
-		}
-
-		// Critera query contains a valid naturalId, use the new API
-		LOG.warn( "Session.byNaturalId(" + entityName
-				+ ") should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria" );
-
-		return naturalIdLoader;
-	}
 
 	public List list(CriteriaImpl criteria) throws HibernateException {
 		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteria );
 		if ( naturalIdLoadAccess != null ) {
+			// EARLY EXIT!
 			return Arrays.asList( naturalIdLoadAccess.load() );
 		}
 
@@ -1601,6 +1544,66 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		return results;
+	}
+
+	/**
+	 * Checks to see if the CriteriaImpl is a naturalId lookup that can be done via
+	 * NaturalIdLoadAccess
+	 *
+	 * @param criteria The criteria to check as a complete natural identifier lookup.
+	 *
+	 * @return A fully configured NaturalIdLoadAccess or null, if null is returned the standard CriteriaImpl execution
+	 *         should be performed
+	 */
+	private NaturalIdLoadAccess tryNaturalIdLoadAccess(CriteriaImpl criteria) {
+		// See if the criteria lookup is by naturalId
+		if ( !criteria.isLookupByNaturalKey() ) {
+			return null;
+		}
+
+		final String entityName = criteria.getEntityOrClassName();
+		final EntityPersister entityPersister = factory.getEntityPersister( entityName );
+
+		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
+		// queries did no natural id validation
+		if ( !entityPersister.hasNaturalIdentifier() ) {
+			return null;
+		}
+
+		// Since isLookupByNaturalKey is true there can be only one CriterionEntry and getCriterion() will
+		// return an instanceof NaturalIdentifier
+		final CriterionEntry criterionEntry = (CriterionEntry) criteria.iterateExpressionEntries().next();
+		final NaturalIdentifier naturalIdentifier = (NaturalIdentifier) criterionEntry.getCriterion();
+
+		final Map<String, Object> naturalIdValues = naturalIdentifier.getNaturalIdValues();
+		final int[] naturalIdentifierProperties = entityPersister.getNaturalIdentifierProperties();
+
+		// Verify the NaturalIdentifier criterion includes all naturalId properties, first check that the property counts match
+		if ( naturalIdentifierProperties.length != naturalIdValues.size() ) {
+			return null;
+		}
+
+		final String[] propertyNames = entityPersister.getPropertyNames();
+		final NaturalIdLoadAccess naturalIdLoader = this.byNaturalId( entityName );
+
+		// Build NaturalIdLoadAccess and in the process verify all naturalId properties were specified
+		for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
+			final String naturalIdProperty = propertyNames[naturalIdentifierProperties[i]];
+			final Object naturalIdValue = naturalIdValues.get( naturalIdProperty );
+
+			if ( naturalIdValue == null ) {
+				// A NaturalId property is missing from the critera query, can't use NaturalIdLoadAccess
+				return null;
+			}
+
+			naturalIdLoader.using( naturalIdProperty, naturalIdValue );
+		}
+
+		// Critera query contains a valid naturalId, use the new API
+		LOG.warn( "Session.byNaturalId(" + entityName
+				+ ") should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria" );
+
+		return naturalIdLoader;
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {

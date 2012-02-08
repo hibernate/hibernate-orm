@@ -21,25 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.internal.source.hbm;
+
+import java.util.Collections;
+import java.util.Map;
+
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
- * Defines a source of configuration value.
- *
  * @author Steve Ebersole
  */
-public interface ConfigurationValueSource {
-	/**
-	 * Get the configuration name.
-	 *
-	 * @return The configuration name
-	 */
-	public String getName();
+public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
+	private final String name;
+	private final String implementationClassName;
+	private final Map<String,String> params;
 
-	/**
-	 * Get the configuration value
-	 *
-	 * @return The configuration value.
-	 */
-	public String getValue();
+	public TypeDescriptorSourceImpl(JaxbHibernateMapping.JaxbTypedef typeDefElement) {
+		this.name = typeDefElement.getName();
+		this.implementationClassName = typeDefElement.getClazz();
+		this.params = Helper.extractParameters( typeDefElement.getParam() );
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public String getTypeImplementationClassName() {
+		return implementationClassName;
+	}
+
+	@Override
+	public Iterable<String> getRegistrationKeys() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Map<String, String> getParameters() {
+		return params;
+	}
 }

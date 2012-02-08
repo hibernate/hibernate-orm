@@ -21,29 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.internal.source.hbm;
+
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterElement;
+import org.hibernate.metamodel.spi.source.FilterSource;
 
 /**
- * Defines the source of filter information.  May have an associated {@link FilterDefSource}.
- * Relates to both {@code <filter/>} and {@link org.hibernate.annotations.Filter @Filter}
- *
  * @author Steve Ebersole
  */
-public interface FilterSource {
-	/**
-	 * Get the name of the filter being described.
-	 *
-	 * @return The name.
-	 */
-	public String getName();
+public class FilterSourceImpl implements FilterSource {
+	private final String name;
+	private final String condition;
 
-	/**
-	 * Get the condition associated with the filter.  Can be {@code null} in the case of a filter described
-	 * further by a "filter def" which contains the condition text.
-	 *
-	 * @return The condition defined on the filter.
-	 *
-	 * @see {@link org.hibernate.metamodel.spi.source.FilterDefSource#getCondition()}
-	 */
-	public String getCondition();
+	public FilterSourceImpl(JaxbFilterElement filterElement) {
+		this.name = filterElement.getName();
+
+		String conditionAttribute = filterElement.getCondition();
+		String conditionContent = filterElement.getValue();
+		this.condition = Helper.coalesce( conditionContent, conditionAttribute );
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public String getCondition() {
+		return condition;
+	}
 }

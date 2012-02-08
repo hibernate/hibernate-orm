@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.Map;
+
 /**
  * Describes the source of a custom type description.  For example, {@code <type-def/>} or
  * {@link org.hibernate.annotations.TypeDef @TypeDef}
@@ -30,8 +32,39 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface TypeDescriptorSource {
+	/**
+	 * Retrieve the name of the type def.
+	 *
+	 * @return The name.
+	 */
 	public String getName();
+
+	/**
+	 * Retrieve the name of the class implementing {@link org.hibernate.type.Type},
+	 * {@link org.hibernate.usertype.UserType}, etc.
+	 *
+	 * @return The implementation class name.
+	 */
 	public String getTypeImplementationClassName();
+
+	/**
+	 * For what are termed "basic types" there is a registry that contain the type keyed by various
+	 * keys.  This is the mechanism that allows a "string type" to reference to by "string", "java.lang.String",
+	 * etc in the mapping.  This method returns the keys under which this type should be registered in
+	 * that registry.
+	 * <p/>
+	 * Note that if the type def contains registration keys, it should be considered illegal for its
+	 * corresponding {@link ExplicitHibernateTypeSource} to define parameters.
+	 *
+	 * @return The registration keys for the type built from this type def.
+	 */
 	public Iterable<String> getRegistrationKeys();
-	public Iterable<ConfigurationValueSource> getConfigurationValueSources();
+
+	/**
+	 * Types accept configuration.  The values here represent the user supplied values that will be given
+	 * to the type instance after instantiation
+	 *
+	 * @return The configuration parameters from the underlying source.
+	 */
+	public Map<String,String> getParameters();
 }

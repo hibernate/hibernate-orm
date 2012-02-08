@@ -60,7 +60,6 @@ import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.exception.internal.SQLStateConverter;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -1526,9 +1525,11 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Dialect's preferred SQLExceptionConverter, or null to
 	 * indicate that the default {@link SQLExceptionConverter} should be used.
 	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()} should be
+	 * @see {@link #buildSQLExceptionConversionDelegate()}
+	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
 	 * overridden instead.
 	 */
+	@Deprecated
 	public SQLExceptionConverter buildSQLExceptionConverter() {
 		return null;
 	}

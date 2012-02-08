@@ -34,9 +34,9 @@ public class FilterSourceImpl implements FilterSource {
 	private final String name;
 	private final String condition;
 
-	public FilterSourceImpl(AnnotationInstance filerDefAnnotation) {
-		this.name = JandexHelper.getValue( filerDefAnnotation, "name", String.class );
-		this.condition = JandexHelper.getValue( filerDefAnnotation, "condition", String.class );
+	public FilterSourceImpl(AnnotationInstance filterAnnotation) {
+		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class );
+		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class );
 	}
 
 	@Override

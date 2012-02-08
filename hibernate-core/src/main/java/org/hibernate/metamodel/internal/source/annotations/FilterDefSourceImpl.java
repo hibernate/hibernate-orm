@@ -39,15 +39,15 @@ public class FilterDefSourceImpl implements FilterDefSource {
 	private final String condition;
 	private List<FilterParameterSource> parameterSources;
 
-	public FilterDefSourceImpl(AnnotationInstance filerDefAnnotation) {
-		this.name = JandexHelper.getValue( filerDefAnnotation, "name", String.class );
-		this.condition = JandexHelper.getValue( filerDefAnnotation, "defaultCondition", String.class );
-		this.parameterSources = buildParameterSources( filerDefAnnotation );
+	public FilterDefSourceImpl(AnnotationInstance filterDefAnnotation) {
+		this.name = JandexHelper.getValue( filterDefAnnotation, "name", String.class );
+		this.condition = JandexHelper.getValue( filterDefAnnotation, "defaultCondition", String.class );
+		this.parameterSources = buildParameterSources( filterDefAnnotation );
 	}
 
-	private List<FilterParameterSource> buildParameterSources(AnnotationInstance filerDefAnnotation) {
+	private List<FilterParameterSource> buildParameterSources(AnnotationInstance filterDefAnnotation) {
 		final List<FilterParameterSource> parameterSources = new ArrayList<FilterParameterSource>();
-		for ( AnnotationInstance paramAnnotation : JandexHelper.getValue( filerDefAnnotation, "parameters", AnnotationInstance[].class ) ) {
+		for ( AnnotationInstance paramAnnotation : JandexHelper.getValue( filterDefAnnotation, "parameters", AnnotationInstance[].class ) ) {
 			parameterSources.add( new FilterParameterSourceImpl( paramAnnotation ) );
 		}
 		return parameterSources;

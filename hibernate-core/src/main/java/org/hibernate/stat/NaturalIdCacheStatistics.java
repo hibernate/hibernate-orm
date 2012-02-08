@@ -39,6 +39,14 @@ public interface NaturalIdCacheStatistics extends Serializable {
 	long getMissCount();
 
 	long getPutCount();
+	
+	long getExecutionCount();
+	
+	long getExecutionAvgTime();
+	
+	long getExecutionMaxTime();
+	
+	long getExecutionMinTime();
 
 	long getElementCountInMemory();
 

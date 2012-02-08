@@ -54,20 +54,19 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a1.setName( "name1" );
 		s.persist( a1 );
 		newTx.commit();
-
+		
 		newTx = s.beginTransaction();
 		getCriteria( s ).uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+		
+		//Create new session to avoid the session cache which can't be tracked
+		s.close();
+		s = openSession();
 
 		newTx = s.beginTransaction();
-
-		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
-		// to see that isUpToDate is called where not appropriated
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
 		s.getSessionFactory().getStatistics().clear();
@@ -76,7 +75,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getQueryCacheHitCount()
+				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
 		);
 
 		s.createQuery( "delete from A" ).executeUpdate();
@@ -105,11 +104,6 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
 
 		newTx = s.beginTransaction();
-
-		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
-		// to see that isUpToDate is called where not appropriated
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
 		s.getSessionFactory().getStatistics().clear();
@@ -147,6 +141,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
+		
+		//Create new session to avoid the session cache which can't be tracked
+		s.close();
+		s = openSession();
 
 		newTx = s.beginTransaction();
 
@@ -163,7 +161,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getQueryCacheHitCount()
+				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
 		);
 		s.createQuery( "delete from D" ).executeUpdate();
 		s.createQuery( "delete from A" ).executeUpdate();
@@ -196,12 +194,11 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
 
-		newTx = s.beginTransaction();
+		//Create new session to avoid the session cache which can't be tracked
+		s.close();
+		s = openSession();
 
-		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
-		// to see that isUpToDate is called where not appropriated
+		newTx = s.beginTransaction();
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
 		s.getSessionFactory().getStatistics().clear();
@@ -211,7 +208,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
-				1, s.getSessionFactory().getStatistics().getQueryCacheHitCount()
+				1, s.getSessionFactory().getStatistics().getNaturalIdCacheHitCount()
 		);
 		s.createQuery( "delete from A" ).executeUpdate();
 		s.createQuery( "delete from D" ).executeUpdate();

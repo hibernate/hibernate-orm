@@ -1562,4 +1562,24 @@ public interface CoreMessageLogger extends BasicLogger {
 	void cannotResolveNonNullableTransientDependencies(String transientEntityString,
 													   Set<String> dependentEntityStrings,
 													   Set<String> nonNullableAssociationPaths);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache puts: %s", id = 438)
+	void naturalIdCachePuts(long naturalIdCachePutCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache hits: %s", id = 439)
+	void naturalIdCacheHits(long naturalIdCacheHitCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache misses: %s", id = 440)
+	void naturalIdCacheMisses(long naturalIdCacheMissCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Max NaturalId query time: %sms", id = 441)
+	void naturalIdMaxQueryTime(long naturalIdQueryExecutionMaxTime);
+	
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId queries executed to database: %s", id = 442)
+	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
 }

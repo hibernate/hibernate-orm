@@ -23,6 +23,9 @@
  *
  */
 package org.hibernate.criterion;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -30,7 +33,6 @@ import org.hibernate.engine.spi.TypedValue;
 
 /**
  * @author Gavin King
- *
  * @see Session#byNaturalId(Class)
  * @see Session#byNaturalId(String)
  * @see Session#bySimpleNaturalId(Class)
@@ -38,7 +40,8 @@ import org.hibernate.engine.spi.TypedValue;
  */
 public class NaturalIdentifier implements Criterion {
 		
-	private Junction conjunction = new Conjunction();
+	private final Junction conjunction = new Conjunction();
+	private final Map<String, Object> naturalIdValues = new HashMap<String, Object>();
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return conjunction.getTypedValues(criteria, criteriaQuery);
@@ -48,8 +51,13 @@ public class NaturalIdentifier implements Criterion {
 		return conjunction.toSqlString(criteria, criteriaQuery);
 	}
 	
+	public Map<String, Object> getNaturalIdValues() {
+		return naturalIdValues;
+	}
+
 	public NaturalIdentifier set(String property, Object value) {
 		conjunction.add( Restrictions.eq(property, value) );
+		naturalIdValues.put( property, value );
 		return this;
 	}
 

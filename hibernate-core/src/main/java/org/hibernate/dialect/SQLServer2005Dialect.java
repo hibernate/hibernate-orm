@@ -149,7 +149,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
 		int distinctIndex = sql.indexOf( DISTINCT );
-		if ( distinctIndex > 0 ) {
+		int selectEndIndex = sql.indexOf( FROM );
+		if (distinctIndex > 0 && distinctIndex < selectEndIndex) {
 			sql.delete( distinctIndex, distinctIndex + DISTINCT.length() + 1 );
 			sql.append( " group by" ).append( getSelectFieldsWithoutAliases( sql ) );
 		}

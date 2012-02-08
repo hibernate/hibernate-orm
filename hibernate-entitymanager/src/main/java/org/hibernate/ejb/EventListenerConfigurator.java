@@ -259,7 +259,7 @@ public class EventListenerConfigurator {
 			if ( beanInfo != null ) {
 				// release the jdk internal caches everytime to ensure this
 				// plays nicely with destroyable class-loaders
-				Introspector.flushFromCaches( getClass() );
+				Introspector.flushFromCaches( listenerConfig.getClass() );
 			}
 		}
 	}

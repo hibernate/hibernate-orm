@@ -160,7 +160,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 			}
 		}
 		else  if ( "extra".equals( lazySelection ) ) {
-			return FetchTiming.EXTRA_LAZY;
+			return FetchTiming.EXTRA_DELAYED;
 		}
 		else if ( "true".equals( lazySelection ) ) {
 			return FetchTiming.DELAYED;

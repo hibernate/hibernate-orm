@@ -25,8 +25,9 @@ package org.hibernate.engine;
 
 /**
  * Enumeration of values describing <b>WHEN</b> fetching should occur.
- * 
+ *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  * @see FetchStyle
  */
 public enum FetchTiming {
@@ -39,7 +40,7 @@ public enum FetchTiming {
 	 */
 	DELAYED,
 	/**
-	 * Take extra care to ensure laziness.  <b>Only available in regards to collections</b>
+	 * Take extra care to ensure laziness (extra lazy).  <b>Only available in regards to collections</b>
 	 */
-	EXTRA_LAZY
+	EXTRA_DELAYED
 }

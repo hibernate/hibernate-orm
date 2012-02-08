@@ -59,7 +59,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public Column locateOrCreateColumn(String name) {
-		if(values.containsKey( name )){
+		if ( values.containsKey( name ) ) {
 			return (Column) values.get( name );
 		}
 		final Column column = new Column( this, values.size(), name );
@@ -69,7 +69,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public DerivedValue locateOrCreateDerivedValue(String fragment) {
-		if(values.containsKey( fragment )){
+		if ( values.containsKey( fragment ) ) {
 			return (DerivedValue) values.get( fragment );
 		}
 		final DerivedValue value = new DerivedValue( this, values.size(), fragment );
@@ -93,6 +93,31 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		foreignKeys.add( fk );
 		return fk;
 	}
+
+	@Override
+	public ForeignKey locateForeignKey(String name) {
+		for ( ForeignKey fk : foreignKeys ) {
+			if ( fk.getName().equals( name ) ) {
+				return fk;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Iterable<ForeignKey> locateForeignKey(TableSpecification targetTable) {
+		List<ForeignKey> result = null;
+		for ( ForeignKey fk : foreignKeys ) {
+			if ( fk.getTargetTable().equals( targetTable ) ) {
+				if ( result == null ) {
+					result = new ArrayList<ForeignKey>();
+				}
+				result.add( fk );
+			}
+		}
+		return result;
+	}
+
 
 	@Override
 	public PrimaryKey getPrimaryKey() {

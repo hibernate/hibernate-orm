@@ -86,6 +86,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return indexes.values();
 	}
 
+	@Override
 	public Index getOrCreateIndex(String name) {
 		if( indexes.containsKey( name ) ){
 			return indexes.get( name );
@@ -100,6 +101,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return uniqueKeys.values();
 	}
 
+	@Override
 	public UniqueKey getOrCreateUniqueKey(String name) {
 		if( uniqueKeys.containsKey( name ) ){
 			return uniqueKeys.get( name );
@@ -108,6 +110,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		uniqueKeys.put(name, uniqueKey );
 		return uniqueKey;
 	}
+
 
 	@Override
 	public Iterable<CheckConstraint> getCheckConstraints() {

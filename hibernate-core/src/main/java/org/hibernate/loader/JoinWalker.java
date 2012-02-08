@@ -707,7 +707,7 @@ public class JoinWalker {
 	 * Does the mapping, and Hibernate default semantics, specify that
 	 * this association should be fetched by outer joining
 	 */
-	protected boolean isJoinedFetchEnabledInMapping(FetchMode config, AssociationType type) 
+	protected boolean isJoinedFetchEnabledInMapping(FetchMode config, AssociationType type)
 	throws MappingException {
 		if ( !type.isEntityType() && !type.isCollectionType() ) {
 			return false;

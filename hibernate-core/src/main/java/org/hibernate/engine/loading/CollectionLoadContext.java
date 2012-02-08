@@ -24,30 +24,21 @@
  */
 package org.hibernate.engine.loading;
 
-import java.sql.ResultSet;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-
+import org.hibernate.CacheMode;
+import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
+import org.hibernate.cache.CacheKey;
+import org.hibernate.cache.entry.CollectionCacheEntry;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.*;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.HibernateException;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.EntityMode;
-import org.hibernate.CacheMode;
-import org.hibernate.cache.entry.CollectionCacheEntry;
-import org.hibernate.cache.CacheKey;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.engine.CollectionKey;
-import org.hibernate.engine.Status;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.SessionFactoryImplementor;
+import java.io.Serializable;
+import java.sql.ResultSet;
+import java.util.*;
 
 /**
  * Represents state associated with the processing of a given {@link ResultSet}

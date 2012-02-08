@@ -23,10 +23,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -39,6 +35,10 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * A locking strategy where the locks are obtained through update statements.
@@ -107,7 +107,9 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 				int affected = st.executeUpdate();
 				if ( affected < 0 ) {
-					factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+					if (factory.getStatistics().isStatisticsEnabled()) {
+						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+					}
 					throw new StaleObjectStateException( lockable.getEntityName(), id );
 				}
 

@@ -27,7 +27,12 @@ import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 
 /**
- * Contract for source information pertaining to a column definition.
+ * Contract for source information pertaining to a physical column definition specific to a particular attribute
+ * context.
+ * <p/>
+ * Conceptual note: this really describes a column from the perspective of its binding to an attribute.
+ * This is especially important for {@link #isIncludedInInsert} and {@link #isIncludedInUpdate}.  There it is
+ * not the column itself being described.
  *
  * @author Steve Ebersole
  */
@@ -109,7 +114,17 @@ public interface ColumnSource extends RelationalValueSource {
 	 */
 	public String getComment();
 
+	/**
+	 * Is the described column written to as part of inserts for the attribute being mapped.
+	 *
+	 * @return {@code true} indicates the column is written on insert from this attribute
+	 */
 	public boolean isIncludedInInsert();
 
+	/**
+	 * Is the described column written to as part of updates for the attribute being mapped.
+	 *
+	 * @return {@code true} indicates the column is written on update from this attribute
+	 */
 	public boolean isIncludedInUpdate();
 }

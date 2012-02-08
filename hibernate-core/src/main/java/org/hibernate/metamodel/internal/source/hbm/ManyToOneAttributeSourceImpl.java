@@ -40,7 +40,7 @@ import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
- * Implementation for {@code <many-to-one/> mappings}
+ * Implementation for {@code <many-to-one/>} mappings
  *
  * @author Steve Ebersole
  */

@@ -27,6 +27,7 @@ package org.hibernate.metamodel.spi.source;
  * Unifying interface for {@link ColumnSource} and {@link DerivedValueSource}.
  *
  * @author Steve Ebersole
+ *
  * @see ColumnSource
  * @see DerivedValueSource
  */

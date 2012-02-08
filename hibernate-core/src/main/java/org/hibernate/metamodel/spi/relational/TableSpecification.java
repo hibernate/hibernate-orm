@@ -79,8 +79,40 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 */
 	public DerivedValue locateOrCreateDerivedValue(String fragment);
 
+	/**
+	 * Retrieve all foreign keys currently defined for this table.
+	 *
+	 * @return All foreign keys defined on this table.
+	 */
 	public Iterable<ForeignKey> getForeignKeys();
 
+	/**
+	 * Locate a foreign key by name
+	 *
+	 * @param name The name of the foreign key to locate
+	 *
+	 * @return The foreign key, or {@code null} to indicate none with that name was found.
+	 */
+	public ForeignKey locateForeignKey(String name);
+
+	/**
+	 * Locate foreign keys with {@code this} table as source and the passed table as the target.
+	 *
+	 * @param targetTable The table that is the target of interest.
+	 *
+	 * @return The matching foreign keys, or {@code null} to indicate none were found.
+	 */
+	public Iterable<ForeignKey> locateForeignKey(TableSpecification targetTable);
+
+	/**
+	 * Create a foreign key targeting the specified table as the target.  Columns should be handled through the
+	 * returned reference.
+	 *
+	 * @param targetTable The table that is the target of the foreign key
+	 * @param name The (optional) name of the foreign key
+	 *
+	 * @return The foreign key reference.
+	 */
 	public ForeignKey createForeignKey(TableSpecification targetTable, String name);
 
 	public Iterable<Index> getIndexes();

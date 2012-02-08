@@ -28,8 +28,11 @@ import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 
 /**
-* @author Steve Ebersole
-*/
+ * Implementation of a {@link ColumnSource} when the column is declared as just the name via the column XML
+ * attribute.  For example, {@code <property name="socialSecurityNumber" column="ssn"/>}.
+ *
+ * @author Steve Ebersole
+ */
 class ColumnAttributeSourceImpl implements ColumnSource {
 	private final String tableName;
 	private final String columnName;

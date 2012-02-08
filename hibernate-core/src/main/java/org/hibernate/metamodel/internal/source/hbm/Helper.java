@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement;
@@ -47,16 +46,15 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
 
 /**
+ * A helper for dealing with
  * @author Steve Ebersole
  * @author Gail Badner
  */
@@ -261,6 +259,21 @@ public class Helper {
 		return Identifier.toIdentifier( name );
 	}
 
+	/**
+	 * For things that define one or more "value sources" there is a lot of variance in terms of how they
+	 * look in the XML.  As an example, consider {@code <property/>} which might have:<ul>
+	 *     <li>a {@code column} XML attribute</li>
+	 *     <li>a {@code formula} XML attribute</li>
+	 *     <li>one or more nested {@code <column/>} XML elements</li>
+	 *     <li>a {@code <formula/>} XML element</li>
+	 * </ul>
+	 * as opposed to {@code <timestamp/>} which can only have:<ul>
+	 *     <li>a {@code column} XML attribute</li>
+	 * </ul>
+	 * <p/>
+	 * This class adapts those variances to a unified contract which is intended to be used in conjunction with
+	 * {@link #buildValueSources}.
+	 */
     public static class ValueSourcesAdapter {
         public String getContainingTableName() {
             return null;
@@ -291,25 +304,37 @@ public class Helper {
         }
     }
 
+	/**
+	 * Given a {@link ValueSourcesAdapter}, build the corresponding list of {@link RelationalValueSource}
+	 *
+	 * @param valueSourcesAdapter The adapter describing the "value sources.
+	 * @param bindingContext The HBM binding context
+	 *
+	 * @return The corresponding list.
+	 */
     public static List<RelationalValueSource> buildValueSources(
 			ValueSourcesAdapter valueSourcesAdapter,
 			LocalBindingContext bindingContext) {
 		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
 
 		if ( StringHelper.isNotEmpty( valueSourcesAdapter.getColumnAttribute() ) ) {
+			// we have the XML defining a column attribute.
+			//		it is therefore illegal for there to also be any nested formula or column elements
 			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw new org.hibernate.metamodel.spi.source.MappingException(
+				throw new MappingException(
 						"column/formula attribute may not be used together with <column>/<formula> subelement",
 						bindingContext.getOrigin()
 				);
 			}
+			//		it is also illegal for there to also be a formula attribute
 			if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
-				throw new org.hibernate.metamodel.spi.source.MappingException(
+				throw new MappingException(
 						"column and formula attributes may not be used together",
 						bindingContext.getOrigin()
 				);
 			}
+
 			result.add(
 					new ColumnAttributeSourceImpl(
 							valueSourcesAdapter.getContainingTableName(),
@@ -321,14 +346,17 @@ public class Helper {
 			);
 		}
 		else if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
+			// we have the XML defining a formula attribute (and not a column attribute)
+			//		it is therefore illegal for there to also be any nested formula or column elements
 			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw new org.hibernate.metamodel.spi.source.MappingException(
+				throw new MappingException(
 						"column/formula attribute may not be used together with <column>/<formula> subelement",
 						bindingContext.getOrigin()
 				);
 			}
-			// column/formula attribute combo checked already
+			// 		column/formula attribute combo checked already
+
 			result.add(
 					new FormulaImpl(
 							valueSourcesAdapter.getContainingTableName(),
@@ -338,6 +366,7 @@ public class Helper {
 		}
 		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+			// we have the XML defining nested formula or column elements (and not column attribute nor formula attribute)
 			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
 				if ( JaxbColumnElement.class.isInstance( columnOrFormulaElement ) ) {
 					result.add(
@@ -361,17 +390,5 @@ public class Helper {
 			}
 		}
 		return result;
-	}
-
-	// todo : remove this once the state objects are cleaned up
-
-	public static Class classForName(String className, ServiceRegistry serviceRegistry) {
-		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		try {
-			return classLoaderService.classForName( className );
-		}
-		catch ( ClassLoadingException e ) {
-			throw new MappingException( "Could not find class: " + className );
-		}
 	}
 }

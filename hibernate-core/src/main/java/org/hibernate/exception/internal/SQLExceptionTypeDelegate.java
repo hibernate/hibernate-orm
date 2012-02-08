@@ -36,6 +36,7 @@ import java.sql.SQLTransactionRollbackException;
 import java.sql.SQLTransientConnectionException;
 
 import org.hibernate.JDBCException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.GenericJDBCException;
@@ -82,8 +83,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 			return new SQLGrammarException( message, sqlException, sql );
 		}
 		else if ( SQLTimeoutException.class.isInstance( sqlException ) ) {
-			// there are no corresponding sql states for this type
-			return new GenericJDBCException( message, sqlException, sql );
+			return new QueryTimeoutException( message, sqlException, sql );
 		}
 		else if ( SQLTransactionRollbackException.class.isInstance( sqlException ) ) {
 			// Not 100% sure this is completely accurate.  The JavaDocs for SQLTransactionRollbackException state that

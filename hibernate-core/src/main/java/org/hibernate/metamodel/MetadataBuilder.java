@@ -25,6 +25,8 @@ package org.hibernate.metamodel;
 
 import javax.persistence.SharedCacheMode;
 
+import org.xml.sax.EntityResolver;
+
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 
@@ -34,6 +36,8 @@ import org.hibernate.cfg.NamingStrategy;
  */
 public interface MetadataBuilder {
 	public MetadataBuilder with(NamingStrategy namingStrategy);
+
+	public MetadataBuilder with(EntityResolver entityResolver);
 
 	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder);
 

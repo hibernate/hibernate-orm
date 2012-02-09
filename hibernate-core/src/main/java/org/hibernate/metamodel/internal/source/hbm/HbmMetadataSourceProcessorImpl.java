@@ -32,6 +32,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.source.Binder;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
  * The {@link org.hibernate.metamodel.spi.source.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
@@ -67,11 +68,15 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		this.entityHierarchies = hierarchyBuilder.groupEntityHierarchies();
 	}
 
+	// todo : still need to deal with auxiliary database objects
+
 	@Override
-	public void processIndependentMetadata(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources) {
+		final List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
-			processor.processIndependentMetadata();
+			processor.collectTypeDescriptorSources( typeDescriptorSources );
 		}
+		return typeDescriptorSources;
 	}
 
 	@Override

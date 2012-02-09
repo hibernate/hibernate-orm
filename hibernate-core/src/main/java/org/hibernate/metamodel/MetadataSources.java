@@ -38,11 +38,7 @@ import java.util.zip.ZipEntry;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
 
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
@@ -54,6 +50,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
+ * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate
+ * about sources and then call {@link #buildMetadata()}.
+ *
  * @author Steve Ebersole
  */
 public class MetadataSources {
@@ -66,19 +65,16 @@ public class MetadataSources {
 	private final JaxbHelper jaxbHelper;
 
 	private final ServiceRegistry serviceRegistry;
-	private final EntityResolver entityResolver;
-	private final NamingStrategy namingStrategy;
 
 	private final MetadataBuilderImpl metadataBuilder;
 
+	/**
+	 * Create a metadata sources using the specified service registry.
+	 *
+	 * @param serviceRegistry The service registry to use.
+	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, EJB3DTDEntityResolver.INSTANCE, EJB3NamingStrategy.INSTANCE );
-	}
-
-	public MetadataSources(ServiceRegistry serviceRegistry, EntityResolver entityResolver, NamingStrategy namingStrategy) {
 		this.serviceRegistry = serviceRegistry;
-		this.entityResolver = entityResolver;
-		this.namingStrategy = namingStrategy;
 
 		this.jaxbHelper = new JaxbHelper( this );
 		this.metadataBuilder = new MetadataBuilderImpl( this );
@@ -100,14 +96,22 @@ public class MetadataSources {
 		return serviceRegistry;
 	}
 
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
-	}
-
+	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
 	public MetadataBuilder getMetadataBuilder() {
 		return metadataBuilder;
 	}
 
+	/**
+	 * Short-hand form of calling {@link #getMetadataBuilder()} and using its
+	 * {@link org.hibernate.metamodel.MetadataBuilder#buildMetadata()} method in cases where the application wants
+	 * to accept the defaults.
+	 *
+	 * @return The built metadata.
+	 */
 	public Metadata buildMetadata() {
 		return getMetadataBuilder().buildMetadata();
 	}

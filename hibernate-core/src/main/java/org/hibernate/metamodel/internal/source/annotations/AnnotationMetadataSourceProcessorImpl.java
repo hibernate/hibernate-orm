@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
@@ -51,6 +52,7 @@ import org.hibernate.metamodel.internal.source.annotations.global.TypeDefProcess
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -106,9 +108,27 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public void processIndependentMetadata(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources) {
 		assertBindingContextExists();
-		TypeDefProcessor.bind( bindingContext );
+
+		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
+		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEF );
+		for ( AnnotationInstance typeDef : annotations ) {
+			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
+		}
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEFS );
+		for ( AnnotationInstance typeDefs : annotations ) {
+			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+					typeDefs,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( AnnotationInstance typeDef : typeDefAnnotations ) {
+				typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
+			}
+		}
+		return typeDescriptorSources;
 	}
 
 	private void assertBindingContextExists() {

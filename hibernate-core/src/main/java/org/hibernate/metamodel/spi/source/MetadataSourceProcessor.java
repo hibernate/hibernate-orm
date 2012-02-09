@@ -41,21 +41,19 @@ public interface MetadataSourceProcessor {
 	public void prepare(MetadataSources sources);
 
 	/**
-	 * Process the independent metadata.  These have no dependency on other types of metadata being processed.
+	 * Retrieve the sources pertaining to type descriptors.
 	 *
 	 * @param sources The metadata sources.
 	 *
-	 * @see #prepare
+	 * @return The type descriptor sources.
 	 */
-	public void processIndependentMetadata(MetadataSources sources);
+	public Iterable<TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources);
 
 	/**
 	 * Process the parts of the metadata that depend on type information (type definitions) having been processed
 	 * and available.
 	 *
 	 * @param sources The metadata sources.
-	 *
-	 * @see #processIndependentMetadata
 	 */
 	public void processTypeDependentMetadata(MetadataSources sources);
 

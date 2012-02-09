@@ -67,6 +67,7 @@ import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -163,7 +164,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
 		prepare( metadataSourceProcessors, metadataSources );
-		bindIndependentMetadata( metadataSourceProcessors, metadataSources );
+
+		processTypeDescriptors( metadataSourceProcessors, metadataSources );
+
 		bindTypeDependentMetadata( metadataSourceProcessors, metadataSources );
 		bindMappingMetadata( metadataSourceProcessors, metadataSources, processedEntityNames );
 		bindMappingDependentMetadata( metadataSourceProcessors, metadataSources );
@@ -181,9 +184,21 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 
-	private void bindIndependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processIndependentMetadata( metadataSources );
+
+	// type descriptors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void processTypeDescriptors(
+			MetadataSourceProcessor[] metadataSourceProcessors,
+			MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDescriptorSources( metadataSources ) ) {
+				final TypeDef typeDef = new TypeDef(
+						typeDescriptorSource.getName(),
+						typeDescriptorSource.getTypeImplementationClassName(),
+						typeDescriptorSource.getParameters()
+				);
+				typeDefs.put( typeDef.getName(), typeDef );
+			}
 		}
 	}
 

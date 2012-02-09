@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.type.Type;
@@ -91,7 +93,6 @@ public class HibernateMappingProcessor {
 
 	public void processIndependentMetadata() {
 		processDatabaseObjectDefinitions();
-		processTypeDefinitions();
 	}
 
 	private void processDatabaseObjectDefinitions() {
@@ -134,23 +135,13 @@ public class HibernateMappingProcessor {
 		}
 	}
 
-	private void processTypeDefinitions() {
+	public void collectTypeDescriptorSources(List<TypeDescriptorSource> typeDescriptorSources) {
 		if ( mappingRoot().getTypedef() == null ) {
 			return;
 		}
 
 		for ( JaxbHibernateMapping.JaxbTypedef typedef : mappingRoot().getTypedef() ) {
-			final Map<String, String> parameters = new HashMap<String, String>();
-			for ( JaxbParamElement paramElement : typedef.getParam() ) {
-				parameters.put( paramElement.getName(), paramElement.getValue() );
-			}
-			metadata.addTypeDefinition(
-					new TypeDef(
-							typedef.getName(),
-							typedef.getClazz(),
-							parameters
-					)
-			);
+			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typedef ) );
 		}
 	}
 

@@ -71,15 +71,16 @@ public class EntityManagerFactoryRegistry {
 		entityManagerFactorySet.add(entityManagerFactory);
 		Set<EntityManagerFactory> previous = entityManagerFactoryMap.putIfAbsent( name, entityManagerFactorySet);
 
-		// if multiple entries are found, give warning and add EMF to existing set
-		// later, if EntityManagerFactoryImpl.deserialize is called for an EM returned from any EMF in the set
-		// an exception will be thrown (failing the deserialization attempt).
+		// if already added under 'name'.  Where 'name' could be session factory name, pu name or uuid (previous
+		// will be null).  We will give a warning that an EntityManagerFactory is created with the same name
+		// as is already used for a different EMF.  The best way to avoid the warning is to specify the AvailableSettings.SESSION_FACTORY_NAME
+		// with a unique name.
 		if (previous != null) {
 			LOG.entityManagerFactoryAlreadyRegistered(name, AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);
 			boolean done = false;
 			while( !done) {
 				synchronized (previous) {
-					if (entityManagerFactoryMap.get(name) == previous) {  // compare and add EMF if same
+					if (entityManagerFactoryMap.get(name) == previous) {  // compare and set EMF if same
 						previous.add(entityManagerFactory);
 						done = true;
 					}

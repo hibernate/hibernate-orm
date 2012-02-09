@@ -23,6 +23,16 @@
  */
 package org.hibernate.ejb;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityExistsException;
@@ -53,16 +63,6 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -124,6 +124,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
+	private static final long serialVersionUID = 78818181L;
 
     private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AbstractEntityManagerImpl.class.getName());
@@ -139,7 +140,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		entityManagerSpecificProperties.add( QueryHints.SPEC_HINT_TIMEOUT );
 	}
 
-	private transient EntityManagerFactoryImpl entityManagerFactory;
+	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
 	protected PersistenceContextType persistenceContextType;
 	private PersistenceUnitTransactionType transactionType;
@@ -1238,12 +1239,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
-		entityManagerFactory.serialize(oos);
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		ois.defaultReadObject();
-		entityManagerFactory = (EntityManagerFactoryImpl)EntityManagerFactoryImpl.deserialize(ois);
 		tx = new TransactionImpl( this );
 	}
 

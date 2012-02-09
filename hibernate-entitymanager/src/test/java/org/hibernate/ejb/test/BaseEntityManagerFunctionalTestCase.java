@@ -109,8 +109,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 		ejb3Configuration
 				.getHibernateConfiguration()
-				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true")
-				.setProperty( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME, "EMF_BaseEntityManagerFunctionalTestCase");
+				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true");
 
 		ejb3Configuration
 				.getHibernateConfiguration()

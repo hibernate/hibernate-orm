@@ -5,6 +5,28 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.10 (2012.02.08)
+-------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11851
+
+** Bug
+    * [HHH-3218] - ManyToOne Persisting Cascade in Embeddable as part of ElementCollection
+    * [HHH-5299] - Multi-Level cascading of unsaved instances with bidirectional associations fails with TransientObjectException (Carl-Eric Menzel)
+    * [HHH-5755] - javax.persistence.criteria.Expression.as() is broken
+    * [HHH-6580] - Discriminator value used as ID when inserting entity to PosgtreSQL
+    * [HHH-6984] - some statistics are incremented even when stats are disabled
+    * [HHH-6986] - BACKPORT: EntityManagerImpl.close() and EntityManagerImpl.isOpen() should check if the session factory is closed
+    * [HHH-6987] - BACKPORT: Create typed query in EntityManager throws NullPointerException when filters are present
+    * [HHH-6988] - BACKPORT: Criteria.setLockMode does not work correctly
+    * [HHH-6989] - BACKPORT: Removing an entity and persisting it again fails
+    * [HHH-6990] - BACKPORT: Improper handling of primitive arrays in AbstractQueryImpl.registerParameterBinding
+    * [HHH-6991] - BACKPORT: SequenceStyleGenerator should force use of TableStructure when the optimizer is PooledLo
+    * [HHH-7008] - HEM leaks bean info
+
+** New Feature
+    * [HHH-7005] - BACKPORT: Ability (easier) to run bits of code in a timeout protected way
+
+
 Changes in version 3.6.9 (2011.12.14)
 -------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11752

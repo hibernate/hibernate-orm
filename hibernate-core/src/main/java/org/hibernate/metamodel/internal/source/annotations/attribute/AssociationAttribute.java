@@ -88,12 +88,12 @@ public class AssociationAttribute extends MappedAttribute {
 		);
 	}
 
-	private AssociationAttribute(String name,
-								 Class<?> javaType,
-								 AttributeNature associationType,
-								 String accessType,
-								 Map<DotName, List<AnnotationInstance>> annotations,
-								 EntityBindingContext context) {
+	AssociationAttribute(String name,
+						 Class<?> javaType,
+						 AttributeNature associationType,
+						 String accessType,
+						 Map<DotName, List<AnnotationInstance>> annotations,
+						 EntityBindingContext context) {
 		super( name, javaType, accessType, annotations, context );
 		this.associationNature = associationType;
 		this.ignoreNotFound = ignoreNotFound();
@@ -243,8 +243,10 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation) {
+		// use the annotated attribute type as default target type
 		String targetTypeName = getAttributeType().getName();
 
+		// unless we have an explicit @Target
 		AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.TARGET

@@ -54,6 +54,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
@@ -92,11 +93,6 @@ public class ConfiguredClass {
 	 * The default access type for this entity
 	 */
 	private final AccessType classAccessType;
-
-	/**
-	 * The type of configured class, entity, mapped super class, embeddable, ...
-	 */
-	private final ConfiguredClassType configuredClassType;
 
 	/**
 	 * The id attributes
@@ -147,7 +143,7 @@ public class ConfiguredClass {
 		this.parent = parent;
 		this.classInfo = classInfo;
 		this.clazz = context.locateClassByName( classInfo.toString() );
-		this.configuredClassType = determineType();
+//		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType( defaultAccessType );
 		this.customTuplizer = determineCustomTuplizer();
 
@@ -220,21 +216,6 @@ public class ConfiguredClass {
 		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
 		sb.append( '}' );
 		return sb.toString();
-	}
-
-	private ConfiguredClassType determineType() {
-		if ( classInfo.annotations().containsKey( JPADotNames.ENTITY ) ) {
-			return ConfiguredClassType.ENTITY;
-		}
-		else if ( classInfo.annotations().containsKey( JPADotNames.MAPPED_SUPERCLASS ) ) {
-			return ConfiguredClassType.MAPPED_SUPERCLASS;
-		}
-		else if ( classInfo.annotations().containsKey( JPADotNames.EMBEDDABLE ) ) {
-			return ConfiguredClassType.EMBEDDABLE;
-		}
-		else {
-			return ConfiguredClassType.NON_ENTITY;
-		}
 	}
 
 	private AccessType determineClassAccessType(AccessType defaultAccessType) {
@@ -485,7 +466,8 @@ public class ConfiguredClass {
 				break;
 			}
 			// OneToOne, OneToMany, ManyToOne, ManyToMany
-			default: {
+			case ONE_TO_ONE:
+			case MANY_TO_ONE: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
 						attributeName,
 						attributeType,
@@ -496,6 +478,19 @@ public class ConfiguredClass {
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}
+			case ONE_TO_MANY:
+			case MANY_TO_MANY: {
+				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
+						attributeName,
+						attributeType,
+						attributeNature,
+						accessTypeString,
+						annotations,
+						getLocalBindingContext()
+				);
+				associationAttributeMap.put( attributeName, attribute );
+			}
+
 		}
 	}
 

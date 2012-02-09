@@ -52,7 +52,7 @@ import org.hibernate.metamodel.spi.source.SingularAttributeNature;
  * @author Hardy Ferentschik
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
-	private static final String PATH_SEPERATOR = ".";
+	private static final String PATH_SEPARATOR = ".";
 	private final EmbeddableClass embeddableClass;
 	private final Value<Class<?>> classReference;
 	private final Map<String, AttributeOverride> attributeOverrides;
@@ -120,7 +120,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;
-			String tmp = getPath() + PATH_SEPERATOR + attribute.getName();
+			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
 			if ( attributeOverrides.containsKey( tmp ) ) {
 				attributeOverride = attributeOverrides.get( tmp );
 			}
@@ -226,7 +226,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		);
 
 		for ( Map.Entry<String, AttributeOverride> entry : embeddableClass.getAttributeOverrideMap().entrySet() ) {
-			String fullPath = getPath() + PATH_SEPERATOR + entry.getKey();
+			String fullPath = getPath() + PATH_SEPARATOR + entry.getKey();
 			if ( !aggregatedOverrideMap.containsKey( fullPath ) ) {
 				aggregatedOverrideMap.put( fullPath, entry.getValue() );
 			}

@@ -36,6 +36,7 @@ https://hibernate.onjira.com/browse/HHH/fixforversion/11223
     * [HHH-7030] - EventListenerRegistry interface generic declaration is not extensible to subclasses
     * [HHH-7034] - java.sql.SQLTimeoutException should be mapped to org.hibernate.QueryTimeoutException
     * [HHH-7041] - SQLServer2005Dialect handles DISTINCT clauses incorrectly
+    * [HHH-7043] - SQLServer2005Dialect should not use alias in the ORDER BY clause when paging
 
 ** Deprecation
     * [HHH-7014] - Deprecate PostgreSQLDialect

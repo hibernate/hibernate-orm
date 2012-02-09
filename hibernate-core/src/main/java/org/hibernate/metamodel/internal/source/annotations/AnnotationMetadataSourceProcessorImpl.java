@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
@@ -39,19 +38,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.source.Binder;
 import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.FilterDefProcessor;
-import org.hibernate.metamodel.internal.source.annotations.global.IdGeneratorProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
-import org.hibernate.metamodel.internal.source.annotations.global.TypeDefProcessor;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -138,21 +135,34 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public void processTypeDependentMetadata(MetadataSources sources) {
+	public Iterable<FilterDefSource> extractFilterDefSources(MetadataSources sources) {
 		assertBindingContextExists();
-		IdGeneratorProcessor.bind( bindingContext );
+
+		List<FilterDefSource> filterDefSources = new ArrayList<FilterDefSource>();
+		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEF );
+		for ( AnnotationInstance filterDef : annotations ) {
+			filterDefSources.add( new FilterDefSourceImpl( filterDef ) );
+		}
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEFS );
+		for ( AnnotationInstance filterDefs : annotations ) {
+			AnnotationInstance[] filterDefAnnotations = JandexHelper.getValue(
+					filterDefs,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( AnnotationInstance filterDef : filterDefAnnotations ) {
+				filterDefSources.add( new FilterDefSourceImpl( filterDef ) );
+			}
+		}
+		return filterDefSources;
 	}
 
 	@Override
-	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
+	public Iterable<? extends EntityHierarchy> extractEntityHierarchies(MetadataSources sources) {
 		assertBindingContextExists();
 		// need to order our annotated entities into an order we can process
-		Set<EntityHierarchy> hierarchies = EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
-
-		Binder binder = new Binder( bindingContext.getMetadataImplementor(), new ArrayList<String>() );
-		for ( EntityHierarchy hierarchy : hierarchies ) {
-			binder.processEntityHierarchy( hierarchy );
-		}
+		return EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
 	}
 
 	@Override

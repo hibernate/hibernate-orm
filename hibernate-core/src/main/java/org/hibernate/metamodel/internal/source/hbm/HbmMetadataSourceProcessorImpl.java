@@ -29,13 +29,13 @@ import java.util.List;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.source.Binder;
+import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.source.FilterDefSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
- * The {@link org.hibernate.metamodel.spi.source.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
+ * The {@link org.hibernate.metamodel.spi.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
  *
  * @author Steve Ebersole
  */
@@ -80,18 +80,17 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	@Override
-	public void processTypeDependentMetadata(MetadataSources sources) {
+	public Iterable<FilterDefSource> extractFilterDefSources(MetadataSources sources) {
+		final List<FilterDefSource> filterDefSources = new ArrayList<FilterDefSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
-			processor.processTypeDependentMetadata();
+			processor.collectFilterDefSources( filterDefSources );
 		}
+		return filterDefSources;
 	}
 
 	@Override
-	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
-		Binder binder = new Binder( metadata, processedEntityNames );
-		for ( EntityHierarchyImpl entityHierarchy : entityHierarchies ) {
-			binder.processEntityHierarchy( entityHierarchy );
-		}
+	public Iterable<EntityHierarchyImpl> extractEntityHierarchies(MetadataSources sources) {
+		return entityHierarchies;
 	}
 
 	@Override

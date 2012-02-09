@@ -53,8 +53,6 @@ public interface FilterDefSource {
 	 * Retrieve parameter sources associated with this filer def.
 	 *
 	 * @return The parameter sources. Can be null.
-	 *
-	 * @see FilterSource#getParameterSources()
 	 */
 	public Iterable<FilterParameterSource> getParameterSources();
 }

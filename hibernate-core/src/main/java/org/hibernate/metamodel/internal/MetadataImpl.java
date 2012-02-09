@@ -131,14 +131,14 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new HbmMetadataSourceProcessorImpl( this ),
-					new AnnotationMetadataSourceProcessorImpl( this )
+					new HbmMetadataSourceProcessorImpl( this, metadataSources ),
+					new AnnotationMetadataSourceProcessorImpl( this, metadataSources )
 			};
 		}
 		else {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new AnnotationMetadataSourceProcessorImpl( this ),
-					new HbmMetadataSourceProcessorImpl( this )
+					new AnnotationMetadataSourceProcessorImpl( this, metadataSources ),
+					new HbmMetadataSourceProcessorImpl( this, metadataSources )
 			};
 		}
 
@@ -159,16 +159,14 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 		);
 
-		prepare( metadataSourceProcessors, metadataSources );
+		processTypeDefinitions( metadataSourceProcessors );
+		processFilterDefinitions( metadataSourceProcessors );
 
-		processTypeDefinitions( metadataSourceProcessors, metadataSources );
-		processFilterDefinitions( metadataSourceProcessors, metadataSources );
+		processIdentifierGenerators( metadataSourceProcessors );
 
-		processIdentifierGenerators( metadataSourceProcessors, metadataSources );
+		processMappings( metadataSourceProcessors );
 
-		processMappings( metadataSourceProcessors, metadataSources );
-
-		bindMappingDependentMetadata( metadataSourceProcessors, metadataSources );
+		bindMappingDependentMetadata( metadataSourceProcessors );
 
 		// todo : remove this by coordinated ordering of entity processing
 		new AssociationResolver( this ).resolve();
@@ -178,22 +176,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 
-	// general preparation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private void prepare(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.prepare( metadataSources );
-		}
-	}
-
-
 	// type definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void processTypeDefinitions(
-			MetadataSourceProcessor[] metadataSourceProcessors,
-			MetadataSources metadataSources) {
+	private void processTypeDefinitions(MetadataSourceProcessor[] metadataSourceProcessors) {
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources( metadataSources ) ) {
+			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources() ) {
 				addTypeDefinition(
 						new TypeDefinition(
 								typeDescriptorSource.getName(),
@@ -233,11 +220,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	// filter definitions  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void processFilterDefinitions(
-			MetadataSourceProcessor[] metadataSourceProcessors,
-			MetadataSources metadataSources) {
+	private void processFilterDefinitions(MetadataSourceProcessor[] metadataSourceProcessors) {
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources( metadataSources ) ) {
+			for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources() ) {
 				addFilterDefinition(
 						new FilterDefinition(
 								filterDefinitionSource.getName(),
@@ -264,19 +249,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	// identifier generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void processIdentifierGenerators(
-			MetadataSourceProcessor[] metadataSourceProcessors,
-			MetadataSources metadataSources) {
+	private void processIdentifierGenerators(MetadataSourceProcessor[] metadataSourceProcessors) {
 		// HHH-7040
 	}
 
-	private void processMappings(
-			MetadataSourceProcessor[] metadataSourceProcessors,
-			MetadataSources metadataSources) {
+	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 		final Binder binder = new Binder( this, processedEntityNames );
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( EntityHierarchy entityHierarchy : processor.extractEntityHierarchies( metadataSources ) ) {
+			for ( EntityHierarchy entityHierarchy : processor.extractEntityHierarchies() ) {
 				binder.processEntityHierarchy( entityHierarchy );
 			}
 		}
@@ -287,9 +268,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 
 
-	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
+	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processMappingDependentMetadata( metadataSources );
+			metadataSourceProcessor.processMappingDependentMetadata();
 		}
 	}
 

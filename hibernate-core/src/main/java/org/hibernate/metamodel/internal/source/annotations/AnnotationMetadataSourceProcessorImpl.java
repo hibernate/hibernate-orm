@@ -63,30 +63,27 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private static final Logger LOG = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
 
 	private final MetadataImplementor metadata;
+
 	private AnnotationBindingContext bindingContext;
 
-	public AnnotationMetadataSourceProcessorImpl(MetadataImpl metadata) {
+	public AnnotationMetadataSourceProcessorImpl(MetadataImpl metadata, MetadataSources metadataSources) {
 		this.metadata = metadata;
-	}
 
-	@Override
-	@SuppressWarnings( { "unchecked" })
-	public void prepare(MetadataSources sources) {
 		// create a jandex index from the annotated classes
 		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : sources.getAnnotatedClasses() ) {
+		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
 			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
 		}
 
 		// add package-info from the configured packages
-		for ( String packageName : sources.getAnnotatedPackages() ) {
+		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
 			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
 		}
 
 		Index index = indexer.complete();
 
 		List<JaxbRoot<JaxbEntityMappings>> mappings = new ArrayList<JaxbRoot<JaxbEntityMappings>>();
-		for ( JaxbRoot<?> root : sources.getJaxbRootList() ) {
+		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
 			if ( root.getRoot() instanceof JaxbEntityMappings ) {
 				mappings.add( (JaxbRoot<JaxbEntityMappings>) root );
 			}
@@ -104,7 +101,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
 		assertBindingContextExists();
 
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
@@ -134,7 +131,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources) {
+	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
 		assertBindingContextExists();
 
 		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
@@ -158,14 +155,14 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public Iterable<? extends EntityHierarchy> extractEntityHierarchies(MetadataSources sources) {
+	public Iterable<EntityHierarchy> extractEntityHierarchies() {
 		assertBindingContextExists();
 		// need to order our annotated entities into an order we can process
 		return EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
 	}
 
 	@Override
-	public void processMappingDependentMetadata(MetadataSources sources) {
+	public void processMappingDependentMetadata() {
 		TableProcessor.bind( bindingContext );
 		FetchProfileProcessor.bind( bindingContext );
 		QueryProcessor.bind( bindingContext );

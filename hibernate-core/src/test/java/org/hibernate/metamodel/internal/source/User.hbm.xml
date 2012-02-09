@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.metamodel.internal.source"
+        xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
+
+    <class name="User">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="userName" column="UNAME"/>
+        <component name="name" class="User$Name">
+            <property name="firstName" column="FNAME"/>
+            <property name="middleName" column="MNAME"/>
+            <property name="lastName" column="LNAME"/>
+        </component>
+
+    </class>
+
+</hibernate-mapping>

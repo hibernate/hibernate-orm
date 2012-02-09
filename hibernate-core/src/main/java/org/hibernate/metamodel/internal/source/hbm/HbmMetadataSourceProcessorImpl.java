@@ -30,6 +30,7 @@ import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
@@ -45,16 +46,12 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
 	private List<EntityHierarchyImpl> entityHierarchies;
 
-	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata) {
+	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, MetadataSources metadataSources) {
 		this.metadata = metadata;
-	}
 
-	@Override
-	@SuppressWarnings( {"unchecked"})
-	public void prepare(MetadataSources sources) {
 		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder();
 
-		for ( JaxbRoot jaxbRoot : sources.getJaxbRootList() ) {
+		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
 			if ( ! JaxbHibernateMapping.class.isInstance( jaxbRoot.getRoot() ) ) {
 				continue;
 			}
@@ -71,7 +68,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	// todo : still need to deal with auxiliary database objects
 
 	@Override
-	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
 		final List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.collectTypeDescriptorSources( typeDescriptorSources );
@@ -80,7 +77,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	@Override
-	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources) {
+	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
 		final List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.collectFilterDefSources( filterDefinitionSources );
@@ -89,12 +86,13 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	@Override
-	public Iterable<EntityHierarchyImpl> extractEntityHierarchies(MetadataSources sources) {
-		return entityHierarchies;
+	@SuppressWarnings( {"unchecked", "RedundantCast"})
+	public Iterable<EntityHierarchy> extractEntityHierarchies() {
+		return (Iterable) entityHierarchies;
 	}
 
 	@Override
-	public void processMappingDependentMetadata(MetadataSources sources) {
+	public void processMappingDependentMetadata() {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.processMappingDependentMetadata();
 		}

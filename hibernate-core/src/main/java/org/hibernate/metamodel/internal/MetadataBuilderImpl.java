@@ -92,7 +92,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		return new MetadataImpl( sources, options );
 	}
 
-	private static class OptionsImpl implements Metadata.Options {
+	public static class OptionsImpl implements Metadata.Options {
 		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
 		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 		// todo : entity-resolver maybe needed for ServiceRegistry building also

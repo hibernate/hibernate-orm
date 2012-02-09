@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
@@ -35,44 +34,29 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
  */
 public interface MetadataSourceProcessor {
 	/**
-	 * Prepare for processing the given sources.
-	 *
-	 * @param sources The metadata sources.
-	 */
-	public void prepare(MetadataSources sources);
-
-	/**
 	 * Retrieve the sources pertaining to type descriptors.
-	 *
-	 * @param sources The metadata sources.
 	 *
 	 * @return The type descriptor sources.
 	 */
-	public Iterable<? extends TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources);
+	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources();
 
 	/**
 	 * Retrieve the sources pertaining to filter defs.
 	 *
-	 * @param sources The metadata sources.
-	 *
 	 * @return The filter def sources.
 	 */
-	public Iterable<? extends FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources);
+	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources();
 
 	/**
 	 * Retrieve the entity hierarchies.
 	 *
-	 * @param sources The metadata sources.
-	 *
 	 * @return The entity hierarchies
 	 */
-	public Iterable<? extends EntityHierarchy> extractEntityHierarchies(MetadataSources sources);
+	public Iterable<EntityHierarchy> extractEntityHierarchies();
 
 	/**
 	 * Process the parts of the metadata that depend on mapping (entities, et al) information having been
 	 * processed and available.
-	 *
-	 * @param sources The metadata sources.
 	 */
-	public void processMappingDependentMetadata(MetadataSources sources);
+	public void processMappingDependentMetadata();
 }

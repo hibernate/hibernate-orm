@@ -23,15 +23,31 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
  * @author Hardy Ferentschik
  */
 public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
-	public SubclassEntitySourceImpl(EntityClass entityClass) {
+
+    private final EntitySource container;
+
+    public SubclassEntitySourceImpl( EntityClass entityClass,
+                                     EntitySource container ) {
 		super( entityClass );
+		this.container = container;
 	}
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.hibernate.metamodel.spi.source.SubclassEntitySource#superclassEntitySource()
+     */
+    @Override
+    public EntitySource superclassEntitySource() {
+        return container;
+    }
 }
 
 

@@ -27,4 +27,9 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface SubclassEntitySource extends EntitySource {
+
+    /**
+     * @return the entity source for the entity that is a superclass of the entity for which this is a source
+     */
+    EntitySource superclassEntitySource();
 }

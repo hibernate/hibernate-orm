@@ -144,7 +144,7 @@ public class EntityHierarchyBuilder {
 					hierarchyInheritanceType,
 					bindingContext
 			);
-			SubclassEntitySource subclassEntitySource = new SubclassEntitySourceImpl( subclassEntityClass );
+			SubclassEntitySource subclassEntitySource = new SubclassEntitySourceImpl( subclassEntityClass, entitySource );
 			entitySource.add( subclassEntitySource );
 			addSubclassEntitySources(
 					bindingContext,

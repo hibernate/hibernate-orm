@@ -33,12 +33,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
@@ -48,7 +52,6 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.CollectionLaziness;
 import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
@@ -59,6 +62,7 @@ import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -67,6 +71,7 @@ import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
@@ -112,41 +117,77 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.Type;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
  * <p/>
- * The API consists of {@link #Binder(MetadataImplementor, List)} and {@link #processEntityHierarchy(EntityHierarchy)}
+ * The API consists of {@link #Binder( MetadataImplementor )} and {@link #processEntityHierarchies(Iterable)}
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
 public class Binder {
 	private final MetadataImplementor metadata;
-	private final List<String> processedEntityNames;
+	private final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
 	private InheritanceType currentInheritanceType;
 	private EntityMode currentHierarchyEntityMode;
 	private LocalBindingContext currentBindingContext;
+    private HashMap<String, EntitySource> sourcesByName = new HashMap<String, EntitySource>();
 
-	public Binder(MetadataImplementor metadata, List<String> processedEntityNames) {
+	public Binder( MetadataImplementor metadata ) {
 		this.metadata = metadata;
-		this.processedEntityNames = processedEntityNames;
 	}
 
 	/**
 	 * Process an entity hierarchy.
 	 *
-	 * @param entityHierarchy THe hierarchy to process.
+	 * @param entityHierarchies THe hierarchies to process.
 	 */
-	public void processEntityHierarchy(EntityHierarchy entityHierarchy) {
-		currentInheritanceType = entityHierarchy.getHierarchyInheritanceType();
-		EntityBinding rootEntityBinding = createEntityBinding( entityHierarchy.getRootEntitySource(), null );
-		if ( currentInheritanceType != InheritanceType.NO_INHERITANCE ) {
-			processHierarchySubEntities( entityHierarchy.getRootEntitySource(), rootEntityBinding );
-		}
-		currentHierarchyEntityMode = null;
+	public void processEntityHierarchies( Iterable<? extends EntityHierarchy> entityHierarchies ) {
+        // Index sources by name so we can find and resolve entities on the fly as references to them are encountered (e.g., within associations)
+        for ( EntityHierarchy hierarchy : entityHierarchies )
+            mapSourcesByName( hierarchy.getRootEntitySource() );
+
+	    for ( EntityHierarchy hierarchy : entityHierarchies ) {
+    	    currentInheritanceType = hierarchy.getHierarchyInheritanceType();
+            RootEntitySource rootEntitySource = hierarchy.getRootEntitySource();
+    		EntityBinding rootEntityBinding = createEntityBinding( rootEntitySource, null );
+    		// Create identifier generator for root entity
+    		Properties properties = new Properties();
+            properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
+            // TODO: where should these be added???
+            if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) )
+                properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
+            if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) )
+                properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, new ObjectNameNormalizer() {
+
+                    @Override
+                    protected boolean isUseQuotedIdentifiersGlobally() {
+                        return metadata.isGloballyQuotedIdentifiers();
+                    }
+
+                    @Override
+                    protected NamingStrategy getNamingStrategy() {
+                        return metadata.getNamingStrategy();
+                    }
+                } );
+            rootEntityBinding.getHierarchyDetails().getEntityIdentifier().
+                createIdentifierGenerator( metadata.getIdentifierGeneratorFactory(), properties );
+
+    		if ( currentInheritanceType != InheritanceType.NO_INHERITANCE )
+    		    processHierarchySubEntities( rootEntitySource, rootEntityBinding );
+    		currentHierarchyEntityMode = null;
+	    }
+	}
+
+	private void mapSourcesByName( EntitySource source ) {
+        sourcesByName.put( source.getEntityName(), source );
+        for ( SubclassEntitySource subsource : source.subclassEntitySources() )
+            mapSourcesByName( subsource );
 	}
 
 	private void processHierarchySubEntities(SubclassEntityContainer subclassEntitySource, EntityBinding superEntityBinding) {
@@ -455,6 +496,7 @@ public class Binder {
 
 		entityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
 		entityBinding.setDiscriminatorMatchValue( entitySource.getDiscriminatorMatchValue() );
+		resolveTypeInformation(discriminator.getExplicitHibernateTypeDescriptor(), relationalValue);
 	}
 
 	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {
@@ -466,7 +508,7 @@ public class Binder {
 	}
 
 	private void bindAttributes(
-			AttributeSourceContainer attributeSourceContainer, 
+			AttributeSourceContainer attributeSourceContainer,
 			AttributeBindingContainer attributeBindingContainer,
 			Deque<TableSpecification> tableStack) {
 		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
@@ -603,26 +645,26 @@ public class Binder {
 		doBasicAttributeBinding( source, binding );
 	}
 
-	private CollectionLaziness interpretLaziness(String laziness) {
-		if ( laziness == null ) {
-			laziness = Boolean.toString( metadata.getMappingDefaults().areAssociationsLazy() );
-		}
-
-		if ( "extra".equals( laziness ) ) {
-			return CollectionLaziness.EXTRA;
-		}
-		else if ( "false".equals( laziness ) ) {
-			return CollectionLaziness.NOT;
-		}
-		else if ( "true".equals( laziness ) ) {
-			return CollectionLaziness.LAZY;
-		}
-
-		throw new MappingException(
-				String.format( "Unexpected collection laziness value %s", laziness ),
-				currentBindingContext.getOrigin()
-		);
-	}
+//	private CollectionLaziness interpretLaziness(String laziness) {
+//		if ( laziness == null ) {
+//			laziness = Boolean.toString( metadata.getMappingDefaults().areAssociationsLazy() );
+//		}
+//
+//		if ( "extra".equals( laziness ) ) {
+//			return CollectionLaziness.EXTRA;
+//		}
+//		else if ( "false".equals( laziness ) ) {
+//			return CollectionLaziness.NOT;
+//		}
+//		else if ( "true".equals( laziness ) ) {
+//			return CollectionLaziness.LAZY;
+//		}
+//
+//		throw new MappingException(
+//				String.format( "Unexpected collection laziness value %s", laziness ),
+//				currentBindingContext.getOrigin()
+//		);
+//	}
 
 	private void bindCollectionTable(
 			PluralAttributeSource attributeSource,
@@ -688,7 +730,7 @@ public class Binder {
 		AbstractPluralAttributeBinding pluralAttributeBinding,
 		Deque<TableSpecification> tableStack) {
 
-		TableSpecification targetTable = tableStack.peekLast();
+//		TableSpecification targetTable = tableStack.peekLast();
 		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
 				attributeSource.getKeySource().getExplicitForeignKeyName(),
 				//tableStack.peekLast().getLogicalName()
@@ -885,21 +927,11 @@ public class Binder {
 		}
 
 		final BasicAttributeBinding attributeBinding;
-		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {
+		if ( attributeSource.getNature() == SingularAttributeNature.BASIC )
 			attributeBinding = attributeBindingContainer.makeBasicAttributeBinding( attribute );
-			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
-		}
-		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE ) {
+		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE )
 			attributeBinding = attributeBindingContainer.makeManyToOneAttributeBinding( attribute );
-			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
-			resolveToOneInformation(
-					(ToOneAttributeSource) attributeSource,
-					(ManyToOneAttributeBinding) attributeBinding
-			);
-		}
-		else {
-			throw new NotYetImplementedException();
-		}
+		else throw new NotYetImplementedException();
 
 		attributeBinding.setGeneration( attributeSource.getGeneration() );
 		attributeBinding.setLazy( attributeSource.isLazy() );
@@ -915,6 +947,25 @@ public class Binder {
 
 		bindRelationalValues( attributeSource, attributeBinding );
 
+        resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+        if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE )
+            resolveToOneInformation( ( ToOneAttributeSource ) attributeSource, ( ManyToOneAttributeBinding ) attributeBinding );
+
+        if ( attributeBinding instanceof SingularAssociationAttributeBinding ) {
+            SingularAssociationAttributeBinding assocAttrBinding = ( SingularAssociationAttributeBinding ) attributeBinding;
+            String referencedEntityName = assocAttrBinding.getReferencedEntityName();
+            EntityBinding referencedEntityBinding = getEntityBinding( referencedEntityName );
+            if (referencedEntityBinding == null) {
+                EntitySource source = sourcesByName.get(referencedEntityName);
+                createEntityBinding(source, referencedEntityBinding);
+            }
+            AttributeBinding referencedAttrBinding = assocAttrBinding.isPropertyReference() ?
+                referencedEntityBinding.locateAttributeBinding( assocAttrBinding.getReferencedAttributeName() ) :
+                referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+            assocAttrBinding.resolveReference( referencedAttrBinding );
+            referencedAttrBinding.addEntityReferencingAttributeBinding( assocAttrBinding );
+        }
+
 		attributeBinding.setMetaAttributeContext(
 				buildMetaAttributeContext(
 						attributeSource.metaAttributes(),
@@ -925,6 +976,24 @@ public class Binder {
 		return attributeBinding;
 	}
 
+	private EntityBinding getEntityBinding( String entityName ) {
+	    // Check if binding has already been created
+        EntityBinding binding = metadata.getEntityBinding( entityName );
+        if ( binding == null ) {
+            // Find appropriate source to create binding
+            EntitySource source = sourcesByName.get( entityName );
+            // Get super entity binding (creating it if necessary using recursive call to this method)
+            EntityBinding superBinding = source instanceof SubclassEntitySource
+                ? getEntityBinding( ( ( SubclassEntitySource ) source ).superclassEntitySource().getEntityName() )
+                : null;
+            // Create entity binding
+            binding = createEntityBinding( source, superBinding );
+            // Create entity binding's sub-entity bindings
+            processHierarchySubEntities( source, binding );
+        }
+        return binding;
+	}
+
 	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
@@ -933,6 +1002,7 @@ public class Binder {
 		}
 
 		resolveTypeInformation( typeSource, attributeBinding.getHibernateTypeDescriptor(), attributeJavaType );
+		resolveTypeInformation( attributeBinding.getHibernateTypeDescriptor(), (SimpleValue)attributeBinding.getValue() );
 	}
 
 	private void resolveTypeInformation(
@@ -974,6 +1044,29 @@ public class Binder {
 			}
 		}
 	}
+
+    private void resolveTypeInformation( HibernateTypeDescriptor descriptor,
+                                         SimpleValue value ) {
+        Type resolvedType = descriptor.getResolvedTypeMapping();
+        if ( resolvedType == null ) {
+            final String name = descriptor.getExplicitTypeName() == null ? descriptor.getJavaTypeName() : descriptor.getExplicitTypeName();
+            if (name != null) {
+                resolvedType = metadata.getTypeResolver().heuristicType( name, convertTypeParametersToProperties( descriptor ) );
+                descriptor.setResolvedTypeMapping( resolvedType );
+            }
+            if (resolvedType == null) return;
+        }
+        if ( descriptor.getJavaTypeName() == null ) descriptor.setJavaTypeName( resolvedType.getReturnedClass().getName() );
+        if ( value.getDatatype() == null )
+            value.setDatatype( new Datatype( resolvedType.sqlTypes( metadata )[0], resolvedType.getName(),
+                                             resolvedType.getReturnedClass() ) );
+    }
+
+    private Properties convertTypeParametersToProperties( HibernateTypeDescriptor descriptor ) {
+        Properties props = new Properties( );
+        if ( descriptor.getTypeParameters() != null ) props.putAll( descriptor.getTypeParameters() );
+        return props;
+    }
 
 	/**
 	 * @param attribute the domain attribute

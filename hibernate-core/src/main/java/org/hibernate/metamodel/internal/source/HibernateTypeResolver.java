@@ -64,11 +64,13 @@ public class HibernateTypeResolver {
 			}
 			for ( AttributeBinding attributeBinding : entityBinding.attributeBindings() ) {
 				if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+	                System.out.println("singlular binding: " + attributeBinding.getAttribute().getName());
 					resolveSingularAttributeTypeInformation(
 							SingularAttributeBinding.class.cast( attributeBinding  )
 					);
 				}
 				else if ( AbstractPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
+	                System.out.println("plural binding: " + attributeBinding.getAttribute().getName());
 					resolvePluralAttributeTypeInformation(
 							AbstractPluralAttributeBinding.class.cast( attributeBinding )
 					);
@@ -126,6 +128,7 @@ public class HibernateTypeResolver {
 		// 		2) we know the java type of the attribute
 		Type resolvedType;
 		resolvedType = determineSingularTypeFromDescriptor( attributeBinding.getHibernateTypeDescriptor() );
+		System.out.println("resolvedType: " + resolvedType);
 		if ( resolvedType == null ) {
 			if ( ! attributeBinding.getAttribute().isSingular() ) {
 				throw new AssertionFailure( "SingularAttributeBinding object has a plural attribute: " + attributeBinding.getAttribute().getName() );

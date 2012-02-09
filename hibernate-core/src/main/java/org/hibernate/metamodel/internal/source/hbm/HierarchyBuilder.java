@@ -36,6 +36,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement;
+import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntityContainer;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
@@ -81,14 +82,14 @@ public class HierarchyBuilder {
 			else {
 				// we have to see if this things super-type has been found yet, and if not add it to the
 				// extends queue
-				final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, entityElement );
+                final String entityItExtends =
+                    currentMappingDocument.getMappingLocalBindingContext().
+                        qualifyClassName( ( (SubEntityElement) entityElement ).getExtends() );
+                final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
+				final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, entityElement, ( EntitySource ) container );
 				final String entityName = subClassEntitySource.getEntityName();
 				subEntityContainerMap.put( entityName, subClassEntitySource );
-				final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext().qualifyClassName(
-						((SubEntityElement) entityElement).getExtends()
-				);
 				processSubElements( entityElement, subClassEntitySource );
-				final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
 				if ( container != null ) {
 					// we already have this entity's super, attach it and continue
 					container.add( subClassEntitySource );
@@ -150,7 +151,7 @@ public class HierarchyBuilder {
 	private void processElements(List subElements, SubclassEntityContainer container) {
 		for ( Object subElementO : subElements ) {
 			final SubEntityElement subElement = (SubEntityElement) subElementO;
-			final SubclassEntitySourceImpl subclassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, subElement );
+			final SubclassEntitySourceImpl subclassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, subElement, ( EntitySource ) container );
 			container.add( subclassEntitySource );
 			final String subEntityName = subclassEntitySource.getEntityName();
 			subEntityContainerMap.put( subEntityName, subclassEntitySource );

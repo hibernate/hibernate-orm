@@ -27,6 +27,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
+import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
 
@@ -34,8 +35,14 @@ import org.hibernate.metamodel.spi.source.TableSource;
  * @author Steve Ebersole
  */
 public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implements SubclassEntitySource {
-	protected SubclassEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
+
+    private final EntitySource container;
+
+	protected SubclassEntitySourceImpl( MappingDocument sourceMappingDocument,
+	                                    EntityElement entityElement,
+	                                    EntitySource container ) {
 		super( sourceMappingDocument, entityElement );
+		this.container = container;
 	}
 
 	@Override
@@ -96,5 +103,15 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		return JaxbSubclassElement.class.isInstance( entityElement() )
 				? ( (JaxbSubclassElement) entityElement() ).getDiscriminatorValue()
 				: null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see SubclassEntitySource#superclassEntitySource()
+	 */
+	@Override
+	public EntitySource superclassEntitySource() {
+	    return container;
 	}
 }

@@ -24,12 +24,8 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
@@ -48,10 +44,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.internal.source.AssociationResolver;
 import org.hibernate.metamodel.internal.source.Binder;
-import org.hibernate.metamodel.internal.source.HibernateTypeResolver;
-import org.hibernate.metamodel.internal.source.IdentifierGeneratorResolver;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
@@ -64,7 +57,6 @@ import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
@@ -74,6 +66,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
+import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -161,18 +154,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		processTypeDefinitions( metadataSourceProcessors );
 		processFilterDefinitions( metadataSourceProcessors );
-
 		processIdentifierGenerators( metadataSourceProcessors );
-
 		processMappings( metadataSourceProcessors );
-
 		bindMappingDependentMetadata( metadataSourceProcessors );
-
-		// todo : remove this by coordinated ordering of entity processing
-		new AssociationResolver( this ).resolve();
-		new HibernateTypeResolver( this ).resolve();
-		// IdentifierGeneratorResolver.resolve() must execute after AttributeTypeResolver.resolve()
-		new IdentifierGeneratorResolver( this ).resolve();
 	}
 
 
@@ -254,19 +238,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
-		final ArrayList<String> processedEntityNames = new ArrayList<String>();
-		final Binder binder = new Binder( this, processedEntityNames );
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( EntityHierarchy entityHierarchy : processor.extractEntityHierarchies() ) {
-				binder.processEntityHierarchy( entityHierarchy );
-			}
-		}
+		final Binder binder = new Binder( this );
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors )
+            binder.processEntityHierarchies( processor.extractEntityHierarchies() );
 	}
-
-
-
-
-
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {

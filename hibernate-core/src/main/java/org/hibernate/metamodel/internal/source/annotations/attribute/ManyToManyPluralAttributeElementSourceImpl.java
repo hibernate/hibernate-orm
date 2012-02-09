@@ -48,7 +48,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getReferencedEntityAttributeName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		// JPA does not have the concept of property refs. Instead column names via @JoinColumn are used
+		return null;
 	}
 
 	@Override
@@ -65,7 +66,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return associationAttribute.getInverseForeignKeyName();
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public boolean fetchImmediately() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return associationAttribute.isLazy();
 	}
 
 	@Override

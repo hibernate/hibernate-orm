@@ -32,17 +32,22 @@ import org.hibernate.FetchMode;
  */
 public interface ManyToManyPluralAttributeElementSource extends PluralAttributeElementSource {
 	public String getReferencedEntityName();
+
 	public String getReferencedEntityAttributeName();
 
 	public List<RelationalValueSource> getValueSources(); // these describe the "outgoing" link
 
 	public boolean isNotFoundAnException();
+
 	public String getExplicitForeignKeyName();
+
 	public boolean isUnique();
 
 	public String getOrderBy();
+
 	public String getWhere();
 
 	public FetchMode getFetchMode();
+
 	public boolean fetchImmediately();
 }

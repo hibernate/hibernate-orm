@@ -30,6 +30,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
@@ -43,6 +44,8 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingC
 public class CollectionAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
 	private final String orderBy;
+	// Used for the non-owning side of a ManyToMany relationship
+	private final String inverseForeignKeyName;
 
 	public static CollectionAssociationAttribute createPluralAssociationAttribute(String name,
 																				  Class<?> attributeType,
@@ -69,6 +72,23 @@ public class CollectionAssociationAttribute extends AssociationAttribute {
 		super( name, javaType, associationType, accessType, annotations, context );
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
+		this.inverseForeignKeyName = determineInverseForeignKeyName();
+
+	}
+
+	private String determineInverseForeignKeyName() {
+		String foreignKeyName = null;
+
+		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.FOREIGN_KEY
+		);
+		if ( foreignKey != null &&
+				StringHelper.isNotEmpty( JandexHelper.getValue( foreignKey, "inverseName", String.class ) ) ) {
+			foreignKeyName = JandexHelper.getValue( foreignKey, "inverseName", String.class );
+		}
+
+		return foreignKeyName;
 	}
 
 	private String determineWereClause() {
@@ -124,6 +144,10 @@ public class CollectionAssociationAttribute extends AssociationAttribute {
 
 	public String getOrderBy() {
 		return orderBy;
+	}
+
+	public String getInverseForeignKeyName() {
+		return inverseForeignKeyName;
 	}
 }
 

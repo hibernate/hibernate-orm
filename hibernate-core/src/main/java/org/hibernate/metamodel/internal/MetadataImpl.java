@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -50,8 +49,12 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.AssociationResolver;
+import org.hibernate.metamodel.internal.source.Binder;
 import org.hibernate.metamodel.internal.source.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.IdentifierGeneratorResolver;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
@@ -61,12 +64,12 @@ import org.hibernate.metamodel.spi.binding.TypeDef;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.FilterDefSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.MetadataSourceProcessor;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -160,12 +163,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		);
 
 
-		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
 		prepare( metadataSourceProcessors, metadataSources );
-		bindIndependentMetadata( metadataSourceProcessors, metadataSources );
-		bindTypeDependentMetadata( metadataSourceProcessors, metadataSources );
-		bindMappingMetadata( metadataSourceProcessors, metadataSources, processedEntityNames );
+
+		processTypeDescriptors( metadataSourceProcessors, metadataSources );
+		processFilterDefs( metadataSourceProcessors, metadataSources );
+		processIdentifierGenerators( metadataSourceProcessors, metadataSources );
+
+		processMappings( metadataSourceProcessors, metadataSources );
+
 		bindMappingDependentMetadata( metadataSourceProcessors, metadataSources );
 
 		// todo : remove this by coordinated ordering of entity processing
@@ -181,23 +187,68 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 
-	private void bindIndependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processIndependentMetadata( metadataSources );
+
+	// type descriptors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void processTypeDescriptors(
+			MetadataSourceProcessor[] metadataSourceProcessors,
+			MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDescriptorSources( metadataSources ) ) {
+				final TypeDef typeDef = new TypeDef(
+						typeDescriptorSource.getName(),
+						typeDescriptorSource.getTypeImplementationClassName(),
+						typeDescriptorSource.getParameters()
+				);
+				typeDefs.put( typeDef.getName(), typeDef );
+			}
 		}
 	}
 
-	private void bindTypeDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processTypeDependentMetadata( metadataSources );
+
+	// filter-defs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void processFilterDefs(
+			MetadataSourceProcessor[] metadataSourceProcessors,
+			MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			for ( FilterDefSource filterDefSource : processor.extractFilterDefSources( metadataSources ) ) {
+				addFilterDefinition(
+						new FilterDefinition(
+								filterDefSource.getName(),
+								filterDefSource.getCondition(),
+								null // the params, todo : need to figure out how to handle the type portion
+						)
+				);
+			}
 		}
 	}
 
-	private void bindMappingMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources, List<String> processedEntityNames) {
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processMappingMetadata( metadataSources, processedEntityNames );
+
+	// identifier generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void processIdentifierGenerators(
+			MetadataSourceProcessor[] metadataSourceProcessors,
+			MetadataSources metadataSources) {
+		// HHH-7040
+	}
+
+	private void processMappings(
+			MetadataSourceProcessor[] metadataSourceProcessors,
+			MetadataSources metadataSources) {
+		final ArrayList<String> processedEntityNames = new ArrayList<String>();
+		final Binder binder = new Binder( this, processedEntityNames );
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			for ( EntityHierarchy entityHierarchy : processor.extractEntityHierarchies( metadataSources ) ) {
+				binder.processEntityHierarchy( entityHierarchy );
+			}
 		}
 	}
+
+
+
+
+
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {

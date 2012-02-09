@@ -25,15 +25,17 @@ package org.hibernate.metamodel.internal;
 
 import javax.persistence.SharedCacheMode;
 
+import org.xml.sax.EntityResolver;
+
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
 
@@ -52,6 +54,12 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	@Override
 	public MetadataBuilder with(NamingStrategy namingStrategy) {
 		this.options.namingStrategy = namingStrategy;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(EntityResolver entityResolver) {
+		this.options.entityResolver = entityResolver;
 		return this;
 	}
 
@@ -87,6 +95,9 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	private static class OptionsImpl implements Metadata.Options {
 		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
 		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
+		// todo : entity-resolver maybe needed for ServiceRegistry building also
+		// 		maybe move there and default to looking up that value somehow?
+		private EntityResolver entityResolver = EJB3DTDEntityResolver.INSTANCE;
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 		private AccessType defaultCacheAccessType;
         private boolean useNewIdentifierGenerators;
@@ -162,6 +173,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		@Override
 		public NamingStrategy getNamingStrategy() {
 			return namingStrategy;
+		}
+
+		@Override
+		public EntityResolver getEntityResolver() {
+			return entityResolver;
 		}
 
 		@Override

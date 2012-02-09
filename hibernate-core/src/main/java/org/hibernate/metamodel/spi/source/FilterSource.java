@@ -46,15 +46,4 @@ public interface FilterSource {
 	 * @see {@link org.hibernate.metamodel.spi.source.FilterDefSource#getCondition()}
 	 */
 	public String getCondition();
-
-	/**
-	 * Retrieves the defined sources of parameter information pertaining to this filer.
-	 * <p/>
-	 * Will be <b>merged</b> with parameter sources associated with matching "filter def"
-	 *
-	 * @return The parameter sources defined on the filter.
-	 *
-	 * @see {@link org.hibernate.metamodel.spi.source.FilterDefSource#getParameterSources()}
-	 */
-	public Iterable<FilterParameterSource> getParameterSources();
 }

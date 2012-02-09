@@ -50,11 +50,11 @@ public interface FetchProfileSource {
 		public String getAttributeName();
 
 		/**
-		 * Retrieve the fetch mode to be applied to the association as part of this profile.
+		 * Retrieve the name of the fetch mode to be applied to the association as part of this profile.
 		 *
-		 * @return the fetch mode.
+		 * @return the fetch mode name.
 		 */
-		public FetchMode getFetchMode();
+		public String getFetchModeName();
 	}
 
 	/**

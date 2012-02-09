@@ -21,11 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
-
-import java.util.List;
+package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
  * Handles the processing of metadata sources in a dependency-ordered manner.
@@ -41,41 +42,37 @@ public interface MetadataSourceProcessor {
 	public void prepare(MetadataSources sources);
 
 	/**
-	 * Process the independent metadata.  These have no dependency on other types of metadata being processed.
+	 * Retrieve the sources pertaining to type descriptors.
 	 *
 	 * @param sources The metadata sources.
 	 *
-	 * @see #prepare
+	 * @return The type descriptor sources.
 	 */
-	public void processIndependentMetadata(MetadataSources sources);
+	public Iterable<? extends TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources);
 
 	/**
-	 * Process the parts of the metadata that depend on type information (type definitions) having been processed
-	 * and available.
+	 * Retrieve the sources pertaining to filter defs.
 	 *
 	 * @param sources The metadata sources.
 	 *
-	 * @see #processIndependentMetadata
+	 * @return The filter def sources.
 	 */
-	public void processTypeDependentMetadata(MetadataSources sources);
+	public Iterable<? extends FilterDefSource> extractFilterDefSources(MetadataSources sources);
 
 	/**
-	 * Process the mapping (entities, et al) metadata.
+	 * Retrieve the entity hierarchies.
 	 *
 	 * @param sources The metadata sources.
-	 * @param processedEntityNames Collection of any already processed entity names.
 	 *
-	 * @see #processTypeDependentMetadata
+	 * @return The entity hierarchies
 	 */
-	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames);
+	public Iterable<? extends EntityHierarchy> extractEntityHierarchies(MetadataSources sources);
 
 	/**
 	 * Process the parts of the metadata that depend on mapping (entities, et al) information having been
 	 * processed and available.
 	 *
 	 * @param sources The metadata sources.
-	 *
-	 * @see #processMappingMetadata
 	 */
 	public void processMappingDependentMetadata(MetadataSources sources);
 }

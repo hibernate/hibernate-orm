@@ -260,6 +260,33 @@ public class Helper {
 	}
 
 	/**
+	 * Operates like SQL coalesce expression, except empty strings are treated as null.  Return the first non-empty value
+	 *
+	 * @param values The list of values.
+	 * @param <T>
+	 *
+	 * @return The first non-empty value, or null if all values were empty
+	 */
+	public static <T> T coalesce(T... values) {
+		if ( values == null ) {
+			return null;
+		}
+		for ( T value : values ) {
+			if ( value != null ) {
+				if ( String.class.isInstance( value ) ) {
+					if ( StringHelper.isNotEmpty( (String) value ) ) {
+						return value;
+					}
+				}
+				else {
+					return value;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * For things that define one or more "value sources" there is a lot of variance in terms of how they
 	 * look in the XML.  As an example, consider {@code <property/>} which might have:<ul>
 	 *     <li>a {@code column} XML attribute</li>

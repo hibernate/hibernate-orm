@@ -27,6 +27,8 @@ package org.hibernate.metamodel;
 import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
+import org.xml.sax.EntityResolver;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
@@ -50,6 +52,7 @@ public interface Metadata {
 	public static interface Options {
 		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
 		public NamingStrategy getNamingStrategy();
+		public EntityResolver getEntityResolver();
 		public SharedCacheMode getSharedCacheMode();
 		public AccessType getDefaultAccessType();
 		public boolean useNewIdentifierGenerators();

@@ -23,35 +23,31 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.TypeDef;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
+import org.hibernate.metamodel.spi.source.FilterDefSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
-import org.hibernate.type.Type;
 
 /**
  * Responsible for processing a {@code <hibernate-mapping/>} element.  Allows processing to be coordinated across
  * all hbm files in an ordered fashion.  The order is essentially the same as defined in
- * {@link org.hibernate.metamodel.spi.source.MetadataSourceProcessor}
+ * {@link org.hibernate.metamodel.spi.MetadataSourceProcessor}
  *
  * @author Steve Ebersole
  */
@@ -71,6 +67,7 @@ public class HibernateMappingProcessor {
 	public HibernateMappingProcessor(MetadataImplementor metadata, MappingDocument mappingDocument) {
 		this.metadata = metadata;
 		this.mappingDocument = mappingDocument;
+		processDatabaseObjectDefinitions();
 	}
 
 	private JaxbHibernateMapping mappingRoot() {
@@ -87,11 +84,6 @@ public class HibernateMappingProcessor {
 
 	private <T> Class<T> classForName(String name) {
 		return classLoaderService.getValue().classForName( bindingContext().qualifyClassName( name ) );
-	}
-
-	public void processIndependentMetadata() {
-		processDatabaseObjectDefinitions();
-		processTypeDefinitions();
 	}
 
 	private void processDatabaseObjectDefinitions() {
@@ -134,67 +126,26 @@ public class HibernateMappingProcessor {
 		}
 	}
 
-	private void processTypeDefinitions() {
+	public void collectTypeDescriptorSources(List<TypeDescriptorSource> typeDescriptorSources) {
 		if ( mappingRoot().getTypedef() == null ) {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbTypedef typedef : mappingRoot().getTypedef() ) {
-			final Map<String, String> parameters = new HashMap<String, String>();
-			for ( JaxbParamElement paramElement : typedef.getParam() ) {
-				parameters.put( paramElement.getName(), paramElement.getValue() );
-			}
-			metadata.addTypeDefinition(
-					new TypeDef(
-							typedef.getName(),
-							typedef.getClazz(),
-							parameters
-					)
-			);
+		for ( JaxbHibernateMapping.JaxbTypedef typeDefElement : mappingRoot().getTypedef() ) {
+			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDefElement ) );
 		}
 	}
 
-	public void processTypeDependentMetadata() {
-		processFilterDefinitions();
-		processIdentifierGenerators();
-	}
-
-	private void processFilterDefinitions() {
+	public void collectFilterDefSources(List<FilterDefSource> filterDefSources) {
 		if ( mappingRoot().getFilterDef() == null ) {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbFilterDef filterDefinition : mappingRoot().getFilterDef() ) {
-			final String name = filterDefinition.getName();
-			final Map<String,Type> parameters = new HashMap<String, Type>();
-			String condition = null;
-			for ( Object o : filterDefinition.getContent() ) {
-				if ( o instanceof String ) {
-					// represents the condition
-					if ( condition != null ) {
-						// log?
-					}
-					condition = (String) o;
-				}
-				else if ( o instanceof JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam ) {
-					final JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam paramElement =
-							JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam.class.cast( o );
-					// todo : should really delay this resolution until later to allow typedef names
-					parameters.put(
-							paramElement.getName(),
-							metadata.getTypeResolver().heuristicType( paramElement.getType() )
-					);
-				}
-				else {
-					throw new MappingException( "Unrecognized nested filter content", origin() );
-				}
-			}
-			if ( condition == null ) {
-				condition = filterDefinition.getCondition();
-			}
-			metadata.addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
+		for ( JaxbHibernateMapping.JaxbFilterDef filterDefElement : mappingRoot().getFilterDef() ) {
+			filterDefSources.add( new FilterDefSourceImpl( filterDefElement ) );
 		}
 	}
+
 
 	private void processIdentifierGenerators() {
 		if ( mappingRoot().getIdentifierGenerator() == null ) {

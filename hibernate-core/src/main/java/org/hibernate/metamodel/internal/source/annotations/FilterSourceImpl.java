@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel;
+package org.hibernate.metamodel.internal.source.annotations;
 
-import javax.persistence.SharedCacheMode;
+import org.jboss.jandex.AnnotationInstance;
 
-import org.xml.sax.EntityResolver;
-
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.source.FilterSource;
 
 /**
  * @author Steve Ebersole
- * @author Hardy Ferentschik
  */
-public interface MetadataBuilder {
-	public MetadataBuilder with(NamingStrategy namingStrategy);
+public class FilterSourceImpl implements FilterSource {
+	private final String name;
+	private final String condition;
 
-	public MetadataBuilder with(EntityResolver entityResolver);
+	public FilterSourceImpl(AnnotationInstance filterAnnotation) {
+		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class );
+		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class );
+	}
 
-	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder);
+	@Override
+	public String getName() {
+		return name;
+	}
 
-	public MetadataBuilder with(SharedCacheMode cacheMode);
-
-	public MetadataBuilder with(AccessType accessType);
-
-	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
-
-	public Metadata buildMetadata();
+	@Override
+	public String getCondition() {
+		return condition;
+	}
 }

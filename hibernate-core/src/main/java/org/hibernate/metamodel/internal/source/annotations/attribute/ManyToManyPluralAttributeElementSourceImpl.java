@@ -35,9 +35,9 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Hardy Ferentschik
  */
 public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
-	private final PluralAssociationAttribute associationAttribute;
+	private final CollectionAssociationAttribute associationAttribute;
 
-	public ManyToManyPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
+	public ManyToManyPluralAttributeElementSourceImpl(CollectionAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 	}
 

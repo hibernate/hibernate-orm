@@ -29,26 +29,28 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 
 /**
- * Represents an association attribute.
+ * Represents an collection association attribute.
  *
  * @author Hardy Ferentschik
  */
-public class PluralAssociationAttribute extends AssociationAttribute {
+public class CollectionAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
 	private final String orderBy;
 
-	public static PluralAssociationAttribute createPluralAssociationAttribute(String name,
-																			  Class<?> attributeType,
-																			  AttributeNature attributeNature,
-																			  String accessType,
-																			  Map<DotName, List<AnnotationInstance>> annotations,
-																			  EntityBindingContext context) {
-		return new PluralAssociationAttribute(
+	public static CollectionAssociationAttribute createPluralAssociationAttribute(String name,
+																				  Class<?> attributeType,
+																				  AttributeNature attributeNature,
+																				  String accessType,
+																				  Map<DotName, List<AnnotationInstance>> annotations,
+																				  EntityBindingContext context) {
+		return new CollectionAssociationAttribute(
 				name,
 				attributeType,
 				attributeNature,
@@ -58,12 +60,12 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		);
 	}
 
-	private PluralAssociationAttribute(String name,
-									   Class<?> javaType,
-									   AttributeNature associationType,
-									   String accessType,
-									   Map<DotName, List<AnnotationInstance>> annotations,
-									   EntityBindingContext context) {
+	private CollectionAssociationAttribute(String name,
+										   Class<?> javaType,
+										   AttributeNature associationType,
+										   String accessType,
+										   Map<DotName, List<AnnotationInstance>> annotations,
+										   EntityBindingContext context) {
 		super( name, javaType, associationType, accessType, annotations, context );
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
@@ -83,12 +85,34 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private String determineOrderBy() {
 		String orderBy = null;
 
-		AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
+		AnnotationInstance hibernateWhereAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.ORDER_BY
 		);
-		if ( whereAnnotation != null ) {
-			orderBy = JandexHelper.getValue( whereAnnotation, "clause", String.class );
+
+		AnnotationInstance jpaWhereAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				JPADotNames.ORDER_BY
+		);
+
+		if ( jpaWhereAnnotation != null && hibernateWhereAnnotation != null ) {
+			throw new AnnotationException(
+					"Cannot use sql order by clause (@org.hibernate.annotations.OrderBy) " +
+							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getName()
+			);
+		}
+
+		if ( hibernateWhereAnnotation != null ) {
+			orderBy = JandexHelper.getValue( hibernateWhereAnnotation, "clause", String.class );
+		}
+
+		if ( jpaWhereAnnotation != null ) {
+			// todo
+			// this could be an empty string according to JPA spec 11.1.38 -
+			// If the ordering element is not specified for an entity association, ordering by the primary key of the
+			// associated entity is assumed
+			// The binder will need to take this into account and generate the right property names
+			orderBy = JandexHelper.getValue( jpaWhereAnnotation, "value", String.class );
 		}
 
 		return orderBy;

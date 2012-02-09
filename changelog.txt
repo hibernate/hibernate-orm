@@ -5,6 +5,71 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+
+Changes in version 4.1.0.Final (2012.02.08)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11223
+
+** Bug
+    * [HHH-3218] - ManyToOne Persisting Cascade in Embeddable as part of ElementCollection
+    * [HHH-3544] - Nullability.checkNullability() throws PropertyValueException (not-null property references a null property) for a property that ForeignKeys.Nullifier.nullifyTransientReferences() just nulled
+    * [HHH-3853] - one-to-one mapping doesn support Primary Key Association
+    * [HHH-4962] - @ManyToOne with @JoinTable fails
+    * [HHH-5024] - MetadataContext#registerAttribute does not recognize inherited fields
+    * [HHH-5299] - Multi-Level cascading of unsaved instances with bidirectional associations fails with TransientObjectException (Carl-Eric Menzel)
+    * [HHH-5755] - javax.persistence.criteria.Expression.as() is broken
+    * [HHH-6580] - Discriminator value used as ID when inserting entity to PosgtreSQL
+    * [HHH-6689] - DefaultMergeEventListener changes CheckNullability flag - not thread save
+    * [HHH-6738] - Hardcoded alias causing problems
+    * [HHH-6744] - TransientObjectException thrown on dirty check during flush with CHECK_NULLABILITY set to false
+    * [HHH-6825] - AuditException with @OneToOne-mappedBy and @PrimaryKeyJoinColumn
+    * [HHH-6964] - EnversIntegrator is always detected by default while initializing Serviceregistry using Native Hibernate API causing a MappingException even when Envers is not used
+    * [HHH-6967] - Reapply HHH-6906
+    * [HHH-6969] - Reference manual discusses removed SessionFactory.openSession(Interceptor) method
+    * [HHH-6984] - some statistics are incremented even when stats are disabled
+    * [HHH-7003] - Scale = 0 doesn't supported
+    * [HHH-7006] - keyword "top" causes test fail on ms sql server
+    * [HHH-7007] - Replacing the region factory in the global cache command factory could affect other apps
+    * [HHH-7016] - NullPointerException in CacheAdapterImpl when evictAll
+    * [HHH-7021] - PostgreSQL 8.1 and earlier does not support if exists before drop (Eric Dalquist)
+    * [HHH-7022] - AbstractMultiTenantConnectionProvider never closes connections causing resource exhaustion
+    * [HHH-7030] - EventListenerRegistry interface generic declaration is not extensible to subclasses
+    * [HHH-7034] - java.sql.SQLTimeoutException should be mapped to org.hibernate.QueryTimeoutException
+    * [HHH-7041] - SQLServer2005Dialect handles DISTINCT clauses incorrectly
+
+** Deprecation
+    * [HHH-7014] - Deprecate PostgreSQLDialect
+    * [HHH-7032] - Deprecate Dialect.buildSQLExceptionConverter()
+
+** Improvement
+    * [HHH-2879] - add an actual api for loading an entity by natural candidate key (mapped natural-id)
+    * [HHH-3910] - custom dirty flag tracking
+    * [HHH-4358] - Having to use @ForceDiscriminator kind of breaks JPA compatibility
+    * [HHH-5472] - Delay saving an entity if it does not cascade the save to non-nullable transient entities
+    * [HHH-6923] - Remove org.hibernate.service.instrumentation.spi.InstrumentationService
+    * [HHH-6944] - Update Dialects to return SQLExceptionConversionDelegate
+    * [HHH-6957] - Throw TransientPropertyValueException if there are unresolved entity insert actions after persist/save/merge listeners execute
+    * [HHH-6968] - Update overview.html for aggregated JavaDocs
+    * [HHH-6974] - Add caching to new "load access" api for natural id loading
+    * [HHH-6980] - Upgrade to Infinispan 5.1.0.CR4
+    * [HHH-6994] - Have EntityEntry fire notification to PersistenceContext on loadedState being updated
+    * [HHH-6998] - Expand CustomEntityDirtinessStrategy to define findDirty
+    * [HHH-7009] - Create PostgreSQL81Dialect and PostgreSQL82Dialect (Eric Dalquist)
+    * [HHH-7026] - upgrade to infinispan 5.1.1.FINAL
+
+** New Feature
+    * [HHH-6605] - Storing information about changes of properties
+
+** Task
+    * [HHH-6082] - Incorporate EntityManager documentation into main dev guide
+    * [HHH-6336] - Add TenantIdentifierResolver
+    * [HHH-6656] - Document org.hibernate.service.classloading.spi.ClassLoaderService
+    * [HHH-6966] - Re apply HHH-6782
+    * [HHH-6985] - Change up tests for PostgreSQL LockMode issues
+    * [HHH-7011] - Document multi-tenancy
+    * [HHH-7018] - change EntityManagerFactory serialization to just serialize the name and lookup the previously created EntityManagerFactory during deserialization
+
+
 Changes in version 4.0.1.Final (2012.01.11)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11754

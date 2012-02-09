@@ -29,7 +29,7 @@ package org.hibernate.metamodel.spi.source;
  *
  * @author Steve Ebersole
  */
-public interface FilterDefSource {
+public interface FilterDefinitionSource {
 	/**
 	 * Retrieve the name of the filter.  Would match the related {@link FilterSource#getName}
 	 *

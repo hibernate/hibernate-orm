@@ -37,7 +37,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
@@ -136,13 +136,13 @@ public class HibernateMappingProcessor {
 		}
 	}
 
-	public void collectFilterDefSources(List<FilterDefSource> filterDefSources) {
+	public void collectFilterDefSources(List<FilterDefinitionSource> filterDefinitionSources) {
 		if ( mappingRoot().getFilterDef() == null ) {
 			return;
 		}
 
 		for ( JaxbHibernateMapping.JaxbFilterDef filterDefElement : mappingRoot().getFilterDef() ) {
-			filterDefSources.add( new FilterDefSourceImpl( filterDefElement ) );
+			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDefElement ) );
 		}
 	}
 

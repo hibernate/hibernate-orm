@@ -33,6 +33,8 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
  * @author Steve Ebersole
  */
 public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
+	private static final String[] NO_REGISTRATION_KEYS = new String[0];
+
 	private final String name;
 	private final String implementationClassName;
 	private final Map<String,String> params;
@@ -54,8 +56,8 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	}
 
 	@Override
-	public Iterable<String> getRegistrationKeys() {
-		return Collections.emptyList();
+	public String[] getRegistrationKeys() {
+		return NO_REGISTRATION_KEYS;
 	}
 
 	@Override

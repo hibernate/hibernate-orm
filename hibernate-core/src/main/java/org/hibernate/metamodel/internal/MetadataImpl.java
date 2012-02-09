@@ -60,12 +60,12 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.TypeDef;
+import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
@@ -105,20 +105,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final MappingDefaults mappingDefaults;
 
-	/**
-	 * Maps the fully qualified class name of an entity to its entity binding
-	 */
-	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
+	private Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
+	private Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
 
+	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports = new HashMap<String, String>();
-	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
 	private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
 	private Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-	private Map<String, FilterDefinition> filterDefs = new HashMap<String, FilterDefinition>();
 
     private boolean globallyQuotedIdentifiers = false;
 
@@ -162,12 +159,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 		);
 
-
-
 		prepare( metadataSourceProcessors, metadataSources );
 
-		processTypeDescriptors( metadataSourceProcessors, metadataSources );
-		processFilterDefs( metadataSourceProcessors, metadataSources );
+		processTypeDefinitions( metadataSourceProcessors, metadataSources );
+		processFilterDefinitions( metadataSourceProcessors, metadataSources );
+
 		processIdentifierGenerators( metadataSourceProcessors, metadataSources );
 
 		processMappings( metadataSourceProcessors, metadataSources );
@@ -181,6 +177,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		new IdentifierGeneratorResolver( this ).resolve();
 	}
 
+
+	// general preparation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	private void prepare(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
 			metadataSourceProcessor.prepare( metadataSources );
@@ -188,40 +187,78 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 
-	// type descriptors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// type definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void processTypeDescriptors(
+	private void processTypeDefinitions(
 			MetadataSourceProcessor[] metadataSourceProcessors,
 			MetadataSources metadataSources) {
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDescriptorSources( metadataSources ) ) {
-				final TypeDef typeDef = new TypeDef(
-						typeDescriptorSource.getName(),
-						typeDescriptorSource.getTypeImplementationClassName(),
-						typeDescriptorSource.getParameters()
+			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources( metadataSources ) ) {
+				addTypeDefinition(
+						new TypeDefinition(
+								typeDescriptorSource.getName(),
+								classLoaderService().classForName( typeDescriptorSource.getTypeImplementationClassName() ),
+								typeDescriptorSource.getRegistrationKeys(),
+								typeDescriptorSource.getParameters()
+						)
 				);
-				typeDefs.put( typeDef.getName(), typeDef );
 			}
 		}
 	}
 
+	@Override
+	public void addTypeDefinition(TypeDefinition typeDefinition) {
+		if ( typeDefinition == null ) {
+			throw new IllegalArgumentException( "Type definition is null" );
+		}
+		else if ( typeDefinition.getName() == null ) {
+			throw new IllegalArgumentException( "Type definition name is null: " + typeDefinition.getTypeImplementorClass().getName() );
+		}
+		final TypeDefinition previous = typeDefinitionMap.put( typeDefinition.getName(), typeDefinition );
+		if ( previous != null ) {
+			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDefinition.getName(), typeDefinition.getTypeImplementorClass().getName() );
+		}
+	}
 
-	// filter-defs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public Iterable<TypeDefinition> getTypeDefinitions() {
+		return typeDefinitionMap.values();
+	}
 
-	private void processFilterDefs(
+	@Override
+	public TypeDefinition getTypeDefinition(String name) {
+		return typeDefinitionMap.get( name );
+	}
+
+
+	// filter definitions  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void processFilterDefinitions(
 			MetadataSourceProcessor[] metadataSourceProcessors,
 			MetadataSources metadataSources) {
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( FilterDefSource filterDefSource : processor.extractFilterDefSources( metadataSources ) ) {
+			for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources( metadataSources ) ) {
 				addFilterDefinition(
 						new FilterDefinition(
-								filterDefSource.getName(),
-								filterDefSource.getCondition(),
+								filterDefinitionSource.getName(),
+								filterDefinitionSource.getCondition(),
 								null // the params, todo : need to figure out how to handle the type portion
 						)
 				);
 			}
 		}
+	}
+
+	@Override
+	public void addFilterDefinition(FilterDefinition filterDefinition) {
+		if ( filterDefinition == null || filterDefinition.getFilterName() == null ) {
+			throw new IllegalArgumentException( "Filter definition object or name is null: "  + filterDefinition );
+		}
+		filterDefinitionMap.put( filterDefinition.getFilterName(), filterDefinition );
+	}
+
+	public Iterable<FilterDefinition> getFilterDefinitions() {
+		return filterDefinitionMap.values();
 	}
 
 
@@ -262,18 +299,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
 		}
 		fetchProfiles.put( profile.getName(), profile );
-	}
-
-	@Override
-	public void addFilterDefinition(FilterDefinition def) {
-		if ( def == null || def.getFilterName() == null ) {
-			throw new IllegalArgumentException( "Filter definition object or name is null: "  + def );
-		}
-		filterDefs.put( def.getFilterName(), def );
-	}
-
-	public Iterable<FilterDefinition> getFilterDefinitions() {
-		return filterDefs.values();
 	}
 
 	@Override
@@ -350,30 +375,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions() {
 		return resultSetMappings.values();
-	}
-
-	@Override
-	public void addTypeDefinition(TypeDef typeDef) {
-		if ( typeDef == null ) {
-			throw new IllegalArgumentException( "Type definition is null" );
-		}
-		else if ( typeDef.getName() == null ) {
-			throw new IllegalArgumentException( "Type definition name is null: " + typeDef.getTypeClass() );
-		}
-		final TypeDef previous = typeDefs.put( typeDef.getName(), typeDef );
-		if ( previous != null ) {
-			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDef.getName(), typeDef.getTypeClass() );
-		}
-	}
-
-	@Override
-	public Iterable<TypeDef> getTypeDefinitions() {
-		return typeDefs.values();
-	}
-
-	@Override
-	public TypeDef getTypeDefinition(String name) {
-		return typeDefs.get( name );
 	}
 
 	private ClassLoaderService classLoaderService() {

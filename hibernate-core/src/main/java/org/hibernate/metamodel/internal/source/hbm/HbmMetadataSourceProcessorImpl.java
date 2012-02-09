@@ -30,7 +30,7 @@ import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
@@ -71,7 +71,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	// todo : still need to deal with auxiliary database objects
 
 	@Override
-	public Iterable<TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources) {
 		final List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.collectTypeDescriptorSources( typeDescriptorSources );
@@ -80,12 +80,12 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	@Override
-	public Iterable<FilterDefSource> extractFilterDefSources(MetadataSources sources) {
-		final List<FilterDefSource> filterDefSources = new ArrayList<FilterDefSource>();
+	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources) {
+		final List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
-			processor.collectFilterDefSources( filterDefSources );
+			processor.collectFilterDefSources( filterDefinitionSources );
 		}
-		return filterDefSources;
+		return filterDefinitionSources;
 	}
 
 	@Override

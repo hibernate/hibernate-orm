@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
- * Defines the source of filter information.  May have an associated {@link FilterDefSource}.
+ * Defines the source of filter information.  May have an associated {@link FilterDefinitionSource}.
  * Relates to both {@code <filter/>} and {@link org.hibernate.annotations.Filter @Filter}
  *
  * @author Steve Ebersole
@@ -43,7 +43,7 @@ public interface FilterSource {
 	 *
 	 * @return The condition defined on the filter.
 	 *
-	 * @see {@link org.hibernate.metamodel.spi.source.FilterDefSource#getCondition()}
+	 * @see {@link FilterDefinitionSource#getCondition()}
 	 */
 	public String getCondition();
 }

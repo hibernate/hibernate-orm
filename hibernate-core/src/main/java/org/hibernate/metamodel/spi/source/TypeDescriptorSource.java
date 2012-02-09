@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * Describes the source of a custom type description.  For example, {@code <type-def/>} or
- * {@link org.hibernate.annotations.TypeDef @TypeDef}
+ * {@link org.hibernate.annotations.TypeDef @TypeDefinition}
  *
  * @author Steve Ebersole
  */
@@ -58,7 +58,7 @@ public interface TypeDescriptorSource {
 	 *
 	 * @return The registration keys for the type built from this type def.
 	 */
-	public Iterable<String> getRegistrationKeys();
+	public String[] getRegistrationKeys();
 
 	/**
 	 * Types accept configuration.  The values here represent the user supplied values that will be given

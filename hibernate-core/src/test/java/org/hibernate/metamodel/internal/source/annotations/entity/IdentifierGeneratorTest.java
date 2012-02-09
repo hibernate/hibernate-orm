@@ -44,6 +44,8 @@ import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.service.ServiceRegistryBuilder;
 
+import org.hibernate.testing.FailureExpected;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -170,6 +172,7 @@ public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-7040" )
 	@Resources(annotatedClasses = NamedGeneratorEntity2.class)
 	public void testNamedGenerator() {
 		EntityBinding binding = getEntityBinding( NamedGeneratorEntity2.class );

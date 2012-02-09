@@ -40,7 +40,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.TypeDef;
+import org.hibernate.metamodel.spi.binding.TypeDefinition;
 
 /**
  * @author Steve Ebersole
@@ -80,9 +80,9 @@ public interface Metadata {
 
 	public Iterable<PluralAttributeBinding> getCollectionBindings();
 
-	public TypeDef getTypeDefinition(String name);
+	public TypeDefinition getTypeDefinition(String name);
 
-	public Iterable<TypeDef> getTypeDefinitions();
+	public Iterable<TypeDefinition> getTypeDefinitions();
 
 	public Iterable<FilterDefinition> getFilterDefinitions();
 

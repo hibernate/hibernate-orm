@@ -1284,7 +1284,7 @@ public final class AnnotationBinder {
 
 		if ( BinderHelper.isEmptyAnnotationValue( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
 			throw new AnnotationException(
-					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass " +
+					"Either name or defaultForType (or both) attribute should be set in TypeDefinition having typeClass " +
 							defAnn.typeClass().getName()
 			);
 		}

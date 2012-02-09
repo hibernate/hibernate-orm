@@ -33,7 +33,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.TypeDef;
+import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TypeResolver;
@@ -56,7 +56,7 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	public void addFetchProfile(FetchProfile profile);
 
-	public void addTypeDefinition(TypeDef typeDef);
+	public void addTypeDefinition(TypeDefinition typeDefinition);
 
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 

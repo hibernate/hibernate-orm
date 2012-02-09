@@ -40,14 +40,13 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
-import org.hibernate.metamodel.internal.source.annotations.global.FilterDefProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -105,7 +104,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public Iterable<TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources) {
+	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources) {
 		assertBindingContextExists();
 
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
@@ -135,13 +134,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
-	public Iterable<FilterDefSource> extractFilterDefSources(MetadataSources sources) {
+	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources) {
 		assertBindingContextExists();
 
-		List<FilterDefSource> filterDefSources = new ArrayList<FilterDefSource>();
+		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEF );
 		for ( AnnotationInstance filterDef : annotations ) {
-			filterDefSources.add( new FilterDefSourceImpl( filterDef ) );
+			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
 		}
 
 		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEFS );
@@ -152,10 +151,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					AnnotationInstance[].class
 			);
 			for ( AnnotationInstance filterDef : filterDefAnnotations ) {
-				filterDefSources.add( new FilterDefSourceImpl( filterDef ) );
+				filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
 			}
 		}
-		return filterDefSources;
+		return filterDefinitionSources;
 	}
 
 	@Override
@@ -170,7 +169,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		TableProcessor.bind( bindingContext );
 		FetchProfileProcessor.bind( bindingContext );
 		QueryProcessor.bind( bindingContext );
-		FilterDefProcessor.bind( bindingContext );
 	}
 
 	private Index parseAndUpdateIndex(List<JaxbRoot<JaxbEntityMappings>> mappings, Index annotationIndex) {

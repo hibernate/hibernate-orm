@@ -57,7 +57,7 @@ import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.binding.TypeDef;
+import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Component;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
@@ -820,11 +820,11 @@ public class Binder {
 
 		final String explicitTypeName = typeSource.getName();
 		if ( explicitTypeName != null ) {
-			final TypeDef typeDef = currentBindingContext.getMetadataImplementor()
+			final TypeDefinition typeDefinition = currentBindingContext.getMetadataImplementor()
 					.getTypeDefinition( explicitTypeName );
-			if ( typeDef != null ) {
-				hibernateTypeDescriptor.setExplicitTypeName( typeDef.getTypeClass() );
-				hibernateTypeDescriptor.getTypeParameters().putAll( typeDef.getParameters() );
+			if ( typeDefinition != null ) {
+				hibernateTypeDescriptor.setExplicitTypeName( typeDefinition.getTypeImplementorClass().getName() );
+				hibernateTypeDescriptor.getTypeParameters().putAll( typeDefinition.getParameters() );
 			}
 			else {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );

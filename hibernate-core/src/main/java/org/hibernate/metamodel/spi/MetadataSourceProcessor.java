@@ -25,7 +25,7 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
@@ -48,7 +48,7 @@ public interface MetadataSourceProcessor {
 	 *
 	 * @return The type descriptor sources.
 	 */
-	public Iterable<? extends TypeDescriptorSource> extractTypeDescriptorSources(MetadataSources sources);
+	public Iterable<? extends TypeDescriptorSource> extractTypeDefinitionSources(MetadataSources sources);
 
 	/**
 	 * Retrieve the sources pertaining to filter defs.
@@ -57,7 +57,7 @@ public interface MetadataSourceProcessor {
 	 *
 	 * @return The filter def sources.
 	 */
-	public Iterable<? extends FilterDefSource> extractFilterDefSources(MetadataSources sources);
+	public Iterable<? extends FilterDefinitionSource> extractFilterDefinitionSources(MetadataSources sources);
 
 	/**
 	 * Retrieve the entity hierarchies.

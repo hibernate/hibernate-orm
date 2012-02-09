@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +38,7 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	private final String name;
 	private final String implementationClassName;
-	private final String registrationKey;
+	private final String[] registrationKeys;
 
 	private Map<String, String> parameterValueMap;
 
@@ -53,17 +52,18 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 				defaultForType = null;
 			}
 		}
-		registrationKey = defaultForType;
+		String registrationKey = defaultForType;
 
 		if ( StringHelper.isEmpty( name ) && registrationKey == null ) {
 			throw new AnnotationException(
 					String.format(
-							"Either name or defaultForType (or both) must be set on TypeDef [%s]",
+							"Either name or defaultForType (or both) must be set on TypeDefinition [%s]",
 							implementationClassName
 					)
 			);
 		}
 
+		this.registrationKeys = registrationKey == null ? new String[0] : new String[] { registrationKey };
 		this.parameterValueMap = extractParameterValues( typeDefAnnotation );
 	}
 
@@ -94,10 +94,8 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	}
 
 	@Override
-	public Iterable<String> getRegistrationKeys() {
-		return registrationKey == null
-				? Collections.<String>emptyList()
-				: Collections.singletonList( registrationKey );
+	public String[] getRegistrationKeys() {
+		return registrationKeys;
 	}
 
 	@Override

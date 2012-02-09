@@ -21,36 +21,43 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations;
+package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import org.hibernate.metamodel.spi.source.FilterDefSource;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
 
 /**
  * @author Steve Ebersole
  */
-public class FilterDefSourceImpl implements FilterDefSource {
+public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
 	private final String name;
 	private final String condition;
 	private List<FilterParameterSource> parameterSources;
 
-	public FilterDefSourceImpl(AnnotationInstance filterDefAnnotation) {
-		this.name = JandexHelper.getValue( filterDefAnnotation, "name", String.class );
-		this.condition = JandexHelper.getValue( filterDefAnnotation, "defaultCondition", String.class );
-		this.parameterSources = buildParameterSources( filterDefAnnotation );
-	}
+	public FilterDefinitionSourceImpl(JaxbHibernateMapping.JaxbFilterDef filterDefElement) {
+		this.name = filterDefElement.getName();
 
-	private List<FilterParameterSource> buildParameterSources(AnnotationInstance filterDefAnnotation) {
+		String conditionAttribute = filterDefElement.getCondition();
+		String conditionContent = null;
+
 		final List<FilterParameterSource> parameterSources = new ArrayList<FilterParameterSource>();
-		for ( AnnotationInstance paramAnnotation : JandexHelper.getValue( filterDefAnnotation, "parameters", AnnotationInstance[].class ) ) {
-			parameterSources.add( new FilterParameterSourceImpl( paramAnnotation ) );
+		for ( Object content : filterDefElement.getContent() ) {
+			if ( String.class.isInstance( content ) ){
+				conditionContent = (String) content;
+			}
+			else {
+				parameterSources.add(
+						new FilterParameterSourceImpl( (JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam) content )
+				);
+			}
 		}
-		return parameterSources;
+
+		this.condition = Helper.coalesce( conditionContent, conditionAttribute );
+		this.parameterSources = parameterSources;
 	}
 
 	@Override
@@ -72,9 +79,9 @@ public class FilterDefSourceImpl implements FilterDefSource {
 		private final String name;
 		private final String type;
 
-		public FilterParameterSourceImpl(AnnotationInstance paramAnnotation) {
-			this.name = JandexHelper.getValue( paramAnnotation, "name", String.class );
-			this.type = JandexHelper.getValue( paramAnnotation, "type", String.class );
+		public FilterParameterSourceImpl(JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam filterParamElement) {
+			this.name = filterParamElement.getName();
+			this.type = filterParamElement.getType();
 		}
 
 		@Override

@@ -96,6 +96,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.CollectionTypeInfo;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Fetch;
@@ -1977,6 +1978,11 @@ public final class AnnotationBinder {
 				collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 				collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 				collectionBinder.bind();
+				
+				CollectionTypeInfo collectionTypeInfo = property.getAnnotation( CollectionTypeInfo.class );
+				if (collectionTypeInfo != null)  {
+					collectionBinder.getCollection().setTypeName(collectionTypeInfo.name());
+				}
 
 			}
 			//Either a regular property or a basic @Id or @EmbeddedId while not ignoring id annotations

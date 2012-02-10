@@ -116,16 +116,6 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 		return versionElement.getAccess();
 	}
 
-	@Override
-	public boolean isInsertable() {
-		return Helper.getBooleanValue( versionElement.isInsert(), true );
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return true;
-	}
-
 	private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
 			new Value.DeferredInitializer<PropertyGeneration>() {
 				@Override
@@ -171,7 +161,7 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return true;
+		return Helper.getBooleanValue( versionElement.isInsert(), true );
 	}
 
 	@Override

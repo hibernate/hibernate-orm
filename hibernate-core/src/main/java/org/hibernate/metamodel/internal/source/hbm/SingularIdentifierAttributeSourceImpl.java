@@ -129,16 +129,6 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return true;
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return false;
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		return PropertyGeneration.INSERT;
 	}
@@ -170,7 +160,7 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return true;
+		return false;
 	}
 
 	@Override

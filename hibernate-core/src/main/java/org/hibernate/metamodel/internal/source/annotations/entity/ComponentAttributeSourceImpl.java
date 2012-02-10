@@ -170,16 +170,6 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return true;
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return true;
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		return null;
 	}

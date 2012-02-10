@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 
@@ -63,7 +64,7 @@ public interface ColumnSource extends RelationalValueSource {
 	 *
 	 * @return {@code true} indicates it is nullable; {@code false} non-nullable.
 	 */
-	public boolean isNullable();
+	public TruthValue isNullable();
 
 	/**
 	 * Obtain a specified default value for the column
@@ -119,12 +120,12 @@ public interface ColumnSource extends RelationalValueSource {
 	 *
 	 * @return {@code true} indicates the column is written on insert from this attribute
 	 */
-	public boolean isIncludedInInsert();
+	public TruthValue isIncludedInInsert();
 
 	/**
 	 * Is the described column written to as part of updates for the attribute being mapped.
 	 *
 	 * @return {@code true} indicates the column is written on update from this attribute
 	 */
-	public boolean isIncludedInUpdate();
+	public TruthValue isIncludedInUpdate();
 }

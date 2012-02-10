@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Steve Ebersole
@@ -53,8 +53,8 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isNullable() {
-		return columnValues.isNullable();
+	public TruthValue isNullable() {
+		return columnValues.isNullable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
 	@Override
@@ -96,13 +96,13 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isIncludedInInsert() {
-		return columnValues.isInsertable();
+	public TruthValue isIncludedInInsert() {
+		return columnValues.isInsertable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
 	@Override
-	public boolean isIncludedInUpdate() {
-		return columnValues.isUpdatable();
+	public TruthValue isIncludedInUpdate() {
+		return columnValues.isUpdatable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
 	@Override

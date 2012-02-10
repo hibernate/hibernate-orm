@@ -186,16 +186,6 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return componentElement.isInsert();
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return componentElement.isUpdate();
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		// todo : is this correct here?
 		return null;
@@ -218,12 +208,12 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return isInsertable();
+		return componentElement.isInsert();
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return isUpdatable();
+		return componentElement.isUpdate();
 	}
 
 	@Override

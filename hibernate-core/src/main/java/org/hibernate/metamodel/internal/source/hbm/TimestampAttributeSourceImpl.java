@@ -116,16 +116,6 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 		return timestampElement.getAccess();
 	}
 
-	@Override
-	public boolean isInsertable() {
-		return true;
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return true;
-	}
-
 	private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
 			new Value.DeferredInitializer<PropertyGeneration>() {
 				@Override

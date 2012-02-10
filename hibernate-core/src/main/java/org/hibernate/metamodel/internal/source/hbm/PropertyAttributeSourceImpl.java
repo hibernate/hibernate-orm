@@ -120,16 +120,6 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return Helper.getBooleanValue( propertyElement.isInsert(), true );
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return Helper.getBooleanValue( propertyElement.isUpdate(), true );
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		return PropertyGeneration.parse( propertyElement.getGenerated() );
 	}

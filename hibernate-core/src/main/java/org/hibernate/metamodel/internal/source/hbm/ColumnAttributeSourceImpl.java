@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * Implementation of a {@link ColumnSource} when the column is declared as just the name via the column XML
@@ -37,29 +37,29 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 class ColumnAttributeSourceImpl implements ColumnSource {
 	private final String tableName;
 	private final String columnName;
-	private boolean includedInInsert;
-	private boolean includedInUpdate;
-    private boolean isForceNotNull;
+	private TruthValue includedInInsert;
+	private TruthValue includedInUpdate;
+    private TruthValue nullable;
 
 	ColumnAttributeSourceImpl(
 			String tableName,
 			String columnName,
-			boolean includedInInsert,
-			boolean includedInUpdate) {
-		this(tableName, columnName, includedInInsert, includedInUpdate, false);
+			TruthValue includedInInsert,
+			TruthValue includedInUpdate) {
+		this( tableName, columnName, includedInInsert, includedInUpdate, TruthValue.UNKNOWN );
 	}
 
     ColumnAttributeSourceImpl(
 			String tableName,
 			String columnName,
-			boolean includedInInsert,
-			boolean includedInUpdate,
-            boolean isForceNotNull) {
+			TruthValue includedInInsert,
+			TruthValue includedInUpdate,
+            TruthValue nullable) {
 		this.tableName = tableName;
 		this.columnName = columnName;
 		this.includedInInsert = includedInInsert;
 		this.includedInUpdate = includedInUpdate;
-        this.isForceNotNull = isForceNotNull;
+        this.nullable = nullable;
 	}
 
 	@Override
@@ -68,12 +68,12 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isIncludedInInsert() {
+	public TruthValue isIncludedInInsert() {
 		return includedInInsert;
 	}
 
 	@Override
-	public boolean isIncludedInUpdate() {
+	public TruthValue isIncludedInUpdate() {
 		return includedInUpdate;
 	}
 
@@ -88,8 +88,8 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isNullable() {
-		return !isForceNotNull;
+	public TruthValue isNullable() {
+		return nullable;
 	}
 
 	@Override

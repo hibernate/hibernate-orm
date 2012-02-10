@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.EntityMode;
+import org.hibernate.TruthValue;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
@@ -217,8 +218,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					return new ColumnAttributeSourceImpl(
 							null, // root table
 							discriminatorElement.getColumnAttribute(),
-							discriminatorElement.isInsert(),
-							discriminatorElement.isInsert()
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE
 					);
 				}
 				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormulaAttribute() ) ) {
@@ -228,8 +229,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					return new ColumnSourceImpl(
 							null, // root table
 							discriminatorElement.getColumn(),
-							discriminatorElement.isInsert(),
-							discriminatorElement.isInsert()
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE
 					);
 				}
 				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormula() ) ) {

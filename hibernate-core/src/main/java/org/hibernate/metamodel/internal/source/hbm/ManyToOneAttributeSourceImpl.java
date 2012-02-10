@@ -105,16 +105,6 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return manyToOneElement.isInsert();
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return manyToOneElement.isUpdate();
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		return PropertyGeneration.NEVER;
 	}

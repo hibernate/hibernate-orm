@@ -61,16 +61,6 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public boolean isInsertable() {
-		return attribute.isInsertable();
-	}
-
-	@Override
-	public boolean isUpdatable() {
-		return attribute.isUpdatable();
-	}
-
-	@Override
 	public PropertyGeneration getGeneration() {
 		return attribute.getPropertyGeneration();
 	}
@@ -119,17 +109,17 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return true;
+		return attribute.isInsertable();
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return true;
+		return attribute.isUpdatable();
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return true;
+		return attribute.isOptional();
 	}
 }
 

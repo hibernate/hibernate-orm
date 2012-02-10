@@ -36,28 +36,30 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.TruthValue;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.metamodel.internal.source.hbm.Helper;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
+import org.hibernate.metamodel.spi.binding.CollectionLaziness;
 import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.Fetchable;
-import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
-import org.hibernate.metamodel.spi.binding.MetaAttribute;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
-import org.hibernate.metamodel.spi.binding.CollectionLaziness;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.MetaAttribute;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -76,23 +78,24 @@ import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Tuple;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
-import org.hibernate.metamodel.spi.source.DerivedValueSource;
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.metamodel.internal.source.hbm.Helper;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.ColumnBindingDefaults;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
+import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
@@ -109,7 +112,6 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
-import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -413,6 +415,23 @@ public class Binder {
 		entityBinding.getHierarchyDetails().setVersioningAttributeBinding( attributeBinding );
 	}
 
+	public static final ColumnBindingDefaults DISCRIMINATOR_COLUMN_BINDING_DEFAULTS = new ColumnBindingDefaults() {
+		@Override
+		public boolean areValuesIncludedInInsertByDefault() {
+			return true;
+		}
+
+		@Override
+		public boolean areValuesIncludedInUpdateByDefault() {
+			return false;
+		}
+
+		@Override
+		public boolean areValuesNullableByDefault() {
+			return false;
+		}
+	};
+
 	private void bindDiscriminator(RootEntitySource entitySource, EntityBinding entityBinding) {
 		final DiscriminatorSource discriminatorSource = entitySource.getDiscriminatorSource();
 		if ( discriminatorSource == null ) {
@@ -422,7 +441,8 @@ public class Binder {
 		EntityDiscriminator discriminator = new EntityDiscriminator();
 		SimpleValue relationalValue = makeSimpleValue(
 				entityBinding,
-				discriminatorSource.getDiscriminatorRelationalValueSource()
+				discriminatorSource.getDiscriminatorRelationalValueSource(),
+				DISCRIMINATOR_COLUMN_BINDING_DEFAULTS
 		);
 		discriminator.setBoundValue( relationalValue );
 
@@ -1108,12 +1128,12 @@ public class Binder {
 
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-					final Column column = makeColumn( (ColumnSource) valueSource, table );
+					final Column column = makeColumn( (ColumnSource) valueSource, relationalValueSourceContainer, table );
 					valueBindings.add(
 							new SimpleValueBinding(
 									column,
-									columnSource.isIncludedInInsert(),
-									columnSource.isIncludedInUpdate()
+									decode( columnSource.isIncludedInInsert(), relationalValueSourceContainer.areValuesIncludedInInsertByDefault() ),
+									decode( columnSource.isIncludedInUpdate(), relationalValueSourceContainer.areValuesIncludedInUpdateByDefault() )
 							)
 					);
 				}
@@ -1136,13 +1156,7 @@ public class Binder {
 									.getPrimaryTable()
 									.locateOrCreateColumn( name );
 			column.setNullable( relationalValueSourceContainer.areValuesNullableByDefault() );
-			valueBindings.add(
-					new SimpleValueBinding(
-							column,
-							relationalValueSourceContainer.areValuesIncludedInInsertByDefault(),
-							relationalValueSourceContainer.areValuesIncludedInUpdateByDefault()
-					)
-			);
+			valueBindings.add( new SimpleValueBinding( column ) );
 		}
 		return valueBindings;
 	}
@@ -1153,23 +1167,29 @@ public class Binder {
 
 	private SimpleValue makeSimpleValue(
 			EntityBinding entityBinding,
-			RelationalValueSource valueSource) {
+			RelationalValueSource valueSource,
+			ColumnBindingDefaults columnBindingDefaults) {
 		final TableSpecification table = entityBinding.locateTable( valueSource.getContainingTableName() );
 
 		if ( ColumnSource.class.isInstance( valueSource ) ) {
-			return makeColumn( (ColumnSource) valueSource, table );
+			return makeColumn( (ColumnSource) valueSource, columnBindingDefaults, table );
 		}
 		else {
 			return makeDerivedValue( (DerivedValueSource) valueSource, table );
 		}
 	}
 
-	private Column makeColumn(ColumnSource columnSource, TableSpecification table) {
+	private Column makeColumn(
+			ColumnSource columnSource,
+			ColumnBindingDefaults columnBindingDefaults,
+			TableSpecification table) {
 		String name = columnSource.getName();
 		name = metadata.getOptions().getNamingStrategy().columnName( name );
 		name = quoteIdentifier( name );
 		final Column column = table.locateOrCreateColumn( name );
-		column.setNullable( columnSource.isNullable() );
+		column.setNullable(
+				decode( columnSource.isNullable(), columnBindingDefaults.areValuesNullableByDefault() )
+		);
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 		column.setSize( columnSource.getSize() );
@@ -1180,6 +1200,20 @@ public class Binder {
 		column.setCheckCondition( columnSource.getCheckCondition() );
 		column.setComment( columnSource.getComment() );
 		return column;
+	}
+
+	private boolean decode(TruthValue truthValue, boolean defaultValue) {
+		switch ( truthValue ) {
+			case FALSE: {
+				return false;
+			}
+			case TRUE: {
+				return true;
+			}
+			default: {
+				return defaultValue;
+			}
+		}
 	}
 
 	private DerivedValue makeDerivedValue(DerivedValueSource derivedValueSource, TableSpecification table) {

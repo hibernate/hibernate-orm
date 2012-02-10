@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import org.hibernate.TruthValue;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
 * @author Steve Ebersole
@@ -35,29 +35,29 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 class ColumnSourceImpl implements ColumnSource {
 	private final String tableName;
 	private final JaxbColumnElement columnElement;
-	private boolean includedInInsert;
-	private boolean includedInUpdate;
-    private final boolean isForceNotNull;
+	private final TruthValue includedInInsert;
+	private final TruthValue includedInUpdate;
+    private final TruthValue nullable;
 
 	ColumnSourceImpl(
 			String tableName,
 			JaxbColumnElement columnElement,
-			boolean isIncludedInInsert,
-			boolean isIncludedInUpdate) {
-		this(tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, false);
+			TruthValue isIncludedInInsert,
+			TruthValue isIncludedInUpdate) {
+		this( tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, TruthValue.UNKNOWN );
 	}
 
     ColumnSourceImpl(
             String tableName,
             JaxbColumnElement columnElement,
-            boolean isIncludedInInsert,
-            boolean isIncludedInUpdate,
-            boolean isForceNotNull) {
+            TruthValue isIncludedInInsert,
+            TruthValue isIncludedInUpdate,
+            TruthValue nullable) {
         this.tableName = tableName;
         this.columnElement = columnElement;
-        this.isForceNotNull = isForceNotNull;
-        includedInInsert = isIncludedInInsert;
-        includedInUpdate = isIncludedInUpdate;
+        this.nullable = nullable;
+        this.includedInInsert = isIncludedInInsert;
+        this.includedInUpdate = isIncludedInUpdate;
     }
 
 	@Override
@@ -71,9 +71,8 @@ class ColumnSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isNullable() {
-        if(isForceNotNull)return false;
-		return ! columnElement.isNotNull();
+	public TruthValue isNullable() {
+		return nullable;
 	}
 
 	@Override
@@ -127,12 +126,12 @@ class ColumnSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isIncludedInInsert() {
+	public TruthValue isIncludedInInsert() {
 		return includedInInsert;
 	}
 
 	@Override
-	public boolean isIncludedInUpdate() {
+	public TruthValue isIncludedInUpdate() {
 		return includedInUpdate;
 	}
 

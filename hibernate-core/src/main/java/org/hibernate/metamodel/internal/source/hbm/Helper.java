@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.TruthValue;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement;
@@ -366,9 +367,9 @@ public class Helper {
 					new ColumnAttributeSourceImpl(
 							valueSourcesAdapter.getContainingTableName(),
 							valueSourcesAdapter.getColumnAttribute(),
-							valueSourcesAdapter.isIncludedInInsertByDefault(),
-							valueSourcesAdapter.isIncludedInUpdateByDefault(),
-                            valueSourcesAdapter.isForceNotNull()
+							valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+							valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+                            valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.TRUE
 					)
 			);
 		}
@@ -400,9 +401,9 @@ public class Helper {
 							new ColumnSourceImpl(
 									valueSourcesAdapter.getContainingTableName(),
 									(JaxbColumnElement) columnOrFormulaElement,
-									valueSourcesAdapter.isIncludedInInsertByDefault(),
-									valueSourcesAdapter.isIncludedInUpdateByDefault(),
-                                    valueSourcesAdapter.isForceNotNull()
+									valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+									valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+                                    valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.TRUE
 							)
 					);
 				}

@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.internal.source;
 
 import java.util.Iterator;
-import java.util.List;
 
 import org.hibernate.EntityMode;
 import org.hibernate.mapping.PropertyGeneration;
@@ -34,10 +33,8 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -123,11 +120,6 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		assertEquals( "id", identifierAttributeSource.getName() );
 		assertTrue( identifierAttributeSource.isSingular() );
 		assertFalse( identifierAttributeSource.isVirtualAttribute() );
-		// todo : see note about semantic interpretation below ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// todo : also, it's not really the attribute that is insertable/updatable; it is its individual values
-		assertTrue( identifierAttributeSource.isInsertable() );
-		assertFalse( identifierAttributeSource.isUpdatable() );
-		// todo : ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertFalse( identifierAttributeSource.isLazy() );
 		assertEquals( SingularAttributeNature.BASIC, identifierAttributeSource.getNature() );
 		assertEquals( PropertyGeneration.INSERT, identifierAttributeSource.getGeneration() );
@@ -141,7 +133,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		//
 		// So do sources simply return explicit user values?  Or do they consider such semantic analysis?
 		assertTrue( identifierAttributeSource.areValuesIncludedInInsertByDefault() );
-		assertTrue( identifierAttributeSource.areValuesIncludedInUpdateByDefault() );
+		assertFalse( identifierAttributeSource.areValuesIncludedInUpdateByDefault() );
 		assertFalse( identifierAttributeSource.areValuesNullableByDefault() );
 
 		// todo : return collections?  or iterables?

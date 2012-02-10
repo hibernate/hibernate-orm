@@ -42,7 +42,7 @@ import java.util.List;
  * 
  * @author Steve Ebersole
  */
-public interface RelationalValueSourceContainer {
+public interface RelationalValueSourceContainer extends ColumnBindingDefaults {
 	/**
 	 * Obtain the contained {@link RelationalValueSource} references.
 	 *
@@ -50,30 +50,4 @@ public interface RelationalValueSourceContainer {
 	 */
 	public List<RelationalValueSource> relationalValueSources();
 
-	/**
-	 * How should non-specification of value insertion by the individual value sources here be
-	 * interpreted in terms of defaulting that value.
-	 *
-	 * @return {@code true} Indicates that insertions are enabled by default for all value sources which
-	 * do not explicitly specify.
-	 */
-	public boolean areValuesIncludedInInsertByDefault();
-
-	/**
-	 * How should non-specification of value updating by the individual value sources here be
-	 * interpreted in terms of defaulting that value.
-	 *
-	 * @return {@code true} Indicates that updates are enabled by default for all value sources which
-	 * do not explicitly specify.
-	 */
-	public boolean areValuesIncludedInUpdateByDefault();
-
-	/**
-	 * How should non-specification of value nullability by the individual value sources here be
-	 * interpreted in terms of defaulting that value.
-	 *
-	 * @return {@code true} Indicates that insertions are enabled by default for all value sources which
-	 * do not explicitly specify.
-	 */
-	public boolean areValuesNullableByDefault();
 }

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -79,6 +80,10 @@ public class PluralAttributeKeyBinding {
 	 */
 	public boolean isInverse() {
 		return inverse;
+	}
+
+	public void setInverse(boolean inverse) {
+		this.inverse = inverse;
 	}
 
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {

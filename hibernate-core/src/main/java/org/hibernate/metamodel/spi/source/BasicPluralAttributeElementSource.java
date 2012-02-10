@@ -28,7 +28,6 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface BasicPluralAttributeElementSource extends PluralAttributeElementSource {
-	public List<RelationalValueSource> getValueSources();
+public interface BasicPluralAttributeElementSource extends PluralAttributeElementSource, RelationalValueSourceContainer {
 	public ExplicitHibernateTypeSource getExplicitHibernateTypeSource();
 }

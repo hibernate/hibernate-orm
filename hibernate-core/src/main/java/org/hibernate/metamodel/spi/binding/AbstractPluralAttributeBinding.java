@@ -48,7 +48,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	private Caching caching;
 
-	private boolean inverse;
 	private boolean mutable = true;
 
 	private Class<? extends CollectionPersister> collectionPersisterClass;
@@ -108,7 +107,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 //		extraLazy = state.isExtraLazy();
 //		pluralAttributeElementBinding.setNodeName( state.getElementNodeName() );
 //		pluralAttributeElementBinding.setTypeName( state.getElementTypeName() );
-//		inverse = state.isInverse();
 //		mutable = state.isMutable();
 //		subselectLoadable = state.isSubselectLoadable();
 //		if ( isSubselectLoadable() ) {
@@ -242,15 +240,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	public void setWhere(String where) {
 		this.where = where;
-	}
-
-	@Override
-	public boolean isInverse() {
-		return inverse;
-	}
-
-	public void setInverse(boolean inverse) {
-		this.inverse = inverse;
 	}
 
 	@Override

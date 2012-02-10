@@ -65,6 +65,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return attribute;
 	}
 
+	protected String getRole() {
+		return getContainer().getPathBase() + '.' + getAttribute().getName();
+	}
+
 	@Override
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		return hibernateTypeDescriptor;

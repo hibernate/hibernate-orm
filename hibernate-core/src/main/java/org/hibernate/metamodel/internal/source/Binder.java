@@ -26,8 +26,11 @@ package org.hibernate.metamodel.internal.source;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -58,12 +61,14 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Component;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.SimpleValue;
@@ -179,7 +184,8 @@ public class Binder {
 		final EntityBinding entityBinding = createBasicEntityBinding( entitySource, superEntityBinding );
 
 		bindSecondaryTables( entitySource, entityBinding );
-		bindAttributes( entitySource, entityBinding );
+		Deque<TableSpecification> tableStack = new ArrayDeque<TableSpecification>(  );
+		bindAttributes( entitySource, entityBinding, tableStack );
 
 		bindTableUniqueConstraints( entitySource, entityBinding );
 
@@ -359,7 +365,9 @@ public class Binder {
 		}
 	}
 
-	private void bindSimpleIdentifier(SimpleIdentifierSource identifierSource, EntityBinding entityBinding) {
+	private void bindSimpleIdentifier(
+			SimpleIdentifierSource identifierSource,
+			EntityBinding entityBinding) {
 		final BasicAttributeBinding idAttributeBinding = doBasicSingularAttributeBindingCreation(
 				identifierSource.getIdentifierAttributeSource(), entityBinding
 		);
@@ -439,7 +447,10 @@ public class Binder {
 		entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 	}
 
-	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, AttributeBindingContainer attributeBindingContainer) {
+	private void bindAttributes(
+			AttributeSourceContainer attributeSourceContainer, 
+			AttributeBindingContainer attributeBindingContainer,
+			Deque<TableSpecification> tableStack) {
 		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
 		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
 		// for now, simply assume all columns come from the base table....
@@ -448,19 +459,22 @@ public class Binder {
 			if ( attributeSource.isSingular() ) {
 				final SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
 				if ( singularAttributeSource.getNature() == SingularAttributeNature.COMPONENT ) {
-					bindComponent( (ComponentAttributeSource) singularAttributeSource, attributeBindingContainer );
+					bindComponent( (ComponentAttributeSource) singularAttributeSource, attributeBindingContainer, tableStack );
 				}
 				else {
 					doBasicSingularAttributeBindingCreation( singularAttributeSource, attributeBindingContainer );
 				}
 			}
 			else {
-				bindPersistentCollection( (PluralAttributeSource) attributeSource, attributeBindingContainer );
+				bindPersistentCollection( (PluralAttributeSource) attributeSource, attributeBindingContainer, tableStack );
 			}
 		}
 	}
 
-	private void bindComponent(ComponentAttributeSource attributeSource, AttributeBindingContainer container) {
+	private void bindComponent(
+			ComponentAttributeSource attributeSource,
+			AttributeBindingContainer container,
+			Deque<TableSpecification> tableStack) {
 		final String attributeName = attributeSource.getName();
 		SingularAttribute attribute = container.getAttributeContainer().locateComponentAttribute( attributeName );
 		if ( attribute == null ) {
@@ -485,10 +499,13 @@ public class Binder {
 				buildMetaAttributeContext( attributeSource.metaAttributes(), container.getMetaAttributeContext() )
 		);
 
-		bindAttributes( attributeSource, componentAttributeBinding );
+		bindAttributes( attributeSource, componentAttributeBinding, tableStack );
 	}
 
-	private void bindPersistentCollection(PluralAttributeSource attributeSource, AttributeBindingContainer attributeBindingContainer) {
+	private void bindPersistentCollection(
+			PluralAttributeSource attributeSource,
+			AttributeBindingContainer attributeBindingContainer,
+			Deque<TableSpecification> tableStack) {
 		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer()
 				.locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
@@ -521,7 +538,7 @@ public class Binder {
 		bindCollectionTable( attributeSource, pluralAttributeBinding );
 		bindSortingAndOrdering( attributeSource, pluralAttributeBinding );
 
-		bindCollectionKey( attributeSource, pluralAttributeBinding );
+		bindCollectionKey( attributeSource, pluralAttributeBinding, tableStack );
 		bindCollectionElement( attributeSource, pluralAttributeBinding );
 		bindCollectionIndex( attributeSource, pluralAttributeBinding );
 
@@ -654,18 +671,84 @@ public class Binder {
 	}
 
 	private void bindCollectionKey(
-			PluralAttributeSource attributeSource,
-			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		PluralAttributeSource attributeSource,
+		AbstractPluralAttributeBinding pluralAttributeBinding,
+		Deque<TableSpecification> tableStack) {
+
+		TableSpecification targetTable = tableStack.peekLast();
 		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
 				attributeSource.getKeySource().getExplicitForeignKeyName(),
+				//tableStack.peekLast().getLogicalName()
 				null  // todo : handle secondary table names
 		);
 		pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().setDeleteRule(
 				attributeSource.getKeySource().getOnDeleteAction()
 		);
-		// todo : need to bind "relational values", account for property-ref
-	}
+		final ForeignKey foreignKey = pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey();
 
+		Iterator<SimpleValueBinding> targetValueBindings = null;
+		if ( attributeSource.getKeySource().getReferencedEntityAttributeName() != null ) {
+			final EntityBinding ownerEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
+			final AttributeBinding referencedAttributeBinding =
+					ownerEntityBinding
+							.locateAttributeBinding( attributeSource.getKeySource().getReferencedEntityAttributeName() );
+			if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+				throw new MappingException(
+						String.format(
+								"Collection (%s) property-ref is a plural attribute (%s); must be singular.",
+								pluralAttributeBinding.getAttribute().getRole(),
+								referencedAttributeBinding
+						),
+						currentBindingContext.getOrigin()
+				);
+			}
+			targetValueBindings = ( ( SingularAttributeBinding) referencedAttributeBinding ).getSimpleValueBindings().iterator();
+		}
+		for ( RelationalValueSource valueSource : attributeSource.getKeySource().getValueSources() ) {
+			SimpleValue targetValue = null;
+			if ( targetValueBindings != null ) {
+				if ( ! targetValueBindings.hasNext() ) {
+					throw new MappingException(
+							String.format(
+									"More collection key source columns than target columns for collection: %s",
+									pluralAttributeBinding.getAttribute().getRole()
+							),
+							currentBindingContext.getOrigin()
+					);
+				}
+				targetValue = targetValueBindings.next().getSimpleValue();
+			}
+			if ( ColumnSource.class.isInstance( valueSource ) ) {
+				final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
+				final Column column = makeColumn( columnSource, pluralAttributeBinding.getCollectionTable() );
+				if ( targetValue != null && ! Column.class.isInstance( targetValue ) ) {
+					throw new MappingException(
+							String.format(
+									"Type mismatch between collection key source and target; collection: %s; source column (%s) corresponds with target derived value (%s).",
+									pluralAttributeBinding.getAttribute().getRole(),
+									columnSource.getName(),
+									DerivedValue.class.cast( targetValue ).getExpression()
+							),
+							currentBindingContext.getOrigin()
+					);
+				}
+				foreignKey.addColumnMapping( column, Column.class.cast( targetValue ) );
+			}
+			else {
+				// TODO: deal with formulas???
+			}
+		}
+		if ( targetValueBindings != null && targetValueBindings.hasNext() ) {
+			throw new MappingException(
+					String.format(
+							"More collection key target columns than source columns for collection: %s",
+							pluralAttributeBinding.getAttribute().getRole()
+					),
+					currentBindingContext.getOrigin()
+			);
+		}
+	}
+	
 	private void bindCollectionElement(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
@@ -678,7 +761,10 @@ public class Binder {
 					pluralAttributeBinding.getAttribute(),
 					basicCollectionElement
 			);
-			// todo : temp
+			bindBasicPluralElementRelationalValues(
+					basicElementSource,
+					basicCollectionElement
+			);
 			return;
 		}
 		// todo : implement
@@ -686,6 +772,18 @@ public class Binder {
 				String.format(
 						"Support for collection elements of type %s not yet implemented",
 						elementSource.getNature()
+				)
+		);
+	}
+
+	private void bindBasicPluralElementRelationalValues(
+			RelationalValueSourceContainer relationalValueSourceContainer,
+			BasicPluralAttributeElementBinding elementBinding) {
+		elementBinding.setSimpleValueBindings(
+				createSimpleRelationalValues(
+						relationalValueSourceContainer,
+						elementBinding.getPluralAttributeBinding().getContainer(),
+						elementBinding.getPluralAttributeBinding().getAttribute()
 				)
 		);
 	}
@@ -986,12 +1084,25 @@ public class Binder {
 	private void bindRelationalValues(
 			RelationalValueSourceContainer relationalValueSourceContainer,
 			SingularAttributeBinding attributeBinding) {
+		attributeBinding.setSimpleValueBindings(
+				createSimpleRelationalValues(
+						relationalValueSourceContainer,
+						attributeBinding.getContainer(),
+						attributeBinding.getAttribute()
+				)
+		);
+	}
+
+	private List<SimpleValueBinding> createSimpleRelationalValues(
+			RelationalValueSourceContainer relationalValueSourceContainer,
+			AttributeBindingContainer attributeBindingContainer,
+			Attribute attribute) {
 
 		List<SimpleValueBinding> valueBindings = new ArrayList<SimpleValueBinding>();
 
 		if ( !relationalValueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
-				final TableSpecification table = attributeBinding.getContainer()
+				final TableSpecification table = attributeBindingContainer
 						.seekEntityBinding()
 						.locateTable( valueSource.getContainingTableName() );
 
@@ -1018,9 +1129,9 @@ public class Binder {
 		else {
 			String name = metadata.getOptions()
 					.getNamingStrategy()
-					.propertyToColumnName( attributeBinding.getAttribute().getName() );
+					.propertyToColumnName( attribute.getName() );
 			name = quoteIdentifier( name );
-			Column column = attributeBinding.getContainer()
+			Column column = attributeBindingContainer
 									.seekEntityBinding()
 									.getPrimaryTable()
 									.locateOrCreateColumn( name );
@@ -1033,7 +1144,7 @@ public class Binder {
 					)
 			);
 		}
-		attributeBinding.setSimpleValueBindings( valueBindings );
+		return valueBindings;
 	}
 
 	private String quoteIdentifier(String identifier) {

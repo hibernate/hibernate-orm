@@ -57,13 +57,6 @@ public interface PluralAttributeBinding extends AttributeBinding {
 	 */
 	public PluralAttributeElementBinding getPluralAttributeElementBinding();
 
-
-
-
-
-
-
-
 	public TableSpecification getCollectionTable();
 
 	public boolean isMutable();
@@ -91,8 +84,6 @@ public interface PluralAttributeBinding extends AttributeBinding {
 	int getBatchSize();
 
 	java.util.Map getFilterMap();
-
-	boolean isInverse();
 
 	String getOrderBy();
 }

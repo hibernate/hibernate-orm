@@ -52,12 +52,12 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return true;
+						return BasicPluralAttributeElementSourceImpl.this.areValuesIncludedInInsertByDefault();
 					}
 
 					@Override
 					public boolean isIncludedInUpdateByDefault() {
-						return true;
+						return BasicPluralAttributeElementSourceImpl.this.areValuesIncludedInUpdateByDefault();
 					}
 
 					@Override
@@ -107,8 +107,23 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 	}
 
 	@Override
-	public List<RelationalValueSource> getValueSources() {
+	public List<RelationalValueSource> relationalValueSources() {
 		return valueSources;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return false;
 	}
 
 	@Override

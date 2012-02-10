@@ -25,6 +25,9 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.HashMap;
 
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.Value;
+
 /**
  * Describes plural attributes of {@link PluralAttributeElementNature#MANY_TO_MANY} elements
  *
@@ -35,7 +38,8 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	private final java.util.Map manyToManyFilters = new HashMap();
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
-
+	// TODO: really should have value defined (which defines table), but may not know 
+	private Value value;
 
 	ManyToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
@@ -60,5 +64,13 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 
 	public void setManyToManyOrderBy(String manyToManyOrderBy) {
 		this.manyToManyOrderBy = manyToManyOrderBy;
+	}
+
+	public Value getValue() {
+		return value;
+	}
+
+	public void setValue(Value value) {
+		this.value = value;
 	}
 }

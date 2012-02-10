@@ -78,10 +78,6 @@ public abstract class AbstractSingularAttributeBinding
 		}
 	}
 
-	private String getRole() {
-		return getContainer().getPathBase() + '.' + getAttribute().getName();
-	}
-
 	@Override
 	public int getSimpleValueSpan() {
 		checkValueBinding();

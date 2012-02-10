@@ -66,11 +66,11 @@ import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingCont
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.ColumnValues;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
-import org.hibernate.metamodel.spi.source.JpaCallbackClass;
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 
 /**
@@ -109,14 +109,14 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
-	private ColumnValues discriminatorColumnValues;
+	private Column discriminatorColumnValues;
 	private FormulaValue discriminatorFormula;
 	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
 	private boolean isDiscriminatorForced = true;
 	private boolean isDiscriminatorIncludedInSql = true;
 
-	private final List<JpaCallbackClass> jpaCallbacks;
+	private final List<JpaCallbackSource> jpaCallbacks;
 
 	public EntityClass(
 			ClassInfo classInfo,
@@ -154,7 +154,7 @@ public class EntityClass extends ConfiguredClass {
 		processDiscriminator();
 	}
 
-	public ColumnValues getDiscriminatorColumnValues() {
+	public Column getDiscriminatorColumnValues() {
 		return discriminatorColumnValues;
 	}
 
@@ -283,7 +283,7 @@ public class EntityClass extends ConfiguredClass {
 		return discriminatorMatchValue;
 	}
 
-	public List<JpaCallbackClass> getJpaCallbacks() {
+	public List<JpaCallbackSource> getJpaCallbacks() {
 		return jpaCallbacks;
 	}
 
@@ -366,7 +366,7 @@ public class EntityClass extends ConfiguredClass {
 			String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class );
 			discriminatorFormula = new FormulaValue( getPrimaryTableSource().getExplicitTableName(), expression );
 		}
-		discriminatorColumnValues = new ColumnValues( null ); //(stliu) give null here, will populate values below
+		discriminatorColumnValues = new Column( null ); //(stliu) give null here, will populate values below
 		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
 		if ( discriminatorColumnAnnotation != null ) {
 
@@ -762,8 +762,8 @@ public class EntityClass extends ConfiguredClass {
 		return batchSizeAnnotation == null ? -1 : batchSizeAnnotation.value( "size" ).asInt();
 	}
 
-	private List<JpaCallbackClass> determineEntityListeners() {
-		List<JpaCallbackClass> callbackClassList = new ArrayList<JpaCallbackClass>();
+	private List<JpaCallbackSource> determineEntityListeners() {
+		List<JpaCallbackSource> callbackClassList = new ArrayList<JpaCallbackSource>();
 
 		// Bind default JPA entity listener callbacks (unless excluded), using superclasses first (unless excluded)
 		if ( JandexHelper.getSingleAnnotation( getClassInfo(), JPADotNames.EXCLUDE_DEFAULT_LISTENERS ) == null ) {
@@ -811,7 +811,7 @@ public class EntityClass extends ConfiguredClass {
 		return callbackClassList;
 	}
 
-	private void processDefaultJpaCallbacks(String instanceCallbackClassName, List<JpaCallbackClass> jpaCallbackClassList) {
+	private void processDefaultJpaCallbacks(String instanceCallbackClassName, List<JpaCallbackSource> jpaCallbackClassList) {
 		ClassInfo callbackClassInfo = getLocalBindingContext().getClassInfo( instanceCallbackClassName );
 
 		// Process superclass first if available and not excluded
@@ -850,7 +850,7 @@ public class EntityClass extends ConfiguredClass {
 		}
 	}
 
-	private void processJpaCallbacks(String instanceCallbackClassName, boolean isListener, List<JpaCallbackClass> callbackClassList) {
+	private void processJpaCallbacks(String instanceCallbackClassName, boolean isListener, List<JpaCallbackSource> callbackClassList) {
 
 		ClassInfo callbackClassInfo = getLocalBindingContext().getClassInfo( instanceCallbackClassName );
 
@@ -954,7 +954,7 @@ public class EntityClass extends ConfiguredClass {
 
 	// Process JPA callbacks, in superclass-first order (unless superclasses are excluded), using default listeners first
 	// (unless default listeners are excluded), then entity listeners, and finally the entity/mapped superclass itself
-	private class JpaCallbackClassImpl implements JpaCallbackClass {
+	private class JpaCallbackClassImpl implements JpaCallbackSource {
 
 		private final Map<Class<?>, String> callbacksByType;
 		private final String name;

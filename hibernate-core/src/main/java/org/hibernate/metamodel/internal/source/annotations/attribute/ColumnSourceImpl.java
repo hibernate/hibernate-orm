@@ -32,8 +32,8 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	private final MappedAttribute attribute;
 	private final String name;
 
-	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
-		super( attribute.getColumnValues() );
+	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride, Column columnValues) {
+		super( columnValues );
 		if ( attributeOverride != null ) {
 			setOverrideColumnValues( attributeOverride.getColumnValues() );
 		}

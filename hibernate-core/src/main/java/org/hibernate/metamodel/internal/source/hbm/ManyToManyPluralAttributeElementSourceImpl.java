@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.FetchMode;
@@ -102,14 +104,19 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
+	// used by JPA instead of referenced entity attribute
+	public Collection<String> getReferencedColumnNames() {
+		return Collections.emptyList();
+	}
+
+	@Override
 	public List<RelationalValueSource> getValueSources() {
 		return valueSources;
 	}
 
 	@Override
 	public boolean isNotFoundAnException() {
-		return manyToManyElement.getNotFound() == null
-				|| ! "ignore".equals( manyToManyElement.getNotFound().value() );
+		return manyToManyElement.getNotFound() == null || !"ignore".equals( manyToManyElement.getNotFound().value() );
 	}
 
 	@Override
@@ -146,12 +153,12 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		}
 
 		if ( manyToManyElement.getOuterJoin() == null ) {
-			return ! bindingContext.getMappingDefaults().areAssociationsLazy();
+			return !bindingContext.getMappingDefaults().areAssociationsLazy();
 		}
 		else {
 			final String value = manyToManyElement.getOuterJoin().value();
 			if ( "auto".equals( value ) ) {
-				return ! bindingContext.getMappingDefaults().areAssociationsLazy();
+				return !bindingContext.getMappingDefaults().areAssociationsLazy();
 			}
 			return "true".equals( value );
 		}

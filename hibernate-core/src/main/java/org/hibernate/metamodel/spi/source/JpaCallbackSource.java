@@ -34,7 +34,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
-public interface JpaCallbackClass {
+public interface JpaCallbackSource {
 
     /**
      * @param callbackType {@link PrePersist}, {@link PreRemove}, {@link PreUpdate}, {@link PostLoad},

@@ -39,7 +39,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.ToOneAttributeSourceImpl;
 import org.hibernate.metamodel.spi.source.AttributeSource;
-import org.hibernate.metamodel.spi.source.JpaCallbackClass;
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
@@ -212,7 +212,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public List<JpaCallbackClass> getJpaCallbackClasses() {
+	public List<JpaCallbackSource> getJpaCallbackClasses() {
 		return entityClass.getJpaCallbacks();
 	}
 

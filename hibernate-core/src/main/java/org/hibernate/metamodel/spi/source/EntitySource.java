@@ -211,5 +211,5 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
      * @return the list of classes (this {@link Entity entity}/{@link MappedSuperclass mapped superclass}, or
      *         {@link EntityListeners entity listeners}) that define JPA callbacks for this entity/mapped superclass.
      */
-    List<JpaCallbackClass> getJpaCallbackClasses();
+    List<JpaCallbackSource> getJpaCallbackClasses();
 }

@@ -32,13 +32,13 @@ import org.hibernate.metamodel.spi.source.ColumnSource;
  * @author Steve Ebersole
  */
 public class ColumnValuesSourceImpl implements ColumnSource {
-	private ColumnValues columnValues;
+	private Column columnValues;
 
-	public ColumnValuesSourceImpl(ColumnValues columnValues) {
+	public ColumnValuesSourceImpl(Column columnValues) {
 		this.columnValues = columnValues;
 	}
 
-	void setOverrideColumnValues(ColumnValues columnValues) {
+	void setOverrideColumnValues(Column columnValues) {
 		this.columnValues = columnValues;
 	}
 
@@ -64,13 +64,11 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public String getSqlType() {
-		// todo
-		return null;
+		return columnValues.getColumnDefinition();
 	}
 
 	@Override
 	public Datatype getDatatype() {
-		// todo
 		return null;
 	}
 
@@ -91,7 +89,6 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public String getComment() {
-		// todo
 		return null;
 	}
 

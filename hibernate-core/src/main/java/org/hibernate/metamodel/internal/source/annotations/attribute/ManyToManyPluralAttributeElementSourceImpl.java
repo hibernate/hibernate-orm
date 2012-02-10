@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.FetchMode;
@@ -50,6 +51,11 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	public String getReferencedEntityAttributeName() {
 		// JPA does not have the concept of property refs. Instead column names via @JoinColumn are used
 		return null;
+	}
+
+	@Override
+	public Collection<String> getReferencedColumnNames() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

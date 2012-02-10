@@ -42,7 +42,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.source.JpaCallbackClass;
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -207,7 +207,7 @@ public final class CallbackResolver {
                                                ClassLoaderService classLoaderService,
                                                EntityBinding binding ) {
         List<Callback> callbacks = new ArrayList<Callback>();
-        for (JpaCallbackClass jpaCallbackClass : binding.getJpaCallbackClasses()) {
+        for (JpaCallbackSource jpaCallbackClass : binding.getJpaCallbackClasses()) {
             Object listener = classLoaderService.classForName(jpaCallbackClass.getName());
             String methodName = jpaCallbackClass.getCallbackMethod( callbackClass );
             Callback callback = jpaCallbackClass.isListener() ?

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.FetchMode;
@@ -34,6 +35,8 @@ public interface ManyToManyPluralAttributeElementSource extends PluralAttributeE
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
+
+	public Collection<String> getReferencedColumnNames();
 
 	public List<RelationalValueSource> getValueSources(); // these describe the "outgoing" link
 

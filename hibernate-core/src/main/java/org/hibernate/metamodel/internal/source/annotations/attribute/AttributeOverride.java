@@ -39,7 +39,7 @@ import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
  */
 public class AttributeOverride {
 	private static final String PROPERTY_PATH_SEPARATOR = ".";
-	private final ColumnValues columnValues;
+	private final Column columnValues;
 	private final String attributePath;
 
 	public AttributeOverride(AnnotationInstance attributeOverrideAnnotation) {
@@ -55,7 +55,7 @@ public class AttributeOverride {
 			throw new AssertionFailure( "A @AttributeOverride annotation needs to be passed to the constructor" );
 		}
 
-		columnValues = new ColumnValues(
+		columnValues = new Column(
 				JandexHelper.getValue(
 						attributeOverrideAnnotation,
 						"column",
@@ -68,7 +68,7 @@ public class AttributeOverride {
 		);
 	}
 
-	public ColumnValues getColumnValues() {
+	public Column getColumnValues() {
 		return columnValues;
 	}
 

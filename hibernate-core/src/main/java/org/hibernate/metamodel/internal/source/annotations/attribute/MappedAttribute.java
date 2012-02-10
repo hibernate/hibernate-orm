@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -64,9 +66,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String accessType;
 
 	/**
-	 * Defines the column values (relational values) for this property.
+	 * Defines the column values (relational values) for this property. A mapped property can refer to multiple
+	 * column values in case of components or join columns etc
 	 */
-	private ColumnValues columnValues;
+	private List<Column> columnValues;
 
 	/**
 	 * Is this property an id property (or part thereof).
@@ -97,15 +100,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				annotations,
 				JPADotNames.EMBEDDED_ID
 		);
-		isId = ( idAnnotation != null || embeddedIdAnnotation != null );
-
-		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				JPADotNames.COLUMN
-		);
-		columnValues = new ColumnValues( columnAnnotation );
-
+		this.isId = ( idAnnotation != null || embeddedIdAnnotation != null );
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
+		checkColumnAnnotations( annotations );
 	}
 
 	public String getName() {
@@ -128,7 +125,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return annotations;
 	}
 
-	public ColumnValues getColumnValues() {
+	public List<Column> getColumnValues() {
 		return columnValues;
 	}
 
@@ -177,6 +174,57 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			triggersVersionIncrement = !exclude;
 		}
 		return triggersVersionIncrement;
+	}
+
+	private void checkColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
+		columnValues = new ArrayList<Column>();
+
+		// single @Column 
+		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.COLUMN
+		);
+		if ( columnAnnotation != null ) {
+			columnValues.add( new Column( columnAnnotation ) );
+		}
+
+		// single @JoinColumn
+		AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_COLUMN
+		);
+		if ( columnAnnotation != null ) {
+			columnValues.add( new Column( joinColumnAnnotation ) );
+		}
+
+		// @org.hibernate.annotations.Columns
+		AnnotationInstance columnsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.COLUMNS
+		);
+		if ( columnsAnnotation != null ) {
+			List<AnnotationInstance> columnsList = Arrays.asList(
+					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
+			);
+			for ( AnnotationInstance annotation : columnsList ) {
+				columnValues.add( new Column( annotation ) );
+			}
+		}
+
+		// @JoinColumns
+		AnnotationInstance joinColumnsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_COLUMNS
+		);
+		if ( joinColumnsAnnotation != null ) {
+			List<AnnotationInstance> columnsList = Arrays.asList(
+					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
+			);
+			for ( AnnotationInstance annotation : columnsList ) {
+				columnValues.add( new Column( annotation ) );
+			}
+		}
+
 	}
 }
 

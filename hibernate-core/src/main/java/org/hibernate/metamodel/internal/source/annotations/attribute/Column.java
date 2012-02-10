@@ -30,29 +30,33 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 
 /**
- * Container for the properties defined by {@link javax.persistence.Column}.
+ * Container for the properties defined by {@link javax.persistence.Column} or {@link javax.persistence.JoinColumn}.
  *
  * @author Hardy Ferentschik
  */
-public class ColumnValues {
+public class Column {
 	private String name = "";
+	private String table = null;
+
 	private boolean unique = false;
 	private boolean nullable = true;
 	private boolean insertable = true;
 	private boolean updatable = true;
-	private String columnDefinition = "";
-	private String table = null;
+
 	private int length = 255;
 	private int precision = 0;
 	private int scale = 0;
 
-	ColumnValues() {
-		this( null );
-	}
+	private String columnDefinition = ""; // used for DDL creation
 
-	public ColumnValues(AnnotationInstance columnAnnotation) {
-		if ( columnAnnotation != null && !JPADotNames.COLUMN.equals( columnAnnotation.name() ) ) {
-			throw new AssertionFailure( "A @Column annotation needs to be passed to the constructor" );
+	private String referencedColumnName; // from @JoinColumn
+
+	public Column(AnnotationInstance columnAnnotation) {
+		if ( columnAnnotation != null &&
+				!( JPADotNames.COLUMN.equals( columnAnnotation.name() ) || JPADotNames.JOIN_COLUMN.equals(
+						columnAnnotation.name()
+				) ) ) {
+			throw new AssertionFailure( "A @Column or @JoinColumn annotation needs to be passed to the constructor" );
 		}
 		applyColumnValues( columnAnnotation );
 	}
@@ -111,6 +115,11 @@ public class ColumnValues {
 		AnnotationValue scaleValue = columnAnnotation.value( "scale" );
 		if ( scaleValue != null ) {
 			this.scale = scaleValue.asInt();
+		}
+
+		AnnotationValue referencedColumnNameValue = columnAnnotation.value( "referencedColumnName" );
+		if ( referencedColumnNameValue != null ) {
+			this.referencedColumnName = referencedColumnNameValue.asString();
 		}
 	}
 
@@ -194,20 +203,29 @@ public class ColumnValues {
 		this.scale = scale;
 	}
 
+	public String getReferencedColumnName() {
+		return referencedColumnName;
+	}
+
+	public void setReferencedColumnName(String referencedColumnName) {
+		this.referencedColumnName = referencedColumnName;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ColumnValues" );
 		sb.append( "{name='" ).append( name ).append( '\'' );
+		sb.append( ", table='" ).append( table ).append( '\'' );
 		sb.append( ", unique=" ).append( unique );
 		sb.append( ", nullable=" ).append( nullable );
 		sb.append( ", insertable=" ).append( insertable );
 		sb.append( ", updatable=" ).append( updatable );
-		sb.append( ", columnDefinition='" ).append( columnDefinition ).append( '\'' );
-		sb.append( ", table='" ).append( table ).append( '\'' );
 		sb.append( ", length=" ).append( length );
 		sb.append( ", precision=" ).append( precision );
 		sb.append( ", scale=" ).append( scale );
+		sb.append( ", columnDefinition='" ).append( columnDefinition ).append( '\'' );
+		sb.append( ", referencedColumnName='" ).append( referencedColumnName ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -221,7 +239,7 @@ public class ColumnValues {
 			return false;
 		}
 
-		ColumnValues that = (ColumnValues) o;
+		Column that = (Column) o;
 
 		if ( insertable != that.insertable ) {
 			return false;
@@ -250,6 +268,9 @@ public class ColumnValues {
 		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
 			return false;
 		}
+		if ( referencedColumnName != null ? !referencedColumnName.equals( that.referencedColumnName ) : that.referencedColumnName != null ) {
+			return false;
+		}
 		if ( table != null ? !table.equals( that.table ) : that.table != null ) {
 			return false;
 		}
@@ -260,15 +281,16 @@ public class ColumnValues {
 	@Override
 	public int hashCode() {
 		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + ( table != null ? table.hashCode() : 0 );
 		result = 31 * result + ( unique ? 1 : 0 );
 		result = 31 * result + ( nullable ? 1 : 0 );
 		result = 31 * result + ( insertable ? 1 : 0 );
 		result = 31 * result + ( updatable ? 1 : 0 );
-		result = 31 * result + ( columnDefinition != null ? columnDefinition.hashCode() : 0 );
-		result = 31 * result + ( table != null ? table.hashCode() : 0 );
 		result = 31 * result + length;
 		result = 31 * result + precision;
 		result = 31 * result + scale;
+		result = 31 * result + ( columnDefinition != null ? columnDefinition.hashCode() : 0 );
+		result = 31 * result + ( referencedColumnName != null ? referencedColumnName.hashCode() : 0 );
 		return result;
 	}
 }

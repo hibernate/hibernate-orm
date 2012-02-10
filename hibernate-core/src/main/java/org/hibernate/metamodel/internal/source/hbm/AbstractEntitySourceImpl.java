@@ -49,7 +49,7 @@ import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.JpaCallbackClass;
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
@@ -305,7 +305,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public List<JpaCallbackClass> getJpaCallbackClasses() {
+	public List<JpaCallbackSource> getJpaCallbackClasses() {
 	    return Collections.EMPTY_LIST;
 	}
 }

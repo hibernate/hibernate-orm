@@ -42,7 +42,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	private final AttributeOverride attributeOverride;
 
 	public SingularAttributeSourceImpl(MappedAttribute attribute) {
-		this(attribute, null);
+		this( attribute, null );
 	}
 
 	public SingularAttributeSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
@@ -83,7 +83,9 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		valueSources.add( new ColumnSourceImpl( attribute, attributeOverride ) );
+		for ( Column columnValues : attribute.getColumnValues() ) {
+			valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, columnValues ) );
+		}
 		return valueSources;
 	}
 

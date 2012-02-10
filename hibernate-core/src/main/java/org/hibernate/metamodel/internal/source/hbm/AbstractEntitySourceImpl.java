@@ -45,12 +45,13 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
 
@@ -202,31 +203,51 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public Iterable<AttributeSource> attributeSources() {
+	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-		for ( Object attributeElement : entityElement.getPropertyOrManyToOneOrOneToOne() ) {
+		processAttributes( attributeSources );
+		return attributeSources;
+	}
+
+	protected List<AttributeSource> processAttributes(List<AttributeSource> attributeSources) {
+		processAttributes(
+				attributeSources,
+				entityElement.getPropertyOrManyToOneOrOneToOne(),
+				SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+		);
+		return attributeSources;
+	}
+
+	protected void processAttributes(
+			List<AttributeSource> results,
+			List attributeElements,
+			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
+		for ( Object attributeElement : attributeElements ) {
 			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
+				results.add(
 						new PropertyAttributeSourceImpl(
 								JaxbPropertyElement.class.cast( attributeElement ),
-								sourceMappingDocument().getMappingLocalBindingContext()
+								sourceMappingDocument().getMappingLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
 			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
+				results.add(
 						new ComponentAttributeSourceImpl(
 								(JaxbComponentElement) attributeElement,
 								this,
-								sourceMappingDocument.getMappingLocalBindingContext()
+								sourceMappingDocument.getMappingLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
 			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
+				results.add(
 						new ManyToOneAttributeSourceImpl(
 								JaxbManyToOneElement.class.cast( attributeElement ),
-								sourceMappingDocument().getMappingLocalBindingContext()
+								sourceMappingDocument().getMappingLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
@@ -237,7 +258,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 				// todo : implement
 			}
 			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
+				results.add(
 						new BagAttributeSourceImpl(
 								JaxbBagElement.class.cast( attributeElement ),
 								this
@@ -248,7 +269,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 				// todo : implement
 			}
 			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
+				results.add(
 						new SetAttributeSourceImpl(
 								JaxbSetElement.class.cast( attributeElement ),
 								this
@@ -265,7 +286,6 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
 			}
 		}
-		return attributeSources;
 	}
 
 	private EntityHierarchyImpl entityHierarchy;

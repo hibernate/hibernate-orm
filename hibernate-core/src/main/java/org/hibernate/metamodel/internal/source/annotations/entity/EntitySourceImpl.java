@@ -171,7 +171,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public Iterable<AttributeSource> attributeSources() {
+	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
 		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );

@@ -6,7 +6,9 @@
         <id name="id">
             <generator class="increment"/>
         </id>
-        <property name="userName" column="UNAME"/>
+        <natural-id>
+            <property name="userName" column="UNAME"/>
+        </natural-id>
         <component name="name" class="User$Name">
             <property name="firstName" column="FNAME"/>
             <property name="middleName" column="MNAME"/>

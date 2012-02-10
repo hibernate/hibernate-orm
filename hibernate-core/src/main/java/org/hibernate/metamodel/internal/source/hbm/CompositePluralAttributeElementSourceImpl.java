@@ -93,7 +93,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public Iterable<AttributeSource> attributeSources() {
+	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		for ( Object attribute : compositeElement.getPropertyOrManyToOneOrAny() ) {
 

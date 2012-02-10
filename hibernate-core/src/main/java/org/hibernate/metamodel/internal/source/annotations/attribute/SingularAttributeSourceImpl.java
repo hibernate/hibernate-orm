@@ -71,6 +71,11 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return null;  // todo : implement proper method body
+	}
+
+	@Override
 	public boolean isIncludedInOptimisticLocking() {
 		return attribute.isOptimisticLockable();
 	}

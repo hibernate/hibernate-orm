@@ -44,6 +44,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * Annotation backed implementation of {@code ComponentAttributeSource}.
@@ -115,30 +116,39 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		return embeddableClass.getLocalBindingContext();
 	}
 
-	@Override
-	public Iterable<AttributeSource> attributeSources() {
-		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
-		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
-			AttributeOverride attributeOverride = null;
-			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
-			if ( attributeOverrides.containsKey( tmp ) ) {
-				attributeOverride = attributeOverrides.get( tmp );
+	private final Value<List<AttributeSource>> attributeSourcesValue = new Value<List<AttributeSource>>(
+			new Value.DeferredInitializer<List<AttributeSource>>() {
+				@Override
+				public List<AttributeSource> initialize() {
+					List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
+					for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
+						AttributeOverride attributeOverride = null;
+						String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
+						if ( attributeOverrides.containsKey( tmp ) ) {
+							attributeOverride = attributeOverrides.get( tmp );
+						}
+						attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
+					}
+					for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
+						attributeList.add(
+								new ComponentAttributeSourceImpl(
+										embeddable,
+										getPath(),
+										createAggregatedOverrideMap()
+								)
+						);
+					}
+					for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
+						attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
+					}
+					return Collections.unmodifiableList( attributeList );
+				}
 			}
-			attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
-		}
-		for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
-			attributeList.add(
-					new ComponentAttributeSourceImpl(
-							embeddable,
-							getPath(),
-							createAggregatedOverrideMap()
-					)
-			);
-		}
-		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
-			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
-		}
-		return attributeList;
+	);
+
+	@Override
+	public List<AttributeSource> attributeSources() {
+		return attributeSourcesValue.getValue();
 	}
 
 	@Override
@@ -177,6 +187,11 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public boolean isLazy() {
 		return false;
+	}
+
+	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return null;  // todo : implement proper method body
 	}
 
 	@Override

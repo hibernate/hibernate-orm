@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.TruthValue;
 import org.hibernate.mapping.PropertyGeneration;
 
 /**
@@ -59,4 +60,17 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * @return {@code true} to indicate the attribute should be lazily loaded.
 	 */
 	public boolean isLazy();
+
+	/**
+	 * Retrieve the natural id mutability
+	 *
+	 * @return The mutability, see enum for meanings
+	 */
+	public NaturalIdMutability getNaturalIdMutability();
+
+	public static enum NaturalIdMutability {
+		MUTABLE,
+		IMMUTABLE,
+		NOT_NATURAL_ID
+	}
 }

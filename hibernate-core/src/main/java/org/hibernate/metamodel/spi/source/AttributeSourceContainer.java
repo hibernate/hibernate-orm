@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
 /**
  * Contract for a container of {@link AttributeSource} references.  Both entities and components contain
  * attributes.
@@ -42,7 +44,7 @@ public interface AttributeSourceContainer {
 	 *
 	 * @return The attribute sources.
 	 */
-	public Iterable<AttributeSource> attributeSources();
+	public List<AttributeSource> attributeSources();
 
 	/**
 	 * Obtain the local binding context associated with this container.

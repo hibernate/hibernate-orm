@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
 import org.hibernate.cache.spi.access.AccessType;
@@ -33,6 +36,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
@@ -110,6 +114,21 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			);
 		}
 		return null;
+	}
+
+	@Override
+	public List<AttributeSource> attributeSources() {
+		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+		final JaxbHibernateMapping.JaxbClass.JaxbNaturalId naturalId = entityElement().getNaturalId();
+		processAttributes(
+				attributeSources,
+				naturalId.getPropertyOrManyToOneOrComponent(),
+				naturalId.isMutable()
+						? SingularAttributeSource.NaturalIdMutability.MUTABLE
+						: SingularAttributeSource.NaturalIdMutability.IMMUTABLE
+		);
+		processAttributes( attributeSources );
+		return attributeSources;
 	}
 
 	@Override

@@ -52,6 +52,11 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return null;  // todo : implement proper method body
+	}
+
+	@Override
 	public String getReferencedEntityName() {
 		return associationAttribute.getReferencedEntityType();
 	}

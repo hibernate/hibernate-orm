@@ -31,9 +31,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -47,11 +47,16 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	private final JaxbManyToOneElement manyToOneElement;
 	private final LocalBindingContext bindingContext;
+	private final NaturalIdMutability naturalIdMutability;
 	private final List<RelationalValueSource> valueSources;
 
-	ManyToOneAttributeSourceImpl(final JaxbManyToOneElement manyToOneElement, LocalBindingContext bindingContext) {
+	ManyToOneAttributeSourceImpl(
+			final JaxbManyToOneElement manyToOneElement,
+			LocalBindingContext bindingContext,
+			NaturalIdMutability naturalIdMutability) {
 		this.manyToOneElement = manyToOneElement;
 		this.bindingContext = bindingContext;
+		this.naturalIdMutability = naturalIdMutability;
 		this.valueSources = Helper.buildValueSources(
 				new Helper.ValueSourcesAdapter() {
 					@Override
@@ -112,6 +117,11 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	@Override
 	public boolean isLazy() {
 		return false;
+	}
+
+	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
 	}
 
 	@Override

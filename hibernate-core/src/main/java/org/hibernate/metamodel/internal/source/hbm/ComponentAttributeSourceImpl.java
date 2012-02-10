@@ -46,6 +46,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * @author Steve Ebersole
@@ -53,17 +54,18 @@ import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private final JaxbComponentElement componentElement;
 	private final AttributeSourceContainer parentContainer;
-
+	private final NaturalIdMutability naturalIdMutability;
 	private final Value<Class<?>> componentClassReference;
 	private final String path;
 
 	public ComponentAttributeSourceImpl(
 			JaxbComponentElement componentElement,
 			AttributeSourceContainer parentContainer,
-			LocalBindingContext bindingContext) {
+			LocalBindingContext bindingContext,
+			NaturalIdMutability naturalIdMutability) {
 		this.componentElement = componentElement;
 		this.parentContainer = parentContainer;
-
+		this.naturalIdMutability = naturalIdMutability;
 		this.componentClassReference = bindingContext.makeClassReference(
 				bindingContext.qualifyClassName( componentElement.getClazz() )
 		);
@@ -110,14 +112,15 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public Iterable<AttributeSource> attributeSources() {
+	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		for ( Object attributeElement : componentElement.getPropertyOrManyToOneOrOneToOne() ) {
 			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new PropertyAttributeSourceImpl(
 								JaxbPropertyElement.class.cast( attributeElement ),
-								getLocalBindingContext()
+								getLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
@@ -126,7 +129,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 						new ComponentAttributeSourceImpl(
 								(JaxbComponentElement) attributeElement,
 								this,
-								getLocalBindingContext()
+								getLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
@@ -134,7 +138,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 				attributeSources.add(
 						new ManyToOneAttributeSourceImpl(
 								JaxbManyToOneElement.class.cast( attributeElement ),
-								getLocalBindingContext()
+								getLocalBindingContext(),
+								naturalIdMutability
 						)
 				);
 			}
@@ -194,6 +199,11 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public boolean isLazy() {
 		return componentElement.isLazy();
+	}
+
+	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
 	}
 
 	@Override

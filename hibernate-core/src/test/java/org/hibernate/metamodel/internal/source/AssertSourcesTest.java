@@ -159,6 +159,8 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 //		assertFalse( columnSource.isIncludedInUpdate() );
 //		assertFalse( columnSource.isNullable() );
 
+		assertEquals( 2, entitySource.attributeSources().size() );
+
 
 	}
 }

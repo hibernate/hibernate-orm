@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -44,8 +44,12 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	private final JaxbPropertyElement propertyElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
+	private final NaturalIdMutability naturalIdMutability;
 
-	PropertyAttributeSourceImpl(final JaxbPropertyElement propertyElement, LocalBindingContext bindingContext) {
+	PropertyAttributeSourceImpl(
+			final JaxbPropertyElement propertyElement,
+			LocalBindingContext bindingContext,
+			NaturalIdMutability naturalIdMutability) {
 		this.propertyElement = propertyElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {
 			private final String name = propertyElement.getTypeAttribute() != null
@@ -102,6 +106,7 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 				},
 				bindingContext
 		);
+		this.naturalIdMutability = naturalIdMutability;
 	}
 
 	@Override
@@ -127,6 +132,11 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public boolean isLazy() {
 		return Helper.getBooleanValue( propertyElement.isLazy(), false );
+	}
+
+	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
 	}
 
 	@Override

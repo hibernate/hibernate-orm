@@ -139,6 +139,11 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return NaturalIdMutability.NOT_NATURAL_ID;
+	}
+
+	@Override
 	public boolean isIncludedInOptimisticLocking() {
 		return false;
 	}

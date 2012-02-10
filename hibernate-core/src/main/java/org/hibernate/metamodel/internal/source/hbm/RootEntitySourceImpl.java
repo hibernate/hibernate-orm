@@ -29,6 +29,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.MappingException;
@@ -150,16 +151,25 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 	}
 
+	private Value<Caching> cachingHolder = new Value<Caching>(
+			new Value.DeferredInitializer<Caching>() {
+				@Override
+				public Caching initialize() {
+					final JaxbCacheElement cache = entityElement().getCache();
+					if ( cache == null ) {
+						return null;
+					}
+					final String region = cache.getRegion() != null ? cache.getRegion() : getEntityName();
+					final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
+					final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
+					return new Caching( region, accessType, cacheLazyProps );
+				}
+			}
+	);
+
 	@Override
 	public Caching getCaching() {
-		final JaxbCacheElement cache = entityElement().getCache();
-		if ( cache == null ) {
-			return null;
-		}
-		final String region = cache.getRegion() != null ? cache.getRegion() : getEntityName();
-		final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
-		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
-		return new Caching( region, accessType, cacheLazyProps );
+		return cachingHolder.getValue();
 	}
 
 	@Override

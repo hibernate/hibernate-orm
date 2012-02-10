@@ -36,4 +36,26 @@ public interface RelationalValueSource {
 	 * @return returns the name of the table that contains this value.
 	 */
 	public String getContainingTableName();
+
+	/**
+	 * Retrieve the nature of this relational value.  Is it a column?  Or is it a derived value (formula)?
+	 *
+	 * @return The nature.
+	 */
+	public Nature getNature();
+
+	public static enum Nature {
+		COLUMN( ColumnSource.class ),
+		DERIVED( DerivedValueSource.class );
+
+		private final Class<? extends RelationalValueSource> specificContractClass;
+
+		private Nature(Class<? extends RelationalValueSource> specificContractClass) {
+			this.specificContractClass = specificContractClass;
+		}
+
+		public Class<? extends RelationalValueSource> getSpecificContractClass() {
+			return specificContractClass;
+		}
+	}
 }

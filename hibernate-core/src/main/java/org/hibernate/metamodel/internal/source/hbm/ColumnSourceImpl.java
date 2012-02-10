@@ -27,6 +27,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
 * @author Steve Ebersole
@@ -45,6 +46,7 @@ class ColumnSourceImpl implements ColumnSource {
 			boolean isIncludedInUpdate) {
 		this(tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, false);
 	}
+
     ColumnSourceImpl(
             String tableName,
             JaxbColumnElement columnElement,
@@ -57,6 +59,11 @@ class ColumnSourceImpl implements ColumnSource {
         includedInInsert = isIncludedInInsert;
         includedInUpdate = isIncludedInUpdate;
     }
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLUMN;
+	}
 
 	@Override
 	public String getName() {

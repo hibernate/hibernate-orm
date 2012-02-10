@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Steve Ebersole
@@ -39,6 +40,11 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	void setOverrideColumnValues(ColumnValues columnValues) {
 		this.columnValues = columnValues;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLUMN;
 	}
 
 	@Override

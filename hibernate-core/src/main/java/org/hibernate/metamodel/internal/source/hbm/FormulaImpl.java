@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
 * @author Steve Ebersole
@@ -35,6 +36,11 @@ class FormulaImpl implements DerivedValueSource {
 	FormulaImpl(String tableName, String expression) {
 		this.tableName = tableName;
 		this.expression = expression;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.DERIVED;
 	}
 
 	@Override

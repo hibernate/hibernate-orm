@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.metamodel.spi.relational.Datatype;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * Implementation of a {@link ColumnSource} when the column is declared as just the name via the column XML
@@ -59,6 +60,11 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 		this.includedInInsert = includedInInsert;
 		this.includedInUpdate = includedInUpdate;
         this.isForceNotNull = isForceNotNull;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLUMN;
 	}
 
 	@Override

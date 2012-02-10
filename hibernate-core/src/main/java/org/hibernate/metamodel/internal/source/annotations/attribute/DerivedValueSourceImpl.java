@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Strong Liu
@@ -35,7 +36,12 @@ public class DerivedValueSourceImpl implements DerivedValueSource {
         this.formulaValue = formulaValue;
     }
 
-    @Override
+	@Override
+	public Nature getNature() {
+		return Nature.DERIVED;
+	}
+
+	@Override
     public String getExpression() {
         return formulaValue.getExpression();
     }

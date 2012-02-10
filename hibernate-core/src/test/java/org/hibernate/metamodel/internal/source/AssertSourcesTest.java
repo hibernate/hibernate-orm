@@ -24,18 +24,25 @@
 package org.hibernate.metamodel.internal.source;
 
 import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.metamodel.Metadata;
+import org.hibernate.EntityMode;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.IdentifierSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
+import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeNature;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
@@ -43,7 +50,10 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -76,9 +86,87 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		EntityHierarchy hierarchy = hierarchies.next();
 		assertFalse( hierarchies.hasNext() );
 		assertTrue( hierarchy.getHierarchyInheritanceType() == InheritanceType.NO_INHERITANCE );
+
 		RootEntitySource entitySource = hierarchy.getRootEntitySource();
 		assertFalse( entitySource.subclassEntitySources().iterator().hasNext() );
 
-		// finish up with assertions on attributes, etc
+		assertEquals( User.class.getName(), entitySource.getClassName() );
+		assertEquals( User.class.getName(), entitySource.getEntityName() );
+		assertNull( User.class.getName(), entitySource.getJpaEntityName() );
+
+		assertEquals( EntityMode.POJO, entitySource.getEntityMode() );
+		assertNull( entitySource.getCaching() );
+		assertNull( entitySource.getDiscriminatorSource() );
+		assertNull( entitySource.getDiscriminatorMatchValue() );
+
+		assertTrue( entitySource.getJpaCallbackClasses() == null || entitySource.getJpaCallbackClasses().isEmpty() );
+
+		TableSource primaryTable = entitySource.getPrimaryTable();
+		// todo : should sources be responsible for figuring out logical names?
+		//		these are the things that need to match in terms of lookup keys
+		assertNull( primaryTable.getLogicalName() );
+		assertNull( primaryTable.getExplicitCatalogName() );
+		assertNull( primaryTable.getExplicitSchemaName() );
+		assertNull( primaryTable.getExplicitTableName() );
+
+		assertFalse( entitySource.getSecondaryTables().iterator().hasNext() );
+		assertTrue(
+				entitySource.getSynchronizedTableNames() == null
+						|| entitySource.getSynchronizedTableNames().isEmpty()
+		);
+
+		IdentifierSource identifierSource = entitySource.getIdentifierSource();
+		assertNotNull( identifierSource );
+		assertEquals( IdentifierSource.Nature.SIMPLE, identifierSource.getNature() );
+		SimpleIdentifierSource simpleIdentifierSource = (SimpleIdentifierSource) identifierSource;
+		SingularAttributeSource identifierAttributeSource = simpleIdentifierSource.getIdentifierAttributeSource();
+		assertEquals( "id", identifierAttributeSource.getName() );
+		assertTrue( identifierAttributeSource.isSingular() );
+		assertFalse( identifierAttributeSource.isVirtualAttribute() );
+		// todo : see note about semantic interpretation below ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// todo : also, it's not really the attribute that is insertable/updatable; it is its individual values
+		assertTrue( identifierAttributeSource.isInsertable() );
+		assertFalse( identifierAttributeSource.isUpdatable() );
+		// todo : ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		assertFalse( identifierAttributeSource.isLazy() );
+		assertEquals( SingularAttributeNature.BASIC, identifierAttributeSource.getNature() );
+		assertEquals( PropertyGeneration.INSERT, identifierAttributeSource.getGeneration() );
+		assertNull( identifierAttributeSource.getPropertyAccessorName() );
+
+		// todo : here is an interesting question in terms of who is responsible for semantic interpretation
+		//		really an attribute for identifier should never be included in updates
+		//		and it should only be included in inserts only in certain cases
+		//		and should never be nullable
+		//	^^ all because this is the PK.  That is the semantic interpretation of those values based on that context.
+		//
+		// So do sources simply return explicit user values?  Or do they consider such semantic analysis?
+		assertTrue( identifierAttributeSource.areValuesIncludedInInsertByDefault() );
+		assertTrue( identifierAttributeSource.areValuesIncludedInUpdateByDefault() );
+		assertFalse( identifierAttributeSource.areValuesNullableByDefault() );
+
+		// todo : return collections?  or iterables?
+		// todo : empty collections?  or null?
+		assertEquals( 0, identifierAttributeSource.relationalValueSources().size() );
+//		RelationalValueSource relationalValueSource = identifierAttributeSource.relationalValueSources().get( 0 );
+//		assertNull( relationalValueSource.getContainingTableName() );
+//		assertEquals( RelationalValueSource.Nature.COLUMN, relationalValueSource.getNature() );
+//		ColumnSource columnSource = (ColumnSource) relationalValueSource;
+//		assertNull( columnSource.getName() );
+//		assertNull( columnSource.getReadFragment() );
+//		assertNull( columnSource.getWriteFragment() );
+//		assertNull( columnSource.getDefaultValue() );
+//		assertNull( columnSource.getSqlType() );
+//		assertNull( columnSource.getCheckCondition() );
+//		assertNull( columnSource.getComment() );
+//		assertNull( columnSource.getDatatype() );
+//		assertNull( columnSource.getSize() );
+//		// todo : technically, pk has to be unique, but this another semantic case
+//		assertFalse( columnSource.isUnique() );
+//		// todo : see comments above
+//		assertFalse( columnSource.isIncludedInInsert() );
+//		assertFalse( columnSource.isIncludedInUpdate() );
+//		assertFalse( columnSource.isNullable() );
+
+
 	}
 }

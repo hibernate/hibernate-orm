@@ -740,7 +740,7 @@ public class Binder {
 			}
 			if ( ColumnSource.class.isInstance( valueSource ) ) {
 				final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-				final Column column = makeColumn( columnSource, pluralAttributeBinding.getCollectionTable() );
+				final Column column = makeColumn( columnSource, COLL_KEY_COLUMN_BINDING_DEFAULTS, pluralAttributeBinding.getCollectionTable() );
 				if ( targetValue != null && ! Column.class.isInstance( targetValue ) ) {
 					throw new MappingException(
 							String.format(
@@ -768,7 +768,24 @@ public class Binder {
 			);
 		}
 	}
-	
+
+	private static final ColumnBindingDefaults COLL_KEY_COLUMN_BINDING_DEFAULTS = new ColumnBindingDefaults() {
+		@Override
+		public boolean areValuesIncludedInInsertByDefault() {
+			return true;
+		}
+
+		@Override
+		public boolean areValuesIncludedInUpdateByDefault() {
+			return false;
+		}
+
+		@Override
+		public boolean areValuesNullableByDefault() {
+			return false;
+		}
+	};
+
 	private void bindCollectionElement(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
@@ -1133,7 +1150,10 @@ public class Binder {
 							new SimpleValueBinding(
 									column,
 									decode( columnSource.isIncludedInInsert(), relationalValueSourceContainer.areValuesIncludedInInsertByDefault() ),
-									decode( columnSource.isIncludedInUpdate(), relationalValueSourceContainer.areValuesIncludedInUpdateByDefault() )
+									decode(
+											columnSource.isIncludedInUpdate(),
+											relationalValueSourceContainer.areValuesIncludedInUpdateByDefault()
+									)
 							)
 					);
 				}

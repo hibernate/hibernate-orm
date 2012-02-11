@@ -33,7 +33,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.BinaryStream;
 
 /**
@@ -45,19 +44,8 @@ public class DataHelper {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DataHelper.class.getName() );
 
-	private static Class nClobClass;
-	static {
-		try {
-			// NClobs are only JDBC 4 (JDK 1.6) and higher
-			nClobClass = ReflectHelper.classForName( "java.sql.NClob", DataHelper.class );
-		}
-		catch ( ClassNotFoundException e ) {
-			LOG.unableToLocateNClobClass();
-		}
-	}
-
-	public static boolean isNClob(Class type) {
-		return nClobClass != null && nClobClass.isAssignableFrom( type );
+	public static boolean isNClob(final Class type) {
+		return java.sql.NClob.class.isAssignableFrom( type );
 	}
 
 	/**

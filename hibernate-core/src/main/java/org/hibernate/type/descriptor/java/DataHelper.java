@@ -43,7 +43,7 @@ import org.hibernate.type.descriptor.BinaryStream;
  */
 public class DataHelper {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DataHelper.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DataHelper.class.getName() );
 
 	private static Class nClobClass;
 	static {
@@ -52,7 +52,7 @@ public class DataHelper {
 			nClobClass = ReflectHelper.classForName( "java.sql.NClob", DataHelper.class );
 		}
 		catch ( ClassNotFoundException e ) {
-            LOG.unableToLocateNClobClass();
+			LOG.unableToLocateNClobClass();
 		}
 	}
 
@@ -80,7 +80,7 @@ public class DataHelper {
 				stringBuilder.append( buffer, 0, amountRead );
 			}
 		}
-		catch ( IOException ioe) {
+		catch ( IOException ioe ) {
 			throw new HibernateException( "IOException occurred reading text", ioe );
 		}
 		finally {
@@ -88,7 +88,7 @@ public class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-                LOG.unableToCloseStream(e);
+				LOG.unableToCloseStream( e );
 			}
 		}
 		return stringBuilder.toString();
@@ -179,13 +179,13 @@ public class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-                LOG.unableToCloseInputStream(e);
+				LOG.unableToCloseInputStream( e );
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-                LOG.unableToCloseOutputStream(e);
+				LOG.unableToCloseOutputStream( e );
 			}
 		}
 		return outputStream.toByteArray();

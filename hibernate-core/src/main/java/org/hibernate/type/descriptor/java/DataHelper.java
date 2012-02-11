@@ -98,15 +98,16 @@ public class DataHelper {
 			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
-			char[] buffer = new char[2048];
+			final int bufferSize = Math.min( length, 2048 );
+			char[] buffer = new char[bufferSize];
 			int charsRead = 0;
 			while ( true ) {
-				int amountRead = characterStream.read( buffer, 0, buffer.length );
+				int amountRead = characterStream.read( buffer, 0, bufferSize );
 				if ( amountRead == -1 ) {
 					break;
 				}
 				stringBuilder.append( buffer, 0, amountRead );
-				if ( amountRead < buffer.length ) {
+				if ( amountRead < bufferSize ) {
 					// we have read up to the end of stream
 					break;
 				}

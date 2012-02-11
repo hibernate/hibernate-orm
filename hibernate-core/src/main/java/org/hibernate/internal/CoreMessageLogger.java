@@ -1135,10 +1135,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to locate MBeanServer on JMX service shutdown", id = 332)
 	void unableToLocateMBeanServer();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3", id = 333)
-	void unableToLocateNClobClass();
-
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to locate requested UUID generation strategy class : %s", id = 334)
 	void unableToLocateUuidGenerationStrategy(String strategyClassName);

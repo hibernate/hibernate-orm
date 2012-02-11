@@ -73,9 +73,9 @@ public class DataHelper {
 	 */
 	public static String extractString(Reader reader, int lengthHint) {
 		// read the Reader contents into a buffer and return the complete string
-		final StringBuilder stringBuilder = new StringBuilder( lengthHint );
+		final int bufferSize = Math.min( lengthHint, 2048 );
+		final StringBuilder stringBuilder = new StringBuilder( bufferSize );
 		try {
-			final int bufferSize = Math.min( lengthHint, 2048 );
 			char[] buffer = new char[bufferSize];
 			while (true) {
 				int amountRead = reader.read( buffer, 0, bufferSize );

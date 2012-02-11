@@ -26,9 +26,7 @@ package org.hibernate.type.descriptor.java;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
-import java.sql.SQLException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.CharacterStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -87,12 +85,7 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 			return DataHelper.extractString( (Reader) value );
 		}
 		if ( Clob.class.isInstance( value ) || DataHelper.isNClob( value.getClass() ) ) {
-			try {
-				return DataHelper.extractString( ( (Clob) value ).getCharacterStream() );
-			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access lob stream", e );
-			}
+			return DataHelper.extractString( (Clob) value );
 		}
 
 		throw unknownWrap( value.getClass() );

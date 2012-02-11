@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Clob;
+import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
@@ -50,18 +52,33 @@ public class DataHelper {
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.
+	 * The reader will be closed.
 	 *
 	 * @param reader The reader for the content
 	 *
 	 * @return The content as string
 	 */
 	public static String extractString(Reader reader) {
+		return extractString( reader, 2048 );
+	}
+
+	/**
+	 * Extract the contents of the given reader/stream as a string.
+	 * The reader will be closed.
+	 *
+	 * @param reader The reader for the content
+	 * @param lengthHint if the length is known in advance the implementation can be slightly more efficient
+	 *
+	 * @return The content as string
+	 */
+	public static String extractString(Reader reader, int lengthHint) {
 		// read the Reader contents into a buffer and return the complete string
-		final StringBuilder stringBuilder = new StringBuilder();
+		final StringBuilder stringBuilder = new StringBuilder( lengthHint );
 		try {
-			char[] buffer = new char[2048];
+			final int bufferSize = Math.min( lengthHint, 2048 );
+			char[] buffer = new char[bufferSize];
 			while (true) {
-				int amountRead = reader.read( buffer, 0, buffer.length );
+				int amountRead = reader.read( buffer, 0, bufferSize );
 				if ( amountRead == -1 ) {
 					break;
 				}
@@ -239,5 +256,28 @@ public class DataHelper {
 	 */
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
 		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
+	}
+
+	/**
+	 * Extract the contents of the given Clob as a string.
+	 *
+	 * @param reader The reader for the content
+	 *
+	 * @return The content as string
+	 */
+	public static String extractString(final Clob value) {
+		try {
+			Reader characterStream = value.getCharacterStream();
+			long length = value.length();
+			if ( length > Integer.MAX_VALUE ) {
+				return extractString( characterStream, Integer.MAX_VALUE );
+			}
+			else {
+				return extractString( characterStream, (int) length );
+			}
+		}
+		catch ( SQLException e ) {
+			throw new HibernateException( "Unable to access lob stream", e );
+		}
 	}
 }

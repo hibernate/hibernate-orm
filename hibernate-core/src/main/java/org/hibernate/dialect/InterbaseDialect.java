@@ -99,10 +99,7 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuilder( sql.length()+15 )
-			.append(sql)
-			.append(hasOffset ? " rows ? to ?" : " rows ?")
-			.toString();
+		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
 	}
 
 	public boolean bindLimitParametersFirst() {

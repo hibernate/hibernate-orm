@@ -80,7 +80,7 @@ public abstract class SubqueryExpression implements Criterion {
 
 		String sql = walker.getSQLString();
 
-		final StringBuffer buf = new StringBuffer( toLeftSqlString(criteria, criteriaQuery) );
+		final StringBuilder buf = new StringBuilder( toLeftSqlString(criteria, criteriaQuery) );
 		if ( op != null ) {
 			buf.append( ' ' ).append( op ).append( ' ' );
 		}

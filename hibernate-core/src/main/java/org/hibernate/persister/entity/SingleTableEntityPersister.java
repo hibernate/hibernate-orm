@@ -852,7 +852,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				if ( !queryable.isAbstract() ) frag.addValue( queryable.getDiscriminatorSQLValue() );
 			}
 
-			StringBuffer buf = new StringBuffer(50)
+			StringBuilder buf = new StringBuilder(50)
 				.append(" and ")
 				.append( frag.toFragmentString() );
 

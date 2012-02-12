@@ -54,8 +54,8 @@ public abstract class AbstractLongStringType extends ImmutableType {
 			// if the corresponding SQL value is NULL, the reader we got is NULL as well
 			if (charReader==null) return null;
 
-			// Fetch Reader content up to the end - and put characters in a StringBuffer
-			StringBuffer sb = new StringBuffer();
+			// Fetch Reader content up to the end - and put characters in a StringBuilder
+			StringBuilder sb = new StringBuilder();
 			try {
 				char[] buffer = new char[2048];
 				while (true) {
@@ -76,7 +76,7 @@ public abstract class AbstractLongStringType extends ImmutableType {
 				}
 			}
 
-			// Return StringBuffer content as a large String
+			// Return StringBuilder content as a large String
 			return sb.toString();
 	}
 

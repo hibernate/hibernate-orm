@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.Mapping;
 public class UniqueKey extends Constraint {
 
 	public String sqlConstraintString(Dialect dialect) {
-		StringBuffer buf = new StringBuffer( "unique (" );
+		StringBuilder buf = new StringBuilder( "unique (" );
 		boolean hadNullableColumn = false;
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -60,7 +60,7 @@ public class UniqueKey extends Constraint {
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
-		StringBuffer buf = new StringBuffer(
+		StringBuilder buf = new StringBuilder(
 				dialect.getAddUniqueConstraintString( constraintName )
 		).append( '(' );
 		Iterator iter = getColumnIterator();

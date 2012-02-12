@@ -211,7 +211,7 @@ public class MySQLDialect extends Dialect {
 			String[] primaryKey, boolean referencesPrimaryKey
 	) {
 		String cols = StringHelper.join(", ", foreignKey);
-		return new StringBuffer(30)
+		return new StringBuilder(30)
 			.append(" add index ")
 			.append(constraintName)
 			.append(" (")
@@ -237,7 +237,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuffer( sql.length() + 20 )
+		return new StringBuilder( sql.length() + 20 )
 				.append( sql )
 				.append( hasOffset ? " limit ?, ?" : " limit ?" )
 				.toString();

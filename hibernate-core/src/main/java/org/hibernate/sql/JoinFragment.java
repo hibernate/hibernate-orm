@@ -91,7 +91,7 @@ public abstract class JoinFragment {
 	 * @param on     The 'on' condition.
 	 * @return Returns true if the condition was added, false if the condition was already in 'on' string.
 	 */
-	protected boolean addCondition(StringBuffer buffer, String on) {
+	protected boolean addCondition(StringBuilder buffer, String on) {
 		if ( StringHelper.isNotEmpty( on ) ) {
 			if ( !on.startsWith( " and" ) ) buffer.append( " and " );
 			buffer.append( on );

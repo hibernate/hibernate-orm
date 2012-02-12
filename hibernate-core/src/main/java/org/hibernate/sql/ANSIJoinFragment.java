@@ -32,8 +32,8 @@ import org.hibernate.AssertionFailure;
  */
 public class ANSIJoinFragment extends JoinFragment {
 
-	private StringBuffer buffer = new StringBuffer();
-	private StringBuffer conditions = new StringBuffer();
+	private StringBuilder buffer = new StringBuilder();
+	private StringBuilder conditions = new StringBuilder();
 
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addJoin(tableName, alias, fkColumns, pkColumns, joinType, null);
@@ -96,7 +96,7 @@ public class ANSIJoinFragment extends JoinFragment {
 
 	public JoinFragment copy() {
 		ANSIJoinFragment copy = new ANSIJoinFragment();
-		copy.buffer = new StringBuffer( buffer.toString() );
+		copy.buffer = new StringBuilder( buffer.toString() );
 		return copy;
 	}
 

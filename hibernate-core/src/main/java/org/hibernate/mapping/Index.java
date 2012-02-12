@@ -80,7 +80,7 @@ public class Index implements RelationalModel, Serializable {
 			String defaultSchema
 	) {
 		//TODO handle supportsNotNullUnique=false, but such a case does not exist in the wild so far
-		StringBuffer buf = new StringBuffer( "create" )
+		StringBuilder buf = new StringBuilder( "create" )
 				.append( unique ?
 						" unique" :
 						"" )
@@ -103,7 +103,7 @@ public class Index implements RelationalModel, Serializable {
 
 	// Used only in Table for sqlCreateString (but commented out at the moment)
 	public String sqlConstraintString(Dialect dialect) {
-		StringBuffer buf = new StringBuffer( " index (" );
+		StringBuilder buf = new StringBuilder( " index (" );
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			buf.append( ( (Column) iter.next() ).getQuotedName( dialect ) );

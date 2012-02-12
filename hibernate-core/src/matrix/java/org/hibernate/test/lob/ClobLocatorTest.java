@@ -178,7 +178,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public static String buildString(int size, char baseChar) {
-		StringBuffer buff = new StringBuffer();
+		StringBuilder buff = new StringBuilder();
 		for( int i = 0; i < size; i++ ) {
 			buff.append( baseChar );
 		}

@@ -321,7 +321,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuffer( sql.length() + 40 )
+		return new StringBuilder( sql.length() + 40 )
 				.append( sql )
 				.append( " fetch first " )
 				.append( limit )

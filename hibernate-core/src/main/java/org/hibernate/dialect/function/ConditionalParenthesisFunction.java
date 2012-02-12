@@ -49,7 +49,7 @@ public class ConditionalParenthesisFunction extends StandardSQLFunction {
 
 	public String render(List args, SessionFactoryImplementor factory) {
 		final boolean hasArgs = !args.isEmpty();
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( getName() );
 		if ( hasArgs ) {
 			buf.append( "(" );

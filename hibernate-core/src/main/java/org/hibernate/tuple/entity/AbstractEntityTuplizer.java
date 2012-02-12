@@ -346,7 +346,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			return (Serializable) id;
 		}
 		catch ( ClassCastException cce ) {
-			StringBuffer msg = new StringBuffer( "Identifier classes must be serializable. " );
+			StringBuilder msg = new StringBuilder( "Identifier classes must be serializable. " );
 			if ( id != null ) {
 				msg.append( id.getClass().getName() ).append( " is not serializable. " );
 			}

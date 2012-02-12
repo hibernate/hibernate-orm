@@ -139,7 +139,7 @@ class FromElementType {
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
 		String[] cols = getPropertyMapping( EntityPersister.ENTITY_ID ).toColumns( getTableAlias(), EntityPersister.ENTITY_ID );
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		// For property references generate <tablealias>.<columnname> as <projectionalias>
 		for ( int j = 0; j < cols.length; j++ ) {
 			String column = cols[j];
@@ -165,7 +165,7 @@ class FromElementType {
 			// TODO: Replace this with a more elegant solution.
 			String[] idColumnNames = ( persister != null ) ?
 					( ( Queryable ) persister ).getIdentifierColumnNames() : new String[0];
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			for ( int i = 0; i < idColumnNames.length; i++ ) {
 				buf.append( fromElement.getTableAlias() ).append( '.' ).append( idColumnNames[i] );
 				if ( i != idColumnNames.length - 1 ) buf.append( ", " );

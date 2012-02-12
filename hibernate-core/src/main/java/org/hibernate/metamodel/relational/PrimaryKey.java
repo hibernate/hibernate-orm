@@ -77,7 +77,7 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 	}
 
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		StringBuffer buf = new StringBuffer(
+		StringBuilder buf = new StringBuilder(
 			dialect.getAddPrimaryKeyConstraintString( getName() )
 		).append('(');
 		boolean first = true;

@@ -221,7 +221,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuffer( sql.length() + 20 )
+		return new StringBuilder( sql.length() + 20 )
 				.append( sql )
 				.append( hasOffset ? " limit ? offset ?" : " limit ?" )
 				.toString();

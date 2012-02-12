@@ -137,14 +137,14 @@ public final class Template {
 		// 		which the tokens occur.  Depending on the state of those flags we decide whether we need to qualify
 		//		identifier references.
 
-		String symbols = new StringBuffer()
+		String symbols = new StringBuilder()
 				.append( "=><!+-*/()',|&`" )
 				.append( StringHelper.WHITESPACE )
 				.append( dialect.openQuote() )
 				.append( dialect.closeQuote() )
 				.toString();
 		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 
 		boolean quoted = false;
 		boolean quotedIdentifier = false;

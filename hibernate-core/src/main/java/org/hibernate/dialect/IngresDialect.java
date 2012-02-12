@@ -288,7 +288,7 @@ public class IngresDialect extends Dialect {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuffer( querySelect.length() + 16 )
+		return new StringBuilder( querySelect.length() + 16 )
 				.append( querySelect )
 				.insert( 6, " first " + limit )
 				.toString();

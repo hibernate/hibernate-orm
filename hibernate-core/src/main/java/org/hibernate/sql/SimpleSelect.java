@@ -147,7 +147,7 @@ public class SimpleSelect {
 	}
 
 	public String toStatementString() {
-		StringBuffer buf = new StringBuffer( 
+		StringBuilder buf = new StringBuilder( 
 				columns.size()*10 + 
 				tableName.length() + 
 				whereTokens.size() * 10 + 
@@ -194,7 +194,7 @@ public class SimpleSelect {
 	}
 
 	public String toWhereClause() {
-		StringBuffer buf = new StringBuffer( whereTokens.size() * 5 );
+		StringBuilder buf = new StringBuilder( whereTokens.size() * 5 );
 		Iterator iter = whereTokens.iterator();
 		while ( iter.hasNext() ) {
 			buf.append( iter.next() );

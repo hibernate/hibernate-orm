@@ -36,8 +36,8 @@ import java.util.Map;
 public class MckoiCaseFragment extends CaseFragment {
 
 	public String toFragmentString() {
-		StringBuffer buf = new StringBuffer( cases.size() * 15 + 10 );
-		StringBuffer buf2= new StringBuffer( cases.size() );
+		StringBuilder buf = new StringBuilder( cases.size() * 15 + 10 );
+		StringBuilder buf2= new StringBuilder( cases.size() );
 
 		Iterator iter = cases.entrySet().iterator();
 		while ( iter.hasNext() ) {

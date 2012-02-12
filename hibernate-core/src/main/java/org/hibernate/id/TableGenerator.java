@@ -207,7 +207,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	public String[] sqlDropStrings(Dialect dialect) {
-		StringBuffer sqlDropString = new StringBuffer( "drop table " );
+		StringBuilder sqlDropString = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			sqlDropString.append( "if exists " );
 		}

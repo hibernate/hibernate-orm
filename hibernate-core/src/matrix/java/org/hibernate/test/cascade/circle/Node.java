@@ -115,7 +115,7 @@ public class Node {
 
 	public String toString()
 	{
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		
 		buffer.append( name + " id: " + nodeID );
 		if ( route != null ) {

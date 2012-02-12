@@ -88,7 +88,7 @@ public class Vehicle {
 
 	public String toString()
 	{
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 
 		buffer.append(name + " id: " + vehicleID + "\n");
 

@@ -34,8 +34,8 @@ package org.hibernate.sql;
  */
 public class Sybase11JoinFragment extends JoinFragment {
 
-	private StringBuffer afterFrom = new StringBuffer();
-	private StringBuffer afterWhere = new StringBuffer();
+	private StringBuilder afterFrom = new StringBuilder();
+	private StringBuilder afterWhere = new StringBuilder();
 
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
@@ -76,8 +76,8 @@ public class Sybase11JoinFragment extends JoinFragment {
 
 	public JoinFragment copy() {
 		Sybase11JoinFragment copy = new Sybase11JoinFragment();
-		copy.afterFrom = new StringBuffer( afterFrom.toString() );
-		copy.afterWhere = new StringBuffer( afterWhere.toString() );
+		copy.afterFrom = new StringBuilder( afterFrom.toString() );
+		copy.afterWhere = new StringBuilder( afterWhere.toString() );
 		return copy;
 	}
 

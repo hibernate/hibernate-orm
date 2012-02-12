@@ -122,7 +122,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public static String qualify(String catalog, String schema, String table) {
-		StringBuffer qualifiedName = new StringBuffer();
+		StringBuilder qualifiedName = new StringBuilder();
 		if ( catalog != null ) {
 			qualifiedName.append( catalog ).append( '.' );
 		}
@@ -296,7 +296,7 @@ public class Table implements RelationalModel, Serializable {
 									String defaultSchema)
 			throws HibernateException {
 
-		StringBuffer root = new StringBuffer( "alter table " )
+		StringBuilder root = new StringBuilder( "alter table " )
 				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
@@ -310,7 +310,7 @@ public class Table implements RelationalModel, Serializable {
 
 			if ( columnInfo == null ) {
 				// the column doesnt exist at all.
-				StringBuffer alter = new StringBuffer( root.toString() )
+				StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) )
 						.append( ' ' )
@@ -359,7 +359,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String sqlTemporaryTableCreateString(Dialect dialect, Mapping mapping) throws HibernateException {
-		StringBuffer buffer = new StringBuffer( dialect.getCreateTemporaryTableString() )
+		StringBuilder buffer = new StringBuilder( dialect.getCreateTemporaryTableString() )
 				.append( ' ' )
 				.append( name )
 				.append( " (" );
@@ -498,7 +498,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		StringBuffer buf = new StringBuffer( "drop table " );
+		StringBuilder buf = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );
 		}
@@ -695,7 +695,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String toString() {
-		StringBuffer buf = new StringBuffer().append( getClass().getName() )
+		StringBuilder buf = new StringBuilder().append( getClass().getName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
 			buf.append( getCatalog() + "." );
@@ -760,7 +760,7 @@ public class Table implements RelationalModel, Serializable {
 		if ( dialect.supportsCommentOn() ) {
 			String tableName = getQualifiedName( dialect, defaultCatalog, defaultSchema );
 			if ( comment != null ) {
-				StringBuffer buf = new StringBuffer()
+				StringBuilder buf = new StringBuilder()
 						.append( "comment on table " )
 						.append( tableName )
 						.append( " is '" )
@@ -773,7 +773,7 @@ public class Table implements RelationalModel, Serializable {
 				Column column = (Column) iter.next();
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					StringBuffer buf = new StringBuffer()
+					StringBuilder buf = new StringBuilder()
 							.append( "comment on column " )
 							.append( tableName )
 							.append( '.' )

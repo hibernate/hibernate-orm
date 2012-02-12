@@ -61,7 +61,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 	}
 
 	public String sqlConstraintStringInCreateTable(Dialect dialect) {
-		StringBuffer buf = new StringBuffer( "unique (" );
+		StringBuilder buf = new StringBuilder( "unique (" );
 		boolean hadNullableColumn = false;
 		boolean first = true;
 		for ( Column column : getColumns() ) {
@@ -84,7 +84,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 
 	@Override
     public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		StringBuffer buf = new StringBuffer(
+		StringBuilder buf = new StringBuilder(
 				dialect.getAddUniqueConstraintString( getName() )
 		).append( '(' );
 		boolean nullable = false;

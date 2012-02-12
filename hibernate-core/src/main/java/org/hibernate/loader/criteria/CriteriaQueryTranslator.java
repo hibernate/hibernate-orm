@@ -412,7 +412,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String getWhereCondition() {
-		StringBuffer condition = new StringBuffer( 30 );
+		StringBuilder condition = new StringBuilder( 30 );
 		Iterator criterionIterator = rootCriteria.iterateExpressionEntries();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.CriterionEntry entry = ( CriteriaImpl.CriterionEntry ) criterionIterator.next();
@@ -426,7 +426,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String getOrderBy() {
-		StringBuffer orderBy = new StringBuffer( 30 );
+		StringBuilder orderBy = new StringBuilder( 30 );
 		Iterator criterionIterator = rootCriteria.iterateOrderings();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.OrderEntry oe = ( CriteriaImpl.OrderEntry ) criterionIterator.next();

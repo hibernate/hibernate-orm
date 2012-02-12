@@ -199,7 +199,7 @@ public class Example implements Criterion {
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 		throws HibernateException {
 
-		StringBuffer buf = new StringBuffer().append('(');
+		StringBuilder buf = new StringBuilder().append('(');
 		EntityPersister meta = criteriaQuery.getFactory().getEntityPersister( criteriaQuery.getEntityName(criteria) );
 		String[] propertyNames = meta.getPropertyNames();
 		Type[] propertyTypes = meta.getPropertyTypes();
@@ -325,7 +325,7 @@ public class Example implements Criterion {
 		Object propertyValue,
 		Criteria criteria,
 		CriteriaQuery cq,
-		StringBuffer buf)
+		StringBuilder buf)
 	throws HibernateException {
 		Criterion crit;
 		if ( propertyValue!=null ) {
@@ -357,7 +357,7 @@ public class Example implements Criterion {
 		CompositeType type,
 		Criteria criteria,
 		CriteriaQuery criteriaQuery,
-		StringBuffer buf)
+		StringBuilder buf)
 	throws HibernateException {
 
 		if (component!=null) {

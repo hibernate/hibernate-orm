@@ -1548,7 +1548,7 @@ public abstract class AbstractEntityPersister
 		String fromClause = fromTableFragment( getRootAlias() ) +
 				fromJoinFragment( getRootAlias(), true, false );
 
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ", aliasedIdColumns ) )
 			.append( "=?" )
 			.append( whereJoinFragment( getRootAlias(), true, false ) )
@@ -1629,7 +1629,7 @@ public abstract class AbstractEntityPersister
 		String fromClause = fromTableFragment( getRootAlias() ) +
 				fromJoinFragment( getRootAlias(), true, false );
 
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ",
 					aliasedIdColumns ) )
 			.append( "=?" )
@@ -1891,7 +1891,7 @@ public abstract class AbstractEntityPersister
 		if ( tableNumber == 0 ) {
 			return rootAlias;
 		}
-		StringBuffer buf = new StringBuffer().append( rootAlias );
+		StringBuilder buf = new StringBuilder().append( rootAlias );
 		if ( !rootAlias.endsWith( "_" ) ) {
 			buf.append( '_' );
 		}
@@ -4460,7 +4460,7 @@ public abstract class AbstractEntityPersister
 		select.setFromClause( fromTableFragment( getRootAlias() ) + fromJoinFragment( getRootAlias(), true, false ) );
 
 		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ",
 					aliasedIdColumns ) )
 			.append( "=?" )

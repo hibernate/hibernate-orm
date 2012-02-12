@@ -32,8 +32,8 @@ import org.hibernate.dialect.Dialect;
  */
 public class QueryJoinFragment extends JoinFragment {
 
-	private StringBuffer afterFrom = new StringBuffer();
-	private StringBuffer afterWhere = new StringBuffer();
+	private StringBuilder afterFrom = new StringBuilder();
+	private StringBuilder afterWhere = new StringBuilder();
 	private Dialect dialect;
 	private boolean useThetaStyleInnerJoins;
 
@@ -78,8 +78,8 @@ public class QueryJoinFragment extends JoinFragment {
 
 	public JoinFragment copy() {
 		QueryJoinFragment copy = new QueryJoinFragment( dialect, useThetaStyleInnerJoins );
-		copy.afterFrom = new StringBuffer( afterFrom.toString() );
-		copy.afterWhere = new StringBuffer( afterWhere.toString() );
+		copy.afterFrom = new StringBuilder( afterFrom.toString() );
+		copy.afterWhere = new StringBuilder( afterWhere.toString() );
 		return copy;
 	}
 

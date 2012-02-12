@@ -43,7 +43,7 @@ public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 	throws MappingException {
 		super( persister, factory, LoadQueryInfluencers.NONE );
 		this.cascadeAction = action;
-		StringBuffer whereCondition = whereString( getAlias(), persister.getIdentifierColumnNames(), 1 )
+		StringBuilder whereCondition = whereString( getAlias(), persister.getIdentifierColumnNames(), 1 )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), CollectionHelper.EMPTY_MAP ) );
 	

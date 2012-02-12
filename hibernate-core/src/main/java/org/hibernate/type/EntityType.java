@@ -492,7 +492,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		
 		EntityPersister persister = factory.getEntityPersister( associatedEntityName );
-		StringBuffer result = new StringBuffer().append( associatedEntityName );
+		StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
 			final EntityMode entityMode = persister.getEntityMode();

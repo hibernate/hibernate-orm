@@ -178,7 +178,7 @@ public class WhereParser implements Parser {
 
 	private boolean inSubselect = false;
 	private int bracketsSinceSelect = 0;
-	private StringBuffer subselect;
+	private StringBuilder subselect;
 
 	private boolean expectingPathContinuation = false;
 	private int expectingIndex = 0;
@@ -233,7 +233,7 @@ public class WhereParser implements Parser {
 		//Cope with a subselect
 		if ( !inSubselect && ( lcToken.equals( "select" ) || lcToken.equals( "from" ) ) ) {
 			inSubselect = true;
-			subselect = new StringBuffer( 20 );
+			subselect = new StringBuilder( 20 );
 		}
 		if ( inSubselect && token.equals( ")" ) ) {
 			bracketsSinceSelect--;
@@ -323,8 +323,8 @@ public class WhereParser implements Parser {
 
 		}
 		else {
-			StringBuffer join = ( StringBuffer ) joins.removeLast();
-			( ( StringBuffer ) joins.getLast() ).append( join.toString() );
+			StringBuilder join = ( StringBuilder ) joins.removeLast();
+			( ( StringBuilder ) joins.getLast() ).append( join.toString() );
 		}
 
 		if ( nots.removeLast() ) negated = !negated;
@@ -335,7 +335,7 @@ public class WhereParser implements Parser {
 	private void openExpression(QueryTranslatorImpl q, String lcToken) {
 		nots.addLast( Boolean.FALSE );
 		booleanTests.addLast( Boolean.FALSE );
-		joins.addLast( new StringBuffer() );
+		joins.addLast( new StringBuilder() );
 		if ( !"(".equals( lcToken ) ) appendToken( q, "(" );
 	}
 
@@ -454,7 +454,7 @@ public class WhereParser implements Parser {
 	}
 
 	private void addToCurrentJoin(String sql) {
-		( ( StringBuffer ) joins.getLast() ).append( sql );
+		( ( StringBuilder ) joins.getLast() ).append( sql );
 	}
 
 	private void addToCurrentJoin(PathExpressionParser.CollectionElement ce)

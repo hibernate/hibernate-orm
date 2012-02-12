@@ -65,9 +65,9 @@ public class PathExpressionParser implements Parser {
 	private String collectionName;
 	private String collectionOwnerName;
 	private String collectionRole;
-	private final StringBuffer componentPath = new StringBuffer();
+	private final StringBuilder componentPath = new StringBuilder();
 	private Type type;
-	private final StringBuffer path = new StringBuffer();
+	private final StringBuilder path = new StringBuilder();
 	private boolean ignoreInitialJoin;
 	private boolean continuation;
 	private JoinType joinType = JoinType.INNER_JOIN; //default mode
@@ -261,7 +261,7 @@ public class PathExpressionParser implements Parser {
 		}
 		else {
 			if ( componentPath.length() > 0 ) {
-				return new StringBuffer()
+				return new StringBuilder()
 						.append( currentProperty )
 						.append( '.' )
 						.append( componentPath.toString() )
@@ -384,7 +384,7 @@ public class PathExpressionParser implements Parser {
 		String alias;
 		String[] elementColumns;
 		JoinSequence joinSequence;
-		StringBuffer indexValue = new StringBuffer();
+		StringBuilder indexValue = new StringBuilder();
 	}
 
 	public CollectionElement lastCollectionElement() {

@@ -754,7 +754,7 @@ public abstract class AbstractQueryImpl implements Query {
 		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();
 		String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
 		String placeholder =
-				new StringBuffer( paramPrefix.length() + name.length() )
+				new StringBuilder( paramPrefix.length() + name.length() )
 						.append( paramPrefix ).append(  name )
 						.toString();
 
@@ -783,7 +783,7 @@ public abstract class AbstractQueryImpl implements Query {
 			return query;
 		}
 
-		StringBuffer list = new StringBuffer( 16 );
+		StringBuilder list = new StringBuilder( 16 );
 		Iterator iter = vals.iterator();
 		int i = 0;
 		while ( iter.hasNext() ) {

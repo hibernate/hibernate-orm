@@ -54,7 +54,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1].
 	 */
 	public static String infoString(String entityName, Serializable id) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( entityName == null ) {
 			s.append( "<null entity name>" );
@@ -87,7 +87,7 @@ public final class MessageHelper {
 			EntityPersister persister, 
 			Object id, 
 			SessionFactoryImplementor factory) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		Type idType;
 		if( persister == null ) {
@@ -131,7 +131,7 @@ public final class MessageHelper {
 			Object id, 
 			Type identifierType,
 			SessionFactoryImplementor factory) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( persister == null ) {
 			s.append( "<null EntityPersister>" );
@@ -164,7 +164,7 @@ public final class MessageHelper {
 			EntityPersister persister, 
 			Serializable[] ids, 
 			SessionFactoryImplementor factory) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( persister == null ) {
 			s.append( "<null EntityPersister>" );
@@ -193,7 +193,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar]
 	 */
 	public static String infoString(EntityPersister persister) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
 			s.append( "<null EntityPersister>" );
@@ -215,7 +215,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String infoString(String entityName, String propertyName, Object key) {
-		StringBuffer s = new StringBuffer()
+		StringBuilder s = new StringBuilder()
 				.append( '[' )
 				.append( entityName )
 				.append( '.' )
@@ -249,7 +249,7 @@ public final class MessageHelper {
 			CollectionPersister persister, 
 			Serializable[] ids, 
 			SessionFactoryImplementor factory) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
 			s.append( "<unreferenced>" );
@@ -286,7 +286,7 @@ public final class MessageHelper {
 			CollectionPersister persister, 
 			Serializable id, 
 			SessionFactoryImplementor factory) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
 			s.append( "<unreferenced>" );
@@ -320,7 +320,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(String role, Serializable id) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( role == null ) {
 			s.append( "<unreferenced>" );

@@ -134,7 +134,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuffer sqlDropString = new StringBuffer( "drop table " );
+		StringBuilder sqlDropString = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			sqlDropString.append( "if exists " );
 		}

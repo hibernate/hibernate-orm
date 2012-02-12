@@ -92,7 +92,7 @@ public class Route {
 
 	public String toString()
 	{
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		
 		buffer.append("Route name: " + name + " id: " + routeID + " transientField: " + transientField + "\n");
 		for (Iterator it = nodes.iterator(); it.hasNext();) {

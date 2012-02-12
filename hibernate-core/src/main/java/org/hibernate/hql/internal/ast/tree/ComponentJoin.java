@@ -57,7 +57,7 @@ public class ComponentJoin extends FromElement {
 		initializeComponentJoin( new ComponentFromElementType( this ) );
 
 		final String[] cols = origin.getPropertyMapping( "" ).toColumns( getTableAlias(), componentProperty );
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for ( int j = 0; j < cols.length; j++ ) {
 			final String column = cols[j];
 			if ( j > 0 ) {
@@ -147,7 +147,7 @@ public class ComponentJoin extends FromElement {
 		@Override
         public String renderScalarIdentifierSelect(int i) {
 			String[] cols = getBasePropertyMapping().toColumns( getTableAlias(), getComponentProperty() );
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			// For property references generate <tablealias>.<columnname> as <projectionalias>
 			for ( int j = 0; j < cols.length; j++ ) {
 				final String column = cols[j];

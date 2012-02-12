@@ -138,7 +138,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	 * @return String - The additional display text.
 	 */
 	public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "IntoClause{" );
 		buf.append( "entityName=" ).append( getEntityName() );
 		buf.append( ",tableName=" ).append( getTableName() );

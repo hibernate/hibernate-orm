@@ -35,11 +35,11 @@ import org.hibernate.dialect.Dialect;
 public class QuerySelect {
 	private Dialect dialect;
 	private JoinFragment joins;
-	private StringBuffer select = new StringBuffer();
-	private StringBuffer where = new StringBuffer();
-	private StringBuffer groupBy = new StringBuffer();
-	private StringBuffer orderBy = new StringBuffer();
-	private StringBuffer having = new StringBuffer();
+	private StringBuilder select = new StringBuilder();
+	private StringBuilder where = new StringBuilder();
+	private StringBuilder groupBy = new StringBuilder();
+	private StringBuilder orderBy = new StringBuilder();
+	private StringBuilder having = new StringBuilder();
 	private String comment;
 	private boolean distinct=false;
 
@@ -133,7 +133,7 @@ public class QuerySelect {
 	}
 
 	public String toQueryString() {
-		StringBuffer buf = new StringBuffer(50);
+		StringBuilder buf = new StringBuilder(50);
 		if (comment!=null) buf.append("/* ").append(comment).append(" */ ");
 		buf.append("select ");
 		if (distinct) buf.append("distinct ");
@@ -176,7 +176,7 @@ public class QuerySelect {
 		return dialect.transformSelectString( buf.toString() );
 	}
 
-	private static void appendTokens(StringBuffer buf, Iterator iter) {
+	private static void appendTokens(StringBuilder buf, Iterator iter) {
 		boolean lastSpaceable=true;
 		boolean lastQuoted=false;
 		while ( iter.hasNext() ) {

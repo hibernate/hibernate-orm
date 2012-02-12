@@ -75,7 +75,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuffer( querySelect.length() + 8 )
+		return new StringBuilder( querySelect.length() + 8 )
 				.append( querySelect )
 				.insert( getAfterSelectInsertPoint( querySelect ), " top " + limit )
 				.toString();

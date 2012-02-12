@@ -85,7 +85,7 @@ public final class QuerySplitter {
 		if ( tokens.length == 0 ) return new String[]{query}; // just especially for the trivial collection filter
 		ArrayList placeholders = new ArrayList();
 		ArrayList replacements = new ArrayList();
-		StringBuffer templateQuery = new StringBuffer( 40 );
+		StringBuilder templateQuery = new StringBuilder( 40 );
 
 		int start = getStartingPositionFor(tokens, templateQuery);
 		int count = 0;
@@ -137,7 +137,7 @@ public final class QuerySplitter {
 		return tokens[tokens.length - 1];
 	}
 	
-	private static int getStartingPositionFor(String[] tokens, StringBuffer templateQuery) {
+	private static int getStartingPositionFor(String[] tokens, StringBuilder templateQuery) {
 		templateQuery.append( tokens[0] );
 		if ( !"select".equals( tokens[0].toLowerCase() ) ) return 1;
 

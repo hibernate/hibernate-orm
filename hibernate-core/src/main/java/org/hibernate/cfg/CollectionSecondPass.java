@@ -85,7 +85,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			throws MappingException;
 
 	private static String columns(Value val) {
-		StringBuffer columns = new StringBuffer();
+		StringBuilder columns = new StringBuilder();
 		Iterator iter = val.getColumnIterator();
 		while ( iter.hasNext() ) {
 			columns.append( ( (Selectable) iter.next() ).getText() );

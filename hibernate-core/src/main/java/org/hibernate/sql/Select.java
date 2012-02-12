@@ -56,7 +56,7 @@ public class Select {
 	 * Construct an SQL <tt>SELECT</tt> statement from the given clauses
 	 */
 	public String toStatementString() {
-		StringBuffer buf = new StringBuffer(guesstimatedBufferSize);
+		StringBuilder buf = new StringBuilder(guesstimatedBufferSize);
 		if ( StringHelper.isNotEmpty(comment) ) {
 			buf.append("/* ").append(comment).append(" */ ");
 		}

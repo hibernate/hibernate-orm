@@ -99,7 +99,7 @@ public class VarArgsSQLFunction implements SQLFunction {
 	}
 
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) {
-		StringBuffer buf = new StringBuffer().append( begin );
+		StringBuilder buf = new StringBuilder().append( begin );
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			buf.append( transformArgument( ( String ) arguments.get( i ) ) );
 			if ( i < arguments.size() - 1 ) {

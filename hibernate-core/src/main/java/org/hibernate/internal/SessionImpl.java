@@ -1782,7 +1782,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public String toString() {
-		StringBuffer buf = new StringBuffer(500)
+		StringBuilder buf = new StringBuilder(500)
 			.append( "SessionImpl(" );
 		if ( !isClosed() ) {
 			buf.append(persistenceContext)

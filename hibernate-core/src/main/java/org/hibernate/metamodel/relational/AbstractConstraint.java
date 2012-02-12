@@ -96,7 +96,7 @@ public abstract class AbstractConstraint implements Constraint {
 		}
 		else {
 			return new String[] {
-					new StringBuffer()
+					new StringBuilder()
 						.append( "alter table " )
 						.append( getTable().getQualifiedName( dialect ) )
 						.append( " drop constraint " )

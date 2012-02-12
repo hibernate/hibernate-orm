@@ -37,7 +37,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class ForUpdateFragment {
-	private final StringBuffer aliases = new StringBuffer();
+	private final StringBuilder aliases = new StringBuilder();
 	private boolean isNowaitEnabled;
 	private final Dialect dialect;
 	private LockMode lockMode;

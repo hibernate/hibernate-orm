@@ -106,7 +106,7 @@ public class Index extends AbstractConstraint implements Constraint {
 
 	public String[] sqlDropStrings(Dialect dialect) {
 		return new String[] {
-				new StringBuffer( "drop index " )
+				new StringBuilder( "drop index " )
 				.append(
 						StringHelper.qualify(
 								getTable().getQualifiedName( dialect ),

@@ -209,12 +209,12 @@ public class JoinProcessor implements SqlTokenTypes {
 		}
 
 		Dialect dialect = walker.getSessionFactoryHelper().getFactory().getDialect();
-		String symbols = new StringBuffer().append( ParserHelper.HQL_SEPARATORS )
+		String symbols = new StringBuilder().append( ParserHelper.HQL_SEPARATORS )
 				.append( dialect.openQuote() )
 				.append( dialect.closeQuote() )
 				.toString();
 		StringTokenizer tokens = new StringTokenizer( sqlFragment, symbols, true );
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 
 		while ( tokens.hasMoreTokens() ) {
 			final String token = tokens.nextToken();

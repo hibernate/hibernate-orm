@@ -318,7 +318,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	@Override
     public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 
 		if (getType() == SqlTokenTypes.ALIAS_REF) {
 			buf.append("{alias=").append(getOriginalText());

@@ -49,8 +49,8 @@ public class TemplateRenderer {
 
 		List<String> chunkList = new ArrayList<String>();
 		List<Integer> paramList = new ArrayList<Integer>();
-		StringBuffer chunk = new StringBuffer( 10 );
-		StringBuffer index = new StringBuffer( 2 );
+		StringBuilder chunk = new StringBuilder( 10 );
+		StringBuilder index = new StringBuilder( 2 );
 
 		for ( int i = 0; i < template.length(); ++i ) {
 			char c = template.charAt( i );

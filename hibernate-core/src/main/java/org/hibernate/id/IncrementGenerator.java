@@ -99,7 +99,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 				)
 		);
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for ( int i=0; i < tables.length; i++ ) {
 			final String tableName = dialect.quote( normalizer.normalizeIdentifierQuoting( tables[i] ) );
 			if ( tables.length > 1 ) {

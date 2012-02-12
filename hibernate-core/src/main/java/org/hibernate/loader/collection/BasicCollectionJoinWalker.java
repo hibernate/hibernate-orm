@@ -87,7 +87,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 		suffixes = BasicLoader.generateSuffixes( joins );
 		collectionSuffixes = BasicLoader.generateSuffixes( joins, collectionJoins );
 
-		StringBuffer whereString = whereString(
+		StringBuilder whereString = whereString(
 				alias, 
 				collectionPersister.getKeyColumnNames(), 
 				subquery,

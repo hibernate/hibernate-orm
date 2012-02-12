@@ -46,7 +46,7 @@ public class JoinSequence {
 	private final SessionFactoryImplementor factory;
 	private final List<Join> joins = new ArrayList<Join>();
 	private boolean useThetaStyle = false;
-	private final StringBuffer conditions = new StringBuffer();
+	private final StringBuilder conditions = new StringBuilder();
 	private String rootAlias;
 	private Joinable rootJoinable;
 	private Selector selector;

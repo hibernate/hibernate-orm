@@ -66,7 +66,7 @@ public class ConditionFragment {
 	}
 
 	public String toFragmentString() {
-		StringBuffer buf = new StringBuffer( lhs.length * 10 );
+		StringBuilder buf = new StringBuilder( lhs.length * 10 );
 		for ( int i=0; i<lhs.length; i++ ) {
 			buf.append(tableAlias)
 				.append('.')

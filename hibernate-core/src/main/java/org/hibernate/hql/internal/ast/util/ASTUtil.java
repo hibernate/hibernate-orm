@@ -220,7 +220,7 @@ public final class ASTUtil {
 	 * @return The list representation of the tree.
 	 */
 	public static String getDebugString(AST n) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "[ " );
 		buf.append( ( n == null ) ? "{null}" : n.toStringTree() );
 		buf.append( " ]" );
@@ -267,12 +267,12 @@ public final class ASTUtil {
 	}
 
 	public static String getPathText(AST n) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		getPathText( buf, n );
 		return buf.toString();
 	}
 
-	private static void getPathText(StringBuffer buf, AST n) {
+	private static void getPathText(StringBuilder buf, AST n) {
 		AST firstChild = n.getFirstChild();
 		// If the node has a first child, recurse into the first child.
 		if ( firstChild != null ) {

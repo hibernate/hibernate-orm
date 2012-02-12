@@ -1134,7 +1134,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
     public String toString() {
-		return new StringBuffer()
+		return new StringBuilder()
 				.append("PersistenceContext[entityKeys=")
 				.append(entitiesByKey.keySet())
 				.append(",collectionKeys=")

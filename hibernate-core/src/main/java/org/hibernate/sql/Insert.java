@@ -106,7 +106,7 @@ public class Insert {
 	}
 
 	public String toStatementString() {
-		StringBuffer buf = new StringBuffer( columns.size()*15 + tableName.length() + 10 );
+		StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
 		if ( comment != null ) {
 			buf.append( "/* " ).append( comment ).append( " */ " );
 		}

@@ -70,7 +70,7 @@ public class ForeignKey extends Constraint {
 		return referencedTable;
 	}
 
-	private void appendColumns(StringBuffer buf, Iterator columns) {
+	private void appendColumns(StringBuilder buf, Iterator columns) {
 		while( columns.hasNext() ) {
 			Column column = (Column) columns.next();
 			buf.append( column.getName() );
@@ -95,7 +95,7 @@ public class ForeignKey extends Constraint {
 	
 	private void alignColumns(Table referencedTable) {
 		if ( referencedTable.getPrimaryKey().getColumnSpan()!=getColumnSpan() ) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			sb.append("Foreign key (")
                 .append( getName() + ":")
 				.append( getTable().getName() )
@@ -170,7 +170,7 @@ public class ForeignKey extends Constraint {
 	
 	public String toString() {
 		if(!isReferenceToPrimaryKey() ) {
-			StringBuffer result = new StringBuffer(getClass().getName() + '(' + getTable().getName() + getColumns() );
+			StringBuilder result = new StringBuilder(getClass().getName() + '(' + getTable().getName() + getColumns() );
 			result.append( " ref-columns:" + '(' + getReferencedColumns() );
 			result.append( ") as " + getName() );
 			return result.toString();

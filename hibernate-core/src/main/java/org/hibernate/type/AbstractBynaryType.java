@@ -154,7 +154,7 @@ public abstract class AbstractBynaryType extends MutableType implements VersionT
 
 	public String toString(Object val) {
 		byte[] bytes = toInternalFormat(val);
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for ( int i=0; i<bytes.length; i++ ) {
 			String hexStr = Integer.toHexString( bytes[i] - Byte.MIN_VALUE );
 			if ( hexStr.length()==1 ) buf.append('0');

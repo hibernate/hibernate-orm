@@ -418,7 +418,7 @@ public class Cache71Dialect extends Dialect {
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
 		// The syntax used to add a foreign key constraint to a table.
-		return new StringBuffer( 300 )
+		return new StringBuilder( 300 )
 				.append( " ADD CONSTRAINT " )
 				.append( constraintName )
 				.append( " FOREIGN KEY " )
@@ -622,7 +622,7 @@ public class Cache71Dialect extends Dialect {
 		// but this extension is not supported through Hibernate anyway.
 		int insertionPoint = sql.startsWith( "select distinct" ) ? 15 : 6;
 
-		return new StringBuffer( sql.length() + 8 )
+		return new StringBuilder( sql.length() + 8 )
 				.append( sql )
 				.insert( insertionPoint, " TOP ? " )
 				.toString();

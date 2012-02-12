@@ -33,7 +33,7 @@ public class ComplexPropertyValue implements PropertyValue {
 	}
 
 	private String keyString() {
-		StringBuffer buff = new StringBuffer();
+		StringBuilder buff = new StringBuilder();
 		Iterator itr = subProperties.keySet().iterator();
 		while ( itr.hasNext() ) {
 			buff.append( itr.next() );

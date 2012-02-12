@@ -104,7 +104,7 @@ public class Transport {
 	
 	public String toString()
 	{
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		
 		buffer.append(name + " id: " + transportID + "\n");
 		

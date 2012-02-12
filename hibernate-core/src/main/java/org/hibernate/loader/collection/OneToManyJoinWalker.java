@@ -97,7 +97,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 		final int collectionJoins = countCollectionPersisters( associations ) + 1;
 		collectionSuffixes = BasicLoader.generateSuffixes( joins + 1, collectionJoins );
 
-		StringBuffer whereString = whereString(
+		StringBuilder whereString = whereString(
 				alias,
 				oneToManyPersister.getKeyColumnNames(),
 				subquery,

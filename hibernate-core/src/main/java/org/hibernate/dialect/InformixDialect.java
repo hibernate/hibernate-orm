@@ -110,7 +110,7 @@ public class InformixDialect extends Dialect {
 			String referencedTable,
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
-		StringBuffer result = new StringBuffer( 30 )
+		StringBuilder result = new StringBuilder( 30 )
 				.append( " add constraint " )
 				.append( " foreign key (" )
 				.append( StringHelper.join( ", ", foreignKey ) )
@@ -180,7 +180,7 @@ public class InformixDialect extends Dialect {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuffer( querySelect.length() + 8 )
+		return new StringBuilder( querySelect.length() + 8 )
 				.append( querySelect )
 				.insert( querySelect.toLowerCase().indexOf( "select" ) + 6, " first " + limit )
 				.toString();

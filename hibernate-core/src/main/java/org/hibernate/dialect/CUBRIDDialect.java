@@ -161,7 +161,7 @@ public class CUBRIDDialect extends Dialect {
 
     public String getLimitString(String sql, boolean hasOffset) {
         // CUBRID 8.3.0 support limit
-        return new StringBuffer( sql.length() + 20 ).append( sql )
+        return new StringBuilder( sql.length() + 20 ).append( sql )
                 .append( hasOffset ? " limit ?, ?" : " limit ?" ).toString();
     }
 

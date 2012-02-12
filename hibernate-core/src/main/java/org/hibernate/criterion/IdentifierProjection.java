@@ -55,7 +55,7 @@ public class IdentifierProjection extends SimpleProjection {
 
 	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		String[] cols = criteriaQuery.getIdentifierColumns(criteria);
 		for ( int i=0; i<cols.length; i++ ) {
 			buf.append( cols[i] )

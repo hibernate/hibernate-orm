@@ -82,7 +82,7 @@ public class SubselectFetch {
 			StringHelper.qualify( alias, loadable.getIdentifierColumnNames() ) :
 			( (PropertyMapping) loadable ).toColumns(alias, ukname);
 
-		return new StringBuffer()
+		return new StringBuilder()
 			.append("select ")
 			.append( StringHelper.join(", ", joinColumns) )
 			.append(queryString)

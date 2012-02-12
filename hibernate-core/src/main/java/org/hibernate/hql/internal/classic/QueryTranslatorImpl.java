@@ -712,7 +712,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		boolean isSubselect = superQuery != null;
 
-		StringBuffer buf = new StringBuffer( 20 );
+		StringBuilder buf = new StringBuilder( 20 );
 
 		if ( scalarTypes.size() == 0 ) {
 			//ie. no select clause

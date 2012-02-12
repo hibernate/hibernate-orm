@@ -53,7 +53,7 @@ public class CharIndexFunction implements SQLFunction {
 		Object string = args.get(1);
 		Object start = threeArgs ? args.get(2) : null;
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append("charindex(").append( pattern ).append(", ");
 		if (threeArgs) buf.append( "right(");
 		buf.append( string );

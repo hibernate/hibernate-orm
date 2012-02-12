@@ -31,7 +31,7 @@ package org.hibernate.sql;
  */
 public class DisjunctionFragment {
 
-	private StringBuffer buffer = new StringBuffer();
+	private StringBuilder buffer = new StringBuilder();
 
 	public DisjunctionFragment addCondition(ConditionFragment fragment) {
 		if ( buffer.length()>0 ) buffer.append(" or ");

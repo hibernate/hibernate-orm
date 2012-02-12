@@ -52,7 +52,7 @@ public final class NameGenerator {
 	}
 
 	public static String scalarName(int x, int y) {
-		return new StringBuffer()
+		return new StringBuilder()
 				.append( "col_" )
 				.append( x )
 				.append( '_' )

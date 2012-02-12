@@ -53,7 +53,7 @@ public class PositionSubstringFunction implements SQLFunction {
 		Object string = args.get(1);
 		Object start = threeArgs ? args.get(2) : null;
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if (threeArgs) buf.append('(');
 		buf.append("position(").append( pattern ).append(" in ");
 		if (threeArgs) buf.append( "substring(");

@@ -257,7 +257,7 @@ public class HSQLDialect extends Dialect {
 
 	public String getLimitString(String sql, boolean hasOffset) {
 		if ( hsqldbVersion < 20 ) {
-			return new StringBuffer( sql.length() + 10 )
+			return new StringBuilder( sql.length() + 10 )
 					.append( sql )
 					.insert(
 							sql.toLowerCase().indexOf( "select" ) + 6,
@@ -266,7 +266,7 @@ public class HSQLDialect extends Dialect {
 					.toString();
 		}
 		else {
-			return new StringBuffer( sql.length() + 20 )
+			return new StringBuilder( sql.length() + 20 )
 					.append( sql )
 					.append( hasOffset ? " offset ? limit ?" : " limit ?" )
 					.toString();

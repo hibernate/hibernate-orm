@@ -339,7 +339,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	        String entitySuffix,
 	        String collectionSuffix,
 	        boolean includeCollectionColumns) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if ( includeCollectionColumns ) {
 //			buf.append( selectFragment( lhsAlias, "" ) )//ignore suffix for collection columns!
 			buf.append( selectFragment( lhsAlias, collectionSuffix ) )

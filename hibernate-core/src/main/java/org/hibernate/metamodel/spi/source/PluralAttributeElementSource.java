@@ -28,5 +28,4 @@ package org.hibernate.metamodel.spi.source;
  */
 public interface PluralAttributeElementSource {
 	public PluralAttributeElementNature getNature();
-
 }

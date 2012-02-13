@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,26 +23,18 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.engine.spi.CascadeStyle;
+
 /**
- * Further contract for sources of {@code *-to-one} style associations.
+ * Describes sources which can be cascaded.
  *
  * @author Steve Ebersole
  */
-public interface ToOneAttributeSource
-		extends SingularAttributeSource, FetchableAttributeSource, CascadeStyleSource {
+public interface CascadeStyleSource {
 	/**
-	 * Obtain the name of the referenced entity.
+	 * Obtain the cascade styles to be applied to this association.
 	 *
-	 * @return The name of the referenced entity
+	 * @return The cascade styles.
 	 */
-	public String getReferencedEntityName();
-
-	/**
-	 * Obtain the name of the referenced attribute.  Typically the reference is built based on the identifier
-	 * attribute of the {@link #getReferencedEntityName() referenced entity}, but this value allows using a different
-	 * attribute instead.
-	 *
-	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
-	 */
-	public String getReferencedEntityAttributeName();
+	public Iterable<CascadeStyle> getCascadeStyles();
 }

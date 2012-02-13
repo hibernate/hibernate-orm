@@ -28,6 +28,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.common.reflection.java.JavaXMember;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -35,7 +38,8 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Hardy Ferentschik
  */
-public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+public class ManyToManyPluralAttributeElementSourceImpl
+		implements ManyToManyPluralAttributeElementSource {
 	private final CollectionAssociationAttribute associationAttribute;
 
 	public ManyToManyPluralAttributeElementSourceImpl(CollectionAssociationAttribute associationAttribute) {
@@ -66,6 +70,15 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		List<CascadeStyle> cascadeStyles = new ArrayList<CascadeStyle>();
+		for ( javax.persistence.CascadeType cascadeType : associationAttribute.getCascadeTypes() ) {
+			cascadeStyles.add( CascadeType.getCascadeType( cascadeType ).toCascadeStyle() );
+		}
+		return cascadeStyles;
+	}
+
+	@Override
 	public boolean isNotFoundAnException() {
 		return !associationAttribute.isIgnoreNotFound();
 	}
@@ -88,11 +101,6 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	@Override
 	public String getWhere() {
 		return associationAttribute.getWhereClause();
-	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		return associationAttribute.getFetchMode();
 	}
 
 	@Override

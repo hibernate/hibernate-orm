@@ -26,12 +26,11 @@ package org.hibernate.metamodel.spi.source;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.FetchMode;
-
 /**
  * @author Steve Ebersole
  */
-public interface ManyToManyPluralAttributeElementSource extends PluralAttributeElementSource {
+public interface ManyToManyPluralAttributeElementSource
+		extends PluralAttributeElementSource, CascadeStyleSource {
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
@@ -49,8 +48,6 @@ public interface ManyToManyPluralAttributeElementSource extends PluralAttributeE
 	public String getOrderBy();
 
 	public String getWhere();
-
-	public FetchMode getFetchMode();
 
 	public boolean fetchImmediately();
 }

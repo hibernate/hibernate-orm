@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -43,6 +46,9 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private final AbstractPluralAttributeElementBinding pluralAttributeElementBinding;
 
 	private Table collectionTable;
+
+	private FetchTiming fetchTiming;
+	private FetchStyle fetchStyle;
 
 	private int batchSize = -1;
 
@@ -299,5 +305,36 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	@Override
 	public java.util.Map getFilterMap() {
 		return filters;
+	}
+
+
+	@Override
+	public FetchMode getFetchMode() {
+		if ( getFetchStyle() == FetchStyle.JOIN ) {
+			return FetchMode.JOIN;
+		}
+		else {
+			return FetchMode.SELECT;
+		}
+	}
+
+	@Override
+	public FetchTiming getFetchTiming() {
+		return fetchTiming;
+	}
+
+	@Override
+	public void setFetchTiming(FetchTiming fetchTiming) {
+		this.fetchTiming = fetchTiming;
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
+	}
+
+	@Override
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
 	}
 }

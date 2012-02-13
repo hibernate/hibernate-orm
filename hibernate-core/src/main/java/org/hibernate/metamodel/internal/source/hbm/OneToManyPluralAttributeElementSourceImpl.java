@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
@@ -33,12 +35,15 @@ import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
  * @author Steve Ebersole
  */
 public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
+	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbOneToManyElement oneToManyElement;
 	private final LocalBindingContext bindingContext;
 
 	public OneToManyPluralAttributeElementSourceImpl(
+			PluralAttributeElement pluralAttributeElement,
 			JaxbOneToManyElement oneToManyElement,
 			LocalBindingContext bindingContext) {
+		this.pluralAttributeElement = pluralAttributeElement;
 		this.oneToManyElement = oneToManyElement;
 		this.bindingContext = bindingContext;
 	}
@@ -59,5 +64,10 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 	public boolean isNotFoundAnException() {
 		return oneToManyElement.getNotFound() == null
 				|| ! "ignore".equals( oneToManyElement.getNotFound().value() );
+	}
+
+	@Override
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext );
 	}
 }

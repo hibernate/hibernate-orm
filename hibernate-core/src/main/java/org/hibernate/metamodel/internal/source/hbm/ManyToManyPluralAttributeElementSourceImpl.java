@@ -28,7 +28,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -39,14 +41,17 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Steve Ebersole
  */
 public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbManyToManyElement manyToManyElement;
 	private final LocalBindingContext bindingContext;
 
 	private final List<RelationalValueSource> valueSources;
 
 	public ManyToManyPluralAttributeElementSourceImpl(
+			final PluralAttributeElement pluralAttributeElement,
 			final JaxbManyToManyElement manyToManyElement,
 			final LocalBindingContext bindingContext) {
+		this.pluralAttributeElement = pluralAttributeElement;
 		this.manyToManyElement = manyToManyElement;
 		this.bindingContext = bindingContext;
 
@@ -140,8 +145,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext );
 	}
 
 	@Override

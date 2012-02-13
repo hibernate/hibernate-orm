@@ -31,16 +31,15 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -49,7 +48,8 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractPluralAttributeSourceImpl implements PluralAttributeSource {
+public abstract class AbstractPluralAttributeSourceImpl
+		implements PluralAttributeSource {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
 
@@ -93,12 +93,16 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 		}
 		else if ( pluralAttributeElement.getOneToMany() != null ) {
 			return new OneToManyPluralAttributeElementSourceImpl(
-					pluralAttributeElement.getOneToMany(), container.getLocalBindingContext()
+					pluralAttributeElement,
+					pluralAttributeElement.getOneToMany(),
+					container.getLocalBindingContext()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToMany() != null ) {
 			return new ManyToManyPluralAttributeElementSourceImpl(
-					pluralAttributeElement.getManyToMany(), container.getLocalBindingContext()
+					pluralAttributeElement,
+					pluralAttributeElement.getManyToMany(),
+					container.getLocalBindingContext()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToAny() != null ) {
@@ -247,11 +251,6 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
-	}
-
-	@Override
 	public FetchTiming getFetchTiming() {
 		final String fetchSelection = pluralAttributeElement.getFetch() != null ?
 				pluralAttributeElement.getFetch().value() :
@@ -334,7 +333,7 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	@Override
 	public FetchMode getFetchMode() {
 		return pluralAttributeElement.getFetch() == null
-				? FetchMode.DEFAULT
+				? null
 				: FetchMode.valueOf( pluralAttributeElement.getFetch().value() );
 	}
 }

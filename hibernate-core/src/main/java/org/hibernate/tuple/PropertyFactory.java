@@ -320,7 +320,7 @@ public class PropertyFactory {
 					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCascadeStyle()
 					: CascadeStyle.NONE;
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
-					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getFetchMode()
+					? pluralAttributeBinding.getFetchMode()
 					: FetchMode.DEFAULT;
 
 			return new StandardProperty(

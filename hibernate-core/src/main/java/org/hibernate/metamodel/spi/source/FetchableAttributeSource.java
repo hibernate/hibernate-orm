@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,26 +23,24 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+
 /**
- * Further contract for sources of {@code *-to-one} style associations.
+ * Describes source for attributes which can be fetched.
  *
  * @author Steve Ebersole
  */
-public interface ToOneAttributeSource
-		extends SingularAttributeSource, FetchableAttributeSource, CascadeStyleSource {
+public interface FetchableAttributeSource {
 	/**
-	 * Obtain the name of the referenced entity.
+	 * Obtain the fetch mode to be applied to this association.
 	 *
-	 * @return The name of the referenced entity
+	 * @return The fetch mode.
 	 */
-	public String getReferencedEntityName();
+	public FetchMode getFetchMode();
 
-	/**
-	 * Obtain the name of the referenced attribute.  Typically the reference is built based on the identifier
-	 * attribute of the {@link #getReferencedEntityName() referenced entity}, but this value allows using a different
-	 * attribute instead.
-	 *
-	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
-	 */
-	public String getReferencedEntityAttributeName();
+	public FetchTiming getFetchTiming();
+
+	public FetchStyle getFetchStyle();
 }

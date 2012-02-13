@@ -34,7 +34,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends AttributeBinding {
+public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 	/**
 	 * Retrieve the plural attribute being bound.
 	 *

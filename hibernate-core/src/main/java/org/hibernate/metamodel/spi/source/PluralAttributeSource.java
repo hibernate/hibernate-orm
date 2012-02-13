@@ -29,7 +29,8 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
+public interface PluralAttributeSource
+		extends AttributeSource, FetchableAttributeSource {
 	public PluralAttributeNature getPluralAttributeNature();
 
 	public PluralAttributeKeySource getKeySource();

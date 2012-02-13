@@ -38,8 +38,6 @@ public abstract class AbstractPluralAttributeAssociationElementBinding
 		extends AbstractPluralAttributeElementBinding
 		implements PluralAttributeAssociationElementBinding {
 
-	private FetchTiming fetchTiming;
-	private FetchStyle fetchStyle;
 	private CascadeStyle cascadeStyle;
 	private boolean orphanDelete;
 
@@ -81,35 +79,5 @@ public abstract class AbstractPluralAttributeAssociationElementBinding
 	@Override
 	public boolean isOrphanDeleteEnabled() {
 		return orphanDelete;
-	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		if ( getFetchStyle() == FetchStyle.JOIN ) {
-			return FetchMode.JOIN;
-		}
-		else {
-			return FetchMode.SELECT;
-		}
-	}
-
-	@Override
-	public FetchTiming getFetchTiming() {
-		return fetchTiming;
-	}
-
-	@Override
-	public void setFetchTiming(FetchTiming fetchTiming) {
-		this.fetchTiming = fetchTiming;
-	}
-
-	@Override
-	public FetchStyle getFetchStyle() {
-		return fetchStyle;
-	}
-
-	@Override
-	public void setFetchStyle(FetchStyle fetchStyle) {
-		this.fetchStyle = fetchStyle;
 	}
 }

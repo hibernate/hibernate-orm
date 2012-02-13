@@ -48,12 +48,10 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CollectionLaziness;
 import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
-import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -566,13 +564,8 @@ public class Binder {
 	}
 
 	private void doBasicPluralAttributeBinding(PluralAttributeSource source, AbstractPluralAttributeBinding binding) {
-		if ( binding.isAssociation() ) {
-			final Cascadeable cascadeable = (Cascadeable) binding.getPluralAttributeElementBinding();
-			cascadeable.setCascadeStyles( source.getCascadeStyles() );
-			final Fetchable fetchable = (Fetchable) binding.getPluralAttributeElementBinding();
-			fetchable.setFetchTiming( source.getFetchTiming() );
-			fetchable.setFetchStyle( source.getFetchStyle() );
-		}
+		binding.setFetchTiming( source.getFetchTiming() );
+		binding.setFetchStyle( source.getFetchStyle() );
 
 		binding.setCaching( source.getCaching() );
 
@@ -804,6 +797,11 @@ public class Binder {
 			);
 			return;
 		}
+
+// todo : handle cascades
+//		final Cascadeable cascadeable = (Cascadeable) binding.getPluralAttributeElementBinding();
+//		cascadeable.setCascadeStyles( source.getCascadeStyles() );
+
 		// todo : implement
 		throw new NotYetImplementedException(
 				String.format(

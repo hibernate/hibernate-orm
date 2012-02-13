@@ -26,7 +26,8 @@ package org.hibernate.metamodel.spi.source;
 /**
  * @author Steve Ebersole
  */
-public interface OneToManyPluralAttributeElementSource extends PluralAttributeElementSource {
+public interface OneToManyPluralAttributeElementSource
+		extends PluralAttributeElementSource, CascadeStyleSource {
 	public String getReferencedEntityName();
 	public boolean isNotFoundAnException();
 }

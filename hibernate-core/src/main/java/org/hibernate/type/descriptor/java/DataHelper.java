@@ -109,6 +109,9 @@ public class DataHelper {
 	 * @return The content as string
 	 */
 	private static String extractString(Reader characterStream, long start, int length) {
+		if ( length == 0 ) {
+			return "";
+		}
 		StringBuilder stringBuilder = new StringBuilder( length );
 		try {
 			long skipped = characterStream.skip( start );

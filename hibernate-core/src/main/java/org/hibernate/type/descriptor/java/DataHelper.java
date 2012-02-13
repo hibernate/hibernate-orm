@@ -73,7 +73,7 @@ public class DataHelper {
 	 */
 	public static String extractString(Reader reader, int lengthHint) {
 		// read the Reader contents into a buffer and return the complete string
-		final int bufferSize = Math.min( lengthHint, 2048 );
+		final int bufferSize = getSuggestedBufferSize( lengthHint );
 		final StringBuilder stringBuilder = new StringBuilder( bufferSize );
 		try {
 			char[] buffer = new char[bufferSize];
@@ -115,7 +115,7 @@ public class DataHelper {
 			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
-			final int bufferSize = Math.min( length, 2048 );
+			final int bufferSize = getSuggestedBufferSize( length );
 			char[] buffer = new char[bufferSize];
 			int charsRead = 0;
 			while ( true ) {
@@ -279,5 +279,16 @@ public class DataHelper {
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access lob stream", e );
 		}
+	}
+
+	/**
+	 * Make sure we allocate a buffer sized not bigger than 2048,
+	 * not higher than what is actually needed, and at least one.
+	 * 
+	 * @param lengthHint the expected size of the full value
+	 * @return the buffer size
+	 */
+	private static final int getSuggestedBufferSize(final int lengthHint) {
+		return Math.max( 1, Math.min( lengthHint , 2048 ) );
 	}
 }

@@ -34,38 +34,108 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
-	private final Identifier tableName;
-	private final ObjectName objectName;
-	private final String qualifiedName;
+	private String logicalName;
+	private Identifier name;
+	private boolean isPhysicalName;
+	private ObjectName objectName;
+	private String qualifiedName;
 
 	private final LinkedHashMap<String,Index> indexes = new LinkedHashMap<String,Index>();
 	private final LinkedHashMap<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private final List<CheckConstraint> checkConstraints = new ArrayList<CheckConstraint>();
 	private final List<String> comments = new ArrayList<String>();
 
-	public Table(Schema database, String tableName) {
-		this( database, Identifier.toIdentifier( tableName ) );
+	/**
+	 * Constructs a {@link Table} instance.
+	 * 
+	 * @param database - the schema
+	 * @param name - the name 
+	 * @param isPhysicalTableName - true, if the name is known to be the physical
+	 *                              table name; false, otherwise.
+	 */
+	public Table(Schema database, String name, boolean isPhysicalTableName) {
+		this( database, Identifier.toIdentifier( name ), isPhysicalTableName );
 	}
 
-	public Table(Schema database, Identifier tableName) {
+
+	/**
+	 * Constructs a {@link Table} instance.
+	 *
+	 * @param database - the schema
+	 * @param name - the name {@link Identifier}
+	 * @param isPhysicalTableName - true, if the name is known to be the physical
+	 *                              table name; false, otherwise.
+	 */
+	public Table(Schema database, Identifier name, boolean isPhysicalTableName) {
 		this.database = database;
-		this.tableName = tableName;
-		objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
-		this.qualifiedName = objectName.toText();
+		setName( name, isPhysicalTableName );
 	}
 
+	private static String createLogicalName(Identifier tableName) {
+		return tableName.isQuoted() ?
+				new StringBuilder( tableName.getName().length() +  2 )
+						.append( '`' )
+						.append( tableName.getName() )
+						.append( '`' ).toString() :
+				tableName.getName();
+	}
+	
 	@Override
 	public Schema getSchema() {
 		return database;
 	}
 
-	public Identifier getTableName() {
-		return tableName;
+	/**
+	 * Gets the logical table name.
+	 *
+	 * @return the logical table name.
+	 */
+	public String getLogicalName() {
+		return logicalName;
 	}
 
+	/**
+	 * Returns the physical table name.
+	 *
+	 * @return the physical table name, or null if the physical
+	 * table name is not defined.
+	 */
+	public Identifier getTableName() {
+		return isPhysicalName ? name : null;
+	}
+
+	/**
+	 * Sets the physical table name.
+	 *
+	 * @param physicalName - the physical table name
+	 */
+	public final void setPhysicalName(Identifier physicalName) {
+		setName(  physicalName, true );
+	}
+
+	private void setName(Identifier name, boolean isPhysicalName) {
+		if ( name == null ) {
+			throw new IllegalArgumentException( "name cannot be null." );
+		}
+		if ( isPhysicalName && ! this.isPhysicalName ) {
+			this.isPhysicalName = isPhysicalName;
+		}
+		if ( ! name.equals( this.name ) ) {
+			String logicalNameOld = logicalName;
+			this.name = name;
+			this.logicalName = createLogicalName( name );
+			objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), name );
+			this.qualifiedName = objectName.toText();
+			if ( logicalNameOld != null ) {
+				database.remapLogicalTableName( logicalNameOld );
+			}
+		}
+	}
+	
 	@Override
 	public String getLoggableValueQualifier() {
 		return qualifiedName;

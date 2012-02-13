@@ -81,7 +81,7 @@ public class TableProcessor {
 		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
 		ObjectName objectName = new ObjectName( tableName );
 		Schema schema = metadata.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
-		Table table = schema.locateTable( objectName.getName() );
+		Table table = schema.locateTable( tableName );
 		if ( table != null ) {
 			bindHibernateTableAnnotation( table, tableAnnotation );
 		}

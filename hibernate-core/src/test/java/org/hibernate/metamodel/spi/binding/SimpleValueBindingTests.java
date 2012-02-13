@@ -56,7 +56,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicMiddleOutBuilding() {
-		Table table = new Table( new Schema( null, null ), "the_table" );
+		Table table = new Table( new Schema( null, null ), "the_table", true );
 		Column idColumn = table.locateOrCreateColumn( "id" );
 		idColumn.setJdbcDataType( BIGINT );
 		idColumn.setSize( Size.precision( 18, 0 ) );

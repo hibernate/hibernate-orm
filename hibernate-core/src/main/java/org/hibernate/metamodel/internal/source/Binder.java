@@ -1219,9 +1219,8 @@ public class Binder {
 						EMPTY_PROPERTIES
 				);
 			}
-		}
-
-		if ( resolvedType != null ) {
+		} else {
+			attributeBinding.getHibernateTypeDescriptor().setResolvedTypeMapping( resolvedType );
 			pushHibernateTypeInformationDownIfNeeded( attributeBinding, resolvedType );
 		}
 	}
@@ -1232,7 +1231,9 @@ public class Binder {
 		}
 		String typeName = determineTypeName( hibernateTypeDescriptor );
 		Properties typeParameters = getTypeParameters( hibernateTypeDescriptor );
-		return getHeuristicType( typeName, typeParameters );
+		Type type = getHeuristicType( typeName, typeParameters );
+		hibernateTypeDescriptor.setResolvedTypeMapping( type );
+		return type;
 	}
 
 	private static String determineTypeName(HibernateTypeDescriptor hibernateTypeDescriptor) {

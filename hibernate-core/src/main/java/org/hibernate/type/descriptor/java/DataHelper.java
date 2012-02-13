@@ -44,6 +44,9 @@ import org.hibernate.type.descriptor.BinaryStream;
  */
 public class DataHelper {
 
+	/** The size of the buffer we will use to deserialize larger streams */
+	private static final int BUFFER_SIZE = 2048;
+
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DataHelper.class.getName() );
 
 	public static boolean isNClob(final Class type) {
@@ -59,7 +62,7 @@ public class DataHelper {
 	 * @return The content as string
 	 */
 	public static String extractString(Reader reader) {
-		return extractString( reader, 2048 );
+		return extractString( reader, BUFFER_SIZE );
 	}
 
 	/**
@@ -169,9 +172,9 @@ public class DataHelper {
 		}
 
 		// read the stream contents into a buffer and return the complete byte[]
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(2048);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
 		try {
-			byte[] buffer = new byte[2048];
+			byte[] buffer = new byte[BUFFER_SIZE];
 			while (true) {
 				int amountRead = inputStream.read( buffer );
 				if ( amountRead == -1 ) {
@@ -224,7 +227,7 @@ public class DataHelper {
 			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
-			byte[] buffer = new byte[2048];
+			byte[] buffer = new byte[BUFFER_SIZE];
 			int bytesRead = 0;
 			while ( true ) {
 				int amountRead = inputStream.read( buffer );
@@ -292,6 +295,6 @@ public class DataHelper {
 	 * @return the buffer size
 	 */
 	private static final int getSuggestedBufferSize(final int lengthHint) {
-		return Math.max( 1, Math.min( lengthHint , 2048 ) );
+		return Math.max( 1, Math.min( lengthHint , BUFFER_SIZE ) );
 	}
 }

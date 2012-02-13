@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +39,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
 	private final int tableNumber;
 
-	private final LinkedHashMap<String, SimpleValue> values = new LinkedHashMap<String, SimpleValue>();
+	private final List<Value> valueList = new ArrayList<Value>();
+	private final LinkedHashMap<String, Value> valueMap = new LinkedHashMap<String, Value>();
 
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
 	private final List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
@@ -53,33 +55,38 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	}
 
 	@Override
-	public Iterable<SimpleValue> values() {
-		return values.values();
+	public List<Value> values() {
+		return Collections.unmodifiableList( valueList );
 	}
 
 	@Override
 	public Column locateOrCreateColumn(String name) {
-		if ( values.containsKey( name ) ) {
-			return (Column) values.get( name );
+		if ( valueMap.containsKey( name ) ) {
+			return (Column) valueMap.get( name );
 		}
-		final Column column = new Column( this, values.size(), name );
-		values.put( name, column );
+		final Column column = new Column( this, valueList.size(), name );
+		valueMap.put( name, column );
+		valueList.add( column );
 		return column;
 	}
 
 	@Override
-	public DerivedValue locateOrCreateDerivedValue(String fragment) {
-		if ( values.containsKey( fragment ) ) {
-			return (DerivedValue) values.get( fragment );
+	public Column locateColumn(String name) {
+		if ( valueMap.containsKey( name ) ) {
+			return (Column) valueMap.get( name );
 		}
-		final DerivedValue value = new DerivedValue( this, values.size(), fragment );
-		values.put( fragment, value );
-		return value;
+		return null;
 	}
 
 	@Override
-	public Tuple createTuple(String name) {
-		return new Tuple( this, name );
+	public DerivedValue locateOrCreateDerivedValue(String fragment) {
+		if ( valueMap.containsKey( fragment ) ) {
+			return (DerivedValue) valueMap.get( fragment );
+		}
+		final DerivedValue value = new DerivedValue( this, valueList.size(), fragment );
+		valueMap.put( fragment, value );
+		valueList.add( value );
+		return value;
 	}
 
 	@Override

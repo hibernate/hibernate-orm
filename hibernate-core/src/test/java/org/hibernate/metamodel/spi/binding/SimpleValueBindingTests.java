@@ -24,15 +24,18 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.Value;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Datatype;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
@@ -47,30 +50,46 @@ import static org.junit.Assert.assertSame;
  * @author Steve Ebersole
  */
 public class SimpleValueBindingTests extends BaseUnitTestCase {
-	public static final Datatype BIGINT = new Datatype( Types.BIGINT, "BIGINT", Long.class );
-	public static final Datatype VARCHAR = new Datatype( Types.VARCHAR, "VARCHAR", String.class );
+	public static final JdbcDataType BIGINT = new JdbcDataType( Types.BIGINT, "BIGINT", Long.class );
+	public static final JdbcDataType VARCHAR = new JdbcDataType( Types.VARCHAR, "VARCHAR", String.class );
 
 
 	@Test
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
+		Column idColumn = table.locateOrCreateColumn( "id" );
+		idColumn.setJdbcDataType( BIGINT );
+		idColumn.setSize( Size.precision( 18, 0 ) );
+		table.getPrimaryKey().addColumn( idColumn );
+		table.getPrimaryKey().setName( "my_table_pk" );
+
 		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
 		EntityBinding entityBinding = new EntityBinding( InheritanceType.NO_INHERITANCE, EntityMode.POJO );
 		entityBinding.setEntity( entity );
 		entityBinding.setPrimaryTable( table );
 
+		List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
+		valueBindings.add(
+				new RelationalValueBinding(
+						idColumn,
+						true,
+						true
+				)
+		);
 		SingularAttribute idAttribute = entity.createSingularAttribute( "id" );
-		BasicAttributeBinding attributeBinding = entityBinding.makeBasicAttributeBinding( idAttribute );
+		BasicAttributeBinding attributeBinding = entityBinding.makeBasicAttributeBinding(
+				idAttribute,
+				valueBindings,
+				"property",
+				true,
+				false,
+				null,
+				PropertyGeneration.NEVER
+		);
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 
 		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( attributeBinding );
-
-		Column idColumn = table.locateOrCreateColumn( "id" );
-		idColumn.setDatatype( BIGINT );
-		idColumn.setSize( Size.precision( 18, 0 ) );
-		table.getPrimaryKey().addColumn( idColumn );
-		table.getPrimaryKey().setName( "my_table_pk" );
 		//attributeBinding.setValue( idColumn );
 	}
 

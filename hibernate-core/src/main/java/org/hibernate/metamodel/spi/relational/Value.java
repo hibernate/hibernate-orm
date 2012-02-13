@@ -23,9 +23,11 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
- * Models a value within a {@link ValueContainer}.  This will generally be either a {@link Column column} or a
- * {@link DerivedValue derived value}, but we also allow the notion of {@link Tuple} at this level
+ * Models a value within a {@link ValueContainer}.  Concretely, either a {@link Column column} or a
+ * {@link DerivedValue derived value}.
  *
  * @author Steve Ebersole
  */
@@ -38,11 +40,41 @@ public interface Value {
 	public TableSpecification getTable();
 
 	/**
+	 * Retrieve the JDBC data type of this value.
+	 *
+	 * @return The value's JDBC data type
+	 */
+	public JdbcDataType getJdbcDataType();
+
+	/**
 	 * Obtain the string representation of this value usable in log statements.
 	 *
 	 * @return The loggable representation
 	 */
 	public String toLoggableString();
+
+	/**
+	 * For any column name, generate an alias that is unique
+	 * to that column name, unique across tables, and within
+	 * alias size constraints determined by
+	 * {@link org.hibernate.dialect.Dialect#getMaxAliasLength()}.
+	 *
+	 * todo : not sure this contract is the best place for this method
+	 *
+	 * @param dialect the dialect.
+	 * @return the alias.
+	 */
+	public String getAlias(Dialect dialect);
+
+	/**
+	 * Validate the value against the incoming JDBC type code array, both in terms of number of types
+	 * and compatibility of types.
+	 *
+	 * @param typeCodes The type codes.
+	 *
+	 * @throws org.hibernate.metamodel.ValidationException if validaton fails.
+	 */
+	public void validateJdbcTypes(JdbcCodes typeCodes);
 
 	/**
 	 * Used to track JDBC type usage throughout a series of potential recursive calls to component
@@ -65,15 +97,5 @@ public interface Value {
 			return index;
 		}
 	}
-
-	/**
-	 * Validate the value against the incoming JDBC type code array, both in terms of number of types
-	 * and compatibility of types.
-	 *
-	 * @param typeCodes The type codes.
-	 *
-	 * @throws org.hibernate.metamodel.ValidationException if validaton fails.
-	 */
-	public void validateJdbcTypes(JdbcCodes typeCodes);
 
 }

@@ -226,7 +226,7 @@ public class Cache71Dialect extends Dialect {
 
 	protected final void commonRegistration() {
 		// Note: For object <-> SQL datatype mappings see:
-		//	 Configuration Manager | Advanced | SQL | System DDL Datatype Mappings
+		//	 Configuration Manager | Advanced | SQL | System DDL JdbcDataType Mappings
 		//
 		//	TBD	registerColumnType(Types.BINARY,        "binary($1)");
 		// changed 08-11-2005, jsl

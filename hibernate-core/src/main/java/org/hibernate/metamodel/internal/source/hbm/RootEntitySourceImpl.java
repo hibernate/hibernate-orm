@@ -45,6 +45,7 @@ import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * @author Steve Ebersole
@@ -100,7 +101,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
-	public SingularAttributeSource getVersioningAttributeSource() {
+	public VersionAttributeSource getVersioningAttributeSource() {
 		if ( entityElement().getVersion() != null ) {
 			return new VersionAttributeSourceImpl(
 					entityElement().getVersion(),

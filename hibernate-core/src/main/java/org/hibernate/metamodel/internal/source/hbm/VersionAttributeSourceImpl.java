@@ -35,14 +35,15 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
+
 
 /**
  * Implementation for {@code <version/>} mappings
  *
  * @author Steve Ebersole
  */
-class VersionAttributeSourceImpl implements SingularAttributeSource {
+class VersionAttributeSourceImpl implements VersionAttributeSource {
 	private final JaxbHibernateMapping.JaxbClass.JaxbVersion versionElement;
 	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
@@ -100,6 +101,11 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 			return null;
 		}
 	};
+
+	@Override
+	public String getUnsavedValue() {
+		return versionElement.getUnsavedValue();
+	}
 
 	@Override
 	public String getName() {

@@ -25,7 +25,6 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
-import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -99,11 +98,16 @@ public class PluralAttributeKeyBinding {
 			throw new AssertionFailure( "Collection table not yet bound" );
 		}
 
+		if ( foreignKeyName != null ) {
+			foreignKey = collectionTable.locateForeignKey( foreignKeyName );
+			if ( foreignKey != null ) {
+				return;
+			}
+		}
+
 		final TableSpecification targetTable = pluralAttributeBinding.getContainer()
 				.seekEntityBinding()
 				.locateTable( targetTableName );
-
-		// todo : handle implicit fk names...
 
 		foreignKey = collectionTable.createForeignKey( targetTable, foreignKeyName );
 	}

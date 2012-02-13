@@ -23,9 +23,14 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Comparator;
+import java.util.List;
+
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -72,7 +77,14 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public BasicAttributeBinding makeBasicAttributeBinding(SingularAttribute attribute);
+	public BasicAttributeBinding makeBasicAttributeBinding(
+			SingularAttribute attribute,
+			List<RelationalValueBinding> relationalValueBindings,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			PropertyGeneration generation);
 
 	/**
 	 * Factory method for component attribute bindings.
@@ -81,16 +93,33 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ComponentAttributeBinding makeComponentAttributeBinding(SingularAttribute attribute);
+	public ComponentAttributeBinding makeComponentAttributeBinding(
+			SingularAttribute attribute,
+			SingularAttribute parentReferenceAttribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext);
 
 	/**
 	 * Factory method for many-to-one attribute bindings.
 	 *
+	 *
 	 * @param attribute The attribute for which to make a binding.
+	 * @param referencedEntityName
+	 * @param referencedEntityAttributeName
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(SingularAttribute attribute);
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			String referencedEntityName,
+			String referencedEntityAttributeName,
+			List<RelationalValueBinding> valueBindings);
 
 	/**
 	 * Factory method for bag attribute bindings.
@@ -100,7 +129,13 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature);
+	public BagBinding makeBagAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext);
 
 	/**
 	 * Factory method for bag attribute bindings.
@@ -110,7 +145,14 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature);
+	public SetBinding makeSetAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			Comparator comparator);
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.

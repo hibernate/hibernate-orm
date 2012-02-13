@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.TruthValue;
-import org.hibernate.metamodel.spi.relational.Datatype;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Size;
 
 /**
@@ -85,7 +85,7 @@ public interface ColumnSource extends RelationalValueSource {
 	 *
 	 * @return The column's SQL data type.
 	 */
-	public Datatype getDatatype();
+	public JdbcDataType getDatatype();
 
 	/**
 	 * Obtain the specified column size.

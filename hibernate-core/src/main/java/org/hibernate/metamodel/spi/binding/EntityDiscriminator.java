@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * Binding of the discriminator in a entity hierarchy
@@ -34,19 +34,18 @@ import org.hibernate.metamodel.spi.relational.SimpleValue;
 public class EntityDiscriminator {
 	private final HibernateTypeDescriptor explicitHibernateTypeDescriptor = new HibernateTypeDescriptor();
 
-	private SimpleValue boundValue;
-	private boolean forced;
-	private boolean inserted = true;
+	private final Value relationalValue;
+	private final boolean inserted;
+	private final boolean forced;
 
-	public EntityDiscriminator() {
+	public EntityDiscriminator(Value relationalValue, boolean inserted, boolean forced) {
+		this.relationalValue = relationalValue;
+		this.inserted = inserted;
+		this.forced = forced;
 	}
 
-	public SimpleValue getBoundValue() {
-		return boundValue;
-	}
-
-	public void setBoundValue(SimpleValue boundValue) {
-		this.boundValue = boundValue;
+	public Value getRelationalValue() {
+		return relationalValue;
 	}
 
 	public HibernateTypeDescriptor getExplicitHibernateTypeDescriptor() {
@@ -57,23 +56,15 @@ public class EntityDiscriminator {
 		return forced;
 	}
 
-	public void setForced(boolean forced) {
-		this.forced = forced;
-	}
-
 	public boolean isInserted() {
 		return inserted;
-	}
-
-	public void setInserted(boolean inserted) {
-		this.inserted = inserted;
 	}
 
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "EntityDiscriminator" );
-		sb.append( "{boundValue=" ).append( boundValue );
+		sb.append( "{relationalValue=" ).append( relationalValue );
 		sb.append( ", forced=" ).append( forced );
 		sb.append( ", inserted=" ).append( inserted );
 		sb.append( '}' );

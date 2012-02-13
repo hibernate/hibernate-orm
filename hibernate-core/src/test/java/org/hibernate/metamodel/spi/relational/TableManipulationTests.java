@@ -41,8 +41,8 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class TableManipulationTests extends BaseUnitTestCase {
-	public static final Datatype VARCHAR = new Datatype( Types.VARCHAR, "VARCHAR", String.class );
-	public static final Datatype INTEGER = new Datatype( Types.INTEGER, "INTEGER", Long.class );
+	public static final JdbcDataType VARCHAR = new JdbcDataType( Types.VARCHAR, "VARCHAR", String.class );
+	public static final JdbcDataType INTEGER = new JdbcDataType( Types.INTEGER, "INTEGER", Long.class );
 
 	@Test
 	public void testTableCreation() {
@@ -56,7 +56,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		assertFalse( table.values().iterator().hasNext() );
 
 		Column idColumn = table.locateOrCreateColumn( "id" );
-		idColumn.setDatatype( INTEGER );
+		idColumn.setJdbcDataType( INTEGER );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
@@ -64,14 +64,14 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		assertEquals( "my_table.PK", table.getPrimaryKey().getExportIdentifier() );
 
 		Column col_1 = table.locateOrCreateColumn( "col_1" );
-		col_1.setDatatype( VARCHAR );
+		col_1.setJdbcDataType( VARCHAR );
 		col_1.setSize( Size.length( 512 ) );
 
 		for ( Value value : table.values() ) {
 			assertTrue( Column.class.isInstance( value ) );
 			Column column = ( Column ) value;
 			if ( column.getColumnName().getName().equals( "id" ) ) {
-				assertEquals( INTEGER, column.getDatatype() );
+				assertEquals( INTEGER, column.getJdbcDataType() );
 				assertEquals( 18, column.getSize().getPrecision() );
 				assertEquals( 0, column.getSize().getScale() );
 				assertEquals( -1, column.getSize().getLength() );
@@ -79,7 +79,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 			}
 			else {
 				assertEquals( "col_1", column.getColumnName().getName() );
-				assertEquals( VARCHAR, column.getDatatype() );
+				assertEquals( VARCHAR, column.getJdbcDataType() );
 				assertEquals( -1, column.getSize().getPrecision() );
 				assertEquals( -1, column.getSize().getScale() );
 				assertEquals( 512, column.getSize().getLength() );
@@ -109,7 +109,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ) );
 
 		Column bookId = book.locateOrCreateColumn( "id" );
-		bookId.setDatatype( INTEGER );
+		bookId.setJdbcDataType( INTEGER );
 		bookId.setSize( Size.precision( 18, 0 ) );
 		book.getPrimaryKey().addColumn( bookId );
 		book.getPrimaryKey().setName( "BOOK_PK" );
@@ -117,13 +117,13 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ) );
 
 		Column pageId = page.locateOrCreateColumn( "id" );
-		pageId.setDatatype( INTEGER );
+		pageId.setJdbcDataType( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
 		page.getPrimaryKey().addColumn( pageId );
 		page.getPrimaryKey().setName( "PAGE_PK" );
 
 		Column pageBookId = page.locateOrCreateColumn( "BOOK_ID" );
-		pageId.setDatatype( INTEGER );
+		pageId.setJdbcDataType( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
 		ForeignKey pageBookFk = page.createForeignKey( book, "PAGE_BOOK_FK" );
 		pageBookFk.addColumn( pageBookId );

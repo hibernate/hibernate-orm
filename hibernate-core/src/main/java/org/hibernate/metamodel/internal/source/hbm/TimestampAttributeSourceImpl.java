@@ -29,20 +29,20 @@ import java.util.Map;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * Implementation for {@code <timestamp/>} mappings
  *
  * @author Steve Ebersole
  */
-class TimestampAttributeSourceImpl implements SingularAttributeSource {
+class TimestampAttributeSourceImpl implements VersionAttributeSource {
 	private final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement;
 	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
@@ -192,5 +192,10 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Helper.buildMetaAttributeSources( timestampElement.getMeta() );
+	}
+
+	@Override
+	public String getUnsavedValue() {
+		return timestampElement.getUnsavedValue();
 	}
 }

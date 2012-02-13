@@ -31,13 +31,13 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -120,7 +120,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		assertNotNull( componentBinding.locateAttributeBinding( "name" ) );
 		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) componentBinding.locateAttributeBinding( "name" );
-		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getValue();
+		assertEquals( 1, nameAttribute.getRelationalValueBindings().size() );
+		org.hibernate.metamodel.spi.relational.Column column
+				= (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals( "Attribute override specifies a custom column name", "FUBAR", column.getColumnName().getName() );
 		assertEquals( "Attribute override specifies a custom size", 42, column.getSize().getLength() );
 	}
@@ -178,7 +180,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		BasicAttributeBinding stateAttribute = (BasicAttributeBinding) attributeComponentBinding.locateAttributeBinding(
 				"state"
 		);
-		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) stateAttribute.getValue();
+		assertEquals( 1, stateAttribute.getRelationalValueBindings().size() );
+		org.hibernate.metamodel.spi.relational.Column column
+				= (org.hibernate.metamodel.spi.relational.Column) stateAttribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
 				"Attribute override specifies a custom column name",
 				"ADDR_STATE",
@@ -194,7 +198,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 
 		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) zipComponentBinding.locateAttributeBinding( "zip" );
-		column = (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getValue();
+		assertEquals( 1, nameAttribute.getRelationalValueBindings().size() );
+		column = (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
 				"Attribute override specifies a custom column name",
 				"ADDR_ZIP",
@@ -270,7 +275,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 
 		BasicAttributeBinding attribute = (BasicAttributeBinding) bComponentBinding.locateAttributeBinding( "foo" );
-		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) attribute.getValue();
+		assertEquals( 1, attribute.getRelationalValueBindings().size() );
+		org.hibernate.metamodel.spi.relational.Column column
+				= (org.hibernate.metamodel.spi.relational.Column) attribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
 				"Attribute override specifies a custom column name",
 				"BAR",
@@ -278,7 +285,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 
 		attribute = (BasicAttributeBinding) bComponentBinding.locateAttributeBinding( "fubar" );
-		column = (org.hibernate.metamodel.spi.relational.Column) attribute.getValue();
+		assertEquals( 1, attribute.getRelationalValueBindings().size() );
+		column = (org.hibernate.metamodel.spi.relational.Column) attribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
 				"Attribute override specifies a custom column name",
 				"C_WINS",

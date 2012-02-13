@@ -31,16 +31,16 @@ import org.jboss.logging.Logger;
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
-import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -120,7 +120,7 @@ public class TableProcessor {
 
 	private static Column findColumn(Table table, String columnName) {
 		Column column = null;
-		for ( SimpleValue value : table.values() ) {
+		for ( Value value : table.values() ) {
 			if ( value instanceof Column && ( (Column) value ).getColumnName().getName().equals( columnName ) ) {
 				column = (Column) value;
 				break;

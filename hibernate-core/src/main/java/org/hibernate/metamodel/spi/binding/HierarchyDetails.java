@@ -39,7 +39,7 @@ public class HierarchyDetails {
 	private EntityDiscriminator entityDiscriminator;
 
 	private OptimisticLockStyle optimisticLockStyle;
-	private BasicAttributeBinding versioningAttributeBinding;
+	private EntityVersion entityVersion;
 
 	private Caching caching;
 
@@ -50,6 +50,7 @@ public class HierarchyDetails {
 		this.inheritanceType = inheritanceType;
 		this.entityMode = entityMode;
 		this.entityIdentifier = new EntityIdentifier( rootEntityBinding );
+		this.entityVersion = new EntityVersion( rootEntityBinding );
 	}
 
 	public EntityBinding getRootEntityBinding() {
@@ -84,12 +85,12 @@ public class HierarchyDetails {
 		this.entityDiscriminator = entityDiscriminator;
 	}
 
-	public BasicAttributeBinding getVersioningAttributeBinding() {
-		return versioningAttributeBinding;
+	public EntityVersion getEntityVersion() {
+		return entityVersion;
 	}
 
-	public void setVersioningAttributeBinding(BasicAttributeBinding versioningAttributeBinding) {
-		this.versioningAttributeBinding = versioningAttributeBinding;
+	public void setEntityVersion(EntityVersion entityVersion) {
+		this.entityVersion = entityVersion;
 	}
 
 	public Caching getCaching() {

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -33,36 +35,45 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * TODO : javadoc
+ * TODO : this really needs an overhaul...  mainly, get rid of the KeyValueBinding concept...
  *
  * @author Steve Ebersole
  */
 public class BasicAttributeBinding
-		extends AbstractSingularAttributeBinding
-		implements  KeyValueBinding {
+		extends AbstractSingularAttributeBinding {
 
-	private String unsavedValue;
-	private PropertyGeneration generation;
-	private boolean includedInOptimisticLocking;
-
-	private boolean forceNonNullable;
-	private boolean forceUnique;
-	private boolean keyCascadeDeleteEnabled;
-
-	private MetaAttributeContext metaAttributeContext;
+	private final List<RelationalValueBinding> relationalValueBindings;
+	private boolean hasDerivedValue;
+	private boolean isNullable = true;
+	private final PropertyGeneration generation;
 
 	BasicAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
-			boolean forceNonNullable,
-			boolean forceUnique) {
-		super( container, attribute );
-		this.forceNonNullable = forceNonNullable;
-		this.forceUnique = forceUnique;
+			List<RelationalValueBinding> relationalValueBindings,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			PropertyGeneration generation) {
+		super(
+				container,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext
+		);
+		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
+			this.isNullable = this.isNullable && relationalValueBinding.isNullable();
+		}
+		this.generation = generation;
 	}
 
 	@Override
@@ -70,68 +81,50 @@ public class BasicAttributeBinding
 		return false;
 	}
 
-	@Override
-	public String getUnsavedValue() {
-		return unsavedValue;
-	}
-
-	public void setUnsavedValue(String unsavedValue) {
-		this.unsavedValue = unsavedValue;
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return relationalValueBindings;
 	}
 
 	@Override
+	public boolean hasDerivedValue() {
+		return hasDerivedValue;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return isNullable;
+	}
+
 	public PropertyGeneration getGeneration() {
 		return generation;
-	}
-
-	public void setGeneration(PropertyGeneration generation) {
-		this.generation = generation;
-	}
-
-	public boolean isIncludedInOptimisticLocking() {
-		return includedInOptimisticLocking;
-	}
-
-	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
-		this.includedInOptimisticLocking = includedInOptimisticLocking;
-	}
-
-	@Override
-	public boolean isKeyCascadeDeleteEnabled() {
-		return keyCascadeDeleteEnabled;
-	}
-
-	public void setKeyCascadeDeleteEnabled(boolean keyCascadeDeleteEnabled) {
-		this.keyCascadeDeleteEnabled = keyCascadeDeleteEnabled;
-	}
-
-	public boolean forceNonNullable() {
-		return forceNonNullable;
-	}
-
-	public boolean forceUnique() {
-		return forceUnique;
-	}
-
-	public MetaAttributeContext getMetaAttributeContext() {
-		return metaAttributeContext;
-	}
-
-	public void setMetaAttributeContext(MetaAttributeContext metaAttributeContext) {
-		this.metaAttributeContext = metaAttributeContext;
 	}
 
 	IdentifierGenerator createIdentifierGenerator(
 			IdGenerator idGenerator,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Properties properties) {
+		if ( getRelationalValueBindings().size() > 1 ) {
+			throw new MappingException(
+					"A SimpleAttributeBinding used for an identifier has more than 1 Value: " + getAttribute().getName()
+			);
+		}
+
+		final RelationalValueBinding relationalValueBinding = getRelationalValueBindings().get( 0 );
+		final TableSpecification table = relationalValueBinding.getValue().getTable();
+		if ( !Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+			throw new MappingException(
+					"Cannot create an IdentifierGenerator because the value is not a column: " +
+							relationalValueBinding.getValue().toLoggableString()
+			);
+		}
+
 		Properties params = new Properties();
 		params.putAll( properties );
 
 		// use the schema/catalog specified by getValue().getTable() - but note that
 		// if the schema/catalog were specified as params, they will already be initialized and
 		//will override the values set here (they are in idGenerator.getParameters().)
-		Schema schema = getValue().getTable().getSchema();
+		Schema schema = table.getSchema();
 		if ( schema != null ) {
 			if ( schema.getName().getSchema() != null ) {
 				params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getName() );
@@ -141,57 +134,29 @@ public class BasicAttributeBinding
 			}
 		}
 
-		// TODO: not sure how this works for collection IDs...
-		//pass the entity-name, if not a collection-id
-		//if ( rootClass!=null) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, getContainer().seekEntityBinding().getEntity().getName() );
-		//}
+		params.setProperty( IdentifierGenerator.ENTITY_NAME, getContainer().seekEntityBinding().getEntity().getName() );
 
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
-		String tableName = getValue().getTable().getQualifiedName( identifierGeneratorFactory.getDialect() );
+		String tableName = table.getQualifiedName( identifierGeneratorFactory.getDialect() );
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
-		//pass the column name (a generated id almost always has a single column)
-		if ( getSimpleValueSpan() > 1 ) {
-			throw new MappingException(
-					"A SimpleAttributeBinding used for an identifier has more than 1 Value: " + getAttribute().getName()
-			);
-		}
-		SimpleValue simpleValue = (SimpleValue) getValue();
-		if ( !Column.class.isInstance( simpleValue ) ) {
-			throw new MappingException(
-					"Cannot create an IdentifierGenerator because the value is not a column: " +
-							simpleValue.toLoggableString()
-			);
-		}
 		params.setProperty(
 				PersistentIdentifierGenerator.PK,
-				( (Column) simpleValue ).getColumnName().encloseInQuotesIfQuoted(
+				( (Column) relationalValueBinding.getValue() ).getColumnName().encloseInQuotesIfQuoted(
 						identifierGeneratorFactory.getDialect()
 				)
 		);
-
-		// TODO: is this stuff necessary for SimpleValue???
-		//if (rootClass!=null) {
-		//	StringBuffer tables = new StringBuffer();
-		//	Iterator iter = rootClass.getIdentityTables().iterator();
-		//	while ( iter.hasNext() ) {
-		//		Table table= (Table) iter.next();
-		//		tables.append( table.getQuotedName(dialect) );
-		//		if ( iter.hasNext() ) tables.append(", ");
-		//	}
-		//	params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
-		//}
-		//else {
 		params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-		//}
-
 		params.putAll( idGenerator.getParameters() );
-
 		return identifierGeneratorFactory.createIdentifierGenerator(
 				idGenerator.getStrategy(), getHibernateTypeDescriptor().getResolvedTypeMapping(), params
 		);
+	}
+
+	@Override
+	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
+		valueBindings.addAll( relationalValueBindings );
 	}
 }

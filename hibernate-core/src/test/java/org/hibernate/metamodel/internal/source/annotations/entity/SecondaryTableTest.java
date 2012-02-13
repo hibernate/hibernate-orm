@@ -23,21 +23,18 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import java.util.Iterator;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
-import org.junit.Test;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
 import org.hibernate.metamodel.spi.relational.Table;
 
+import org.junit.Test;
+
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -47,6 +44,7 @@ import static junit.framework.Assert.fail;
 public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	@SecondaryTable(name = "SECOND_TABLE")
+	@SuppressWarnings( {"UnusedDeclaration"})
 	class EntityWithSecondaryTable {
 		@Id
 		private long id;
@@ -62,11 +60,9 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 		Table table = (Table) binding.locateTable( "SECOND_TABLE" );
 		assertEquals( "The secondary table should exist", "SECOND_TABLE", table.getTableName().getName() );
 
-		Iterator<SimpleValue> valueIterator = table.values().iterator();
-		assertTrue( valueIterator.hasNext() );
-		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) valueIterator.next();
+		assertEquals( 1, table.values().size() );
+		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 0 );
 		assertEquals( "Wrong column name", "name", column.getColumnName().getName() );
-		assertFalse( valueIterator.hasNext() );
 	}
 
 	@Test

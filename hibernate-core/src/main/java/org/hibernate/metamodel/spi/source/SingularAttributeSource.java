@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.TruthValue;
 import org.hibernate.mapping.PropertyGeneration;
 
 /**

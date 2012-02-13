@@ -41,7 +41,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -454,7 +454,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
         EntityBinding entityBinding = getEntityBinding( Apple.class );
         assertFalse( entityBinding.isRoot() );
 		EntityDiscriminator discriminator = rootEntityBinding.getHierarchyDetails().getEntityDiscriminator();
-        SimpleValue simpleValue = discriminator.getBoundValue();
+        Value simpleValue = discriminator.getRelationalValue();
         assertTrue( simpleValue instanceof DerivedValue);
         DerivedValue derivedValue = (DerivedValue)simpleValue;
         assertEquals( "case when zik_type is null then 0 else zik_type end", derivedValue.getExpression() );

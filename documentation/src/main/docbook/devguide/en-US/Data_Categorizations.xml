@@ -15,7 +15,7 @@
   <note>
     <title>Usage of the word <wordasword>type</wordasword></title>
     <para>
-      A Hibernate <classname>type</classname> is neither a Java type nor a SQL datatype. It provides information about
+      A Hibernate <classname>type</classname> is neither a Java type nor a SQL jdbcDataType. It provides information about
       both of these.
     </para>
     <para>

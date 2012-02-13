@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,8 +37,8 @@ import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Datatype;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -85,7 +86,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		assertNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding() );
+		assertNull( entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() );
 	}
 
 	@Test
@@ -96,8 +97,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		EntityBinding entityBinding = metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
 		assertIdAndSimpleProperty( entityBinding );
 
-		assertNotNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding() );
-		assertNotNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding().getAttribute() );
+		assertNotNull( entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() );
+		assertNotNull( entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding().getAttribute() );
 	}
 
 	@Test
@@ -170,9 +171,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
 		assertSame( Long.class, basicIdAttributeType.getClassReference() );
 
-		assertNotNull( singularIdAttributeBinding.getValue() );
-		assertTrue( singularIdAttributeBinding.getValue() instanceof Column );
-		Datatype idDataType = ( (Column) singularIdAttributeBinding.getValue() ).getDatatype();
+		assertTrue( singularIdAttributeBinding.getRelationalValueBindings().size() == 1 );
+		Value value = singularIdAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+		assertTrue( value instanceof Column );
+		JdbcDataType idDataType = value.getJdbcDataType();
 		assertSame( Long.class, idDataType.getJavaType() );
 		assertSame( Types.BIGINT, idDataType.getTypeCode() );
 		assertSame( LongType.INSTANCE.getName(), idDataType.getTypeName() );
@@ -185,15 +187,14 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( nameBinding.isNullable() );
 		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		assertNotNull( nameBinding.getAttribute() );
-		assertNotNull( nameBinding.getValue() );
-		SingularAttribute singularNameAttribute =  (SingularAttribute) nameBinding.getAttribute();
+		assertNotNull( nameBinding.getRelationalValueBindings().size() );
+		SingularAttribute singularNameAttribute =  nameBinding.getAttribute();
 		BasicType basicNameAttributeType = (BasicType) singularNameAttribute.getSingularAttributeType();
 		assertSame( String.class, basicNameAttributeType.getClassReference() );
-
-		assertNotNull( nameBinding.getValue() );
-		SimpleValue nameValue = (SimpleValue) nameBinding.getValue();
+		Assert.assertEquals( 1, nameBinding.getRelationalValueBindings().size() );
+		Value nameValue = (Value) nameBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertTrue( nameValue instanceof Column );
-		Datatype nameDataType = nameValue.getDatatype();
+		JdbcDataType nameDataType = nameValue.getJdbcDataType();
 		assertSame( String.class, nameDataType.getJavaType() );
 		assertSame( Types.VARCHAR, nameDataType.getTypeCode() );
 		assertSame( StringType.INSTANCE.getName(), nameDataType.getTypeName() );

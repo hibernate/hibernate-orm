@@ -59,7 +59,7 @@ public abstract class AbstractConstraint implements Constraint {
 		return columns;
 	}
 
-	protected int getColumnSpan() {
+	public int getColumnSpan() {
 		return columns.size();
 	}
 

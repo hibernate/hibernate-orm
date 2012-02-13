@@ -162,7 +162,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		}
 
 		boolean isFirst = true;
-		for ( SimpleValue simpleValue : values() ) {
+		for ( Value simpleValue : values() ) {
 			if ( ! Column.class.isInstance( simpleValue ) ) {
 				continue;
 			}
@@ -183,7 +183,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 					buf.append( getTypeString( col, dialect ) );
 				}
 				buf.append( ' ' )
-						.append( dialect.getIdentityColumnString( col.getDatatype().getTypeCode() ) );
+						.append( dialect.getIdentityColumnString( col.getJdbcDataType().getTypeCode() ) );
 			}
 			else {
 				buf.append( getTypeString( col, dialect ) );
@@ -271,7 +271,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 					col.getSize();
 
 			typeString = dialect.getTypeName(
-						col.getDatatype().getTypeCode(),
+						col.getJdbcDataType().getTypeCode(),
 						size.getLength(),
 						size.getPrecision(),
 						size.getScale()

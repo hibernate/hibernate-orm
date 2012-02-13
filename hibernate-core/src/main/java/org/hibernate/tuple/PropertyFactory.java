@@ -42,7 +42,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
-import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
@@ -117,7 +117,7 @@ public class PropertyFactory {
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
 		//		see org.hibernate.metamodel.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
 
-		final String mappedUnsavedValue = property.getUnsavedValue();
+		final String mappedUnsavedValue = mappedEntity.getHierarchyDetails().getEntityIdentifier().getUnsavedValue();
 		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
@@ -194,10 +194,12 @@ public class PropertyFactory {
 	 * @param lazyAvailable Is property lazy loading currently available.
 	 * @return The appropriate VersionProperty definition.
 	 */
-	public static VersionProperty buildVersionProperty(BasicAttributeBinding property, boolean lazyAvailable) {
-		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
-
-		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
+	public static VersionProperty buildVersionProperty(
+			EntityBinding entityBinding,
+			BasicAttributeBinding property,
+			boolean lazyAvailable) {
+		final String mappedUnsavedValue = entityBinding.getHierarchyDetails().getEntityVersion().getUnsavedValue();
+		final VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
 				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
@@ -297,6 +299,9 @@ public class PropertyFactory {
 					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
 					: FetchMode.DEFAULT;
 
+			PropertyGeneration propertyGeneration = BasicAttributeBinding.class.isInstance( property )
+					? ( (BasicAttributeBinding) property ).getGeneration()
+					: PropertyGeneration.NEVER;
 			return new StandardProperty(
 					singularAttributeBinding.getAttribute().getName(),
 					null,
@@ -304,9 +309,9 @@ public class PropertyFactory {
 					lazyAvailable && singularAttributeBinding.isLazy(),
 					true, // insertable
 					true, // updatable
-					singularAttributeBinding.getGeneration() == PropertyGeneration.INSERT
-							|| singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
-					singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
+					propertyGeneration == PropertyGeneration.INSERT
+							|| propertyGeneration == PropertyGeneration.ALWAYS,
+					propertyGeneration == PropertyGeneration.ALWAYS,
 					singularAttributeBinding.isNullable(),
 					alwaysDirtyCheck || areAllValuesIncludedInUpdate( singularAttributeBinding ),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
@@ -348,7 +353,7 @@ public class PropertyFactory {
 		if ( attributeBinding.hasDerivedValue() ) {
 			return false;
 		}
-		for ( SimpleValueBinding valueBinding : attributeBinding.getSimpleValueBindings() ) {
+		for ( RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
 			if ( ! valueBinding.isIncludeInUpdate() ) {
 				return false;
 			}

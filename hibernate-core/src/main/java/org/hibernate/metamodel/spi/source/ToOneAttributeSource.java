@@ -45,4 +45,11 @@ public interface ToOneAttributeSource
 	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
 	 */
 	public String getReferencedEntityAttributeName();
+
+	/**
+	 * Retrieve the name of the foreign key as supplied by the user, or {@code null} if the user supplied none.
+	 *
+	 * @return The user supplied foreign key name.
+	 */
+	public String getForeignKeyName();
 }

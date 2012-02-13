@@ -30,7 +30,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public class DerivedValue extends AbstractSimpleValue {
+public class DerivedValue extends AbstractValue {
 	private final String expression;
 
 	public DerivedValue(TableSpecification table, int position, String expression) {

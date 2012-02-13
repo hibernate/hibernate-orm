@@ -552,7 +552,7 @@
           <title>Set the <option>sql-type</option> attribure.</title>
           <para>
             Use the <option>sql-type</option> attribute to override the default mapping of a Hibernate type to SQL
-            datatype.
+            jdbcDataType.
           </para>
           <programlisting language="XML" role="XML"><xi:include href="extras/sql-type.xml"
           xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>

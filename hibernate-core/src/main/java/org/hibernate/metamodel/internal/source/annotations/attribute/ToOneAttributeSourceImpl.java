@@ -67,6 +67,11 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
+	public String getForeignKeyName() {
+		return null;
+	}
+
+	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
 		return cascadeStyles;
 	}

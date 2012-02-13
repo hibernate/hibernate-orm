@@ -176,7 +176,7 @@
 
             <para>
                 The <literal>sql-type</literal> attribute allows the user to override the default 
-                mapping of a Hibernate type to SQL datatype.
+                mapping of a Hibernate type to SQL jdbcDataType.
             </para>
             
             <programlisting role="XML"><![CDATA[<property name="balance" type="float">

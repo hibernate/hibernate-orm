@@ -57,7 +57,8 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 		SingularAttributeBinding nameBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
 
-		Column column = (Column) nameBinding.getValue();
+		assertEquals( 1, nameBinding.getRelationalValueBindings().size() );
+		Column column = (Column) nameBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals( "Wrong column name", "MY_NAME", column.getColumnName().toString() );
 	}
 
@@ -68,7 +69,8 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 		SingularAttributeBinding fooBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "foo" );
 		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
 
-		Column column = (Column) fooBinding.getValue();
+		assertEquals( 1, fooBinding.getRelationalValueBindings().size() );
+		Column column = (Column) fooBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals( "Wrong column name", "MY_FOO", column.getColumnName().toString() );
 	}
 

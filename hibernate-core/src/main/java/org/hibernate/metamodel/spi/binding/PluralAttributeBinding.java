@@ -63,7 +63,7 @@ public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 
 	public Caching getCaching();
 
-	public Class<? extends CollectionPersister> getCollectionPersisterClass();
+	public Class<? extends CollectionPersister> getExplicitPersisterClass();
 
 	public String getCustomLoaderName();
 

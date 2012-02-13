@@ -39,7 +39,7 @@
 
     <important>
         <para>
-            A Hibernate type is neither a Java type nor a SQL datatype; it provides a information about both.
+            A Hibernate type is neither a Java type nor a SQL jdbcDataType; it provides a information about both.
         </para>
         <para>
             When you encounter the term <emphasis>type</emphasis> in regards to Hibernate be aware that usage might

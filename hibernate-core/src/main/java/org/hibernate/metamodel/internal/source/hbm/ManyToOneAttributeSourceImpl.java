@@ -268,4 +268,9 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	public String getReferencedEntityAttributeName() {
 		return manyToOneElement.getPropertyRef();
 	}
+
+	@Override
+	public String getForeignKeyName() {
+		return manyToOneElement.getForeignKey();
+	}
 }

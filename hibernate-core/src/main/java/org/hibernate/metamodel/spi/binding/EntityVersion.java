@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,31 +23,34 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BagBinding extends AbstractPluralAttributeBinding {
-	protected BagBinding(
-			AttributeBindingContainer container,
-			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean isLazy,
-			MetaAttributeContext metaAttributeContext) {
-		super(
-				container,
-				attribute,
-				pluralAttributeElementNature,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				isLazy,
-				metaAttributeContext
-		);
+public class EntityVersion {
+	private final EntityBinding rootEntityBinding;
+	private BasicAttributeBinding versioningAttributeBinding;
+	private String unsavedValue;
+
+	public EntityVersion(EntityBinding rootEntityBinding) {
+		this.rootEntityBinding = rootEntityBinding;
+	}
+
+
+	public BasicAttributeBinding getVersioningAttributeBinding() {
+		return versioningAttributeBinding;
+	}
+
+	public void setVersioningAttributeBinding(BasicAttributeBinding versioningAttributeBinding) {
+		this.versioningAttributeBinding = versioningAttributeBinding;
+	}
+
+	public String getUnsavedValue() {
+		return unsavedValue;
+	}
+
+	public void setUnsavedValue(String unsavedValue) {
+		this.unsavedValue = unsavedValue;
 	}
 }

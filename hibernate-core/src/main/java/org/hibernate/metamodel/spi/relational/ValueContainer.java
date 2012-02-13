@@ -23,20 +23,23 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import java.util.List;
+
 /**
  * Contract for data containers (what the ANSI SQL spec calls "table specifications") to which we can map
- * entity state.  The two flavors here are {@link Table physical table} and {@link InLineView inline view}, but a
- * {@link Tuple} is a conceptual value container as well.
+ * entity state.  The two flavors here are {@link Table physical table} and {@link InLineView inline view}.
  *
  * @author Steve Ebersole
  */
 public interface ValueContainer {
 	/**
 	 * Obtain an iterator over this containers current set of value definitions.
+	 * <p/>
+	 * The returned list is unmodifiable!
 	 *
 	 * @return Iterator over value definitions.
 	 */
-	public Iterable<SimpleValue> values();
+	public List<Value> values();
 
 	/**
 	 * Get a qualifier which can be used to qualify {@link Value values} belonging to this container in

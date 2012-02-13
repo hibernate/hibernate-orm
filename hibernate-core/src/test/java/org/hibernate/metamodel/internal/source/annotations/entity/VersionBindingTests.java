@@ -96,6 +96,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 		EntityBinding binding = getEntityBinding( Item2.class );
 		assertTrue( binding.isVersioned() );
 		HibernateTypeDescriptor descriptor = binding.getHierarchyDetails()
+				.getEntityVersion()
 				.getVersioningAttributeBinding()
 				.getHibernateTypeDescriptor();
 //		assertEquals( "Long", descriptor.getExplicitTypeName() );
@@ -121,6 +122,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 		EntityBinding binding = getEntityBinding( Item3.class );
 		assertTrue( binding.isVersioned() );
 		HibernateTypeDescriptor descriptor = binding.getHierarchyDetails()
+				.getEntityVersion()
 				.getVersioningAttributeBinding()
 				.getHibernateTypeDescriptor();
 		assertEquals( "dbtimestamp", descriptor.getExplicitTypeName() );

@@ -202,8 +202,8 @@
         <para>
             In some cases this automatic detection might not chose the default you expect or need, as seen with the
             <varname>date</varname> property. Hibernate cannot know if the property, which is of type
-            <classname>java.util.Date</classname>, should map to a SQL <database class="datatype">DATE</database>,
-            <database class="datatype">TIME</database>, or <database class="datatype">TIMESTAMP</database> datatype.
+            <classname>java.util.Date</classname>, should map to a SQL <database class="jdbcDataType">DATE</database>,
+            <database class="jdbcDataType">TIME</database>, or <database class="jdbcDataType">TIMESTAMP</database> jdbcDataType.
             Full date and time information is preserved by mapping the property to a <type>timestamp</type> converter,
             which identifies an instance of the class <classname>org.hibernate.type.TimestampType</classname>.
         </para>

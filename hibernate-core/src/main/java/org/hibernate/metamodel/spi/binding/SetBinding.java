@@ -26,25 +26,36 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.Comparator;
 
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SetBinding extends AbstractPluralAttributeBinding {
-	private Comparator comparator;
+	private final Comparator comparator;
 
-	protected SetBinding(
+	public SetBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature) {
-		super( container, attribute, pluralAttributeElementNature );
+			PluralAttributeElementNature pluralAttributeElementNature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean isLazy,
+			MetaAttributeContext metaAttributeContext,
+			Comparator comparator) {
+		super(
+				container,
+				attribute,
+				pluralAttributeElementNature,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				isLazy,
+				metaAttributeContext
+		);
+		this.comparator = comparator;
 	}
 
 	public Comparator getComparator() {
 		return comparator;
-	}
-
-	public void setComparator(Comparator comparator) {
-		this.comparator = comparator;
 	}
 }

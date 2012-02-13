@@ -96,8 +96,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
@@ -795,7 +796,11 @@ public abstract class AbstractEntityPersister
 
 		// IDENTIFIER
 
-		identifierColumnSpan = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().getSimpleValueSpan();
+		identifierColumnSpan = entityBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getValueBinding()
+				.getRelationalValueBindings()
+				.size();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
@@ -823,9 +828,20 @@ public abstract class AbstractEntityPersister
 		// VERSION
 
 		if ( entityBinding.isVersioned() ) {
-			final Value versioningValue = entityBinding.getHierarchyDetails().getVersioningAttributeBinding().getValue();
+			final BasicAttributeBinding versionAttributeBinding =  entityBinding.getHierarchyDetails()
+					.getEntityVersion()
+					.getVersioningAttributeBinding();
+			if ( versionAttributeBinding.getRelationalValueBindings().size() > 1 ) {
+				throw new AssertionFailure(
+						"Bad versioning attribute binding, expecting single column but found " +
+								versionAttributeBinding.getRelationalValueBindings().size()
+				);
+			}
+			final Value versioningValue = versionAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
 			if ( ! org.hibernate.metamodel.spi.relational.Column.class.isInstance( versioningValue ) ) {
-				throw new AssertionFailure( "Bad versioning attribute binding : " + versioningValue );
+				throw new AssertionFailure(
+						"Bad versioning attribute binding, expecting column but found [" + versioningValue + "]"
+				);
 			}
 			org.hibernate.metamodel.spi.relational.Column versionColumn = org.hibernate.metamodel.spi.relational.Column.class.cast( versioningValue );
 			versionColumnName = versionColumn.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
@@ -882,7 +898,7 @@ public abstract class AbstractEntityPersister
 
 			propertySubclassNames[i] = ( (EntityBinding) singularAttributeBinding.getContainer() ).getEntity().getName();
 
-			int span = singularAttributeBinding.getSimpleValueSpan();
+			int span = singularAttributeBinding.getRelationalValueBindings().size();
 			propertyColumnSpans[i] = span;
 
 			String[] colNames = new String[span];
@@ -895,14 +911,14 @@ public abstract class AbstractEntityPersister
 
 			int k = 0;
 
-			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
-				colAliases[k] = valueBinding.getSimpleValue().getAlias( factory.getDialect() );
+			for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+				colAliases[k] = valueBinding.getValue().getAlias( factory.getDialect() );
 				if ( valueBinding.isDerived() ) {
 					foundFormula = true;
-					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getSimpleValue() ).getExpression(), factory );
+					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getValue() ).getExpression(), factory );
 				}
 				else {
-					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getSimpleValue();
+					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getValue();
 					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
 					colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
@@ -989,7 +1005,7 @@ public abstract class AbstractEntityPersister
 			propNullables.add( singularAttributeBinding.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
 			types.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 
-			final int span = singularAttributeBinding.getSimpleValueSpan();
+			final int span = singularAttributeBinding.getRelationalValueBindings().size();
 			String[] cols = new String[ span ];
 			String[] readers = new String[ span ];
 			String[] readerTemplates = new String[ span ];
@@ -998,9 +1014,9 @@ public abstract class AbstractEntityPersister
 			int[] formnos = new int[ span ];
 			int l = 0;
 			Boolean lazy = singularAttributeBinding.isLazy() && lazyAvailable;
-			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
+			for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
 				if ( valueBinding.isDerived() ) {
-					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getSimpleValue() );
+					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
 					String template = getTemplateFromString( derivedValue.getExpression(), factory );
 					formnos[l] = formulaTemplates.size();
 					colnos[l] = -1;
@@ -1011,7 +1027,7 @@ public abstract class AbstractEntityPersister
 					formulasLazy.add( lazy );
 				}
 				else {
-					org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getSimpleValue() );
+					org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
 					String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 					colnos[l] = columns.size(); //before add :-)
 					formnos[l] = -1;

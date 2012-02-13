@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,33 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.binding;
-
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+package org.hibernate.metamodel.spi.source;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BagBinding extends AbstractPluralAttributeBinding {
-	protected BagBinding(
-			AttributeBindingContainer container,
-			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean isLazy,
-			MetaAttributeContext metaAttributeContext) {
-		super(
-				container,
-				attribute,
-				pluralAttributeElementNature,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				isLazy,
-				metaAttributeContext
-		);
-	}
+public interface VersionAttributeSource extends SingularAttributeSource {
+	public String getUnsavedValue();
 }

@@ -23,14 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
-import org.hibernate.metamodel.spi.relational.Tuple;
-import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * @author Steve Ebersole
@@ -39,14 +35,14 @@ public abstract class AbstractSingularAttributeBinding
 		extends AbstractAttributeBinding
 		implements SingularAttributeBinding {
 
-	private Value value;
-	private List<SimpleValueBinding> simpleValueBindings = new ArrayList<SimpleValueBinding>();
-
-	private boolean hasDerivedValue;
-	private boolean isNullable = true;
-
-	protected AbstractSingularAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {
-		super( container, attribute );
+	protected AbstractSingularAttributeBinding(
+			AttributeBindingContainer container,
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext) {
+		super( container, attribute, propertyAccessorName, includedInOptimisticLocking, lazy, metaAttributeContext );
 	}
 
 	@Override
@@ -54,56 +50,5 @@ public abstract class AbstractSingularAttributeBinding
 		return (SingularAttribute) super.getAttribute();
 	}
 
-	public Value getValue() {
-		return value;
-	}
-
-	public void setSimpleValueBindings(Iterable<SimpleValueBinding> simpleValueBindings) {
-		List<SimpleValue> values = new ArrayList<SimpleValue>();
-		for ( SimpleValueBinding simpleValueBinding : simpleValueBindings ) {
-			this.simpleValueBindings.add( simpleValueBinding );
-			values.add( simpleValueBinding.getSimpleValue() );
-			this.hasDerivedValue = this.hasDerivedValue || simpleValueBinding.isDerived();
-			this.isNullable = this.isNullable && simpleValueBinding.isNullable();
-		}
-		if ( values.size() == 1 ) {
-			this.value = values.get( 0 );
-		}
-		else {
-			final Tuple tuple = values.get( 0 ).getTable().createTuple( getRole() );
-			for ( SimpleValue value : values ) {
-				tuple.addValue( value );
-			}
-			this.value = tuple;
-		}
-	}
-
-	@Override
-	public int getSimpleValueSpan() {
-		checkValueBinding();
-		return simpleValueBindings.size();
-	}
-
-	protected void checkValueBinding() {
-		if ( value == null ) {
-			throw new AssertionFailure( "No values yet bound!" );
-		}
-	}
-
-	@Override
-	public Iterable<SimpleValueBinding> getSimpleValueBindings() {
-		return simpleValueBindings;
-	}
-
-	@Override
-	public boolean hasDerivedValue() {
-		checkValueBinding();
-		return hasDerivedValue;
-	}
-
-	@Override
-	public boolean isNullable() {
-		checkValueBinding();
-		return isNullable;
-	}
+	protected abstract void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings);
 }

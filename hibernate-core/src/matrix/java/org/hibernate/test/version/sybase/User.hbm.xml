@@ -4,7 +4,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <!--
-    Demonstrates use of the TIMESTAMP datatype available in Sybase
+    Demonstrates use of the TIMESTAMP jdbcDataType available in Sybase
     and SQL Server for optimistic locking value.
  -->
 <hibernate-mapping package="org.hibernate.test.version.sybase">

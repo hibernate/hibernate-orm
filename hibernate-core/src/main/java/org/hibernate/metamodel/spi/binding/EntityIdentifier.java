@@ -42,6 +42,7 @@ public class EntityIdentifier {
 	private IdGenerator idGenerator;
 	private boolean isIdentifierMapper = false;
 	// todo : mappers, etc
+	private String unsavedValue;
 
 	/**
 	 * Create an identifier
@@ -73,7 +74,7 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return attributeBinding.getSimpleValueSpan() > 1;
+		return attributeBinding.getRelationalValueBindings().size() > 1;
 	}
 
 	public boolean isIdentifierMapper() {
@@ -91,5 +92,13 @@ public class EntityIdentifier {
 
 	public IdentifierGenerator getIdentifierGenerator() {
 		return identifierGenerator;
+	}
+
+	public String getUnsavedValue() {
+		return unsavedValue;
+	}
+
+	public void setUnsavedValue(String unsavedValue) {
+		this.unsavedValue = unsavedValue;
 	}
 }

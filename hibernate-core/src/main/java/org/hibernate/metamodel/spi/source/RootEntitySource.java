@@ -50,7 +50,7 @@ public interface RootEntitySource extends EntitySource {
 	 *
 	 * @return the source information about the attribute used for versioning
 	 */
-	public SingularAttributeSource getVersioningAttributeSource();
+	public VersionAttributeSource getVersioningAttributeSource();
 
 	/**
 	 * Obtain the source information about the discriminator attribute for single table inheritance

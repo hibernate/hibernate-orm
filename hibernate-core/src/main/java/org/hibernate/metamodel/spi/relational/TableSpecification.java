@@ -62,13 +62,13 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public Column locateOrCreateColumn(String name);
 
 	/**
-	 * Factory method for creating a {@link Column} associated with this container.
+	 * Attempt to locate a column with the given name
 	 *
 	 * @param name The column name
 	 *
-	 * @return The generated column
+	 * @return The located column, or {@code null} is none found
 	 */
-	public Tuple createTuple(String name);
+	public Column locateColumn(String name);
 
 	/**
 	 * Factory method for creating a {@link DerivedValue} associated with this container.

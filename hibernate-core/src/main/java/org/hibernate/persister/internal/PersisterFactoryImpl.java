@@ -203,7 +203,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			PluralAttributeBinding collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
-		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
+		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getExplicitPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}

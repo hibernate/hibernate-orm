@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.TruthValue;
-import org.hibernate.metamodel.spi.relational.Datatype;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 
@@ -103,7 +103,7 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public Datatype getDatatype() {
+	public JdbcDataType getDatatype() {
 		return null;
 	}
 

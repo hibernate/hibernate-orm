@@ -42,17 +42,27 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
-	private boolean includedInOptimisticLocking;
+	private final String propertyAccessorName;
+	private final boolean includedInOptimisticLocking;
+	private final boolean isLazy;
 
-	private boolean isLazy;
-	private String propertyAccessorName;
 	private boolean isAlternateUniqueKey;
 
-	private MetaAttributeContext metaAttributeContext;
+	private final MetaAttributeContext metaAttributeContext;
 
-	protected AbstractAttributeBinding(AttributeBindingContainer container, Attribute attribute) {
+	protected AbstractAttributeBinding(
+			AttributeBindingContainer container,
+			Attribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean isLazy,
+			MetaAttributeContext metaAttributeContext) {
 		this.container = container;
 		this.attribute = attribute;
+		this.propertyAccessorName = propertyAccessorName;
+		this.includedInOptimisticLocking = includedInOptimisticLocking;
+		this.isLazy = isLazy;
+		this.metaAttributeContext = metaAttributeContext;
 	}
 
 	@Override
@@ -84,17 +94,9 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return propertyAccessorName;
 	}
 
-	public void setPropertyAccessorName(String propertyAccessorName) {
-		this.propertyAccessorName = propertyAccessorName;
-	}
-
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
 		return includedInOptimisticLocking;
-	}
-
-	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
-		this.includedInOptimisticLocking = includedInOptimisticLocking;
 	}
 
 	@Override
@@ -102,12 +104,9 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return metaAttributeContext;
 	}
 
-	public void setMetaAttributeContext(MetaAttributeContext metaAttributeContext) {
-		this.metaAttributeContext = metaAttributeContext;
-	}
-
 	@Override
 	public boolean isAlternateUniqueKey() {
+		// todo : is this the same as "part of natural id"?
 		return isAlternateUniqueKey;
 	}
 
@@ -118,10 +117,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	@Override
 	public boolean isLazy() {
 		return isLazy;
-	}
-
-	public void setLazy(boolean isLazy) {
-		this.isLazy = isLazy;
 	}
 
 	public void addEntityReferencingAttributeBinding(SingularAssociationAttributeBinding referencingAttributeBinding) {

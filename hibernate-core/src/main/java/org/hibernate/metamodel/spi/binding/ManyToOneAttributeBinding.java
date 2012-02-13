@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
@@ -32,6 +33,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * TODO : javadoc
@@ -39,20 +41,56 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class ManyToOneAttributeBinding extends BasicAttributeBinding implements SingularAssociationAttributeBinding {
+public class ManyToOneAttributeBinding
+		extends AbstractSingularAttributeBinding
+		implements SingularAssociationAttributeBinding {
+
+	private final List<RelationalValueBinding> relationalValueBindings;
+
 	private String referencedEntityName;
 	private String referencedAttributeName;
 	private AttributeBinding referencedAttributeBinding;
 
 	private boolean isLogicalOneToOne;
-	private String foreignKeyName;
 
 	private CascadeStyle cascadeStyle;
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
 
-	ManyToOneAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {
-		super( container, attribute, false, false );
+	public ManyToOneAttributeBinding(
+			AttributeBindingContainer container,
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			List<RelationalValueBinding> relationalValueBindings) {
+		super(
+				container,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext
+		);
+		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
+	}
+
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return relationalValueBindings;
+	}
+
+	@Override
+	public boolean hasDerivedValue() {
+		// todo : not sure this is even relevant for many-to-one
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		// todo : not sure this is even relevant for many-to-one
+		return false;
 	}
 
 	@Override
@@ -237,4 +275,9 @@ public class ManyToOneAttributeBinding extends BasicAttributeBinding implements 
 //		}
 //		//TODO: validate that the entity reference is resolved
 //	}
+
+	@Override
+	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
+		valueBindings.addAll( relationalValueBindings );
+	}
 }

@@ -428,10 +428,11 @@ public class EntityMetamodel implements Serializable {
 				continue;
 			}
 
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getVersioningAttributeBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(
-						entityBinding.getHierarchyDetails().getVersioningAttributeBinding(),
+						entityBinding,
+						entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding(),
 						instrumentationMetadata.isInstrumented()
 				);
 			}

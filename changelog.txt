@@ -172,7 +172,7 @@ https://hibernate.onjira.com/browse/HHH/fixforversion/11550
     * [HHH-6749] - FooBarTest.testLimit() fails on MS SQL Server due to dialect interpretation of max row
     * [HHH-6750] - ASTParserLoadingTest.testAggregation() fails on MS SQL Server performing avg, presumably due to forcing result to match column type
     * [HHH-6751] - Test failure due to inconsistent scale returned for BigDecimal properties
-    * [HHH-6755] - SQL Server/Sybase dialects don't have type mapping for binary datatype
+    * [HHH-6755] - SQL Server/Sybase dialects don't have type mapping for binary jdbcDataType
     * [HHH-6756] - Test failures due to Oracle LONG limitatations
     * [HHH-6757] - QueryCacheTest.testCaseInsensitiveComparison() fails for case-insensitive DBs
     * [HHH-6758] - Test failure due to Oracle restrictions on Blob comparison and missing equals() and hashcode()

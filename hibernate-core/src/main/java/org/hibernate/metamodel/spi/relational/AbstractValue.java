@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -29,19 +29,19 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.ValidationException;
 
 /**
- * Basic support for {@link SimpleValue} implementations.
+ * Basic support for {@link Value} implementations.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSimpleValue implements SimpleValue {
+public abstract class AbstractValue implements Value {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractSimpleValue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractValue.class.getName());
 
 	private final TableSpecification table;
 	private final int position;
-	private Datatype datatype;
+	private JdbcDataType jdbcDataType;
 
-	protected AbstractSimpleValue(TableSpecification table, int position) {
+	protected AbstractValue(TableSpecification table, int position) {
 		this.table = table;
 		this.position = position;
 	}
@@ -56,23 +56,22 @@ public abstract class AbstractSimpleValue implements SimpleValue {
 	}
 
 	@Override
-	public Datatype getDatatype() {
-		return datatype;
+	public JdbcDataType getJdbcDataType() {
+		return jdbcDataType;
 	}
 
-	@Override
-	public void setDatatype(Datatype datatype) {
-		LOG.debugf( "setting datatype for column %s : %s", toLoggableString(), datatype );
-		if ( this.datatype != null && ! this.datatype.equals( datatype ) ) {
-			LOG.debugf( "overriding previous datatype : %s", this.datatype );
+	public void setJdbcDataType(JdbcDataType jdbcDataType) {
+		LOG.debugf( "setting jdbcDataType for column %s : %s", toLoggableString(), jdbcDataType );
+		if ( this.jdbcDataType != null && ! this.jdbcDataType.equals( jdbcDataType ) ) {
+			LOG.debugf( "overriding previous jdbcDataType : %s", this.jdbcDataType );
 		}
-		this.datatype = datatype;
+		this.jdbcDataType = jdbcDataType;
 	}
 
 	@Override
 	public void validateJdbcTypes(JdbcCodes typeCodes) {
 		// todo : better compatibility testing...
-		if ( datatype.getTypeCode() != typeCodes.nextJdbcCde() ) {
+		if ( jdbcDataType.getTypeCode() != typeCodes.nextJdbcCde() ) {
 			throw new ValidationException( "Mismatched types" );
 		}
 	}

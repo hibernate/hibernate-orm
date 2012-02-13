@@ -25,60 +25,67 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
+ * Represents the binding information of a column/formula.
+ *
+ * Different from a {@link Value} because, while the {@link Value} exists only once in the relational model,
+ * that {@link Value} may be bound to multiple attributes.  A {@link RelationalValueBinding} then tracks the
+ * information that is specific to each attribute's binding to that {@link Value}.
+ *
  * @author Steve Ebersole
  */
-public class SimpleValueBinding {
-	private SimpleValue simpleValue;
+public class RelationalValueBinding {
+	private final Value value;
 	private boolean includeInInsert;
 	private boolean includeInUpdate;
 
-	public SimpleValueBinding() {
-		this( true, true );
+	public RelationalValueBinding(Value value) {
+		this( value, true, true );
 	}
 
-	public SimpleValueBinding(SimpleValue simpleValue) {
-		this();
-		setSimpleValue( simpleValue );
-	}
-
-	public SimpleValueBinding(SimpleValue simpleValue, boolean includeInInsert, boolean includeInUpdate) {
-		this( includeInInsert, includeInUpdate );
-		setSimpleValue( simpleValue );
-	}
-
-	public SimpleValueBinding(boolean includeInInsert, boolean includeInUpdate) {
-		this.includeInInsert = includeInInsert;
-		this.includeInUpdate = includeInUpdate;
-	}
-
-	public SimpleValue getSimpleValue() {
-		return simpleValue;
-	}
-
-	public void setSimpleValue(SimpleValue simpleValue) {
-		this.simpleValue = simpleValue;
-		if ( DerivedValue.class.isInstance( simpleValue ) ) {
-			includeInInsert = false;
-			includeInUpdate = false;
+	public RelationalValueBinding(Value value, boolean includeInInsert, boolean includeInUpdate) {
+		this.value = value;
+		if ( DerivedValue.class.isInstance( value ) ) {
+			this.includeInInsert = false;
+			this.includeInUpdate = false;
+		}
+		else {
+			this.includeInInsert = includeInInsert;
+			this.includeInUpdate = includeInUpdate;
 		}
 	}
 
-	public boolean isDerived() {
-		return DerivedValue.class.isInstance( simpleValue );
+	/**
+	 * Retrieve the relational value bound here.
+	 *
+	 * @return The relational value.
+	 */
+	public Value getValue() {
+		return value;
 	}
 
+	/**
+	 * Is the value bound here derived?  Same as checking {@link #getValue()} as a {@link DerivedValue}
+	 *
+	 * @return {@code true} indicates the bound value is derived.
+	 */
+	public boolean isDerived() {
+		return DerivedValue.class.isInstance( value );
+	}
+
+	/**
+	 * Is the value bound here nullable?
+	 *
+	 * @return {@code true} indicates the bound value is derived or a column not marked as non-null.
+	 */
 	public boolean isNullable() {
-		return isDerived() || Column.class.cast( simpleValue ).isNullable();
+		return isDerived() || Column.class.cast( value ).isNullable();
 	}
 
 	/**
 	 * Is the value to be inserted as part of its binding here?
-	 * <p/>
-	 * <b>NOTE</b> that a column may be bound to multiple attributes.  The purpose of this value is to track this
-	 * notion of "insertability" for this particular binding.
 	 *
 	 * @return {@code true} indicates the value should be included; {@code false} indicates it should not
 	 */
@@ -86,15 +93,12 @@ public class SimpleValueBinding {
 		return includeInInsert;
 	}
 
-	public void setIncludeInInsert(boolean includeInInsert) {
-		this.includeInInsert = includeInInsert;
-	}
-
+	/**
+	 * Is the value to be updated as part of its binding here?
+	 *
+	 * @return {@code true} indicates the value should be included; {@code false} indicates it should not
+	 */
 	public boolean isIncludeInUpdate() {
 		return includeInUpdate;
-	}
-
-	public void setIncludeInUpdate(boolean includeInUpdate) {
-		this.includeInUpdate = includeInUpdate;
 	}
 }

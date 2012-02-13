@@ -50,10 +50,9 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.SimpleValueBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
-import org.hibernate.metamodel.spi.relational.SimpleValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
@@ -537,7 +536,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// DISCRIMINATOR
 
 		if ( entityBinding.isPolymorphic() ) {
-			SimpleValue discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getBoundValue();
+			org.hibernate.metamodel.spi.relational.Value discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getRelationalValue();
 			if ( discriminatorRelationalValue == null ) {
 				throw new MappingException("discriminator mapping required for single table polymorphic persistence");
 			}
@@ -652,8 +651,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					join
 			);
 
-			for ( SimpleValueBinding simpleValueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
-				if ( DerivedValue.class.isInstance( simpleValueBinding.getSimpleValue() ) ) {
+			for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+				if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
 					formulaJoinedNumbers.add( join );
 				}
 				else {

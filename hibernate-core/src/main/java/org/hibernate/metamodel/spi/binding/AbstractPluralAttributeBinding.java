@@ -34,6 +34,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -56,7 +57,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	private boolean mutable = true;
 
-	private Class<? extends CollectionPersister> collectionPersisterClass;
+	private Class<? extends CollectionPersister> explicitPersisterClass;
 
 	private String where;
 	private String orderBy;
@@ -78,8 +79,19 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature) {
-		super( container, attribute );
+			PluralAttributeElementNature pluralAttributeElementNature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean isLazy,
+			MetaAttributeContext metaAttributeContext) {
+		super(
+				container,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				isLazy,
+				metaAttributeContext
+		);
 		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this );
 		this.pluralAttributeElementBinding = interpretNature( pluralAttributeElementNature );
 	}
@@ -214,12 +226,13 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.customSqlDeleteAll = customSqlDeleteAll;
 	}
 
-	public Class<? extends CollectionPersister> getCollectionPersisterClass() {
-		return collectionPersisterClass;
+	@Override
+	public Class<? extends CollectionPersister> getExplicitPersisterClass() {
+		return explicitPersisterClass;
 	}
 
-	public void setCollectionPersisterClass(Class<? extends CollectionPersister> collectionPersisterClass) {
-		this.collectionPersisterClass = collectionPersisterClass;
+	public void setExplicitPersisterClass(Class<? extends CollectionPersister> explicitPersisterClass) {
+		this.explicitPersisterClass = explicitPersisterClass;
 	}
 
 	public Caching getCaching() {

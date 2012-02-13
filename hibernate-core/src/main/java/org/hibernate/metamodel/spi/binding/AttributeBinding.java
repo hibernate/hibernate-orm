@@ -64,11 +64,7 @@ public interface AttributeBinding {
 
 	public String getPropertyAccessorName();
 
-	public void setPropertyAccessorName(String propertyAccessorName);
-
 	public boolean isIncludedInOptimisticLocking();
-
-	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking);
 
 	/**
 	 * Obtain the meta attributes associated with this binding

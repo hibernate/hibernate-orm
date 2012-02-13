@@ -150,7 +150,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 //		assertNull( columnSource.getSqlType() );
 //		assertNull( columnSource.getCheckCondition() );
 //		assertNull( columnSource.getComment() );
-//		assertNull( columnSource.getDatatype() );
+//		assertNull( columnSource.getJdbcDataType() );
 //		assertNull( columnSource.getSize() );
 //		// todo : technically, pk has to be unique, but this another semantic case
 //		assertFalse( columnSource.isUnique() );

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.collections.JoinedIterable;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
@@ -257,7 +259,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	public boolean isVersioned() {
-		return getHierarchyDetails().getVersioningAttributeBinding() != null;
+		return getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() != null;
 	}
 
 	public boolean isDiscriminatorMatchValueNull() {
@@ -487,47 +489,114 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
-	public BasicAttributeBinding makeBasicAttributeBinding(SingularAttribute attribute) {
-		return makeSimpleAttributeBinding( attribute, false, false );
-	}
-
-	private BasicAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute, boolean forceNonNullable, boolean forceUnique) {
+	public BasicAttributeBinding makeBasicAttributeBinding(
+			SingularAttribute attribute,
+			List<RelationalValueBinding> relationalValueBindings,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			PropertyGeneration generation) {
 		final BasicAttributeBinding binding = new BasicAttributeBinding(
 				this,
 				attribute,
-				forceNonNullable,
-				forceUnique
+				relationalValueBindings,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				generation
 		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
 	@Override
-	public ComponentAttributeBinding makeComponentAttributeBinding(SingularAttribute attribute) {
-		final ComponentAttributeBinding binding = new ComponentAttributeBinding( this, attribute );
+	public ComponentAttributeBinding makeComponentAttributeBinding(
+			SingularAttribute attribute,
+			SingularAttribute parentReferenceAttribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext) {
+		final ComponentAttributeBinding binding = new ComponentAttributeBinding(
+				this,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				parentReferenceAttribute
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
 	@Override
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(SingularAttribute attribute) {
-		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this, attribute );
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			String referencedEntityName,
+			String referencedEntityAttributeName,
+			List<RelationalValueBinding> valueBindings) {
+		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
+				this,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				valueBindings
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
 	@Override
-	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature) {
+	public BagBinding makeBagAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
-		final BagBinding binding = new BagBinding( this, attribute, nature );
+		final BagBinding binding = new BagBinding(
+				this,
+				attribute,
+				nature,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
 	@Override
-	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, PluralAttributeElementNature nature) {
+	public SetBinding makeSetAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			Comparator comparator) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
-		final SetBinding binding = new SetBinding( this, attribute, nature );
+		final SetBinding binding = new SetBinding(
+				this,
+				attribute,
+				nature,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				comparator
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
@@ -602,4 +671,5 @@ public class EntityBinding implements AttributeBindingContainer {
     public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
         return jpaCallbackClasses;
     }
+
 }

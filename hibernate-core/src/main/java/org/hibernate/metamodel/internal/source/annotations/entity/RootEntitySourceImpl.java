@@ -27,15 +27,15 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SimpleIdentifierSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.VersionAttributeSourceImpl;
+import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * @author Hardy Ferentschik
@@ -66,13 +66,12 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	}
 
 	@Override
-	public SingularAttributeSource getVersioningAttributeSource() {
-		SingularAttributeSource attributeSource = null;
-		EntityClass entityClass = getEntityClass();
-		if ( entityClass.getVersionAttribute() != null ) {
-			attributeSource = new SingularAttributeSourceImpl( entityClass.getVersionAttribute() );
+	public VersionAttributeSource getVersioningAttributeSource() {
+		final EntityClass entityClass = getEntityClass();
+		if ( entityClass.getVersionAttribute() == null ) {
+			return null;
 		}
-		return attributeSource;
+		return new VersionAttributeSourceImpl( entityClass.getVersionAttribute() );
 	}
 
 	@Override

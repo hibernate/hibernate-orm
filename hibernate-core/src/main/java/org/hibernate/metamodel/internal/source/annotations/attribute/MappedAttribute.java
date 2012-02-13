@@ -193,7 +193,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				annotations,
 				JPADotNames.JOIN_COLUMN
 		);
-		if ( columnAnnotation != null ) {
+		if ( joinColumnAnnotation != null ) {
 			columnValues.add( new Column( joinColumnAnnotation ) );
 		}
 

@@ -120,13 +120,15 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		final JaxbHibernateMapping.JaxbClass.JaxbNaturalId naturalId = entityElement().getNaturalId();
-		processAttributes(
-				attributeSources,
-				naturalId.getPropertyOrManyToOneOrComponent(),
-				naturalId.isMutable()
-						? SingularAttributeSource.NaturalIdMutability.MUTABLE
-						: SingularAttributeSource.NaturalIdMutability.IMMUTABLE
-		);
+		if ( naturalId != null ) {
+			processAttributes(
+					attributeSources,
+					naturalId.getPropertyOrManyToOneOrComponent(),
+					naturalId.isMutable()
+							? SingularAttributeSource.NaturalIdMutability.MUTABLE
+							: SingularAttributeSource.NaturalIdMutability.IMMUTABLE
+			);
+		}
 		processAttributes( attributeSources );
 		return attributeSources;
 	}

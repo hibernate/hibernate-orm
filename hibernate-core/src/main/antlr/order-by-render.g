@@ -40,7 +40,7 @@ options {
 
 {
     // the buffer to which we write the resulting SQL.
-	private StringBuffer buffer = new StringBuffer();
+	private StringBuilder buffer = new StringBuilder();
 
 	protected void out(String text) {
 	    buffer.append( text );

@@ -478,7 +478,7 @@ path returns [String p] {
 	}
 	: a:identifier { p = a.getText(); }
 	| #(DOT x=path y:identifier) {
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			buf.append(x).append(".").append(y.getText());
 			p = buf.toString();
 		}

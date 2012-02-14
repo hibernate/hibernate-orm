@@ -103,12 +103,7 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescripto
 			return ( (String) value ).toCharArray();
 		}
 		if ( Clob.class.isInstance( value ) ) {
-			try {
-				return DataHelper.extractString( ( (Clob) value ).getCharacterStream() ).toCharArray();
-			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access lob stream", e );
-			}
+			return DataHelper.extractString( ( (Clob) value ) ).toCharArray();
 		}
 		if ( Reader.class.isInstance( value ) ) {
 			return DataHelper.extractString( ( (Reader) value ) ).toCharArray();

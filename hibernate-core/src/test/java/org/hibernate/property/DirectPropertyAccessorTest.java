@@ -35,6 +35,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Rudolf
@@ -57,7 +58,8 @@ public class DirectPropertyAccessorTest extends BaseCoreFunctionalTestCase {
 		o = ( Order ) s.load( Order.class, 1 );
 		assertFalse( Hibernate.isInitialized( o ) );
 		o.getOrderNumber();
-		assertFalse( Hibernate.isInitialized( o ) );
+		// If you mapped with field access, any method call initializes the proxy
+		assertTrue( Hibernate.isInitialized( o ) );
 		s.close();
 	}
 

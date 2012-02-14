@@ -130,6 +130,9 @@ import org.hibernate.type.TypeFactory;
  * <p/>
  * The API consists of {@link #Binder( MetadataImplementor )} and {@link #processEntityHierarchies(Iterable)}
  *
+ * @todo Really need to chop this up.  The class is doing so many different things right now.
+ * @todo And really need to come up with consistent method naming.
+ *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */

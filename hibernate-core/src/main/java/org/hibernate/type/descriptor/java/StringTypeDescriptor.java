@@ -84,7 +84,7 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 		if ( Reader.class.isInstance( value ) ) {
 			return DataHelper.extractString( (Reader) value );
 		}
-		if ( Clob.class.isInstance( value ) || DataHelper.isNClob( value.getClass() ) ) {
+		if ( Clob.class.isInstance( value ) ) {
 			return DataHelper.extractString( (Clob) value );
 		}
 

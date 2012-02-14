@@ -95,7 +95,7 @@ options {
         }
 
         public String getErrorMessage() {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             for ( Iterator iterator = errorList.iterator(); iterator.hasNext(); ) {
                 buf.append( (String) iterator.next() );
                 if ( iterator.hasNext() ) {

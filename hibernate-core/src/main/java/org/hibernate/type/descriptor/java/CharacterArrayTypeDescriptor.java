@@ -103,12 +103,7 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 			return wrapChars( ( (String) value ).toCharArray() );
 		}
 		if ( Clob.class.isInstance( value ) ) {
-			try {
-				return wrapChars( DataHelper.extractString( ( (Clob) value ).getCharacterStream() ).toCharArray() );
-			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access lob stream", e );
-			}
+			return wrapChars( DataHelper.extractString( ( (Clob) value ) ).toCharArray() );
 		}
 		if ( Reader.class.isInstance( value ) ) {
 			return wrapChars( DataHelper.extractString( (Reader) value ).toCharArray() );

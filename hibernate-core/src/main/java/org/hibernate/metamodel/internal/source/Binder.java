@@ -602,7 +602,12 @@ public class Binder {
 					attributeSource.getReferencedEntityAttributeName(),
 					relationalValueBindings
 			);
-			final String referencedEntityName = attributeSource.getReferencedEntityName();
+			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+			resolveToOneInformation(
+					attributeSource,
+					(ManyToOneAttributeBinding) attributeBinding
+			);
+			final String referencedEntityName = attributeBinding.getReferencedEntityName();
 			EntityBinding referencedEntityBinding = getEntityBinding( referencedEntityName );
 			if ( referencedEntityBinding == null ) {
 				EntitySource source = sourcesByName.get( referencedEntityName );
@@ -613,12 +618,6 @@ public class Binder {
 					: referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 			attributeBinding.resolveReference( referencedAttrBinding );
 			referencedAttrBinding.addEntityReferencingAttributeBinding( attributeBinding );
-
-			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
-			resolveToOneInformation(
-					attributeSource,
-					(ManyToOneAttributeBinding) attributeBinding
-			);
 		}
 		else {
 			throw new NotYetImplementedException();

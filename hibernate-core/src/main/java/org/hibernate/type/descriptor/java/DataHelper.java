@@ -45,7 +45,7 @@ import org.hibernate.type.descriptor.BinaryStream;
 public class DataHelper {
 
 	/** The size of the buffer we will use to deserialize larger streams */
-	private static final int BUFFER_SIZE = 2048;
+	private static final int BUFFER_SIZE = 1024 * 4;
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DataHelper.class.getName() );
 

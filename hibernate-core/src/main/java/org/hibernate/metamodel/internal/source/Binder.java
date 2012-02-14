@@ -137,6 +137,18 @@ public class Binder {
 	private final MetadataImplementor metadata;
 	private final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
+	private final ObjectNameNormalizer NAME_NORMALIZER = new ObjectNameNormalizer() {
+		@Override
+		protected boolean isUseQuotedIdentifiersGlobally() {
+			return metadata.isGloballyQuotedIdentifiers();
+		}
+
+		@Override
+		protected NamingStrategy getNamingStrategy() {
+			return metadata.getNamingStrategy();
+		}
+	};
+
 	private InheritanceType currentInheritanceType;
 	private EntityMode currentHierarchyEntityMode;
 	private LocalBindingContext currentBindingContext;
@@ -152,51 +164,63 @@ public class Binder {
 	 * @param entityHierarchies THe hierarchies to process.
 	 */
 	public void processEntityHierarchies( Iterable<? extends EntityHierarchy> entityHierarchies ) {
-        // Index sources by name so we can find and resolve entities on the fly as references to them are encountered (e.g., within associations)
-        for ( EntityHierarchy hierarchy : entityHierarchies )
-            mapSourcesByName( hierarchy.getRootEntitySource() );
+        // Index sources by name so we can find and resolve entities on the fly as references to them
+        // are encountered (e.g., within associations)
+        for ( EntityHierarchy hierarchy : entityHierarchies ) {
+			mapSourcesByName( hierarchy.getRootEntitySource() );
+		}
 
 	    for ( EntityHierarchy hierarchy : entityHierarchies ) {
-    	    currentInheritanceType = hierarchy.getHierarchyInheritanceType();
-            RootEntitySource rootEntitySource = hierarchy.getRootEntitySource();
-    		EntityBinding rootEntityBinding = createEntityBinding( rootEntitySource, null );
-    		// Create identifier generator for root entity
-    		Properties properties = new Properties();
-            properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
-            // TODO: where should these be added???
-            if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) )
-                properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
-            if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) )
-                properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, new ObjectNameNormalizer() {
-
-                    @Override
-                    protected boolean isUseQuotedIdentifiersGlobally() {
-                        return metadata.isGloballyQuotedIdentifiers();
-                    }
-
-                    @Override
-                    protected NamingStrategy getNamingStrategy() {
-                        return metadata.getNamingStrategy();
-                    }
-                } );
-            rootEntityBinding.getHierarchyDetails().getEntityIdentifier().
-                createIdentifierGenerator( metadata.getIdentifierGeneratorFactory(), properties );
-
-    		if ( currentInheritanceType != InheritanceType.NO_INHERITANCE )
-    		    processHierarchySubEntities( rootEntitySource, rootEntityBinding );
-    		currentHierarchyEntityMode = null;
+			processEntityHierarchy( hierarchy );
 	    }
 	}
 
-	private void mapSourcesByName( EntitySource source ) {
+	private void mapSourcesByName(EntitySource source) {
         sourcesByName.put( source.getEntityName(), source );
-        for ( SubclassEntitySource subsource : source.subclassEntitySources() )
-            mapSourcesByName( subsource );
+        for ( SubclassEntitySource subclassEntitySource : source.subclassEntitySources() ) {
+			mapSourcesByName( subclassEntitySource );
+		}
 	}
 
-	private void processHierarchySubEntities(SubclassEntityContainer subclassEntitySource, EntityBinding superEntityBinding) {
+	@SuppressWarnings( {"unchecked"})
+	private void processEntityHierarchy(EntityHierarchy hierarchy) {
+		final RootEntitySource rootEntitySource = hierarchy.getRootEntitySource();
+		currentInheritanceType = hierarchy.getHierarchyInheritanceType();
+		currentHierarchyEntityMode = rootEntitySource.getEntityMode();
+		try {
+			// create the binding
+			final EntityBinding rootEntityBinding = createEntityBinding( rootEntitySource, null );
+
+			// Create identifier generator for root entity
+			Properties properties = new Properties();
+			properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
+			if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
+				properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
+			}
+			if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
+				properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, NAME_NORMALIZER );
+			}
+			rootEntityBinding.getHierarchyDetails()
+					.getEntityIdentifier()
+					.createIdentifierGenerator( metadata.getIdentifierGeneratorFactory(), properties );
+
+			if ( currentInheritanceType != InheritanceType.NO_INHERITANCE ) {
+				processHierarchySubEntities( rootEntitySource, rootEntityBinding );
+			}
+		}
+		finally {
+			currentHierarchyEntityMode = null;
+			currentInheritanceType = null;
+		}
+	}
+
+	private void processHierarchySubEntities(
+			SubclassEntityContainer subclassEntitySource,
+			EntityBinding superEntityBinding) {
 		for ( SubclassEntitySource subEntity : subclassEntitySource.subclassEntitySources() ) {
-			EntityBinding entityBinding = createEntityBinding( subEntity, superEntityBinding );
+			// create the current entity's binding....
+			final EntityBinding entityBinding = createEntityBinding( subEntity, superEntityBinding );
+			// then drill down into its sub-class entities
 			processHierarchySubEntities( subEntity, entityBinding );
 		}
 	}
@@ -258,8 +282,6 @@ public class Binder {
 	}
 
 	private EntityBinding makeRootEntityBinding(RootEntitySource entitySource) {
-		currentHierarchyEntityMode = entitySource.getEntityMode();
-
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, null );
 
 		bindPrimaryTable( entitySource, entityBinding );

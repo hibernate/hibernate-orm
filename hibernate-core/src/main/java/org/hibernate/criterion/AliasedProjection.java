@@ -49,8 +49,7 @@ public class AliasedProjection implements EnhancedProjection {
 		return projection.toSqlString(criteria, position, criteriaQuery);
 	}
 
-	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
+	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) {
 		return projection.toGroupSqlString(criteria, criteriaQuery);
 	}
 

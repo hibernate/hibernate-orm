@@ -24,7 +24,6 @@
  */
 package org.hibernate.criterion;
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException;
 import org.hibernate.type.Type;
 
 
@@ -70,8 +69,7 @@ public abstract class SimpleProjection implements EnhancedProjection {
 		return getColumnAliases( alias, loc );
 	}
 
-	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
+	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery) {
 		return null;
 	}
 
@@ -102,8 +100,7 @@ public abstract class SimpleProjection implements EnhancedProjection {
 		return new String[1];
 	}
 
-	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
+	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) {
 		throw new UnsupportedOperationException("not a grouping projection");
 	}
 

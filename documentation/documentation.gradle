@@ -2,10 +2,12 @@ buildscript {
   repositories {
       mavenCentral()
       mavenLocal()
-      mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
+	  mavenRepo name: 'jboss-nexus', url: "https://repository.jboss.org/nexus/content/groups/public/"
   }
   dependencies {
-      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.0'
+      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.3'
+	  classpath "org.jboss.pressgang:pressgang-xslt:2.0.1"
+	  classpath "org.jboss.pressgang:pressgang-fonts:2.0.1"
   }
 }
 
@@ -13,7 +15,10 @@ apply plugin: "java"
 apply plugin: "jdocbook"
 
 dependencies {
-	jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
+	jdocbookStyles( "org.jboss.pressgang:pressgang-jdocbook-style:2.0.1" ) {
+		exclude group: 'org.eclipse.wst.css'
+		exclude group: 'org.eclipse.wst.sse'
+	}
 }
 
 defaultTasks 'buildDocs'
@@ -49,12 +54,24 @@ jdocbook {
 // todo : make this part of gradle-jdocbook.
 // 		specifically the ability to supply ant-style resource for images (dir + include/exclude patterns)
 stageStyles_devguide.doLast {
+	logger.lifecycle( "Staging devguide-specific style resources")
 	copy {
 		into project.file( 'target/docbook/stage/devguide/images' )
 		from project.file( 'src/main/docbook/devguide/en-US' )
 		include '**/images/*.png'
 		include '**/images/*.svg'
 		includeEmptyDirs = false
+	}
+}
+
+[ 'devguide', 'manual', 'quickstart' ].each { bookName ->
+	tasks[ "stageStyles_$bookName" ].doLast {
+		logger.lifecycle( "Staging local style resources")
+		copy {
+			into project.file( "target/docbook/stage/$bookName" )
+			from project.file( 'src/main/style' )
+			includeEmptyDirs = false
+		}
 	}
 }
 

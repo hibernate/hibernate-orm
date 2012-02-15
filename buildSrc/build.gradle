@@ -30,7 +30,7 @@ buildDir = "target"
 repositories {
     mavenCentral()
     mavenLocal()
-    mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
+    mavenRepo name: "jboss", url: "http://repository.jboss.org/nexus/content/groups/public/"
 }
 targetCompatibility = "1.6"
 sourceCompatibility = "1.6"
@@ -51,8 +51,10 @@ dependencies {
     groovy localGroovy()
 }
 
-ideaModule {
-    downloadSources =true
-    downloadJavadoc= true
-    javaVersion = '1.6'
+idea {
+	module {
+		downloadSources = true
+		downloadJavadoc = true
+		javaVersion = '1.6'
+	}
 }

@@ -1,36 +1,9 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2012, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<appendix id="query-criteria-legacy">
-    <title>Legacy Hibernate Criteria Queries</title>
+<appendix xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
+    <info>
+        <title>Legacy Hibernate Criteria Queries</title>
+    </info>
 
     <note>
         <para>
@@ -38,7 +11,7 @@
             should be considered deprecated.  New development should focus on the JPA
             <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> API.  Eventually,
             Hibernate-specific criteria features will be ported as extensions to the JPA
-            <interface>javax.persistence.criteria.CriteriaQuery</interface>.  For details on the JPA APIs, see
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>.  For details on the JPA APIs, see
             <xref linkend="query-criteria"/>.
         </para>
         <para>
@@ -50,7 +23,7 @@
         Hibernate features an intuitive, extensible criteria query API.
     </para>
     
-    <section id="querycriteria-creating">
+    <section xml:id="querycriteria-creating">
         <title>Creating a <literal>Criteria</literal> instance</title>
 
         <para>
@@ -65,7 +38,7 @@ List cats = crit.list();]]></programlisting>
 
     </section>
      
-    <section id="querycriteria-narrowing">
+    <section xml:id="querycriteria-narrowing">
         <title>Narrowing the result set</title>
 
         <para>
@@ -137,7 +110,7 @@ List cats = sess.createCriteria(Cat.class)
     
    </section>
      
-    <section id="querycriteria-ordering">
+    <section xml:id="querycriteria-ordering">
         <title>Ordering the results</title>
 
         <para>
@@ -160,7 +133,7 @@ List cats = sess.createCriteria(Cat.class)
     
     </section>
     
-    <section id="querycriteria-associations" revision="2">
+    <section xml:id="querycriteria-associations">
         <title>Associations</title>
 
         <para>
@@ -244,7 +217,7 @@ while ( iter.hasNext() ) {
 	</para>
     </section>
     
-    <section id="querycriteria-dynamicfetching" revision="1">
+    <section xml:id="querycriteria-dynamicfetching">
         <title>Dynamic association fetching</title>
 
         <para>

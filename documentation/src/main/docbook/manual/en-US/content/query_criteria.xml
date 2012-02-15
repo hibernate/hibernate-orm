@@ -1,42 +1,14 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
+<!DOCTYPE preface SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="querycriteria">
+<chapter xml:id="querycriteria">
     <title>Criteria Queries</title>
 
     <para>
         Hibernate features an intuitive, extensible criteria query API.
     </para>
     
-    <section id="querycriteria-creating">
+    <section xml:id="querycriteria-creating">
         <title>Creating a <literal>Criteria</literal> instance</title>
 
         <para>
@@ -51,7 +23,7 @@ List cats = crit.list();]]></programlisting>
 
     </section>
      
-    <section id="querycriteria-narrowing">
+    <section xml:id="querycriteria-narrowing">
         <title>Narrowing the result set</title>
 
         <para>
@@ -123,7 +95,7 @@ List cats = sess.createCriteria(Cat.class)
     
    </section>
      
-    <section id="querycriteria-ordering">
+    <section xml:id="querycriteria-ordering">
         <title>Ordering the results</title>
 
         <para>
@@ -146,7 +118,7 @@ List cats = sess.createCriteria(Cat.class)
     
     </section>
     
-    <section id="querycriteria-associations" revision="2">
+    <section xml:id="querycriteria-associations" revision="2">
         <title>Associations</title>
 
         <para>
@@ -230,7 +202,7 @@ while ( iter.hasNext() ) {
 	</para>
     </section>
     
-    <section id="querycriteria-dynamicfetching" revision="1">
+    <section xml:id="querycriteria-dynamicfetching" revision="1">
         <title>Dynamic association fetching</title>
 
         <para>
@@ -251,7 +223,7 @@ while ( iter.hasNext() ) {
     
     </section>
 
-    <section id="querycriteria-components" revision="2">
+    <section xml:id="querycriteria-components" revision="2">
         <title>Components</title>
 
         <para>
@@ -275,7 +247,7 @@ while ( iter.hasNext() ) {
 
     </section>
 
-    <section id="querycriteria-collections" revision="1">
+    <section xml:id="querycriteria-collections" revision="1">
 	<title>Collections</title>
 	<para>
 		When using criteria against collections, there are two distinct cases.  One is if
@@ -303,7 +275,7 @@ while ( iter.hasNext() ) {
 	</programlisting>
     </section>
 
-    <section id="querycriteria-examples">
+    <section xml:id="querycriteria-examples">
         <title>Example queries</title>
 
         <para>
@@ -348,7 +320,7 @@ List results = session.createCriteria(Cat.class)
     
     </section>
     
-    <section id="querycriteria-projection">
+    <section xml:id="querycriteria-projection">
         <title>Projections, aggregation and grouping</title>
         <para>
             The class <literal>org.hibernate.criterion.Projections</literal> is a
@@ -442,7 +414,7 @@ List results = session.createCriteria(Cat.class)
     
     </section>
     
-    <section id="querycriteria-detachedqueries">
+    <section xml:id="querycriteria-detachedqueries">
         <title>Detached queries and subqueries</title>
         <para>
             The <literal>DetachedCriteria</literal> class allows you to create a query outside the scope 
@@ -505,7 +477,7 @@ session.createCriteria( Woman.class )
                   user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
                   could also be explained. -->
                
-    <section id="query-criteria-naturalid">
+    <section xml:id="query-criteria-naturalid">
         <title>Queries by natural identifier</title>
         
         <para>

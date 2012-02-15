@@ -1,33 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="session-configuration" revision="1">
+<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
+
+<chapter xml:id="session-configuration" revision="1">
   <title>Configuration</title>
 
   <para>Hibernate is designed to operate in many different environments and,
@@ -37,7 +11,7 @@
   <literal>etc/</literal> that displays the various options. Simply put the
   example file in your classpath and customize it to suit your needs.</para>
 
-  <section id="configuration-programmatic" revision="1">
+  <section xml:id="configuration-programmatic" revision="1">
     <title>Programmatic configuration</title>
 
     <para>An instance of
@@ -114,7 +88,7 @@
     <literal>SessionFactory</literal> is created.</para>
   </section>
 
-  <section id="configuration-sessionfactory">
+  <section xml:id="configuration-sessionfactory">
     <title>Obtaining a SessionFactory</title>
 
     <para>When all mappings have been parsed by the
@@ -130,7 +104,7 @@
     useful if you are using more than one database.</para>
   </section>
 
-  <section id="configuration-hibernatejdbc" revision="1">
+  <section xml:id="configuration-hibernatejdbc" revision="1">
     <title>JDBC connections</title>
 
     <para>It is advisable to have the
@@ -320,7 +294,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     <property>hibernate.connection.provider_class</property> property.</para>
   </section>
 
-  <section id="configuration-optional" revision="1">
+  <section xml:id="configuration-optional" revision="1">
     <title>Optional configuration properties</title>
 
     <para>There are a number of other properties that control the behavior of
@@ -336,7 +310,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
         above.</para>
       </warning></para>
 
-    <table frame="topbot" id="configuration-optional-properties" revision="8">
+    <table frame="topbot" xml:id="configuration-optional-properties" revision="8">
       <title>Hibernate Configuration Properties</title>
 
       <tgroup cols="2">
@@ -503,7 +477,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       databases (if a sequence or a table is used for id generation).</para>
     </note>
 
-    <table frame="topbot" id="configuration-jdbc-properties" revision="8">
+    <table frame="topbot" xml:id="configuration-jdbc-properties" revision="8">
       <title>Hibernate JDBC and Connection Properties</title>
 
       <tgroup cols="2">
@@ -666,7 +640,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </tgroup>
     </table>
 
-    <table frame="topbot" id="configuration-cache-properties" revision="7">
+    <table frame="topbot" xml:id="configuration-cache-properties" revision="7">
       <title>Hibernate Cache Properties</title>
 
       <tgroup cols="2">
@@ -761,7 +735,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </tgroup>
     </table>
 
-    <table frame="topbot" id="configuration-transaction-properties"
+    <table frame="topbot" xml:id="configuration-transaction-properties"
            revision="9">
       <title>Hibernate Transaction Properties</title>
 
@@ -835,7 +809,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </tgroup>
     </table>
 
-    <table frame="topbot" id="configuration-misc-properties" revision="11">
+    <table frame="topbot" xml:id="configuration-misc-properties" revision="11">
       <title>Miscellaneous Properties</title>
 
       <tgroup cols="2">
@@ -955,7 +929,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </tgroup>
     </table>
 
-    <section id="configuration-optional-dialects" revision="1">
+    <section xml:id="configuration-optional-dialects" revision="1">
       <title>SQL Dialects</title>
 
       <para>Always set the <literal>hibernate.dialect</literal> property to
@@ -964,7 +938,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       defaults for some of the other properties listed above. This means that
       you will not have to specify them manually.</para>
 
-      <table frame="topbot" id="sql-dialects" revision="3">
+      <table frame="topbot" xml:id="sql-dialects" revision="3">
         <title>Hibernate SQL Dialects
         (<literal>hibernate.dialect</literal>)</title>
 
@@ -1149,7 +1123,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </table>
     </section>
 
-    <section id="configuration-optional-outerjoin" revision="4">
+    <section xml:id="configuration-optional-outerjoin" revision="4">
       <title>Outer Join Fetching</title>
 
       <para>If your database supports ANSI, Oracle or Sybase style outer
@@ -1171,7 +1145,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       information.</para>
     </section>
 
-    <section id="configuration-optional-binarystreams" revision="1">
+    <section xml:id="configuration-optional-binarystreams" revision="1">
       <title>Binary Streams</title>
 
       <para>Oracle limits the size of <literal>byte</literal> arrays that can
@@ -1182,7 +1156,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       is a system-level setting only.</emphasis></para>
     </section>
 
-    <section id="configuration-optional-cacheprovider" revision="2">
+    <section xml:id="configuration-optional-cacheprovider" revision="2">
       <title>Second-level and query cache</title>
 
       <para>The properties prefixed by <literal>hibernate.cache</literal>
@@ -1191,7 +1165,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       information.</para>
     </section>
 
-    <section id="configuration-optional-querysubstitution">
+    <section xml:id="configuration-optional-querysubstitution">
       <title>Query Language Substitution</title>
 
       <para>You can define new Hibernate query tokens using
@@ -1209,7 +1183,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       function.</para>
     </section>
 
-    <section id="configuration-optional-statistics" revision="2">
+    <section xml:id="configuration-optional-statistics" revision="2">
       <title>Hibernate statistics</title>
 
       <para>If you enable <literal>hibernate.generate_statistics</literal>,
@@ -1221,18 +1195,26 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     </section>
   </section>
 
-  <section id="configuration-logging">
+  <section xml:id="configuration-logging">
     <title>Logging</title>
 
-    <para>Hibernate utilizes <ulink url="http://www.slf4j.org/">Simple Logging
-    Facade for Java</ulink> (SLF4J) in order to log various system events.
+      <important>
+          <para>
+              Completely out of date.  Hibernate uses JBoss Logging starting in 4.0.
+              This will get documented as we migrate this content to the Developer Guide.
+          </para>
+      </important>
+
+    <para>Hibernate utilizes <link xlink:href="http://www.slf4j.org/" xmlns:xlink="http://www.w3.org/1999/xlink">Simple Logging
+    Facade for Java</link> (SLF4J) in order to log various system events.
     SLF4J can direct your logging output to several logging frameworks (NOP,
     Simple, log4j version 1.2, JDK 1.4 logging, JCL or logback) depending on
     your chosen binding. In order to setup logging you will need
     <filename>slf4j-api.jar</filename> in your classpath together with the jar
     file for your preferred binding - <filename>slf4j-log4j12.jar</filename>
-    in the case of Log4J. See the SLF4J <ulink
-    url="http://www.slf4j.org/manual.html">documentation</ulink> for more
+    in the case of Log4J. See the SLF4J
+        <link xlink:href="http://www.slf4j.org/manual.html" xmlns:xlink="http://www.w3.org/1999/xlink">documentation</link>
+        for more
     detail. To use Log4j you will also need to place a
     <filename>log4j.properties</filename> file in your classpath. An example
     properties file is distributed with Hibernate in the
@@ -1244,7 +1226,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     troubleshooting device. The most interesting log categories are the
     following:</para>
 
-    <table frame="topbot" id="log-categories" revision="2">
+    <table frame="topbot" xml:id="log-categories" revision="2">
       <title>Hibernate Log Categories</title>
 
       <tgroup cols="2">
@@ -1332,7 +1314,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     <literal>hibernate.show_sql</literal> enabled.</para>
   </section>
 
-  <section id="configuration-namingstrategy">
+  <section xml:id="configuration-namingstrategy">
     <title>Implementing a <literal>NamingStrategy</literal></title>
 
     <para>The interface <literal>org.hibernate.cfg.NamingStrategy</literal>
@@ -1403,7 +1385,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     them on each entity or collection mapping. </para>
   </section>
 
-  <section id="configuration-xmlconfig" revision="2">
+  <section xml:id="configuration-xmlconfig" revision="2">
     <title>XML configuration file</title>
 
     <para>An alternative approach to configuration is to specify a full
@@ -1467,7 +1449,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     .buildSessionFactory();</programlisting>
   </section>
 
-  <section id="configuration-j2ee" revision="1">
+  <section xml:id="configuration-j2ee" revision="1">
     <title>Java EE Application Server integration</title>
 
     <para>Hibernate has the following integration points for J2EE
@@ -1524,7 +1506,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     <literal>hibernate.connection.aggressive_release</literal> to true if your
     application server shows "connection containment" exceptions.</para>
 
-    <section id="configuration-optional-transactionstrategy" revision="3">
+    <section xml:id="configuration-optional-transactionstrategy" revision="3">
       <title>Transaction strategy configuration</title>
 
       <para>The Hibernate <literal>Session</literal> API is independent of any
@@ -1584,7 +1566,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       you have to specify how Hibernate should obtain a reference to the
       <literal>TransactionManager</literal>:</para>
 
-      <table frame="topbot" id="jtamanagerlookup" revision="1">
+      <table frame="topbot" xml:id="jtamanagerlookup" revision="1">
         <title>JTA TransactionManagers</title>
 
         <tgroup cols="2">
@@ -1673,7 +1655,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </table>
     </section>
 
-    <section id="configuration-optional-jndi" revision="3">
+    <section xml:id="configuration-optional-jndi" revision="3">
       <title>JNDI-bound <literal>SessionFactory</literal></title>
 
       <para>A JNDI-bound Hibernate <literal>SessionFactory</literal> can
@@ -1718,7 +1700,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       chapter 1.</para>
     </section>
 
-    <section id="configuration-j2ee-currentsession" revision="4">
+    <section xml:id="configuration-j2ee-currentsession" revision="4">
       <title>Current Session context management with JTA</title>
 
       <para>The easiest way to handle <literal>Sessions</literal> and
@@ -1743,7 +1725,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       transaction demarcation with CMT is preferred.</para>
     </section>
 
-    <section id="configuration-j2ee-jmx" revision="1">
+    <section xml:id="configuration-j2ee-jmx" revision="1">
       <title>JMX deployment</title>
 
       <para>The line <literal>cfg.buildSessionFactory()</literal> still has to

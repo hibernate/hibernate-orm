@@ -1,10 +1,7 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
 
-<chapter>
+<chapter xmlns="http://docbook.org/ns/docbook">
+
     <title>Native SQL Queries</title>
 
     <para>
@@ -15,7 +12,7 @@
         create, update, delete, and load operations.
     </para>
 
-  <section id="querysql-creating" revision="4">
+  <section xml:id="querysql-creating">
     <title>Using a <literal>SQLQuery</literal></title>
 
     <para>Execution of native SQL queries is controlled via the
@@ -226,7 +223,7 @@ List loggedCats = sess.createSQLQuery(sql)
         .addEntity("mother", Cat.class).list()
 </programlisting>
 
-      <section id="querysql-aliasreferences" revision="2">
+      <section xml:id="querysql-aliasreferences" >
         <title>Alias and property references</title>
 
         <para>In most cases the above alias injection is needed. For queries
@@ -239,7 +236,7 @@ List loggedCats = sess.createSQLQuery(sql)
         simply examples; each alias will have a unique and probably different
         name when used.</para>
 
-        <table frame="topbot" id="aliasinjection-summary">
+        <table frame="topbot" xml:id="aliasinjection-summary">
           <title>Alias injection names</title>
 
           <tgroup cols="3">
@@ -394,7 +391,7 @@ List pusList = query.setString("name", "Pus%").list();          </programlisting
     </section>
   </section>
 
-  <section id="querysql-namedqueries" revision="3">
+  <section xml:id="querysql-namedqueries" >
     <title>Named SQL queries</title>
 
     <para>Named SQL queries can also be defined in the mapping document and
@@ -550,7 +547,7 @@ List pusList = query.setString("name", "Pus%").list();          </programlisting
     This can be seen in <xref
     linkend="example-field-result-annotation-with-associations" />.</para>
 
-    <example id="example-named-native-query-annotation-with-result-set-mapping">
+    <example xml:id="example-named-native-query-annotation-with-result-set-mapping">
       <title>Named SQL query using <classname>@NamedNativeQuery</classname>
       together with <classname>@SqlResultSetMapping</classname></title>
 
@@ -574,7 +571,7 @@ List pusList = query.setString("name", "Pus%").list();          </programlisting
 )</programlisting>
     </example>
 
-    <example id="example-implicit-result-set-mapping">
+    <example xml:id="example-implicit-result-set-mapping">
       <title>Implicit result set mapping</title>
 
       <programlisting language="JAVA" role="JAVA">@Entity
@@ -616,7 +613,7 @@ public class SpaceShip {
 }</programlisting>
     </example>
 
-    <example id="example-field-result-annotation-with-associations">
+    <example xml:id="example-field-result-annotation-with-associations">
       <title>Using dot notation in @FieldResult for specifying associations
       </title>
 
@@ -747,7 +744,7 @@ public class SpaceShip {</programlisting>
     <literal>org.hibernate.callable</literal> which can be true or false
     depending on whether the query is a stored procedure or not.</para>
 
-    <section id="propertyresults">
+    <section xml:id="propertyresults">
       <title>Using return-property to explicitly specify column/alias
       names</title>
 
@@ -800,7 +797,7 @@ public class SpaceShip {</programlisting>
       discriminator column.</para>
     </section>
 
-    <section id="sp_query" revision="1">
+    <section xml:id="sp_query" >
       <title>Using stored procedures for querying</title>
 
       <para>Hibernate3 provides support for queries via stored procedures and
@@ -845,7 +842,7 @@ BEGIN
       <literal>&lt;return-join&gt;</literal> and
       <literal>&lt;load-collection&gt;</literal> are not supported.</para>
 
-      <section id="querysql-limits-storedprocedures" revision="1">
+      <section xml:id="querysql-limits-storedprocedures" >
         <title>Rules/limitations for using stored procedures</title>
 
         <para>You cannot use stored procedures with Hibernate unless you
@@ -898,7 +895,7 @@ BEGIN
     </section>
   </section>
 
-  <section id="querysql-cud">
+  <section xml:id="querysql-cud">
     <title>Custom SQL for create, update and delete</title>
 
     <para>Hibernate3 can use custom SQL for create, update, and delete
@@ -936,7 +933,7 @@ public class Chaos {
     <literal>&lt;sql-delete&gt;</literal> nodes. This can be seen in <xref
     linkend="example-custom-crdu-via-xml" />.</para>
 
-    <example id="example-custom-crdu-via-xml">
+    <example xml:id="example-custom-crdu-via-xml">
       <title>Custom CRUD XML</title>
 
       <programlisting role="XML">&lt;class name="Person"&gt;
@@ -981,7 +978,7 @@ public class Chaos {
     to override the collection related statements -see <xref
     linkend="example-overriding-sql-collections-annotations" />.</para>
 
-    <example id="example-overriding-sql-collections-annotations">
+    <example xml:id="example-overriding-sql-collections-annotations">
       <title>Overriding SQL statements for collections using
       annotations</title>
 
@@ -1057,7 +1054,7 @@ END updatePerson;</programlisting>
     </example>
   </section>
 
-  <section id="querysql-load">
+  <section xml:id="querysql-load">
     <title>Custom SQL for loading</title>
 
     <para>You can also declare your own SQL (or HQL) queries for entity

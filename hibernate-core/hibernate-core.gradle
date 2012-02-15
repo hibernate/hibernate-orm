@@ -59,10 +59,12 @@ sourceSets.test.resources {
     setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
-ideaModule {
-    sourceDirs += file( '$buildDir/generated-src/antlr/main' )
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
+idea {
+	module {
+		sourceDirs += file( '$buildDir/generated-src/antlr/main' )
+		testSourceDirs += file( 'src/matrix/java')
+		testSourceDirs += file( 'src/matrix/resources')
+	}
 }
 
 task jaxb {

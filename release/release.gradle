@@ -3,7 +3,7 @@ apply plugin: 'idea'
 
 buildDir = "target"
 
-ideaModule {
+idea.module {
 }
 
 

@@ -29,7 +29,10 @@ sourceSets {
     }
 }
 compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
-ideaModule {
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
+
+idea {
+	module {
+		testSourceDirs += file( 'src/matrix/java')
+		testSourceDirs += file( 'src/matrix/resources')
+	}
 }

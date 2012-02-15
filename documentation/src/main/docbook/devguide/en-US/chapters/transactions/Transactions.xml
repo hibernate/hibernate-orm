@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Transactions and concurrency control</title>
 
     <section>
@@ -191,21 +190,21 @@
             <interfacename>org.hibernate.Session</interfacename> acts as a transaction-scoped cache providing
             repeatable reads for lookup by identifier and queries that result in loading entities.
         </para>
-    </section>
 
-    <important>
-        <para>
-            To reduce lock contention in the database, the physical database transaction needs to be as short as
-            possible.  Long database transactions prevent your application from scaling to a highly-concurrent load.
-            Do not hold a database transaction open during end-user-level work, but open it after the end-user-level
-            work is finished.  This is concept is referred to as <literal>transactional write-behind</literal>.
-        </para>
-    </important>
+        <important>
+            <para>
+                To reduce lock contention in the database, the physical database transaction needs to be as short as
+                possible.  Long database transactions prevent your application from scaling to a highly-concurrent load.
+                Do not hold a database transaction open during end-user-level work, but open it after the end-user-level
+                work is finished.  This is concept is referred to as <literal>transactional write-behind</literal>.
+            </para>
+        </important>
+    </section>
 
     <section>
         <title>Transactional patterns (and anti-patterns)</title>
 
-        <section id="session-per-operation">
+        <section xml:id="session-per-operation">
             <title>Session-per-operation anti-pattern</title>
             <para>
                 This is an anti-pattern of opening and closing a <classname>Session</classname> for each database call
@@ -226,7 +225,7 @@
             </note>
         </section>
 
-        <section id="session-per-request">
+        <section xml:id="session-per-request">
             <title>Session-per-request pattern</title>
             <para>
                 This is the most common transaction pattern.  The term request here relates to the concept of a system
@@ -307,7 +306,7 @@
             </important>
         </section>
 
-        <section id="long-conversations">
+        <section xml:id="long-conversations">
             <title>Conversations</title>
             <para>
                 The <phrase>session-per-request</phrase> pattern is not the only valid way of designing units of work.
@@ -416,6 +415,9 @@
 
         <section>
             <title>Session-per-application</title>
+            <para>
+                Discussion coming soon..
+            </para>
         </section>
     </section>
 
@@ -429,11 +431,11 @@
         </para>
         <example>
             <title>Database identity</title>
-            <programlisting language="Java" role="JAVA"><xi:include href="extras/database-identity.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/database-identity.java" parse="text" /></programlisting>
         </example>
         <example>
             <title>JVM identity</title>
-            <programlisting language="Java" role="JAVA"><xi:include href="extras/jvm-identity.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/jvm-identity.java" parse="text" /></programlisting>
         </example>
         <para>
             For objects attached to a particular <interfacename>Session</interfacename>, the two notions are
@@ -470,7 +472,7 @@
 </section>
 
 
-    <section id="transactions-basics-issues">
+    <section xml:id="transactions-basics-issues">
         <title>Common issues</title>
 
          <para>

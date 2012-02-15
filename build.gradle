@@ -5,8 +5,8 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
-        mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
+        mavenRepo name: 'jboss-nexus', url: "https://repository.jboss.org/nexus/content/groups/public/"
+        mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
 }
 
@@ -14,34 +14,55 @@ buildscript {
     repositories {
         mavenCentral()
         mavenLocal()
-        mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
-        mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
+        mavenRepo name: 'jboss-nexus', url: "https://repository.jboss.org/nexus/content/groups/public/"
+        mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
     dependencies {
-        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.0.2'
+        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.1.0'
     }
 }
 
-ideaProject {
-    javaVersion = "1.6"
-    withXml { provider ->
-        def node = provider.asNode()
-        def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
-        vcsConfig.mapping[0].'@vcs' = 'Git'
-        def maxHeapSizeConfig =  node.component.find { it.'@name' == 'JavacSettings' }
-        if( maxHeapSizeConfig == null ){
-            def javacSettingsNode =  node.appendNode('component',[name: 'JavacSettings'])
-            javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
-        }
-    }
-    beforeConfigured { module ->
-        module.modulePaths.removeAll { it.filePath.endsWith('hibernate-core.iml') }
-    }
+idea {
+	project {
+		jdkName = "1.6"
+		ipr {
+			withXml { provider ->
+				provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+				def maxHeapSizeConfig =  provider.node.component.find { it.@name == 'JavacSettings' }
+				if( maxHeapSizeConfig == null ){
+					def javacSettingsNode =  provider.node.appendNode('component',[name: 'JavacSettings'])
+					javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
+				}
+			}
+			beforeMerged { project ->
+				project.modulePaths.clear()
+			}
+		}
+	}
+	module {
+		name = "hibernate-orm"
+	}
 }
-
-ideaModule {
-    moduleName = 'hibernate-core-root'
-}
+//ideaProject {
+//    javaVersion = "1.6"
+//    withXml { provider ->
+//        def node = provider.asNode()
+//        def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
+//        vcsConfig.mapping[0].'@vcs' = 'Git'
+//        def maxHeapSizeConfig =  node.component.find { it.'@name' == 'JavacSettings' }
+//        if( maxHeapSizeConfig == null ){
+//            def javacSettingsNode =  node.appendNode('component',[name: 'JavacSettings'])
+//            javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
+//        }
+//    }
+//    beforeConfigured { module ->
+//        module.modulePaths.removeAll { it.filePath.endsWith('hibernate-core.iml') }
+//    }
+//}
+//
+//ideaModule {
+//    moduleName = 'hibernate-core-root'
+//}
 
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
@@ -227,29 +248,61 @@ subprojects { subProject ->
         targetCompatibility = "1.6"
         sourceCompatibility = "1.6"
 
-        ideaModule {
-            beforeConfigured { module ->
-                module.excludeFolders.clear()
-            }
-            scopes.COMPILE.plus.add( configurations.provided )
-            whenConfigured { module ->
-                module.dependencies*.exported = true
-            }
-            excludeDirs = [
-                    file(".gradle"),
-                    file("$buildDir/classes"),
-                    file("$buildDir/dependency-cache"),
-                    file("$buildDir/libs"),
-                    file("$buildDir/reports"),
-                    file("$buildDir/test-results"),
-                    file("$buildDir/tmp"),
-                    file("$buildDir/matrix")
-            ] as Set
-        }
-
-		eclipseClasspath {
-			plusConfigurations.add( configurations.provided )
+		idea {
+			module {
+				iml {
+					beforeMerged { module ->
+						module.dependencies.clear()
+						module.excludeFolders.clear()
+					}
+					whenMerged { module ->
+						module.dependencies*.exported = true
+						module.excludeFolders = [
+								file(".gradle"),
+								file("$buildDir/bundles"),
+								file("$buildDir/classes"),
+								file("$buildDir/dependency-cache"),
+								file("$buildDir/libs"),
+								file("$buildDir/reports"),
+								file("$buildDir/test-results"),
+								file("$buildDir/tmp"),
+								file("$buildDir/matrix")
+						] as Set
+					}
+				}
+				downloadSources = true
+				scopes.COMPILE.plus += configurations.provided
+			}
 		}
+
+//        ideaModule {
+//            beforeConfigured { module ->
+//                module.excludeFolders.clear()
+//            }
+//            scopes.COMPILE.plus.add( configurations.provided )
+//            whenConfigured { module ->
+//                module.dependencies*.exported = true
+//            }
+//            excludeDirs = [
+//                    file(".gradle"),
+//                    file("$buildDir/classes"),
+//                    file("$buildDir/dependency-cache"),
+//                    file("$buildDir/libs"),
+//                    file("$buildDir/reports"),
+//                    file("$buildDir/test-results"),
+//                    file("$buildDir/tmp"),
+//                    file("$buildDir/matrix")
+//            ] as Set
+//        }
+
+		eclipse {
+			classpath {
+				plusConfigurations.add( configurations.provided )
+			}
+		}
+//		eclipseClasspath {
+//			plusConfigurations.add( configurations.provided )
+//		}
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {
@@ -326,6 +379,5 @@ dependsOnChildren()
 //  2) /gradlew.bat which is the windows bat script for for executing builds
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
-    // HHH-6106 - this is needed for IntellJ generation until 1.0-milestone-3 is released.
-    gradleVersion = '1.0-milestone-3'
+    gradleVersion = '1.0-milestone-8'
 }

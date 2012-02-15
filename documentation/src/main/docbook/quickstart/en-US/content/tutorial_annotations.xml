@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-<chapter id="hibernate-gsg-tutorial-annotations">
+<chapter xmlns="http://docbook.org/ns/docbook">
     <title>Tutorial Using Native Hibernate APIs and Annotation Mappings</title>
 
     <para>
@@ -22,7 +21,7 @@
     </itemizedlist>
 
 
-    <section id="hibernate-gsg-tutorial-annotations-config">
+    <section xml:id="hibernate-gsg-tutorial-annotations-config">
         <title>The Hibernate configuration file</title>
 
         <para>
@@ -32,7 +31,7 @@
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-entity">
+    <section xml:id="hibernate-gsg-tutorial-annotations-entity">
         <title>The annotated entity Java class</title>
         <para>
             The entity class in this tutorial is <classname>org.hibernate.tutorial.annotations.Event</classname> which
@@ -41,7 +40,7 @@
             rather than a separate <filename>hbm.xml</filename> file.
         </para>
 
-        <example id="hibernate-gsg-tutorial-annotations-entity-entity">
+        <example xml:id="hibernate-gsg-tutorial-annotations-entity-entity">
             <title>Identifying the class as an entity</title>
             <programlisting role="JAVA">@Entity
 @Table( name = "EVENTS" )
@@ -60,7 +59,7 @@ public class Event {
           literal value, not a table as a table -->
         </para>
 
-        <example id="hibernate-gsg-tutorial-annotations-entity-id">
+        <example xml:id="hibernate-gsg-tutorial-annotations-entity-id">
           <title>Identifying the identifier property</title>
           <programlisting role="JAVA">@Id
 @GeneratedValue(generator="increment")
@@ -78,7 +77,7 @@ public Long getId() {
             strategy for this entity's identifier values.
         </para>
 
-        <example id="hibernate-gsg-tutorial-annotations-entity-properties">
+        <example xml:id="hibernate-gsg-tutorial-annotations-entity-properties">
           <title>Identifying basic properties</title>
           <programlisting role="JAVA">public String getTitle() {
     return title;
@@ -97,7 +96,7 @@ public Date getDate() {
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-test">
+    <section xml:id="hibernate-gsg-tutorial-annotations-test">
         <title>Example code</title>
         <para>
             <classname>org.hibernate.tutorial.annotations.AnnotationsIllustrationTest</classname> is essentially the
@@ -106,7 +105,7 @@ public Date getDate() {
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-further">
+    <section xml:id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
         <itemizedlist>
           <title>Practice Exercises</title>

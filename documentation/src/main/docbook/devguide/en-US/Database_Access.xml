@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Database access</title>
 
     <section>
@@ -49,15 +49,11 @@
               </para>
                 <example>
                     <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
-                    <programlisting>
-                        <xi:include href="extras/hibernate.properties" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
-                    </programlisting>
+                    <programlisting><xi:include href="extras/hibernate.properties" parse="text" /></programlisting>
                 </example>
                 <example>
                     <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
-                    <programlisting language="XML" role="XML">
-                        <xi:include href="extras/hibernate.cfg.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
-                    </programlisting>
+                    <programlisting language="XML" role="XML"><xi:include href="extras/hibernate.cfg.xml" parse="text" /></programlisting>
                 </example>
 
       <section>
@@ -76,8 +72,7 @@
             directly and specifying XML mapping documents. If the mapping files are in the classpath, use method
             <methodname>addResource()</methodname>.
           </para>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/specify_mapping_files_directly.java"
-          xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specify_mapping_files_directly.java" parse="text" /></programlisting>
         </example>
         <example>
           <title>Letting Hibernate find the mapping files for you</title>
@@ -87,11 +82,11 @@
             <filename>org/hibernate/auction/Item.hbm.xml</filename> and
             <filename>org/hibernate/auction/Bid.hbm.xml</filename>.
           </para>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/letting_hibernate_find_mapping_files.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/letting_hibernate_find_mapping_files.java" parse="text" /></programlisting>
         </example>
         <example>
           <title>Specifying configuration properties</title>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/specifying_configuration_properties_programmatically.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specifying_configuration_properties_programmatically.java" parse="text" /></programlisting>
         </example>
         <itemizedlist>
           <title>Other ways to configure Hibernate programmatically</title>
@@ -120,9 +115,7 @@
         </para>
         <example>
             <title>Specifying configuration properties</title>
-            <programlisting language="Java" role="JAVA">
-                <xi:include href="extras/opening_a_session.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
-            </programlisting>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/opening_a_session.java" parse="text" /></programlisting>
         </example>
         <itemizedlist id="hibernate-jdbc-properties">
             <title>Most important Hibernate JDBC properties</title>
@@ -172,8 +165,7 @@
         <filename>lib/</filename> directory. Hibernate uses its
         <classname>org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider</classname> for connection pooling if you set the
         <property>hibernate.proxool.*</property> properties. Unlike c3p0, proxool requires some additional configuration
-        parameters, as described by the Proxool documentation available at <ulink
-        url="http://proxool.sourceforge.net/configure.html" />.
+        parameters, as described by the Proxool documentation available at <link xlink:href="http://proxool.sourceforge.net/configure.html" />.
       </para>
       <table>
         <title>Important configuration properties for the Proxool connection pool</title>

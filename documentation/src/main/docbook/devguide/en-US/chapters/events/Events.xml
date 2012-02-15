@@ -1,11 +1,10 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
 
-]>
+<chapter xml:id="events"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xl="http://www.w3.org/1999/xlink">
 
-<chapter id="events">
     <title>Interceptors and events</title>
 
     <para>
@@ -42,7 +41,7 @@
             A Session-scoped interceptor is specified when a session is opened.
         </para>
 
-        <programlisting role="JAVA"><xi:include href="extras/SessionScopedExample.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        <programlisting role="JAVA"><xi:include href="extras/SessionScopedExample.java" parse="text"/></programlisting>
 
         <para>
             A SessionFactory-scoped interceptor is registered with the <classname>Configuration</classname> object
@@ -52,7 +51,7 @@
             states, since multiple sessions will use this interceptor potentially concurrently.
         </para>
 
-        <programlisting role="JAVA"><xi:include href="extras/SessionFactoryScopedExample.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        <programlisting role="JAVA"><xi:include href="extras/SessionFactoryScopedExample.java" parse="text"/></programlisting>
 
     </section>
 
@@ -96,10 +95,10 @@
         </para>
 
          <example>
-             <blockinfo>
+             <info>
                  <title>Custom LoadListener example</title>
-             </blockinfo>
-             <programlisting role="JAVA"><xi:include href="extras/LoadListenerExample.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+             </info>
+             <programlisting role="JAVA"><xi:include href="extras/LoadListenerExample.java" parse="text"/></programlisting>
          </example>
 
          <section>
@@ -118,9 +117,9 @@
              </para>
 
              <example>
-                 <blockinfo>
+                 <info>
                      <title>JACC listener registration example</title>
-                 </blockinfo>
+                 </info>
                  <programlisting role="JAVA"><xi:include href="extras/jacc-event-reg-example.java" parse="text" xmlns:xi="http://www.w3.org/2001/XInclude" /></programlisting>
              </example>
 
@@ -233,10 +232,10 @@
             </listitem>
         </itemizedlist>
         <example>
-            <blockinfo>
+            <info>
                 <title>Example of specifying JPA callbacks</title>
-            </blockinfo>
-            <programlisting role="JAVA"><xi:include href="extras/JpaCallbacksExample.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </info>
+            <programlisting role="JAVA"><xi:include href="extras/JpaCallbacksExample.java" parse="text"/></programlisting>
         </example>
         <para>
             These approaches can be mixed, meaning you can use both together.

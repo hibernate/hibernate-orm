@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
-    <title>Persistence Contexts</title>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <info>
+        <title>Persistence Contexts</title>
+    </info>
 
     <para>
         Both the <interfacename>org.hibernate.Session</interfacename> API and
@@ -66,8 +67,8 @@
 
         <example>
             <title>Example of making an entity persistent</title>
-            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithEM.java" parse="text"/></programlisting>
         </example>
 
         <para>
@@ -92,8 +93,8 @@
         </para>
         <example>
             <title>Example of deleting an entity</title>
-            <programlisting role="JAVA"><xi:include href="extras/DeletingWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            <programlisting role="JAVA"><xi:include href="extras/DeletingWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithEM.java" parse="text"/></programlisting>
         </example>
         <para>
             It is important to note that Hibernate itself can handle deleting detached state.  JPA, however, disallows
@@ -179,8 +180,8 @@
 
         <example>
             <title>Example of modifying managed state</title>
-            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithEM.java" parse="text"/></programlisting>
         </example>
     </section>
 
@@ -214,8 +215,8 @@
             </important>
             <example>
                 <title>Example of reattaching a detached entity</title>
-                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession1.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession1.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession2.java" parse="text"/></programlisting>
             </example>
             <para>
                 The method name <methodname>update</methodname> is a bit misleading here.  It does not mean that an
@@ -239,15 +240,15 @@
             </para>
             <example>
                 <title>Visualizing merge</title>
-                <programlisting role="JAVA"><xi:include href="extras/VisualizingMerge.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/VisualizingMerge.java" parse="text"/></programlisting>
             </example>
             <para>
                 That is not exactly what happens, but its a good visualization.
             </para>
             <example>
                 <title>Example of merging a detached entity</title>
-                <programlisting role="JAVA"><xi:include href="extras/MergeWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/MergeWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithSession.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithEM.java" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -262,13 +263,13 @@
         </para>
         <example>
             <title>Examples of verifying managed state</title>
-            <programlisting role="JAVA"><xi:include href="extras/ContainsWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            <programlisting role="JAVA"><xi:include href="extras/ContainsWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithEM.java" parse="text"/></programlisting>
         </example>
         <example>
             <title>Examples of verifying laziness</title>
-            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithHibernate.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithHibernate.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA.java" parse="text"/></programlisting>
         </example>
         <para>
             In JPA there is an alternative means to check laziness using the following
@@ -277,7 +278,7 @@
         </para>
         <example>
             <title>Alternative JPA means to verify laziness</title>
-            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA2.java" parse="text"/></programlisting>
         </example>
 
     </section>
@@ -289,7 +290,7 @@
         </para>
         <example>
             <title>Usage of EntityManager.unwrap</title>
-            <programlisting role="JAVA"><xi:include href="extras/UnwrapWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/UnwrapWithEM.java" parse="text"/></programlisting>
         </example>
     </section>
 </chapter>

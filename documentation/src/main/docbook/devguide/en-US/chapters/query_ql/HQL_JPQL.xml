@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="query-ql">
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>HQL and JPQL</title>
 
     <para>
@@ -64,7 +63,7 @@
             <para>
                 The BNF for <literal>SELECT</literal> statements in HQL is:
             </para>
-            <programlisting><xi:include href="extras/statement_select_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/statement_select_bnf.txt" parse="text"/></programlisting>
             <para>
                 The simplest possible HQL <literal>SELECT</literal> statement is of the form:
             </para>
@@ -86,7 +85,7 @@
             <para>
                 The BNF for <literal>UPDATE</literal> statements is the same in HQL and JPQL:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/statement_update_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_update_bnf.txt" parse="text"/></programlisting>
             <para>
                 <literal>UPDATE</literal> statements, by default, do not effect the <literal>version</literal>
                 or the <literal>timestamp</literal> attribute values for the affected entities. However,
@@ -112,9 +111,9 @@
             </para>
             <example>
                 <title>Example UPDATE query statements</title>
-                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_jpql.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql_versioned.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_jpql.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql_versioned.java" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -130,7 +129,7 @@
             <para>
                 The BNF for <literal>DELETE</literal> statements is the same in HQL and JPQL:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/statement_delete_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_delete_bnf.txt" parse="text"/></programlisting>
             <para>
                 A <literal>DELETE</literal> statement is also executed using the <methodname>executeUpdate</methodname>
                 method of either <interfacename>org.hibernate.Query</interfacename> or
@@ -144,7 +143,7 @@
                 HQL adds the ability to define <literal>INSERT</literal> statements as well.  There is no JPQL
                 equivalent to this.  The BNF for an HQL <literal>INSERT</literal> statement is:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/statement_insert_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/statement_insert_bnf.txt" parse="text"/></programlisting>
             <para>
                 The <literal>attribute_list</literal> is analogous to the <literal>column specification</literal> in the
                 SQL <literal>INSERT</literal> statement.  For entities involved in mapped inheritance, only attributes
@@ -179,7 +178,7 @@
             </para>
             <example>
                 <title>Example INSERT query statements</title>
-                <programlisting role="JAVA"><xi:include href="extras/statement_insert_example_named_id.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_insert_example_named_id.java" parse="text"/></programlisting>
             </example>
         </section>
     </section>
@@ -223,10 +222,10 @@
             <para>
                 The BNF for a root entity reference is:
             </para>
-            <programlisting role="JAVA"><xi:include href="extras/root_entity_ref_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/root_entity_ref_bnf.txt" parse="text"/></programlisting>
             <example id="ql-simple-query-ex">
                 <title>Simple query example</title>
-                <programlisting role="JAVA"><xi:include href="extras/simplest_query.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/simplest_query.java" parse="text"/></programlisting>
             </example>
             <para>
                 We see that the query is defining a root entity reference to the <classname>com.acme.Cat</classname>
@@ -240,15 +239,15 @@
             </para>
             <example>
                 <title>Simple query using entity name for root entity reference</title>
-                <programlisting role="JAVA"><xi:include href="extras/simplest_query2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/simplest_query2.java" parse="text"/></programlisting>
             </example>
             <para>
                 Multiple root entity references can also be specified.  Even naming the same entity!
             </para>
             <example>
                 <title>Simple query using multiple root entity references</title>
-                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example2.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example.txt" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example2.txt" parse="text"/></programlisting>
             </example>
         </section>
         <section>
@@ -260,11 +259,11 @@
             </para>
             <example>
                 <title>Explicit inner join examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_inner.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_inner.txt" parse="text"/></programlisting>
             </example>
             <example>
                 <title>Explicit left (outer) join examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_outer.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_outer.txt" parse="text"/></programlisting>
             </example>
             <para>
                 An important use case for explicit joins is to define <literal>FETCH JOINS</literal> which override
@@ -273,7 +272,7 @@
             </para>
             <example>
                 <title>Fetch join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/join_example_fetch.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_fetch.txt" parse="text"/></programlisting>
             </example>
             <para>
                 As you can see from the example, a fetch join is specified by injecting the keyword <literal>fetch</literal>
@@ -304,7 +303,7 @@
             </para>
             <example>
                 <title>with-clause join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/join_example_with.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_with.txt" parse="text"/></programlisting>
             </example>
             <para>
                 The important distinction is that in the generated SQL the conditions of the
@@ -329,7 +328,7 @@
             </para>
             <example>
                 <title>Simple implicit join example</title>
-                <programlisting role="JAVA"><xi:include href="extras/join_example_implicit.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_implicit.txt" parse="text"/></programlisting>
             </example>
             <para>
                 An implicit join always starts from an <literal>identification variable</literal>, followed by
@@ -343,7 +342,7 @@
             </para>
             <important>
                 <para>
-                    If the attribute represents an entity association (non-collection) or a coponent/embedded, that
+                    If the attribute represents an entity association (non-collection) or a component/embedded, that
                     reference can be further navigated.  Basic values and collection-valued associations cannot be
                     further navigated.
                 </para>
@@ -355,7 +354,7 @@
             </para>
             <example>
                 <title>Reused implicit join</title>
-                <programlisting><xi:include href="extras/join_example_implicit_reused.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/join_example_implicit_reused.txt" parse="text"/></programlisting>
             </example>
             <para>
                 Just as with explicit joins, implicit joins may reference association or component/embedded attributes.
@@ -374,7 +373,7 @@
             </para>
             <example>
                 <title>Collection references example</title>
-                <programlisting><xi:include href="extras/collection_reference_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/collection_reference_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 In the example, the identification variable <literal>o</literal> actually refers to the object model
@@ -395,7 +394,7 @@
                 </para>
                 <example>
                     <title>Qualified collection references example</title>
-                    <programlisting><xi:include href="extras/qualified_path_expressions_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting><xi:include href="extras/qualified_path_expressions_example.txt" parse="text"/></programlisting>
                 </example>
                 <variablelist>
                     <varlistentry>
@@ -504,7 +503,7 @@
             </para>
             <example>
                 <title>String literal examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/string_literals_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/string_literals_example.txt" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -512,7 +511,7 @@
             </para>
             <example>
                 <title>Numeric literal examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/numeric_literals_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/numeric_literals_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 In the scientific notation form, the <literal>E</literal> is case insensitive.
@@ -558,7 +557,7 @@
                 </para>
                 <example>
                     <title>Named parameter examples</title>
-                    <programlisting role="JAVA"><xi:include href="extras/named_parameter_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting role="JAVA"><xi:include href="extras/named_parameter_example.txt" parse="text"/></programlisting>
                 </example>
             </section>
             <section>
@@ -570,7 +569,7 @@
                 </para>
                 <example>
                     <title>Positional (JPQL) parameter examples</title>
-                    <programlisting role="JAVA"><xi:include href="extras/jpql_positional_parameter_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting role="JAVA"><xi:include href="extras/jpql_positional_parameter_example.txt" parse="text"/></programlisting>
                 </example>
             </section>
             <section>
@@ -593,7 +592,7 @@
             </para>
             <example>
                 <title>Numeric arithmetic examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/arithmetic_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/arithmetic_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 The following rules apply to the result of arithmetic operations:
@@ -651,7 +650,7 @@
             </para>
             <example>
                 <title>Concatenation operation example</title>
-                <programlisting role="JAVA"><xi:include href="extras/concat_op_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/concat_op_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 See <xref linkend="ql-exp-functions"/> for details on the <literal>concat()</literal> function
@@ -697,7 +696,7 @@
             </itemizedlist>
             <example>
                 <title>Aggregate function examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/agg_func_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/agg_func_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 Aggregations often appear with grouping.  For information on grouping see <xref linkend="ql-grouping"/>
@@ -734,7 +733,7 @@
                             <para>
                                 Extracts a portion of a string value.
                             </para>
-                            <programlisting><xi:include href="extras/substring_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                            <programlisting><xi:include href="extras/substring_bnf.txt" parse="text"/></programlisting>
                             <para>
                                 The second argument denotes the starting position.  The third (optional) argument
                                 denotes the length.
@@ -779,7 +778,7 @@
                             <para>
                                 Locates a string within another string.
                             </para>
-                            <programlisting><xi:include href="extras/locate_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                            <programlisting><xi:include href="extras/locate_bnf.txt" parse="text"/></programlisting>
                             <para>
                                 The third argument (optional) is used to denote a position from which to start looking.
                             </para>
@@ -1018,14 +1017,14 @@
             </variablelist>
             <example>
                 <title>Collection-related expressions examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/collection_expression_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/collection_expression_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 Elements of indexed collections (arrays, lists, and maps) can be referred to by index operator.
             </para>
             <example>
                 <title>Index operator examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/index_operator_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/index_operator_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 See also <xref linkend="ql-collection-qualification"/> as there is a good deal of overlap.
@@ -1044,7 +1043,7 @@
             </para>
             <example>
                 <title>Entity type expression examples</title>
-                <programlisting role="JAVA"><xi:include href="extras/entity_type_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/entity_type_exp_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 HQL also has a legacy form of referring to an entity type, though that legacy form is considered
@@ -1064,10 +1063,10 @@
                 <para>
                     The simple form has the following syntax:
                 </para>
-                <programlisting><xi:include href="extras/simple_case_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/simple_case_bnf.txt" parse="text"/></programlisting>
                 <example>
                     <title>Simple case expression example</title>
-                    <programlisting><xi:include href="extras/simple_case_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting><xi:include href="extras/simple_case_exp_example.txt" parse="text"/></programlisting>
                 </example>
             </section>
             <section>
@@ -1075,10 +1074,10 @@
                 <para>
                     The searched form has the following syntax:
                 </para>
-                <programlisting><xi:include href="extras/searched_case_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/searched_case_bnf.txt" parse="text"/></programlisting>
                 <example>
                     <title>Searched case expression example</title>
-                    <programlisting><xi:include href="extras/searched_case_exp_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting><xi:include href="extras/searched_case_exp_example.txt" parse="text"/></programlisting>
                 </example>
             </section>
             <section>
@@ -1088,7 +1087,7 @@
                 </para>
                 <example>
                     <title>NULLIF example</title>
-                    <programlisting><xi:include href="extras/nullif_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                    <programlisting><xi:include href="extras/nullif_example.txt" parse="text"/></programlisting>
                 </example>
             </section>
             <section>
@@ -1118,7 +1117,7 @@
 
         <example>
             <title>Dynamic instantiation example - constructor</title>
-            <programlisting><xi:include href="extras/ctor_dynamic_instantiation_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/ctor_dynamic_instantiation_example.txt" parse="text"/></programlisting>
         </example>
 
         <para>
@@ -1137,7 +1136,7 @@
         </para>
         <example>
             <title>Dynamic instantiation example - list</title>
-            <programlisting><xi:include href="extras/list_dynamic_instantiation_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/list_dynamic_instantiation_example.txt" parse="text"/></programlisting>
         </example>
         <para>
             The results from this query will be a <![CDATA[List<List>]]> as opposed to a <![CDATA[List<Object[]>]]>
@@ -1148,7 +1147,7 @@
         </para>
         <example>
             <title>Dynamic instantiation example - map</title>
-            <programlisting><xi:include href="extras/map_dynamic_instantiation_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/map_dynamic_instantiation_example.txt" parse="text"/></programlisting>
         </example>
         <para>
             The results from this query will be a <![CDATA[List<Map<String,Object>>]]> as opposed to a
@@ -1175,7 +1174,7 @@
             </para>
             <example>
                 <title>Relational comparison examples</title>
-                <programlisting><xi:include href="extras/predicate_comparison_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_comparison_example.txt" parse="text"/></programlisting>
             </example>
             <para>
                 Comparisons can also involve subquery qualifiers - <literal>ALL</literal>, <literal>ANY</literal>,
@@ -1187,7 +1186,7 @@
             </para>
             <example>
                 <title>ALL subquery comparison qualifier example</title>
-                <programlisting><xi:include href="extras/predicate_comparison_example_using_all.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_comparison_example_using_all.txt" parse="text"/></programlisting>
             </example>
             <para>
                 The ANY/SOME qualifier resolves to true if the comparison is true for some of (at least one of) the
@@ -1203,7 +1202,7 @@
             </para>
             <example>
                 <title>Nullness checking examples</title>
-                <programlisting><xi:include href="extras/predicate_nullness_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_nullness_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1212,7 +1211,7 @@
             <para>
                 Performs a like comparison on string values.  The syntax is:
             </para>
-            <programlisting><xi:include href="extras/predicate_like_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/predicate_like_bnf.txt" parse="text"/></programlisting>
             <para>
                 The semantics follow that of the SQL like expression.  The <literal>pattern_value</literal> is the
                 pattern to attempt to match in the <literal>string_expression</literal>.  Just like SQL,
@@ -1228,7 +1227,7 @@
             </para>
             <example>
                 <title>Like predicate examples</title>
-                <programlisting><xi:include href="extras/predicate_like_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_like_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1240,7 +1239,7 @@
             </para>
             <example>
                 <title>Between predicate examples</title>
-                <programlisting><xi:include href="extras/predicate_between_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_between_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1250,7 +1249,7 @@
                 <literal>IN</literal> predicates performs a check that a particular value is in a list of values.
                 Its syntax is:
             </para>
-            <programlisting><xi:include href="extras/predicate_in_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/predicate_in_bnf.txt" parse="text"/></programlisting>
             <para>
                 The types of the <literal>single_valued_expression</literal> and the individual values in the
                 <literal>single_valued_list</literal> must be consistent.    JPQL limits the valid types here
@@ -1285,7 +1284,7 @@
             </para>
             <example>
                 <title>In predicate examples</title>
-                <programlisting><xi:include href="extras/predicate_in_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/predicate_in_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1306,7 +1305,7 @@
             </para>
             <example>
                 <title>Empty collection expression examples</title>
-                <programlisting><xi:include href="extras/empty_collection_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/empty_collection_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1318,7 +1317,7 @@
             </para>
             <example>
                 <title>Member-of collection expression examples</title>
-                <programlisting><xi:include href="extras/member_of_collection_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting><xi:include href="extras/member_of_collection_example.txt" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -1367,7 +1366,7 @@
         </para>
         <example id="group_by_illustration">
             <title>Group-by illustration</title>
-            <programlisting><xi:include href="extras/group_by_illustration.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/group_by_illustration.txt" parse="text"/></programlisting>
         </example>
         <para>
             The first query retrieves the complete total of all orders.  The second retrieves the total for each
@@ -1383,7 +1382,7 @@
         </para>
         <example id="having_illustration">
             <title>Having illustration</title>
-            <programlisting><xi:include href="extras/having_illustration.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/having_illustration.txt" parse="text"/></programlisting>
         </example>
         <para>
             The HAVING clause follows the same rules as the WHERE clause and is also made up of predicates.  HAVING is
@@ -1432,7 +1431,7 @@
         </para>
         <example>
             <title>Order-by examples</title>
-            <programlisting><xi:include href="extras/order_by_example.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting><xi:include href="extras/order_by_example.txt" parse="text"/></programlisting>
         </example>
     </section>
 

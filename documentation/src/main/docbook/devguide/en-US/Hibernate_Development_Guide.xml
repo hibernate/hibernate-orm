@@ -1,28 +1,51 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
 %BOOK_ENTITIES;
 ]>
+
 <book>
-  <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Database_Access.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/transactions/Transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/pc/Persistence_Context.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Batch_Processing.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Locking.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Caching.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/services/Services.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Data_Categorizations.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Mapping_Entities.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Mapping_Association.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/query_ql/HQL_JPQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/query_criteria/Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/query_native/Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="chapters/multitenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="appendices/legacy_criteria/Legacy_Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <info>
+        <title>Hibernate Developer Guide</title>
+        <releaseinfo>&version;</releaseinfo>
+        <productname>Hibernate O/RM</productname>
+        <productnumber>&version;</productnumber>
+        <pubdate>&today;</pubdate>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+
+        <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    </info>
+
+
+    <xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Database_Access.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/transactions/Transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/pc/Persistence_Context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Batch_Processing.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Locking.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Caching.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/services/Services.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Data_Categorizations.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Mapping_Entities.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Mapping_Association.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/query_ql/HQL_JPQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/query_criteria/Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/query_native/Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/multitenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="appendices/legacy_criteria/Legacy_Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 </book>
 

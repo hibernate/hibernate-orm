@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="query-criteria">
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Criteria</title>
 
     <para>
@@ -12,11 +11,11 @@
 
     <important>
         <para>
-            Hibernate offers an older, legacy <interface>org.hibernate.Criteria</interface> API which should be
+            Hibernate offers an older, legacy <interfacename>org.hibernate.Criteria</interfacename> API which should be
             considered deprecated.  No feature development will target those APIs.  Eventually, Hibernate-specific
             criteria features will be ported as extensions to the JPA
-            <interface>javax.persistence.criteria.CriteriaQuery</interface>.  For details on the
-            <interface>org.hibernate.Criteria</interface> API, see <xref linkend="query-criteria-legacy"/>.
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>.  For details on the
+            <interfacename>org.hibernate.Criteria</interfacename> API, see <xref linkend="query-criteria-legacy"/>.
         </para>
         <para>
             This chapter will focus on the JPA APIs for declaring type-safe criteria queries.
@@ -51,7 +50,7 @@
         <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> for this purpose:
     </para>
 
-    <programlisting role="JAVA"><xi:include href="extras/CriteriaBuilder_query_creation_snippet.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+    <programlisting role="JAVA"><xi:include href="extras/CriteriaBuilder_query_creation_snippet.java" parse="text"/></programlisting>
 
     <para>
         Each serves a different purpose depending on the expected type of the query results.
@@ -83,7 +82,7 @@
 
             <example id="ex-criteria-typedquery-entity">
                 <title>Selecting the root entity</title>
-                <programlisting role="JAVA"><xi:include href="extras/select_root_entity_example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/select_root_entity_example.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -116,7 +115,7 @@
 
             <example id="ex-criteria-typedquery-attribute">
                 <title>Selecting an attribute</title>
-                <programlisting role="JAVA"><xi:include href="extras/select_attribute_example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/select_attribute_example.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -141,7 +140,7 @@
 
             <example id="ex-criteria-typedquery-array">
                 <title>Selecting an array</title>
-                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -158,7 +157,7 @@
 
             <example id="ex-criteria-typedquery-array2">
                 <title>Selecting an array (2)</title>
-                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array2.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array2.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -181,7 +180,7 @@
 
             <example id="ex-criteria-typedquery-construct">
                 <title>Selecting an wrapper</title>
-                <programlisting role="JAVA"><xi:include href="extras/select_wrapper.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/select_wrapper.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -213,7 +212,7 @@
 
         <example id="ex-criteria-typedquery-tuple">
             <title>Selecting a tuple</title>
-            <programlisting role="JAVA"><xi:include href="extras/select_tuple.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/select_tuple.java" parse="text"/></programlisting>
         </example>
 
         <para>
@@ -311,11 +310,11 @@
                 <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>:
             </para>
 
-            <programlisting role="JAVA"><xi:include href="extras/from_root_methods.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/from_root_methods.java" parse="text"/></programlisting>
 
             <example>
                 <title>Adding a root</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_root_example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_root_example.java" parse="text"/></programlisting>
             </example>
 
             <para>
@@ -326,7 +325,7 @@
 
             <example>
                 <title>Adding multiple roots</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_root_example_multiple.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_root_example_multiple.java" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -342,12 +341,12 @@
 
             <example id="criteria-join-singular">
                 <title>Example with Embedded and ManyToOne</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_join_example_embedded_and_many2one.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_join_example_embedded_and_many2one.java" parse="text"/></programlisting>
             </example>
 
             <example id="criteria-join-plural">
                 <title>Example with Collections</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_join_example_plural.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_join_example_plural.java" parse="text"/></programlisting>
             </example>
         </section>
 
@@ -362,7 +361,7 @@
 
             <example id="criteria-fetch-singular">
                 <title>Example with Embedded and ManyToOne</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_embedded_and_many2one.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_embedded_and_many2one.java" parse="text"/></programlisting>
             </example>
 
             <note>
@@ -375,7 +374,7 @@
 
             <example id="criteria-fetch-plural">
                 <title>Example with Collections</title>
-                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_plural.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_plural.java" parse="text"/></programlisting>
             </example>
         </section>
     </section>
@@ -394,7 +393,7 @@
 
         <example id="ex-querycriteria-param">
             <title>Using parameters</title>
-            <programlisting role="JAVA"><xi:include href="extras/parameter_example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/parameter_example.java" parse="text"/></programlisting>
         </example>
 
         <para>

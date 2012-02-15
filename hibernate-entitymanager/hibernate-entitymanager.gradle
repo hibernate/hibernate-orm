@@ -1,19 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'java'
-apply plugin: "jdocbook"
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
-
-buildscript {
-  repositories {
-      mavenCentral()
-      mavenLocal()
-      mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
-  }
-  dependencies {
-      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.0'
-  }
-}
 
 dependencies {
     compile( project(':hibernate-core') )
@@ -28,7 +16,6 @@ dependencies {
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
     testRuntime( libraries.validator )
-    jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
 }
 
 sourceSets {
@@ -127,21 +114,9 @@ task copyBundleResources (type: Copy) {
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
 
-jdocbook {
-    format('html_single') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+idea {
+	module {
+		testSourceDirs += file( 'src/matrix/java')
+		testSourceDirs += file( 'src/matrix/resources')
 	}
-	format('html') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-	}
-    masterSourceDocumentName="master.xml"
-    masterLanguage="en"
-}
-
-ideaModule {
-    excludeDirs += file("$buildDir/bundles")
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
 }

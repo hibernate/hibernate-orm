@@ -1,10 +1,9 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
 
-<chapter>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Multi-tenancy</title>
 
     <section>
@@ -29,7 +28,7 @@
             <para>
                 Each approach has pros and cons as well as specific techniques and considerations.  Such
                 topics are beyond the scope of this documentation.  Many resources exist which delve into these
-                other topics.  One example is <ulink url=" http://msdn.microsoft.com/en-us/library/aa479086.aspx"/>
+                other topics.  One example is <link xl:href="http://msdn.microsoft.com/en-us/library/aa479086.aspx"/>
                 which does a great job of covering these topics.
             </para>
         </note>
@@ -126,7 +125,7 @@
         </para>
         <example>
             <title>Specifying tenant identifier from <interfacename>SessionFactory</interfacename></title>
-            <programlisting role="JAVA"><xi:include href="extras/tenant-identifier-from-SessionFactory.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/tenant-identifier-from-SessionFactory.java" parse="text"/></programlisting>
         </example>
         <para>
             Additionally, when specifying configuration, a <classname>org.hibernate.MultiTenancyStrategy</classname>
@@ -264,7 +263,7 @@
         <title>Strategies for <interfacename>MultiTenantConnectionProvider</interfacename> implementors</title>
         <example>
             <title>Implementing MultiTenantConnectionProvider using different connection pools</title>
-            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-multi-cp.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-multi-cp.java" parse="text"/></programlisting>
         </example>
         <para>
             The approach above is valid for the DATABASE approach.  It is also valid for the SCHEMA approach
@@ -272,7 +271,7 @@
         </para>
         <example>
             <title>Implementing MultiTenantConnectionProvider using single connection pool</title>
-            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-single-cp.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-single-cp.java" parse="text"/></programlisting>
         </example>
         <para>
             This approach is only relevant to the SCHEMA approach.

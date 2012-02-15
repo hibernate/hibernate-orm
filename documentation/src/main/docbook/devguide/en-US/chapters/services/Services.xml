@@ -1,10 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
 
-<chapter>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Services</title>
 
     <section>
@@ -71,7 +69,7 @@
         </section>
     </section>
 
-    <section id="services-registry">
+    <section xml:id="services-registry">
         <title>ServiceRegistry</title>
         <para>
             The central service API, aside from the services themselves, is the
@@ -92,7 +90,7 @@
     <section>
         <title>Standard services</title>
 
-        <section id="services-BatchBuilder">
+        <section xml:id="services-BatchBuilder">
             <title><interfacename>org.hibernate.engine.jdbc.batch.spi.BatchBuilder</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -122,7 +120,7 @@
             </variablelist>
         </section>
 
-        <section id="services-ConfigurationService">
+        <section xml:id="services-ConfigurationService">
             <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -154,7 +152,7 @@
             </variablelist>
         </section>
 
-        <section id="services-ConnectionProvider">
+        <section xml:id="services-ConnectionProvider">
             <title><interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -217,7 +215,7 @@
             </variablelist>
         </section>
 
-        <section id="services-DialectFactory">
+        <section xml:id="services-DialectFactory">
             <title><interfacename>org.hibernate.service.jdbc.dialect.spi.DialectFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -250,7 +248,7 @@
             </variablelist>
         </section>
 
-        <section id="services-DialectResolver">
+        <section xml:id="services-DialectResolver">
             <title><interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -289,7 +287,7 @@
             </variablelist>
         </section>
 
-        <section id="services-JdbcServices">
+        <section xml:id="services-JdbcServices">
             <title><interfacename>org.hibernate.engine.jdbc.spi.JdbcServices</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -320,7 +318,7 @@
             </variablelist>
         </section>
 
-        <section id="services-JmxService">
+        <section xml:id="services-JmxService">
             <title><interfacename>org.hibernate.service.jmx.spi.JmxService</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -361,7 +359,7 @@
             </variablelist>
         </section>
 
-        <section id="services-JndiService">
+        <section xml:id="services-JndiService">
             <title><interfacename>org.hibernate.service.jndi.spi.JndiService</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -391,7 +389,7 @@
             </variablelist>
         </section>
 
-        <section id="services-JtaPlatform">
+        <section xml:id="services-JtaPlatform">
             <title><interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -531,7 +529,7 @@
             </variablelist>
         </section>
 
-        <section id="services-MultiTenantConnectionProvider">
+        <section xml:id="services-MultiTenantConnectionProvider">
             <title><interfacename>org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -562,7 +560,7 @@
             </variablelist>
         </section>
 
-        <section id="services-PersisterClassResolver">
+        <section xml:id="services-PersisterClassResolver">
             <title><interfacename>org.hibernate.persister.spi.PersisterClassResolver</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -595,7 +593,7 @@
             </variablelist>
         </section>
 
-        <section id="services-PersisterFactory">
+        <section xml:id="services-PersisterFactory">
             <title><interfacename>org.hibernate.persister.spi.PersisterFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -628,7 +626,7 @@
             </variablelist>
         </section>
 
-        <section id="services-RegionFactory">
+        <section xml:id="services-RegionFactory">
             <title><interfacename>org.hibernate.cache.spi.RegionFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -682,7 +680,7 @@
             </variablelist>
         </section>
 
-        <section id="services-SessionFactoryServiceRegistryFactory">
+        <section xml:id="services-SessionFactoryServiceRegistryFactory">
             <title><interfacename>org.hibernate.service.spi.SessionFactoryServiceRegistryFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -717,7 +715,7 @@
             </variablelist>
         </section>
 
-        <section id="services-Statistics">
+        <section xml:id="services-Statistics">
             <title><interfacename>org.hibernate.stat.Statistics</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -760,7 +758,7 @@
             </variablelist>
         </section>
 
-        <section id="services-TransactionFactory">
+        <section xml:id="services-TransactionFactory">
             <title><interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -822,7 +820,7 @@
             </variablelist>
         </section>
 
-        <section id="services-ImportSqlCommandExtractor">
+        <section xml:id="services-ImportSqlCommandExtractor">
             <title><interfacename>org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor</interfacename></title>
             <variablelist>
                 <varlistentry>
@@ -910,7 +908,7 @@
     <section>
         <title>Special service registries</title>
 
-        <section id="services-registry-bootstrap">
+        <section xml:id="services-registry-bootstrap">
             <title>Boot-strap registry</title>
             <para>
                 The boot-strap registry holds services that absolutely have to be available for most things to work.
@@ -924,9 +922,9 @@
                 <classname>org.hibernate.service.BootstrapServiceRegistryBuilder</classname> class.
             </para>
 
-            <example id="BootstrapServiceRegistryBuilder-example">
+            <example xml:id="BootstrapServiceRegistryBuilder-example">
                 <title>Using BootstrapServiceRegistryBuilder</title>
-                <programlisting role="JAVA"><xi:include href="extras/BootstrapServiceRegistryBuilder-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/BootstrapServiceRegistryBuilder-example.java" parse="text"/></programlisting>
             </example>
 
             <section id="services-registry-bootstrap-services">
@@ -975,7 +973,7 @@
                     </note>
                 </section>
 
-                <section id="services-IntegratorService">
+                <section xml:id="services-IntegratorService">
                     <title><interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename></title>
                     <para>
                         Applications, add-ons and others all need to integrate with Hibernate which used to require
@@ -1002,7 +1000,7 @@
             </section>
         </section>
 
-        <section id="services-registry-sessionfactory">
+        <section xml:id="services-registry-sessionfactory">
             <title>SessionFactory registry</title>
             <para>
                 While it is best practice to treat instances of all the registry types as targeting a given
@@ -1013,7 +1011,7 @@
                 <interfacename>org.hibernate.service.spi.SessionFactoryServiceRegistry</interfacename>
             </para>
 
-            <section id="services-EventListenerRegistry">
+            <section xml:id="services-EventListenerRegistry">
                 <title><interfacename>org.hibernate.event.service.spi.EventListenerRegistry</interfacename></title>
                 <variablelist>
                     <varlistentry>
@@ -1047,14 +1045,14 @@
     </section>
 
 
-    <section id="services-use">
+    <section xml:id="services-use">
         <title>Using services and registries</title>
         <para>
             Coming soon...
         </para>
     </section>
 
-    <section id="integrators">
+    <section xml:id="integrators">
         <title>Integrators</title>
         <para>
             The <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> is intended to provide a simple
@@ -1081,7 +1079,7 @@
             See <xref linkend="BootstrapServiceRegistryBuilder-example"/>
         </para>
 
-        <section id="integrators-uses">
+        <section xml:id="integrators-uses">
             <title>Integrator use-cases</title>
             <para>
                 The main use cases for an <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> right
@@ -1091,7 +1089,7 @@
                 relational models.
             </para>
 
-            <example id="registering-listeners-example">
+            <example xml:id="registering-listeners-example">
                 <title>Registering event listeners</title>
                 <programlisting role="JAVA"><xi:include href="extras/register-event-listeners-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>

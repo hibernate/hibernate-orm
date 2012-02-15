@@ -1,24 +1,20 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
 
-<chapter>
-    <title>Envers</title>
-
-    <preface>
-        <title>Preface</title>
-        <para>
-            The aim of Hibernate Envers is to provide historical versioning of your application's entity data.  Much
-            like source control management tools such as Subversion or Git, Hibernate Envers manages a notion of revisions
-            if your application data through the use of audit tables.  Each transaction relates to one global revision number
-            which can be used to identify groups of changes (much like a change set in source control).  As the revisions
-            are global, having a revision number, you can query for various entities at that revision, retrieving a
-            (partial) view of the database at that revision. You can find a revision number having a date, and the other
-            way round, you can get the date at which a revision was committed.
-        </para>
-    </preface>
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" >
+    <info>
+        <title>Envers</title>
+        <abstract>
+            <para>
+                The aim of Hibernate Envers is to provide historical versioning of your application's entity data.  Much
+                like source control management tools such as Subversion or Git, Hibernate Envers manages a notion of revisions
+                if your application data through the use of audit tables.  Each transaction relates to one global revision number
+                which can be used to identify groups of changes (much like a change set in source control).  As the revisions
+                are global, having a revision number, you can query for various entities at that revision, retrieving a
+                (partial) view of the database at that revision. You can find a revision number having a date, and the other
+                way round, you can get the date at which a revision was committed.
+            </para>
+        </abstract>
+    </info>
 
     <section>
         <title>Basics</title>
@@ -52,7 +48,7 @@
 
         <para>
             The audit (history) of an entity can be accessed using the <literal>AuditReader</literal> interface, which
-            can be obtained having an open <listeral>EntityManager</listeral> or <literal>Session</literal> via
+            can be obtained having an open <literal>EntityManager</literal> or <literal>Session</literal> via
             the <literal>AuditReaderFactory</literal>. See the javadocs for these classes for details on the
             functionality offered.
         </para>
@@ -398,7 +394,7 @@
         </orderedlist>
     </section>
 
-    <section id="envers-revisionlog">
+    <section xml:id="envers-revisionlog">
         <title>Revision Log</title>
         <subtitle>Logging data for revisions</subtitle>
 
@@ -408,14 +404,18 @@
         </para>
         <orderedlist>
             <listitem>
-                <firstterm>revision number</firstterm> - An integral value (<literal>int/Integer</literal> or
-                <literal>long/Long</literal>).  Essentially the primary key of the revision
+                <para>
+                    <firstterm>revision number</firstterm> - An integral value (<literal>int/Integer</literal> or
+                    <literal>long/Long</literal>).  Essentially the primary key of the revision
+                </para>
             </listitem>
             <listitem>
-                <firstterm>revision timestamp</firstterm> - either a <literal>long/Long</literal> or
-                <classname>java.util.Date</classname> value representing the instant at which the revision was made.
-                When using a <classname>java.util.Date</classname>, instead of a <literal>long/Long</literal> for
-                the revision timestamp, take care not to store it to a column data type which will loose precision.
+                <para>
+                    <firstterm>revision timestamp</firstterm> - either a <literal>long/Long</literal> or
+                    <classname>java.util.Date</classname> value representing the instant at which the revision was made.
+                    When using a <classname>java.util.Date</classname>, instead of a <literal>long/Long</literal> for
+                    the revision timestamp, take care not to store it to a column data type which will loose precision.
+                </para>
             </listitem>
         </orderedlist>
 
@@ -530,7 +530,7 @@ public class ExampleListener implements RevisionListener {
 
         </example>
 
-        <section id="envers-tracking-modified-entities-revchanges">
+        <section xml:id="envers-tracking-modified-entities-revchanges">
             <title>Tracking entity names modified during revisions</title>
             <para>
                 By default entity types that have been changed in each revision are not being tracked. This implies the
@@ -544,14 +544,18 @@ public class ExampleListener implements RevisionListener {
             </para>
             <orderedlist>
                 <listitem>
-                    Set <property>org.hibernate.envers.track_entities_changed_in_revision</property> parameter to
-                    <literal>true</literal>. In this case
-                    <classname>org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity</classname> will
-                    be implicitly used as the revision log entity.
+                    <para>
+                        Set <property>org.hibernate.envers.track_entities_changed_in_revision</property> parameter to
+                        <literal>true</literal>. In this case
+                        <classname>org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity</classname> will
+                        be implicitly used as the revision log entity.
+                    </para>
                 </listitem>
                 <listitem>
-                    Create a custom revision entity that extends
-                    <classname>org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity</classname> class.
+                    <para>
+                        Create a custom revision entity that extends
+                        <classname>org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity</classname> class.
+                    </para>
                     <programlisting>
 <![CDATA[@Entity
 @RevisionEntity
@@ -561,9 +565,11 @@ public class ExtendedRevisionEntity
 }]]></programlisting>
                 </listitem>
                 <listitem>
-                    Mark an appropriate field of a custom revision entity with
-                    <interfacename>@org.hibernate.envers.ModifiedEntityNames</interfacename> annotation. The property is
-                    required to be of <literal><![CDATA[Set<String>]]></literal> type.
+                    <para>
+                        Mark an appropriate field of a custom revision entity with
+                        <interfacename>@org.hibernate.envers.ModifiedEntityNames</interfacename> annotation. The property is
+                        required to be of <literal><![CDATA[Set<String>]]></literal> type.
+                    </para>
                     <programlisting>
 <![CDATA[@Entity
 @RevisionEntity
@@ -662,7 +668,7 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
 
     </section>
 
-    <section id="envers-tracking-properties-changes">
+    <section xml:id="envers-tracking-properties-changes">
         <title>Tracking entity changes at property level</title>
         <para>
             By default the only information stored by Envers are revisions of modified entities.
@@ -681,16 +687,16 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
         </para>
         <orderedlist>
             <listitem>
-                setting
-                <property>org.hibernate.envers.global_with_modified_flag</property>
-                configuration property to
-                <literal>true</literal>.
-                This global switch will cause adding modification flags for all audited
-                properties in all audited entities.
+                <para>
+                    setting <property>org.hibernate.envers.global_with_modified_flag</property> configuration
+                    property to <literal>true</literal>.  This global switch will cause adding modification flags
+                    for all audited properties in all audited entities.
+                </para>
             </listitem>
             <listitem>
-                using <literal>@Audited(withModifiedFlag=true)</literal>
-                on a property or on an entity.
+                <para>
+                    using <literal>@Audited(withModifiedFlag=true)</literal> on a property or on an entity.
+                </para>
             </listitem>
         </orderedlist>
         <para>
@@ -710,7 +716,7 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
         </para>
     </section>
 
-    <section id="envers-queries">
+    <section xml:id="envers-queries">
 
         <title>Queries</title>
 
@@ -723,9 +729,8 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
         </para>
 
         <para>
-            The queries in Envers are similar to
-            <ulink url="http://www.hibernate.org/hib_docs/v3/reference/en/html/querycriteria.html">Hibernate Criteria</ulink>,
-            so if you are common with them, using Envers queries will be much easier.
+            The queries in Envers are similar to Hibernate Criteria queries, so if you are common with them,
+            using Envers queries will be much easier.
         </para>
 
         <para>
@@ -746,7 +751,7 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
             <xref linkend="configuration"/>.
         </para>
 
-        <section id="entities-at-revision">
+        <section xml:id="entities-at-revision">
 
             <title>Querying for entities of a class at a given revision</title>
 
@@ -796,7 +801,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
         </section>
 
-        <section id="revisions-of-entity">
+        <section xml:id="revisions-of-entity">
 
             <title>Querying for revisions, at which entities of a given class changed</title>
 
@@ -899,7 +904,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
         </section>
 
-        <section id="envers-envers-tracking-properties-changes-queries">
+        <section xml:id="envers-envers-tracking-properties-changes-queries">
 
             <title>Querying for revisions of entity that modified given property</title>
 
@@ -971,7 +976,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
         </section>
 
 
-        <section id="envers-tracking-modified-entities-queries">
+        <section xml:id="envers-tracking-modified-entities-queries">
             <title>Querying for entities modified in a given revision</title>
             <para>
                 The basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
@@ -983,22 +988,28 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             </para>
             <orderedlist>
                 <listitem>
-                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number)</methodname></firstterm>
-                    - Returns snapshots of all audited entities changed (added, updated and removed) in a given revision.
-                    Executes <literal>n+1</literal> SQL queries, where <literal>n</literal> is a number of different entity
-                    classes modified within specified revision.
+                    <para>
+                        <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number)</methodname></firstterm>
+                        - Returns snapshots of all audited entities changed (added, updated and removed) in a given revision.
+                        Executes <literal>n+1</literal> SQL queries, where <literal>n</literal> is a number of different entity
+                        classes modified within specified revision.
+                    </para>
                 </listitem>
                 <listitem>
-                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number, RevisionType)</methodname></firstterm>
-                    - Returns snapshots of all audited entities changed (added, updated or removed) in a given revision
-                    filtered by modification type. Executes <literal>n+1</literal> SQL queries, where <literal>n</literal>
-                    is a number of different entity classes modified within specified revision.
+                    <para>
+                        <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number, RevisionType)</methodname></firstterm>
+                        - Returns snapshots of all audited entities changed (added, updated or removed) in a given revision
+                        filtered by modification type. Executes <literal>n+1</literal> SQL queries, where <literal>n</literal>
+                        is a number of different entity classes modified within specified revision.
+                    </para>
                 </listitem>
                 <listitem>
-                    <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesGroupByRevisionType(Number)</methodname></firstterm>
-                    - Returns a map containing lists of entity snapshots grouped by modification operation (e.g.
-                    addition, update and removal). Executes <literal>3n+1</literal> SQL queries, where <literal>n</literal>
-                    is a number of different entity classes modified within specified revision.
+                    <para>
+                        <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesGroupByRevisionType(Number)</methodname></firstterm>
+                        - Returns a map containing lists of entity snapshots grouped by modification operation (e.g.
+                        addition, update and removal). Executes <literal>3n+1</literal> SQL queries, where <literal>n</literal>
+                        is a number of different entity classes modified within specified revision.
+                    </para>
                 </listitem>
             </orderedlist>
             <para>
@@ -1021,28 +1032,36 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             Conditional auditing can be implemented by overriding some of the Envers event listeners.
             To use customized Envers event listeners, the following steps are needed:
             <orderedlist>
-            <listitem>
-                Turn off automatic Envers event listeners registration by setting the
-                <literal>hibernate.listeners.envers.autoRegister</literal>
-                Hibernate property to <literal>false</literal>.
-            </listitem>
-            <listitem>
-                Create subclasses for appropriate event listeners. For example, if you want to conditionally audit
-                entity insertions, extend the
-                <literal>org.hibernate.envers.eventEnversPostInsertEventListenerImpl</literal>
-                class. Place the conditional-auditing logic in the subclasses, call the super method if auditing
-                should be performed.
-            </listitem>
-            <listitem>
-                Create your own implementation of <literal>org.hibernate.integrator.spi.Integrator</literal>,
-                similar to <literal>org.hibernate.envers.event.EnversIntegrator</literal>. Use your event listener
-                classes instead of the default ones.
-            </listitem>
-            <listitem>
-                For the integrator to be automatically used when Hibernate starts up, you will need to add a
-                <literal>META-INF/services/org.hibernate.integrator.spi.Integrator</literal> file to your jar.
-                The file should contain the fully qualified name of the class implementing the interface.
-            </listitem>
+                <listitem>
+                    <para>
+                        Turn off automatic Envers event listeners registration by setting the
+                        <literal>hibernate.listeners.envers.autoRegister</literal> Hibernate property to
+                        <literal>false</literal>.
+                     </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Create subclasses for appropriate event listeners. For example, if you want to
+                        conditionally audit entity insertions, extend the
+                        <literal>org.hibernate.envers.eventEnversPostInsertEventListenerImpl</literal>
+                        class. Place the conditional-auditing logic in the subclasses, call the super method if
+                        auditing should be performed.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Create your own implementation of <literal>org.hibernate.integrator.spi.Integrator</literal>,
+                        similar to <literal>org.hibernate.envers.event.EnversIntegrator</literal>. Use your event
+                        listener classes instead of the default ones.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        For the integrator to be automatically used when Hibernate starts up, you will need to add a
+                        <literal>META-INF/services/org.hibernate.integrator.spi.Integrator</literal> file to your jar.
+                        The file should contain the fully qualified name of the class implementing the interface.
+                    </para>
+                </listitem>
             </orderedlist>
         </para>
     </section>
@@ -1103,7 +1122,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
         </para>
 
         <para>
-            Additionally, there is a <term>revision entity</term> table which contains the information about the
+            Additionally, there is a revision entity table which contains the information about the
             global revision.  By default the generated table is named <database class="table">REVINFO</database> and
             contains just 2 columns: <database class="field">ID</database> and <database class="field">TIMESTAMP</database>.
             A row is inserted into this table on each new revision, that is, on each commit of a transaction, which
@@ -1124,7 +1143,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
     </section>
 
-    <section id="envers-generateschema">
+    <section xml:id="envers-generateschema">
         <title>Generating schema with Ant</title>
 
         <para>
@@ -1219,7 +1238,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
     </section>
 
 
-    <section id="envers-mappingexceptions">
+    <section xml:id="envers-mappingexceptions">
         <title>Mapping exceptions</title>
 
         <section>
@@ -1287,9 +1306,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             <para>
                 One special case are relations mapped with <literal>@OneToMany</literal>+<literal>@JoinColumn</literal> on
                 the one side, and <literal>@ManyToOne</literal>+<literal>@JoinColumn(insertable=false, updatable=false</literal>)
-                on the many side.
-                Such relations are in fact bidirectional, but the owning side is the collection (see alse
-                <ulink url="http://docs.jboss.org/hibernate/stable/annotations/reference/en/html_single/#entity-hibspec-collection-extratype">here</ulink>).
+                on the many side.  Such relations are in fact bidirectional, but the owning side is the collection.
             </para>
             <para>
                 To properly audit such relations with Envers, you can use the <literal>@AuditMappedBy</literal> annotation.
@@ -1303,10 +1320,10 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
         </section>
     </section>
 
-    <section id="envers-partitioning">
+    <section xml:id="envers-partitioning">
         <title>Advanced: Audit table partitioning</title>
 
-        <section id="envers-partitioning-benefits">
+        <section xml:id="envers-partitioning-benefits">
 
             <title>Benefits of audit table partitioning</title>
 
@@ -1330,7 +1347,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
         </section>
 
-        <section id="envers-partitioning-columns">
+        <section xml:id="envers-partitioning-columns">
 
             <title>Suitable columns for audit table partitioning</title>
             <para>
@@ -1400,7 +1417,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
         </section>
 
-        <section id="envers-partitioning-example">
+        <section xml:id="envers-partitioning-example">
 
             <title>Audit table partitioning example</title>
             <para>
@@ -1526,7 +1543,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                 </table>
             </para>
 
-            <section id="envers-partitioning-example-column">
+            <section xml:id="envers-partitioning-example-column">
 
                 <title>Determining a suitable partitioning column</title>
                 <para>
@@ -1563,7 +1580,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
             </section>
 
-            <section id="envers-partitioning-example-scheme">
+            <section xml:id="envers-partitioning-example-scheme">
 
                 <title>Determining a suitable partitioning scheme</title>
                 <para>
@@ -1631,39 +1648,39 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
         </section>
     </section>
 
-    <section id="envers-links">
+    <section xml:id="envers-links">
         <title>Envers links</title>
 
         <orderedlist>
             <listitem>
                 <para>
-                    <ulink url="http://hibernate.org">Hibernate main page</ulink>
+                    <link xl:href="http://hibernate.org">Hibernate main page</link>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="http://community.jboss.org/en/envers?view=discussions">Forum</ulink>
+                    <link xl:href="http://community.jboss.org/en/envers?view=discussions">Forum</link>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH">JIRA issue tracker</ulink>
+                    <link xl:href="http://opensource.atlassian.com/projects/hibernate/browse/HHH">JIRA issue tracker</link>
                     (when adding issues concerning Envers, be sure to select the "envers" component!)
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="irc://irc.freenode.net:6667/envers">IRC channel</ulink>
+                    <link xl:href="irc://irc.freenode.net:6667/envers">IRC channel</link>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="http://www.jboss.org/feeds/view/envers">Envers Blog</ulink>
+                    <link xl:href="http://www.jboss.org/feeds/view/envers">Envers Blog</link>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="https://community.jboss.org/wiki/EnversFAQ">FAQ</ulink>
+                    <link xl:href="https://community.jboss.org/wiki/EnversFAQ">FAQ</link>
                 </para>
             </listitem>
         </orderedlist>

@@ -1,9 +1,7 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook">
+
   <title>Data categorizations</title>
   <para>
     Hibernate understands both the Java and JDBC representations of application data. The ability to read and write
@@ -24,11 +22,11 @@
     </para>
   </note>
   <para>
-    Hibernate categorizes types into two high-level groups: <xref linkend="value-types" /> and <xref
-    linkend="entity-types" />.
+    Hibernate categorizes types into two high-level groups: <xref linkend="value-types" />
+      and <xref linkend="entity-types" />.
   </para>
   
-  <section id="value-types">
+  <section xml:id="value-types">
     <title>Value types</title>
     <para>
       A <firstterm>value type</firstterm> does not define its own lifecycle. It is, in effect, owned by an <xref
@@ -41,7 +39,7 @@
       <listitem><para><xref linkend="value-collection-types" /></para></listitem>
     </itemizedlist>
 
-    <section id="value-basic-types">
+    <section xml:id="value-basic-types">
       <title>Basic types</title>
       <para>
         Basic value types usually map a single database value, or column, to a single, non-aggregated Java
@@ -297,7 +295,7 @@
       </table>
     </section>
     
-    <section id="value-composite-types">
+    <section xml:id="value-composite-types">
       <title>Composite types</title>
       <para>
         <firstterm>Composite types</firstterm>, or <firstterm>embedded types</firstterm>, as they are called by the Java
@@ -315,7 +313,7 @@
       
     </section>
     
-    <section id="value-collection-types">
+    <section xml:id="value-collection-types">
       <title>Collection types</title>
       <para>
         A <firstterm>collection</firstterm> type refers to the data type itself, not its contents.
@@ -328,7 +326,7 @@
       </para>
     </section>
   </section>
-  <section id="entity-types">
+  <section xml:id="entity-types">
     <title>Entity Types</title>
     <para>
       Entities are application-specific classes which correlate to rows in a table, using a unique identifier. Because

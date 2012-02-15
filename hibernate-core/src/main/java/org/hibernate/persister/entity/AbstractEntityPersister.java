@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -121,7 +123,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
-import org.jboss.logging.Logger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -3597,16 +3598,15 @@ public abstract class AbstractEntityPersister
 		else {
 			sqlIdentityInsertString = null;
 		}
-		
-		if (hasNaturalIdentifier()) {
-		    sqlEntityIdByNaturalIdString = generateEntityIdByNaturalIdSql();
-		}
 
 		logStaticSQL();
 
 	}
 
 	public void postInstantiate() throws MappingException {
+		if ( hasNaturalIdentifier() ) {
+		    sqlEntityIdByNaturalIdString = generateEntityIdByNaturalIdSql();
+		}
 
 		createLoaders();
 		createUniqueKeyLoaders();
@@ -4571,6 +4571,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String generateEntityIdByNaturalIdSql() {
+		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
+		if ( rootPersister != this ) {
+			if ( rootPersister instanceof AbstractEntityPersister ) {
+				return ( (AbstractEntityPersister) rootPersister ).sqlEntityIdByNaturalIdString;
+			}
+		}
+
 		Select select = new Select( getFactory().getDialect() );
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
 			select.setComment( "get current natural-id->entity-id state " + getEntityName() );

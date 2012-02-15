@@ -44,7 +44,7 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	protected String resolveColumnName() {
 		if ( StringHelper.isEmpty( super.getName() ) ) {
 			//no @Column defined.
-			return attribute.getContext().getNamingStrategy().propertyToColumnName( attribute.getName() );
+			return  null;
 		}
 		else {
 			return super.getName();

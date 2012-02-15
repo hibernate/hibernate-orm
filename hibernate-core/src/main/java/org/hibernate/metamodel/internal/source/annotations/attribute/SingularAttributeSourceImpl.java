@@ -88,8 +88,13 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		for ( Column columnValues : attribute.getColumnValues() ) {
-			valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, columnValues ) );
+		if ( ! attribute.getColumnValues().isEmpty() ) {
+			for ( Column columnValues : attribute.getColumnValues() ) {
+				valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, columnValues ) );
+			}
+		}
+		else if ( attributeOverride != null && attributeOverride.getColumnValues() != null ) {
+			valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, null ) );
 		}
 		return valueSources;
 	}
@@ -121,12 +126,12 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return attribute.isUpdatable();
+		return !attribute.isId() && attribute.isUpdatable();
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return attribute.isOptional();
+		return !attribute.isId() && attribute.isOptional();
 	}
 }
 

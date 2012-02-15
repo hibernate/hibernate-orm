@@ -49,7 +49,7 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public String getName() {
-		return columnValues.getName();
+		return columnValues == null ? null : columnValues.getName();
 	}
 
 	@Override

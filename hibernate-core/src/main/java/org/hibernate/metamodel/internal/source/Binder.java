@@ -508,11 +508,20 @@ public class Binder {
 			return;
 		}
 
-		Value relationalValue = makeRelationalValue(
-				entityBinding,
-				discriminatorSource.getDiscriminatorRelationalValueSource(),
-				DISCRIMINATOR_COLUMN_BINDING_DEFAULTS
-		);
+		TableSpecification table = entityBinding.locateTable( discriminatorSource.getDiscriminatorRelationalValueSource().getContainingTableName() );
+		Value relationalValue;
+		if ( ColumnSource.class.isInstance( discriminatorSource.getDiscriminatorRelationalValueSource() ) ) {
+			relationalValue = makeColumn(
+					( ColumnSource) discriminatorSource.getDiscriminatorRelationalValueSource(),
+					DISCRIMINATOR_COLUMN_BINDING_DEFAULTS,
+					table,
+					currentBindingContext.getMappingDefaults().getDiscriminatorColumnName(), 
+					false
+			);
+		}
+		else {
+			relationalValue = makeDerivedValue( (DerivedValueSource) discriminatorSource.getDiscriminatorRelationalValueSource(), table );
+		}
 		EntityDiscriminator discriminator = new EntityDiscriminator(
 				relationalValue,
 				discriminatorSource.isInserted(),
@@ -653,7 +662,8 @@ public class Binder {
 
 	private ForeignKey resolveForeignKey(
 			ToOneAttributeSource attributeSource,
-			AttributeBindingContainer attributeBindingContainer) {
+			AttributeBindingContainer attributeBindingContainer,
+			Attribute attribute) {
 		final String explicitForeignKeyName = attributeSource.getForeignKeyName();
 
 		// foreign key columns should all come from the same table...
@@ -669,7 +679,14 @@ public class Binder {
 
 		final List<Value> sourceColumns = new ArrayList<Value>();
 		for ( RelationalValueSource relationalValueSource : attributeSource.relationalValueSources() ) {
-			sourceColumns.add( locateOrMakeValue( sourceTable, relationalValueSource, attributeSource ) );
+			sourceColumns.add(
+					makeRelationalValue(
+							sourceTable,
+							relationalValueSource,
+							attributeSource,
+							attribute
+					)
+			);
 		}
 
 		// todo : pretty sure this is one of the places where the "chasing" approach implemented by john breaks down
@@ -1064,7 +1081,13 @@ public class Binder {
 			}
 			if ( ColumnSource.class.isInstance( valueSource ) ) {
 				final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-				final Column column = makeColumn( columnSource, COLL_KEY_COLUMN_BINDING_DEFAULTS, pluralAttributeBinding.getCollectionTable() );
+				final Column column = makeColumn( 
+						columnSource, 
+						COLL_KEY_COLUMN_BINDING_DEFAULTS, 
+						pluralAttributeBinding.getCollectionTable(),
+						pluralAttributeBinding.getAttribute().getName(), 
+						true
+				);
 				if ( targetValue != null && ! Column.class.isInstance( targetValue ) ) {
 					throw new MappingException(
 							String.format(
@@ -1676,7 +1699,14 @@ public class Binder {
 
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-					final Column column = makeColumn( (ColumnSource) valueSource, relationalValueSourceContainer, table );
+					final Column column = 
+							makeColumn(
+									columnSource, 
+									relationalValueSourceContainer, 
+									table,
+									attribute.getName(), 
+									true 
+							);
 					valueBindings.add(
 							new RelationalValueBinding(
 									column,
@@ -1716,29 +1746,20 @@ public class Binder {
 		return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( identifier ) : identifier;
 	}
 
-	private Value locateOrMakeValue(
-			TableSpecification table,
-			RelationalValueSource relationalValueSource,
-			ColumnBindingDefaults columnBindingDefaults) {
-		if ( ColumnSource.class.isInstance( relationalValueSource ) ) {
-			final Column column = table.locateColumn( ( (Column) relationalValueSource ).getColumnName().getName() );
-			return column == null
-					? makeColumn( (ColumnSource) relationalValueSource, columnBindingDefaults, table )
-					: column;
-		}
-		else {
-			return makeDerivedValue( (DerivedValueSource) relationalValueSource, table );
-		}
-	}
-
 	private Value makeRelationalValue(
-			EntityBinding entityBinding,
+			TableSpecification table,
 			RelationalValueSource valueSource,
-			ColumnBindingDefaults columnBindingDefaults) {
-		final TableSpecification table = entityBinding.locateTable( valueSource.getContainingTableName() );
-
+			ColumnBindingDefaults columnBindingDefaults,
+			Attribute attribute) {
 		if ( ColumnSource.class.isInstance( valueSource ) ) {
-			return makeColumn( (ColumnSource) valueSource, columnBindingDefaults, table );
+			final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
+			return makeColumn(
+					columnSource,
+					columnBindingDefaults, 
+					table, 
+					attribute.getName(),
+					true
+			);
 		}
 		else {
 			return makeDerivedValue( (DerivedValueSource) valueSource, table );
@@ -1748,11 +1769,27 @@ public class Binder {
 	private Column makeColumn(
 			ColumnSource columnSource,
 			ColumnBindingDefaults columnBindingDefaults,
-			TableSpecification table) {
-		String name = columnSource.getName();
-		name = metadata.getOptions().getNamingStrategy().columnName( name );
-		name = quoteIdentifier( name );
-		final Column column = table.locateOrCreateColumn( name );
+			TableSpecification table,
+			String defaultName, 
+			boolean isDefaultAttributeName) {
+		if ( columnSource.getName() == null && defaultName == null ) {
+			throw new MappingException(
+					"Cannot resolve name for column because the no name was specified and default name is null.",
+					currentBindingContext.getOrigin()
+			);
+		}
+		String name;
+		if ( columnSource.getName() != null ) {
+			name = metadata.getOptions().getNamingStrategy().columnName( columnSource.getName() );
+		}
+		else if ( isDefaultAttributeName ) {
+			name = metadata.getOptions().getNamingStrategy().propertyToColumnName( defaultName );
+		}
+		else {
+			name = metadata.getOptions().getNamingStrategy().columnName( defaultName );
+		}
+		String resolvedColumnName = quoteIdentifier( name );
+		final Column column = table.locateOrCreateColumn( resolvedColumnName );
 		column.setNullable(
 				decode( columnSource.isNullable(), columnBindingDefaults.areValuesNullableByDefault() )
 		);

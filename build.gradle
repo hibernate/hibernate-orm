@@ -43,26 +43,6 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-//ideaProject {
-//    javaVersion = "1.6"
-//    withXml { provider ->
-//        def node = provider.asNode()
-//        def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
-//        vcsConfig.mapping[0].'@vcs' = 'Git'
-//        def maxHeapSizeConfig =  node.component.find { it.'@name' == 'JavacSettings' }
-//        if( maxHeapSizeConfig == null ){
-//            def javacSettingsNode =  node.appendNode('component',[name: 'JavacSettings'])
-//            javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
-//        }
-//    }
-//    beforeConfigured { module ->
-//        module.modulePaths.removeAll { it.filePath.endsWith('hibernate-core.iml') }
-//    }
-//}
-//
-//ideaModule {
-//    moduleName = 'hibernate-core-root'
-//}
 
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
@@ -275,34 +255,11 @@ subprojects { subProject ->
 			}
 		}
 
-//        ideaModule {
-//            beforeConfigured { module ->
-//                module.excludeFolders.clear()
-//            }
-//            scopes.COMPILE.plus.add( configurations.provided )
-//            whenConfigured { module ->
-//                module.dependencies*.exported = true
-//            }
-//            excludeDirs = [
-//                    file(".gradle"),
-//                    file("$buildDir/classes"),
-//                    file("$buildDir/dependency-cache"),
-//                    file("$buildDir/libs"),
-//                    file("$buildDir/reports"),
-//                    file("$buildDir/test-results"),
-//                    file("$buildDir/tmp"),
-//                    file("$buildDir/matrix")
-//            ] as Set
-//        }
-
 		eclipse {
 			classpath {
 				plusConfigurations.add( configurations.provided )
 			}
 		}
-//		eclipseClasspath {
-//			plusConfigurations.add( configurations.provided )
-//		}
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

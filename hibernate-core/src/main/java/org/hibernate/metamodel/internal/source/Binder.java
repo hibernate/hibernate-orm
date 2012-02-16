@@ -55,7 +55,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.ComponentAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositionAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
@@ -69,7 +69,7 @@ import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.Component;
+import org.hibernate.metamodel.spi.domain.Composition;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -723,8 +723,8 @@ public class Binder {
 			final SingularAttributeBinding referencedAttributeBinding = (SingularAttributeBinding) referencedEntityBinding.locateAttributeBinding(
 					attributeSource.getReferencedEntityAttributeName()
 			);
-			if ( ComponentAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-				collectValues( (ComponentAttributeBinding) referencedAttributeBinding, targetColumns );
+			if ( CompositionAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+				collectValues( (CompositionAttributeBinding) referencedAttributeBinding, targetColumns );
 			}
 			else {
 				for ( RelationalValueBinding valueBinding :( (BasicAttributeBinding) referencedAttributeBinding ).getRelationalValueBindings() ) {
@@ -749,8 +749,8 @@ public class Binder {
 		return foreignKey;
 	}
 
-	private void collectValues(ComponentAttributeBinding componentAttributeBinding, List<Value> targetColumns) {
-		for ( AttributeBinding attributeBinding : componentAttributeBinding.attributeBindings() ) {
+	private void collectValues(CompositionAttributeBinding compositionAttributeBinding, List<Value> targetColumns) {
+		for ( AttributeBinding attributeBinding : compositionAttributeBinding.attributeBindings() ) {
 			if ( BasicAttributeBinding.class.isInstance( attributeBinding ) ) {
 				for ( RelationalValueBinding valueBinding :( (BasicAttributeBinding) attributeBinding ).getRelationalValueBindings() ) {
 					targetColumns.add( valueBinding.getValue() );
@@ -761,8 +761,8 @@ public class Binder {
 					targetColumns.add( valueBinding.getValue() );
 				}
 			}
-			else if ( ComponentAttributeBinding.class.isInstance( attributeBinding ) ) {
-				collectValues( (ComponentAttributeBinding) attributeBinding, targetColumns );
+			else if ( CompositionAttributeBinding.class.isInstance( attributeBinding ) ) {
+				collectValues( (CompositionAttributeBinding) attributeBinding, targetColumns );
 			}
 		}
 	}
@@ -819,19 +819,19 @@ public class Binder {
 			AttributeBindingContainer container,
 			Deque<TableSpecification> tableStack) {
 		final String attributeName = attributeSource.getName();
-		SingularAttribute attribute = container.getAttributeContainer().locateComponentAttribute( attributeName );
-		final Component component;
+		SingularAttribute attribute = container.getAttributeContainer().locateCompositionAttribute( attributeName );
+		final Composition composition;
 		if ( attribute == null ) {
-			component = new Component(
+			composition = new Composition(
 					attributeSource.getPath(),
 					attributeSource.getClassName(),
 					attributeSource.getClassReference(),
-					null // component inheritance not YET supported
+					null // composition inheritance not YET supported
 			);
-			attribute = container.getAttributeContainer().createComponentAttribute( attributeName, component );
+			attribute = container.getAttributeContainer().createCompositionAttribute( attributeName, composition );
 		}
 		else {
-			component = (Component) attribute.getSingularAttributeType();
+			composition = (Composition) attribute.getSingularAttributeType();
 		}
 
 		final String propertyAccessorName = Helper.getPropertyAccessorName(
@@ -846,13 +846,13 @@ public class Binder {
 
 		final SingularAttribute parentReferenceAttribute;
 		if ( StringHelper.isNotEmpty( attributeSource.getParentReferenceAttributeName() ) ) {
-			parentReferenceAttribute = component.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
+			parentReferenceAttribute = composition.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		}
 		else {
 			parentReferenceAttribute = null;
 		}
 
-		ComponentAttributeBinding componentAttributeBinding = container.makeComponentAttributeBinding(
+		CompositionAttributeBinding compositionAttributeBinding = container.makeComponentAttributeBinding(
 				attribute,
 				parentReferenceAttribute,
 				propertyAccessorName,
@@ -861,7 +861,7 @@ public class Binder {
 				metaAttributeContext
 		);
 
-		bindAttributes( attributeSource, componentAttributeBinding, tableStack );
+		bindAttributes( attributeSource, compositionAttributeBinding, tableStack );
 	}
 
 	private void bindPersistentCollection(
@@ -1416,17 +1416,17 @@ public class Binder {
 					resolvedHibernateType
 			);
 		}
-		else if ( ComponentAttributeBinding.class.isInstance( attributeBinding ) ) {
+		else if ( CompositionAttributeBinding.class.isInstance( attributeBinding ) ) {
 			pushHibernateTypeInformationDownIfNeeded(
 					hibernateTypeDescriptor,
-					(ComponentAttributeBinding) attributeBinding
+					(CompositionAttributeBinding) attributeBinding
 			);
 		}
 	}
 
 	private void pushHibernateTypeInformationDownIfNeeded(
 			HibernateTypeDescriptor hibernateTypeDescriptor,
-			ComponentAttributeBinding attributeBinding) {
+			CompositionAttributeBinding attributeBinding) {
 		final SingularAttribute singularAttribute = SingularAttribute.class.cast( attributeBinding.getAttribute() );
 		if ( ! singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getJavaTypeName() != null ) {
 			singularAttribute.resolveType( metadata.makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );

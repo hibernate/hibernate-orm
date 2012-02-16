@@ -30,11 +30,10 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * Common contract for {@link EntityBinding} and {@link ComponentAttributeBinding} in so far as they are both
+ * Common contract for {@link EntityBinding} and {@link CompositionAttributeBinding} in so far as they are both
  * containers for {@link AttributeBinding} descriptors
  *
  * @author Steve Ebersole
@@ -93,7 +92,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ComponentAttributeBinding makeComponentAttributeBinding(
+	public CompositionAttributeBinding makeComponentAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,

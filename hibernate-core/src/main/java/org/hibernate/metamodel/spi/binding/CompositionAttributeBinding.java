@@ -31,24 +31,23 @@ import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
-import org.hibernate.metamodel.spi.domain.Component;
+import org.hibernate.metamodel.spi.domain.Composition;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * @author Steve Ebersole
  */
-public class ComponentAttributeBinding
+public class CompositionAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements AttributeBindingContainer {
 	private final String path;
 	private final SingularAttribute parentReference;
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
-	public ComponentAttributeBinding(
+	public CompositionAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
@@ -99,8 +98,8 @@ public class ComponentAttributeBinding
 		return getComponent();
 	}
 
-	public Component getComponent() {
-		return (Component) getAttribute().getSingularAttributeType();
+	public Composition getComponent() {
+		return (Composition) getAttribute().getSingularAttributeType();
 	}
 
 	@Override
@@ -159,14 +158,14 @@ public class ComponentAttributeBinding
 	}
 
 	@Override
-	public ComponentAttributeBinding makeComponentAttributeBinding(
+	public CompositionAttributeBinding makeComponentAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
-		final ComponentAttributeBinding binding = new ComponentAttributeBinding(
+		final CompositionAttributeBinding binding = new CompositionAttributeBinding(
 				this,
 				attribute,
 				propertyAccessorName,

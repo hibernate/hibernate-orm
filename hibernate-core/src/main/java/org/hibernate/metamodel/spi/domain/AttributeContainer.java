@@ -62,8 +62,8 @@ public interface AttributeContainer extends Type {
 	public SingularAttribute createSingularAttribute(String name);
 	public SingularAttribute createVirtualSingularAttribute(String name);
 
-	public SingularAttribute locateComponentAttribute(String name);
-	public SingularAttribute createComponentAttribute(String name, Component component);
+	public SingularAttribute locateCompositionAttribute(String name);
+	public SingularAttribute createCompositionAttribute(String name, Composition composition);
 
 	public PluralAttribute locatePluralAttribute(String name);
 

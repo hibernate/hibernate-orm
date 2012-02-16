@@ -289,6 +289,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 
 
+	@Override
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
 	}

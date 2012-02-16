@@ -86,4 +86,6 @@ public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 	java.util.Map getFilterMap();
 
 	String getOrderBy();
+
+	String getReferencedPropertyName();
 }

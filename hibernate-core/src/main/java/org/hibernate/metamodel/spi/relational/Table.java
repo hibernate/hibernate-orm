@@ -37,24 +37,34 @@ import org.hibernate.dialect.Dialect;
  */
 public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
-	private final Identifier tableName;
-	private final ObjectName objectName;
-	private final String qualifiedName;
+	private Identifier tableName;
+	private ObjectName objectName;
+	private String qualifiedName;
 
 	private final LinkedHashMap<String,Index> indexes = new LinkedHashMap<String,Index>();
 	private final LinkedHashMap<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private final List<CheckConstraint> checkConstraints = new ArrayList<CheckConstraint>();
 	private final List<String> comments = new ArrayList<String>();
 
+	/**
+	 * Constructs a {@link Table} instance.
+	 *
+	 * @param database - the schema
+	 * @param tableName - the table name as a String
+	 */
 	public Table(Schema database, String tableName) {
 		this( database, Identifier.toIdentifier( tableName ) );
 	}
 
+	/**
+	 * Constructs a {@link Table} instance.
+	 *
+	 * @param database - the schema
+	 * @param tableName - the table name as an {@link Identifier}
+	 */
 	public Table(Schema database, Identifier tableName) {
 		this.database = database;
-		this.tableName = tableName;
-		objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
-		this.qualifiedName = objectName.toText();
+		setTableName( tableName );
 	}
 
 	@Override
@@ -62,6 +72,41 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return database;
 	}
 
+	/**
+	 * Gets the logical table name.
+	 *
+	 * @return the logical table name.
+	 */
+	@Override
+	public String getLogicalName() {
+		return tableName.getName();
+	}
+
+	/**
+	 * Sets the table name, remapping this {@link Table} by the new
+	 * table name in the {@link Schema}, if necessary.
+	 * 
+	 * @param tableName - the table name
+	 */
+	public final void setTableName(Identifier tableName) {
+		if ( tableName == null ) {
+			throw new IllegalArgumentException( "tableName cannot be null." );
+		}
+		if ( !tableName.equals( this.tableName ) ) {
+			Identifier tableNameOld = this.tableName;
+			this.tableName = tableName;
+			objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
+			this.qualifiedName = objectName.toText();
+			if ( tableNameOld != null ) {
+				database.remapTableName( tableNameOld );
+			}
+		}
+	}
+
+	/**
+	 * Gets the table name.
+	 * @return the table name.
+	 */
 	public Identifier getTableName() {
 		return tableName;
 	}

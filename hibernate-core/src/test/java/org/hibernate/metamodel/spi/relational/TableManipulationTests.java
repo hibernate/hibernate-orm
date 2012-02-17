@@ -35,6 +35,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -148,5 +149,72 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 		InLineView inLineView = schema.createInLineView( "my_inlineview", "select ..." );
 		assertEquals( "( select ... )", inLineView.getQualifiedName( dialect ) );
+	}
+
+	@Test
+	public void testTableIdentifier() {
+		Identifier tableIdentifier = Identifier.toIdentifier( "my_table" );
+		assertEquals( "my_table", tableIdentifier.getName() );
+		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
+		Table table = schema.createTable( tableIdentifier );
+		assertSame( tableIdentifier, table.getTableName() );
+		assertSame( table, schema.locateTable( Identifier.toIdentifier( "my_table"  ) ) );
+		assertEquals( "my_table", table.getLogicalName() );
+		tableIdentifier = Identifier.toIdentifier( "my_new_table" );
+		table.setTableName( tableIdentifier );
+		assertEquals( "my_new_table", table.getLogicalName() );
+		assertEquals( "my_new_table", table.getTableName().getName() );
+		assertSame( table, schema.locateTable(  Identifier.toIdentifier( "my_new_table" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "my_table" ) ) );
+		tableIdentifier = Identifier.toIdentifier( "my_newer_table" );
+		table.setTableName( tableIdentifier );
+		assertEquals( "my_newer_table", table.getLogicalName() );
+		assertEquals( "my_newer_table", table.getTableName().getName() );
+		assertSame( table, schema.locateTable( Identifier.toIdentifier( "my_newer_table" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "my_new_table" ) ) );
+	}
+
+	@Test
+	public void testQuotedTableIdentifier() {
+		Identifier tableIdentifier = Identifier.toIdentifier( "`my_table`" );
+		assertEquals( "my_table", tableIdentifier.getName() );
+		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
+		Table table = schema.createTable( tableIdentifier );
+		assertSame( tableIdentifier, table.getTableName() );
+		assertSame( table, schema.locateTable( Identifier.toIdentifier( "`my_table`" ) ) );
+		assertEquals( "my_table", table.getLogicalName() );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "my_table" ) ) );
+		tableIdentifier = Identifier.toIdentifier( "`my_new_table`" );
+		table.setTableName( tableIdentifier );
+		assertEquals( "my_new_table", table.getLogicalName() );
+		assertEquals( "my_new_table", table.getTableName().getName() );
+		assertSame( table, schema.locateTable(  Identifier.toIdentifier( "`my_new_table`" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "`my_table`" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "my_new_table" ) ) );
+		tableIdentifier = Identifier.toIdentifier( "`my_newer_table`" );
+		table.setTableName( tableIdentifier );
+		assertEquals( "my_newer_table", table.getLogicalName() );
+		assertEquals( "my_newer_table", table.getTableName().getName() );
+		assertSame( table, schema.locateTable( Identifier.toIdentifier( "`my_newer_table`" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "`my_new_table`" ) ) );
+		assertNull( schema.locateTable( Identifier.toIdentifier( "my_newer_table" ) ) );
+	}
+
+	@Test
+	public void testInLineViewLogicalName() {
+		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
+		InLineView view = schema.createInLineView( "my_view", "select" );
+		assertEquals( "my_view", view.getLogicalName() );
+		assertEquals( "select", view.getSelect() );
+		assertSame(  view, schema.getInLineView( view.getLogicalName() ) );
+	}
+
+	@Test
+	public void testLocateOrCreateTable() {
+		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
+		Identifier tableIdentifier = Identifier.toIdentifier( "my_table" );
+		Table table = schema.locateOrCreateTable( tableIdentifier );
+		assertSame( tableIdentifier, table.getTableName() );
+		assertSame( table, schema.locateOrCreateTable( tableIdentifier ) );
 	}
 }

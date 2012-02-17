@@ -49,6 +49,11 @@ public class InLineView extends AbstractTableSpecification {
 		return schema;
 	}
 
+	@Override
+	public String getLogicalName() {
+		return logicalName;
+	}
+
 	public String getSelect() {
 		return select;
 	}

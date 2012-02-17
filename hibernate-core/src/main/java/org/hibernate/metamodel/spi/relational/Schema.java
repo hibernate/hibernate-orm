@@ -48,22 +48,62 @@ public class Schema {
 		return name;
 	}
 
-	public Table locateTable(Identifier name) {
-		return tables.get( name );
+	/**
+	 * Returns the table with the specified table name.
+	 *
+	 * @param tableName - the name of the table
+	 *
+	 * @return the table with the specified table name,
+	 *         or null if there is no table with the specified
+	 *         table name.
+	 */
+	public Table locateTable(Identifier tableName) {
+		return tables.get( tableName );
 	}
 
-	public Table createTable(Identifier name) {
-		Table table = new Table( this, name );
-		tables.put( name, table );
+	/**
+	 * Creates a {@link Table} with the specified name.
+	 *
+	 * @param tableName - the name of the table
+	 *
+	 * @return the created table.
+	 */
+	public Table createTable(Identifier tableName) {
+		Table table = new Table( this, tableName );
+		tables.put( tableName, table );
 		return table;
 	}
 
-	public Table locateOrCreateTable(Identifier name) {
-		final Table existing = locateTable( name );
+	/**
+	 * Locates a {@link Table} with the specified name; if
+	 * it does not exist, then a table is created with
+	 * the specified name.
+	 *
+	 * @param tableName - the name of the table
+	 *
+	 * @return the located or created table.
+	 */
+	public Table locateOrCreateTable(Identifier tableName) {
+		final Table existing = locateTable( tableName );
 		if ( existing == null ) {
-			return createTable( name );
+			return createTable( tableName );
 		}
 		return existing;
+	}
+
+	/* package-protected */
+	void remapTableName(Identifier oldTableName) {
+		Table table = tables.remove( oldTableName );
+		if ( table == null ) {
+			throw new IllegalStateException(
+					String.format(
+							"Schema (%s) does not contain a table (%s) to remap.",
+							name,
+							oldTableName
+					)
+			);
+		}
+		tables.put( table.getTableName(), table );
 	}
 
 	public Iterable<Table> getTables() {

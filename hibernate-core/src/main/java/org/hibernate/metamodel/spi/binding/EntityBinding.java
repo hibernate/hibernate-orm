@@ -512,14 +512,14 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
-	public CompositionAttributeBinding makeComponentAttributeBinding(
+	public CompositeAttributeBinding makeComponentAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
-		final CompositionAttributeBinding binding = new CompositionAttributeBinding(
+		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
 				this,
 				attribute,
 				propertyAccessorName,

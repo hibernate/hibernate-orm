@@ -32,8 +32,8 @@ import org.hibernate.internal.util.Value;
  *
  * @author Steve Ebersole
  */
-public class Composition extends AbstractAttributeContainer {
-	public Composition(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
+public class Composite extends AbstractAttributeContainer {
+	public Composite(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
 		super( name, className, classReference, superType );
 	}
 

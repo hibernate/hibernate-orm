@@ -33,7 +33,7 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * Common contract for {@link EntityBinding} and {@link CompositionAttributeBinding} in so far as they are both
+ * Common contract for {@link EntityBinding} and {@link CompositeAttributeBinding} in so far as they are both
  * containers for {@link AttributeBinding} descriptors
  *
  * @author Steve Ebersole
@@ -92,7 +92,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public CompositionAttributeBinding makeComponentAttributeBinding(
+	public CompositeAttributeBinding makeComponentAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,

@@ -49,7 +49,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.CompositionAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -61,7 +61,7 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.Composition;
+import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -722,8 +722,8 @@ public class Binder {
 			final SingularAttributeBinding referencedAttributeBinding = (SingularAttributeBinding) referencedEntityBinding.locateAttributeBinding(
 					attributeSource.getReferencedEntityAttributeName()
 			);
-			if ( CompositionAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-				collectValues( (CompositionAttributeBinding) referencedAttributeBinding, targetColumns );
+			if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+				collectValues( (CompositeAttributeBinding) referencedAttributeBinding, targetColumns );
 			}
 			else {
 				for ( RelationalValueBinding valueBinding :( (BasicAttributeBinding) referencedAttributeBinding ).getRelationalValueBindings() ) {
@@ -748,8 +748,8 @@ public class Binder {
 		return foreignKey;
 	}
 
-	private void collectValues(CompositionAttributeBinding compositionAttributeBinding, List<Value> targetColumns) {
-		for ( AttributeBinding attributeBinding : compositionAttributeBinding.attributeBindings() ) {
+	private void collectValues(CompositeAttributeBinding compositeAttributeBinding, List<Value> targetColumns) {
+		for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
 			if ( BasicAttributeBinding.class.isInstance( attributeBinding ) ) {
 				for ( RelationalValueBinding valueBinding :( (BasicAttributeBinding) attributeBinding ).getRelationalValueBindings() ) {
 					targetColumns.add( valueBinding.getValue() );
@@ -760,8 +760,8 @@ public class Binder {
 					targetColumns.add( valueBinding.getValue() );
 				}
 			}
-			else if ( CompositionAttributeBinding.class.isInstance( attributeBinding ) ) {
-				collectValues( (CompositionAttributeBinding) attributeBinding, targetColumns );
+			else if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
+				collectValues( (CompositeAttributeBinding) attributeBinding, targetColumns );
 			}
 		}
 	}
@@ -818,19 +818,19 @@ public class Binder {
 			AttributeBindingContainer container,
 			Deque<TableSpecification> tableStack) {
 		final String attributeName = attributeSource.getName();
-		SingularAttribute attribute = container.getAttributeContainer().locateCompositionAttribute( attributeName );
-		final Composition composition;
+		SingularAttribute attribute = container.getAttributeContainer().locateCompositeAttribute( attributeName );
+		final Composite composite;
 		if ( attribute == null ) {
-			composition = new Composition(
+			composite = new Composite(
 					attributeSource.getPath(),
 					attributeSource.getClassName(),
 					attributeSource.getClassReference(),
 					null // composition inheritance not YET supported
 			);
-			attribute = container.getAttributeContainer().createCompositionAttribute( attributeName, composition );
+			attribute = container.getAttributeContainer().createCompositeAttribute( attributeName, composite );
 		}
 		else {
-			composition = (Composition) attribute.getSingularAttributeType();
+			composite = (Composite) attribute.getSingularAttributeType();
 		}
 
 		final String propertyAccessorName = Helper.getPropertyAccessorName(
@@ -845,13 +845,13 @@ public class Binder {
 
 		final SingularAttribute parentReferenceAttribute;
 		if ( StringHelper.isNotEmpty( attributeSource.getParentReferenceAttributeName() ) ) {
-			parentReferenceAttribute = composition.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
+			parentReferenceAttribute = composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		}
 		else {
 			parentReferenceAttribute = null;
 		}
 
-		CompositionAttributeBinding compositionAttributeBinding = container.makeComponentAttributeBinding(
+		CompositeAttributeBinding compositeAttributeBinding = container.makeComponentAttributeBinding(
 				attribute,
 				parentReferenceAttribute,
 				propertyAccessorName,
@@ -860,7 +860,7 @@ public class Binder {
 				metaAttributeContext
 		);
 
-		bindAttributes( attributeSource, compositionAttributeBinding, tableStack );
+		bindAttributes( attributeSource, compositeAttributeBinding, tableStack );
 	}
 
 	private void bindPersistentCollection(

@@ -39,7 +39,7 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.CompositionAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -305,9 +305,9 @@ public class HibernateTypeHelper {
 					resolvedHibernateType
 			);
 		}
-		else if ( CompositionAttributeBinding.class.isInstance( attributeBinding ) ) {
+		else if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
 			pushHibernateTypeInformationDown(
-					(CompositionAttributeBinding) attributeBinding,
+					(CompositeAttributeBinding) attributeBinding,
 					resolvedHibernateType
 			);
 		}
@@ -330,7 +330,7 @@ public class HibernateTypeHelper {
 
 	@SuppressWarnings( {"UnusedParameters"})
 	private void pushHibernateTypeInformationDown(
-			CompositionAttributeBinding attributeBinding,
+			CompositeAttributeBinding attributeBinding,
 			Type resolvedHibernateType) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		final SingularAttribute singularAttribute = SingularAttribute.class.cast( attributeBinding.getAttribute() );

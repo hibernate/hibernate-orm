@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
-import org.hibernate.metamodel.spi.domain.Composition;
+import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -40,14 +40,14 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 /**
  * @author Steve Ebersole
  */
-public class CompositionAttributeBinding
+public class CompositeAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements AttributeBindingContainer {
 	private final String path;
 	private final SingularAttribute parentReference;
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
-	public CompositionAttributeBinding(
+	public CompositeAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
@@ -98,8 +98,8 @@ public class CompositionAttributeBinding
 		return getComponent();
 	}
 
-	public Composition getComponent() {
-		return (Composition) getAttribute().getSingularAttributeType();
+	public Composite getComponent() {
+		return (Composite) getAttribute().getSingularAttributeType();
 	}
 
 	@Override
@@ -158,14 +158,14 @@ public class CompositionAttributeBinding
 	}
 
 	@Override
-	public CompositionAttributeBinding makeComponentAttributeBinding(
+	public CompositeAttributeBinding makeComponentAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
-		final CompositionAttributeBinding binding = new CompositionAttributeBinding(
+		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
 				this,
 				attribute,
 				propertyAccessorName,

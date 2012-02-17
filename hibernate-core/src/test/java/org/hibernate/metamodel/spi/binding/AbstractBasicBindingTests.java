@@ -137,12 +137,12 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		CompositionAttributeBinding compositionAttributeBinding = (CompositionAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
-		assertNotNull( compositionAttributeBinding );
-		assertSame( compositionAttributeBinding.getAttribute().getSingularAttributeType(), compositionAttributeBinding.getAttributeContainer() );
-		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", compositionAttributeBinding.getPathBase() );
-		assertSame( entityBinding, compositionAttributeBinding.seekEntityBinding() );
-		assertNotNull( compositionAttributeBinding.getComponent() );
+		CompositeAttributeBinding compositeAttributeBinding = (CompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		assertNotNull( compositeAttributeBinding );
+		assertSame( compositeAttributeBinding.getAttribute().getSingularAttributeType(), compositeAttributeBinding.getAttributeContainer() );
+		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", compositeAttributeBinding.getPathBase() );
+		assertSame( entityBinding, compositeAttributeBinding.seekEntityBinding() );
+		assertNotNull( compositeAttributeBinding.getComponent() );
 	}
 
 	public abstract void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);

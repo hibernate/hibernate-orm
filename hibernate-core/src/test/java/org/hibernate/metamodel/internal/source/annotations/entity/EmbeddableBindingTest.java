@@ -34,7 +34,7 @@ import javax.persistence.Id;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositionAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 import org.junit.Test;
@@ -72,8 +72,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "phone";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding compositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
@@ -81,12 +81,12 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong path",
 				EmbeddableBindingTest.User.class.getName() + ".phone",
-				compositionBinding.getPathBase()
+				compositeBinding.getPathBase()
 		);
 
-		assertNotNull( compositionBinding.locateAttributeBinding( "countryCode" ) );
-		assertNotNull( compositionBinding.locateAttributeBinding( "areaCode" ) );
-		assertNotNull( compositionBinding.locateAttributeBinding( "number" ) );
+		assertNotNull( compositeBinding.locateAttributeBinding( "countryCode" ) );
+		assertNotNull( compositeBinding.locateAttributeBinding( "areaCode" ) );
+		assertNotNull( compositeBinding.locateAttributeBinding( "number" ) );
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,13 +113,13 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "embedded";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding compositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
-		assertNotNull( compositionBinding.locateAttributeBinding( "name" ) );
-		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) compositionBinding.locateAttributeBinding( "name" );
+		assertNotNull( compositeBinding.locateAttributeBinding( "name" ) );
+		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) compositeBinding.locateAttributeBinding( "name" );
 		assertEquals( 1, nameAttribute.getRelationalValueBindings().size() );
 		org.hibernate.metamodel.spi.relational.Column column
 				= (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getRelationalValueBindings().get( 0 ).getValue();
@@ -168,16 +168,16 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String addressComponentName = "address";
 		assertNotNull( binding.locateAttributeBinding( addressComponentName ) );
-		assertTrue( binding.locateAttributeBinding( addressComponentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding attributeCompositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( addressComponentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding attributeCompositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				addressComponentName
 		);
 
-		assertNotNull( attributeCompositionBinding.locateAttributeBinding( "street" ) );
-		assertNotNull( attributeCompositionBinding.locateAttributeBinding( "city" ) );
-		assertNotNull( attributeCompositionBinding.locateAttributeBinding( "state" ) );
+		assertNotNull( attributeCompositeBinding.locateAttributeBinding( "street" ) );
+		assertNotNull( attributeCompositeBinding.locateAttributeBinding( "city" ) );
+		assertNotNull( attributeCompositeBinding.locateAttributeBinding( "state" ) );
 
-		BasicAttributeBinding stateAttribute = (BasicAttributeBinding) attributeCompositionBinding.locateAttributeBinding(
+		BasicAttributeBinding stateAttribute = (BasicAttributeBinding) attributeCompositeBinding.locateAttributeBinding(
 				"state"
 		);
 		assertEquals( 1, stateAttribute.getRelationalValueBindings().size() );
@@ -191,13 +191,13 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 
 		final String zipComponentName = "zipcode";
-		assertNotNull( attributeCompositionBinding.locateAttributeBinding( zipComponentName ) );
-		assertTrue( attributeCompositionBinding.locateAttributeBinding( zipComponentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding zipCompositionBinding = (CompositionAttributeBinding) attributeCompositionBinding.locateAttributeBinding(
+		assertNotNull( attributeCompositeBinding.locateAttributeBinding( zipComponentName ) );
+		assertTrue( attributeCompositeBinding.locateAttributeBinding( zipComponentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding zipCompositeBinding = (CompositeAttributeBinding) attributeCompositeBinding.locateAttributeBinding(
 				zipComponentName
 		);
 
-		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) zipCompositionBinding.locateAttributeBinding( "zip" );
+		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) zipCompositeBinding.locateAttributeBinding( "zip" );
 		assertEquals( 1, nameAttribute.getRelationalValueBindings().size() );
 		column = (org.hibernate.metamodel.spi.relational.Column) nameAttribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
@@ -262,19 +262,19 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String aComponentName = "a";
 		assertNotNull( binding.locateAttributeBinding( aComponentName ) );
-		assertTrue( binding.locateAttributeBinding( aComponentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding aCompositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( aComponentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding aCompositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				aComponentName
 		);
 
 		final String bComponentName = "b";
-		assertNotNull( aCompositionBinding.locateAttributeBinding( bComponentName ) );
-		assertTrue( aCompositionBinding.locateAttributeBinding( bComponentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding bCompositionBinding = (CompositionAttributeBinding) aCompositionBinding.locateAttributeBinding(
+		assertNotNull( aCompositeBinding.locateAttributeBinding( bComponentName ) );
+		assertTrue( aCompositeBinding.locateAttributeBinding( bComponentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding bCompositeBinding = (CompositeAttributeBinding) aCompositeBinding.locateAttributeBinding(
 				bComponentName
 		);
 
-		BasicAttributeBinding attribute = (BasicAttributeBinding) bCompositionBinding.locateAttributeBinding( "foo" );
+		BasicAttributeBinding attribute = (BasicAttributeBinding) bCompositeBinding.locateAttributeBinding( "foo" );
 		assertEquals( 1, attribute.getRelationalValueBindings().size() );
 		org.hibernate.metamodel.spi.relational.Column column
 				= (org.hibernate.metamodel.spi.relational.Column) attribute.getRelationalValueBindings().get( 0 ).getValue();
@@ -284,7 +284,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				column.getColumnName().getName()
 		);
 
-		attribute = (BasicAttributeBinding) bCompositionBinding.locateAttributeBinding( "fubar" );
+		attribute = (BasicAttributeBinding) bCompositeBinding.locateAttributeBinding( "fubar" );
 		assertEquals( 1, attribute.getRelationalValueBindings().size() );
 		column = (org.hibernate.metamodel.spi.relational.Column) attribute.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals(
@@ -319,12 +319,12 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "embedded";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding compositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
-		assertEquals( "Wrong parent reference name", "parent", compositionBinding.getParentReference().getName() );
+		assertEquals( "Wrong parent reference name", "parent", compositeBinding.getParentReference().getName() );
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,12 +365,12 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "car";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositionAttributeBinding );
-		CompositionAttributeBinding compositionBinding = (CompositionAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
+		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
-		BasicAttributeBinding attribute = (BasicAttributeBinding) compositionBinding.locateAttributeBinding( "horsePower" );
+		BasicAttributeBinding attribute = (BasicAttributeBinding) compositeBinding.locateAttributeBinding( "horsePower" );
 		assertTrue( attribute.getAttribute().isTypeResolved() );
 		assertEquals(
 				"Wrong resolved type",

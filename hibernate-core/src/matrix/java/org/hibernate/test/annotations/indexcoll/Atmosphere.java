@@ -57,7 +57,7 @@ public class Atmosphere {
 	@ElementCollection
 	@Column(name="composition_rate")
 	@MapKeyJoinColumns( { @MapKeyJoinColumn(name="gas_id" ) } ) //use @MapKeyJoinColumns explicitly for tests
-	@JoinTable(name = "Composition", joinColumns = @JoinColumn(name = "atmosphere_id"))
+	@JoinTable(name = "Composite", joinColumns = @JoinColumn(name = "atmosphere_id"))
 	public Map<Gas, Double> composition = new HashMap<Gas, Double>();
 
 	//use default JPA 2 column name for map key

@@ -55,7 +55,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.Composition;
+import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.PropertyFactory;
@@ -608,8 +608,8 @@ public class EntityMetamodel implements Serializable {
 			return ValueInclusion.FULL;
 		}
 		// TODO: fix the following when components are working (HHH-6173)
-		//else if ( mappingProperty.getValue() instanceof CompositionAttributeBinding ) {
-		//	if ( hasPartialInsertComponentGeneration( ( CompositionAttributeBinding ) mappingProperty.getValue() ) ) {
+		//else if ( mappingProperty.getValue() instanceof CompositeAttributeBinding ) {
+		//	if ( hasPartialInsertComponentGeneration( ( CompositeAttributeBinding ) mappingProperty.getValue() ) ) {
 		//		return ValueInclusion.PARTIAL;
 		//	}
 		//}
@@ -649,8 +649,8 @@ public class EntityMetamodel implements Serializable {
 			return ValueInclusion.FULL;
 		}
 		// TODO: fix the following when components are working (HHH-6173)
-		//else if ( mappingProperty.getValue() instanceof CompositionAttributeBinding ) {
-		//	if ( hasPartialUpdateComponentGeneration( ( CompositionAttributeBinding ) mappingProperty.getValue() ) ) {
+		//else if ( mappingProperty.getValue() instanceof CompositeAttributeBinding ) {
+		//	if ( hasPartialUpdateComponentGeneration( ( CompositeAttributeBinding ) mappingProperty.getValue() ) ) {
 		//		return ValueInclusion.PARTIAL;
 		//	}
 		//}
@@ -691,9 +691,9 @@ public class EntityMetamodel implements Serializable {
 		propertyIndexes.put( attribute.getName(), i );
 		if ( attribute.isSingular() &&
 				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComponent() ) {
-			Composition composition =
-					(Composition) ( (SingularAttribute) attribute ).getSingularAttributeType();
-			for ( Attribute subAttribute : composition.attributes() ) {
+			Composite composite =
+					(Composite) ( (SingularAttribute) attribute ).getSingularAttributeType();
+			for ( Attribute subAttribute : composite.attributes() ) {
 				propertyIndexes.put(
 						attribute.getName() + '.' + subAttribute.getName(),
 						i

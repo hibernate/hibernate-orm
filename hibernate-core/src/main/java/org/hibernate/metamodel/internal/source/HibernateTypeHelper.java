@@ -61,14 +61,17 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
 /**
- * Serves 2 roles:<ol>
+ * Delegate for handling:<ol>
  *     <li>
- *         Takes information about an attribute mapping and determines the appropriate Hibernate
- *         {@link org.hibernate.type.Type} to use, if possible.
+ *         binding of Hibernate type information ({@link ExplicitHibernateTypeSource} ->
+ *         {@link HibernateTypeDescriptor}
  *     </li>
  *     <li>
- *         Given a Hibernate {@link org.hibernate.type.Type}, it pushes the jdbc and java type information
- *         reported the {@link org.hibernate.type.Type} into parts of the metamodel that may be missing it
+ *         attempt to resolve the actual {@link Type} instance
+ *     </li>
+ *     <li>
+ *         push java type and JDBC type information reported by the {@link Type} instance to relational/
+ *         domain models.
  *     </li>
  * </ol>
  * <p/>

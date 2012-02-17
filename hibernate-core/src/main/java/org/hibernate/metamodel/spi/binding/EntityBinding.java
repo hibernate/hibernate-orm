@@ -231,7 +231,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
     public TableSpecification locateTable(String tableName) {
-        if ( tableName == null || tableName.equals( getPrimaryTableLogicalName() ) ) {
+        if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
             return primaryTable;
         }
         TableSpecification tableSpec = secondaryTables.get( tableName );
@@ -246,8 +246,8 @@ public class EntityBinding implements AttributeBindingContainer {
         }
         return tableSpec;
     }
-    public String getPrimaryTableLogicalName() {
-        return primaryTable.getLogicalName();
+    public String getPrimaryTableName() {
+        return primaryTableName;
     }
 
     public void setPrimaryTableName(String primaryTableName) {

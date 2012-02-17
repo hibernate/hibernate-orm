@@ -35,7 +35,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -48,7 +47,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	@Test
 	public void testTableCreation() {
 		Schema schema = new Schema( null, null );
-		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), true );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
 		assertNull( table.getSchema().getName().getSchema() );
 		assertNull( table.getSchema().getName().getCatalog() );
 		assertEquals( "my_table", table.getTableName().toString() );
@@ -92,10 +91,10 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	@Test
 	public void testTableSpecificationCounter() {
 		Schema schema = new Schema( null, null );
-		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), true );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
 		InLineView inLineView = schema.createInLineView( "my_inlineview", "subselect" );
 		InLineView otherInLineView = schema.createInLineView( "my_other_inlineview", "other subselect" );
-		Table otherTable = schema.createTable( Identifier.toIdentifier( "my_other_table" ), true );
+		Table otherTable = schema.createTable( Identifier.toIdentifier( "my_other_table" ) );
 
 		int firstTableNumber = table.getTableNumber();
 		assertEquals( firstTableNumber, table.getTableNumber() );
@@ -107,7 +106,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	@Test
 	public void testBasicForeignKeyDefinition() {
 		Schema schema = new Schema( null, null );
-		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ), true );
+		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ) );
 
 		Column bookId = book.locateOrCreateColumn( "id" );
 		bookId.setJdbcDataType( INTEGER );
@@ -115,7 +114,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		book.getPrimaryKey().addColumn( bookId );
 		book.getPrimaryKey().setName( "BOOK_PK" );
 
-		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ), true );
+		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ) );
 
 		Column pageId = page.locateOrCreateColumn( "id" );
 		pageId.setJdbcDataType( INTEGER );
@@ -137,80 +136,17 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	public void testQualifiedName() {
 		Dialect dialect = new H2Dialect();
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
-		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), true );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
 		assertEquals( "my_table", table.getTableName().getName() );
 		assertEquals( "my_table", table.getTableName().toString() );
 		assertEquals( "schema.\"catalog\".my_table", table.getQualifiedName( dialect ) );
 
-		table = schema.createTable( Identifier.toIdentifier( "`my_table`" ), true );
+		table = schema.createTable( Identifier.toIdentifier( "`my_table`" ) );
 		assertEquals( "my_table", table.getTableName().getName() );
 		assertEquals( "`my_table`", table.getTableName().toString() );
 		assertEquals( "schema.\"catalog\".\"my_table\"", table.getQualifiedName( dialect ) );
 
 		InLineView inLineView = schema.createInLineView( "my_inlineview", "select ..." );
 		assertEquals( "( select ... )", inLineView.getQualifiedName( dialect ) );
-	}
-	
-	@Test
-	public void testTableLogicalName() {
-		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
-		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), false );
-		assertEquals( "my_table", table.getLogicalName() );
-		assertNull( table.getTableName() );
-		assertSame(  table, schema.locateTable( table.getLogicalName() ) );
-		table.setPhysicalName( Identifier.toIdentifier( "my_new_table" ) );
-		assertEquals( "my_new_table", table.getLogicalName() );
-		assertEquals( "my_new_table", table.getTableName().getName() );
-		assertSame( table, schema.locateTable( "my_new_table" ) );
-		assertNull( schema.locateTable( "my_table" ) );
-		table.setPhysicalName( Identifier.toIdentifier( "my_newer_table" ) );
-		assertEquals( "my_newer_table", table.getLogicalName() );
-		assertEquals( "my_newer_table", table.getTableName().getName() );
-		assertSame( table, schema.locateTable( "my_newer_table" ) );
-		assertNull( schema.locateTable( "my_new_table" ) );
-	}
-
-	@Test
-	public void testQuotedTableLogicalName() {
-		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
-		Table table = schema.createTable( Identifier.toIdentifier( "`my_table`" ), false );
-		assertEquals( "`my_table`", table.getLogicalName() );
-		assertNull( table.getTableName() );
-		assertSame( table, schema.locateTable( table.getLogicalName() ) );
-		table.setPhysicalName( Identifier.toIdentifier( "`my_new_table`" ) );
-		assertEquals( "`my_new_table`", table.getLogicalName() );
-		assertEquals( "my_new_table", table.getTableName().getName() );
-		assertSame( table, schema.locateTable( "`my_new_table`" ) );
-		assertNull( schema.locateTable( "`my_table`" ) );
-		table.setPhysicalName( Identifier.toIdentifier( "`my_newer_table`" ) );
-		assertEquals( "`my_newer_table`", table.getLogicalName() );
-		assertEquals( "my_newer_table", table.getTableName().getName() );
-		assertSame( table, schema.locateTable( "`my_newer_table`" ) );
-		assertNull( schema.locateTable( "`my_new_table`" ) );
-	}
-
-	@Test
-	public void testInLineViewLogicalName() {
-		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
-		InLineView view = schema.createInLineView( "my_view", "select" );
-		assertEquals( "my_view", view.getLogicalName() );
-		assertEquals( "select", view.getSelect() );
-		assertSame(  view, schema.getInLineView( view.getLogicalName() ) );
-	}
-
-	@Test
-	public void testLocateOrCreateTable() {
-		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
-		Table table = schema.locateOrCreateTable( "my_table", false );
-		assertEquals( "my_table", table.getLogicalName() );
-		assertNull( table.getTableName() );
-		Table tableTemp = schema.locateOrCreateTable( "my_table", true );
-		assertSame( table, tableTemp );
-		assertEquals( "my_table", table.getLogicalName() );
-		assertEquals( Identifier.toIdentifier( "my_table" ), table.getTableName() );
-		tableTemp = schema.locateOrCreateTable( "my_table", false );
-		assertSame( table, tableTemp );
-		assertEquals( "my_table", table.getLogicalName() );
-		assertEquals( Identifier.toIdentifier( "my_table" ), table.getTableName() );
 	}
 }

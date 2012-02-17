@@ -46,13 +46,6 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public int getTableNumber();
 
 	/**
-	 * Get logical table name
-	 *
-	 * @return the logical table name.
-	 */
-	public String getLogicalName();
-
-	/**
 	 * Get the primary key definition for this table spec.
 	 *
 	 * @return The PK definition.

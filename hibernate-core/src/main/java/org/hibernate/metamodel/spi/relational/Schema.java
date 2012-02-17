@@ -34,7 +34,7 @@ import java.util.Map;
 public class Schema {
 	private final Name name;
 	private Map<String, InLineView> inLineViews = new HashMap<String, InLineView>();
-	private Map<String, Table> tables = new HashMap<String, Table>();
+	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
 
 	public Schema(Name name) {
 		this.name = name;
@@ -48,72 +48,20 @@ public class Schema {
 		return name;
 	}
 
-	/**
-	 * Returns the table with the specified logical table name.
-	 * .
-	 * @param logicalTableName
-	 *
-	 * @return the table with the specified logical table name,
-	 *         or null if there is no table with the specified
-	 *         logical table name.
-	 */
-	public Table locateTable(String logicalTableName) {
-		return tables.get( logicalTableName );
+	public Table locateTable(Identifier name) {
+		return tables.get( name );
 	}
 
-	/**
-	 * Creates a {@link Table} with the specified logical name. If
-	 * {@code isPhysicalName} is true, then {@code name} is also
-	 * the phycical table name.
-	 *
-	 * @param name - the name of the table
-	 * @param isPhysicalName - true, if the name is known to be the
-	 *        physical name.
-	 * @return the created table.
-	 */
-	public Table createTable(Identifier name, boolean isPhysicalName) {
-		Table table = new Table( this, name, isPhysicalName );
-		tables.put( table.getLogicalName(), table );
+	public Table createTable(Identifier name) {
+		Table table = new Table( this, name );
+		tables.put( name, table );
 		return table;
 	}
 
-	/* package-protected */
-	void remapLogicalTableName(String oldName) {
-		Table table = tables.remove( oldName );
-		if ( table == null ) {
-			throw new IllegalStateException(
-					String.format(
-							"Schema (%s) does not contain a table with logical name (%s) to remap.",
-							name,
-							oldName
-					)
-			);
-		}
-		tables.put( table.getLogicalName(), table );
-	}
-
-	/**
-	 * Locates the table with the specified name; if none is found,
-	 * a table with the specified name is created.
-	 * <p/>
-	 * The value for {@code isPhysicalTableName} is ignored if a table
-	 * is located with the specified name, and that name is defined
-	 * as the physical table name (indicated by a non-null value returned
-	 * by {@link Table#getTableName()}.
-	 *
-	 * @param name - the name
-	 * @param isPhysicalTableName - true, if the table is known to be
-	 *                              the physical table name.
-	 * @return the located or created table.
-	 */
-	public Table locateOrCreateTable(String name, boolean isPhysicalTableName) {
+	public Table locateOrCreateTable(Identifier name) {
 		final Table existing = locateTable( name );
-		Identifier tableIdentifier = Identifier.toIdentifier( name );
 		if ( existing == null ) {
-			return createTable( tableIdentifier, isPhysicalTableName );
-		}
-		else if ( isPhysicalTableName && existing.getTableName() == null ) {
-			existing.setPhysicalName( tableIdentifier );
+			return createTable( name );
 		}
 		return existing;
 	}

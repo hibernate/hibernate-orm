@@ -256,7 +256,6 @@ public class Binder {
 
 		bindSecondaryTables( entitySource, entityBinding );
 		Deque<TableSpecification> tableStack = new ArrayDeque<TableSpecification>(  );
-		tableStack.add( entityBinding.getPrimaryTable() );
 		bindAttributes( entitySource, entityBinding, tableStack );
 
 		bindTableUniqueConstraints( entitySource, entityBinding );
@@ -385,6 +384,7 @@ public class Binder {
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
 
 		entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
+		entityBinding.setPrimaryTableName( superEntityBinding.getPrimaryTableName() );
 		bindDiscriminatorValue( entitySource, entityBinding );
 
 		return entityBinding;
@@ -989,10 +989,12 @@ public class Binder {
 
 		final String tableName = attributeSource.getExplicitCollectionTableName();
 		if ( StringHelper.isNotEmpty( tableName ) ) {
-			final String table = currentBindingContext.getNamingStrategy().tableName( tableName );
-			Table collectionTable = schema.locateTable( table );
+			final Identifier tableIdentifier = Identifier.toIdentifier(
+					currentBindingContext.getNamingStrategy().tableName( tableName )
+			);
+			Table collectionTable = schema.locateTable( tableIdentifier );
 			if ( collectionTable == null ) {
-				collectionTable = schema.createTable( Identifier.toIdentifier( tableName ), true );
+				collectionTable = schema.createTable( tableIdentifier );
 			}
 			pluralAttributeBinding.setCollectionTable( collectionTable );
 		}
@@ -1000,7 +1002,7 @@ public class Binder {
 			// todo : not sure wel have all the needed info here in all cases, specifically when needing to know the "other side"
 			final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
 			final String ownerTableLogicalName = Table.class.isInstance( owner.getPrimaryTable() )
-					? owner.getPrimaryTable().getLogicalName()
+					? Table.class.cast( owner.getPrimaryTable() ).getTableName().getName()
 					: null;
 			String collectionTableName = currentBindingContext.getNamingStrategy().collectionTableName(
 					owner.getEntity().getName(),
@@ -1010,13 +1012,11 @@ public class Binder {
 					pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
 			);
 			collectionTableName = quoteIdentifier( collectionTableName );
-			// TODO: may not know physical collection table name if this is an association;
-			// for now, assume that the physical collection table name is known at this point;
-			boolean isPhysicalCollectionTable = true;
 			pluralAttributeBinding.setCollectionTable(
 					schema.locateOrCreateTable(
-							collectionTableName,
-							isPhysicalCollectionTable
+							Identifier.toIdentifier(
+									collectionTableName
+							)
 					)
 			);
 		}
@@ -1037,9 +1037,11 @@ public class Binder {
 		AbstractPluralAttributeBinding pluralAttributeBinding,
 		Deque<TableSpecification> tableStack) {
 
+//		TableSpecification targetTable = tableStack.peekLast();
 		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
 				attributeSource.getKeySource().getExplicitForeignKeyName(),
-				tableStack.peekLast().getLogicalName()
+				//tableStack.peekLast().getLogicalName()
+				null  // todo : handle secondary table names
 		);
 		pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().setDeleteRule(
 				attributeSource.getKeySource().getOnDeleteAction()
@@ -1289,6 +1291,7 @@ public class Binder {
 		final TableSource tableSource = entitySource.getPrimaryTable();
 		final Table table = createTable( entityBinding, tableSource );
 		entityBinding.setPrimaryTable( table );
+		entityBinding.setPrimaryTableName( table.getTableName().getName() );
 	}
 
 	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
@@ -1317,7 +1320,7 @@ public class Binder {
 		return currentBindingContext.getMetadataImplementor()
 				.getDatabase()
 				.locateSchema( databaseSchemaName )
-				.locateOrCreateTable( tableName, true );
+				.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
 	}
 
 	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {

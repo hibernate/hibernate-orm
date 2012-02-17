@@ -23,25 +23,25 @@ buildscript {
 }
 
 idea {
-	project {
-		jdkName = "1.6"
-		ipr {
-			withXml { provider ->
-				provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
-				def maxHeapSizeConfig =  provider.node.component.find { it.@name == 'JavacSettings' }
-				if( maxHeapSizeConfig == null ){
-					def javacSettingsNode =  provider.node.appendNode('component',[name: 'JavacSettings'])
-					javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
-				}
-			}
-			beforeMerged { project ->
-				project.modulePaths.clear()
-			}
-		}
-	}
-	module {
-		name = "hibernate-orm"
-	}
+    project {
+        jdkName = "1.6"
+        ipr {
+            withXml { provider ->
+                provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+                def maxHeapSizeConfig =  provider.node.component.find { it.@name == 'JavacSettings' }
+                if( maxHeapSizeConfig == null ){
+                    def javacSettingsNode =  provider.node.appendNode('component',[name: 'JavacSettings'])
+                    javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
+                }
+            }
+            beforeMerged { project ->
+                project.modulePaths.clear()
+            }
+        }
+    }
+    module {
+        name = "hibernate-orm"
+    }
 }
 
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
@@ -107,7 +107,7 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
-	apply plugin: 'eclipse'
+    apply plugin: 'eclipse'
 
     defaultTasks 'build'
 
@@ -142,7 +142,7 @@ subprojects { subProject ->
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
-	        compile( libraries.logging )
+            compile( libraries.logging )
             testCompile( libraries.junit )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )
@@ -195,9 +195,9 @@ subprojects { subProject ->
         // for the time being eat the annoying output from running the annotation processors
         generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
-		compileJava.dependsOn generateMainLoggingClasses
+        compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
-	compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
+        compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
         manifest.mainAttributes(
                 provider: 'gradle',
@@ -228,38 +228,36 @@ subprojects { subProject ->
         targetCompatibility = "1.6"
         sourceCompatibility = "1.6"
 
-		idea {
-			module {
-				iml {
-					beforeMerged { module ->
-						module.dependencies.clear()
-						module.excludeFolders.clear()
-					}
-					whenMerged { module ->
-						module.dependencies*.exported = true
-						module.excludeFolders = [
-								file(".gradle"),
-								file("$buildDir/bundles"),
-								file("$buildDir/classes"),
-								file("$buildDir/dependency-cache"),
-								file("$buildDir/libs"),
-								file("$buildDir/reports"),
-								file("$buildDir/test-results"),
-								file("$buildDir/tmp"),
-								file("$buildDir/matrix")
-						] as Set
-					}
-				}
-				downloadSources = true
-				scopes.COMPILE.plus += configurations.provided
-			}
-		}
+        idea {
+            module {
+                iml {
+                    beforeMerged { module ->
+                        module.dependencies.clear()
+                        module.excludeFolders.clear()
+                    }
+                    whenMerged { module ->
+                        module.dependencies*.exported = true
+                        module.excludeFolders += module.pathFactory.path(file(".gradle"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/bundles"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/classes"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/dependency-cache"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/libs"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/reports"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/test-results"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/tmp"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/matrix"))
+                    }
+                }
+                downloadSources = true
+                scopes.COMPILE.plus += configurations.provided
+            }
+        }
 
-		eclipse {
-			classpath {
-				plusConfigurations.add( configurations.provided )
-			}
-		}
+        eclipse {
+            classpath {
+                plusConfigurations.add( configurations.provided )
+            }
+        }
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

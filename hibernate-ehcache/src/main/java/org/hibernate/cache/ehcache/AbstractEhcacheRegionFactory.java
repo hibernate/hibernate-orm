@@ -35,6 +35,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.nonstop.NonstopAccessStrategyFactory;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheQueryResultsRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTimestampsRegion;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
@@ -134,8 +135,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
     @Override
     public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
             throws CacheException {
-        // TODO Auto-generated method stub
-        return null;
+        return new EhcacheNaturalIdRegion( accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
     }
 
     /**

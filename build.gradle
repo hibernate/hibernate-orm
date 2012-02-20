@@ -18,7 +18,7 @@ buildscript {
         mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
     dependencies {
-        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.1.0'
+        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.1.1'
     }
 }
 

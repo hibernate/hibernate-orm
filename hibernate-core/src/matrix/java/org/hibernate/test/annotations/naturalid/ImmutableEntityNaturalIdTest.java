@@ -24,13 +24,17 @@
 package org.hibernate.test.annotations.naturalid;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -57,6 +61,15 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testImmutableNaturalIdLifecycle() {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.setStatisticsEnabled( true );
+		stats.clear();
+
+		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be empty", 0, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be empty", 0, stats.getNaturalIdQueryExecutionCount() );
+		
 		Building b1 = new Building();
 		b1.setName( "Computer Science" );
 		b1.setAddress( "1210 W. Dayton St." );
@@ -68,54 +81,86 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.persist( b1 );
 		tx.commit();
 		s.close();
+
+		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be one after insert", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be empty", 0, stats.getNaturalIdQueryExecutionCount() );
 		
-//		Statistics stats = sessionFactory().getStatistics();
-//		assertEquals(
-//				"Cache hits should be empty", 0, stats
-//						.getNaturalIdCacheHitCount()
-//		);
-//		assertEquals(
-//				"First load should be a miss", 1, stats
-//						.getNaturalIdCacheMissCount()
-//		);
-//		assertEquals(
-//				"Query result should be added to cache", 3, stats
-//						.getNaturalIdCachePutCount()
-//		);
-//
-//		Session s = openSession();
-//		Transaction tx = s.beginTransaction();
-//		State france = ( State ) s.load( State.class, 2 );
-//		final NaturalIdLoadAccess naturalIdLoader = s.byNaturalId( Citizen.class );
-//		naturalIdLoader.using( "ssn", "1234" ).using( "state", france );
-//
-//		//Not clearing naturalId caches, should be warm from entity loading
-//		stats.setStatisticsEnabled( true );
-//		stats.clear();
-//		assertEquals(
-//				"Cache hits should be empty", 0, stats
-//						.getNaturalIdCacheHitCount()
-//		);
-//
-//		// first query
-//		Citizen citizen = (Citizen)naturalIdLoader.load();
-//		assertNotNull( citizen );
-//		assertEquals(
-//				"Cache hits should be empty", 1, stats
-//						.getNaturalIdCacheHitCount()
-//		);
-//		assertEquals(
-//				"First load should be a miss", 0, stats
-//						.getNaturalIdCacheMissCount()
-//		);
-//		assertEquals(
-//				"Query result should be added to cache", 0, stats
-//						.getNaturalIdCachePutCount()
-//		);
-//
-//		// cleanup
-//		tx.rollback();
-//		s.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		
+		//Clear caches and reset cache stats
+		s.getSessionFactory().getCache().evictNaturalIdRegions();
+		stats.clear();
+		
+		NaturalIdLoadAccess naturalIdLoader = s.byNaturalId( Building.class );
+		naturalIdLoader.using( "address", "1210 W. Dayton St." ).using( "city", "Madison" ).using( "state", "WI" );
+
+		// first query
+		Building building = (Building) naturalIdLoader.load();
+		assertNotNull( building );
+		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be one after first query", 1, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be one after first query", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be one after first query", 1, stats.getNaturalIdQueryExecutionCount() );
+
+		// cleanup
+		tx.rollback();
+		s.close();
+		
+		//Try two, should be a cache hit
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		naturalIdLoader = s.byNaturalId( Building.class );
+		naturalIdLoader.using( "address", "1210 W. Dayton St." ).using( "city", "Madison" ).using( "state", "WI" );
+
+		// second query
+		building = (Building) naturalIdLoader.load();
+		assertNotNull( building );
+		assertEquals( "Cache hits should be one after second query", 1, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be one after second query", 1, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be one after second query", 1, stats.getNaturalIdQueryExecutionCount() );
+		
+		// Try Deleting
+		s.delete( building );
+		
+		// third query
+		building = (Building) naturalIdLoader.load();
+		assertNull( building );
+		assertEquals( "Cache hits should be one after second query", 1, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be one after second query", 1, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be one after second query", 1, stats.getNaturalIdQueryExecutionCount() );
+
+		// cleanup
+		tx.commit();
+		s.close();
+		
+		//Try three, should be db lookup and miss
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		naturalIdLoader = s.byNaturalId( Building.class );
+		naturalIdLoader.using( "address", "1210 W. Dayton St." ).using( "city", "Madison" ).using( "state", "WI" );
+
+		// second query
+		building = (Building) naturalIdLoader.load();
+		assertNull( building );
+		assertEquals( "Cache hits should be one after third query", 1, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache misses should be one after third query", 2, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "Cache put should be one after third query", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "Query count should be one after third query", 2, stats.getNaturalIdQueryExecutionCount() );
+
+		// cleanup
+		tx.rollback();
+		s.close();
+		
+		
+		
+		
 	}
 
 	@Override

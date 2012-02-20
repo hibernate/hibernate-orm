@@ -241,7 +241,7 @@ public final class EntityEntry implements Serializable {
 				.getCustomEntityDirtinessStrategy()
 				.resetDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 
-		notifyLoadedStateUpdated();
+		notifyLoadedStateUpdated( updatedState );
 	}
 
 	/**
@@ -253,17 +253,17 @@ public final class EntityEntry implements Serializable {
 		status = Status.GONE;
 		existsInDatabase = false;
 		
-		notifyLoadedStateDeleted();
+		notifyLoadedStateDeleted( deletedState );
 	}
 	
 	/**
 	 * After actually inserting a row, record the fact that the instance exists on the 
 	 * database (needed for identity-column key generation)
 	 */
-	public void postInsert() {
+	public void postInsert(Object[] insertedState) {
 		existsInDatabase = true;
 		
-		notifyLoadedStateInserted();
+		notifyLoadedStateInserted( insertedState );
 	}
 	
 	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
@@ -360,7 +360,7 @@ public final class EntityEntry implements Serializable {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
-			notifyLoadedStateUpdated();
+			notifyLoadedStateUpdated( loadedState );
 		}
 	}
 	
@@ -374,28 +374,28 @@ public final class EntityEntry implements Serializable {
 		return loadedWithLazyPropertiesUnfetched;
 	}
 
-	private void notifyLoadedStateUpdated() {
+	private void notifyLoadedStateUpdated(Object[] state) {
 		if ( persistenceContext == null ) {
 			throw new HibernateException( "PersistenceContext was null on attempt to update loaded state" );
 		}
 
-		persistenceContext.loadedStateUpdatedNotification( this );
+		persistenceContext.loadedStateUpdatedNotification( this, state );
 	}
 	
-	private void notifyLoadedStateInserted() {
+	private void notifyLoadedStateInserted(Object[] state) {
 		if ( persistenceContext == null ) {
 			throw new HibernateException( "PersistenceContext was null on attempt to insert loaded state" );
 		}
 
-		persistenceContext.loadedStateInsertedNotification( this );
+		persistenceContext.loadedStateInsertedNotification( this, state );
 	}
 
-	private void notifyLoadedStateDeleted() {
+	private void notifyLoadedStateDeleted(Object[] deletedState) {
 		if ( persistenceContext == null ) {
 			throw new HibernateException( "PersistenceContext was null on attempt to delete loaded state" );
 		}
 
-		persistenceContext.loadedStateDeletedNotification( this );
+		persistenceContext.loadedStateDeletedNotification( this, deletedState );
 	}
 
 	/**

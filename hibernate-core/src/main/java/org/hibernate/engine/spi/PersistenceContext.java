@@ -683,11 +683,11 @@ public interface PersistenceContext {
 	 */
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 
-	public void loadedStateUpdatedNotification(EntityEntry entityEntry);
+	public void loadedStateUpdatedNotification(EntityEntry entityEntry, Object[] state);
 	
-	public void loadedStateInsertedNotification(EntityEntry entityEntry);
+	public void loadedStateInsertedNotification(EntityEntry entityEntry, Object[] state);
 	
-	public void loadedStateDeletedNotification(EntityEntry entityEntry);
+	public void loadedStateDeletedNotification(EntityEntry entityEntry, Object[] deletedState);
 
 	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
 
@@ -704,5 +704,4 @@ public interface PersistenceContext {
 	
 	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId, CachedNaturalIdValueSource valueSource);
 	
-	public void evictNaturalIdResolution(EntityPersister persister, final Serializable pk, Object[] naturalIdValues );
 }

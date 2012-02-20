@@ -246,6 +246,8 @@ subprojects { subProject ->
                         module.excludeFolders += module.pathFactory.path(file("$buildDir/test-results"))
                         module.excludeFolders += module.pathFactory.path(file("$buildDir/tmp"))
                         module.excludeFolders += module.pathFactory.path(file("$buildDir/matrix"))
+                        module.excludeFolders += module.pathFactory.path(file("$buildDir/resources"))
+                        module.excludeFolders -= module.pathFactory.path(file("$buildDir"))
                     }
                 }
                 downloadSources = true

@@ -68,6 +68,7 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
@@ -276,7 +277,8 @@ public final class SessionFactoryImpl
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
 		// Caches
-		settings.getRegionFactory().start( settings, properties );
+		final RegionFactory regionFactory = settings.getRegionFactory();
+		regionFactory.start( settings, properties );
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		// todo : everything above here consider implementing as standard SF service.  specifically: stats, caches, types, function-reg
@@ -344,7 +346,7 @@ public final class SessionFactoryImpl
 					if ( LOG.isTraceEnabled() ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntityName() );
 					}
-					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
+					EntityRegion entityRegion = regionFactory.buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
 					allCacheRegions.put( cacheRegionName, entityRegion );
@@ -357,10 +359,22 @@ public final class SessionFactoryImpl
 				naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
 				
 				if ( naturalIdAccessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
-					final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
-					naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
-					entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
-					allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+					final CacheDataDescriptionImpl cacheDataDescription = CacheDataDescriptionImpl.decode( model );
+					
+					NaturalIdRegion naturalIdRegion = null;
+					try {
+						naturalIdRegion = regionFactory.buildNaturalIdRegion( naturalIdCacheRegionName, properties,
+								cacheDataDescription );
+					}
+					catch ( UnsupportedOperationException e ) {
+						LOG.warn( regionFactory.getClass().getName() +  " threw an UnsupportedOperationException for buildNaturalIdRegion, second-level NaturalId caching will not be enabled for " + model.getEntityName() );
+					}
+					
+					if (naturalIdRegion != null) {
+						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
+						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+						allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+					}
 				}
 			}
 			
@@ -389,7 +403,7 @@ public final class SessionFactoryImpl
 				if ( LOG.isTraceEnabled() ) {
 					LOG.tracev("Building cache for collection data [{0}]", model.getRole() );
 				}
-				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl
+				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl
 						.decode( model ) );
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
@@ -1495,7 +1509,7 @@ public final class SessionFactoryImpl
 			EntityPersister p = getEntityPersister( entityName );
 			if ( p.hasNaturalIdCache() ) {
 				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
+					LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );
 				}
 				p.getNaturalIdCacheAccessStrategy().evictAll();
 			}

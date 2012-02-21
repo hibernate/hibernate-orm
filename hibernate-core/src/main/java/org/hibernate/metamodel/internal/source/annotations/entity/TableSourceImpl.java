@@ -34,7 +34,7 @@ class TableSourceImpl implements TableSource {
 		this.schema = schema;
 		this.catalog = catalog;
 		// for some reason annotations passing in "" sometimes :(
-		this.tableName = tableName.equals( "" ) ? null : tableName;
+		this.tableName = "".equals( tableName ) ? null : tableName;
 	}
 
 	@Override

@@ -33,8 +33,7 @@ class TableSourceImpl implements TableSource {
 	TableSourceImpl(String schema, String catalog, String tableName) {
 		this.schema = schema;
 		this.catalog = catalog;
-		// for some reason annotations passing in "" sometimes :(
-		this.tableName = "".equals( tableName ) ? null : tableName;
+		this.tableName = tableName;
 	}
 
 	@Override

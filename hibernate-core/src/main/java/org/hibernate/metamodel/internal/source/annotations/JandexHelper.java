@@ -335,7 +335,7 @@ public class JandexHelper {
 		if ( defaultValue.getClass().isArray() && defaultValue.getClass().getComponentType().isAnnotation() ) {
 			returnValue = new AnnotationInstance[0];
 		}
-		return type.cast( returnValue );
+		return type.cast( nullIfUndefined( returnValue, type ) );
 	}
 
 	private static <T> T explicitAnnotationParameter(AnnotationValue annotationValue, Class<T> type) {
@@ -358,6 +358,30 @@ public class JandexHelper {
 			returnValue = arr;
 		}
 
-		return type.cast( returnValue );
+		return type.cast( nullIfUndefined( returnValue, type ) );
+	}
+
+	/**
+	 * Swaps type-specific undefined values with {@code null}.
+	 *
+	 * @param value The value
+	 * @param type The target type
+	 *
+	 * @return {@code null} if value is deemed to UNDEFINED; value itself otherwise.
+	 */
+	private static Object nullIfUndefined(Object value, Class type) {
+		if ( value instanceof Type ) {
+			value = ( (Type) value ).name().toString();
+			if ( void.class.getName().equals( value ) ) {
+				value = null;
+			}
+		}
+
+		if ( String.class.equals( type ) ) {
+			if ( "".equals( type.cast( value ) ) ) {
+				value = null;
+			}
+		}
+		return value;
 	}
 }

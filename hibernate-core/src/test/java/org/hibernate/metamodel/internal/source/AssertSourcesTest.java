@@ -40,6 +40,7 @@ import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
@@ -98,10 +99,11 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertTrue( entitySource.getJpaCallbackClasses() == null || entitySource.getJpaCallbackClasses().isEmpty() );
 
-		TableSource primaryTable = entitySource.getPrimaryTable();
+		TableSpecificationSource primaryTableSpecificationSource = entitySource.getPrimaryTable();
+		assertTrue( TableSource.class.isInstance( primaryTableSpecificationSource  ) );
+		TableSource primaryTable = (TableSource) primaryTableSpecificationSource;
 		// todo : should sources be responsible for figuring out logical names?
 		//		these are the things that need to match in terms of lookup keys
-		assertNull( primaryTable.getLogicalName() );
 		assertNull( primaryTable.getExplicitCatalogName() );
 		assertNull( primaryTable.getExplicitSchemaName() );
 		assertNull( primaryTable.getExplicitTableName() );

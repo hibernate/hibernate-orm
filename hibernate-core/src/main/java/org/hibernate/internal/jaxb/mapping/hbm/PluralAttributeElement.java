@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface PluralAttributeElement extends MetaAttributeContainer {
+public interface PluralAttributeElement extends TableInformationSource, MetaAttributeContainer {
 	public String getName();
 	public String getAccess();
 
@@ -42,13 +42,8 @@ public interface PluralAttributeElement extends MetaAttributeContainer {
 	public JaxbManyToManyElement getManyToMany();
     public JaxbManyToAnyElement getManyToAny();
 
-	public String getSchema();
-	public String getCatalog();
-	public String getTable();
 	public String getComment();
 	public String getCheck();
-	public String getSubselect();
-	public String getSubselectAttribute();
 	public String getWhere();
 
 	public JaxbLoaderElement getLoader();

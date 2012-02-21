@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class Schema {
 	private final Name name;
-	private Map<String, InLineView> inLineViews = new HashMap<String, InLineView>();
+	private Map<Identifier, InLineView> inLineViews = new HashMap<Identifier, InLineView>();
 	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
 
 	public Schema(Name name) {
@@ -49,72 +49,41 @@ public class Schema {
 	}
 
 	/**
-	 * Returns the table with the specified table name.
+	 * Returns the table with the specified logical table name.
 	 *
-	 * @param tableName - the name of the table
+	 * @param logicalTableName - the logical name of the table
 	 *
 	 * @return the table with the specified table name,
 	 *         or null if there is no table with the specified
 	 *         table name.
 	 */
-	public Table locateTable(Identifier tableName) {
-		return tables.get( tableName );
+	public Table locateTable(Identifier logicalTableName) {
+		return tables.get( logicalTableName );
 	}
 
 	/**
 	 * Creates a {@link Table} with the specified name.
 	 *
-	 * @param tableName - the name of the table
+	 * @param logicalTableName The logical table name
+	 * @param physicalTableName - the name of the table
 	 *
 	 * @return the created table.
 	 */
-	public Table createTable(Identifier tableName) {
-		Table table = new Table( this, tableName );
-		tables.put( tableName, table );
+	public Table createTable(Identifier logicalTableName, Identifier physicalTableName) {
+		Table table = new Table( this, logicalTableName, physicalTableName );
+		tables.put( logicalTableName, table );
 		return table;
-	}
-
-	/**
-	 * Locates a {@link Table} with the specified name; if
-	 * it does not exist, then a table is created with
-	 * the specified name.
-	 *
-	 * @param tableName - the name of the table
-	 *
-	 * @return the located or created table.
-	 */
-	public Table locateOrCreateTable(Identifier tableName) {
-		final Table existing = locateTable( tableName );
-		if ( existing == null ) {
-			return createTable( tableName );
-		}
-		return existing;
-	}
-
-	/* package-protected */
-	void remapTableName(Identifier oldTableName) {
-		Table table = tables.remove( oldTableName );
-		if ( table == null ) {
-			throw new IllegalStateException(
-					String.format(
-							"Schema (%s) does not contain a table (%s) to remap.",
-							name,
-							oldTableName
-					)
-			);
-		}
-		tables.put( table.getTableName(), table );
 	}
 
 	public Iterable<Table> getTables() {
 		return tables.values();
 	}
 
-	public InLineView getInLineView(String logicalName) {
+	public InLineView getInLineView(Identifier logicalName) {
 		return inLineViews.get( logicalName );
 	}
 
-	public InLineView createInLineView(String logicalName, String subSelect) {
+	public InLineView createInLineView(Identifier logicalName, String subSelect) {
 		InLineView inLineView = new InLineView( this, logicalName, subSelect );
 		inLineViews.put( logicalName, inLineView );
 		return inLineView;

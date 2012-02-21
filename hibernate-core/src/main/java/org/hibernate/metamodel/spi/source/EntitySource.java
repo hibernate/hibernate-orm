@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 import java.util.List;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
@@ -78,14 +79,14 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 *
 	 * @return The primary table.
 	 */
-	public TableSource getPrimaryTable();
+	public TableSpecificationSource getPrimaryTable();
 
 	/**
 	 * Obtain the secondary tables for this entity
 	 *
 	 * @return returns an iterator over the secondary tables for this entity
 	 */
-	public Iterable<TableSource> getSecondaryTables();
+	public Set<SecondaryTableSource> getSecondaryTables();
 
 	/**
 	 * Obtain the name of a custom tuplizer class to be used.

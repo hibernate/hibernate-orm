@@ -24,78 +24,36 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
-import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Steve Ebersole
  */
 public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implements SubclassEntitySource {
-
     private final EntitySource container;
+	private final TableSpecificationSource primaryTable;
 
-	protected SubclassEntitySourceImpl( MappingDocument sourceMappingDocument,
-	                                    EntityElement entityElement,
-	                                    EntitySource container ) {
+	protected SubclassEntitySourceImpl(
+			MappingDocument sourceMappingDocument,
+			EntityElement entityElement,
+			EntitySource container) {
 		super( sourceMappingDocument, entityElement );
 		this.container = container;
+		this.primaryTable = TableInformationSource.class.isInstance( entityElement )
+				? Helper.createTableSource(
+						(TableInformationSource) entityElement,
+						sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement )
+				)
+				: null;
 	}
 
 	@Override
-	public TableSource getPrimaryTable() {
-		if ( JaxbJoinedSubclassElement.class.isInstance( entityElement() ) ) {
-			return new TableSource() {
-				@Override
-				public String getExplicitSchemaName() {
-					return ( (JaxbJoinedSubclassElement) entityElement() ).getSchema();
-				}
-
-				@Override
-				public String getExplicitCatalogName() {
-					return ( (JaxbJoinedSubclassElement) entityElement() ).getCatalog();
-				}
-
-				@Override
-				public String getExplicitTableName() {
-					return ( (JaxbJoinedSubclassElement) entityElement() ).getTable();
-				}
-
-				@Override
-				public String getLogicalName() {
-					// logical name for the primary table is null
-					return null;
-				}
-			};
-		}
-		else if ( JaxbUnionSubclassElement.class.isInstance( entityElement() ) ) {
-			return new TableSource() {
-				@Override
-				public String getExplicitSchemaName() {
-					return ( (JaxbUnionSubclassElement) entityElement() ).getSchema();
-				}
-
-				@Override
-				public String getExplicitCatalogName() {
-					return ( (JaxbUnionSubclassElement) entityElement() ).getCatalog();
-				}
-
-				@Override
-				public String getExplicitTableName() {
-					return ( (JaxbUnionSubclassElement) entityElement() ).getTable();
-				}
-
-				@Override
-				public String getLogicalName() {
-					// logical name for the primary table is null
-					return null;
-				}
-			};
-		}
-		return null;
+	public TableSpecificationSource getPrimaryTable() {
+		return primaryTable;
 	}
 
 	@Override
@@ -105,11 +63,6 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 				: null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see SubclassEntitySource#superclassEntitySource()
-	 */
 	@Override
 	public EntitySource superclassEntitySource() {
 	    return container;

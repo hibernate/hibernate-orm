@@ -28,6 +28,7 @@ import java.util.List;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -43,4 +44,7 @@ public interface HbmBindingContext extends LocalBindingContext {
 	public String determineEntityName(EntityElement entityElement);
 
 	public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName);
+
+	public MappingException makeMappingException(String message);
+	public MappingException makeMappingException(String message, Exception cause);
 }

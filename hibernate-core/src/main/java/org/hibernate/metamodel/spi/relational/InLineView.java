@@ -36,10 +36,10 @@ import org.hibernate.dialect.Dialect;
  */
 public class InLineView extends AbstractTableSpecification {
 	private final Schema schema;
-	private final String logicalName;
+	private final Identifier logicalName;
 	private final String select;
 
-	public InLineView(Schema schema, String logicalName, String select) {
+	public InLineView(Schema schema, Identifier logicalName, String select) {
 		this.schema = schema;
 		this.logicalName = logicalName;
 		this.select = select;
@@ -50,7 +50,7 @@ public class InLineView extends AbstractTableSpecification {
 	}
 
 	@Override
-	public String getLogicalName() {
+	public Identifier getLogicalName() {
 		return logicalName;
 	}
 
@@ -60,7 +60,7 @@ public class InLineView extends AbstractTableSpecification {
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return logicalName;
+		return logicalName.getName();
 	}
 
 	@Override

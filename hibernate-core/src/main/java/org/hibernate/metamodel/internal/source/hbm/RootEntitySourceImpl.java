@@ -37,22 +37,30 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.AttributeSource;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * @author Steve Ebersole
  */
 public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements RootEntitySource {
-	protected RootEntitySourceImpl(MappingDocument sourceMappingDocument, JaxbHibernateMapping.JaxbClass entityElement) {
+	private final TableSpecificationSource primaryTable;
+
+	protected RootEntitySourceImpl(
+			MappingDocument sourceMappingDocument,
+			JaxbHibernateMapping.JaxbClass entityElement) {
 		super( sourceMappingDocument, entityElement );
+		this.primaryTable = Helper.createTableSource(
+				entityElement,
+				sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement )
+		);
 	}
 
 	@Override
@@ -196,29 +204,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
-	public TableSource getPrimaryTable() {
-		return new TableSource() {
-			@Override
-			public String getExplicitSchemaName() {
-				return entityElement().getSchema();
-			}
-
-			@Override
-			public String getExplicitCatalogName() {
-				return entityElement().getCatalog();
-			}
-
-			@Override
-			public String getExplicitTableName() {
-				return entityElement().getTable();
-			}
-
-			@Override
-			public String getLogicalName() {
-				// logical name for the primary table is null
-				return null;
-			}
-		};
+	public TableSpecificationSource getPrimaryTable() {
+		return primaryTable;
 	}
 
 	@Override

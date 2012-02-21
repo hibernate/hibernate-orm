@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,15 +24,18 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
- * Contract describing source of table information
+ * Describes in-line view source information.  Generally, either {@link org.hibernate.annotations.Subselect}
+ * or {@code <subselect/>}
  *
  * @author Steve Ebersole
  */
-public interface TableSource extends TableSpecificationSource {
+public interface InLineViewSource extends TableSpecificationSource {
 	/**
-	 * Obtain the supplied table name.
+	 * Obtain the {@code SQL SELECT} statement to use.  Cannot be null!
 	 *
-	 * @return The table name, or {@code null} is no name specified.
+	 * @return The {@code SQL SELECT} statement
 	 */
-	public String getExplicitTableName();
+	public String getSelectStatement();
+
+	public String getLogicalName();
 }

@@ -69,6 +69,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.InLineView;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -85,6 +86,7 @@ import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
@@ -97,6 +99,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
+import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -104,6 +107,7 @@ import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.SubclassEntityContainer;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
@@ -974,51 +978,37 @@ public class Binder {
 //	}
 
 	private void bindCollectionTable(
-			PluralAttributeSource attributeSource,
-			AbstractPluralAttributeBinding pluralAttributeBinding) {
+			final PluralAttributeSource attributeSource,
+			final AbstractPluralAttributeBinding pluralAttributeBinding) {
 		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY ) {
 			return;
 		}
 
-		final Schema.Name schemaName = Helper.determineDatabaseSchemaName(
-				attributeSource.getExplicitSchemaName(),
-				attributeSource.getExplicitCatalogName(),
-				currentBindingContext
-		);
-		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
-
-		final String tableName = attributeSource.getExplicitCollectionTableName();
-		if ( StringHelper.isNotEmpty( tableName ) ) {
-			final Identifier tableIdentifier = Identifier.toIdentifier(
-					currentBindingContext.getNamingStrategy().tableName( tableName )
+		TableSpecificationSource tableSpecificationSource = attributeSource.getCollectionTableSpecificationSource();
+		if ( TableSource.class.isInstance( tableSpecificationSource ) ) {
+			Table collectionTable = createTable(
+					(TableSource) tableSpecificationSource,
+					new InferredNamingStrategy() {
+						@Override
+						public String inferredTableName() {
+							final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
+							final String ownerTableLogicalName = Table.class.isInstance( owner.getPrimaryTable() )
+									? Table.class.cast( owner.getPrimaryTable() ).getTableName().getName()
+									: null;
+							return currentBindingContext.getNamingStrategy().collectionTableName(
+									owner.getEntity().getName(),
+									ownerTableLogicalName,
+									null,	// todo : here
+									null,	// todo : and here
+									pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
+							);
+						}
+					}
 			);
-			Table collectionTable = schema.locateTable( tableIdentifier );
-			if ( collectionTable == null ) {
-				collectionTable = schema.createTable( tableIdentifier );
-			}
 			pluralAttributeBinding.setCollectionTable( collectionTable );
 		}
 		else {
-			// todo : not sure wel have all the needed info here in all cases, specifically when needing to know the "other side"
-			final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
-			final String ownerTableLogicalName = Table.class.isInstance( owner.getPrimaryTable() )
-					? Table.class.cast( owner.getPrimaryTable() ).getTableName().getName()
-					: null;
-			String collectionTableName = currentBindingContext.getNamingStrategy().collectionTableName(
-					owner.getEntity().getName(),
-					ownerTableLogicalName,
-					null,	// todo : here
-					null,	// todo : and here
-					pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
-			);
-			collectionTableName = quoteIdentifier( collectionTableName );
-			pluralAttributeBinding.setCollectionTable(
-					schema.locateOrCreateTable(
-							Identifier.toIdentifier(
-									collectionTableName
-							)
-					)
-			);
+			pluralAttributeBinding.setCollectionTable( createInLineView( (InLineViewSource) tableSpecificationSource ) );
 		}
 
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableComment() ) ) {
@@ -1287,40 +1277,99 @@ public class Binder {
 
 	// Relational ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void bindPrimaryTable(EntitySource entitySource, EntityBinding entityBinding) {
-		final TableSource tableSource = entitySource.getPrimaryTable();
-		final Table table = createTable( entityBinding, tableSource );
-		entityBinding.setPrimaryTable( table );
-		entityBinding.setPrimaryTableName( table.getTableName().getName() );
-	}
-
-	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
-		for ( TableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
-			final Table table = createTable( entityBinding, secondaryTableSource );
-			entityBinding.addSecondaryTable( secondaryTableSource.getLogicalName(), table );
-		}
-	}
-
-	private Table createTable(EntityBinding entityBinding, TableSource tableSource) {
-		String tableName = tableSource.getExplicitTableName();
-		if ( StringHelper.isEmpty( tableName ) ) {
-			tableName = currentBindingContext.getNamingStrategy()
-					.classToTableName( entityBinding.getEntity().getClassName() );
+	private void bindPrimaryTable(EntitySource entitySource, final EntityBinding entityBinding) {
+		final TableSpecificationSource tableSpecificationSource = entitySource.getPrimaryTable();
+		if ( TableSource.class.isInstance( tableSpecificationSource ) ) {
+			final Table table = createTable(
+					(TableSource) tableSpecificationSource,
+					new InferredNamingStrategy() {
+						@Override
+						public String inferredTableName() {
+							return currentBindingContext.getNamingStrategy()
+									.classToTableName( entityBinding.getEntity().getClassName() );
+						}
+					}
+			);
+			entityBinding.setPrimaryTable( table );
+			// todo : ugh!
+			entityBinding.setPrimaryTableName( table.getTableName().getName() );
 		}
 		else {
-			tableName = currentBindingContext.getNamingStrategy().tableName( tableName );
+			entityBinding.setPrimaryTable( createInLineView( (InLineViewSource) tableSpecificationSource ) );
 		}
-		tableName = quoteIdentifier( tableName );
+	}
+
+	private InLineView createInLineView(InLineViewSource inLineViewSource) {
+		final Schema.Name databaseSchemaName = Helper.determineDatabaseSchemaName(
+				inLineViewSource.getExplicitSchemaName(),
+				inLineViewSource.getExplicitCatalogName(),
+				currentBindingContext
+		);
+		final Identifier logicalName = Identifier.toIdentifier( inLineViewSource.getLogicalName() );
+		return currentBindingContext.getMetadataImplementor()
+				.getDatabase()
+				.locateSchema( databaseSchemaName )
+				.createInLineView( logicalName, inLineViewSource.getSelectStatement() );
+	}
+
+	private static interface InferredNamingStrategy {
+		public String inferredTableName();
+	}
+
+	private Table createTable(TableSource tableSource, InferredNamingStrategy namingStrategy) {
+		String explicitTableNameString = tableSource.getExplicitTableName();
+		if ( explicitTableNameString == null ) {
+			explicitTableNameString = namingStrategy.inferredTableName();
+		}
+		explicitTableNameString = quoteIdentifier( explicitTableNameString );
+		final Identifier logicalName = Identifier.toIdentifier( explicitTableNameString );
+
+		explicitTableNameString = currentBindingContext.getNamingStrategy().tableName( explicitTableNameString );
+		explicitTableNameString = quoteIdentifier( explicitTableNameString );
+		final Identifier physicalName = Identifier.toIdentifier( explicitTableNameString );
 
 		final Schema.Name databaseSchemaName = Helper.determineDatabaseSchemaName(
 				tableSource.getExplicitSchemaName(),
 				tableSource.getExplicitCatalogName(),
 				currentBindingContext
 		);
-		return currentBindingContext.getMetadataImplementor()
+
+		Table table = currentBindingContext.getMetadataImplementor()
 				.getDatabase()
 				.locateSchema( databaseSchemaName )
-				.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
+				.locateTable( logicalName );
+		if ( table == null ) {
+			table = currentBindingContext.getMetadataImplementor()
+				.getDatabase()
+				.locateSchema( databaseSchemaName )
+				.createTable( logicalName, physicalName );
+		}
+		return table;
+	}
+
+	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
+		for ( SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
+			final TableSpecificationSource source = secondaryTableSource.getTableSource();
+			if ( TableSource.class.isInstance( source ) ) {
+				final Table table = createTable(
+						(TableSource) source,
+						new InferredNamingStrategy() {
+							@Override
+							public String inferredTableName() {
+								throw new MappingException(
+										"Secondary table must specify explicit name",
+										currentBindingContext.getOrigin()
+								);
+							}
+						}
+				);
+				// todo : finish up...
+				//		1) no need to keep secondary tables on EntityBinding because we should be able to look them
+				//			up from Schema
+				//		2) process foreign key
+				entityBinding.addSecondaryTable( table.getLogicalName().getName(), table );
+			}
+		}
 	}
 
 	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {

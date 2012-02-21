@@ -37,9 +37,10 @@ import org.hibernate.dialect.Dialect;
  */
 public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
-	private Identifier tableName;
+	private Identifier physicalName;
+	private Identifier logicalName;
 	private ObjectName objectName;
-	private String qualifiedName;
+	private String exportIdentifier;
 
 	private final LinkedHashMap<String,Index> indexes = new LinkedHashMap<String,Index>();
 	private final LinkedHashMap<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
@@ -50,21 +51,15 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	 * Constructs a {@link Table} instance.
 	 *
 	 * @param database - the schema
-	 * @param tableName - the table name as a String
+	 * @param logicalName - The logical name
+	 * @param physicalName - the physical table name.
 	 */
-	public Table(Schema database, String tableName) {
-		this( database, Identifier.toIdentifier( tableName ) );
-	}
-
-	/**
-	 * Constructs a {@link Table} instance.
-	 *
-	 * @param database - the schema
-	 * @param tableName - the table name as an {@link Identifier}
-	 */
-	public Table(Schema database, Identifier tableName) {
+	public Table(Schema database, Identifier logicalName, Identifier physicalName) {
 		this.database = database;
-		setTableName( tableName );
+		this.logicalName = logicalName;
+		this.physicalName = physicalName;
+		this.objectName = new ObjectName( database, physicalName );
+		this.exportIdentifier = objectName.toText();
 	}
 
 	@Override
@@ -78,29 +73,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	 * @return the logical table name.
 	 */
 	@Override
-	public String getLogicalName() {
-		return tableName.getName();
-	}
-
-	/**
-	 * Sets the table name, remapping this {@link Table} by the new
-	 * table name in the {@link Schema}, if necessary.
-	 * 
-	 * @param tableName - the table name
-	 */
-	public final void setTableName(Identifier tableName) {
-		if ( tableName == null ) {
-			throw new IllegalArgumentException( "tableName cannot be null." );
-		}
-		if ( !tableName.equals( this.tableName ) ) {
-			Identifier tableNameOld = this.tableName;
-			this.tableName = tableName;
-			objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
-			this.qualifiedName = objectName.toText();
-			if ( tableNameOld != null ) {
-				database.remapTableName( tableNameOld );
-			}
-		}
+	public Identifier getLogicalName() {
+		return logicalName;
 	}
 
 	/**
@@ -108,22 +82,22 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	 * @return the table name.
 	 */
 	public Identifier getTableName() {
-		return tableName;
+		return physicalName;
 	}
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return qualifiedName;
+		return exportIdentifier;
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		return qualifiedName;
+		return exportIdentifier;
 	}
 
 	@Override
 	public String toLoggableString() {
-		return qualifiedName;
+		return exportIdentifier;
 	}
 
 	@Override
@@ -341,6 +315,6 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public String toString() {
-		return "Table{name=" + qualifiedName + '}';
+		return "Table{name=" + exportIdentifier + '}';
 	}
 }

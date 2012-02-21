@@ -20,6 +20,7 @@
         <!-- Mix-ins -->
         <jaxb:bindings node="//xsd:element[@name='class']/xsd:complexType">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.EntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='subclass-element']">
@@ -28,10 +29,16 @@
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='joined-subclass-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='union-subclass-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='join-element']">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
+        </jaxb:bindings>
+
         <jaxb:bindings node="//xsd:complexType[@name='sql-insert-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>

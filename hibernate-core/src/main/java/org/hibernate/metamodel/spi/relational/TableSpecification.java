@@ -43,7 +43,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 *
 	 *  @return the logical table name.
 	 */
-	public String getLogicalName();
+	public Identifier getLogicalName();
 
 	/**
 	 * Get the table number.

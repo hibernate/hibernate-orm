@@ -41,8 +41,9 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.ToOneAttrib
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
-import org.hibernate.metamodel.spi.source.TableSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Hardy Ferentschik
@@ -86,7 +87,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public TableSource getPrimaryTable() {
+	public TableSpecificationSource getPrimaryTable() {
 		return entityClass.getPrimaryTableSource();
 	}
 
@@ -217,7 +218,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public Iterable<TableSource> getSecondaryTables() {
+	public Set<SecondaryTableSource> getSecondaryTables() {
 		return entityClass.getSecondaryTableSources();
 	}
 }

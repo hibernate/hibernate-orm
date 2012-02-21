@@ -44,6 +44,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Steve Ebersole
@@ -137,6 +138,14 @@ public abstract class AbstractPluralAttributeSourceImpl
 	@Override
 	public PluralAttributeElementSource getElementSource() {
 		return elementSource;
+	}
+
+	@Override
+	public TableSpecificationSource getCollectionTableSpecificationSource() {
+		return Helper.createTableSource(
+				pluralAttributeElement,
+				container().getPath() + "." + pluralAttributeElement.getName()
+		);
 	}
 
 	@Override

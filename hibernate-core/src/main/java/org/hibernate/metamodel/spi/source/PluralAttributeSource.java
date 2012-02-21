@@ -37,6 +37,7 @@ public interface PluralAttributeSource
 
 	public PluralAttributeElementSource getElementSource();
 
+	public TableSpecificationSource getCollectionTableSpecificationSource();
 	public String getExplicitSchemaName();
 	public String getExplicitCatalogName();
 	public String getExplicitCollectionTableName();

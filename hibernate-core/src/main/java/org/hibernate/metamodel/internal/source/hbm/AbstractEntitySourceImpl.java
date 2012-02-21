@@ -25,7 +25,9 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -35,6 +37,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdbagElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
@@ -43,6 +46,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -51,9 +55,9 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
-import org.hibernate.metamodel.spi.source.TableSource;
 
 /**
  * @author Steve Ebersole
@@ -62,12 +66,27 @@ import org.hibernate.metamodel.spi.source.TableSource;
 public abstract class AbstractEntitySourceImpl implements EntitySource {
 	private final MappingDocument sourceMappingDocument;
 	private final EntityElement entityElement;
+	private final Set<SecondaryTableSource> secondaryTableSources;
 
 	private List<SubclassEntitySource> subclassEntitySources = new ArrayList<SubclassEntitySource>();
 
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
 		this.sourceMappingDocument = sourceMappingDocument;
 		this.entityElement = entityElement;
+
+		secondaryTableSources = extractSecondaryTables( entityElement, sourceMappingDocument.getMappingLocalBindingContext() );
+	}
+
+	private static Set<SecondaryTableSource> extractSecondaryTables(EntityElement entityElement, HbmBindingContext bindingContext) {
+		if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
+			return Collections.emptySet();
+		}
+
+		final Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
+		for ( JaxbJoinElement joinElement :  ( (JoinElementSource) entityElement ).getJoin() ) {
+			secondaryTableSources.add( new SecondaryTableSourceImpl( joinElement, bindingContext ) );
+		}
+		return secondaryTableSources;
 	}
 
 	protected EntityElement entityElement() {
@@ -320,11 +339,12 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public Iterable<TableSource> getSecondaryTables() {
-		return Collections.emptySet();
+	public Set<SecondaryTableSource> getSecondaryTables() {
+		return secondaryTableSources;
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked"})
 	public List<JpaCallbackSource> getJpaCallbackClasses() {
 	    return Collections.EMPTY_LIST;
 	}

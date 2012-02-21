@@ -41,6 +41,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -53,6 +54,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * A helper for dealing with
@@ -285,6 +287,27 @@ public class Helper {
 			}
 		}
 		return null;
+	}
+
+	public static TableSpecificationSource createTableSource(TableInformationSource jaxbTableSource, String context) {
+		if ( jaxbTableSource.getSubselectAttribute() == null && jaxbTableSource.getSubselect() == null ) {
+			return new TableSourceImpl(
+					jaxbTableSource.getSchema(),
+					jaxbTableSource.getCatalog(),
+					jaxbTableSource.getTable()
+			);
+		}
+		else {
+			return new InLineViewSourceImpl(
+					jaxbTableSource.getSchema(),
+					jaxbTableSource.getCatalog(),
+					jaxbTableSource.getSubselectAttribute() != null
+							? jaxbTableSource.getSubselectAttribute()
+							: jaxbTableSource.getSubselect(),
+					context
+			);
+		}
+
 	}
 
 	/**

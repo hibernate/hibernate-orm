@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,15 +24,24 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
- * Contract describing source of table information
+ * Contract describing source of "table specification" information.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.metamodel.spi.relational.TableSpecification
  */
-public interface TableSource extends TableSpecificationSource {
+public interface TableSpecificationSource {
 	/**
-	 * Obtain the supplied table name.
+	 * Obtain the supplied schema name
 	 *
-	 * @return The table name, or {@code null} is no name specified.
+	 * @return The schema name. If {@code null}, the binder will apply the default.
 	 */
-	public String getExplicitTableName();
+	public String getExplicitSchemaName();
+
+	/**
+	 * Obtain the supplied catalog name
+	 *
+	 * @return The catalog name. If {@code null}, the binder will apply the default.
+	 */
+	public String getExplicitCatalogName();
 }

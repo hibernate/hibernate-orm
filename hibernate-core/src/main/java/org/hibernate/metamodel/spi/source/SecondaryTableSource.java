@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,16 +23,30 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
 /**
- * Contract describing source of table information
- *
  * @author Steve Ebersole
  */
-public interface TableSource extends TableSpecificationSource {
+public interface SecondaryTableSource {
 	/**
-	 * Obtain the supplied table name.
+	 * Obtain the table being joined to.
 	 *
-	 * @return The table name, or {@code null} is no name specified.
+	 * @return The joined table.
 	 */
-	public String getExplicitTableName();
+	public TableSpecificationSource getTableSource();
+
+	/**
+	 * Retrieves the columns used to define the foreign key back to the entity table.
+	 * 
+	 * @return The columns used to define the foreign key for this secondary table
+	 */
+	public List<PrimaryKeyJoinColumnSource> getJoinColumns();
+
+	/**
+	 * Retrieve any user-specified foreign key name.
+	 *
+	 * @return The user-specified foreign key name, or {@code null} if the user did not specify.
+	 */
+	public String getForeignKeyName();
 }

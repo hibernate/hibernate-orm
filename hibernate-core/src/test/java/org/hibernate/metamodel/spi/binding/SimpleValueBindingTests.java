@@ -35,6 +35,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Size;
@@ -56,7 +57,8 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicMiddleOutBuilding() {
-		Table table = new Table( new Schema( null, null ), "the_table" );
+		final Identifier tableName = Identifier.toIdentifier( "the_table" );
+		Table table = new Table( new Schema( null, null ), tableName, tableName );
 		Column idColumn = table.locateOrCreateColumn( "id" );
 		idColumn.setJdbcDataType( BIGINT );
 		idColumn.setSize( Size.precision( 18, 0 ) );

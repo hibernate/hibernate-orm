@@ -35,6 +35,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
@@ -168,6 +169,16 @@ public class MappingDocument {
 		@Override
 		public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName) {
 			// todo : this really needs to not be part of the context
+		}
+
+		@Override
+		public MappingException makeMappingException(String message) {
+			return new MappingException( message, getOrigin() );
+		}
+
+		@Override
+		public MappingException makeMappingException(String message, Exception cause) {
+			return new MappingException( message, cause, getOrigin() );
 		}
 	}
 }

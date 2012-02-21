@@ -32,7 +32,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -46,7 +45,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private final PluralAttributeKeyBinding pluralAttributeKeyBinding;
 	private final AbstractPluralAttributeElementBinding pluralAttributeElementBinding;
 
-	private Table collectionTable;
+	private TableSpecification collectionTable;
 
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
@@ -167,7 +166,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return collectionTable;
 	}
 
-	public void setCollectionTable(Table collectionTable) {
+	public void setCollectionTable(TableSpecification collectionTable) {
 		this.collectionTable = collectionTable;
 	}
 

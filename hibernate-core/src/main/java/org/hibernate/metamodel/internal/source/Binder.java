@@ -52,6 +52,7 @@ import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
@@ -95,6 +96,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
@@ -261,7 +263,9 @@ public class Binder {
 		final EntityBinding entityBinding = createBasicEntityBinding( entitySource, superEntityBinding );
 
 		bindSecondaryTables( entitySource, entityBinding );
+
 		Deque<TableSpecification> tableStack = new ArrayDeque<TableSpecification>(  );
+		tableStack.add( entityBinding.getPrimaryTable() );
 		bindAttributes( entitySource, entityBinding, tableStack );
 
 		bindTableUniqueConstraints( entitySource, entityBinding );
@@ -614,7 +618,10 @@ public class Binder {
 		final List<RelationalValueBinding> relationalValueBindings = createSimpleRelationalValues(
 				attributeSource,
 				attributeBindingContainer,
-				attribute
+				attribute,
+				attributeBindingContainer
+						.seekEntityBinding()
+						.getPrimaryTable()
 		);
 		final String propertyAccessorName = Helper.getPropertyAccessorName(
 				attributeSource.getPropertyAccessorName(),
@@ -794,7 +801,10 @@ public class Binder {
 		final List<RelationalValueBinding> relationalValueBindings = createSimpleRelationalValues(
 				attributeSource,
 				attributeBindingContainer,
-				attribute
+				attribute,
+				attributeBindingContainer
+						.seekEntityBinding()
+						.getPrimaryTable()
 		);
 		final String propertyAccessorName = Helper.getPropertyAccessorName(
 				attributeSource.getPropertyAccessorName(),
@@ -955,6 +965,8 @@ public class Binder {
 		binding.setCustomSqlDelete( source.getCustomSqlDelete() );
 		binding.setCustomSqlDeleteAll( source.getCustomSqlDeleteAll() );
 
+		binding.setWhere( source.getWhere() );
+
 //		doBasicAttributeBinding( source, binding );
 	}
 
@@ -1020,8 +1032,6 @@ public class Binder {
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableCheck() ) ) {
 			pluralAttributeBinding.getCollectionTable().addCheckConstraint( attributeSource.getCollectionTableCheck() );
 		}
-
-		pluralAttributeBinding.setWhere( attributeSource.getWhere() );
 	}
 
 	private void bindCollectionKey(
@@ -1029,56 +1039,91 @@ public class Binder {
 		AbstractPluralAttributeBinding pluralAttributeBinding,
 		Deque<TableSpecification> tableStack) {
 
-//		TableSpecification targetTable = tableStack.peekLast();
-		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
-				attributeSource.getKeySource().getExplicitForeignKeyName(),
-				//tableStack.peekLast().getLogicalName()
-				null  // todo : handle secondary table names
+		final PluralAttributeKeySource keySource = attributeSource.getKeySource();
+		
+		String foreignKeyName = (
+				StringHelper.isNotEmpty( keySource.getExplicitForeignKeyName() ) ?
+						quoteIdentifier( keySource.getExplicitForeignKeyName() ) :
+						null // TODO: is null FK name allowd (is there a default?) 
 		);
-		pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().setDeleteRule(
-				attributeSource.getKeySource().getOnDeleteAction()
+		pluralAttributeBinding.getPluralAttributeKeyBinding().prepareForeignKey(
+				foreignKeyName,
+				tableStack.peekLast()
 		);
 		final ForeignKey foreignKey = pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey();
 
-		Iterator<RelationalValueBinding> targetValueBindings = null;
-		if ( attributeSource.getKeySource().getReferencedEntityAttributeName() != null ) {
-			final EntityBinding ownerEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
-			final AttributeBinding referencedAttributeBinding = ownerEntityBinding.locateAttributeBinding(
-					attributeSource.getKeySource().getReferencedEntityAttributeName()
+		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
+
+		if ( keySource.getReferencedEntityAttributeName() == null ) {
+			bindCollectionKeyTargetingPrimaryKey( attributeSource.getKeySource(), pluralAttributeBinding );
+		}
+		else {
+			bindCollectionKeyTargetingPropertyRef( attributeSource.getKeySource(), pluralAttributeBinding );
+		}
+
+		HibernateTypeDescriptor targetTypeDescriptor = pluralAttributeBinding.getHibernateTypeDescriptor();
+
+	}
+
+	private void bindCollectionKeyTargetingPrimaryKey(
+			PluralAttributeKeySource keySource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+
+		for ( RelationalValueSource valueSource : keySource.getValueSources() ) {
+			if ( ColumnSource.class.isInstance( valueSource ) ) {
+				final Column column = makeColumn(
+						ColumnSource.class.cast( valueSource ),
+						COLL_KEY_COLUMN_BINDING_DEFAULTS,
+						pluralAttributeBinding.getCollectionTable(),
+						pluralAttributeBinding.getAttribute().getName(),
+						true
+				);
+				pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().addColumn( column );
+			}
+			else {
+				// TODO: deal with formulas???
+			}
+		}
+	}
+
+	private void bindCollectionKeyTargetingPropertyRef(
+			PluralAttributeKeySource keySource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		final EntityBinding ownerEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
+		final AttributeBinding referencedAttributeBinding = ownerEntityBinding.locateAttributeBinding(
+				keySource.getReferencedEntityAttributeName()
+		);
+		final ForeignKey foreignKey = pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey();
+		if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+			throw new MappingException(
+					String.format(
+							"Collection (%s) property-ref is a plural attribute (%s); must be singular.",
+							pluralAttributeBinding.getAttribute().getRole(),
+							referencedAttributeBinding
+					),
+					currentBindingContext.getOrigin()
 			);
-			if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+		}
+		Iterator<RelationalValueBinding> targetValueBindings = 
+				( (SingularAttributeBinding) referencedAttributeBinding ).getRelationalValueBindings().iterator();
+		for ( RelationalValueSource valueSource : keySource.getValueSources() ) {
+			if ( ! targetValueBindings.hasNext() ) {
 				throw new MappingException(
 						String.format(
-								"Collection (%s) property-ref is a plural attribute (%s); must be singular.",
-								pluralAttributeBinding.getAttribute().getRole(),
-								referencedAttributeBinding
+								"More collection key source columns than target columns for collection: %s",
+								pluralAttributeBinding.getAttribute().getRole()
 						),
 						currentBindingContext.getOrigin()
 				);
 			}
-//			targetValueBindings = ( (SingularAttributeBinding) referencedAttributeBinding ).getRelationalValueBindings().iterator();
-		}
-		for ( RelationalValueSource valueSource : attributeSource.getKeySource().getValueSources() ) {
-			Value targetValue = null;
-			if ( targetValueBindings != null ) {
-				if ( ! targetValueBindings.hasNext() ) {
-					throw new MappingException(
-							String.format(
-									"More collection key source columns than target columns for collection: %s",
-									pluralAttributeBinding.getAttribute().getRole()
-							),
-							currentBindingContext.getOrigin()
-					);
-				}
-				targetValue = targetValueBindings.next().getValue();
-			}
+			Value targetValue = targetValueBindings.next().getValue();
 			if ( ColumnSource.class.isInstance( valueSource ) ) {
 				final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-				final Column column = makeColumn( 
-						columnSource, 
-						COLL_KEY_COLUMN_BINDING_DEFAULTS, 
+				final Column column = makeColumn(
+						columnSource,
+						COLL_KEY_COLUMN_BINDING_DEFAULTS,
 						pluralAttributeBinding.getCollectionTable(),
-						pluralAttributeBinding.getAttribute().getName(), 
+						pluralAttributeBinding.getAttribute().getName(),
 						true
 				);
 				if ( targetValue != null && ! Column.class.isInstance( targetValue ) ) {
@@ -1108,7 +1153,6 @@ public class Binder {
 			);
 		}
 	}
-
 	private static final ColumnBindingDefaults COLL_KEY_COLUMN_BINDING_DEFAULTS = new ColumnBindingDefaults() {
 		@Override
 		public boolean areValuesIncludedInInsertByDefault() {
@@ -1166,7 +1210,8 @@ public class Binder {
 				createSimpleRelationalValues(
 						relationalValueSourceContainer,
 						elementBinding.getPluralAttributeBinding().getContainer(),
-						elementBinding.getPluralAttributeBinding().getAttribute()
+						elementBinding.getPluralAttributeBinding().getAttribute(),
+						elementBinding.getPluralAttributeBinding().getCollectionTable()
 				)
 		);
 	}
@@ -1440,23 +1485,26 @@ public class Binder {
 	private List<RelationalValueBinding> createSimpleRelationalValues(
 			RelationalValueSourceContainer relationalValueSourceContainer,
 			AttributeBindingContainer attributeBindingContainer,
-			Attribute attribute) {
+			Attribute attribute,
+			TableSpecification defaultTable) {
 
 		List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
 
 		if ( !relationalValueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
-				final TableSpecification table = attributeBindingContainer
-						.seekEntityBinding()
-						.locateTable( valueSource.getContainingTableName() );
-
+				TableSpecification resolvedTable = defaultTable;
+				if ( valueSource.getContainingTableName() != null ) {
+					resolvedTable = attributeBindingContainer
+							.seekEntityBinding()
+							.locateTable( valueSource.getContainingTableName() );
+				}
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
 					final Column column = 
 							makeColumn(
 									columnSource, 
-									relationalValueSourceContainer, 
-									table,
+									relationalValueSourceContainer,
+									resolvedTable,
 									attribute.getName(), 
 									true 
 							);
@@ -1474,7 +1522,7 @@ public class Binder {
 				else {
 					valueBindings.add(
 							new RelationalValueBinding(
-									makeDerivedValue( ( (DerivedValueSource) valueSource ), table )
+									makeDerivedValue( ( (DerivedValueSource) valueSource ), resolvedTable )
 							)
 					);
 				}
@@ -1485,18 +1533,15 @@ public class Binder {
 					.getNamingStrategy()
 					.propertyToColumnName( attribute.getName() );
 			name = quoteIdentifier( name );
-			Column column = attributeBindingContainer
-									.seekEntityBinding()
-									.getPrimaryTable()
-									.locateOrCreateColumn( name );
+			Column column = defaultTable.locateOrCreateColumn( name );
 			column.setNullable( relationalValueSourceContainer.areValuesNullableByDefault() );
 			valueBindings.add( new RelationalValueBinding( column ) );
 		}
 		return valueBindings;
 	}
 
-	private String quoteIdentifier(String identifier) {
-		return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( identifier ) : identifier;
+	private String quoteIdentifier(String string) {
+		return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( string ) : string;
 	}
 
 	private Value makeRelationalValue(

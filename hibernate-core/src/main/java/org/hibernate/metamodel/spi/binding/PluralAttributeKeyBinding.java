@@ -40,8 +40,7 @@ public class PluralAttributeKeyBinding {
 	// may need notion of "boolean updatable"
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
-	private HibernateTypeDescriptor hibernateTypeDescriptor;
-	// in which case add this...
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	// SingularAttributeBinding referencedAttributeBinding;
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
@@ -89,7 +88,7 @@ public class PluralAttributeKeyBinding {
 		return hibernateTypeDescriptor;
 	}
 
-	public void prepareForeignKey(String foreignKeyName, String targetTableName) {
+	public void prepareForeignKey(String foreignKeyName, TableSpecification targetTable) {
 		if ( foreignKey != null ) {
 			throw new AssertionFailure( "Foreign key already initialized" );
 		}
@@ -104,10 +103,6 @@ public class PluralAttributeKeyBinding {
 				return;
 			}
 		}
-
-		final TableSpecification targetTable = pluralAttributeBinding.getContainer()
-				.seekEntityBinding()
-				.locateTable( targetTableName );
 
 		foreignKey = collectionTable.createForeignKey( targetTable, foreignKeyName );
 	}

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Iterator;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +32,19 @@ import org.junit.Test;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -77,14 +85,64 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertNotNull( bagBinding );
 		assertSame( bagBinding, entityBinding.locateAttributeBinding( "theBag" ) );
 		assertNotNull( bagBinding.getCollectionTable() );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theBag`" ), bagBinding.getCollectionTable().getLogicalName() );
+		PluralAttributeKeyBinding bagKeyBinding = bagBinding.getPluralAttributeKeyBinding();
+		assertSame( bagBinding, bagKeyBinding.getPluralAttributeBinding() );
+
+		ForeignKey fkBag = bagKeyBinding.getForeignKey();
+		assertNotNull( fkBag );
+		assertSame( bagBinding.getCollectionTable(), fkBag.getSourceTable() );
+		assertEquals( 1, fkBag.getColumnSpan() );
+		Iterator<Column> fkBagColumnIterator = fkBag.getColumns().iterator();
+		Iterator<Column> fkBagSourceColumnIterator = fkBag.getSourceColumns().iterator();
+		assertNotNull( fkBagColumnIterator );
+		assertNotNull( fkBagSourceColumnIterator );
+		assertTrue( fkBagColumnIterator.hasNext() );
+		assertTrue( fkBagSourceColumnIterator.hasNext() );
+		assertEquals( Identifier.toIdentifier( "`owner_id`" ), fkBagColumnIterator.next().getColumnName() );
+		assertEquals( Identifier.toIdentifier( "`owner_id`" ), fkBagSourceColumnIterator.next().getColumnName() );
+		assertFalse( fkBagColumnIterator.hasNext() );
+		assertFalse( fkBagSourceColumnIterator.hasNext() );
+		assertSame( entityBinding.getPrimaryTable(), fkBag.getTargetTable() );
+		assertEquals( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getDeleteRule() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getUpdateRule() );
+		// FK is null because no default FK name is generated until HHH-7092 is fixed
+		assertNull( fkBag.getName() );
+		assertFalse( bagKeyBinding.isInverse() );
 		assertEquals( PluralAttributeElementNature.BASIC, bagBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
-		assertEquals( String.class.getName(), ( (BasicPluralAttributeElementBinding) bagBinding.getPluralAttributeElementBinding() ).getHibernateTypeDescriptor().getJavaTypeName() );
+		assertEquals( String.class.getName(), bagBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
 
 		PluralAttributeBinding setBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" );
 		assertNotNull( setBinding );
 		assertSame( setBinding, entityBinding.locateAttributeBinding( "theSet" ) );
 		assertNotNull( setBinding.getCollectionTable() );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theSet`" ), setBinding.getCollectionTable().getLogicalName() );
+		PluralAttributeKeyBinding setKeyBinding = setBinding.getPluralAttributeKeyBinding();
+		assertSame( setBinding, setKeyBinding.getPluralAttributeBinding() );
+
+		ForeignKey fkSet = setKeyBinding.getForeignKey();
+		assertNotNull( fkSet );
+		assertSame( setBinding.getCollectionTable(), fkSet.getSourceTable() );
+		assertEquals( 1, fkSet.getColumnSpan() );
+		Iterator<Column> fkSetColumnIterator = fkSet.getColumns().iterator();
+		Iterator<Column> fkSetSourceColumnIterator = fkSet.getSourceColumns().iterator();
+		assertNotNull( fkSetColumnIterator );
+		assertNotNull( fkSetSourceColumnIterator );
+		assertTrue( fkSetColumnIterator.hasNext() );
+		assertTrue( fkSetSourceColumnIterator.hasNext() );
+		assertEquals( Identifier.toIdentifier( "`pid`" ), fkSetColumnIterator.next().getColumnName() );
+		assertEquals( Identifier.toIdentifier( "`pid`" ), fkSetSourceColumnIterator.next().getColumnName() );
+		assertFalse( fkSetColumnIterator.hasNext() );
+		assertFalse( fkSetSourceColumnIterator.hasNext() );
+		assertSame( entityBinding.getPrimaryTable(), fkSet.getTargetTable() );
+		assertEquals( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getDeleteRule() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getUpdateRule() );
+		// FK is null because no default FK name is generated until HHH-7092 is fixed
+		assertNull( fkSet.getName() );
+		assertFalse( setKeyBinding.isInverse() );
 		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
-		assertEquals( String.class.getName(), ( (BasicPluralAttributeElementBinding) setBinding.getPluralAttributeElementBinding() ).getHibernateTypeDescriptor().getJavaTypeName() );
+		assertEquals( String.class.getName(), setBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
 	}
 }

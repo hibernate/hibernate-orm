@@ -46,30 +46,82 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * @author Steve Ebersole
  */
-public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
+class ComponentAttributeSourceImpl extends AbstractHbmSourceNode implements ComponentAttributeSource {
 	private final JaxbComponentElement componentElement;
 	private final AttributeSourceContainer parentContainer;
+	private final List<AttributeSource> subAttributeSources;
 	private final NaturalIdMutability naturalIdMutability;
 	private final Value<Class<?>> componentClassReference;
 	private final String path;
 
 	public ComponentAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
 			JaxbComponentElement componentElement,
 			AttributeSourceContainer parentContainer,
-			LocalBindingContext bindingContext,
+			String logicalTableName,
 			NaturalIdMutability naturalIdMutability) {
+		super( sourceMappingDocument );
 		this.componentElement = componentElement;
 		this.parentContainer = parentContainer;
 		this.naturalIdMutability = naturalIdMutability;
-		this.componentClassReference = bindingContext.makeClassReference(
-				bindingContext.qualifyClassName( componentElement.getClazz() )
-		);
+		this.componentClassReference = makeClassReference( componentElement.getClazz() );
 		this.path = parentContainer.getPath() + '.' + componentElement.getName();
+
+		this.subAttributeSources = buildAttributeSources( logicalTableName );
+	}
+
+	private List<AttributeSource> buildAttributeSources(String logicalTableName) {
+		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+		for ( Object attributeElement : componentElement.getPropertyOrManyToOneOrOneToOne() ) {
+			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new PropertyAttributeSourceImpl(
+								sourceMappingDocument(),
+								JaxbPropertyElement.class.cast( attributeElement ),
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new ComponentAttributeSourceImpl(
+								sourceMappingDocument(),
+								(JaxbComponentElement) attributeElement,
+								this,
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new ManyToOneAttributeSourceImpl(
+								sourceMappingDocument(),
+								JaxbManyToOneElement.class.cast( attributeElement ),
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbOneToManyElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbManyToManyElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+		}
+		return attributeSources;
 	}
 
 	@Override
@@ -113,50 +165,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public List<AttributeSource> attributeSources() {
-		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-		for ( Object attributeElement : componentElement.getPropertyOrManyToOneOrOneToOne() ) {
-			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
-						new PropertyAttributeSourceImpl(
-								JaxbPropertyElement.class.cast( attributeElement ),
-								getLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
-						new ComponentAttributeSourceImpl(
-								(JaxbComponentElement) attributeElement,
-								this,
-								getLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-				attributeSources.add(
-						new ManyToOneAttributeSourceImpl(
-								JaxbManyToOneElement.class.cast( attributeElement ),
-								getLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbOneToManyElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbManyToManyElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-		}
-		return attributeSources;
+		return subAttributeSources;
 	}
 
 	@Override

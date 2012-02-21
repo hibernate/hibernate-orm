@@ -66,7 +66,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	private Entity entity;
 	private TableSpecification primaryTable;
     private String primaryTableName;
-	private Map<String, TableSpecification> secondaryTables = new HashMap<String, TableSpecification>();
+	private Map<String, SecondaryTable> secondaryTables = new HashMap<String, SecondaryTable>();
 
 	private Value<Class<?>> proxyInterfaceType;
 
@@ -234,17 +234,17 @@ public class EntityBinding implements AttributeBindingContainer {
         if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
             return primaryTable;
         }
-        TableSpecification tableSpec = secondaryTables.get( tableName );
-        if ( tableSpec == null ) {
-            throw new AssertionFailure(
-                    String.format(
-                            "Unable to find table %s amongst tables %s",
-                            tableName,
-                            secondaryTables.keySet()
-                    )
-            );
-        }
-        return tableSpec;
+		SecondaryTable secondaryTable = secondaryTables.get( tableName );
+		if ( secondaryTable == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"Unable to find table %s amongst tables %s",
+							tableName,
+							secondaryTables.keySet()
+					)
+			);
+		}
+		return secondaryTable.getSecondaryTableReference();
     }
     public String getPrimaryTableName() {
         return primaryTableName;
@@ -254,8 +254,8 @@ public class EntityBinding implements AttributeBindingContainer {
         this.primaryTableName = primaryTableName;
     }
 
-	public void addSecondaryTable(String tableName, TableSpecification table) {
-		secondaryTables.put( tableName, table );
+	public void addSecondaryTable(SecondaryTable secondaryTable) {
+		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getName(), secondaryTable );
 	}
 
 	public boolean isVersioned() {

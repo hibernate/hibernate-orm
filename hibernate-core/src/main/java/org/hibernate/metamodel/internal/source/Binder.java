@@ -58,6 +58,7 @@ import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -96,6 +97,7 @@ import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
@@ -1348,10 +1350,13 @@ public class Binder {
 	}
 
 	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
+		final TableSpecification primaryEntityTable = entityBinding.getPrimaryTable();
+
 		for ( SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
+			final TableSpecification secondaryTable;
 			final TableSpecificationSource source = secondaryTableSource.getTableSource();
 			if ( TableSource.class.isInstance( source ) ) {
-				final Table table = createTable(
+				secondaryTable = createTable(
 						(TableSource) source,
 						new InferredNamingStrategy() {
 							@Override
@@ -1363,12 +1368,52 @@ public class Binder {
 							}
 						}
 				);
-				// todo : finish up...
-				//		1) no need to keep secondary tables on EntityBinding because we should be able to look them
-				//			up from Schema
-				//		2) process foreign key
-				entityBinding.addSecondaryTable( table.getLogicalName().getName(), table );
 			}
+			else {
+				secondaryTable = createInLineView( (InLineViewSource) source );
+			}
+
+			// todo : really need a concept like SecondaryTableSource in the binding model as well
+			//		so that EntityBinding can know the proper foreign key to use to build SQL statements.
+
+			ForeignKey foreignKey = null;
+			if ( secondaryTableSource.getForeignKeyName() != null ) {
+				foreignKey = secondaryTable.locateForeignKey( secondaryTableSource.getForeignKeyName() );
+				if ( foreignKey == null ) {
+					foreignKey = secondaryTable.createForeignKey(
+							primaryEntityTable,
+							secondaryTableSource.getForeignKeyName()
+					);
+				}
+			}
+			else {
+				// for now lets assume we have to create it, but eventually we should look through the
+				//		candidate foreign keys referencing primary table also...
+				foreignKey = secondaryTable.createForeignKey( primaryEntityTable, null );
+			}
+
+			for ( PrimaryKeyJoinColumnSource joinColumnSource : secondaryTableSource.getJoinColumns() ) {
+				// todo : currently we only support columns here, not formulas
+				// todo : apply naming strategy to infer missing column name
+				Column fkColumn = secondaryTable.locateColumn( joinColumnSource.getColumnName() );
+				if ( fkColumn == null ) {
+					fkColumn = secondaryTable.createColumn( joinColumnSource.getColumnName() );
+					if ( joinColumnSource.getColumnDefinition() != null ) {
+						fkColumn.setSqlType( joinColumnSource.getColumnDefinition() );
+					}
+				}
+				if ( joinColumnSource.getReferencedColumnName() != null ) {
+					final Column referencedColumn = primaryEntityTable.locateColumn(
+							joinColumnSource.getReferencedColumnName()
+					);
+					foreignKey.addColumnMapping( fkColumn, referencedColumn );
+				}
+				else {
+					foreignKey.addColumn( fkColumn );
+				}
+			}
+
+			entityBinding.addSecondaryTable( new SecondaryTable( secondaryTable, foreignKey ) );
 		}
 	}
 

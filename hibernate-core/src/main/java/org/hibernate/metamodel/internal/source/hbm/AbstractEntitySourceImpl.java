@@ -63,28 +63,158 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public abstract class AbstractEntitySourceImpl implements EntitySource {
-	private final MappingDocument sourceMappingDocument;
+public abstract class AbstractEntitySourceImpl
+		extends AbstractHbmSourceNode
+		implements EntitySource, Helper.InLineViewNameInferrer {
 	private final EntityElement entityElement;
-	private final Set<SecondaryTableSource> secondaryTableSources;
+	private final String className;
+	private final String entityName;
 
-	private List<SubclassEntitySource> subclassEntitySources = new ArrayList<SubclassEntitySource>();
+	private int inLineViewCount = 0;
+
+	// logically final, but built during 'afterInstantiation' callback
+	private List<AttributeSource> attributeSources;
+	private Set<SecondaryTableSource> secondaryTableSources;
+	private List<SubclassEntitySource> subclassEntitySources;
 
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
-		this.sourceMappingDocument = sourceMappingDocument;
+		super( sourceMappingDocument );
 		this.entityElement = entityElement;
 
-		secondaryTableSources = extractSecondaryTables( entityElement, sourceMappingDocument.getMappingLocalBindingContext() );
+		this.className = bindingContext().qualifyClassName( entityElement.getName() );
+		this.entityName = StringHelper.isNotEmpty( entityElement.getEntityName() )
+				? entityElement.getEntityName()
+				: className;
 	}
 
-	private static Set<SecondaryTableSource> extractSecondaryTables(EntityElement entityElement, HbmBindingContext bindingContext) {
+	@Override
+	public String inferInLineViewName() {
+		return entityName + '#' + (++inLineViewCount);
+	}
+
+	protected void afterInstantiation() {
+		this.attributeSources = buildAttributeSources();
+		this.secondaryTableSources = buildSecondaryTables();
+
+		this.subclassEntitySources = buildSubClassSources();
+	}
+
+	protected List<AttributeSource> buildAttributeSources() {
+		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+		buildAttributeSources( attributeSources );
+		return attributeSources;
+	}
+
+	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
+		processAttributes(
+				attributeSources,
+				entityElement.getPropertyOrManyToOneOrOneToOne(),
+				null,
+				SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+		);
+		return attributeSources;
+	}
+
+	protected void processAttributes(
+			List<AttributeSource> results,
+			List attributeElements,
+			String logicalTableName,
+			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
+		for ( Object attributeElement : attributeElements ) {
+			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
+				results.add(
+						new PropertyAttributeSourceImpl(
+								sourceMappingDocument(),
+								JaxbPropertyElement.class.cast( attributeElement ),
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
+				results.add(
+						new ComponentAttributeSourceImpl(
+								sourceMappingDocument(),
+								(JaxbComponentElement) attributeElement,
+								this,
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
+				results.add(
+						new ManyToOneAttributeSourceImpl(
+								sourceMappingDocument(),
+								JaxbManyToOneElement.class.cast( attributeElement ),
+								logicalTableName,
+								naturalIdMutability
+						)
+				);
+			}
+			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
+				results.add(
+						new BagAttributeSourceImpl(
+								JaxbBagElement.class.cast( attributeElement ),
+								this
+						)
+				);
+			}
+			else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
+				results.add(
+						new SetAttributeSourceImpl(
+								JaxbSetElement.class.cast( attributeElement ),
+								this
+						)
+				);
+			}
+			else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else {
+				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
+			}
+		}
+	}
+
+	protected List<SubclassEntitySource> buildSubClassSources() {
+		// todo : implement subclass processing
+		return Collections.emptyList();
+	}
+
+	private Set<SecondaryTableSource> buildSecondaryTables() {
 		if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
 			return Collections.emptySet();
 		}
 
 		final Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
 		for ( JaxbJoinElement joinElement :  ( (JoinElementSource) entityElement ).getJoin() ) {
-			secondaryTableSources.add( new SecondaryTableSourceImpl( joinElement, bindingContext ) );
+			final SecondaryTableSourceImpl secondaryTableSource = new SecondaryTableSourceImpl(
+					sourceMappingDocument(),
+					joinElement,
+					this
+			);
+			secondaryTableSources.add( secondaryTableSource );
+
+			final String logicalTableName = secondaryTableSource.getLogicalTableNameForContainedColumns();
+			processAttributes(
+					attributeSources,
+					joinElement.getPropertyOrManyToOneOrComponent(),
+					logicalTableName,
+					SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+			);
 		}
 		return secondaryTableSources;
 	}
@@ -93,30 +223,24 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 		return entityElement;
 	}
 
-	protected MappingDocument sourceMappingDocument() {
-		return sourceMappingDocument;
-	}
-
 	@Override
 	public Origin getOrigin() {
-		return sourceMappingDocument.getOrigin();
+		return origin();
 	}
 
 	@Override
 	public LocalBindingContext getLocalBindingContext() {
-		return sourceMappingDocument.getMappingLocalBindingContext();
+		return bindingContext();
 	}
 
 	@Override
 	public String getEntityName() {
-		return StringHelper.isNotEmpty( entityElement.getEntityName() )
-				? entityElement.getEntityName()
-				: getClassName();
+		return entityName;
 	}
 
 	@Override
 	public String getClassName() {
-		return getLocalBindingContext().qualifyClassName( entityElement.getName() );
+		return className;
 	}
 
 	@Override
@@ -218,93 +342,12 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 
 	@Override
 	public String getPath() {
-		return sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement );
+		return bindingContext().determineEntityName( entityElement );
 	}
 
 	@Override
 	public List<AttributeSource> attributeSources() {
-		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-		processAttributes( attributeSources );
 		return attributeSources;
-	}
-
-	protected List<AttributeSource> processAttributes(List<AttributeSource> attributeSources) {
-		processAttributes(
-				attributeSources,
-				entityElement.getPropertyOrManyToOneOrOneToOne(),
-				SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
-		);
-		return attributeSources;
-	}
-
-	protected void processAttributes(
-			List<AttributeSource> results,
-			List attributeElements,
-			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
-		for ( Object attributeElement : attributeElements ) {
-			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new PropertyAttributeSourceImpl(
-								JaxbPropertyElement.class.cast( attributeElement ),
-								sourceMappingDocument().getMappingLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new ComponentAttributeSourceImpl(
-								(JaxbComponentElement) attributeElement,
-								this,
-								sourceMappingDocument.getMappingLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new ManyToOneAttributeSourceImpl(
-								JaxbManyToOneElement.class.cast( attributeElement ),
-								sourceMappingDocument().getMappingLocalBindingContext(),
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new BagAttributeSourceImpl(
-								JaxbBagElement.class.cast( attributeElement ),
-								this
-						)
-				);
-			}
-			else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new SetAttributeSourceImpl(
-								JaxbSetElement.class.cast( attributeElement ),
-								this
-						)
-				);
-			}
-			else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else {
-				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
-			}
-		}
 	}
 
 	private EntityHierarchyImpl entityHierarchy;

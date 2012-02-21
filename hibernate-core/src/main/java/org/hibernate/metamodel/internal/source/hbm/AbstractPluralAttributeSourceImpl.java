@@ -50,7 +50,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralAttributeSourceImpl
-		implements PluralAttributeSource {
+		implements PluralAttributeSource, Helper.InLineViewNameInferrer {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
 
@@ -141,11 +141,13 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
+	public String inferInLineViewName() {
+		return container().getPath() + "." + pluralAttributeElement.getName();
+	}
+
+	@Override
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
-		return Helper.createTableSource(
-				pluralAttributeElement,
-				container().getPath() + "." + pluralAttributeElement.getName()
-		);
+		return Helper.createTableSource( pluralAttributeElement, this );
 	}
 
 	@Override

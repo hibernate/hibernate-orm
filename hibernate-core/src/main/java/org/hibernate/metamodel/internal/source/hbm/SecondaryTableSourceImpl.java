@@ -28,30 +28,32 @@ import java.util.List;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinElement;
+import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
+import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Steve Ebersole
  */
-public class SecondaryTableSourceImpl implements SecondaryTableSource {
+class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements SecondaryTableSource {
 	private final JaxbJoinElement joinElement;
 	private final TableSpecificationSource joinTable;
 	private final List<PrimaryKeyJoinColumnSource> joinColumns;
 
-	public SecondaryTableSourceImpl(JaxbJoinElement joinElement, HbmBindingContext bindingContext) {
+	public SecondaryTableSourceImpl(
+			MappingDocument sourceMappingDocument,
+			JaxbJoinElement joinElement,
+			Helper.InLineViewNameInferrer inLineViewNameInferrer) {
+		super( sourceMappingDocument );
 		this.joinElement = joinElement;
-		this.joinTable = Helper.createTableSource(
-				joinElement,
-				// todo : need to implement this
-				null
-		);
+		this.joinTable = Helper.createTableSource( joinElement, inLineViewNameInferrer );
 
 		joinColumns = new ArrayList<PrimaryKeyJoinColumnSource>();
 		if ( joinElement.getKey().getColumnAttribute() != null ) {
 			if ( joinElement.getKey().getColumn().size() > 0 ) {
-				throw bindingContext.makeMappingException( "<join/> defined both column attribute and nested <column/>" );
+				throw makeMappingException( "<join/> defined both column attribute and nested <column/>" );
 			}
 			joinColumns.add(
 					new PrimaryKeyJoinColumnSource() {
@@ -107,5 +109,11 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 	@Override
 	public List<PrimaryKeyJoinColumnSource> getJoinColumns() {
 		return joinColumns;
+	}
+
+	public String getLogicalTableNameForContainedColumns() {
+		return TableSource.class.isInstance( joinTable )
+				? ( (TableSource) joinTable ).getExplicitTableName()
+				: ( (InLineViewSource) joinTable ).getLogicalName();
 	}
 }

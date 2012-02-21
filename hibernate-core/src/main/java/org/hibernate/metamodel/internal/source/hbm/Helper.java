@@ -289,7 +289,13 @@ public class Helper {
 		return null;
 	}
 
-	public static TableSpecificationSource createTableSource(TableInformationSource jaxbTableSource, String context) {
+	public static interface InLineViewNameInferrer {
+		public String inferInLineViewName();
+	}
+
+	public static TableSpecificationSource createTableSource(
+			TableInformationSource jaxbTableSource,
+			InLineViewNameInferrer inLineViewNameInferrer) {
 		if ( jaxbTableSource.getSubselectAttribute() == null && jaxbTableSource.getSubselect() == null ) {
 			return new TableSourceImpl(
 					jaxbTableSource.getSchema(),
@@ -304,7 +310,9 @@ public class Helper {
 					jaxbTableSource.getSubselectAttribute() != null
 							? jaxbTableSource.getSubselectAttribute()
 							: jaxbTableSource.getSubselect(),
-					context
+					jaxbTableSource.getTable() == null
+							? inLineViewNameInferrer.inferInLineViewName()
+							: jaxbTableSource.getTable()
 			);
 		}
 

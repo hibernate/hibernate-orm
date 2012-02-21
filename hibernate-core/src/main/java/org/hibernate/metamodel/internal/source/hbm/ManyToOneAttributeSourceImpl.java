@@ -32,7 +32,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -44,18 +43,18 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
  *
  * @author Steve Ebersole
  */
-class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
+class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOneAttributeSource {
 	private final JaxbManyToOneElement manyToOneElement;
-	private final LocalBindingContext bindingContext;
 	private final NaturalIdMutability naturalIdMutability;
 	private final List<RelationalValueSource> valueSources;
 
 	ManyToOneAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
 			final JaxbManyToOneElement manyToOneElement,
-			LocalBindingContext bindingContext,
+			final String logicalTableName,
 			NaturalIdMutability naturalIdMutability) {
+		super( sourceMappingDocument );
 		this.manyToOneElement = manyToOneElement;
-		this.bindingContext = bindingContext;
 		this.naturalIdMutability = naturalIdMutability;
 		this.valueSources = Helper.buildValueSources(
 				new Helper.ValueSourcesAdapter() {
@@ -76,8 +75,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 
 					@Override
 					public String getContainingTableName() {
-						// todo : need to implement this...
-						return null;
+						return logicalTableName;
 					}
 
 					@Override
@@ -90,7 +88,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 						return manyToOneElement.isUpdate();
 					}
 				},
-				bindingContext
+				bindingContext()
 		);
 	}
 
@@ -131,7 +129,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext );
+		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext() );
 	}
 
 	@Override
@@ -154,7 +152,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 				return FetchTiming.DELAYED;
 			}
 			else {
-				return bindingContext.getMappingDefaults().areAssociationsLazy()
+				return bindingContext().getMappingDefaults().areAssociationsLazy()
 						? FetchTiming.DELAYED
 						: FetchTiming.IMMEDIATE;
 			}
@@ -175,7 +173,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 						lazySelection,
 						manyToOneElement.getName()
 				),
-				bindingContext.getOrigin()
+				origin()
 		);
 	}
 
@@ -196,7 +194,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 			}
 			else {
 				if ( "auto".equals( outerJoinSelection ) ) {
-					return bindingContext.getMappingDefaults().areAssociationsLazy()
+					return bindingContext().getMappingDefaults().areAssociationsLazy()
 							? FetchStyle.SELECT
 							: FetchStyle.JOIN;
 				}

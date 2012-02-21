@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
@@ -44,6 +43,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
@@ -57,10 +57,9 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			MappingDocument sourceMappingDocument,
 			JaxbHibernateMapping.JaxbClass entityElement) {
 		super( sourceMappingDocument, entityElement );
-		this.primaryTable = Helper.createTableSource(
-				entityElement,
-				sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement )
-		);
+		this.primaryTable = Helper.createTableSource( entityElement, this );
+
+		afterInstantiation();
 	}
 
 	@Override
@@ -126,20 +125,19 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
-	public List<AttributeSource> attributeSources() {
-		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
 		final JaxbHibernateMapping.JaxbClass.JaxbNaturalId naturalId = entityElement().getNaturalId();
 		if ( naturalId != null ) {
 			processAttributes(
 					attributeSources,
 					naturalId.getPropertyOrManyToOneOrComponent(),
+					null,
 					naturalId.isMutable()
 							? SingularAttributeSource.NaturalIdMutability.MUTABLE
 							: SingularAttributeSource.NaturalIdMutability.IMMUTABLE
 			);
 		}
-		processAttributes( attributeSources );
-		return attributeSources;
+		return super.buildAttributeSources( attributeSources );
 	}
 
 	@Override
@@ -151,7 +149,6 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	public boolean isMutable() {
 		return entityElement().isMutable();
 	}
-
 
 	@Override
 	public boolean isExplicitPolymorphism() {

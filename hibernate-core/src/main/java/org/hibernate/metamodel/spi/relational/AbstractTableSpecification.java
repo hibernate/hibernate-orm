@@ -64,10 +64,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		if ( valueMap.containsKey( name ) ) {
 			return (Column) valueMap.get( name );
 		}
-		final Column column = new Column( this, valueList.size(), name );
-		valueMap.put( name, column );
-		valueList.add( column );
-		return column;
+		return createColumn( name );
 	}
 
 	@Override
@@ -76,6 +73,14 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 			return (Column) valueMap.get( name );
 		}
 		return null;
+	}
+
+	@Override
+	public Column createColumn(String name) {
+		final Column column = new Column( this, valueList.size(), name );
+		valueMap.put( name, column );
+		valueList.add( column );
+		return column;
 	}
 
 	@Override

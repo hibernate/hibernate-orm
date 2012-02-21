@@ -29,7 +29,6 @@ import java.util.Map;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -40,16 +39,18 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  *
  * @author Steve Ebersole
  */
-class PropertyAttributeSourceImpl implements SingularAttributeSource {
+class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements SingularAttributeSource {
 	private final JaxbPropertyElement propertyElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 	private final NaturalIdMutability naturalIdMutability;
 
 	PropertyAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
 			final JaxbPropertyElement propertyElement,
-			LocalBindingContext bindingContext,
+			final String logicalTableName,
 			NaturalIdMutability naturalIdMutability) {
+		super( sourceMappingDocument );
 		this.propertyElement = propertyElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {
 			private final String name = propertyElement.getTypeAttribute() != null
@@ -90,8 +91,7 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 
 					@Override
 					public String getContainingTableName() {
-						// todo : need to implement this...
-						return null;
+						return logicalTableName;
 					}
 
 					@Override
@@ -104,7 +104,7 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 						return Helper.getBooleanValue( propertyElement.isUpdate(), true );
 					}
 				},
-				bindingContext
+				bindingContext()
 		);
 		this.naturalIdMutability = naturalIdMutability;
 	}

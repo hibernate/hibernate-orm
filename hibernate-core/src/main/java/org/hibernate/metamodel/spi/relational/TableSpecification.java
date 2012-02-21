@@ -77,6 +77,8 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 */
 	public Column locateColumn(String name);
 
+	public Column createColumn(String name);
+
 	/**
 	 * Factory method for creating a {@link DerivedValue} associated with this container.
 	 *

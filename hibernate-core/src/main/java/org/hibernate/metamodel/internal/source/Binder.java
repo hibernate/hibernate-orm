@@ -60,6 +60,7 @@ import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.binding.SetBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -72,6 +73,7 @@ import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.InLineView;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -937,6 +939,7 @@ public class Binder {
 		bindCollectionKey( attributeSource, pluralAttributeBinding, tableStack );
 		bindCollectionElement( attributeSource, pluralAttributeBinding );
 		bindCollectionIndex( attributeSource, pluralAttributeBinding );
+		bindCollectionTablePrimaryKey( attributeSource, pluralAttributeBinding );
 
 		metadata.addCollection( pluralAttributeBinding );
 	}
@@ -1031,9 +1034,9 @@ public class Binder {
 
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableCheck() ) ) {
 			pluralAttributeBinding.getCollectionTable().addCheckConstraint( attributeSource.getCollectionTableCheck() );
-		}
+		}		
 	}
-
+	
 	private void bindCollectionKey(
 		PluralAttributeSource attributeSource,
 		AbstractPluralAttributeBinding pluralAttributeBinding,
@@ -1153,6 +1156,56 @@ public class Binder {
 			);
 		}
 	}
+
+	private void bindCollectionTablePrimaryKey(
+			final PluralAttributeSource attributeSource,
+			final AbstractPluralAttributeBinding pluralAttributeBinding) {
+		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY ||
+				attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
+			return;
+		}
+		if ( pluralAttributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.BASIC ) {
+			if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.SET ) {
+				bindBasicElementSetTablePrimaryKey( ( SetBinding ) pluralAttributeBinding );
+			}
+			else {
+				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
+			}
+		}
+	}
+
+	private void bindBasicElementSetTablePrimaryKey(SetBinding setBinding) {		
+
+		final PrimaryKey pk = setBinding.getCollectionTable().getPrimaryKey();
+		final ForeignKey foreignKey = setBinding.getPluralAttributeKeyBinding().getForeignKey();
+
+		final BasicPluralAttributeElementBinding elementBinding =
+				( BasicPluralAttributeElementBinding ) setBinding.getPluralAttributeElementBinding();
+		if ( elementBinding.getPluralAttributeElementNature() != PluralAttributeElementNature.BASIC ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expected a SetBinding with an element of nature PluralAttributeElementNature.BASIC; instead was %s",
+							elementBinding.getPluralAttributeElementNature()
+					)
+			);
+		}
+
+		for ( Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
+			pk.addColumn( foreignKeyColumn );
+		}
+
+		for ( RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
+			if ( Column.class.isInstance( elementValueBinding.getValue() ) && !elementValueBinding.isNullable() ) {
+				pk.addColumn( ( Column ) elementValueBinding.getValue() );
+			}
+		}
+		if ( pk.getColumnSpan() == foreignKey.getColumnSpan() ) {
+			//for backward compatibility, allow a set with no not-null
+			//element columns, using all columns in the row locater SQL
+			//TODO: create an implicit not null constraint on all cols?
+		}
+	}
+
 	private static final ColumnBindingDefaults COLL_KEY_COLUMN_BINDING_DEFAULTS = new ColumnBindingDefaults() {
 		@Override
 		public boolean areValuesIncludedInInsertByDefault() {

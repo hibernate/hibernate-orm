@@ -33,12 +33,17 @@ import org.hibernate.metamodel.spi.source.FilterParameterSource;
 /**
  * @author Steve Ebersole
  */
-public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
+public class FilterDefinitionSourceImpl
+		extends AbstractHbmSourceNode
+		implements FilterDefinitionSource {
 	private final String name;
 	private final String condition;
 	private List<FilterParameterSource> parameterSources;
 
-	public FilterDefinitionSourceImpl(JaxbHibernateMapping.JaxbFilterDef filterDefElement) {
+	public FilterDefinitionSourceImpl(
+			MappingDocument mappingDocument,
+			JaxbHibernateMapping.JaxbFilterDef filterDefElement) {
+		super( mappingDocument );
 		this.name = filterDefElement.getName();
 
 		String conditionAttribute = filterDefElement.getCondition();

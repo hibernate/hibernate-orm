@@ -32,11 +32,17 @@ import org.hibernate.metamodel.spi.source.FetchProfileSource;
 /**
  * @author Steve Ebersole
  */
-public class FetchProfileSourceImpl implements FetchProfileSource {
+public class FetchProfileSourceImpl
+		extends AbstractHbmSourceNode
+		implements FetchProfileSource {
+
 	private final String name;
 	private final List<AssociationOverrideSource> associationOverrideSources;
 
-	public FetchProfileSourceImpl(JaxbFetchProfileElement fetchProfileElement) {
+	public FetchProfileSourceImpl(
+			MappingDocument mappingDocument,
+			JaxbFetchProfileElement fetchProfileElement) {
+		super( mappingDocument );
 		this.name = fetchProfileElement.getName();
 		this.associationOverrideSources = buildAssociationOverrideSources( fetchProfileElement );
 	}

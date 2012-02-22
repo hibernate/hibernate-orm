@@ -28,16 +28,20 @@ import org.hibernate.metamodel.spi.source.InLineViewSource;
 /**
  * @author Steve Ebersole
  */
-public class InLineViewSourceImpl implements InLineViewSource {
+public class InLineViewSourceImpl
+		extends AbstractHbmSourceNode
+		implements InLineViewSource {
 	private final String schemaName;
 	private final String catalogName;
 	private final String selectStatement;
 	private final String logicalName;
 
 	public InLineViewSourceImpl(
+			MappingDocument mappingDocument,
 			String schemaName,
 			String catalogName,
 			String selectStatement, String logicalName) {
+		super( mappingDocument );
 		this.schemaName = schemaName;
 		this.catalogName = catalogName;
 		this.selectStatement = selectStatement;

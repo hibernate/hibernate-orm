@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import java.util.List;
-
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
@@ -46,8 +44,10 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		super( sourceMappingDocument, entityElement );
 		this.container = container;
 		this.primaryTable = TableInformationSource.class.isInstance( entityElement )
-				? Helper.createTableSource( (TableInformationSource) entityElement, this )
+				? Helper.createTableSource( sourceMappingDocument(), (TableInformationSource) entityElement, this )
 				: null;
+
+		afterInstantiation();
 	}
 
 	@Override

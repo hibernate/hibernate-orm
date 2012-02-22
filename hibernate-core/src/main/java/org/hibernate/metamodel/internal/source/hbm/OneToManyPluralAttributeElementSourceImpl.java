@@ -34,18 +34,19 @@ import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 /**
  * @author Steve Ebersole
  */
-public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
+public class OneToManyPluralAttributeElementSourceImpl
+		extends AbstractHbmSourceNode
+		implements OneToManyPluralAttributeElementSource {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbOneToManyElement oneToManyElement;
-	private final LocalBindingContext bindingContext;
 
 	public OneToManyPluralAttributeElementSourceImpl(
+			MappingDocument mappingDocument,
 			PluralAttributeElement pluralAttributeElement,
-			JaxbOneToManyElement oneToManyElement,
-			LocalBindingContext bindingContext) {
+			JaxbOneToManyElement oneToManyElement) {
+		super( mappingDocument );
 		this.pluralAttributeElement = pluralAttributeElement;
 		this.oneToManyElement = oneToManyElement;
-		this.bindingContext = bindingContext;
 	}
 
 	@Override
@@ -57,7 +58,7 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 	public String getReferencedEntityName() {
 		return StringHelper.isNotEmpty( oneToManyElement.getEntityName() )
 				? oneToManyElement.getEntityName()
-				: bindingContext.qualifyClassName( oneToManyElement.getClazz() );
+				: bindingContext().qualifyClassName( oneToManyElement.getClazz() );
 	}
 
 	@Override
@@ -68,6 +69,6 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext );
+		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
 	}
 }

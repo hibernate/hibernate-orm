@@ -34,7 +34,9 @@ import org.hibernate.metamodel.spi.source.ColumnSource;
  *
  * @author Steve Ebersole
  */
-class ColumnAttributeSourceImpl implements ColumnSource {
+class ColumnAttributeSourceImpl
+		extends AbstractHbmSourceNode
+		implements ColumnSource {
 	private final String tableName;
 	private final String columnName;
 	private TruthValue includedInInsert;
@@ -42,19 +44,22 @@ class ColumnAttributeSourceImpl implements ColumnSource {
     private TruthValue nullable;
 
 	ColumnAttributeSourceImpl(
+			MappingDocument mappingDocument,
 			String tableName,
 			String columnName,
 			TruthValue includedInInsert,
 			TruthValue includedInUpdate) {
-		this( tableName, columnName, includedInInsert, includedInUpdate, TruthValue.UNKNOWN );
+		this( mappingDocument, tableName, columnName, includedInInsert, includedInUpdate, TruthValue.UNKNOWN );
 	}
 
     ColumnAttributeSourceImpl(
+			MappingDocument mappingDocument,
 			String tableName,
 			String columnName,
 			TruthValue includedInInsert,
 			TruthValue includedInUpdate,
             TruthValue nullable) {
+		super( mappingDocument );
 		this.tableName = tableName;
 		this.columnName = columnName;
 		this.includedInInsert = includedInInsert;

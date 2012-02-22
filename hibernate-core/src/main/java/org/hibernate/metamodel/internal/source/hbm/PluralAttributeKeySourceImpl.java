@@ -34,17 +34,22 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
+public class PluralAttributeKeySourceImpl
+		extends AbstractHbmSourceNode
+		implements PluralAttributeKeySource {
 	private final JaxbKeyElement keyElement;
 
 	private final List<RelationalValueSource> valueSources;
 
 	public PluralAttributeKeySourceImpl(
+			MappingDocument mappingDocument,
 			final JaxbKeyElement keyElement,
 			final AttributeSourceContainer container) {
+		super( mappingDocument );
 		this.keyElement = keyElement;
 
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getContainingTableName() {
@@ -75,8 +80,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 					public List getColumnOrFormulaElements() {
 						return keyElement.getColumn();
 					}
-				},
-				container.getLocalBindingContext()
+				}
 		);
 	}
 

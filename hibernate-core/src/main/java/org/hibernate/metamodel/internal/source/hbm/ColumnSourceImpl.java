@@ -32,7 +32,9 @@ import org.hibernate.metamodel.spi.source.ColumnSource;
 /**
 * @author Steve Ebersole
 */
-class ColumnSourceImpl implements ColumnSource {
+class ColumnSourceImpl
+		extends AbstractHbmSourceNode
+		implements ColumnSource {
 	private final String tableName;
 	private final JaxbColumnElement columnElement;
 	private final TruthValue includedInInsert;
@@ -40,19 +42,22 @@ class ColumnSourceImpl implements ColumnSource {
     private final TruthValue nullable;
 
 	ColumnSourceImpl(
+			MappingDocument mappingDocument,
 			String tableName,
 			JaxbColumnElement columnElement,
 			TruthValue isIncludedInInsert,
 			TruthValue isIncludedInUpdate) {
-		this( tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, TruthValue.UNKNOWN );
+		this( mappingDocument, tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, TruthValue.UNKNOWN );
 	}
 
     ColumnSourceImpl(
+			MappingDocument mappingDocument,
             String tableName,
             JaxbColumnElement columnElement,
             TruthValue isIncludedInInsert,
             TruthValue isIncludedInUpdate,
             TruthValue nullable) {
+		super( mappingDocument );
         this.tableName = tableName;
         this.columnElement = columnElement;
         this.nullable = nullable;

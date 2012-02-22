@@ -28,12 +28,15 @@ import org.hibernate.metamodel.spi.source.TableSource;
 /**
  * @author Steve Ebersole
  */
-public class TableSourceImpl implements TableSource {
+public class TableSourceImpl
+		extends AbstractHbmSourceNode
+		implements TableSource {
 	private final String schema;
 	private final String catalog;
 	private final String tableName;
 
-	TableSourceImpl(String schema, String catalog, String tableName) {
+	TableSourceImpl(MappingDocument mappingDocument, String schema, String catalog, String tableName) {
+		super( mappingDocument );
 		this.schema = schema;
 		this.catalog = catalog;
 		this.tableName = tableName;

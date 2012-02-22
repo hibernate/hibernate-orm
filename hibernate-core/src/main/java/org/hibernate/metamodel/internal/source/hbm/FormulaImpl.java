@@ -24,16 +24,18 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
 * @author Steve Ebersole
 */
-class FormulaImpl implements DerivedValueSource {
+class FormulaImpl
+		extends AbstractHbmSourceNode
+		implements DerivedValueSource {
 	private String tableName;
 	private final String expression;
 
-	FormulaImpl(String tableName, String expression) {
+	FormulaImpl(MappingDocument mappingDocument, String tableName, String expression) {
+		super( mappingDocument );
 		this.tableName = tableName;
 		this.expression = expression;
 	}

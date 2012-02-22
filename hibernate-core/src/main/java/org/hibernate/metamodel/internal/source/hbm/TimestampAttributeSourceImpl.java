@@ -30,8 +30,6 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -42,17 +40,19 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
  *
  * @author Steve Ebersole
  */
-class TimestampAttributeSourceImpl implements VersionAttributeSource {
+class TimestampAttributeSourceImpl
+		extends AbstractHbmSourceNode
+		implements VersionAttributeSource {
 	private final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement;
-	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
 
 	TimestampAttributeSourceImpl(
-			final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement,
-			LocalBindingContext bindingContext) {
+			MappingDocument mappingDocument,
+			final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement) {
+		super( mappingDocument );
 		this.timestampElement = timestampElement;
-		this.bindingContext = bindingContext;
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
@@ -84,8 +84,7 @@ class TimestampAttributeSourceImpl implements VersionAttributeSource {
 					public boolean isIncludedInUpdateByDefault() {
 						return true;
 					}
-				},
-				bindingContext
+				}
 		);
 	}
 
@@ -124,10 +123,7 @@ class TimestampAttributeSourceImpl implements VersionAttributeSource {
 							? PropertyGeneration.NEVER
 							: PropertyGeneration.parse( timestampElement.getGenerated().value() );
 					if ( propertyGeneration == PropertyGeneration.INSERT ) {
-						throw new MappingException(
-								"'generated' attribute cannot be 'insert' for versioning property",
-								bindingContext.getOrigin()
-						);
+						throw makeMappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 					}
 					return propertyGeneration;
 				}

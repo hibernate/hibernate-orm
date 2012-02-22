@@ -39,15 +39,17 @@ import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 /**
  * @author Steve Ebersole
  */
-public class CompositePluralAttributeElementSourceImpl implements CompositePluralAttributeElementSource {
+public class CompositePluralAttributeElementSourceImpl
+		extends AbstractHbmSourceNode
+		implements CompositePluralAttributeElementSource {
+
 	private final JaxbCompositeElementElement compositeElement;
-	private final LocalBindingContext bindingContext;
 
 	public CompositePluralAttributeElementSourceImpl(
-			JaxbCompositeElementElement compositeElement,
-			LocalBindingContext bindingContext) {
+			MappingDocument mappingDocument,
+			JaxbCompositeElementElement compositeElement) {
+		super( mappingDocument );
 		this.compositeElement = compositeElement;
-		this.bindingContext = bindingContext;
 	}
 
 	@Override
@@ -57,12 +59,12 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public String getClassName() {
-		return bindingContext.qualifyClassName( compositeElement.getClazz() );
+		return bindingContext().qualifyClassName( compositeElement.getClazz() );
 	}
 
 	@Override
 	public Value<Class<?>> getClassReference() {
-		return bindingContext.makeClassReference( getClassName() );
+		return bindingContext().makeClassReference( getClassName() );
 	}
 
 	@Override
@@ -103,6 +105,6 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public LocalBindingContext getLocalBindingContext() {
-		return bindingContext;
+		return bindingContext();
 	}
 }

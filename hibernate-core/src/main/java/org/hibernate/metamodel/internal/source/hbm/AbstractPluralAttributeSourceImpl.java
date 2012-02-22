@@ -38,7 +38,6 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
@@ -50,6 +49,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralAttributeSourceImpl
+		extends AbstractHbmSourceNode
 		implements PluralAttributeSource, Helper.InLineViewNameInferrer {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
@@ -60,12 +60,18 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private final PluralAttributeElementSource elementSource;
 
 	protected AbstractPluralAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
 			final PluralAttributeElement pluralAttributeElement,
 			AttributeSourceContainer container) {
+		super( sourceMappingDocument );
 		this.pluralAttributeElement = pluralAttributeElement;
 		this.container = container;
 
-		this.keySource = new PluralAttributeKeySourceImpl( pluralAttributeElement.getKey(), container );
+		this.keySource = new PluralAttributeKeySourceImpl(
+				sourceMappingDocument(),
+				pluralAttributeElement.getKey(),
+				container
+		);
 		this.elementSource = interpretElementType();
 
 		this.typeInformation = new ExplicitHibernateTypeSource() {
@@ -84,26 +90,28 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private PluralAttributeElementSource interpretElementType() {
 		if ( pluralAttributeElement.getElement() != null ) {
 			return new BasicPluralAttributeElementSourceImpl(
-					pluralAttributeElement.getElement(), container.getLocalBindingContext()
+					sourceMappingDocument(),
+					pluralAttributeElement.getElement()
 			);
 		}
 		else if ( pluralAttributeElement.getCompositeElement() != null ) {
 			return new CompositePluralAttributeElementSourceImpl(
-					pluralAttributeElement.getCompositeElement(), container.getLocalBindingContext()
+					sourceMappingDocument(),
+					pluralAttributeElement.getCompositeElement()
 			);
 		}
 		else if ( pluralAttributeElement.getOneToMany() != null ) {
 			return new OneToManyPluralAttributeElementSourceImpl(
+					sourceMappingDocument(),
 					pluralAttributeElement,
-					pluralAttributeElement.getOneToMany(),
-					container.getLocalBindingContext()
+					pluralAttributeElement.getOneToMany()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToMany() != null ) {
 			return new ManyToManyPluralAttributeElementSourceImpl(
+					sourceMappingDocument(),
 					pluralAttributeElement,
-					pluralAttributeElement.getManyToMany(),
-					container.getLocalBindingContext()
+					pluralAttributeElement.getManyToMany()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToAny() != null ) {
@@ -126,10 +134,6 @@ public abstract class AbstractPluralAttributeSourceImpl
 		return container;
 	}
 
-	protected LocalBindingContext bindingContext() {
-		return container().getLocalBindingContext();
-	}
-
 	@Override
 	public PluralAttributeKeySource getKeySource() {
 		return keySource;
@@ -147,7 +151,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
-		return Helper.createTableSource( pluralAttributeElement, this );
+		return Helper.createTableSource( sourceMappingDocument(), pluralAttributeElement, this );
 	}
 
 	@Override
@@ -302,7 +306,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 						lazySelection,
 						pluralAttributeElement.getName()
 				),
-				bindingContext().getOrigin()
+				origin()
 		);
 	}
 

@@ -27,12 +27,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -40,22 +38,24 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Steve Ebersole
  */
-public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+public class ManyToManyPluralAttributeElementSourceImpl
+		extends AbstractHbmSourceNode
+		implements ManyToManyPluralAttributeElementSource {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbManyToManyElement manyToManyElement;
-	private final LocalBindingContext bindingContext;
 
 	private final List<RelationalValueSource> valueSources;
 
 	public ManyToManyPluralAttributeElementSourceImpl(
+			MappingDocument mappingDocument,
 			final PluralAttributeElement pluralAttributeElement,
-			final JaxbManyToManyElement manyToManyElement,
-			final LocalBindingContext bindingContext) {
+			final JaxbManyToManyElement manyToManyElement) {
+		super( mappingDocument );
 		this.pluralAttributeElement = pluralAttributeElement;
 		this.manyToManyElement = manyToManyElement;
-		this.bindingContext = bindingContext;
 
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getContainingTableName() {
@@ -86,8 +86,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 					public List getColumnOrFormulaElements() {
 						return manyToManyElement.getColumnOrFormula();
 					}
-				},
-				bindingContext
+				}
 		);
 	}
 
@@ -100,7 +99,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	public String getReferencedEntityName() {
 		return StringHelper.isNotEmpty( manyToManyElement.getEntityName() )
 				? manyToManyElement.getEntityName()
-				: bindingContext.qualifyClassName( manyToManyElement.getClazz() );
+				: bindingContext().qualifyClassName( manyToManyElement.getClazz() );
 	}
 
 	@Override
@@ -146,7 +145,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext );
+		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
 	}
 
 	@Override
@@ -158,12 +157,11 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		}
 
 		if ( manyToManyElement.getOuterJoin() == null ) {
-			return !bindingContext.getMappingDefaults().areAssociationsLazy();
+			return !bindingContext().getMappingDefaults().areAssociationsLazy();
 		}
 		else {
 			final String value = manyToManyElement.getOuterJoin().value();
 			if ( "auto".equals( value ) ) {
-				return !bindingContext.getMappingDefaults().areAssociationsLazy();
 			}
 			return "true".equals( value );
 		}

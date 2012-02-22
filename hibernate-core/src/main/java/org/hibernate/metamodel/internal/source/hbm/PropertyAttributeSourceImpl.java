@@ -73,6 +73,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 			}
 		};
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
@@ -103,8 +104,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 					public boolean isIncludedInUpdateByDefault() {
 						return Helper.getBooleanValue( propertyElement.isUpdate(), true );
 					}
-				},
-				bindingContext()
+				}
 		);
 		this.naturalIdMutability = naturalIdMutability;
 	}

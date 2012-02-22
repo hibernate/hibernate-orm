@@ -142,7 +142,7 @@ public class HibernateMappingProcessor {
 		}
 
 		for ( JaxbHibernateMapping.JaxbFilterDef filterDefElement : mappingRoot().getFilterDef() ) {
-			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDefElement ) );
+			filterDefinitionSources.add( new FilterDefinitionSourceImpl( mappingDocument, filterDefElement ) );
 		}
 	}
 

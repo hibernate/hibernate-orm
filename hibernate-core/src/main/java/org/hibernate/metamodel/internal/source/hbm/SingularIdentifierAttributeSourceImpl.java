@@ -40,14 +40,17 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  *
  * @author Steve Ebersole
  */
-class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
+class SingularIdentifierAttributeSourceImpl
+		extends AbstractHbmSourceNode
+		implements SingularAttributeSource {
 	private final JaxbHibernateMapping.JaxbClass.JaxbId idElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	public SingularIdentifierAttributeSourceImpl(
-			final JaxbHibernateMapping.JaxbClass.JaxbId idElement,
-			LocalBindingContext bindingContext) {
+			MappingDocument mappingDocument,
+			final JaxbHibernateMapping.JaxbClass.JaxbId idElement) {
+		super( mappingDocument );
 		this.idElement = idElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {
 			private final String name = idElement.getTypeAttribute() != null
@@ -70,6 +73,7 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 			}
 		};
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
@@ -106,8 +110,7 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
                     public boolean isForceNotNull() {
                         return true;
                     }
-                },
-				bindingContext
+                }
 		);
 	}
 

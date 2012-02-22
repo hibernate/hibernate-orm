@@ -294,10 +294,12 @@ public class Helper {
 	}
 
 	public static TableSpecificationSource createTableSource(
+			MappingDocument mappingDocument,
 			TableInformationSource jaxbTableSource,
 			InLineViewNameInferrer inLineViewNameInferrer) {
 		if ( jaxbTableSource.getSubselectAttribute() == null && jaxbTableSource.getSubselect() == null ) {
 			return new TableSourceImpl(
+					mappingDocument,
 					jaxbTableSource.getSchema(),
 					jaxbTableSource.getCatalog(),
 					jaxbTableSource.getTable()
@@ -305,6 +307,7 @@ public class Helper {
 		}
 		else {
 			return new InLineViewSourceImpl(
+					mappingDocument,
 					jaxbTableSource.getSchema(),
 					jaxbTableSource.getCatalog(),
 					jaxbTableSource.getSubselectAttribute() != null
@@ -372,8 +375,8 @@ public class Helper {
 	 * @return The corresponding list.
 	 */
     public static List<RelationalValueSource> buildValueSources(
-			ValueSourcesAdapter valueSourcesAdapter,
-			LocalBindingContext bindingContext) {
+			MappingDocument mappingDocument,
+			ValueSourcesAdapter valueSourcesAdapter) {
 		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
 
 		if ( StringHelper.isNotEmpty( valueSourcesAdapter.getColumnAttribute() ) ) {
@@ -381,21 +384,20 @@ public class Helper {
 			//		it is therefore illegal for there to also be any nested formula or column elements
 			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw new MappingException(
-						"column/formula attribute may not be used together with <column>/<formula> subelement",
-						bindingContext.getOrigin()
+				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement"
 				);
 			}
 			//		it is also illegal for there to also be a formula attribute
 			if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
-				throw new MappingException(
-						"column and formula attributes may not be used together",
-						bindingContext.getOrigin()
+				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
+						"column and formula attributes may not be used together"
 				);
 			}
 
 			result.add(
 					new ColumnAttributeSourceImpl(
+							mappingDocument,
 							valueSourcesAdapter.getContainingTableName(),
 							valueSourcesAdapter.getColumnAttribute(),
 							valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
@@ -409,15 +411,15 @@ public class Helper {
 			//		it is therefore illegal for there to also be any nested formula or column elements
 			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw new MappingException(
-						"column/formula attribute may not be used together with <column>/<formula> subelement",
-						bindingContext.getOrigin()
+				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement"
 				);
 			}
 			// 		column/formula attribute combo checked already
 
 			result.add(
 					new FormulaImpl(
+							mappingDocument,
 							valueSourcesAdapter.getContainingTableName(),
 							valueSourcesAdapter.getFormulaAttribute()
 					)
@@ -430,6 +432,7 @@ public class Helper {
 				if ( JaxbColumnElement.class.isInstance( columnOrFormulaElement ) ) {
 					result.add(
 							new ColumnSourceImpl(
+									mappingDocument,
 									valueSourcesAdapter.getContainingTableName(),
 									(JaxbColumnElement) columnOrFormulaElement,
 									valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
@@ -441,6 +444,7 @@ public class Helper {
 				else {
 					result.add(
 							new FormulaImpl(
+									mappingDocument,
 									valueSourcesAdapter.getContainingTableName(),
 									(String) columnOrFormulaElement
 							)

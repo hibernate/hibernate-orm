@@ -82,9 +82,8 @@ public class HierarchyBuilder {
 			else {
 				// we have to see if this things super-type has been found yet, and if not add it to the
 				// extends queue
-                final String entityItExtends =
-                    currentMappingDocument.getMappingLocalBindingContext().
-                        qualifyClassName( ( (SubEntityElement) entityElement ).getExtends() );
+                final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext()
+						.qualifyClassName( ( (SubEntityElement) entityElement ).getExtends() );
                 final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
 				final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, entityElement, ( EntitySource ) container );
 				final String entityName = subClassEntitySource.getEntityName();

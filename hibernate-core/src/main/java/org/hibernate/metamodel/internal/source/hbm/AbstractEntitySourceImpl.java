@@ -66,16 +66,18 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 public abstract class AbstractEntitySourceImpl
 		extends AbstractHbmSourceNode
 		implements EntitySource, Helper.InLineViewNameInferrer {
+
 	private final EntityElement entityElement;
 	private final String className;
 	private final String entityName;
+
+	private List<SubclassEntitySource> subclassEntitySources = new ArrayList<SubclassEntitySource>();
 
 	private int inLineViewCount = 0;
 
 	// logically final, but built during 'afterInstantiation' callback
 	private List<AttributeSource> attributeSources;
 	private Set<SecondaryTableSource> secondaryTableSources;
-	private List<SubclassEntitySource> subclassEntitySources;
 
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
 		super( sourceMappingDocument );
@@ -95,8 +97,6 @@ public abstract class AbstractEntitySourceImpl
 	protected void afterInstantiation() {
 		this.attributeSources = buildAttributeSources();
 		this.secondaryTableSources = buildSecondaryTables();
-
-		this.subclassEntitySources = buildSubClassSources();
 	}
 
 	protected List<AttributeSource> buildAttributeSources() {
@@ -161,6 +161,7 @@ public abstract class AbstractEntitySourceImpl
 			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
 				results.add(
 						new BagAttributeSourceImpl(
+								sourceMappingDocument(),
 								JaxbBagElement.class.cast( attributeElement ),
 								this
 						)
@@ -172,6 +173,7 @@ public abstract class AbstractEntitySourceImpl
 			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
 				results.add(
 						new SetAttributeSourceImpl(
+								sourceMappingDocument(),
 								JaxbSetElement.class.cast( attributeElement ),
 								this
 						)
@@ -187,11 +189,6 @@ public abstract class AbstractEntitySourceImpl
 				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
 			}
 		}
-	}
-
-	protected List<SubclassEntitySource> buildSubClassSources() {
-		// todo : implement subclass processing
-		return Collections.emptyList();
 	}
 
 	private Set<SecondaryTableSource> buildSecondaryTables() {

@@ -29,11 +29,16 @@ import org.hibernate.metamodel.spi.source.FilterSource;
 /**
  * @author Steve Ebersole
  */
-public class FilterSourceImpl implements FilterSource {
+public class FilterSourceImpl
+		extends AbstractHbmSourceNode
+		implements FilterSource {
 	private final String name;
 	private final String condition;
 
-	public FilterSourceImpl(JaxbFilterElement filterElement) {
+	public FilterSourceImpl(
+			MappingDocument mappingDocument,
+			JaxbFilterElement filterElement) {
+		super( mappingDocument );
 		this.name = filterElement.getName();
 
 		String conditionAttribute = filterElement.getCondition();

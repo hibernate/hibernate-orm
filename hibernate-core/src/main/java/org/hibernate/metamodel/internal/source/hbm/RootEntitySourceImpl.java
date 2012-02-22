@@ -43,7 +43,6 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
@@ -57,7 +56,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			MappingDocument sourceMappingDocument,
 			JaxbHibernateMapping.JaxbClass entityElement) {
 		super( sourceMappingDocument, entityElement );
-		this.primaryTable = Helper.createTableSource( entityElement, this );
+		this.primaryTable = Helper.createTableSource( sourceMappingDocument(), entityElement, this );
 
 		afterInstantiation();
 	}
@@ -74,8 +73,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 				@Override
 				public SingularAttributeSource getIdentifierAttributeSource() {
 					return new SingularIdentifierAttributeSourceImpl(
-							entityElement().getId(),
-							sourceMappingDocument().getMappingLocalBindingContext()
+							sourceMappingDocument(),
+							entityElement().getId()
 					);
 				}
 
@@ -111,14 +110,14 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	public VersionAttributeSource getVersioningAttributeSource() {
 		if ( entityElement().getVersion() != null ) {
 			return new VersionAttributeSourceImpl(
-					entityElement().getVersion(),
-					sourceMappingDocument().getMappingLocalBindingContext()
+					sourceMappingDocument(),
+					entityElement().getVersion()
 			);
 		}
 		else if ( entityElement().getTimestamp() != null ) {
 			return new TimestampAttributeSourceImpl(
-					entityElement().getTimestamp(),
-					sourceMappingDocument().getMappingLocalBindingContext()
+					sourceMappingDocument(),
+					entityElement().getTimestamp()
 			);
 		}
 		return null;
@@ -222,6 +221,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			public RelationalValueSource getDiscriminatorRelationalValueSource() {
 				if ( StringHelper.isNotEmpty( discriminatorElement.getColumnAttribute() ) ) {
 					return new ColumnAttributeSourceImpl(
+							sourceMappingDocument(),
 							null, // root table
 							discriminatorElement.getColumnAttribute(),
 							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
@@ -229,10 +229,15 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					);
 				}
 				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormulaAttribute() ) ) {
-					return new FormulaImpl( null, discriminatorElement.getFormulaAttribute() );
+					return new FormulaImpl(
+							sourceMappingDocument(),
+							null,
+							discriminatorElement.getFormulaAttribute()
+					);
 				}
 				else if ( discriminatorElement.getColumn() != null ) {
 					return new ColumnSourceImpl(
+							sourceMappingDocument(),
 							null, // root table
 							discriminatorElement.getColumn(),
 							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
@@ -240,7 +245,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					);
 				}
 				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormula() ) ) {
-					return new FormulaImpl( null, discriminatorElement.getFormula() );
+					return new FormulaImpl(
+							sourceMappingDocument(),
+							null,
+							discriminatorElement.getFormula()
+					);
 				}
 				else {
 					throw new MappingException( "could not determine source of discriminator mapping", getOrigin() );

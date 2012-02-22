@@ -57,6 +57,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 		this.manyToOneElement = manyToOneElement;
 		this.naturalIdMutability = naturalIdMutability;
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
@@ -87,8 +88,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 					public boolean isIncludedInUpdateByDefault() {
 						return manyToOneElement.isUpdate();
 					}
-				},
-				bindingContext()
+				}
 		);
 	}
 

@@ -33,8 +33,11 @@ import org.hibernate.metamodel.spi.source.PluralAttributeNature;
  * @author Steve Ebersole
  */
 public class BagAttributeSourceImpl extends AbstractPluralAttributeSourceImpl implements Orderable {
-	public BagAttributeSourceImpl(JaxbBagElement bagElement, AttributeSourceContainer container) {
-		super( bagElement, container );
+	public BagAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
+			JaxbBagElement bagElement,
+			AttributeSourceContainer container) {
+		super( sourceMappingDocument, bagElement, container );
 	}
 
 	@Override

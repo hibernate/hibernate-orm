@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -36,14 +35,18 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Steve Ebersole
  */
-public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttributeElementSource {
+public class BasicPluralAttributeElementSourceImpl
+		extends AbstractHbmSourceNode
+		implements BasicPluralAttributeElementSource {
 	private final List<RelationalValueSource> valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 
 	public BasicPluralAttributeElementSourceImpl(
-			final JaxbElementElement elementElement,
-			LocalBindingContext bindingContext) {
+			MappingDocument sourceMappingDocument,
+			final JaxbElementElement elementElement) {
+		super( sourceMappingDocument );
 		this.valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getContainingTableName() {
@@ -74,8 +77,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 					public List getColumnOrFormulaElements() {
 						return elementElement.getColumnOrFormula();
 					}
-				},
-				bindingContext
+				}
 		);
 
 		this.typeSource = new ExplicitHibernateTypeSource() {

@@ -34,8 +34,11 @@ import org.hibernate.metamodel.spi.source.Sortable;
  * @author Steve Ebersole
  */
 public class SetAttributeSourceImpl extends AbstractPluralAttributeSourceImpl implements Orderable, Sortable {
-	public SetAttributeSourceImpl(JaxbSetElement setElement, AttributeSourceContainer container) {
-		super( setElement, container );
+	public SetAttributeSourceImpl(
+			MappingDocument sourceMappingDocument,
+			JaxbSetElement setElement,
+			AttributeSourceContainer container) {
+		super( sourceMappingDocument, setElement, container );
 	}
 
 	@Override

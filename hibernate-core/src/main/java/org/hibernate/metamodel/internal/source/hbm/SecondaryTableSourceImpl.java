@@ -48,7 +48,7 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 			Helper.InLineViewNameInferrer inLineViewNameInferrer) {
 		super( sourceMappingDocument );
 		this.joinElement = joinElement;
-		this.joinTable = Helper.createTableSource( joinElement, inLineViewNameInferrer );
+		this.joinTable = Helper.createTableSource( sourceMappingDocument(), joinElement, inLineViewNameInferrer );
 
 		joinColumns = new ArrayList<PrimaryKeyJoinColumnSource>();
 		if ( joinElement.getKey().getColumnAttribute() != null ) {

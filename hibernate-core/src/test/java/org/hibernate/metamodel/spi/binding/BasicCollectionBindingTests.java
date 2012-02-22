@@ -79,6 +79,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
 
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithBasicCollections.class.getName() );
+		final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		assertNotNull( entityBinding );
 
 		PluralAttributeBinding bagBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" );
@@ -104,11 +105,20 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertFalse( fkBagColumnIterator.hasNext() );
 		assertFalse( fkBagSourceColumnIterator.hasNext() );
 		assertSame( entityBinding.getPrimaryTable(), fkBag.getTargetTable() );
-		assertEquals( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
+		assertSame( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getDeleteRule() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getUpdateRule() );
-		// FK is null because no default FK name is generated until HHH-7092 is fixed
+		// FK name is null because no default FK name is generated until HHH-7092 is fixed
 		assertNull( fkBag.getName() );
+		checkEquals(
+				entityIdentifier.getValueBinding().getHibernateTypeDescriptor(),
+				bagKeyBinding.getHibernateTypeDescriptor()
+		);
+		assertEquals( 0, bagBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		assertEquals(
+				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
+				bagKeyBinding.getForeignKey().getColumns().iterator().next().getJdbcDataType()
+		);
 		assertFalse( bagKeyBinding.isInverse() );
 		assertEquals( PluralAttributeElementNature.BASIC, bagBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
 		assertEquals( String.class.getName(), bagBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
@@ -136,13 +146,34 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertFalse( fkSetColumnIterator.hasNext() );
 		assertFalse( fkSetSourceColumnIterator.hasNext() );
 		assertSame( entityBinding.getPrimaryTable(), fkSet.getTargetTable() );
-		assertEquals( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
+		assertSame( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getDeleteRule() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getUpdateRule() );
 		// FK is null because no default FK name is generated until HHH-7092 is fixed
 		assertNull( fkSet.getName() );
+		checkEquals(
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().getHibernateTypeDescriptor(),
+				setKeyBinding.getHibernateTypeDescriptor()
+		);
 		assertFalse( setKeyBinding.isInverse() );
+		assertEquals( 1, setBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		assertEquals(
+				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
+				setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType()
+		);
+		assertSame(
+				setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next(),
+				setKeyBinding.getForeignKey().getColumns().iterator().next()
+		);
 		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
 		assertEquals( String.class.getName(), setBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
+	}
+
+	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {
+		assertEquals( expected.getExplicitTypeName(), actual.getExplicitTypeName() );
+		assertEquals( expected.getJavaTypeName(), actual.getJavaTypeName() );
+		assertEquals( expected.getTypeParameters(), actual.getTypeParameters() );
+		assertEquals( expected.getResolvedTypeMapping(), actual.getResolvedTypeMapping() );
+		assertEquals( expected.isToOne(), actual.isToOne() );
 	}
 }

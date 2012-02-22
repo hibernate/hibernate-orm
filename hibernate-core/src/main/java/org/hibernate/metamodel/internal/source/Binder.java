@@ -1064,8 +1064,35 @@ public class Binder {
 			bindCollectionKeyTargetingPropertyRef( attributeSource.getKeySource(), pluralAttributeBinding );
 		}
 
-		HibernateTypeDescriptor targetTypeDescriptor = pluralAttributeBinding.getHibernateTypeDescriptor();
+		final EntityBinding entityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
+		AttributeBinding referencedAttributeBinding = 
+				attributeSource.getKeySource().getReferencedEntityAttributeName() == null ?
+						entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() :
+						entityBinding.locateAttributeBinding( attributeSource.getKeySource().getReferencedEntityAttributeName() );
+		
+		if ( referencedAttributeBinding == null ) {
+			throw new MappingException(
+					String.format(
+							"Plural atttribute key references an attribute binding that does not exist: %s",
+							attributeSource.getKeySource().getReferencedEntityAttributeName()
+					),
+					currentBindingContext.getOrigin()
+			);
+		}
+		if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+			throw new MappingException( 
+					String.format(
+							"Plural attribute key references an attribute that is not singular: %s",
+							attributeSource.getKeySource().getReferencedEntityAttributeName() 
+					),
+					currentBindingContext.getOrigin()
+			);
+		}
 
+		typeHelper.bindPluralAttributeKeyTypeInformation( 
+				pluralAttributeBinding.getPluralAttributeKeyBinding(),
+				( SingularAttributeBinding ) referencedAttributeBinding
+		);
 	}
 
 	private void bindCollectionKeyTargetingPrimaryKey(

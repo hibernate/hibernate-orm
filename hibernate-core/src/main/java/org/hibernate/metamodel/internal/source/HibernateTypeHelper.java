@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.ParameterizedType;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,17 +47,20 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.AbstractValue;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -160,6 +164,50 @@ public class HibernateTypeHelper {
 		processPluralAttributeTypeInformation( attributeBinding );
 	}
 
+	public void bindPluralAttributeKeyTypeInformation(
+			PluralAttributeKeyBinding keyBinding,
+			SingularAttributeBinding referencedAttributeBinding) {
+		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
+		final HibernateTypeDescriptor referencedTypeDescriptor = referencedAttributeBinding.getHibernateTypeDescriptor();
+		pluralAttributeKeyTypeDescriptor.setExplicitTypeName( referencedTypeDescriptor.getExplicitTypeName() );
+		pluralAttributeKeyTypeDescriptor.setJavaTypeName( referencedTypeDescriptor.getJavaTypeName() );
+
+		// TODO: not sure about the following...
+		pluralAttributeKeyTypeDescriptor.setToOne( referencedTypeDescriptor.isToOne() );
+		pluralAttributeKeyTypeDescriptor.getTypeParameters().putAll( referencedTypeDescriptor.getTypeParameters() );
+		
+		processPluralAttributeKeyInformation( keyBinding, referencedAttributeBinding );
+	}
+
+	private void processPluralAttributeKeyInformation(
+			PluralAttributeKeyBinding keyBinding,
+			SingularAttributeBinding referencedAttributeBinding) {
+		if ( keyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
+			return;
+		}
+		// we can determine the Hibernate Type if either:
+		// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
+		// 		2) we know the java type of the attribute
+		Type resolvedType = determineHibernateTypeFromDescriptor( keyBinding.getHibernateTypeDescriptor() );
+		if ( resolvedType == null ) {
+			resolvedType = determineHibernateTypeFromAttributeJavaType( referencedAttributeBinding.getAttribute() );
+		}
+
+		if ( resolvedType != null ) {
+			Iterator<Column> fkColumnIterator = keyBinding.getForeignKey().getSourceColumns().iterator();
+
+			if ( resolvedType.isComponentType() ) {
+				ComponentType componentType = ( ComponentType ) resolvedType;
+				for ( Type subType : componentType.getSubtypes() ) {
+					pushHibernateTypeInformationDown( subType, fkColumnIterator.next() );
+				}
+			}
+			else {
+				pushHibernateTypeInformationDown( resolvedType, fkColumnIterator.next() );
+			}
+		}
+	}
+	
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();

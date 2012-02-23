@@ -41,14 +41,17 @@ public class PluralAttributeKeyBinding {
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	// SingularAttributeBinding referencedAttributeBinding;
+	private final SingularAttributeBinding referencedAttributeBinding;
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
 //	private BasicAttributeBinding otherSide;
 
 
-	public PluralAttributeKeyBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
+	public PluralAttributeKeyBinding(
+			AbstractPluralAttributeBinding pluralAttributeBinding,
+			SingularAttributeBinding referencedAttributeBinding) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
+		this.referencedAttributeBinding = referencedAttributeBinding;
 	}
 
 	/**
@@ -60,6 +63,9 @@ public class PluralAttributeKeyBinding {
 		return pluralAttributeBinding;
 	}
 
+	public SingularAttributeBinding getReferencedAttributeBinding() {
+		return referencedAttributeBinding;
+	}
 	/**
 	 * The foreign key that defines the scope of this relationship.
 	 *

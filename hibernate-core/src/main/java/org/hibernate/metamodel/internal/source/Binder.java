@@ -52,7 +52,6 @@ import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
-import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
@@ -134,6 +133,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class Binder {
 	private final MetadataImplementor metadata;
@@ -898,6 +898,12 @@ public class Binder {
 				attributeSource.metaAttributes(),
 				attributeBindingContainer.getMetaAttributeContext()
 		);
+
+		// TODO: referenced attribute binding may not be defined yet; if it doesn't, need to chase it
+		//       before resolving types.
+ 		SingularAttributeBinding referencedAttributeBinding = locatePluralAttributeKeyReferencedBinding(
+				 attributeSource, attributeBindingContainer
+		);
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
 			final PluralAttribute attribute = existingAttribute != null
 					? existingAttribute
@@ -905,6 +911,7 @@ public class Binder {
 			pluralAttributeBinding = attributeBindingContainer.makeBagAttributeBinding(
 					attribute,
 					convert( attributeSource.getElementSource().getNature() ),
+					referencedAttributeBinding,
 					propertyAccessorName,
 					attributeSource.isIncludedInOptimisticLocking(),
 					false,
@@ -919,6 +926,7 @@ public class Binder {
 			pluralAttributeBinding = attributeBindingContainer.makeSetAttributeBinding(
 					attribute,
 					convert( attributeSource.getElementSource().getNature() ),
+					referencedAttributeBinding,
 					propertyAccessorName,
 					attributeSource.isIncludedInOptimisticLocking(),
 					false,
@@ -941,7 +949,39 @@ public class Binder {
 		bindCollectionIndex( attributeSource, pluralAttributeBinding );
 		bindCollectionTablePrimaryKey( attributeSource, pluralAttributeBinding );
 
+		typeHelper.bindPluralAttributeTypeInformation( attributeSource, pluralAttributeBinding );
+
 		metadata.addCollection( pluralAttributeBinding );
+	}
+
+	private SingularAttributeBinding locatePluralAttributeKeyReferencedBinding(
+			PluralAttributeSource attributeSource,
+			AttributeBindingContainer attributeBindingContainer) {
+		final EntityBinding entityBinding = attributeBindingContainer.seekEntityBinding();
+		final String referencedAttributeName = attributeSource.getKeySource().getReferencedEntityAttributeName();
+		AttributeBinding referencedAttributeBinding =
+				attributeSource.getKeySource().getReferencedEntityAttributeName() == null ?
+						entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() :
+						entityBinding.locateAttributeBinding( referencedAttributeName );
+		if ( referencedAttributeBinding == null ) {
+			throw new MappingException(
+					String.format(
+							"Plural atttribute key references an attribute binding that does not exist: %s",
+							referencedAttributeBinding
+					),
+					currentBindingContext.getOrigin()
+			);
+		}
+		if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+			throw new MappingException(
+					String.format(
+							"Plural atttribute key references a plural attribute; it must be plural: %s",
+							referencedAttributeName
+					),
+					currentBindingContext.getOrigin()
+			);
+		}
+		return ( SingularAttributeBinding ) referencedAttributeBinding;
 	}
 
 	private void doBasicPluralAttributeBinding(PluralAttributeSource source, AbstractPluralAttributeBinding binding) {
@@ -1063,36 +1103,6 @@ public class Binder {
 		else {
 			bindCollectionKeyTargetingPropertyRef( attributeSource.getKeySource(), pluralAttributeBinding );
 		}
-
-		final EntityBinding entityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
-		AttributeBinding referencedAttributeBinding = 
-				attributeSource.getKeySource().getReferencedEntityAttributeName() == null ?
-						entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() :
-						entityBinding.locateAttributeBinding( attributeSource.getKeySource().getReferencedEntityAttributeName() );
-		
-		if ( referencedAttributeBinding == null ) {
-			throw new MappingException(
-					String.format(
-							"Plural atttribute key references an attribute binding that does not exist: %s",
-							attributeSource.getKeySource().getReferencedEntityAttributeName()
-					),
-					currentBindingContext.getOrigin()
-			);
-		}
-		if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw new MappingException( 
-					String.format(
-							"Plural attribute key references an attribute that is not singular: %s",
-							attributeSource.getKeySource().getReferencedEntityAttributeName() 
-					),
-					currentBindingContext.getOrigin()
-			);
-		}
-
-		typeHelper.bindPluralAttributeKeyTypeInformation( 
-				pluralAttributeBinding.getPluralAttributeKeyBinding(),
-				( SingularAttributeBinding ) referencedAttributeBinding
-		);
 	}
 
 	private void bindCollectionKeyTargetingPrimaryKey(
@@ -1262,10 +1272,6 @@ public class Binder {
 			bindBasicPluralElementRelationalValues(
 					basicElementSource,
 					basicCollectionElement
-			);
-			typeHelper.bindPluralAttributeTypeInformation(
-					attributeSource,
-					pluralAttributeBinding
 			);
 			return;
 		}

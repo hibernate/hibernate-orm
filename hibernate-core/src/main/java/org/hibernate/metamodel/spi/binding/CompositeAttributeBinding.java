@@ -205,6 +205,7 @@ public class CompositeAttributeBinding
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -214,6 +215,7 @@ public class CompositeAttributeBinding
 				this,
 				attribute,
 				nature,
+				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
@@ -227,6 +229,7 @@ public class CompositeAttributeBinding
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -237,6 +240,7 @@ public class CompositeAttributeBinding
 				this,
 				attribute,
 				nature,
+				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,

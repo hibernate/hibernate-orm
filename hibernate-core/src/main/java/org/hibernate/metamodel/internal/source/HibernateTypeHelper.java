@@ -91,6 +91,7 @@ import org.hibernate.type.TypeFactory;
  * </ul>
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class HibernateTypeHelper {
 	private static final Logger log = Logger.getLogger( HibernateTypeHelper.class );
@@ -159,16 +160,18 @@ public class HibernateTypeHelper {
 			}
 		}
 
-		//todo : we need to support type descriptors at multiple levels
-		bindHibernateTypeInformation( attributeSource.getTypeInformation(), attributeBinding.getHibernateTypeDescriptor() );
+		bindHibernateTypeInformation(
+				attributeSource.getTypeInformation(),
+				attributeBinding.getHibernateTypeDescriptor()
+		);
 		processPluralAttributeTypeInformation( attributeBinding );
 	}
 
-	public void bindPluralAttributeKeyTypeInformation(
-			PluralAttributeKeyBinding keyBinding,
-			SingularAttributeBinding referencedAttributeBinding) {
+	private void processPluralAttributeKeyTypeInformation(PluralAttributeKeyBinding keyBinding) {
 		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
-		final HibernateTypeDescriptor referencedTypeDescriptor = referencedAttributeBinding.getHibernateTypeDescriptor();
+		final HibernateTypeDescriptor referencedTypeDescriptor =
+				keyBinding.getReferencedAttributeBinding().getHibernateTypeDescriptor();
+
 		pluralAttributeKeyTypeDescriptor.setExplicitTypeName( referencedTypeDescriptor.getExplicitTypeName() );
 		pluralAttributeKeyTypeDescriptor.setJavaTypeName( referencedTypeDescriptor.getJavaTypeName() );
 
@@ -176,12 +179,10 @@ public class HibernateTypeHelper {
 		pluralAttributeKeyTypeDescriptor.setToOne( referencedTypeDescriptor.isToOne() );
 		pluralAttributeKeyTypeDescriptor.getTypeParameters().putAll( referencedTypeDescriptor.getTypeParameters() );
 		
-		processPluralAttributeKeyInformation( keyBinding, referencedAttributeBinding );
+		processPluralAttributeKeyInformation( keyBinding );
 	}
 
-	private void processPluralAttributeKeyInformation(
-			PluralAttributeKeyBinding keyBinding,
-			SingularAttributeBinding referencedAttributeBinding) {
+	private void processPluralAttributeKeyInformation(PluralAttributeKeyBinding keyBinding) {
 		if ( keyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
 			return;
 		}
@@ -190,7 +191,9 @@ public class HibernateTypeHelper {
 		// 		2) we know the java type of the attribute
 		Type resolvedType = determineHibernateTypeFromDescriptor( keyBinding.getHibernateTypeDescriptor() );
 		if ( resolvedType == null ) {
-			resolvedType = determineHibernateTypeFromAttributeJavaType( referencedAttributeBinding.getAttribute() );
+			resolvedType = determineHibernateTypeFromAttributeJavaType(
+					keyBinding.getReferencedAttributeBinding().getAttribute()
+			);
 		}
 
 		if ( resolvedType != null ) {
@@ -444,6 +447,12 @@ public class HibernateTypeHelper {
 	}
 
 	private void processPluralAttributeTypeInformation(PluralAttributeBinding attributeBinding) {
+		processCollectionTypeInformation( attributeBinding );
+		processPluralAttributeElementTypeInformation( attributeBinding.getPluralAttributeElementBinding() );
+		processPluralAttributeKeyTypeInformation( attributeBinding.getPluralAttributeKeyBinding() );
+	}
+
+	private void processCollectionTypeInformation(PluralAttributeBinding attributeBinding) {
 		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
 			return;
 		}
@@ -469,14 +478,8 @@ public class HibernateTypeHelper {
 			resolvedType = determineHibernateTypeFromCollectionType( attributeBinding );
 		}
 		if ( resolvedType != null ) {
-// todo : what exactly is getting pushed down here?  and to what/where?
-//			pushHibernateTypeInformationDownIfNeeded(
-//					attributeBinding.getHibernateTypeDescriptor(),
-//					null,
-//					resolvedType
-//			);
+			attributeBinding.getHibernateTypeDescriptor().setResolvedTypeMapping( resolvedType );
 		}
-		bindCollectionElementTypeInformation( attributeBinding.getPluralAttributeElementBinding() );
 	}
 
 	private Type determineHibernateTypeFromCollectionType(PluralAttributeBinding attributeBinding) {
@@ -505,10 +508,12 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	private void bindCollectionElementTypeInformation(PluralAttributeElementBinding pluralAttributeElementBinding) {
+	private void processPluralAttributeElementTypeInformation(
+			PluralAttributeElementBinding pluralAttributeElementBinding
+	) {
 		switch ( pluralAttributeElementBinding.getPluralAttributeElementNature() ) {
 			case BASIC: {
-				bindBasicCollectionElementTypeInformation(
+				processBasicCollectionElementTypeInformation(
 						BasicPluralAttributeElementBinding.class.cast(
 								pluralAttributeElementBinding
 						)
@@ -528,7 +533,7 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	private void bindBasicCollectionElementTypeInformation(BasicPluralAttributeElementBinding basicCollectionElement) {
+	private void processBasicCollectionElementTypeInformation(BasicPluralAttributeElementBinding basicCollectionElement) {
 		Type resolvedHibernateType = determineHibernateTypeFromDescriptor( basicCollectionElement.getHibernateTypeDescriptor() );
 		if ( resolvedHibernateType != null ) {
 			pushHibernateTypeInformationDown(

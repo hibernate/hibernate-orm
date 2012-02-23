@@ -559,6 +559,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -568,6 +569,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				this,
 				attribute,
 				nature,
+				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
@@ -581,6 +583,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -591,6 +594,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				this,
 				attribute,
 				nature,
+				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,

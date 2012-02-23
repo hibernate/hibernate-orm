@@ -131,6 +131,7 @@ public interface AttributeBindingContainer {
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -147,6 +148,7 @@ public interface AttributeBindingContainer {
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,

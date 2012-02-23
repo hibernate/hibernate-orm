@@ -23,7 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +41,8 @@ import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.BagType;
+import org.hibernate.type.SetType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -89,6 +94,13 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theBag`" ), bagBinding.getCollectionTable().getLogicalName() );
 		PluralAttributeKeyBinding bagKeyBinding = bagBinding.getPluralAttributeKeyBinding();
 		assertSame( bagBinding, bagKeyBinding.getPluralAttributeBinding() );
+		HibernateTypeDescriptor bagHibernateTypeDescriptor = bagBinding.getHibernateTypeDescriptor();
+		assertNull( bagHibernateTypeDescriptor.getExplicitTypeName() );
+		assertEquals( Collection.class.getName(), bagHibernateTypeDescriptor.getJavaTypeName() );
+		assertTrue( bagHibernateTypeDescriptor.getTypeParameters().isEmpty() );
+		assertTrue( bagHibernateTypeDescriptor.getResolvedTypeMapping() instanceof BagType );
+		assertFalse( bagHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
+		assertEquals( "theBag", ( (BagType) bagHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
 
 		ForeignKey fkBag = bagKeyBinding.getForeignKey();
 		assertNotNull( fkBag );
@@ -130,6 +142,13 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theSet`" ), setBinding.getCollectionTable().getLogicalName() );
 		PluralAttributeKeyBinding setKeyBinding = setBinding.getPluralAttributeKeyBinding();
 		assertSame( setBinding, setKeyBinding.getPluralAttributeBinding() );
+		HibernateTypeDescriptor setHibernateTypeDescriptor = setBinding.getHibernateTypeDescriptor();
+		assertNull( setHibernateTypeDescriptor.getExplicitTypeName() );
+		assertEquals( Set.class.getName(), setHibernateTypeDescriptor.getJavaTypeName() );
+		assertTrue( setHibernateTypeDescriptor.getTypeParameters().isEmpty() );
+		assertTrue( setHibernateTypeDescriptor.getResolvedTypeMapping() instanceof SetType );
+		assertFalse( setHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
+		assertEquals( "theSet", ( (SetType) setHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
 
 		ForeignKey fkSet = setKeyBinding.getForeignKey();
 		assertNotNull( fkSet );

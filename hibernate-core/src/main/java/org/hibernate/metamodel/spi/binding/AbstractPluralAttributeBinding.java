@@ -79,6 +79,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
 			PluralAttributeElementNature pluralAttributeElementNature,
+			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean isLazy,
@@ -91,7 +92,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 				isLazy,
 				metaAttributeContext
 		);
-		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this );
+		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this, referencedAttributeBinding );
 		this.pluralAttributeElementBinding = interpretNature( pluralAttributeElementNature );
 	}
 

@@ -26,17 +26,16 @@ package org.hibernate.cache;
 import org.hibernate.cfg.Environment;
 
 /**
- * Implementation of NoCachingEnabledException.
+ * Implementation of NoCacheRegionFactoryAvailableException.
  *
  * @author Steve Ebersole
  */
-public class NoCachingEnabledException extends CacheException {
-	private static final String MSG =
-	        "Second-level cache is not enabled for usage [" +
-	        Environment.USE_SECOND_LEVEL_CACHE +
-	        " | " + Environment.USE_QUERY_CACHE + "]";
-
-	public NoCachingEnabledException() {
+public class NoCacheRegionFactoryAvailableException extends CacheException {
+	private static final String MSG = "Second-level cache is used in the application, but property "
+			+ Environment.CACHE_REGION_FACTORY + "is not gaven, please either disable second level cache" +
+			" or set correct region factory class name to property "+Environment.CACHE_REGION_FACTORY+
+			" (and make sure the second level cache provider, hibernate-infinispan, for example, available in the classpath).";
+	public NoCacheRegionFactoryAvailableException() {
 		super( MSG );
 	}
 }

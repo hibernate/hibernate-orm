@@ -26,7 +26,7 @@ package org.hibernate.cache.internal;
 import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.NoCachingEnabledException;
+import org.hibernate.cache.NoCacheRegionFactoryAvailableException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -66,24 +66,24 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		throw new NoCachingEnabledException();
+		throw new NoCacheRegionFactoryAvailableException();
 	}
 	
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		throw new NoCachingEnabledException();
+		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		throw new NoCachingEnabledException();
+		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		throw new NoCachingEnabledException();
+		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
-		throw new NoCachingEnabledException();
+		throw new NoCacheRegionFactoryAvailableException();
 	}
 }

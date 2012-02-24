@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,13 +27,12 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.FetchMode;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -58,6 +57,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
+	private final Value<Caching> cachingHolder;
 
 	protected AbstractPluralAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -73,6 +73,8 @@ public abstract class AbstractPluralAttributeSourceImpl
 				container
 		);
 		this.elementSource = interpretElementType();
+
+		this.cachingHolder = Helper.createCachingHolder( pluralAttributeElement.getCache(), StringHelper.qualify( container().getPath(), getName() ) );
 
 		this.typeInformation = new ExplicitHibernateTypeSource() {
 			@Override
@@ -181,16 +183,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public Caching getCaching() {
-		final JaxbCacheElement cache = pluralAttributeElement.getCache();
-		if ( cache == null ) {
-			return null;
-		}
-		final String region = cache.getRegion() != null
-				? cache.getRegion()
-				: StringHelper.qualify( container().getPath(), getName() );
-		final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
-		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
-		return new Caching( region, accessType, cacheLazyProps );
+		return cachingHolder.getValue();
 	}
 
 	@Override

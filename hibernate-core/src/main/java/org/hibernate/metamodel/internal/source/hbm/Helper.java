@@ -31,10 +31,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.TruthValue;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
@@ -43,6 +45,8 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
@@ -122,6 +126,23 @@ public class Helper {
 				: qualifyIfNeeded( entityElement.getName(), unqualifiedClassPackage );
 	}
 
+	public static Value<Caching> createCachingHolder(final JaxbCacheElement cacheElement, final String defaultRegionName) {
+		return new Value<Caching>(
+			new Value.DeferredInitializer<Caching>() {
+				@Override
+				public Caching initialize() {
+					if ( cacheElement == null ) {
+						return null;
+					}
+					final String region = cacheElement.getRegion() != null ? cacheElement.getRegion() : defaultRegionName;
+					final AccessType accessType = Enum.valueOf( AccessType.class, cacheElement.getUsage() );
+					final boolean cacheLazyProps = !"non-lazy".equals( cacheElement.getInclude() );
+					return new Caching( region, accessType, cacheLazyProps );
+				}
+			}
+		);
+	}
+	
 	/**
 	 * Qualify a (supposed class) name with the unqualified-class package name if it is not already qualified
 	 *

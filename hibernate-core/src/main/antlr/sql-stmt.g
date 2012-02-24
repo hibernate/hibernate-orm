@@ -123,7 +123,7 @@ options {
 }
 
 STMT_END
-    : ';'
+    : ';' ( '\t' | ' ' | '\r' | '\n' )*
     ;
 
 NOT_STMT_END

@@ -100,7 +100,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertTrue( bagHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( bagHibernateTypeDescriptor.getResolvedTypeMapping() instanceof BagType );
 		assertFalse( bagHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
-		assertEquals( "theBag", ( (BagType) bagHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
+		assertEquals( EntityWithBasicCollections.class.getName() + ".theBag", ( (BagType) bagHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
 
 		ForeignKey fkBag = bagKeyBinding.getForeignKey();
 		assertNotNull( fkBag );
@@ -148,7 +148,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertTrue( setHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( setHibernateTypeDescriptor.getResolvedTypeMapping() instanceof SetType );
 		assertFalse( setHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
-		assertEquals( "theSet", ( (SetType) setHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
+		assertEquals( EntityWithBasicCollections.class.getName() + ".theSet", ( (SetType) setHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
 
 		ForeignKey fkSet = setKeyBinding.getForeignKey();
 		assertNotNull( fkSet );

@@ -650,7 +650,7 @@ public class Binder {
 					attributeSource.getReferencedEntityAttributeName(),
 					relationalValueBindings
 			);
-			typeHelper.bindSingularAttributeTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+			typeHelper.bindSingularAttributeTypeInformation( attributeSource, attributeBinding );
 			resolveToOneInformation(
 					attributeSource,
 					(ManyToOneAttributeBinding) attributeBinding
@@ -827,7 +827,7 @@ public class Binder {
 				metaAttributeContext,
 				attributeSource.getGeneration()
 		);
-		typeHelper.bindSingularAttributeTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+		typeHelper.bindSingularAttributeTypeInformation( attributeSource, attributeBinding );
 		return attributeBinding;
 	}
 

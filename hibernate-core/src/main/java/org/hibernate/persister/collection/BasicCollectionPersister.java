@@ -46,6 +46,8 @@ import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectCollectionLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Delete;
@@ -71,6 +73,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Configuration cfg,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
 		super( collection, cacheAccessStrategy, cfg, factory );
+	}
+
+	public BasicCollectionPersister(
+			AbstractPluralAttributeBinding collection,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			MetadataImplementor metadata,
+			SessionFactoryImplementor factory) throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, metadata, factory );
 	}
 
 	/**

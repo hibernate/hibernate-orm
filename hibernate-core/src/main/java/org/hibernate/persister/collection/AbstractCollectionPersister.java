@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -49,6 +50,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityKey;
@@ -76,6 +78,16 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.pretty.MessageHelper;
@@ -87,6 +99,7 @@ import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 
 /**
@@ -602,6 +615,374 @@ public abstract class AbstractCollectionPersister
 		initCollectionPropertyMap();
 	}
 
+	public AbstractCollectionPersister(
+		AbstractPluralAttributeBinding collection,
+		CollectionRegionAccessStrategy cacheAccessStrategy,
+		MetadataImplementor metadata,
+		SessionFactoryImplementor factory) throws MappingException, CacheException {
+
+		this.factory = factory;
+		this.cacheAccessStrategy = cacheAccessStrategy;
+		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
+			cacheEntryStructure = collection.getAttribute().getNature() == PluralAttributeNature.MAP ?
+					new StructuredMapCacheEntry() :
+					new StructuredCollectionCacheEntry();
+		}
+		else {
+			cacheEntryStructure = new UnstructuredCacheEntry();
+		}
+
+		dialect = factory.getDialect();
+		sqlExceptionHelper = factory.getSQLExceptionHelper();
+		if ( !collection.getHibernateTypeDescriptor().getResolvedTypeMapping().isCollectionType() ) {
+			throw new MappingException( 
+					String.format( 
+							"Unexpected resolved type for %s; expected a CollectionType; instead it is %s",
+							collection.getAttribute().getRole(),
+							collection.getHibernateTypeDescriptor().getResolvedTypeMapping() ) 
+			);
+		}
+		
+		collectionType = (CollectionType) collection.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		role = collection.getAttribute().getRole();
+		entityName = collection.getContainer().seekEntityBinding().getEntity().getName();
+		ownerPersister = factory.getEntityPersister( entityName );
+		queryLoaderName = collection.getCustomLoaderName();
+		// TODO: is nodeName obsolete?
+		//nodeName = collection.getNodeName();
+		nodeName = null;
+		isMutable = collection.isMutable();
+
+		TableSpecification table = collection.getCollectionTable();
+		fetchMode = collection.getFetchMode();
+		elementType = collection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
+		// isSet = collection.isSet();
+		// isSorted = collection.isSorted();
+		isArray = collectionType.isArrayType();
+		isPrimitiveArray = 
+				collectionType.isArrayType() && 
+						PrimitiveType.class.isInstance(
+								collection.getPluralAttributeElementBinding()
+										.getHibernateTypeDescriptor()
+										.getResolvedTypeMapping()
+						);
+		subselectLoadable = collection.getFetchStyle() == FetchStyle.SUBSELECT;
+
+		qualifiedTableName = table.getQualifiedName( dialect );
+
+		// TODO: fix this when synchronized tables are available
+		spaces = new String[1];
+		spaces[0] = qualifiedTableName;
+		//int spacesSize = 1 + collection.getSynchronizedTables().size();
+		//spaces = new String[spacesSize];
+		//spaces[0] = qualifiedTableName;
+		//Iterator iter = collection.getSynchronizedTables().iterator();
+		//for ( int i = 1; i < spacesSize; i++ ) {
+		//	spaces[i] = (String) iter.next();
+		//}
+
+		sqlWhereString = StringHelper.isNotEmpty( collection.getWhere() ) ? "( " + collection.getWhere() + ") " : null;
+		hasWhere = sqlWhereString != null;
+		sqlWhereStringTemplate = hasWhere ?
+				Template.renderWhereStringTemplate( sqlWhereString, dialect, factory.getSqlFunctionRegistry() ) :
+				null;
+
+		hasOrphanDelete =
+				collection.getPluralAttributeElementBinding().getPluralAttributeElementNature().isAssociation() &&
+						( ( PluralAttributeAssociationElementBinding ) collection.getPluralAttributeElementBinding() ).isOrphanDeleteEnabled();
+
+		int batch = collection.getBatchSize();
+		if ( batch == -1 ) {
+			batch = factory.getSettings().getDefaultBatchFetchSize();
+		}
+		batchSize = batch;
+
+		isVersioned = collection.isIncludedInOptimisticLocking();
+
+		// KEY
+
+		PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
+		keyType = keyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+
+		int keySpan = keyBinding.getForeignKey().getColumnSpan();
+		keyColumnNames = new String[keySpan];
+		keyColumnAliases = new String[keySpan];
+		int k = 0;
+		for ( org.hibernate.metamodel.spi.relational.Column keyColumn : keyBinding.getForeignKey().getSourceColumns() ) {
+			// NativeSQL: collect key column and auto-aliases
+			keyColumnNames[k] = keyColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+			// TODO: does the owner root table need to be in alias?
+			keyColumnAliases[k] = keyColumn.getAlias( dialect );
+			// keyColumnAliases[k] = col.getAlias( dialect, collection.getOwner().getRootTable() );
+			k++;
+		}
+
+		// ELEMENT
+
+		PluralAttributeElementBinding elementBinding = collection.getPluralAttributeElementBinding();
+		//TODO: is elemNode needed?
+		String elemNode = null;
+		//String elemNode = collection.getElementNodeName();
+		if ( elementType.isEntityType() ) {
+			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
+			elementPersister = factory.getEntityPersister( entityName );
+			//if ( elemNode == null ) {
+			//	elemNode = cfg.getClassMapping( entityName ).getNodeName();
+			//}
+			// NativeSQL: collect element column and auto-aliases
+
+		}
+		else {
+			elementPersister = null;
+		}
+		elementNodeName = elemNode;
+
+		int elementSpan = collection.getCollectionTable() == null ? 0 : collection.getCollectionTable().values().size();
+		elementColumnAliases = new String[elementSpan];
+		elementColumnNames = new String[elementSpan];
+		elementColumnWriters = new String[elementSpan];
+		elementColumnReaders = new String[elementSpan];
+		elementColumnReaderTemplates = new String[elementSpan];
+		elementFormulaTemplates = new String[elementSpan];
+		elementFormulas = new String[elementSpan];
+		elementColumnIsSettable = new boolean[elementSpan];
+		elementColumnIsInPrimaryKey = new boolean[elementSpan];
+		boolean isPureFormula = true;
+		boolean hasNotNullableColumns = false;
+		int j = 0;
+		if ( elementSpan > 0 ) {
+			for ( Value value : collection.getCollectionTable().values() ) {
+				elementColumnAliases[j] = value.getAlias( dialect );
+				if ( DerivedValue.class.isInstance( value ) ) {
+					DerivedValue form = (DerivedValue) value;
+					elementFormulaTemplates[j] = getTemplateFromString( form.getExpression(), factory);
+					elementFormulas[j] = form.getExpression();
+				}
+				else {
+					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) value;
+					elementColumnNames[j] = col.getColumnName().encloseInQuotesIfQuoted( dialect );
+					elementColumnWriters[j] = col.getWriteFragment();
+					elementColumnReaders[j] = col.getReadFragment() == null ?
+							col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+							col.getReadFragment();
+					elementColumnReaderTemplates[j] = getTemplateFromColumn( col, factory );
+					elementColumnIsSettable[j] = true;
+					elementColumnIsInPrimaryKey[j] = !col.isNullable();
+					if ( !col.isNullable() ) {
+						hasNotNullableColumns = true;
+					}
+					isPureFormula = false;
+				}
+				j++;
+			}
+		}
+		elementIsPureFormula = isPureFormula;
+
+		// workaround, for backward compatibility of sets with no
+		// not-null columns, assume all columns are used in the
+		// row locator SQL
+		if ( !hasNotNullableColumns ) {
+			Arrays.fill( elementColumnIsInPrimaryKey, true );
+		}
+
+		// INDEX AND ROW SELECT
+
+		hasIndex = collection.getAttribute().getNature().isIndexed();
+		// TODO: Fix this when index relational binding is created
+		//if ( hasIndex ) {
+		//	// NativeSQL: collect index column and auto-aliases
+		//	PluralAttributeIndexBinding indexBinding = ( (IndexedPluralAttributeBinding) collection ).getPluralAttributeIndexBinding();
+		//	indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		//}
+		//else {
+			indexContainsFormula = false;
+			indexColumnIsSettable = null;
+			indexFormulaTemplates = null;
+			indexFormulas = null;
+			indexType = null;
+			indexColumnNames = null;
+			indexColumnAliases = null;
+			baseIndex = 0;
+			indexNodeName = null;
+		//}
+
+		hasIdentifier = collection.getAttribute().getNature() == PluralAttributeNature.IDBAG;
+		// TODO: fix this when IdBags are supported.
+		//if ( hasIdentifier ) {
+		//}
+		//else {
+			identifierType = null;
+			identifierColumnName = null;
+			identifierColumnAlias = null;
+			// unquotedIdentifierColumnName = null;
+			identifierGenerator = null;
+		//}
+
+		// GENERATE THE SQL:
+
+		// sqlSelectString = sqlSelectString();
+		// sqlSelectRowString = sqlSelectRowString();
+
+		if ( collection.getCustomSqlInsert() == null ) {
+			sqlInsertRowString = generateInsertRowString();
+			insertCallable = false;
+			insertCheckStyle = ExecuteUpdateResultCheckStyle.COUNT;
+		}
+		else {
+			final CustomSQL customSqlInsert = collection.getCustomSqlInsert();
+			sqlInsertRowString = customSqlInsert.getSql();
+			insertCallable = customSqlInsert.isCallable();
+			insertCheckStyle = customSqlInsert.getCheckStyle() == null
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSqlInsert.getSql(), insertCallable )
+					: customSqlInsert.getCheckStyle();
+		}
+
+		if ( collection.getCustomSqlUpdate() == null ) {
+			sqlUpdateRowString = generateUpdateRowString();
+			updateCallable = false;
+			updateCheckStyle = ExecuteUpdateResultCheckStyle.COUNT;
+		}
+		else {
+			final CustomSQL customSqlUpdate = collection.getCustomSqlUpdate();
+			sqlUpdateRowString = customSqlUpdate.getSql();
+			updateCallable = customSqlUpdate.isCallable();
+			updateCheckStyle = customSqlUpdate.getCheckStyle() == null
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSqlUpdate.getSql(), insertCallable )
+					: customSqlUpdate.getCheckStyle();
+		}
+
+		if ( collection.getCustomSqlDelete() == null ) {
+			sqlDeleteRowString = generateDeleteRowString();
+			deleteCallable = false;
+			deleteCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
+		}
+		else {
+			final CustomSQL customSqlDelete = collection.getCustomSqlDelete();
+			sqlDeleteRowString = customSqlDelete.getSql();
+			deleteCallable = customSqlDelete.isCallable();
+			deleteCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
+		}
+
+		if ( collection.getCustomSqlDeleteAll() == null ) {
+			sqlDeleteString = generateDeleteString();
+			deleteAllCallable = false;
+			deleteAllCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
+		}
+		else {
+			final CustomSQL customSqlDeleteAll = collection.getCustomSqlDeleteAll();
+			sqlDeleteString = customSqlDeleteAll.getSql();
+			deleteAllCallable = customSqlDeleteAll.isCallable();
+			deleteAllCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
+		}
+
+		sqlSelectSizeString = generateSelectSizeString(
+				collection.getAttribute().getNature().isIndexed() &&
+						collection.getAttribute().getNature() != PluralAttributeNature.MAP
+		);
+		sqlDetectRowByIndexString = generateDetectRowByIndexString();
+		sqlDetectRowByElementString = generateDetectRowByElementString();
+		sqlSelectRowByIndexString = generateSelectRowByIndexString();
+
+		logStaticSQL();
+
+		isLazy = collection.isLazy();
+
+		// TODO: fix this when PluralAttributeBinding.isExtraLazy() is available
+		// isExtraLazy = collection.isExtraLazy();
+		isExtraLazy = false;
+
+		isInverse = keyBinding.isInverse();
+		if ( isArray ) {
+			elementClass = collectionType.getReturnedClass();
+		}
+		else {
+			// for non-arrays, we don't need to know the element class
+			elementClass = null; // elementType.returnedClass();
+		}
+
+		if ( elementType.isComponentType() ) {
+			elementPropertyMapping = new CompositeElementPropertyMapping(
+					elementColumnNames,
+					elementColumnReaders,
+					elementColumnReaderTemplates,
+					elementFormulaTemplates,
+					(CompositeType) elementType,
+					factory
+			);
+		}
+		else if ( !elementType.isEntityType() ) {
+			elementPropertyMapping = new ElementPropertyMapping(
+					elementColumnNames,
+					elementType
+			);
+		}
+		else {
+			if ( elementPersister instanceof PropertyMapping ) { // not all classpersisters implement PropertyMapping!
+				elementPropertyMapping = (PropertyMapping) elementPersister;
+			}
+			else {
+				elementPropertyMapping = new ElementPropertyMapping(
+						elementColumnNames,
+						elementType
+				);
+			}
+		}
+
+		hasOrder = collection.getOrderBy() != null;
+		if ( hasOrder ) {
+			ColumnMapper mapper = new ColumnMapper() {
+
+				public String[] map(String reference) {
+					return elementPropertyMapping.toColumns( reference );
+				}
+			};
+			sqlOrderByStringTemplate = Template.renderOrderByStringTemplate(
+					collection.getOrderBy(),
+					mapper,
+					factory,
+					dialect,
+					factory.getSqlFunctionRegistry()
+			);
+		}
+		else {
+			sqlOrderByStringTemplate = null;
+		}
+
+		// Handle any filters applied to this collection
+		filterHelper = new FilterHelper( collection.getFilterMap(), dialect, factory.getSqlFunctionRegistry() );
+
+		// TODO: fix this when ManyToManyPluralAttributeElementBinding is working
+		//if ( elementBinding.getPluralAttributeElementNature() == PluralAttributeElementNature.MANY_TO_MANY ) {
+		//}
+		//else {
+			manyToManyFilterHelper = new FilterHelper( Collections.emptyMap(), dialect, factory.getSqlFunctionRegistry() );
+			manyToManyWhereString = null;
+			manyToManyWhereTemplate = null;
+			hasManyToManyOrder = false;
+			manyToManyOrderByTemplate = null;
+		//}
+
+		initCollectionPropertyMap();
+	}
+
+	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
+		return string == null ?
+				null :
+				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
+	}
+
+	public String getTemplateFromColumn(org.hibernate.metamodel.spi.relational.Column column, SessionFactoryImplementor factory) {
+		String templateString;
+		if ( column.getReadFragment() != null ) {
+			templateString = getTemplateFromString( column.getReadFragment(), factory );
+		}
+		else {
+			String columnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			templateString = Template.TEMPLATE + '.' + columnName;
+		}
+		return templateString;
+	}
+	
 	public void postInstantiate() throws MappingException {
 		initializer = queryLoaderName == null ?
 				createCollectionInitializer( LoadQueryInfluencers.NONE ) :

@@ -805,19 +805,23 @@ public final class SessionFactoryImpl
 						"AbstractPluralAttributeBinding has a Singular attribute defined: " + model.getAttribute().getName()
 				);
 			}
-			final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
-			final AccessType accessType = model.getCaching().getAccessType();
 			CollectionRegionAccessStrategy accessStrategy = null;
-			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
+			if ( settings.isSecondLevelCacheEnabled() &&
+					model.getCaching() != null &&
+					model.getCaching().getAccessType() != null ) {
+				final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
+				final AccessType accessType = model.getCaching().getAccessType();
+				if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
+					if ( LOG.isTraceEnabled() ) {
+						LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
+					}
+					CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+					);
+					accessStrategy = collectionRegion.buildAccessStrategy( accessType );
+					entityAccessStrategies.put( cacheRegionName, accessStrategy );
+					allCacheRegions.put( cacheRegionName, collectionRegion );
 				}
-				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
-						cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
-				);
-				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
-				entityAccessStrategies.put( cacheRegionName, accessStrategy );
-				allCacheRegions.put( cacheRegionName, collectionRegion );
 			}
 			CollectionPersister persister = serviceRegistry
 					.getService( PersisterFactory.class )

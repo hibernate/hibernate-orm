@@ -887,18 +887,13 @@ public abstract class AbstractEntityPersister
 				continue;
 			}
 
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				// collections handled separately
-				continue;
-			}
+			thisClassProperties.add( attributeBinding );
 
-			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			propertySubclassNames[i] = ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName();
 
-			thisClassProperties.add( singularAttributeBinding );
-
-			propertySubclassNames[i] = ( (EntityBinding) singularAttributeBinding.getContainer() ).getEntity().getName();
-
-			int span = singularAttributeBinding.getRelationalValueBindings().size();
+			int span = attributeBinding.getAttribute().isSingular() ?
+					( (SingularAttributeBinding) attributeBinding).getRelationalValueBindings().size() :
+					0;
 			propertyColumnSpans[i] = span;
 
 			String[] colNames = new String[span];
@@ -909,23 +904,27 @@ public abstract class AbstractEntityPersister
 			boolean[] propertyColumnInsertability = new boolean[span];
 			boolean[] propertyColumnUpdatability = new boolean[span];
 
-			int k = 0;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) attributeBinding;
 
-			for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
-				colAliases[k] = valueBinding.getValue().getAlias( factory.getDialect() );
-				if ( valueBinding.isDerived() ) {
-					foundFormula = true;
-					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getValue() ).getExpression(), factory );
+				int k = 0;
+
+				for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+					colAliases[k] = valueBinding.getValue().getAlias( factory.getDialect() );
+					if ( valueBinding.isDerived() ) {
+						foundFormula = true;
+						formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getValue() ).getExpression(), factory );
+					}
+					else {
+						org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getValue();
+						colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+						colReaderTemplates[k] = getTemplateFromColumn( col, factory );
+						colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
+					}
+					propertyColumnInsertability[k] = valueBinding.isIncludeInInsert();
+					propertyColumnUpdatability[k] = valueBinding.isIncludeInUpdate();
+					k++;
 				}
-				else {
-					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getValue();
-					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
-					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
-					colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
-				}
-				propertyColumnInsertability[k] = valueBinding.isIncludeInInsert();
-				propertyColumnUpdatability[k] = valueBinding.isIncludeInUpdate();
-				k++;
 			}
 			propertyColumnNames[i] = colNames;
 			propertyColumnFormulaTemplates[i] = formulaTemplates;
@@ -936,11 +935,11 @@ public abstract class AbstractEntityPersister
 			propertyColumnUpdateable[i] = propertyColumnUpdatability;
 			propertyColumnInsertable[i] = propertyColumnInsertability;
 
-			if ( lazyAvailable && singularAttributeBinding.isLazy() ) {
-				lazyProperties.add( singularAttributeBinding.getAttribute().getName() );
-				lazyNames.add( singularAttributeBinding.getAttribute().getName() );
+			if ( lazyAvailable && attributeBinding.isLazy() ) {
+				lazyProperties.add( attributeBinding.getAttribute().getName() );
+				lazyNames.add( attributeBinding.getAttribute().getName() );
 				lazyNumbers.add( i );
-				lazyTypes.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping());
+				lazyTypes.add( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping());
 				lazyColAliases.add( colAliases );
 			}
 
@@ -949,7 +948,7 @@ public abstract class AbstractEntityPersister
 			//propertySelectable[i] = singularAttributeBinding.isBackRef();
 			propertySelectable[i] = true;
 
-			propertyUniqueness[i] = singularAttributeBinding.isAlternateUniqueKey();
+			propertyUniqueness[i] = attributeBinding.isAlternateUniqueKey();
 
 			i++;
 

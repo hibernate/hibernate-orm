@@ -1562,21 +1562,27 @@ public final class SessionFactoryImpl
 		}
 
 		public void evictQueryRegion(String regionName) {
-            if (regionName == null) throw new NullPointerException(
-                                                                   "Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)");
-            if (settings.isQueryCacheEnabled()) {
-                QueryCache namedQueryCache = queryCaches.get(regionName);
-                // TODO : cleanup entries in queryCaches + allCacheRegions ?
-                if (namedQueryCache != null) namedQueryCache.clear();
+			if ( regionName == null ) {
+				throw new NullPointerException(
+						"Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)"
+				);
+			}
+			if ( settings.isQueryCacheEnabled() ) {
+				QueryCache namedQueryCache = queryCaches.get( regionName );
+				// TODO : cleanup entries in queryCaches + allCacheRegions ?
+				if ( namedQueryCache != null ) {
+					namedQueryCache.clear();
+				}
 			}
 		}
 
 		public void evictQueryRegions() {
-			if ( queryCaches != null ) {
-				for ( QueryCache queryCache : queryCaches.values() ) {
-					queryCache.clear();
-					// TODO : cleanup entries in queryCaches + allCacheRegions ?
-				}
+			if ( CollectionHelper.isEmpty( queryCaches ) ) {
+				return;
+			}
+			for ( QueryCache queryCache : queryCaches.values() ) {
+				queryCache.clear();
+				// TODO : cleanup entries in queryCaches + allCacheRegions ?
 			}
 		}
 	}

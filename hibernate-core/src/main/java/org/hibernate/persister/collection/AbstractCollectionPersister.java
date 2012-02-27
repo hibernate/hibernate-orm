@@ -761,7 +761,7 @@ public abstract class AbstractCollectionPersister
 				else {
 					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) value;
 					elementColumnNames[j] = col.getColumnName().encloseInQuotesIfQuoted( dialect );
-					elementColumnWriters[j] = col.getWriteFragment();
+					elementColumnWriters[j] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 					elementColumnReaders[j] = col.getReadFragment() == null ?
 							col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
 							col.getReadFragment();

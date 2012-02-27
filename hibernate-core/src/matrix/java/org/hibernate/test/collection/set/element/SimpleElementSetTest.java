@@ -33,9 +33,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,22 +54,24 @@ public class SimpleElementSetTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6525")
 	public void testLoad() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		User u = new User( );
 		u.setUserName( "username" );
 		u.getSessionAttributeNames().add( "name" );
+		u.getSessionAttributeNames().add( "anothername" );
 		s.save( u );
 		t.commit();
 		s.close();
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get( User.class, "name" );
-
-		u.getSessionAttributeNames().add( "bar" );
+		u = (User) s.get( User.class, "username" );
+		assertFalse( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
+		assertEquals( 2, u.getSessionAttributeNames().size() );
 		assertTrue( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
+		assertTrue( u.getSessionAttributeNames().contains( "name" ) );
+		assertTrue( u.getSessionAttributeNames().contains( "anothername" ) );
 		s.delete( u );
 		t.commit();
 		s.close();

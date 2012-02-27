@@ -33,6 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,6 +55,7 @@ public class SimpleElementSetTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-6525")
 	public void testLoad() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

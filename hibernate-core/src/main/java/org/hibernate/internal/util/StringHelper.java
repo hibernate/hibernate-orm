@@ -224,7 +224,7 @@ public final class StringHelper {
 
 	public static String unqualify(String qualifiedName) {
 		int loc = qualifiedName.lastIndexOf(".");
-		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf(".") + 1 );
+		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
@@ -600,12 +600,7 @@ public final class StringHelper {
 	 * @return The unquoted version.
 	 */
 	public static String unquote(String name) {
-		if ( isQuoted( name ) ) {
-			return name.substring( 1, name.length() - 1 );
-		}
-		else {
-			return name;
-		}
+		return isQuoted( name ) ? name.substring( 1, name.length() - 1 ) : name;
 	}
 
 	/**
@@ -622,9 +617,18 @@ public final class StringHelper {
 	 * @return True if quoted, false otherwise
 	 */
 	public static boolean isQuoted(String name, Dialect dialect) {
-		return name != null && name.length() != 0
-				&& ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`'
-				|| name.charAt( 0 ) == dialect.openQuote() && name.charAt( name.length() - 1 ) == dialect.closeQuote() );
+		return name != null
+				&&
+					name.length() != 0
+				&& (
+					name.charAt( 0 ) == '`'
+					&&
+					name.charAt( name.length() - 1 ) == '`'
+					||
+					name.charAt( 0 ) == dialect.openQuote()
+					&&
+					name.charAt( name.length() - 1 ) == dialect.closeQuote()
+				);
 	}
 
 	/**
@@ -636,12 +640,7 @@ public final class StringHelper {
 	 * @return The unquoted version.
 	 */
 	public static String unquote(String name, Dialect dialect) {
-		if ( isQuoted( name, dialect ) ) {
-			return name.substring( 1, name.length() - 1 );
-		}
-		else {
-			return name;
-		}
+		return isQuoted( name, dialect ) ? name.substring( 1, name.length() - 1 ) : name;
 	}
 
 	/**

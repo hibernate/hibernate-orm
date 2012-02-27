@@ -85,12 +85,7 @@ public final class Alias {
 			//truncate the identifier to the max alias length, less the suffix length
 			unquoted = unquoted.substring(0, length);
 		}
-		if ( suffix == null ) {
-			return unquoted;
-		}
-		else {
-			return unquoted + suffix;
-		}
+		return ( suffix == null ) ? unquoted : unquoted + suffix;
 	}
 
 	public String[] toUnquotedAliasStrings(String[] sqlIdentifiers) {

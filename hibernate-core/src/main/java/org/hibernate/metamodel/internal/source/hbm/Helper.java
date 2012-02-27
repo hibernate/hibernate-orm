@@ -423,7 +423,7 @@ public class Helper {
 							valueSourcesAdapter.getColumnAttribute(),
 							valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
 							valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
-                            valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.TRUE
+                            valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.UNKNOWN
 					)
 			);
 		}

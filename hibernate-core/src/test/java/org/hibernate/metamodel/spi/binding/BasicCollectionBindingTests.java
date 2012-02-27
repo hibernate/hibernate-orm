@@ -175,11 +175,17 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				setKeyBinding.getHibernateTypeDescriptor()
 		);
 		assertFalse( setKeyBinding.isInverse() );
-		assertEquals( 1, setBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		assertEquals( 2, setBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		Iterator<Column> setPrimaryKeyIterator = setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator();
 		assertEquals(
 				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
-				setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType()
+				setPrimaryKeyIterator.next().getJdbcDataType()
 		);
+		assertEquals(
+				setBinding.getCollectionTable().locateColumn( "`set_stuff`" ).getJdbcDataType(),
+				setPrimaryKeyIterator.next().getJdbcDataType()
+		);
+		assertFalse( setPrimaryKeyIterator.hasNext() );
 		assertSame(
 				setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next(),
 				setKeyBinding.getForeignKey().getColumns().iterator().next()

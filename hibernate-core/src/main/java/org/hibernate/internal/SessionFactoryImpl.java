@@ -1135,6 +1135,8 @@ public final class SessionFactoryImpl
 			catch ( MappingException e ) {
 				errors.put( queryName, e );
 			}
+
+
 		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Checking %s named SQL queries", namedSqlQueries.size() );
@@ -1176,6 +1178,7 @@ public final class SessionFactoryImpl
 			catch ( MappingException e ) {
 				errors.put( queryName, e );
 			}
+
 		}
 
 		return errors;
@@ -1265,11 +1268,15 @@ public final class SessionFactoryImpl
 	}
 
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP ).getReturnMetadata().getReturnTypes();
+		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP )
+				.getReturnMetadata()
+				.getReturnTypes();
 	}
 
 	public String[] getReturnAliases(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP ).getReturnMetadata().getReturnAliases();
+		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP )
+				.getReturnMetadata()
+				.getReturnAliases();
 	}
 
 	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
@@ -1430,6 +1437,8 @@ public final class SessionFactoryImpl
 		}
 
 		settings.getRegionFactory().stop();
+
+		queryPlanCache.cleanup();
 
 		if ( settings.isAutoDropSchema() ) {
 			schemaExport.drop( false, true );

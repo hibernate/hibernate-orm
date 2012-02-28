@@ -36,11 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.commons.collections.map.AbstractReferenceMap;
-import org.apache.commons.collections.map.ReferenceMap;
 import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -64,6 +60,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -158,7 +155,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitiesByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
 		entitiesByUniqueKey = new HashMap<EntityUniqueKey, Object>( INIT_COLL_SIZE );
 		//noinspection unchecked
-		proxiesByKey = (Map<EntityKey, Object>) new ReferenceMap( AbstractReferenceMap.HARD, AbstractReferenceMap.WEAK );
+		proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>( INIT_COLL_SIZE, .75f, 1, ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK, null );
 		entitySnapshotsByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
 
 		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
@@ -199,19 +196,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
 		if (unownedCollections==null) {
-			unownedCollections = new HashMap<CollectionKey,PersistentCollection>(8);
+			unownedCollections = new HashMap<CollectionKey,PersistentCollection>(INIT_COLL_SIZE);
 		}
 		unownedCollections.put( key, collection );
 	}
 
 	@Override
 	public PersistentCollection useUnownedCollection(CollectionKey key) {
-		if ( unownedCollections == null ) {
-			return null;
-		}
-		else {
-			return unownedCollections.remove(key);
-		}
+		return ( unownedCollections == null ) ? null : unownedCollections.remove( key );
 	}
 
 	@Override
@@ -225,8 +217,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void clear() {
 		for ( Object o : proxiesByKey.values() ) {
-			final LazyInitializer li = ((HibernateProxy) o).getHibernateLazyInitializer();
-			li.unsetSession();
+			if ( o == null ) {
+				//entry may be GCd
+				continue;
+			}
+			((HibernateProxy) o).getHibernateLazyInitializer().unsetSession();
 		}
 		for ( Map.Entry<PersistentCollection, CollectionEntry> aCollectionEntryArray : IdentityMap.concurrentEntries( collectionEntries ) ) {
 			aCollectionEntryArray.getKey().unsetSession( getSession() );
@@ -733,14 +728,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object proxyFor(EntityPersister persister, EntityKey key, Object impl)
 	throws HibernateException {
-		if ( !persister.hasProxy() ) return impl;
-		Object proxy = proxiesByKey.get(key);
-		if ( proxy != null ) {
-			return narrowProxy(proxy, persister, key, impl);
-		}
-		else {
+		if ( !persister.hasProxy() ) {
 			return impl;
 		}
+		Object proxy = proxiesByKey.get( key );
+		return ( proxy != null ) ? narrowProxy( proxy, persister, key, impl ) : impl;
 	}
 
 	/**
@@ -1574,7 +1566,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			count = ois.readInt();
 			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] proxiesByKey entries");
 			//noinspection unchecked
-			rtn.proxiesByKey = new ReferenceMap( AbstractReferenceMap.HARD, AbstractReferenceMap.WEAK, count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count, .75f );
+			rtn.proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>(
+					count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count,
+					.75f,
+					1,
+					ConcurrentReferenceHashMap.ReferenceType.STRONG,
+					ConcurrentReferenceHashMap.ReferenceType.WEAK,
+					null
+			);
 			for ( int i = 0; i < count; i++ ) {
 				EntityKey ek = EntityKey.deserialize( ois, session );
 				Object proxy = ois.readObject();

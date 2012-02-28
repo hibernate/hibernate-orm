@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.merge;
 
+import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
 import javax.persistence.Entity;
@@ -10,6 +11,7 @@ import javax.persistence.Id;
  */
 @Entity
 @Audited
+@AuditTable("GIVENIDSTRENTITY_AUD")
 public class GivenIdStrEntity {
     @Id
     private Integer id;

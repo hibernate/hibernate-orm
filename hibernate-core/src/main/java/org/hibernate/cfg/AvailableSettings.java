@@ -452,14 +452,36 @@ public interface AvailableSettings {
 	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
-	 * The maximum number of strong references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 128.
+	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
+	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
 	 */
+	@Deprecated
 	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
 	/**
-	 * The maximum number of soft references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 2048.
+	 * The maximum number of soft references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
+	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
 	 */
+	@Deprecated
 	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+
+	/**
+	 * The maximum number of entries including:
+	 * <ul>
+	 *     <li>{@link org.hibernate.engine.query.spi.HQLQueryPlan}</li>
+	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
+	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
+	 * </ul>
+	 * 
+	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
+	 */
+	public static final String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
+
+	/**
+	 * The maximum number of {@link org.hibernate.engine.query.spi.ParameterMetadata} maintained 
+	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
+	 */
+	public static final String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
 	/**
 	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).

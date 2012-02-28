@@ -4,7 +4,6 @@ apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
-	compile( libraries.commons_collections )
     compile( libraries.jta )
     compile( libraries.dom4j ) {
         transitive = false

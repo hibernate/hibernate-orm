@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.spi.relational.Value;
+import java.util.List;
 
 /**
  * Common information pertaining to the binding of the various plural attribute natures (one-to-many, basic, etc).
@@ -44,7 +44,7 @@ public interface PluralAttributeElementBinding {
 	 *
 	 * @return The relation information.
 	 */
-	public Value getRelationalValue();
+	public List<RelationalValueBinding> getRelationalValueBindings();
 
 	/**
 	 * Retrieves an enumeration describing the mapping nature of the collection's elements.

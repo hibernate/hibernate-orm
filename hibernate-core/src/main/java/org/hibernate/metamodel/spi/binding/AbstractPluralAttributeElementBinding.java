@@ -23,7 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.spi.relational.Value;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Basic contract describing the commonality between the various types of collection element mappings.
@@ -33,7 +34,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 public abstract class AbstractPluralAttributeElementBinding implements PluralAttributeElementBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private Value relationalValue;
+	private List<RelationalValueBinding> relationalValueBindings;
 
 	AbstractPluralAttributeElementBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
@@ -50,7 +51,11 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 	}
 
 	@Override
-	public Value getRelationalValue() {
-		return relationalValue;
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return relationalValueBindings;
+	}
+
+	protected void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
+		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 	}
 }

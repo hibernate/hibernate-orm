@@ -55,7 +55,6 @@ public class SimpleElementSetTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6525")
 	public void testLoad() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -69,7 +68,7 @@ public class SimpleElementSetTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		u = (User) s.get( User.class, "username" );
-		assertFalse( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
+		assertTrue( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
 		assertEquals( 2, u.getSessionAttributeNames().size() );
 		assertTrue( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
 		assertTrue( u.getSessionAttributeNames().contains( "name" ) );

@@ -83,6 +83,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -737,7 +738,9 @@ public abstract class AbstractCollectionPersister
 		}
 		elementNodeName = elemNode;
 
-		int elementSpan = collection.getCollectionTable() == null ? 0 : collection.getCollectionTable().values().size();
+		int elementSpan = collection.getPluralAttributeElementBinding().getRelationalValueBindings() == null ?
+				0 :
+				collection.getPluralAttributeElementBinding().getRelationalValueBindings().size();
 		elementColumnAliases = new String[elementSpan];
 		elementColumnNames = new String[elementSpan];
 		elementColumnWriters = new String[elementSpan];
@@ -751,7 +754,8 @@ public abstract class AbstractCollectionPersister
 		boolean hasNotNullableColumns = false;
 		int j = 0;
 		if ( elementSpan > 0 ) {
-			for ( Value value : collection.getCollectionTable().values() ) {
+			for ( RelationalValueBinding relationalValueBinding : collection.getPluralAttributeElementBinding().getRelationalValueBindings() ) {
+				final Value value = relationalValueBinding.getValue();
 				elementColumnAliases[j] = value.getAlias( dialect );
 				if ( DerivedValue.class.isInstance( value ) ) {
 					DerivedValue form = (DerivedValue) value;

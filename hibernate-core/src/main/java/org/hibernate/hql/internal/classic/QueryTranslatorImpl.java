@@ -268,7 +268,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return sqlString;
 	}
 
-	public List collectSqlStrings() {
+	public List<String> collectSqlStrings() {
 		return ArrayHelper.toList( new String[] { sqlString } );
 	}
 

@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
@@ -41,9 +40,8 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.SimpleMRUCache;
-import org.hibernate.internal.util.collections.SoftLimitMRUCache;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -57,37 +55,64 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 public class QueryPlanCache implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryPlanCache.class.getName());
+	
+	private static final boolean isTraceEnabled = LOG.isTraceEnabled();
+	/**
+	 * The default strong reference count.
+	 */
+	public static final int DEFAULT_PARAMETER_METADATA_MAX_COUNT = 128;
+	/**
+	 * The default soft reference count.
+	 */
+	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
+	private final SessionFactoryImplementor factory;
+	/**
+	 * the cache of the actual plans...
+	 */
+	private final BoundedConcurrentHashMap queryPlanCache;
 	/**
 	 * simple cache of param metadata based on query string.  Ideally, the original "user-supplied query"
 	 * string should be used to obtain this metadata (i.e., not the para-list-expanded query string) to avoid
 	 * unnecessary cache entries.
-	 * <p>
+	 * <p></p>
 	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
 	 * discussion as to why...
 	 */
-	private final SimpleMRUCache sqlParamMetadataCache;
+	private final BoundedConcurrentHashMap<String,ParameterMetadata> parameterMetadataCache;
 
-	/**
-	 * the cache of the actual plans...
-	 */
-	private final SoftLimitMRUCache planCache;
-	private SessionFactoryImplementor factory;
-
-	public QueryPlanCache(SessionFactoryImplementor factory) {
-		int maxStrongReferenceCount = ConfigurationHelper.getInt(
-				Environment.QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES,
-				factory.getProperties(),
-				SoftLimitMRUCache.DEFAULT_STRONG_REF_COUNT
-		);
-		int maxSoftReferenceCount = ConfigurationHelper.getInt(
-				Environment.QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES,
-				factory.getProperties(),
-				SoftLimitMRUCache.DEFAULT_SOFT_REF_COUNT
-		);
-
+	public QueryPlanCache(final SessionFactoryImplementor factory) {
 		this.factory = factory;
-		this.sqlParamMetadataCache = new SimpleMRUCache( maxStrongReferenceCount );
-		this.planCache = new SoftLimitMRUCache( maxStrongReferenceCount, maxSoftReferenceCount );
+
+		Integer maxParameterMetadataCount = ConfigurationHelper.getInteger(
+				Environment.QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE,
+				factory.getProperties()
+		);
+		if ( maxParameterMetadataCount == null ) {
+			maxParameterMetadataCount = ConfigurationHelper.getInt(
+					Environment.QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES,
+					factory.getProperties(),
+					DEFAULT_PARAMETER_METADATA_MAX_COUNT
+			);
+		}
+		Integer maxQueryPlanCount = ConfigurationHelper.getInteger(
+				Environment.QUERY_PLAN_CACHE_MAX_SIZE,
+				factory.getProperties()
+		);
+		if ( maxQueryPlanCount == null ) {
+			maxQueryPlanCount = ConfigurationHelper.getInt(
+					Environment.QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES,
+					factory.getProperties(),
+					DEFAULT_QUERY_PLAN_MAX_COUNT
+			);
+		}
+
+		queryPlanCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		parameterMetadataCache = new BoundedConcurrentHashMap<String, ParameterMetadata>(
+				maxParameterMetadataCount,
+				20,
+				BoundedConcurrentHashMap.Eviction.LIRS
+		);
+
 	}
 
 	/**
@@ -100,79 +125,22 @@ public class QueryPlanCache implements Serializable {
 	 * @param query The query
 	 * @return The parameter metadata
 	 */
-	public ParameterMetadata getSQLParameterMetadata(String query) {
-		ParameterMetadata metadata = ( ParameterMetadata ) sqlParamMetadataCache.get( query );
-		if ( metadata == null ) {
-			metadata = buildNativeSQLParameterMetadata( query );
-			sqlParamMetadataCache.put( query, metadata );
+	public ParameterMetadata getSQLParameterMetadata(final String query)  {
+		ParameterMetadata value = parameterMetadataCache.get( query );
+		if ( value == null ) {
+			value = buildParameterMetadata( query );
+			parameterMetadataCache.putIfAbsent( query, value );
 		}
-		return metadata;
+		return value;
 	}
-
-	public HQLQueryPlan getHQLQueryPlan(String queryString, boolean shallow, Map enabledFilters)
-			throws QueryException, MappingException {
-		HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
-		HQLQueryPlan plan = ( HQLQueryPlan ) planCache.get ( key );
-
-		if ( plan == null ) {
-			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
-			plan = new HQLQueryPlan(queryString, shallow, enabledFilters, factory );
-		}
-		else {
-			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
-		}
-		planCache.put( key, plan );
-
-		return plan;
-	}
-
-	public FilterQueryPlan getFilterQueryPlan(String filterString, String collectionRole, boolean shallow, Map enabledFilters)
-			throws QueryException, MappingException {
-		FilterQueryPlanKey key = new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
-		FilterQueryPlan plan = ( FilterQueryPlan ) planCache.get ( key );
-
-		if ( plan == null ) {
-			LOG.tracev( "Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
-					collectionRole, filterString );
-			plan = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters, factory );
-		}
-		else {
-			LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
-		}
-
-		planCache.put( key, plan );
-
-		return plan;
-	}
-
-	public NativeSQLQueryPlan getNativeSQLQueryPlan(NativeSQLQuerySpecification spec) {
-		NativeSQLQueryPlan plan = ( NativeSQLQueryPlan ) planCache.get( spec );
-
-		if ( plan == null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
-			}
-			plan = new NativeSQLQueryPlan( spec, factory );
-		}
-		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
-			}
-		}
-
-		planCache.put( spec, plan );
-		return plan;
-	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
-	private ParameterMetadata buildNativeSQLParameterMetadata(String sqlString) {
-		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( sqlString );
-
-		OrdinalParameterDescriptor[] ordinalDescriptors =
-				new OrdinalParameterDescriptor[ recognizer.getOrdinalParameterLocationList().size() ];
-		for ( int i = 0; i < recognizer.getOrdinalParameterLocationList().size(); i++ ) {
+	
+	private ParameterMetadata buildParameterMetadata(String query){
+		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( query );
+		final int size = recognizer.getOrdinalParameterLocationList().size();
+		OrdinalParameterDescriptor[] ordinalDescriptors = new OrdinalParameterDescriptor[ size ];
+		for ( int i = 0; i < size; i++ ) {
 			final Integer position = ( Integer ) recognizer.getOrdinalParameterLocationList().get( i );
-			ordinalDescriptors[i] = new OrdinalParameterDescriptor( i, null, position.intValue() );
+			ordinalDescriptors[i] = new OrdinalParameterDescriptor( i, null, position );
 		}
 
 		Iterator itr = recognizer.getNamedParameterDescriptionMap().entrySet().iterator();
@@ -184,11 +152,64 @@ public class QueryPlanCache implements Serializable {
 					( ParamLocationRecognizer.NamedParameterDescription ) entry.getValue();
 			namedParamDescriptorMap.put(
 					name ,
-			        new NamedParameterDescriptor( name, null, description.buildPositionsArray(), description.isJpaStyle() )
+					new NamedParameterDescriptor( name, null, description.buildPositionsArray(), description.isJpaStyle() )
 			);
 		}
 
 		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
+	}
+
+	public HQLQueryPlan getHQLQueryPlan( String queryString, boolean shallow, Map enabledFilters)
+			throws QueryException, MappingException {
+		HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
+		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
+		if ( value == null ) {
+			if( isTraceEnabled ) LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
+			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
+			queryPlanCache.putIfAbsent( key, value );
+		} else {
+			if( isTraceEnabled ) LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
+		}
+		return value;
+	}
+
+
+
+	public FilterQueryPlan getFilterQueryPlan(String filterString, String collectionRole, boolean shallow, Map enabledFilters)
+			throws QueryException, MappingException {
+		FilterQueryPlanKey key =  new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
+		FilterQueryPlan value = (FilterQueryPlan) queryPlanCache.get( key );
+		if(value == null){
+			if( isTraceEnabled ) LOG.tracev( "Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
+										collectionRole, filterString );
+			value = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters,factory );
+			queryPlanCache.putIfAbsent( key, value );
+		} else {
+			if( isTraceEnabled ) LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
+		}
+		return value;
+	}
+
+	public NativeSQLQueryPlan getNativeSQLQueryPlan(final NativeSQLQuerySpecification spec) {
+		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
+		if(value == null){
+			if( isTraceEnabled ) LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
+			value = new NativeSQLQueryPlan( spec, factory);
+			queryPlanCache.putIfAbsent( spec, value );
+		} else {
+			if( isTraceEnabled ) LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
+		}
+		return value;
+	}
+	
+
+	//clean up QueryPlanCache when Sessionfactory is closed
+	public void cleanup() {
+		if ( isTraceEnabled ) {
+			LOG.trace( "Cleaning QueryPlan Cache" );
+		}
+		queryPlanCache.clear();
+		parameterMetadataCache.clear();
 	}
 
 	private static class HQLQueryPlanKey implements Serializable {
@@ -200,8 +221,7 @@ public class QueryPlanCache implements Serializable {
 		public HQLQueryPlanKey(String query, boolean shallow, Map enabledFilters) {
 			this.query = query;
 			this.shallow = shallow;
-
-			if ( enabledFilters == null || enabledFilters.isEmpty() ) {
+			if ( CollectionHelper.isEmpty( enabledFilters ) ) {
 				filterKeys = Collections.emptySet();
 			}
 			else {
@@ -314,13 +334,14 @@ public class QueryPlanCache implements Serializable {
 			this.collectionRole = collectionRole;
 			this.shallow = shallow;
 
-			if ( enabledFilters == null || enabledFilters.isEmpty() ) {
-				filterNames = Collections.emptySet();
+			if ( CollectionHelper.isEmpty( enabledFilters ) ) {
+				this.filterNames = Collections.emptySet();
 			}
 			else {
 				Set<String> tmp = new HashSet<String>();
 				tmp.addAll( enabledFilters.keySet() );
 				this.filterNames = Collections.unmodifiableSet( tmp );
+
 			}
 
 			int hash = query.hashCode();

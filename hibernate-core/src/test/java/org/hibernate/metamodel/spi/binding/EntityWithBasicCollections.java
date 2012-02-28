@@ -41,6 +41,7 @@ public class EntityWithBasicCollections {
 	private String name;
 	private Collection<String> theBag = new ArrayList<String>();
 	private Set<String> theSet = new HashSet<String>();
+	private Set<Integer> thePropertyRefSet = new HashSet<Integer>();
 
 	public EntityWithBasicCollections() {
 	}
@@ -82,5 +83,14 @@ public class EntityWithBasicCollections {
 
 	public void setTheSet(Set<String> theSet) {
 		this.theSet = theSet;
+	}
+
+	@ElementCollection
+	public Set<Integer> getThePropertyRefSet() {
+		return thePropertyRefSet;
+	}
+
+	public void setThePropertyRefSet(Set<Integer> thePropertyRefSet) {
+		this.thePropertyRefSet = thePropertyRefSet;
 	}
 }

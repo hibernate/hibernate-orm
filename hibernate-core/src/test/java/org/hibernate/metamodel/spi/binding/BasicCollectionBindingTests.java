@@ -87,6 +87,9 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		assertNotNull( entityBinding );
 
+		// TODO: this will fail until HHH-7121 is fixed
+		//assertTrue( entityBinding.getPrimaryTable().locateColumn( "`name`" ).isUnique() );
+
 		PluralAttributeBinding bagBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" );
 		assertNotNull( bagBinding );
 		assertSame( bagBinding, entityBinding.locateAttributeBinding( "theBag" ) );
@@ -192,6 +195,67 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		);
 		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
 		assertEquals( String.class.getName(), setBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
+
+		PluralAttributeBinding propertyRefSetBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" );
+		assertNotNull( propertyRefSetBinding );
+		assertSame( propertyRefSetBinding, entityBinding.locateAttributeBinding( "thePropertyRefSet" ) );
+		assertNotNull( propertyRefSetBinding.getCollectionTable() );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_thePropertyRefSet`" ), propertyRefSetBinding.getCollectionTable().getLogicalName() );
+		PluralAttributeKeyBinding propertyRefSetKeyBinding = propertyRefSetBinding.getPluralAttributeKeyBinding();
+		assertSame( propertyRefSetBinding, propertyRefSetKeyBinding.getPluralAttributeBinding() );
+		HibernateTypeDescriptor propertyRefSetHibernateTypeDescriptor = propertyRefSetBinding.getHibernateTypeDescriptor();
+		assertNull( propertyRefSetHibernateTypeDescriptor.getExplicitTypeName() );
+		assertEquals( Set.class.getName(), propertyRefSetHibernateTypeDescriptor.getJavaTypeName() );
+		assertTrue( propertyRefSetHibernateTypeDescriptor.getTypeParameters().isEmpty() );
+		assertTrue( propertyRefSetHibernateTypeDescriptor.getResolvedTypeMapping() instanceof SetType );
+		assertFalse( propertyRefSetHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
+		assertEquals(
+				EntityWithBasicCollections.class.getName() + ".thePropertyRefSet",
+				( (SetType) propertyRefSetHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole()
+		);
+
+		ForeignKey fkPropertyRefSet = propertyRefSetKeyBinding.getForeignKey();
+		assertNotNull( fkPropertyRefSet );
+		assertSame( propertyRefSetBinding.getCollectionTable(), fkPropertyRefSet.getSourceTable() );
+		assertEquals( 1, fkPropertyRefSet.getColumnSpan() );
+		Iterator<Column> fkPropertyRefSetColumnIterator = fkPropertyRefSet.getColumns().iterator();
+		Iterator<Column> fkPropertyRefSetSourceColumnIterator = fkPropertyRefSet.getSourceColumns().iterator();
+		assertNotNull( fkPropertyRefSetColumnIterator );
+		assertNotNull( fkPropertyRefSetSourceColumnIterator );
+		assertTrue( fkPropertyRefSetColumnIterator.hasNext() );
+		assertTrue( fkPropertyRefSetSourceColumnIterator.hasNext() );
+		assertEquals( Identifier.toIdentifier( "`pid`" ), fkPropertyRefSetColumnIterator.next().getColumnName() );
+		assertEquals( Identifier.toIdentifier( "`pid`" ), fkPropertyRefSetSourceColumnIterator.next().getColumnName() );
+		assertFalse( fkPropertyRefSetColumnIterator.hasNext() );
+		assertFalse( fkPropertyRefSetSourceColumnIterator.hasNext() );
+		assertSame( entityBinding.getPrimaryTable(), fkPropertyRefSet.getTargetTable() );
+		assertSame( entityBinding.getPrimaryTable().locateColumn( "`name`" ), fkPropertyRefSet.getTargetColumns().iterator().next() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkPropertyRefSet.getDeleteRule() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkPropertyRefSet.getUpdateRule() );
+		// FK is null because no default FK name is generated until HHH-7092 is fixed
+		assertNull( fkPropertyRefSet.getName() );
+		checkEquals(
+				entityBinding.locateAttributeBinding( "name" ).getHibernateTypeDescriptor(),
+				propertyRefSetKeyBinding.getHibernateTypeDescriptor()
+		);
+		assertFalse( propertyRefSetKeyBinding.isInverse() );
+		assertEquals( 2, propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		Iterator<Column> propertyRefSetPrimaryKeyIterator = propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumns().iterator();
+		assertEquals(
+				entityBinding.getPrimaryTable().locateColumn( "`name`" ).getJdbcDataType(),
+				propertyRefSetPrimaryKeyIterator.next().getJdbcDataType()
+		);
+		assertEquals(
+				propertyRefSetBinding.getCollectionTable().locateColumn( "`property_ref_set_stuff`" ).getJdbcDataType(),
+				propertyRefSetPrimaryKeyIterator.next().getJdbcDataType()
+		);
+		assertFalse( propertyRefSetPrimaryKeyIterator.hasNext() );
+		assertSame(
+				propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next(),
+				propertyRefSetKeyBinding.getForeignKey().getColumns().iterator().next()
+		);
+		assertEquals( PluralAttributeElementNature.BASIC, propertyRefSetBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
+		assertEquals( Integer.class.getName(), propertyRefSetBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
 	}
 
 	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {

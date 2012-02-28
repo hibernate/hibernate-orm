@@ -8,7 +8,7 @@
     	<id name="id">
     		<generator class="increment"/>
     	</id>
-        <property name="name"/>
+        <property name="name" unique="true"/>
 
         <bag name="theBag">
             <key column="owner_id"/>
@@ -19,6 +19,12 @@
             <key column="pid"/>
             <element column="set_stuff" type="string"/>
         </set>
+
+        <set name="thePropertyRefSet">
+            <key column="pid" property-ref="name"/>
+            <element column="property_ref_set_stuff" type="Integer"/>
+        </set>
+
 	</class>
 
 </hibernate-mapping>

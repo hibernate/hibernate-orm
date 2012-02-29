@@ -1,18 +1,51 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.hibernate.spatial.dialect.postgis;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
+import org.postgis.GeometryCollection;
+import org.postgis.MultiLineString;
+import org.postgis.MultiPoint;
+import org.postgis.MultiPolygon;
+import org.postgis.PGboxbase;
+import org.postgis.PGgeometry;
+import org.postgis.Point;
+import org.postgis.Polygon;
+
+import org.hibernate.spatial.dialect.AbstractGeometryValueExtractor;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.spatial.jts.mgeom.MLineString;
-import org.postgis.*;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
+public class PGGeometryValueExtractor<X> extends AbstractGeometryValueExtractor<X> {
 
+	public PGGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor) {
+		super( javaDescriptor , PGGeometryTypeDescriptor.INSTANCE);
+	}
 
 	public Geometry toJTS(Object object) {
 		if ( object == null ) {
@@ -240,9 +273,9 @@ public class PGGeometryValueExtractor extends AbstractJTSGeometryValueExtractor 
 					pt.getX(), pt
 					.getY(), pt.getZ(), pt.getM()
 			) : MCoordinate.create3d(
-                    pt
-                            .getX(), pt.getY(), pt.getZ()
-            );
+					pt
+							.getX(), pt.getY(), pt.getZ()
+			);
 		}
 		return mc;
 	}

@@ -1,22 +1,57 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.hibernate.spatial.dialect.postgis;
+
+import java.sql.Connection;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import org.hibernate.spatial.dialect.AbstractJTSGeometryValueBinder;
+import org.postgis.GeometryCollection;
+import org.postgis.LineString;
+import org.postgis.LinearRing;
+import org.postgis.MultiLineString;
+import org.postgis.MultiPoint;
+import org.postgis.MultiPolygon;
+import org.postgis.PGgeometry;
+import org.postgis.Point;
+import org.postgis.Polygon;
+
+import org.hibernate.spatial.dialect.AbstractGeometryValueBinder;
 import org.hibernate.spatial.jts.JTS;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.spatial.jts.mgeom.MGeometry;
-import org.postgis.*;
-
-import java.sql.Connection;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryValueBinder extends AbstractJTSGeometryValueBinder {
+public class PGGeometryValueBinder<X> extends AbstractGeometryValueBinder<X> {
 
+
+	public PGGeometryValueBinder(JavaTypeDescriptor<X> javaDescriptor) {
+		super( javaDescriptor, PGGeometryTypeDescriptor.INSTANCE );
+	}
 
 	/**
 	 * Converts a JTS <code>Geometry</code> to a native geometry object.
@@ -70,7 +105,7 @@ public class PGGeometryValueBinder extends AbstractJTSGeometryValueBinder {
 		if ( forced.isEmpty() ) {
 			GeometryFactory factory = jtsGeom.getFactory();
 			if ( factory == null ) {
-				factory = JTS.getDefaultGeomFactory();
+				factory = JTS.getDefaultGeometryFactory();
 			}
 			forced = factory.createGeometryCollection( null );
 			forced.setSRID( jtsGeom.getSRID() );
@@ -166,7 +201,7 @@ public class PGGeometryValueBinder extends AbstractJTSGeometryValueBinder {
 			);
 		}
 		MultiLineString mls = new MultiLineString( lines );
-		if ( string instanceof MGeometry) {
+		if ( string instanceof MGeometry ) {
 			mls.haveMeasure = true;
 		}
 		mls.setSrid( string.getSRID() );

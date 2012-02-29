@@ -476,6 +476,7 @@ public class ConfiguredClass {
 						getLocalBindingContext()
 				);
 				associationAttributeMap.put( attributeName, attribute );
+				break;
 			}
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
@@ -488,6 +489,7 @@ public class ConfiguredClass {
 						getLocalBindingContext()
 				);
 				associationAttributeMap.put( attributeName, attribute );
+				break;
 			}
 
 		}

@@ -24,7 +24,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 
 /**
- * TODO  javadoc
+ * A {@link org.hibernate.type.BasicType BasicType} for JTS <code>Geometry</code>s.
  *
  * @author Karel Maesen
  */

@@ -3,7 +3,7 @@ apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     compile( project( ':hibernate-core' ) )
-    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.11'] ) {
+    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.12'] ) {
         transitive = false
     }
     compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.3'] )

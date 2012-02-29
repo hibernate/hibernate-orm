@@ -1,6 +1,7 @@
 package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
@@ -48,9 +49,9 @@ public class TestSupportFactories {
         if ("org.hibernate.spatial.dialect.postgis.PostgisDialect".equals(canonicalName)) {
             return PostgisTestSupport.class;
         }
-//        if ("org.hibernate.spatial.geodb.GeoDBDialect".equals(canonicalName)) {
-//            return "org.hibernate.spatial.geodb.GeoDBSupport";
-//        }
+        if ("org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals(canonicalName)) {
+            return GeoDBTestSupport.class;
+        }
         if ("org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals(canonicalName)) {
             return SQLServerTestSupport.class;
         }

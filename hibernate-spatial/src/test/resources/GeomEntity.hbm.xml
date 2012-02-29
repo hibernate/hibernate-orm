@@ -35,7 +35,7 @@
         <property name="type" type="string">
             <column name="type" length="50"/>
         </property>
-        <property name="geom" type="org.hibernate.spatial.GeometryType">
+        <property name="geom" type="geometry">
             <column name="geom"/>
         </property>
     </class>

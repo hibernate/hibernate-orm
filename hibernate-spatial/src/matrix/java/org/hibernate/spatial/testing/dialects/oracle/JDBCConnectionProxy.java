@@ -1,20 +1,27 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.hibernate.spatial.testing.dialects.oracle;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,11 +40,11 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public <T> T unwrap(Class<T> iface) throws SQLException {
-		return delegate.unwrap( iface );
+		return delegate.unwrap(iface);
 	}
 
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		return delegate.isWrapperFor( iface );
+		return delegate.isWrapperFor(iface);
 	}
 
 	public Statement createStatement() throws SQLException {
@@ -45,19 +52,19 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
-		return delegate.prepareStatement( sql );
+		return delegate.prepareStatement(sql);
 	}
 
 	public CallableStatement prepareCall(String sql) throws SQLException {
-		return delegate.prepareCall( sql );
+		return delegate.prepareCall(sql);
 	}
 
 	public String nativeSQL(String sql) throws SQLException {
-		return delegate.nativeSQL( sql );
+		return delegate.nativeSQL(sql);
 	}
 
 	public void setAutoCommit(boolean autoCommit) throws SQLException {
-		delegate.setAutoCommit( autoCommit );
+		delegate.setAutoCommit(autoCommit);
 	}
 
 	public boolean getAutoCommit() throws SQLException {
@@ -85,7 +92,7 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public void setReadOnly(boolean readOnly) throws SQLException {
-		delegate.setReadOnly( readOnly );
+		delegate.setReadOnly(readOnly);
 	}
 
 	public boolean isReadOnly() throws SQLException {
@@ -93,7 +100,7 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public void setCatalog(String catalog) throws SQLException {
-		delegate.setCatalog( catalog );
+		delegate.setCatalog(catalog);
 	}
 
 	public String getCatalog() throws SQLException {
@@ -101,7 +108,7 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public void setTransactionIsolation(int level) throws SQLException {
-		delegate.setTransactionIsolation( level );
+		delegate.setTransactionIsolation(level);
 	}
 
 	public int getTransactionIsolation() throws SQLException {
@@ -117,16 +124,16 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-		return delegate.createStatement( resultSetType, resultSetConcurrency );
+		return delegate.createStatement(resultSetType, resultSetConcurrency);
 	}
 
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
 			throws SQLException {
-		return delegate.prepareStatement( sql, resultSetType, resultSetConcurrency );
+		return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
 	}
 
 	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-		return delegate.prepareCall( sql, resultSetType, resultSetConcurrency );
+		return delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
 	}
 
 	public Map<String, Class<?>> getTypeMap() throws SQLException {
@@ -134,11 +141,11 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
-		delegate.setTypeMap( map );
+		delegate.setTypeMap(map);
 	}
 
 	public void setHoldability(int holdability) throws SQLException {
-		delegate.setHoldability( holdability );
+		delegate.setHoldability(holdability);
 	}
 
 	public int getHoldability() throws SQLException {
@@ -150,42 +157,42 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public Savepoint setSavepoint(String name) throws SQLException {
-		return delegate.setSavepoint( name );
+		return delegate.setSavepoint(name);
 	}
 
 	public void rollback(Savepoint savepoint) throws SQLException {
-		delegate.rollback( savepoint );
+		delegate.rollback(savepoint);
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		delegate.releaseSavepoint( savepoint );
+		delegate.releaseSavepoint(savepoint);
 	}
 
 	public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
-		return delegate.createStatement( resultSetType, resultSetConcurrency, resultSetHoldability );
+		return delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
-		return delegate.prepareStatement( sql, resultSetType, resultSetConcurrency, resultSetHoldability );
+		return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
-		return delegate.prepareCall( sql, resultSetType, resultSetConcurrency, resultSetHoldability );
+		return delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-		return delegate.prepareStatement( sql, autoGeneratedKeys );
+		return delegate.prepareStatement(sql, autoGeneratedKeys);
 	}
 
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-		return delegate.prepareStatement( sql, columnIndexes );
+		return delegate.prepareStatement(sql, columnIndexes);
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-		return delegate.prepareStatement( sql, columnNames );
+		return delegate.prepareStatement(sql, columnNames);
 	}
 
 	public Clob createClob() throws SQLException {
@@ -205,19 +212,19 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public boolean isValid(int timeout) throws SQLException {
-		return delegate.isValid( timeout );
+		return delegate.isValid(timeout);
 	}
 
 	public void setClientInfo(String name, String value) throws SQLClientInfoException {
-		delegate.setClientInfo( name, value );
+		delegate.setClientInfo(name, value);
 	}
 
 	public void setClientInfo(Properties properties) throws SQLClientInfoException {
-		delegate.setClientInfo( properties );
+		delegate.setClientInfo(properties);
 	}
 
 	public String getClientInfo(String name) throws SQLException {
-		return delegate.getClientInfo( name );
+		return delegate.getClientInfo(name);
 	}
 
 	public Properties getClientInfo() throws SQLException {
@@ -225,10 +232,10 @@ public class JDBCConnectionProxy implements Connection {
 	}
 
 	public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
-		return delegate.createArrayOf( typeName, elements );
+		return delegate.createArrayOf(typeName, elements);
 	}
 
 	public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
-		return delegate.createStruct( typeName, attributes );
+		return delegate.createStruct(typeName, attributes);
 	}
 }

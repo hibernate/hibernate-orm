@@ -1,37 +1,32 @@
 /*
- * $Id:$
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.testing.dialects.oracle;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
-
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
-import org.hibernate.spatial.testing.NativeSQLStatement;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.NativeSQLStatement;
 
 /**
  * Expectations factory for Oracle 10g (SDOGeometry).
@@ -43,7 +38,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor();
 
 	public SDOGeometryExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		super( dataSourceUtils );
+		super(dataSourceUtils);
 	}
 
 	@Override
@@ -110,7 +105,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Buffer(?).GEOM from GEOMTEST T where t.GEOM.SDO_SRID = 4326",
-				new Double[] { distance }
+				new Double[]{distance}
 		);
 	}
 
@@ -156,12 +151,12 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected NativeSQLStatement createNativeAsTextStatement() {
-		return createNativeSQLStatement( "select t.ID, t.GEOM.GET_WKT() FROM GEOMTEST T" );
+		return createNativeSQLStatement("select t.ID, t.GEOM.GET_WKT() FROM GEOMTEST T");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeSridStatement() {
-		return createNativeSQLStatement( "SELECT t.ID, t.GEOM.SDO_SRID FROM GEOMTEST t" );
+		return createNativeSQLStatement("SELECT t.ID, t.GEOM.SDO_SRID FROM GEOMTEST t");
 	}
 
 	@Override
@@ -202,7 +197,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected NativeSQLStatement createNativeAsBinaryStatement() {
-		return createNativeSQLStatement( "select t.ID, t.GEOM.GET_WKB() FROM GEOMTEST T" );
+		return createNativeSQLStatement("select t.ID, t.GEOM.GET_WKB() FROM GEOMTEST T");
 	}
 
 	@Override
@@ -261,11 +256,11 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
-		return createNativeSQLStatement( "select t.id, 1 from GeomTest t where t.geom.SDO_SRID =  " + srid );
+		return createNativeSQLStatement("select t.id, 1 from GeomTest t where t.geom.SDO_SRID =  " + srid);
 	}
 
 	@Override
 	protected Geometry decode(Object o) {
-		return decoder.toJTS( o );
+		return decoder.toJTS(o);
 	}
 }

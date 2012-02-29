@@ -1,32 +1,27 @@
 /*
- * $Id: AbstractDecoder.java 163 2010-03-08 22:29:37Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
@@ -38,16 +33,16 @@ abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 	}
 
 	public G decode(SqlServerGeometry nativeGeom) {
-		if ( !accepts( nativeGeom ) ) {
-			throw new IllegalArgumentException( getClass().getSimpleName() + " received object of type " + nativeGeom.openGisType() );
+		if (!accepts(nativeGeom)) {
+			throw new IllegalArgumentException(getClass().getSimpleName() + " received object of type " + nativeGeom.openGisType());
 		}
-		if ( nativeGeom.isEmpty() ) {
+		if (nativeGeom.isEmpty()) {
 			G nullGeom = createNullGeometry();
-			setSrid( nativeGeom, nullGeom );
+			setSrid(nativeGeom, nullGeom);
 			return nullGeom;
 		}
-		G result = createGeometry( nativeGeom );
-		setSrid( nativeGeom, result );
+		G result = createGeometry(nativeGeom);
+		setSrid(nativeGeom, result);
 		return result;
 	}
 
@@ -56,7 +51,7 @@ abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 	}
 
 	public boolean accepts(SqlServerGeometry nativeGeom) {
-		return accepts( nativeGeom.openGisType() );
+		return accepts(nativeGeom.openGisType());
 	}
 
 	protected abstract OpenGisType getOpenGisType();
@@ -72,8 +67,8 @@ abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 	}
 
 	protected void setSrid(SqlServerGeometry sqlServerGeom, G result) {
-		if ( sqlServerGeom.getSrid() != null ) {
-			result.setSRID( sqlServerGeom.getSrid() );
+		if (sqlServerGeom.getSrid() != null) {
+			result.setSRID(sqlServerGeom.getSrid());
 		}
 	}
 

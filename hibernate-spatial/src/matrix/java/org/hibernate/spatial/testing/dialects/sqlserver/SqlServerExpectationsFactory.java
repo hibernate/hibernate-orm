@@ -1,37 +1,32 @@
 /*
- * $Id: SqlServerExpectationsFactory.java 293 2011-03-04 22:47:49Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
-
 import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
-import org.hibernate.spatial.testing.NativeSQLStatement;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.NativeSQLStatement;
 
 
 /**
@@ -42,19 +37,19 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 
 
 	public SqlServerExpectationsFactory(DataSourceUtils utils) {
-		super( utils );
+		super(utils);
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDimensionSQL() {
-		return createNativeSQLStatement( "select t.id, t.geom.STDimension() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STDimension() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.STBuffer(?) from GeomTest t where t.geom.STSrid = 4326",
-				new Object[] { distance }
+				new Object[]{distance}
 		);
 	}
 
@@ -100,52 +95,52 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeAsTextStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STAsText() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STAsText() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeSridStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STSrid from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STSrid from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeIsSimpleStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STIsSimple() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STIsSimple() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeIsEmptyStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STIsEmpty() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STIsEmpty() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeIsNotEmptyStatement() {
-		return createNativeSQLStatement( "select t.id, ~t.geom.STIsEmpty() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, ~t.geom.STIsEmpty() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeBoundaryStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STBoundary() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STBoundary() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeEnvelopeStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STEnvelope() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STEnvelope() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeAsBinaryStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STAsBinary() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STAsBinary() from GeomTest t");
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeGeometryTypeStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.STGeometryType() from GeomTest t" );
+		return createNativeSQLStatement("select t.id, t.geom.STGeometryType() from GeomTest t");
 	}
 
 	@Override
 	protected Geometry decode(Object o) {
-		return Decoders.decode( (byte[]) o );
+		return Decoders.decode((byte[]) o);
 	}
 
 	@Override
@@ -195,7 +190,7 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
-		return createNativeSQLStatement( "select t.id, 1 from GeomTest t where t.geom.STSrid =  " + srid );
+		return createNativeSQLStatement("select t.id, 1 from GeomTest t where t.geom.STSrid =  " + srid);
 	}
 
 	@Override
@@ -233,7 +228,7 @@ public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
 		String sql = "select t.id, t.geom.STRelate(geometry::STGeomFromText(?, 4326), '" + matrix + "' ) from GeomTest t where t.geom.STRelate(geometry::STGeomFromText(?, 4326), '" + matrix + "') = 'true' and t.geom.STSrid = 4326";
-		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
+		return createNativeSQLStatementAllWKTParams(sql, geom.toText());
 	}
 
 	@Override

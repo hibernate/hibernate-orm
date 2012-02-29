@@ -33,25 +33,25 @@ import java.sql.Types;
  *         creation-date: 2/29/12
  */
 public class GeoDBGeometryTypeDescriptor implements SqlTypeDescriptor {
-    public static final GeoDBGeometryTypeDescriptor INSTANCE = new GeoDBGeometryTypeDescriptor();
+	public static final GeoDBGeometryTypeDescriptor INSTANCE = new GeoDBGeometryTypeDescriptor();
 
-    @Override
-    public int getSqlType() {
-        return Types.ARRAY;
-    }
+	@Override
+	public int getSqlType() {
+		return Types.ARRAY;
+	}
 
-    @Override
-    public boolean canBeRemapped() {
-        return false;
-    }
+	@Override
+	public boolean canBeRemapped() {
+		return false;
+	}
 
-    @Override
-    public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-        return (ValueBinder<X>) new GeoDBValueBinder();
-    }
+	@Override
+	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return (ValueBinder<X>) new GeoDBValueBinder();
+	}
 
-    @Override
-    public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-        return (ValueExtractor<X>) new GeoDBValueExtractor();
-    }
+	@Override
+	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return (ValueExtractor<X>) new GeoDBValueExtractor();
+	}
 }

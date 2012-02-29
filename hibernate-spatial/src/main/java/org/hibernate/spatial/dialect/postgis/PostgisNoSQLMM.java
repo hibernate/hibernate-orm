@@ -1,3 +1,24 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.hibernate.spatial.dialect.postgis;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -13,7 +34,7 @@ import org.hibernate.type.StandardBasicTypes;
 public class PostgisNoSQLMM extends PostgisDialect {
 	@Override
 	protected void registerTypesAndFunctions() {
-		registerColumnType( java.sql.Types.STRUCT, "geometry" );
+		registerColumnType(java.sql.Types.STRUCT, "geometry");
 
 		// registering OGC functions
 		// (spec_simplefeatures_sql_99-04.pdf)
@@ -164,7 +185,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "symdifference", GeometryType.INSTANCE )
+				new StandardSQLFunction("symdifference", GeometryType.INSTANCE)
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
@@ -208,7 +229,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 
 	public String getSpatialRelateSQL(String columnName, int spatialRelation,
 									  boolean hasFilter) {
-		switch ( spatialRelation ) {
+		switch (spatialRelation) {
 			case SpatialRelation.WITHIN:
 				return hasFilter ? "(" + columnName + " && ?  AND   within("
 						+ columnName + ", ?))" : " within(" + columnName + ",?)";
@@ -244,6 +265,6 @@ public class PostgisNoSQLMM extends PostgisDialect {
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return super.supports( function );
+		return super.supports(function);
 	}
 }

@@ -1,26 +1,22 @@
 /*
- * $Id: PointConvertorTest.java 278 2010-12-18 14:03:32Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2009 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
@@ -44,22 +40,22 @@ public class PointConvertorTest extends AbstractConvertorTest {
 
 	@BeforeClassOnce
 	public void beforeClass() {
-        super.beforeClass();
-		doDecoding( OpenGisType.POINT );
+		super.beforeClass();
+		doDecoding(OpenGisType.POINT);
 		doEncoding();
 	}
 
 	@Test
 	public void test_verify_srid() {
-		assertEquals( 0, decodedGeoms.get( 1 ).getSRID() );
-		assertEquals( 4326, decodedGeoms.get( 2 ).getSRID() );
-		assertEquals( 31370, decodedGeoms.get( 3 ).getSRID() );
+		assertEquals(0, decodedGeoms.get(1).getSRID());
+		assertEquals(4326, decodedGeoms.get(2).getSRID());
+		assertEquals(31370, decodedGeoms.get(3).getSRID());
 	}
 
 	@Test
 	public void test_class() {
-		for ( Integer id : decodedGeoms.keySet() ) {
-			assertEquals( Point.class, decodedGeoms.get( id ).getClass() );
+		for (Integer id : decodedGeoms.keySet()) {
+			assertEquals(Point.class, decodedGeoms.get(id).getClass());
 		}
 	}
 
@@ -67,14 +63,14 @@ public class PointConvertorTest extends AbstractConvertorTest {
 	public void test_coordinates() {
 		Coordinate expected;
 		Coordinate received;
-		expected = new Coordinate( 10.0, 5.0 );
-		assertEquals( expected, decodedGeoms.get( 1 ).getCoordinate() );
-		expected = new Coordinate( 52.25, 2.53 );
-		assertEquals( expected, decodedGeoms.get( 2 ).getCoordinate() );
-		expected = new Coordinate( 150000.0, 200000.0 );
-		assertEquals( expected, decodedGeoms.get( 3 ).getCoordinate() );
-		expected = new MCoordinate( 10.0, 2.0, 1.0, 3.0 );
-		assertEquals( expected, decodedGeoms.get( 4 ).getCoordinate() );
+		expected = new Coordinate(10.0, 5.0);
+		assertEquals(expected, decodedGeoms.get(1).getCoordinate());
+		expected = new Coordinate(52.25, 2.53);
+		assertEquals(expected, decodedGeoms.get(2).getCoordinate());
+		expected = new Coordinate(150000.0, 200000.0);
+		assertEquals(expected, decodedGeoms.get(3).getCoordinate());
+		expected = new MCoordinate(10.0, 2.0, 1.0, 3.0);
+		assertEquals(expected, decodedGeoms.get(4).getCoordinate());
 	}
 
 	@Test

@@ -35,17 +35,17 @@ import java.sql.Connection;
  */
 public class GeoDBValueBinder extends AbstractJTSGeometryValueBinder {
 
-    private static Log LOG = LogFactory.make();
+	private static Log LOG = LogFactory.make();
 
-    @Override
-    protected Object toNative(Geometry jtsGeom, Connection connection) {
-        try {
-            return WKB.toWKB(jtsGeom);
-        } catch (Exception e) {
-            LOG.warn("Could not convert JTS Geometry to a database object.");
-            e.printStackTrace();
-            return null;
-        }
-    }
+	@Override
+	protected Object toNative(Geometry jtsGeom, Connection connection) {
+		try {
+			return WKB.toWKB(jtsGeom);
+		} catch (Exception e) {
+			LOG.warn("Could not convert JTS Geometry to a database object.");
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 }

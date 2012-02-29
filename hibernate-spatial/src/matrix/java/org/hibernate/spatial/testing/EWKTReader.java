@@ -1,69 +1,39 @@
 /*
- * $Id: EWKTReader.java 166 2010-03-11 22:17:49Z maesenka $
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is an adapted version of the JTS WKTReader. It has
- * been extended by Martin Steinwender to deal with Measured coordinates.
- * 
- * Original copyright notice:
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * The JTS Topology Suite is a collection of Java classes that
- * implement the fundamental operations required to validate a given
- * geo-spatial data set to a known topological specification.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * Copyright (C) 2001 Vivid Solutions
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, contact:
- *
- *     Vivid Solutions
- *     Suite #1A
- *     2328 Government Street
- *     Victoria BC  V8T 5G5
- *     Canada
- *
- *     (250)385-6040
- *     www.vividsolutions.com
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 
 package org.hibernate.spatial.testing;
+
+import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.util.Assert;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.PrecisionModel;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.util.Assert;
-
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.spatial.jts.mgeom.MLineString;
 
 /**
  * Converts a geometry in EWKT to a JTS-Geometry.
@@ -156,7 +126,7 @@ public class EWKTReader {
 	 * Creates a reader that creates objects using the default {@link GeometryFactory}.
 	 */
 	public EWKTReader() {
-		this( new MGeometryFactory() );
+		this(new MGeometryFactory());
 	}
 
 	/**
@@ -175,18 +145,16 @@ public class EWKTReader {
 	 * from a {@link String}.
 	 *
 	 * @param wellKnownText one or more <Geometry Tagged Text>strings (see the OpenGIS
-	 * Simple Features Specification) separated by whitespace
-	 *
+	 *                      Simple Features Specification) separated by whitespace
 	 * @return a <code>Geometry</code> specified by <code>wellKnownText</code>
-	 *
-	 * @throws com.vividsolutions.jts.io.ParseException if a parsing problem occurs
+	 * @throws com.vividsolutions.jts.io.ParseException
+	 *          if a parsing problem occurs
 	 */
 	public Geometry read(String wellKnownText) throws ParseException {
-		StringReader reader = new StringReader( wellKnownText );
+		StringReader reader = new StringReader(wellKnownText);
 		try {
-			return read( reader );
-		}
-		finally {
+			return read(reader);
+		} finally {
 			reader.close();
 		}
 	}
@@ -196,45 +164,41 @@ public class EWKTReader {
 	 * from a {@link java.io.Reader}.
 	 *
 	 * @param reader a Reader which will return a <Geometry Tagged Text>
-	 * string (see the OpenGIS Simple Features Specification)
-	 *
+	 *               string (see the OpenGIS Simple Features Specification)
 	 * @return a <code>Geometry</code> read from <code>reader</code>
-	 *
 	 * @throws ParseException if a parsing problem occurs
 	 */
 	public Geometry read(Reader reader) throws ParseException {
 
 		try {
 
-			synchronized ( this ) {
-				if ( this.tokenizer != null ) {
-					throw new RuntimeException( "EWKT-Reader is already in use." );
+			synchronized (this) {
+				if (this.tokenizer != null) {
+					throw new RuntimeException("EWKT-Reader is already in use.");
 				}
-				tokenizer = new StreamTokenizer( reader );
+				tokenizer = new StreamTokenizer(reader);
 			}
 
 			// set tokenizer to NOT parse numbers
 			tokenizer.resetSyntax();
-			tokenizer.wordChars( 'a', 'z' );
-			tokenizer.wordChars( 'A', 'Z' );
-			tokenizer.wordChars( 128 + 32, 255 );
-			tokenizer.wordChars( '0', '9' );
-			tokenizer.wordChars( '-', '-' );
-			tokenizer.wordChars( '+', '+' );
-			tokenizer.wordChars( '.', '.' );
-			tokenizer.whitespaceChars( 0, ' ' );
-			tokenizer.commentChar( '#' );
+			tokenizer.wordChars('a', 'z');
+			tokenizer.wordChars('A', 'Z');
+			tokenizer.wordChars(128 + 32, 255);
+			tokenizer.wordChars('0', '9');
+			tokenizer.wordChars('-', '-');
+			tokenizer.wordChars('+', '+');
+			tokenizer.wordChars('.', '.');
+			tokenizer.whitespaceChars(0, ' ');
+			tokenizer.commentChar('#');
 
 			this.hasM = null;
 			this.dimension = -1;
 
 			return readGeometryTaggedText();
 
-		}
-		catch ( IOException e ) {
-			throw new ParseException( e.toString() );
-		}
-		finally {
+		} catch (IOException e) {
+			throw new ParseException(e.toString());
+		} finally {
 			this.tokenizer = null;
 		}
 	}
@@ -243,37 +207,34 @@ public class EWKTReader {
 	 * Returns the next array of <code>Coordinate</code>s in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next element returned by the stream should be L_PAREN (the
-	 * beginning of "(x1 y1, x2 y2, ..., xn yn)") or EMPTY.
-	 *
+	 *                  format. The next element returned by the stream should be L_PAREN (the
+	 *                  beginning of "(x1 y1, x2 y2, ..., xn yn)") or EMPTY.
 	 * @return the next array of <code>Coordinate</code>s in the
 	 *         stream, or an empty array if EMPTY is the next element returned by
 	 *         the stream.
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private MCoordinate[] getCoordinates()
 			throws IOException, ParseException {
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
-			return new MCoordinate[] { };
+		if (nextToken.equals(EMPTY)) {
+			return new MCoordinate[]{};
 		}
 		ArrayList coordinates = new ArrayList();
-		coordinates.add( getPreciseCoordinate() );
+		coordinates.add(getPreciseCoordinate());
 		nextToken = getNextCloserOrComma();
-		while ( nextToken.equals( COMMA ) ) {
-			coordinates.add( getPreciseCoordinate() );
+		while (nextToken.equals(COMMA)) {
+			coordinates.add(getPreciseCoordinate());
 			nextToken = getNextCloserOrComma();
 		}
-		return (MCoordinate[]) coordinates.toArray( new MCoordinate[coordinates.size()] );
+		return (MCoordinate[]) coordinates.toArray(new MCoordinate[coordinates.size()]);
 	}
 
 	/**
 	 * gets the next Coordinate and checks dimension
 	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 * @throws ParseException
 	 */
@@ -286,60 +247,54 @@ public class EWKTReader {
 		Double thirdOrdinateValue = null;
 		Double fourthOrdinateValue = null;
 
-		if ( this.dimension == 3 ) {
+		if (this.dimension == 3) {
 			thirdOrdinateValue = getNextNumber();
-		}
-		else if ( this.dimension == 4 ) {
+		} else if (this.dimension == 4) {
 			thirdOrdinateValue = getNextNumber();
 			fourthOrdinateValue = getNextNumber();
-		}
-		else if ( this.dimension < 0 ) {
-			if ( isNumberNext() ) {
+		} else if (this.dimension < 0) {
+			if (isNumberNext()) {
 				thirdOrdinateValue = getNextNumber();
 			}
-			if ( isNumberNext() ) {
+			if (isNumberNext()) {
 				fourthOrdinateValue = getNextNumber();
 			}
 
-			if ( fourthOrdinateValue != null ) {
+			if (fourthOrdinateValue != null) {
 				this.dimension = 4;
-				setHasM( true );
-			}
-			else if ( thirdOrdinateValue != null ) {
+				setHasM(true);
+			} else if (thirdOrdinateValue != null) {
 				this.dimension = 3;
-				setHasM( Boolean.TRUE.equals( this.hasM ) );
-			}
-			else {
+				setHasM(Boolean.TRUE.equals(this.hasM));
+			} else {
 				this.dimension = 2;
-				setHasM( false );
+				setHasM(false);
 			}
 		}
 
-		switch ( this.dimension ) {
+		switch (this.dimension) {
 			case 2:
 				break;
 			case 3:
-				if ( this.hasM ) {
+				if (this.hasM) {
 					coord.m = thirdOrdinateValue;
-				}
-				else {
+				} else {
 					coord.z = thirdOrdinateValue;
 				}
 				break;
 			case 4:
-				if ( this.hasM ) {
+				if (this.hasM) {
 					coord.z = thirdOrdinateValue;
 					coord.m = fourthOrdinateValue;
-				}
-				else {
-					throw new ParseException( "Unsupported geometry dimension." );
+				} else {
+					throw new ParseException("Unsupported geometry dimension.");
 				}
 				break;
 			default:
-				throw new ParseException( "Unsupported geometry dimension." );
+				throw new ParseException("Unsupported geometry dimension.");
 		}
 
-		precisionModel.makePrecise( coord );
+		precisionModel.makePrecise(coord);
 		return coord;
 	}
 
@@ -355,27 +310,24 @@ public class EWKTReader {
 	 * Numbers with exponents are handled.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be a number.
-	 *
+	 *                  format. The next token must be a number.
 	 * @return the next number in the stream
-	 *
 	 * @throws ParseException if the next token is not a valid number
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private double getNextNumber() throws IOException,
 			ParseException {
 		int type = tokenizer.nextToken();
-		switch ( type ) {
+		switch (type) {
 			case StreamTokenizer.TT_WORD: {
 				try {
-					return Double.parseDouble( tokenizer.sval );
-				}
-				catch ( NumberFormatException ex ) {
-					throw new ParseException( "Invalid number: " + tokenizer.sval );
+					return Double.parseDouble(tokenizer.sval);
+				} catch (NumberFormatException ex) {
+					throw new ParseException("Invalid number: " + tokenizer.sval);
 				}
 			}
 		}
-		parseError( "number" );
+		parseError("number");
 		return 0.0;
 	}
 
@@ -383,20 +335,18 @@ public class EWKTReader {
 	 * Returns the next EMPTY or L_PAREN in the stream as uppercase text.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be EMPTY or L_PAREN.
-	 *
+	 *                  format. The next token must be EMPTY or L_PAREN.
 	 * @return the next EMPTY or L_PAREN in the stream as uppercase
 	 *         text.
-	 *
 	 * @throws ParseException if the next token is not EMPTY or L_PAREN
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private String getNextEmptyOrOpener() throws IOException, ParseException {
 		String nextWord = getNextWord();
-		if ( nextWord.equals( EMPTY ) || nextWord.equals( L_PAREN ) ) {
+		if (nextWord.equals(EMPTY) || nextWord.equals(L_PAREN)) {
 			return nextWord;
 		}
-		parseError( EMPTY + " or " + L_PAREN );
+		parseError(EMPTY + " or " + L_PAREN);
 		return null;
 	}
 
@@ -404,19 +354,17 @@ public class EWKTReader {
 	 * Returns the next R_PAREN or COMMA in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be R_PAREN or COMMA.
-	 *
+	 *                  format. The next token must be R_PAREN or COMMA.
 	 * @return the next R_PAREN or COMMA in the stream
-	 *
 	 * @throws ParseException if the next token is not R_PAREN or COMMA
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private String getNextCloserOrComma() throws IOException, ParseException {
 		String nextWord = getNextWord();
-		if ( nextWord.equals( COMMA ) || nextWord.equals( R_PAREN ) ) {
+		if (nextWord.equals(COMMA) || nextWord.equals(R_PAREN)) {
 			return nextWord;
 		}
-		parseError( COMMA + " or " + R_PAREN );
+		parseError(COMMA + " or " + R_PAREN);
 		return null;
 	}
 
@@ -424,19 +372,17 @@ public class EWKTReader {
 	 * Returns the next R_PAREN in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be R_PAREN.
-	 *
+	 *                  format. The next token must be R_PAREN.
 	 * @return the next R_PAREN in the stream
-	 *
 	 * @throws ParseException if the next token is not R_PAREN
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private String getNextCloser() throws IOException, ParseException {
 		String nextWord = getNextWord();
-		if ( nextWord.equals( R_PAREN ) ) {
+		if (nextWord.equals(R_PAREN)) {
 			return nextWord;
 		}
-		parseError( R_PAREN );
+		parseError(R_PAREN);
 		return null;
 	}
 
@@ -444,21 +390,19 @@ public class EWKTReader {
 	 * Returns the next R_PAREN in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be R_PAREN.
-	 *
+	 *                  format. The next token must be R_PAREN.
 	 * @return the next R_PAREN in the stream
-	 *
 	 * @throws ParseException if the next token is not R_PAREN
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private int getSRID() throws IOException, ParseException {
-		if ( !getNextWord().equals( EQUALS ) ) {
-			parseError( EQUALS );
+		if (!getNextWord().equals(EQUALS)) {
+			parseError(EQUALS);
 			return 0;
 		}
-		int srid = Integer.parseInt( getNextWord() );
-		if ( !getNextWord().equals( SEMICOLON ) ) {
-			parseError( SEMICOLON );
+		int srid = Integer.parseInt(getNextWord());
+		if (!getNextWord().equals(SEMICOLON)) {
+			parseError(SEMICOLON);
 			return 0;
 		}
 		return srid;
@@ -468,20 +412,18 @@ public class EWKTReader {
 	 * Returns the next word in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next token must be a word.
-	 *
+	 *                  format. The next token must be a word.
 	 * @return the next word in the stream as uppercase text
-	 *
 	 * @throws ParseException if the next token is not a word
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private String getNextWord() throws IOException, ParseException {
 		int type = tokenizer.nextToken();
-		switch ( type ) {
+		switch (type) {
 			case StreamTokenizer.TT_WORD:
 
 				String word = tokenizer.sval;
-				if ( word.equalsIgnoreCase( EMPTY ) ) {
+				if (word.equalsIgnoreCase(EMPTY)) {
 					return EMPTY;
 				}
 				return word;
@@ -497,7 +439,7 @@ public class EWKTReader {
 			case ';':
 				return SEMICOLON;
 		}
-		parseError( "word" );
+		parseError("word");
 		return null;
 	}
 
@@ -505,22 +447,22 @@ public class EWKTReader {
 	 * Throws a formatted ParseException for the current token.
 	 *
 	 * @param expected a description of what was expected
-	 *
 	 * @throws ParseException
-	 * @throws com.vividsolutions.jts.util.AssertionFailedException if an invalid token is encountered
+	 * @throws com.vividsolutions.jts.util.AssertionFailedException
+	 *                        if an invalid token is encountered
 	 */
 	private void parseError(String expected)
 			throws ParseException {
 		// throws Asserts for tokens that should never be seen
-		if ( tokenizer.ttype == StreamTokenizer.TT_NUMBER ) {
-			Assert.shouldNeverReachHere( "Unexpected NUMBER token" );
+		if (tokenizer.ttype == StreamTokenizer.TT_NUMBER) {
+			Assert.shouldNeverReachHere("Unexpected NUMBER token");
 		}
-		if ( tokenizer.ttype == StreamTokenizer.TT_EOL ) {
-			Assert.shouldNeverReachHere( "Unexpected EOL token" );
+		if (tokenizer.ttype == StreamTokenizer.TT_EOL) {
+			Assert.shouldNeverReachHere("Unexpected EOL token");
 		}
 
 		String tokenStr = tokenString();
-		throw new ParseException( "Expected " + expected + " but found " + tokenStr );
+		throw new ParseException("Expected " + expected + " but found " + tokenStr);
 	}
 
 	/**
@@ -529,7 +471,7 @@ public class EWKTReader {
 	 * @return a description of the current token
 	 */
 	private String tokenString() {
-		switch ( tokenizer.ttype ) {
+		switch (tokenizer.ttype) {
 			case StreamTokenizer.TT_NUMBER:
 				return "<NUMBER>";
 			case StreamTokenizer.TT_EOL:
@@ -546,15 +488,13 @@ public class EWKTReader {
 	 * Creates a <code>Geometry</code> using the next token in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;Geometry Tagged Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;Geometry Tagged Text&gt;.
 	 * @return a <code>Geometry</code> specified by the next token
 	 *         in the stream
-	 *
 	 * @throws ParseException if the coordinates used to create a <code>Polygon</code>
-	 * shell and holes do not form closed linestrings, or if an unexpected
-	 * token was encountered
-	 * @throws IOException if an I/O error occurs
+	 *                        shell and holes do not form closed linestrings, or if an unexpected
+	 *                        token was encountered
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private Geometry readGeometryTaggedText() throws IOException, ParseException {
 
@@ -565,83 +505,64 @@ public class EWKTReader {
 
 		try {
 			String firstWord = getNextWord();
-			if ( "SRID".equals( firstWord ) ) {
+			if ("SRID".equals(firstWord)) {
 				srid = getSRID();
 				type = getNextWord();
-			}
-			else {
+			} else {
 				type = firstWord;
 			}
-		}
-		catch ( IOException e ) {
+		} catch (IOException e) {
 			return null;
-		}
-		catch ( ParseException e ) {
+		} catch (ParseException e) {
 			return null;
 		}
 
-		if ( type.equals( "POINT" ) ) {
+		if (type.equals("POINT")) {
 			geom = readPointText();
-		}
-		else if ( type.equals( "POINTM" ) ) {
-			setHasM( true );
+		} else if (type.equals("POINTM")) {
+			setHasM(true);
 			geom = readPointText();
-		}
-		else if ( type.equalsIgnoreCase( "LINESTRING" ) ) {
+		} else if (type.equalsIgnoreCase("LINESTRING")) {
 			geom = readLineStringText();
-		}
-		else if ( type.equalsIgnoreCase( "LINESTRINGM" ) ) {
-			setHasM( true );
+		} else if (type.equalsIgnoreCase("LINESTRINGM")) {
+			setHasM(true);
 			geom = readLineStringText();
-		}
-		else if ( type.equalsIgnoreCase( "LINEARRING" ) ) {
+		} else if (type.equalsIgnoreCase("LINEARRING")) {
 			geom = readLinearRingText();
-		}
-		else if ( type.equalsIgnoreCase( "LINEARRINGM" ) ) {
-			setHasM( true );
+		} else if (type.equalsIgnoreCase("LINEARRINGM")) {
+			setHasM(true);
 			geom = readLinearRingText();
-		}
-		else if ( type.equalsIgnoreCase( "POLYGON" ) ) {
+		} else if (type.equalsIgnoreCase("POLYGON")) {
 			geom = readPolygonText();
-		}
-		else if ( type.equalsIgnoreCase( "POLYGONM" ) ) {
+		} else if (type.equalsIgnoreCase("POLYGONM")) {
 			//setHasM(true);
 			//geom = readPolygonText();
-			throw new RuntimeException( "PolygonM is not supported." );
-		}
-		else if ( type.equalsIgnoreCase( "MULTIPOINT" ) ) {
+			throw new RuntimeException("PolygonM is not supported.");
+		} else if (type.equalsIgnoreCase("MULTIPOINT")) {
 			geom = readMultiPointText();
-		}
-		else if ( type.equalsIgnoreCase( "MULTIPOINTM" ) ) {
-			setHasM( true );
+		} else if (type.equalsIgnoreCase("MULTIPOINTM")) {
+			setHasM(true);
 			geom = readMultiPointText();
-		}
-		else if ( type.equalsIgnoreCase( "MULTILINESTRING" ) ) {
+		} else if (type.equalsIgnoreCase("MULTILINESTRING")) {
 			geom = readMultiLineStringText();
-		}
-		else if ( type.equalsIgnoreCase( "MULTILINESTRINGM" ) ) {
-			setHasM( true );
+		} else if (type.equalsIgnoreCase("MULTILINESTRINGM")) {
+			setHasM(true);
 			geom = readMultiLineStringText();
-		}
-		else if ( type.equalsIgnoreCase( "MULTIPOLYGON" ) ) {
+		} else if (type.equalsIgnoreCase("MULTIPOLYGON")) {
 			geom = readMultiPolygonText();
-		}
-		else if ( type.equalsIgnoreCase( "MULTIPOLYGONM" ) ) {
+		} else if (type.equalsIgnoreCase("MULTIPOLYGONM")) {
 			//setHasM(true);
 			//geom = readMultiPolygonText();
-			throw new RuntimeException( "MultiPolygonM is not supported." );
-		}
-		else if ( type.equalsIgnoreCase( "GEOMETRYCOLLECTION" ) ) {
+			throw new RuntimeException("MultiPolygonM is not supported.");
+		} else if (type.equalsIgnoreCase("GEOMETRYCOLLECTION")) {
 			geom = readGeometryCollectionText();
-		}
-		else if ( type.equalsIgnoreCase( "GEOMETRYCOLLECTIONM" ) ) {
-			setHasM( true );
+		} else if (type.equalsIgnoreCase("GEOMETRYCOLLECTIONM")) {
+			setHasM(true);
 			geom = readGeometryCollectionText();
+		} else {
+			throw new ParseException("Unknown geometry type: " + type);
 		}
-		else {
-			throw new ParseException( "Unknown geometry type: " + type );
-		}
-		geom.setSRID( srid );
+		geom.setSRID(srid);
 
 		return geom;
 	}
@@ -652,11 +573,10 @@ public class EWKTReader {
 	 * @throws ParseException
 	 */
 	private void setHasM(boolean hasM) throws ParseException {
-		if ( this.hasM == null ) {
+		if (this.hasM == null) {
 			this.hasM = hasM;
-		}
-		else if ( this.hasM != hasM ) {
-			throw new ParseException( "Inkonsistent use of m-values." );
+		} else if (this.hasM != hasM) {
+			throw new ParseException("Inkonsistent use of m-values.");
 		}
 	}
 
@@ -664,21 +584,19 @@ public class EWKTReader {
 	 * Creates a <code>Point</code> using the next token in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;Point Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;Point Text&gt;.
 	 * @return a <code>Point</code> specified by the next token in
 	 *         the stream
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private Point readPointText() throws IOException, ParseException {
 
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
-			return geometryFactory.createPoint( (Coordinate) null );
+		if (nextToken.equals(EMPTY)) {
+			return geometryFactory.createPoint((Coordinate) null);
 		}
-		Point point = geometryFactory.createPoint( getPreciseCoordinate() );
+		Point point = geometryFactory.createPoint(getPreciseCoordinate());
 		getNextCloser();
 		return point;
 	}
@@ -687,22 +605,19 @@ public class EWKTReader {
 	 * Creates a <code>LineString</code> using the next token in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;LineString Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;LineString Text&gt;.
 	 * @return a <code>LineString</code> specified by the next
 	 *         token in the stream
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private LineString readLineStringText() throws IOException, ParseException {
 
 		MCoordinate[] coords = getCoordinates();
-		if ( this.hasM != null && this.hasM ) {
-			return ( (MGeometryFactory) geometryFactory ).createMLineString( coords );
-		}
-		else {
-			return geometryFactory.createLineString( coords );
+		if (this.hasM != null && this.hasM) {
+			return ((MGeometryFactory) geometryFactory).createMLineString(coords);
+		} else {
+			return geometryFactory.createLineString(coords);
 		}
 
 	}
@@ -711,24 +626,21 @@ public class EWKTReader {
 	 * Creates a <code>LinearRing</code> using the next token in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;LineString Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;LineString Text&gt;.
 	 * @return a <code>LinearRing</code> specified by the next
 	 *         token in the stream
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if the coordinates used to create the <code>LinearRing</code>
-	 * do not form a closed linestring, or if an unexpected token was
-	 * encountered
+	 *                        do not form a closed linestring, or if an unexpected token was
+	 *                        encountered
 	 */
 	private LinearRing readLinearRingText()
 			throws IOException, ParseException {
 		MCoordinate[] coords = getCoordinates();
-		if ( this.hasM ) {
-			throw new RuntimeException( "LinearRingM not supported." );
-		}
-		else {
-			return geometryFactory.createLinearRing( coords );
+		if (this.hasM) {
+			throw new RuntimeException("LinearRingM not supported.");
+		} else {
+			return geometryFactory.createLinearRing(coords);
 		}
 	}
 
@@ -736,18 +648,16 @@ public class EWKTReader {
 	 * Creates a <code>MultiPoint</code> using the next token in the stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;MultiPoint Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;MultiPoint Text&gt;.
 	 * @return a <code>MultiPoint</code> specified by the next
 	 *         token in the stream
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private MultiPoint readMultiPointText() throws IOException, ParseException {
 		MCoordinate[] coords = getCoordinates();
-		Point[] pts = toPoints( coords );
-		return geometryFactory.createMultiPoint( pts );
+		Point[] pts = toPoints(coords);
+		return geometryFactory.createMultiPoint(pts);
 	}
 
 	/**
@@ -755,17 +665,16 @@ public class EWKTReader {
 	 * s.
 	 *
 	 * @param coordinates the <code>Coordinate</code>s with which to create the
-	 * <code>Point</code>s
-	 *
+	 *                    <code>Point</code>s
 	 * @return <code>Point</code>s created using this <code>WKTReader</code>
 	 *         s <code>GeometryFactory</code>
 	 */
 	private Point[] toPoints(Coordinate[] coordinates) {
 		ArrayList points = new ArrayList();
-		for ( int i = 0; i < coordinates.length; i++ ) {
-			points.add( geometryFactory.createPoint( coordinates[i] ) );
+		for (int i = 0; i < coordinates.length; i++) {
+			points.add(geometryFactory.createPoint(coordinates[i]));
 		}
-		return (Point[]) points.toArray( new Point[] { } );
+		return (Point[]) points.toArray(new Point[]{});
 	}
 
 	/**
@@ -773,39 +682,37 @@ public class EWKTReader {
 	 *
 	 * @param hasM
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;Polygon Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;Polygon Text&gt;.
 	 * @return a <code>Polygon</code> specified by the next token
 	 *         in the stream
-	 *
 	 * @throws ParseException if the coordinates used to create the <code>Polygon</code>
-	 * shell and holes do not form closed linestrings, or if an unexpected
-	 * token was encountered.
-	 * @throws IOException if an I/O error occurs
+	 *                        shell and holes do not form closed linestrings, or if an unexpected
+	 *                        token was encountered.
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private Polygon readPolygonText() throws IOException, ParseException {
 
 		// PolygonM is not supported
-		setHasM( false );
+		setHasM(false);
 
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
+		if (nextToken.equals(EMPTY)) {
 			return geometryFactory.createPolygon(
 					geometryFactory.createLinearRing(
-							new Coordinate[] { }
-					), new LinearRing[] { }
+							new Coordinate[]{}
+					), new LinearRing[]{}
 			);
 		}
 		ArrayList holes = new ArrayList();
 		LinearRing shell = readLinearRingText();
 		nextToken = getNextCloserOrComma();
-		while ( nextToken.equals( COMMA ) ) {
+		while (nextToken.equals(COMMA)) {
 			LinearRing hole = readLinearRingText();
-			holes.add( hole );
+			holes.add(hole);
 			nextToken = getNextCloserOrComma();
 		}
 		LinearRing[] array = new LinearRing[holes.size()];
-		return geometryFactory.createPolygon( shell, (LinearRing[]) holes.toArray( array ) );
+		return geometryFactory.createPolygon(shell, (LinearRing[]) holes.toArray(array));
 	}
 
 	/**
@@ -813,12 +720,10 @@ public class EWKTReader {
 	 *
 	 * @param hasM
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;MultiLineString Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;MultiLineString Text&gt;.
 	 * @return a <code>MultiLineString</code> specified by the
 	 *         next token in the stream
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private com.vividsolutions.jts.geom.MultiLineString readMultiLineStringText() throws IOException, ParseException {
@@ -826,28 +731,26 @@ public class EWKTReader {
 		ArrayList lineStrings = new ArrayList();
 
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
+		if (nextToken.equals(EMPTY)) {
 			// No Coordinates for LineString
-		}
-		else {
+		} else {
 			LineString lineString = readLineStringText();
-			lineStrings.add( lineString );
+			lineStrings.add(lineString);
 			nextToken = getNextCloserOrComma();
-			while ( nextToken.equals( COMMA ) ) {
+			while (nextToken.equals(COMMA)) {
 				lineString = readLineStringText();
-				lineStrings.add( lineString );
+				lineStrings.add(lineString);
 				nextToken = getNextCloserOrComma();
 			}
 		}
 
-		if ( this.hasM != null && this.hasM == true ) {
-			MLineString[] mlines = (MLineString[]) lineStrings.toArray( new MLineString[lineStrings.size()] );
-			return ( (MGeometryFactory) geometryFactory ).createMultiMLineString( mlines );
-		}
-		else {
-			setHasM( false );
-			LineString[] lines = (LineString[]) lineStrings.toArray( new LineString[lineStrings.size()] );
-			return geometryFactory.createMultiLineString( lines );
+		if (this.hasM != null && this.hasM == true) {
+			MLineString[] mlines = (MLineString[]) lineStrings.toArray(new MLineString[lineStrings.size()]);
+			return ((MGeometryFactory) geometryFactory).createMultiMLineString(mlines);
+		} else {
+			setHasM(false);
+			LineString[] lines = (LineString[]) lineStrings.toArray(new LineString[lineStrings.size()]);
+			return geometryFactory.createMultiLineString(lines);
 		}
 	}
 
@@ -856,36 +759,34 @@ public class EWKTReader {
 	 *
 	 * @param hasM
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;MultiPolygon Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;MultiPolygon Text&gt;.
 	 * @return a <code>MultiPolygon</code> specified by the next
 	 *         token in the stream, or if if the coordinates used to create the
 	 *         <code>Polygon</code> shells and holes do not form closed linestrings.
-	 *
-	 * @throws IOException if an I/O error occurs
+	 * @throws IOException	if an I/O error occurs
 	 * @throws ParseException if an unexpected token was encountered
 	 */
 	private MultiPolygon readMultiPolygonText()
 			throws IOException, ParseException {
 
 		// MultiPolygonM is not supported
-		setHasM( false );
+		setHasM(false);
 
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
-			return geometryFactory.createMultiPolygon( new Polygon[] { } );
+		if (nextToken.equals(EMPTY)) {
+			return geometryFactory.createMultiPolygon(new Polygon[]{});
 		}
 		ArrayList polygons = new ArrayList();
 		Polygon polygon = readPolygonText();
-		polygons.add( polygon );
+		polygons.add(polygon);
 		nextToken = getNextCloserOrComma();
-		while ( nextToken.equals( COMMA ) ) {
+		while (nextToken.equals(COMMA)) {
 			polygon = readPolygonText();
-			polygons.add( polygon );
+			polygons.add(polygon);
 			nextToken = getNextCloserOrComma();
 		}
 		Polygon[] array = new Polygon[polygons.size()];
-		return geometryFactory.createMultiPolygon( (Polygon[]) polygons.toArray( array ) );
+		return geometryFactory.createMultiPolygon((Polygon[]) polygons.toArray(array));
 	}
 
 	/**
@@ -893,34 +794,32 @@ public class EWKTReader {
 	 * stream.
 	 *
 	 * @param tokenizer tokenizer over a stream of text in Well-known Text
-	 * format. The next tokens must form a &lt;GeometryCollection Text&gt;.
-	 *
+	 *                  format. The next tokens must form a &lt;GeometryCollection Text&gt;.
 	 * @return a <code>GeometryCollection</code> specified by the
 	 *         next token in the stream
-	 *
 	 * @throws ParseException if the coordinates used to create a <code>Polygon</code>
-	 * shell and holes do not form closed linestrings, or if an unexpected
-	 * token was encountered
-	 * @throws IOException if an I/O error occurs
+	 *                        shell and holes do not form closed linestrings, or if an unexpected
+	 *                        token was encountered
+	 * @throws IOException	if an I/O error occurs
 	 */
 	private GeometryCollection readGeometryCollectionText()
 			throws IOException, ParseException {
 
 		String nextToken = getNextEmptyOrOpener();
-		if ( nextToken.equals( EMPTY ) ) {
-			return geometryFactory.createGeometryCollection( new Geometry[] { } );
+		if (nextToken.equals(EMPTY)) {
+			return geometryFactory.createGeometryCollection(new Geometry[]{});
 		}
 		ArrayList geometries = new ArrayList();
 		Geometry geometry = readGeometryTaggedText();
-		geometries.add( geometry );
+		geometries.add(geometry);
 		nextToken = getNextCloserOrComma();
-		while ( nextToken.equals( COMMA ) ) {
+		while (nextToken.equals(COMMA)) {
 			geometry = readGeometryTaggedText();
-			geometries.add( geometry );
+			geometries.add(geometry);
 			nextToken = getNextCloserOrComma();
 		}
 		Geometry[] array = new Geometry[geometries.size()];
-		return geometryFactory.createGeometryCollection( (Geometry[]) geometries.toArray( array ) );
+		return geometryFactory.createGeometryCollection((Geometry[]) geometries.toArray(array));
 	}
 
 }

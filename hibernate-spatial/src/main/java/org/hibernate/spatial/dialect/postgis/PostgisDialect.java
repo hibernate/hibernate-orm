@@ -1,30 +1,22 @@
-/**
- * $Id: PostgisDialect.java 289 2011-02-15 21:34:56Z maesenka $
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is part of Hibernate Spatial, an extension to the 
- * hibernate ORM solution for geographic data. 
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * Copyright © 2007 Geovise BVBA
- * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This work was partially supported by the European Commission, 
- * under the 6th Framework Programme, contract IST-2-004688-STP.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.dialect.postgis;
 
@@ -32,12 +24,7 @@ package org.hibernate.spatial.dialect.postgis;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.GeometryType;
-import org.hibernate.spatial.SpatialAggregate;
-import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.spatial.*;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -57,7 +44,7 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 
 	protected void registerTypesAndFunctions() {
 
-		registerColumnType( java.sql.Types.STRUCT, "geometry" );
+		registerColumnType(java.sql.Types.STRUCT, "geometry");
 		// registering OGC functions
 		// (spec_simplefeatures_sql_99-04.pdf)
 
@@ -207,7 +194,7 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "st_symdifference", GeometryType.INSTANCE )
+				new StandardSQLFunction("st_symdifference", GeometryType.INSTANCE)
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
@@ -239,37 +226,37 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 		);
 	}
 
-    //TODO the getTypeName() override is necessary in the absence of HHH-6074
-    /**
-     * Get the name of the database type associated with the given
+	//TODO the getTypeName() override is necessary in the absence of HHH-6074
+
+	/**
+	 * Get the name of the database type associated with the given
 	 * {@link java.sql.Types} typecode with the given storage specification
 	 * parameters. In the case of typecode == 3000, it returns this dialect's spatial type which is
-     * <code>GEOMETRY</code>.
-     *
-     *
-     * @param code The {@link java.sql.Types} typecode
-     * @param length The datatype length
-     * @param precision The datatype precision
-     * @param scale The datatype scale
-     * @return
-     * @throws HibernateException
-     */
-    @Override
-    public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-        if (code == 3000 ) return "GEOMETRY";
-        return super.getTypeName(code, length, precision, scale);
-    }
+	 * <code>GEOMETRY</code>.
+	 *
+	 * @param code	  The {@link java.sql.Types} typecode
+	 * @param length	The datatype length
+	 * @param precision The datatype precision
+	 * @param scale	 The datatype scale
+	 * @return
+	 * @throws HibernateException
+	 */
+	@Override
+	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
+		if (code == 3000) return "GEOMETRY";
+		return super.getTypeName(code, length, precision, scale);
+	}
 
-    @Override
+	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
+		if (sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
 			return PGGeometryTypeDescriptor.INSTANCE;
 		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+		return super.remapSqlTypeDescriptor(sqlTypeDescriptor);
 	}
 
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		switch ( spatialRelation ) {
+		switch (spatialRelation) {
 			case SpatialRelation.WITHIN:
 				return " ST_within(" + columnName + ",?)";
 			case SpatialRelation.CONTAINS:
@@ -313,10 +300,10 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 	}
 
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		switch ( aggregation ) {
+		switch (aggregation) {
 			case SpatialAggregate.EXTENT:
 				StringBuilder stbuf = new StringBuilder();
-				stbuf.append( "extent(" ).append( columnName ).append( ")" );
+				stbuf.append("extent(").append(columnName).append(")");
 				return stbuf.toString();
 			default:
 				throw new IllegalArgumentException(
@@ -331,6 +318,6 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 	}
 
 	public boolean supports(SpatialFunction function) {
-		return ( getFunctions().get( function.toString() ) != null );
+		return (getFunctions().get(function.toString()) != null);
 	}
 }

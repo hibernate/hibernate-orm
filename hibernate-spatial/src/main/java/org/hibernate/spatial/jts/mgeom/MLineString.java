@@ -1,30 +1,22 @@
-/**
- * $Id$
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is part of Hibernate Spatial, an extension to the 
- * hibernate ORM solution for geographic data. 
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * Copyright © 2007 Geovise BVBA
- * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This work was partially supported by the European Commission, 
- * under the 6th Framework Programme, contract IST-2-004688-STP.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.jts.mgeom;
 
@@ -53,13 +45,13 @@ public class MLineString extends LineString implements MGeometry {
 	private boolean strictMonotone = false;
 
 	public MLineString(CoordinateSequence points, GeometryFactory factory) {
-		super( points, factory );
+		super(points, factory);
 		determineMonotone();
 	}
 
 	public Object clone() {
 		LineString ls = (LineString) super.clone();
-		return new MLineString( ls.getCoordinateSequence(), this.getFactory() );
+		return new MLineString(ls.getCoordinateSequence(), this.getFactory());
 	}
 
 	/**
@@ -71,27 +63,26 @@ public class MLineString extends LineString implements MGeometry {
 	private void determineMonotone() {
 		this.monotone = true;
 		this.strictMonotone = true;
-		if ( !this.isEmpty() ) {
+		if (!this.isEmpty()) {
 			double m[] = this.getMeasures();
 			// short circuit if the first value is NaN
-			if ( Double.isNaN( m[0] ) ) {
+			if (Double.isNaN(m[0])) {
 				this.monotone = false;
 				this.strictMonotone = false;
-			}
-			else {
+			} else {
 				int result = 0;
 				int prevResult = 0;
-				for ( int i = 1; i < m.length && this.monotone; i++ ) {
-					result = Double.compare( m[i - 1], m[i] );
-					this.monotone = !( result * prevResult < 0 || Double
-							.isNaN( m[i] ) );
+				for (int i = 1; i < m.length && this.monotone; i++) {
+					result = Double.compare(m[i - 1], m[i]);
+					this.monotone = !(result * prevResult < 0 || Double
+							.isNaN(m[i]));
 					this.strictMonotone &= this.monotone && result != 0;
 					prevResult = result;
 				}
 			}
 		}
 		// if not monotone, then certainly not strictly monotone
-		assert ( !( this.strictMonotone && !this.monotone ) );
+		assert (!(this.strictMonotone && !this.monotone));
 	}
 
 	protected void geometryChangedAction() {
@@ -99,20 +90,19 @@ public class MLineString extends LineString implements MGeometry {
 	}
 
 	/**
-	 * @param co input coordinate in the neighbourhood of the MLineString
+	 * @param co		input coordinate in the neighbourhood of the MLineString
 	 * @param tolerance max. distance that co may be from this MLineString
-	 *
 	 * @return an MCoordinate on this MLineString with appropriate M-value
 	 */
 	public MCoordinate getClosestPoint(Coordinate co, double tolerance)
 			throws MGeometryException {
-		if ( !this.isMonotone( false ) ) {
+		if (!this.isMonotone(false)) {
 			throw new MGeometryException(
 					MGeometryException.OPERATION_REQUIRES_MONOTONE
 			);
 		}
 
-		if ( !this.isEmpty() ) {
+		if (!this.isEmpty()) {
 			LineSegment seg = new LineSegment();
 			Coordinate[] coAr = this.getCoordinates();
 			seg.p0 = coAr[0];
@@ -120,31 +110,29 @@ public class MLineString extends LineString implements MGeometry {
 			double projfact = 0.0;
 			double minDist = Double.POSITIVE_INFINITY;
 			MCoordinate mincp = null;
-			for ( int i = 1; i < coAr.length; i++ ) {
+			for (int i = 1; i < coAr.length; i++) {
 				seg.p1 = coAr[i];
-				Coordinate cp = seg.closestPoint( co );
-				d = cp.distance( co );
-				if ( d <= tolerance && d <= minDist ) {
-					MCoordinate testcp = new MCoordinate( cp );
-					projfact = seg.projectionFactor( cp );
-					testcp.m = ( (MCoordinate) coAr[i - 1] ).m
+				Coordinate cp = seg.closestPoint(co);
+				d = cp.distance(co);
+				if (d <= tolerance && d <= minDist) {
+					MCoordinate testcp = new MCoordinate(cp);
+					projfact = seg.projectionFactor(cp);
+					testcp.m = ((MCoordinate) coAr[i - 1]).m
 							+ projfact
-							* ( ( (MCoordinate) coAr[i] ).m - ( (MCoordinate) coAr[i - 1] ).m );
-					if ( d < minDist || testcp.m < mincp.m ) {
+							* (((MCoordinate) coAr[i]).m - ((MCoordinate) coAr[i - 1]).m);
+					if (d < minDist || testcp.m < mincp.m) {
 						mincp = testcp;
 						minDist = d;
 					}
 				}
 				seg.p0 = seg.p1;
 			}
-			if ( minDist > tolerance ) {
+			if (minDist > tolerance) {
 				return null;
-			}
-			else {
+			} else {
 				return mincp;
 			}
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -156,35 +144,33 @@ public class MLineString extends LineString implements MGeometry {
 		  */
 
 	public Coordinate getCoordinateAtM(double m) throws MGeometryException {
-		if ( !this.isMonotone( false ) ) {
+		if (!this.isMonotone(false)) {
 			throw new MGeometryException(
 					MGeometryException.OPERATION_REQUIRES_MONOTONE
 			);
 		}
-		if ( this.isEmpty() ) {
+		if (this.isEmpty()) {
 			return null;
-		}
-		else {
+		} else {
 			double mval[] = this.getMeasures();
 			double lb = getMinM();
 			double up = getMaxM();
 
-			if ( m < lb || m > up ) {
+			if (m < lb || m > up) {
 				return null;
-			}
-			else {
+			} else {
 				// determine linesegment that contains m;
-				for ( int i = 1; i < mval.length; i++ ) {
-					if ( ( mval[i - 1] <= m && m <= mval[i] )
-							|| ( mval[i] <= m && m <= mval[i - 1] ) ) {
+				for (int i = 1; i < mval.length; i++) {
+					if ((mval[i - 1] <= m && m <= mval[i])
+							|| (mval[i] <= m && m <= mval[i - 1])) {
 						MCoordinate p0 = (MCoordinate) this
-								.getCoordinateN( i - 1 );
-						MCoordinate p1 = (MCoordinate) this.getCoordinateN( i );
+								.getCoordinateN(i - 1);
+						MCoordinate p1 = (MCoordinate) this.getCoordinateN(i);
 						// r indicates how far in this segment the M-values lies
-						double r = ( m - mval[i - 1] ) / ( mval[i] - mval[i - 1] );
-						double dx = r * ( p1.x - p0.x );
-						double dy = r * ( p1.y - p0.y );
-						double dz = r * ( p1.z - p0.z );
+						double r = (m - mval[i - 1]) / (mval[i] - mval[i - 1]);
+						double dx = r * (p1.x - p0.x);
+						double dy = r * (p1.y - p0.y);
+						double dz = r * (p1.z - p0.z);
 						MCoordinate nc = new MCoordinate(
 								p0.x + dx, p0.y + dy,
 								p0.z + dz, m
@@ -216,12 +202,11 @@ public class MLineString extends LineString implements MGeometry {
 
 	public double getMatCoordinate(Coordinate c, double tolerance)
 			throws MGeometryException {
-		MCoordinate mco = this.getClosestPoint( c, tolerance );
-		if ( mco == null ) {
+		MCoordinate mco = this.getClosestPoint(c, tolerance);
+		if (mco == null) {
 			return Double.NaN;
-		}
-		else {
-			return ( mco.m );
+		} else {
+			return (mco.m);
 		}
 	}
 
@@ -229,12 +214,11 @@ public class MLineString extends LineString implements MGeometry {
 	 * get the measure of the specified coordinate
 	 *
 	 * @param n index of the coordinate
-	 *
 	 * @return The measure of the coordinate. If the coordinate does not exists
 	 *         it returns Double.NaN
 	 */
 	public double getMatN(int n) {
-		return ( (MCoordinate) ( this.getCoordinates()[n] ) ).m;
+		return ((MCoordinate) (this.getCoordinates()[n])).m;
 	}
 
 	/*
@@ -244,23 +228,20 @@ public class MLineString extends LineString implements MGeometry {
 		  */
 
 	public double getMaxM() {
-		if ( this.isEmpty() ) {
+		if (this.isEmpty()) {
 			return Double.NaN;
-		}
-		else {
+		} else {
 			double[] measures = this.getMeasures();
 
-			if ( this.getMeasureDirection() == INCREASING) {
+			if (this.getMeasureDirection() == INCREASING) {
 				return measures[measures.length - 1];
-			}
-			else if ( this.getMeasureDirection() == DECREASING
+			} else if (this.getMeasureDirection() == DECREASING
 					|| this.getMeasureDirection() == CONSTANT) {
 				return measures[0];
-			}
-			else {
+			} else {
 				double ma = Double.NEGATIVE_INFINITY;
-				for ( int i = 0; i < measures.length; i++ ) {
-					if ( ma < measures[i] ) {
+				for (int i = 0; i < measures.length; i++) {
+					if (ma < measures[i]) {
 						ma = measures[i];
 					}
 				}
@@ -283,31 +264,29 @@ public class MLineString extends LineString implements MGeometry {
 	 * @param mcoordinates
 	 * @param fromM
 	 * @param toM
-	 * @param direction INCREASING or DECREASING
-	 *
+	 * @param direction	INCREASING or DECREASING
 	 * @return a CoordinateSubSequence containing the coordinates between fromM and toM
 	 */
 	private CoordinateSubSequence copyCoordinatesBetween(MCoordinate[] mcoordinates, double fromM, double toM, int direction) {
 		CoordinateSubSequence sseq = new CoordinateSubSequence();
 		sseq.firstIndex = -1;
 		sseq.lastIndex = -1;
-		for ( int i = 0; i < mcoordinates.length; i++ ) {
+		for (int i = 0; i < mcoordinates.length; i++) {
 			double m = mcoordinates[i].m;
 
-			if ( m >= fromM && m <= toM ) {
-				sseq.vertices.add( mcoordinates[i] );
-				if ( sseq.firstIndex == -1 ) {
+			if (m >= fromM && m <= toM) {
+				sseq.vertices.add(mcoordinates[i]);
+				if (sseq.firstIndex == -1) {
 					sseq.firstIndex = i;
 				}
 			}
-			if ( direction == INCREASING) {
-				if ( m > toM ) {
+			if (direction == INCREASING) {
+				if (m > toM) {
 					break;
 				}
 				sseq.lastIndex = i;
-			}
-			else {
-				if ( m < fromM ) {
+			} else {
+				if (m < fromM) {
 					break;
 				}
 				sseq.lastIndex = i;
@@ -321,45 +300,44 @@ public class MLineString extends LineString implements MGeometry {
 	 * Interpolates a coordinate between mco1, mco2, based on the measured value m
 	 */
 	private MCoordinate interpolate(MCoordinate mco1, MCoordinate mco2, double m) {
-		if ( mco1.m > mco2.m ) {
+		if (mco1.m > mco2.m) {
 			MCoordinate h = mco1;
 			mco1 = mco2;
 			mco2 = h;
 		}
 
-		if ( m < mco1.m || m > mco2.m ) {
-			throw new IllegalArgumentException( "Internal Error: m-value not in interval mco1.m/mco2.m" );
+		if (m < mco1.m || m > mco2.m) {
+			throw new IllegalArgumentException("Internal Error: m-value not in interval mco1.m/mco2.m");
 		}
 
-		double r = ( m - mco1.m ) / ( mco2.m - mco1.m );
+		double r = (m - mco1.m) / (mco2.m - mco1.m);
 		MCoordinate interpolated = new MCoordinate(
-				mco1.x + r * ( mco2.x - mco1.x ),
-				mco1.y + r * ( mco2.y - mco1.y ),
-				mco1.z + r * ( mco2.z - mco1.z ),
+				mco1.x + r * (mco2.x - mco1.x),
+				mco1.y + r * (mco2.y - mco1.y),
+				mco1.z + r * (mco2.z - mco1.z),
 				m
 		);
-		this.getPrecisionModel().makePrecise( interpolated );
+		this.getPrecisionModel().makePrecise(interpolated);
 		return interpolated;
 	}
 
 
 	public CoordinateSequence[] getCoordinatesBetween(double fromM, double toM) throws MGeometryException {
-		if ( !this.isMonotone( false ) ) {
+		if (!this.isMonotone(false)) {
 			throw new MGeometryException(
 					MGeometryException.OPERATION_REQUIRES_MONOTONE,
 					"Operation requires geometry with monotonic measures"
 			);
 		}
 
-		if ( fromM > toM ) {
-			return getCoordinatesBetween( toM, fromM );
+		if (fromM > toM) {
+			return getCoordinatesBetween(toM, fromM);
 		}
 
 		MCoordinateSequence mc;
-		if ( !isOverlapping( fromM, toM ) ) {
-			mc = new MCoordinateSequence( new MCoordinate[] { } );
-		}
-		else {
+		if (!isOverlapping(fromM, toM)) {
+			mc = new MCoordinateSequence(new MCoordinate[]{});
+		} else {
 			MCoordinate[] mcoordinates = (MCoordinate[]) this.getCoordinates();
 			CoordinateSubSequence subsequence = copyCoordinatesBetween(
 					mcoordinates,
@@ -367,80 +345,78 @@ public class MLineString extends LineString implements MGeometry {
 					toM,
 					this.getMeasureDirection()
 			);
-			addInterpolatedEndPoints( fromM, toM, mcoordinates, subsequence );
-			MCoordinate[] ra = subsequence.vertices.toArray( new MCoordinate[subsequence.vertices.size()] );
-			mc = new MCoordinateSequence( ra );
+			addInterpolatedEndPoints(fromM, toM, mcoordinates, subsequence);
+			MCoordinate[] ra = subsequence.vertices.toArray(new MCoordinate[subsequence.vertices.size()]);
+			mc = new MCoordinateSequence(ra);
 		}
-		return new MCoordinateSequence[] { mc };
+		return new MCoordinateSequence[]{mc};
 	}
 
 	private boolean isOverlapping(double fromM, double toM) {
-		if ( this.isEmpty() ) {
+		if (this.isEmpty()) {
 			return false;
 		}
 		//WARNING: this assumes a monotonic increasing or decreasing measures
-		MCoordinate beginCo = (MCoordinate) this.getCoordinateN( 0 );
-		MCoordinate endCo = (MCoordinate) this.getCoordinateN( this.getNumPoints() - 1 );
-		return !( Math.min( fromM, toM ) > Math.max( beginCo.m, endCo.m ) ||
-				Math.max( fromM, toM ) < Math.min( beginCo.m, endCo.m ) );
+		MCoordinate beginCo = (MCoordinate) this.getCoordinateN(0);
+		MCoordinate endCo = (MCoordinate) this.getCoordinateN(this.getNumPoints() - 1);
+		return !(Math.min(fromM, toM) > Math.max(beginCo.m, endCo.m) ||
+				Math.max(fromM, toM) < Math.min(beginCo.m, endCo.m));
 	}
 
 	private void addInterpolatedEndPoints(double fromM, double toM, MCoordinate[] mcoordinates, CoordinateSubSequence subsequence) {
 
 		boolean increasing = this.getMeasureDirection() == INCREASING;
 		double fM, lM;
-		if ( increasing ) {
+		if (increasing) {
 			fM = fromM;
 			lM = toM;
-		}
-		else {
+		} else {
 			fM = toM;
 			lM = fromM;
 		}
 
-		if ( subsequence.firstIndex == -1 ) {
+		if (subsequence.firstIndex == -1) {
 			MCoordinate fi = interpolate(
 					mcoordinates[subsequence.lastIndex],
 					mcoordinates[subsequence.lastIndex + 1],
 					fM
 			);
-			subsequence.vertices.add( fi );
+			subsequence.vertices.add(fi);
 			MCoordinate li = interpolate(
 					mcoordinates[subsequence.lastIndex],
 					mcoordinates[subsequence.lastIndex + 1],
 					lM
 			);
-			subsequence.vertices.add( li );
-		}
-		else {
+			subsequence.vertices.add(li);
+		} else {
 			//interpolate a first vertex if necessary
-			if ( subsequence.firstIndex > 0 && (
+			if (subsequence.firstIndex > 0 && (
 					increasing && mcoordinates[subsequence.firstIndex].m > fromM ||
 							!increasing && mcoordinates[subsequence.firstIndex].m < toM
-			) ) {
+			)) {
 				MCoordinate fi = interpolate(
 						mcoordinates[subsequence.firstIndex - 1],
 						mcoordinates[subsequence.firstIndex],
 						fM
 				);
-				subsequence.vertices.add( 0, fi );
+				subsequence.vertices.add(0, fi);
 			}
 			//interpolate a last vertex if necessary
-			if ( subsequence.lastIndex < ( mcoordinates.length - 1 ) && (
+			if (subsequence.lastIndex < (mcoordinates.length - 1) && (
 					increasing && mcoordinates[subsequence.lastIndex].m < toM ||
-							!increasing && mcoordinates[subsequence.lastIndex].m > fromM ) ) {
+							!increasing && mcoordinates[subsequence.lastIndex].m > fromM)) {
 				MCoordinate li = interpolate(
 						mcoordinates[subsequence.lastIndex],
 						mcoordinates[subsequence.lastIndex + 1],
 						lM
 				);
-				subsequence.vertices.add( li );
+				subsequence.vertices.add(li);
 			}
 		}
 	}
 
 	private MCoordinate[] inverse(MCoordinate[] mcoordinates) {
-		for ( int i = 0; i < mcoordinates.length / 2; i++ ) {
+		for (int i = 0; i < mcoordinates.length / 2; i++) {
 			MCoordinate h = mcoordinates[i];
 			mcoordinates[i] = mcoordinates[mcoordinates.length - 1 - i];
 			mcoordinates[mcoordinates.length - 1 - i] = h;
@@ -458,20 +434,18 @@ public class MLineString extends LineString implements MGeometry {
 	 *         MGeometry.CONSTANT
 	 */
 	public int getMeasureDirection() {
-		if ( !this.monotone ) {
+		if (!this.monotone) {
 			return NON_MONOTONE;
 		}
-		MCoordinate c1 = (MCoordinate) this.getCoordinateN( 0 );
+		MCoordinate c1 = (MCoordinate) this.getCoordinateN(0);
 		MCoordinate c2 = (MCoordinate) this
-				.getCoordinateN( this.getNumPoints() - 1 );
+				.getCoordinateN(this.getNumPoints() - 1);
 
-		if ( c1.m < c2.m ) {
+		if (c1.m < c2.m) {
 			return INCREASING;
-		}
-		else if ( c1.m > c2.m ) {
+		} else if (c1.m > c2.m) {
 			return DECREASING;
-		}
-		else {
+		} else {
 			return CONSTANT;
 		}
 	}
@@ -481,38 +455,34 @@ public class MLineString extends LineString implements MGeometry {
 	 */
 	public double[] getMeasures() {
 		// return the measures of all vertices
-		if ( !this.isEmpty() ) {
+		if (!this.isEmpty()) {
 			Coordinate[] co = this.getCoordinates();
 			double[] a = new double[co.length];
-			for ( int i = 0; i < co.length; i++ ) {
-				a[i] = ( (MCoordinate) co[i] ).m;
+			for (int i = 0; i < co.length; i++) {
+				a[i] = ((MCoordinate) co[i]).m;
 			}
 			return a;
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
 
 	public double getMinM() {
 
-		if ( this.isEmpty() ) {
+		if (this.isEmpty()) {
 			return Double.NaN;
-		}
-		else {
+		} else {
 			double[] a = this.getMeasures();
-			if ( this.getMeasureDirection() == INCREASING) {
+			if (this.getMeasureDirection() == INCREASING) {
 				return a[0];
-			}
-			else if ( this.getMeasureDirection() == DECREASING
+			} else if (this.getMeasureDirection() == DECREASING
 					|| this.getMeasureDirection() == CONSTANT) {
 				return a[a.length - 1];
-			}
-			else {
+			} else {
 
 				double ma = Double.POSITIVE_INFINITY;
-				for ( int i = 0; i < a.length; i++ ) {
-					if ( ma > a[i] ) {
+				for (int i = 0; i < a.length; i++) {
+					if (ma > a[i]) {
 						ma = a[i];
 					}
 				}
@@ -532,10 +502,10 @@ public class MLineString extends LineString implements MGeometry {
 	 * all intermediate coordinates shall be the same value.
 	 *
 	 * @param beginMeasure Measure value for first coordinate
-	 * @param endMeasure Measure value for last coordinate
+	 * @param endMeasure   Measure value for last coordinate
 	 */
 	public void interpolate(double beginMeasure, double endMeasure) {
-		if ( this.isEmpty() ) {
+		if (this.isEmpty()) {
 			return;
 		}
 		// interpolate with first vertex = beginMeasure; last vertex =
@@ -544,25 +514,24 @@ public class MLineString extends LineString implements MGeometry {
 		double length = this.getLength();
 		double mLength = endMeasure - beginMeasure;
 		double d = 0;
-		boolean continuous = DoubleComparator.equals( beginMeasure, endMeasure );
+		boolean continuous = DoubleComparator.equals(beginMeasure, endMeasure);
 		double m = beginMeasure;
-		MCoordinate prevCoord = MCoordinate.convertCoordinate( coordinates[0] );
+		MCoordinate prevCoord = MCoordinate.convertCoordinate(coordinates[0]);
 		prevCoord.m = m;
 		MCoordinate curCoord;
-		for ( int i = 1; i < coordinates.length; i++ ) {
-			curCoord = MCoordinate.convertCoordinate( coordinates[i] );
-			if ( continuous ) {
+		for (int i = 1; i < coordinates.length; i++) {
+			curCoord = MCoordinate.convertCoordinate(coordinates[i]);
+			if (continuous) {
 				curCoord.m = beginMeasure;
-			}
-			else {
-				d += curCoord.distance( prevCoord );
-				m = beginMeasure + ( d / length ) * mLength;
+			} else {
+				d += curCoord.distance(prevCoord);
+				m = beginMeasure + (d / length) * mLength;
 				curCoord.m = m;
 				prevCoord = curCoord;
 			}
 		}
 		this.geometryChanged();
-		assert ( this.isMonotone( false ) ) : "interpolate function should always leave MGeometry monotone";
+		assert (this.isMonotone(false)) : "interpolate function should always leave MGeometry monotone";
 	}
 
 	/**
@@ -576,13 +545,12 @@ public class MLineString extends LineString implements MGeometry {
 	 * @return The measure length of the LineString
 	 */
 	public double getMLength() {
-		if ( getCoordinateSequence().size() == 0 ) {
+		if (getCoordinateSequence().size() == 0) {
 			return Double.NaN;
 		}
-		if ( getCoordinateSequence().size() == 1 ) {
+		if (getCoordinateSequence().size() == 1) {
 			return 0.0D;
-		}
-		else {
+		} else {
 			int lastIndex = getCoordinateSequence().size() - 1;
 			double begin = getCoordinateSequence().getOrdinate(
 					0,
@@ -592,8 +560,8 @@ public class MLineString extends LineString implements MGeometry {
 					lastIndex,
 					CoordinateSequence.M
 			);
-			return ( Double.isNaN( begin ) || Double.isNaN( end ) ) ? Double.NaN
-					: Math.abs( end - begin );
+			return (Double.isNaN(begin) || Double.isNaN(end)) ? Double.NaN
+					: Math.abs(end - begin);
 		}
 	}
 
@@ -619,16 +587,16 @@ public class MLineString extends LineString implements MGeometry {
 	public void measureOnLength(boolean keepBeginMeasure) {
 
 		Coordinate[] co = this.getCoordinates();
-		if ( !this.isEmpty() ) {
+		if (!this.isEmpty()) {
 			double d = 0.0;
 			MCoordinate pco = (MCoordinate) co[0];
-			if ( !keepBeginMeasure || Double.isNaN( pco.m ) ) {
+			if (!keepBeginMeasure || Double.isNaN(pco.m)) {
 				pco.m = 0.0d;
 			}
 			MCoordinate mco;
-			for ( int i = 1; i < co.length; i++ ) {
+			for (int i = 1; i < co.length; i++) {
 				mco = (MCoordinate) co[i];
-				d += mco.distance( pco );
+				d += mco.distance(pco);
 				mco.m = d;
 				pco = mco;
 			}
@@ -641,11 +609,11 @@ public class MLineString extends LineString implements MGeometry {
 	 * CoordinateSequence without modifying the positional (x,y,z) values.
 	 */
 	public void reverseMeasures() {
-		if ( !this.isEmpty() ) {
+		if (!this.isEmpty()) {
 			double m[] = this.getMeasures();
 			MCoordinate[] coar = (MCoordinate[]) this.getCoordinates();
 			double nv;
-			for ( int i = 0; i < m.length; i++ ) {
+			for (int i = 0; i < m.length; i++) {
 				nv = m[m.length - 1 - i];
 				coar[i].m = nv;
 			}
@@ -654,7 +622,7 @@ public class MLineString extends LineString implements MGeometry {
 	}
 
 	public void setMeasureAtIndex(int index, double m) {
-		getCoordinateSequence().setOrdinate( index, CoordinateSequence.M, m );
+		getCoordinateSequence().setOrdinate(index, CoordinateSequence.M, m);
 		this.geometryChanged();
 	}
 
@@ -664,13 +632,13 @@ public class MLineString extends LineString implements MGeometry {
 	 * negative measures.
 	 *
 	 * @param amount the positive or negative amount by which to shift the measures
-	 * in the CoordinateSequence.
+	 *               in the CoordinateSequence.
 	 */
 	public void shiftMeasure(double amount) {
 		Coordinate[] coordinates = this.getCoordinates();
 		MCoordinate mco;
-		if ( !this.isEmpty() ) {
-			for ( int i = 0; i < coordinates.length; i++ ) {
+		if (!this.isEmpty()) {
+			for (int i = 0; i < coordinates.length; i++) {
 				mco = (MCoordinate) coordinates[i];
 				mco.m = mco.m + amount;
 			}
@@ -686,32 +654,32 @@ public class MLineString extends LineString implements MGeometry {
 
 	public String toString() {
 		Coordinate[] ar = this.getCoordinates();
-		StringBuffer buf = new StringBuffer( ar.length * 17 * 3 );
-		for ( int i = 0; i < ar.length; i++ ) {
-			buf.append( ar[i].x );
-			buf.append( " " );
-			buf.append( ar[i].y );
-			buf.append( " " );
-			buf.append( ( (MCoordinate) ar[i] ).m );
-			buf.append( "\n" );
+		StringBuffer buf = new StringBuffer(ar.length * 17 * 3);
+		for (int i = 0; i < ar.length; i++) {
+			buf.append(ar[i].x);
+			buf.append(" ");
+			buf.append(ar[i].y);
+			buf.append(" ");
+			buf.append(((MCoordinate) ar[i]).m);
+			buf.append("\n");
 		}
 		return buf.toString();
 	}
 
 	public MLineString unionM(MLineString l) throws MGeometryException {
 
-		if ( !this.monotone || !l.monotone ) {
+		if (!this.monotone || !l.monotone) {
 			throw new MGeometryException(
 					MGeometryException.OPERATION_REQUIRES_MONOTONE
 			);
 		}
 		Coordinate[] linecoar = l.getCoordinates();
-		if ( l.getMeasureDirection() == DECREASING) {
-			CoordinateArrays.reverse( linecoar );
+		if (l.getMeasureDirection() == DECREASING) {
+			CoordinateArrays.reverse(linecoar);
 		}
 		Coordinate[] thiscoar = this.getCoordinates();
-		if ( this.getMeasureDirection() == DECREASING) {
-			CoordinateArrays.reverse( thiscoar );
+		if (this.getMeasureDirection() == DECREASING) {
+			CoordinateArrays.reverse(thiscoar);
 		}
 
 		// either the last coordinate in thiscoar equals the first in linecoar;
@@ -723,32 +691,30 @@ public class MLineString extends LineString implements MGeometry {
 
 		MCoordinate[] newcoar = new MCoordinate[thiscoar.length
 				+ linecoar.length - 1];
-		if ( lasttco.equals2D( firstlco )
-				&& DoubleComparator.equals( lasttco.m, firstlco.m ) ) {
-			System.arraycopy( thiscoar, 0, newcoar, 0, thiscoar.length );
+		if (lasttco.equals2D(firstlco)
+				&& DoubleComparator.equals(lasttco.m, firstlco.m)) {
+			System.arraycopy(thiscoar, 0, newcoar, 0, thiscoar.length);
 			System.arraycopy(
 					linecoar, 1, newcoar, thiscoar.length,
 					linecoar.length - 1
 			);
-		}
-		else if ( lastlco.equals2D( firsttco )
-				&& DoubleComparator.equals( lastlco.m, firsttco.m ) ) {
-			System.arraycopy( linecoar, 0, newcoar, 0, linecoar.length );
+		} else if (lastlco.equals2D(firsttco)
+				&& DoubleComparator.equals(lastlco.m, firsttco.m)) {
+			System.arraycopy(linecoar, 0, newcoar, 0, linecoar.length);
 			System.arraycopy(
 					thiscoar, 1, newcoar, linecoar.length,
 					thiscoar.length - 1
 			);
-		}
-		else {
+		} else {
 			throw new MGeometryException(
 					MGeometryException.UNIONM_ON_DISJOINT_MLINESTRINGS
 			);
 		}
 
 		CoordinateSequence mcs = this.getFactory()
-				.getCoordinateSequenceFactory().create( newcoar );
-		MLineString returnmlinestring = new MLineString( mcs, this.getFactory() );
-		assert ( returnmlinestring.isMonotone( false ) ) : "new unionM-ed MLineString is not monotone";
+				.getCoordinateSequenceFactory().create(newcoar);
+		MLineString returnmlinestring = new MLineString(mcs, this.getFactory());
+		assert (returnmlinestring.isMonotone(false)) : "new unionM-ed MLineString is not monotone";
 		return returnmlinestring;
 	}
 

@@ -1,39 +1,31 @@
-/**
- * $Id$
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is part of Hibernate Spatial, an extension to the 
- * hibernate ORM solution for geographic data. 
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * Copyright © 2007 Geovise BVBA
- * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This work was partially supported by the European Commission, 
- * under the 6th Framework Programme, contract IST-2-004688-STP.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.jts.mgeom;
-
-import java.io.Serializable;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+
+import java.io.Serializable;
 
 /**
  * Defines geometries that carry measures in their CoordinateSequence.
@@ -66,16 +58,14 @@ public interface MGeometry extends Cloneable, Serializable {
 	/**
 	 * Returns the measure value at the Coordinate
 	 *
-	 * @param c the Coordinate for which the measure value is sought
+	 * @param c		 the Coordinate for which the measure value is sought
 	 * @param tolerance distance to the MGeometry within which Coordinate c has to lie
-	 *
 	 * @return the measure value if Coordinate c is within tolerance of the
 	 *         Geometry, else Double.NaN
-	 *         <p>
+	 *         <p/>
 	 *         When the geometry is a ring or is self-intersecting more
 	 *         coordinates may be determined by one coordinate. In that case,
 	 *         the lowest measure is returned.
-	 *
 	 * @throws MGeometryException when this MGeometry is not monotone
 	 */
 	public double getMatCoordinate(Coordinate c, double tolerance)
@@ -86,8 +76,8 @@ public interface MGeometry extends Cloneable, Serializable {
 	 * (first coordinate) of the Geometry.
 	 *
 	 * @param keepBeginMeasure -
-	 * if true, the measure of the first coordinate is maintained and
-	 * used as start value, unless this measure is Double.NaN
+	 *                         if true, the measure of the first coordinate is maintained and
+	 *                         used as start value, unless this measure is Double.NaN
 	 */
 	public void measureOnLength(boolean keepBeginMeasure);
 
@@ -95,9 +85,7 @@ public interface MGeometry extends Cloneable, Serializable {
 	 * Returns the Coordinate along the Geometry at the measure value
 	 *
 	 * @param m measure value
-	 *
 	 * @return the Coordinate if m is on the MGeometry otherwise null
-	 *
 	 * @throws MGeometryException when MGeometry is not monotone
 	 */
 	public Coordinate getCoordinateAtM(double m) throws MGeometryException;
@@ -107,12 +95,10 @@ public interface MGeometry extends Cloneable, Serializable {
 	 * begin and end measures.
 	 *
 	 * @param begin begin measure
-	 * @param end end measure
-	 *
+	 * @param end   end measure
 	 * @return an array containing all coordinatesequences in order between
 	 *         begin and end. Each CoordinateSequence covers a contiguous
 	 *         stretch of the MGeometry.
-	 *
 	 * @throws MGeometryException when this MGeometry is not monotone
 	 */
 	public CoordinateSequence[] getCoordinatesBetween(double begin, double end)
@@ -175,7 +161,7 @@ public interface MGeometry extends Cloneable, Serializable {
 
 	/**
 	 * Returns this <code>MGeometry</code> as a <code>Geometry</code>.
-	 *
+	 * <p/>
 	 * Modifying the returned <code>Geometry</code> will result in internal state changes.
 	 *
 	 * @return this object as a Geometry.

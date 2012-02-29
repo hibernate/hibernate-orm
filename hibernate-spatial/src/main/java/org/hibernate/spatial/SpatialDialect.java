@@ -1,26 +1,22 @@
 /*
- * $Id: SpatialDialect.java 301 2011-05-07 18:00:18Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial;
 
@@ -39,11 +35,10 @@ public interface SpatialDialect extends Serializable {
 	 * into prepared statements.
 	 * <p/>
 	 *
-	 * @param columnName The name of the geometry-typed column to which the relation is
-	 * applied
+	 * @param columnName	  The name of the geometry-typed column to which the relation is
+	 *                        applied
 	 * @param spatialRelation The type of spatial relation (as defined in
-	 * <code>SpatialRelation</code>).
-	 *
+	 *                        <code>SpatialRelation</code>).
 	 * @return SQL fragment for use in the SQL WHERE-clause.
 	 */
 	public String getSpatialRelateSQL(String columnName, int spatialRelation);
@@ -54,16 +49,14 @@ public interface SpatialDialect extends Serializable {
 	 * into prepared statements.
 	 *
 	 * @param columnName- the name of the geometry-typed column to which the filter is
-	 * be applied.
-	 *
+	 *                    be applied.
 	 * @return
 	 */
 	public String getSpatialFilterExpression(String columnName);
 
 	/**
-	 * @param columnName the name of the Geometry property
+	 * @param columnName  the name of the Geometry property
 	 * @param aggregation the type of <code>SpatialAggregate</code>
-	 *
 	 * @return the SQL fragment for the projection
 	 */
 	public String getSpatialAggregateSQL(String columnName, int aggregation);
@@ -72,7 +65,6 @@ public interface SpatialDialect extends Serializable {
 	 * Returns the SQL fragment when parsing a <code>DWithinExpression</code>.
 	 *
 	 * @param columnName the geometry column to test against
-	 *
 	 * @return
 	 */
 	public String getDWithinSQL(String columnName);
@@ -81,7 +73,6 @@ public interface SpatialDialect extends Serializable {
 	 * Returns the SQL fragment when parsing an <code>HavingSridExpression</code>.
 	 *
 	 * @param columnName the geometry column to test against
-	 *
 	 * @return
 	 */
 	public String getHavingSridSQL(String columnName);
@@ -92,8 +83,7 @@ public interface SpatialDialect extends Serializable {
 	 * <code>IsNotEmpty</code> expression.
 	 *
 	 * @param columnName the geometry column
-	 * @param isEmpty whether the geometry is tested for empty or non-empty
-	 *
+	 * @param isEmpty	whether the geometry is tested for empty or non-empty
 	 * @return
 	 */
 	public String getIsEmptySQL(String columnName, boolean isEmpty);
@@ -109,7 +99,6 @@ public interface SpatialDialect extends Serializable {
 	 * Does this dialect supports the specified <code>SpatialFunction</code>.
 	 *
 	 * @param function <code>SpatialFunction</code>
-	 *
 	 * @return true if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
 	public boolean supports(SpatialFunction function);

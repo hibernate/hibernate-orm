@@ -1,26 +1,22 @@
 /*
- * $Id: TestData.java 253 2010-10-02 15:14:52Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.testing;
@@ -57,7 +53,7 @@ public class TestData implements List<TestDataElement> {
 	}
 
 	public boolean contains(Object o) {
-		return testDataElements.contains( o );
+		return testDataElements.contains(o);
 	}
 
 	public Iterator<TestDataElement> iterator() {
@@ -69,35 +65,35 @@ public class TestData implements List<TestDataElement> {
 	}
 
 	public <T> T[] toArray(T[] a) {
-		return testDataElements.toArray( a );
+		return testDataElements.toArray(a);
 	}
 
 	public boolean add(TestDataElement testDataElement) {
-		return testDataElements.add( testDataElement );
+		return testDataElements.add(testDataElement);
 	}
 
 	public boolean remove(Object o) {
-		return testDataElements.remove( o );
+		return testDataElements.remove(o);
 	}
 
 	public boolean containsAll(Collection<?> c) {
-		return testDataElements.containsAll( c );
+		return testDataElements.containsAll(c);
 	}
 
 	public boolean addAll(Collection<? extends TestDataElement> c) {
-		return testDataElements.addAll( c );
+		return testDataElements.addAll(c);
 	}
 
 	public boolean addAll(int index, Collection<? extends TestDataElement> c) {
-		return testDataElements.addAll( index, c );
+		return testDataElements.addAll(index, c);
 	}
 
 	public boolean removeAll(Collection<?> c) {
-		return testDataElements.removeAll( c );
+		return testDataElements.removeAll(c);
 	}
 
 	public boolean retainAll(Collection<?> c) {
-		return testDataElements.retainAll( c );
+		return testDataElements.retainAll(c);
 	}
 
 	public void clear() {
@@ -105,7 +101,7 @@ public class TestData implements List<TestDataElement> {
 	}
 
 	public boolean equals(Object o) {
-		return testDataElements.equals( o );
+		return testDataElements.equals(o);
 	}
 
 	public int hashCode() {
@@ -113,27 +109,27 @@ public class TestData implements List<TestDataElement> {
 	}
 
 	public TestDataElement get(int index) {
-		return testDataElements.get( index );
+		return testDataElements.get(index);
 	}
 
 	public TestDataElement set(int index, TestDataElement element) {
-		return testDataElements.set( index, element );
+		return testDataElements.set(index, element);
 	}
 
 	public void add(int index, TestDataElement element) {
-		testDataElements.add( index, element );
+		testDataElements.add(index, element);
 	}
 
 	public TestDataElement remove(int index) {
-		return testDataElements.remove( index );
+		return testDataElements.remove(index);
 	}
 
 	public int indexOf(Object o) {
-		return testDataElements.indexOf( o );
+		return testDataElements.indexOf(o);
 	}
 
 	public int lastIndexOf(Object o) {
-		return testDataElements.lastIndexOf( o );
+		return testDataElements.lastIndexOf(o);
 	}
 
 	public ListIterator<TestDataElement> listIterator() {
@@ -141,20 +137,20 @@ public class TestData implements List<TestDataElement> {
 	}
 
 	public ListIterator<TestDataElement> listIterator(int index) {
-		return testDataElements.listIterator( index );
+		return testDataElements.listIterator(index);
 	}
 
 	public List<TestDataElement> subList(int fromIndex, int toIndex) {
-		return testDataElements.subList( fromIndex, toIndex );
+		return testDataElements.subList(fromIndex, toIndex);
 	}
 
 	public static TestData fromFile(String fileName) {
 		TestDataReader reader = new TestDataReader();
-		return fromFile( fileName, reader );
+		return fromFile(fileName, reader);
 	}
 
 	public static TestData fromFile(String fileName, TestDataReader reader) {
-		List<TestDataElement> elements = reader.read( fileName );
+		List<TestDataElement> elements = reader.read(fileName);
 		TestData testData = new TestData();
 		testData.testDataElements = elements;
 		return testData;

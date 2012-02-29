@@ -1,26 +1,22 @@
 /*
- * $Id: AbstractExpectationsFactory.java 287 2011-02-15 21:30:01Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.testing;
@@ -87,22 +83,20 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns the expected dimensions of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, dimension
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getDimension() throws SQLException {
-		return retrieveExpected( createNativeDimensionSQL(), INTEGER );
+		return retrieveExpected(createNativeDimensionSQL(), INTEGER);
 	}
 
 	/**
 	 * Returns the expected WKT of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, WKT-string
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsText() throws SQLException {
-		return retrieveExpected( createNativeAsTextStatement(), STRING );
+		return retrieveExpected(createNativeAsTextStatement(), STRING);
 
 	}
 
@@ -111,66 +105,60 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns the expected WKB representations of all testsuite-suite geometries
 	 *
 	 * @return map of identifier, WKB representation
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsBinary() throws SQLException {
-		return retrieveExpected( createNativeAsBinaryStatement(), OBJECT );
+		return retrieveExpected(createNativeAsBinaryStatement(), OBJECT);
 	}
 
 	/**
 	 * Returns the expected type names of all testsuite-suite geometries
 	 *
 	 * @return map of identifier, type name
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getGeometryType() throws SQLException {
-		return retrieveExpected( createNativeGeometryTypeStatement(), STRING );
+		return retrieveExpected(createNativeGeometryTypeStatement(), STRING);
 	}
 
 	/**
 	 * Returns the expected SRID codes of all testsuite-suite geometries
 	 *
 	 * @return map of identifier, SRID
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getSrid() throws SQLException {
-		return retrieveExpected( createNativeSridStatement(), INTEGER );
+		return retrieveExpected(createNativeSridStatement(), INTEGER);
 	}
 
 	/**
 	 * Returns whether the testsuite-suite geometries are simple
 	 *
 	 * @return map of identifier and whether testsuite-suite geometry is simple
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsSimple() throws SQLException {
-		return retrieveExpected( createNativeIsSimpleStatement(), BOOLEAN );
+		return retrieveExpected(createNativeIsSimpleStatement(), BOOLEAN);
 	}
 
 	/**
 	 * Returns whether the testsuite-suite geometries are empty
 	 *
 	 * @return map of identifier and whether testsuite-suite geometry is empty
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsEmpty() throws SQLException {
-		return retrieveExpected( createNativeIsEmptyStatement(), BOOLEAN );
+		return retrieveExpected(createNativeIsEmptyStatement(), BOOLEAN);
 	}
 
 	/**
 	 * Returns whether the testsuite-suite geometries are empty
 	 *
 	 * @return map of identifier and whether testsuite-suite geometry is empty
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsNotEmpty() throws SQLException {
-		return retrieveExpected( createNativeIsNotEmptyStatement(), BOOLEAN );
+		return retrieveExpected(createNativeIsNotEmptyStatement(), BOOLEAN);
 	}
 
 
@@ -178,120 +166,104 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns the expected boundaries of all testsuite-suite geometries
 	 *
 	 * @return map of identifier and boundary geometry
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getBoundary() throws SQLException {
-		return retrieveExpected( createNativeBoundaryStatement(), GEOMETRY );
+		return retrieveExpected(createNativeBoundaryStatement(), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected envelopes of all testsuite-suite geometries
 	 *
 	 * @return map of identifier and envelope
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEnvelope() throws SQLException {
-		return retrieveExpected( createNativeEnvelopeStatement(), GEOMETRY );
+		return retrieveExpected(createNativeEnvelopeStatement(), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the within operator
 	 *
 	 * @param geom testsuite-suite geometry
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getWithin(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeWithinStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeWithinStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the equals operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getEquals(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeEqualsStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeEqualsStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the crosses operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCrosses(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeCrossesStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeCrossesStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the contains operator
 	 */
 	public Map<Integer, Boolean> getContains(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeContainsStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeContainsStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the disjoint operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getDisjoint(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeDisjointStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeDisjointStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the intersects operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIntersects(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeIntersectsStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeIntersectsStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the touches operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getTouches(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeTouchesStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeTouchesStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the overlaps operator
 	 *
 	 * @param geom
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getOverlaps(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeOverlapsStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeOverlapsStatement(geom), BOOLEAN);
 	}
 
 	/**
@@ -299,22 +271,20 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @param geom
 	 * @param distance
-	 *
 	 * @return
 	 */
 	public Map<Integer, Boolean> getDwithin(Point geom, double distance) throws SQLException {
-		return retrieveExpected( createNativeDwithinStatement( geom, distance ), BOOLEAN );
+		return retrieveExpected(createNativeDwithinStatement(geom, distance), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected result of the havingSRID operator
 	 *
 	 * @param srid the SRID (EPSG code)
-	 *
 	 * @return
 	 */
 	public Map<Integer, Boolean> havingSRID(int srid) throws SQLException {
-		return retrieveExpected( createNativeHavingSRIDStatement( srid ), BOOLEAN );
+		return retrieveExpected(createNativeHavingSRIDStatement(srid), BOOLEAN);
 	}
 
 
@@ -323,129 +293,110 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @param geom
 	 * @param matrix
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getRelate(Geometry geom, String matrix) throws SQLException {
-		return retrieveExpected( createNativeRelateStatement( geom, matrix ), BOOLEAN );
+		return retrieveExpected(createNativeRelateStatement(geom, matrix), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results for the geometry filter
 	 *
 	 * @param geom filter Geometry
-	 *
 	 * @return
 	 */
 	public Map<Integer, Boolean> getFilter(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeFilterStatement( geom ), BOOLEAN );
+		return retrieveExpected(createNativeFilterStatement(geom), BOOLEAN);
 	}
 
 	/**
 	 * Returns the expected results of the distance function
 	 *
 	 * @param geom geometry parameter to distance function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getDistance(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeDistanceStatement( geom ), DOUBLE );
+		return retrieveExpected(createNativeDistanceStatement(geom), DOUBLE);
 	}
 
 	/**
 	 * Returns the expected results of the buffering function
 	 *
 	 * @param distance distance parameter to the buffer function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getBuffer(Double distance) throws SQLException {
-		return retrieveExpected( createNativeBufferStatement( distance ), GEOMETRY );
+		return retrieveExpected(createNativeBufferStatement(distance), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the convexhull function
 	 *
 	 * @param geom geometry with which each testsuite-suite geometry is unioned before convexhull calculation
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getConvexHull(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeConvexHullStatement( geom ), GEOMETRY );
+		return retrieveExpected(createNativeConvexHullStatement(geom), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the intersection function
 	 *
 	 * @param geom parameter to the intersection function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getIntersection(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeIntersectionStatement( geom ), GEOMETRY );
+		return retrieveExpected(createNativeIntersectionStatement(geom), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the difference function
 	 *
 	 * @param geom parameter to the difference function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getDifference(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeDifferenceStatement( geom ), GEOMETRY );
+		return retrieveExpected(createNativeDifferenceStatement(geom), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the symdifference function
 	 *
 	 * @param geom parameter to the symdifference function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 
 	public Map<Integer, Geometry> getSymDifference(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeSymDifferenceStatement( geom ), GEOMETRY );
+		return retrieveExpected(createNativeSymDifferenceStatement(geom), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected results of the geomunion function
 	 *
 	 * @param geom parameter to the geomunion function
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomUnion(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeGeomUnionStatement( geom ), GEOMETRY );
+		return retrieveExpected(createNativeGeomUnionStatement(geom), GEOMETRY);
 	}
 
 	/**
 	 * Returns the expected result of the transform function
 	 *
 	 * @param epsg
-	 *
 	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getTransform(int epsg) throws SQLException {
-		return retrieveExpected( createNativeTransformStatement( epsg ), GEOMETRY );
+		return retrieveExpected(createNativeTransformStatement(epsg), GEOMETRY);
 	}
 
 	/**
@@ -453,7 +404,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, touches(geom, :filter) from GeomEntity where touches(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeTouchesStatement(Geometry geom);
@@ -463,7 +413,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, overlaps(geom, :filter) from GeomEntity where overlaps(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeOverlapsStatement(Geometry geom);
@@ -472,9 +421,8 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns a statement corresponding to the HQL statement:
 	 * "SELECT id, relate(geom, :filter, :matrix) from GeomEntity where relate(geom, :filter, :matrix) = true and srid(geom) = 4326"
 	 *
-	 * @param geom the geometry corresponding to the ':filter' query parameter
+	 * @param geom   the geometry corresponding to the ':filter' query parameter
 	 * @param matrix the string corresponding to the ':matrix' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix);
@@ -483,9 +431,8 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns a statement corresponding to the HQL statement:
 	 * "SELECT id, dwithin(geom, :filter, :distance) from GeomEntity where dwithin(geom, :filter, :distance) = true and srid(geom) = 4326"
 	 *
-	 * @param geom the geometry corresponding to the ':filter' query parameter
+	 * @param geom	 the geometry corresponding to the ':filter' query parameter
 	 * @param distance the string corresponding to the ':distance' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeDwithinStatement(Point geom, double distance);
@@ -495,7 +442,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, intersects(geom, :filter) from GeomEntity where intersects(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeIntersectsStatement(Geometry geom);
@@ -504,7 +450,6 @@ public abstract class AbstractExpectationsFactory {
 	 * Returns the statement corresponding to the SpatialRestrictions.filter() method.
 	 *
 	 * @param geom filter geometry
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeFilterStatement(Geometry geom);
@@ -514,7 +459,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, distance(geom, :filter) from GeomEntity where srid(geom) = 4326"
 	 *
 	 * @param geom
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeDistanceStatement(Geometry geom);
@@ -532,7 +476,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, buffer(geom, :distance) from GeomEntity where srid(geom) = 4326"
 	 *
 	 * @param distance parameter corresponding to the ':distance' query parameter
-	 *
 	 * @return the native SQL Statement
 	 */
 	protected abstract NativeSQLStatement createNativeBufferStatement(Double distance);
@@ -542,7 +485,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, convexhull(geomunion(geom, :polygon)) from GeomEntity where srid(geom) = 4326"
 	 *
 	 * @param geom parameter corresponding to the ':polygon' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeConvexHullStatement(Geometry geom);
@@ -552,7 +494,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, intersection(geom, :polygon) from GeomEntity where srid(geom) = 4326"
 	 *
 	 * @param geom parameter corresponding to the ':polygon' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeIntersectionStatement(Geometry geom);
@@ -562,7 +503,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, difference(geom, :polygon) from GeomEntity where srid(geom) = 4326"26"
 	 *
 	 * @param geom parameter corresponding to the ':polygon' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeDifferenceStatement(Geometry geom);
@@ -572,7 +512,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, symdifference(geom, :polygon) from GeomEntity where srid(geom) = 4326"26"
 	 *
 	 * @param geom parameter corresponding to the ':polygon' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom);
@@ -582,7 +521,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, geomunion(geom, :polygon) from GeomEntity where srid(geom) = 4326"26"
 	 *
 	 * @param geom parameter corresponding to the ':polygon' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeGeomUnionStatement(Geometry geom);
@@ -665,7 +603,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, within(geom, :filter) from GeomEntity where within(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param testPolygon the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeWithinStatement(Geometry testPolygon);
@@ -675,7 +612,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, equals(geom, :filter) from GeomEntity where equals(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeEqualsStatement(Geometry geom);
@@ -685,7 +621,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, crosses(geom, :filter) from GeomEntity where crosses(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeCrossesStatement(Geometry geom);
@@ -695,7 +630,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, contains(geom, :filter) from GeomEntity where contains(geom, :geom) = true and srid(geom) = 4326";
 	 *
 	 * @param geom
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeContainsStatement(Geometry geom);
@@ -705,7 +639,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, disjoint(geom, :filter) from GeomEntity where disjoint(geom, :filter) = true and srid(geom) = 4326"
 	 *
 	 * @param geom the geometry corresponding to the ':filter' query parameter
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeDisjointStatement(Geometry geom);
@@ -716,7 +649,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "SELECT id, transform(geom, :epsg) from GeomEntity where srid(geom) = 4326"
 	 *
 	 * @param epsg - the EPSG code of the target projection system.
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeTransformStatement(int epsg);
@@ -726,7 +658,6 @@ public abstract class AbstractExpectationsFactory {
 	 * "select id, (srid(geom) = :epsg) from GeomEntity where srid(geom) = :epsg ";
 	 *
 	 * @param srid
-	 *
 	 * @return
 	 */
 	protected abstract NativeSQLStatement createNativeHavingSRIDStatement(int srid);
@@ -735,7 +666,6 @@ public abstract class AbstractExpectationsFactory {
 	 * Creates a connection to the database
 	 *
 	 * @return a Connection
-	 *
 	 * @throws SQLException
 	 */
 	protected Connection createConnection() throws SQLException {
@@ -746,7 +676,6 @@ public abstract class AbstractExpectationsFactory {
 	 * Decodes a native database object to a JTS <code>Geometry</code> instance
 	 *
 	 * @param o native database object
-	 *
 	 * @return decoded geometry
 	 */
 	protected abstract Geometry decode(Object o);
@@ -759,12 +688,11 @@ public abstract class AbstractExpectationsFactory {
 	public Polygon getTestPolygon() {
 		WKTReader reader = new WKTReader();
 		try {
-			Polygon polygon = (Polygon) reader.read( TEST_POLYGON_WKT );
-			polygon.setSRID( getTestSrid() );
+			Polygon polygon = (Polygon) reader.read(TEST_POLYGON_WKT);
+			polygon.setSRID(getTestSrid());
 			return polygon;
-		}
-		catch ( ParseException e ) {
-			throw new RuntimeException( e );
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -776,12 +704,11 @@ public abstract class AbstractExpectationsFactory {
 	public Point getTestPoint() {
 		WKTReader reader = new WKTReader();
 		try {
-			Point point = (Point) reader.read( TEST_POINT_WKT );
-			point.setSRID( getTestSrid() );
+			Point point = (Point) reader.read(TEST_POINT_WKT);
+			point.setSRID(getTestSrid());
 			return point;
-		}
-		catch ( ParseException e ) {
-			throw new RuntimeException( e );
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -792,48 +719,47 @@ public abstract class AbstractExpectationsFactory {
 		Map<Integer, T> expected = new HashMap<Integer, T>();
 		try {
 			cn = createConnection();
-			preparedStatement = nativeSQLStatement.prepare( cn );
-			LOG.info( "Native SQL is: " + preparedStatement.toString() );
+			preparedStatement = nativeSQLStatement.prepare(cn);
+			LOG.info("Native SQL is: " + preparedStatement.toString());
 			ResultSet results = preparedStatement.executeQuery();
-			while ( results.next() ) {
-				int id = results.getInt( 1 );
-				switch ( type ) {
+			while (results.next()) {
+				int id = results.getInt(1);
+				switch (type) {
 					case GEOMETRY:
-						expected.put( id, (T) decode( results.getObject( 2 ) ) );
+						expected.put(id, (T) decode(results.getObject(2)));
 						break;
 					case STRING:
-						expected.put( id, (T) results.getString( 2 ) );
+						expected.put(id, (T) results.getString(2));
 						break;
 					case INTEGER:
-						expected.put( id, (T) Long.valueOf( results.getLong( 2 ) ) );
+						expected.put(id, (T) Long.valueOf(results.getLong(2)));
 						break;
 					case DOUBLE:
-						Double value = Double.valueOf( results.getDouble( 2 ) );
-						if ( results.wasNull() ) {
+						Double value = Double.valueOf(results.getDouble(2));
+						if (results.wasNull()) {
 							value = null; //this is required because SQL Server converts automatically null to 0.0
 						}
-						expected.put( id, (T) value );
+						expected.put(id, (T) value);
 						break;
 					case BOOLEAN:
-						expected.put( id, (T) Boolean.valueOf( results.getBoolean( 2 ) ) );
+						expected.put(id, (T) Boolean.valueOf(results.getBoolean(2)));
 						break;
 					default:
-						T val = (T) results.getObject( 2 );
+						T val = (T) results.getObject(2);
 						//this code is a hack to deal with Oracle Spatial that returns Blob's for asWKB() function
 						//TODO -- clean up
-						if ( val instanceof Blob ) {
-							val = (T) ( (Blob) val ).getBytes( 1, MAX_BYTE_LEN );
+						if (val instanceof Blob) {
+							val = (T) ((Blob) val).getBytes(1, MAX_BYTE_LEN);
 						}
-						expected.put( id, val );
+						expected.put(id, val);
 				}
 			}
 			return expected;
-		}
-		finally {
-			if ( preparedStatement != null ) {
+		} finally {
+			if (preparedStatement != null) {
 				preparedStatement.close();
 			}
-			if ( cn != null ) {
+			if (cn != null) {
 				cn.close();
 			}
 		}
@@ -842,7 +768,7 @@ public abstract class AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeSQLStatement(final String sql) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
-				return connection.prepareStatement( sql );
+				return connection.prepareStatement(sql);
 			}
 		};
 	}
@@ -850,9 +776,9 @@ public abstract class AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeSQLStatementAllWKTParams(final String sql, final String wkt) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
-				PreparedStatement pstmt = connection.prepareStatement( sql );
-				for ( int i = 1; i <= numPlaceHoldersInSQL( sql ); i++ ) {
-					pstmt.setString( i, wkt );
+				PreparedStatement pstmt = connection.prepareStatement(sql);
+				for (int i = 1; i <= numPlaceHoldersInSQL(sql); i++) {
+					pstmt.setString(i, wkt);
 				}
 				return pstmt;
 			}
@@ -862,10 +788,10 @@ public abstract class AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeSQLStatement(final String sql, final Object[] params) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
-				PreparedStatement pstmt = connection.prepareStatement( sql );
+				PreparedStatement pstmt = connection.prepareStatement(sql);
 				int i = 1;
-				for ( Object param : params ) {
-					pstmt.setObject( i++, param );
+				for (Object param : params) {
+					pstmt.setObject(i++, param);
 				}
 				return pstmt;
 			}
@@ -874,6 +800,6 @@ public abstract class AbstractExpectationsFactory {
 
 
 	protected int numPlaceHoldersInSQL(String sql) {
-		return sql.replaceAll( "[^?]", "" ).length();
+		return sql.replaceAll("[^?]", "").length();
 	}
 }

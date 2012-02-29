@@ -1,35 +1,26 @@
-/**
- * $Id: SpatialRelateExpression.java 287 2011-02-15 21:30:01Z maesenka $
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is part of Hibernate Spatial, an extension to the 
- * hibernate ORM solution for geographic data. 
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * Copyright © 2007 Geovise BVBA
- * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This work was partially supported by the European Commission, 
- * under the 6th Framework Programme, contract IST-2-004688-STP.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.criterion;
 
 import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -81,7 +72,7 @@ public class SpatialRelateExpression implements Criterion {
 
 	public TypedValue[] getTypedValues(Criteria criteria,
 									   CriteriaQuery criteriaQuery) throws HibernateException {
-		return new TypedValue[] {
+		return new TypedValue[]{
 				criteriaQuery.getTypedValue(
 						criteria,
 						propertyName, value
@@ -105,14 +96,13 @@ public class SpatialRelateExpression implements Criterion {
 				this.propertyName
 		);
 		Dialect dialect = factory.getDialect();
-		if ( dialect instanceof SpatialDialect ) {
+		if (dialect instanceof SpatialDialect) {
 			SpatialDialect seDialect = (SpatialDialect) dialect;
 			return seDialect.getSpatialRelateSQL(
 					columns[0],
 					spatialRelation
 			);
-		}
-		else {
+		} else {
 			throw new IllegalStateException(
 					"Dialect must be spatially enabled dialect"
 			);

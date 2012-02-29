@@ -1,26 +1,22 @@
 /*
- * $Id: AbstractConvertorTest.java 278 2010-12-18 14:03:32Z maesenka $
- *
  * This file is part of Hibernate Spatial, an extension to the
- * hibernate ORM solution for geographic data.
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * Copyright © 2007-2010 Geovise BVBA
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
@@ -53,33 +49,33 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 
-    private final static Log LOG = LogFactory.make();
+	private final static Log LOG = LogFactory.make();
 
-    private final static TestSupport support = new SQLServerTestSupport();
+	private final static TestSupport support = new SQLServerTestSupport();
 
-    private DataSourceUtils dataSourceUtils;
+	private DataSourceUtils dataSourceUtils;
 
-    Map<Integer, Geometry> decodedGeoms;
-    Map<Integer, Object> rawResults;
-    Map<Integer, byte[]> encodedGeoms;
-    Map<Integer, Geometry> expectedGeoms;
+	Map<Integer, Geometry> decodedGeoms;
+	Map<Integer, Object> rawResults;
+	Map<Integer, byte[]> encodedGeoms;
+	Map<Integer, Geometry> expectedGeoms;
 
-    public void beforeClass() {
-        dataSourceUtils = new DataSourceUtils(
-            "sqlserver/hibernate-spatial-sqlserver-test.properties",
-            new SQLServerExpressionTemplate()
-            );
-        try {
-            String sql = dataSourceUtils.parseSqlIn("sqlserver/create-sqlserver-test-schema.sql");
-            dataSourceUtils.executeStatement(sql);
-            TestData testData = support.createTestData(null);
-            dataSourceUtils.insertTestData(testData);
-        }catch(SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	public void beforeClass() {
+		dataSourceUtils = new DataSourceUtils(
+				"sqlserver/hibernate-spatial-sqlserver-test.properties",
+				new SQLServerExpressionTemplate()
+		);
+		try {
+			String sql = dataSourceUtils.parseSqlIn("sqlserver/create-sqlserver-test-schema.sql");
+			dataSourceUtils.executeStatement(sql);
+			TestData testData = support.createTestData(null);
+			dataSourceUtils.insertTestData(testData);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 //
 //    public void afterClass() {
 //        try {
@@ -92,46 +88,46 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 //        }
 //    }
 
-    public void doDecoding(OpenGisType type) {
-        rawResults = dataSourceUtils.rawDbObjects(type.toString());
-        TestData testData = support.createTestData(null);
-        expectedGeoms = dataSourceUtils.expectedGeoms(type.toString(), testData);
-        decodedGeoms = new HashMap<Integer, Geometry>();
+	public void doDecoding(OpenGisType type) {
+		rawResults = dataSourceUtils.rawDbObjects(type.toString());
+		TestData testData = support.createTestData(null);
+		expectedGeoms = dataSourceUtils.expectedGeoms(type.toString(), testData);
+		decodedGeoms = new HashMap<Integer, Geometry>();
 
-        for (Integer id : rawResults.keySet()) {
-            Geometry geometry = Decoders.decode((byte[]) rawResults.get(id));
-            decodedGeoms.put(id, geometry);
-        }
-    }
+		for (Integer id : rawResults.keySet()) {
+			Geometry geometry = Decoders.decode((byte[]) rawResults.get(id));
+			decodedGeoms.put(id, geometry);
+		}
+	}
 
-    public void doEncoding() {
-        encodedGeoms = new HashMap<Integer, byte[]>();
-        for (Integer id : decodedGeoms.keySet()) {
-            Geometry geom = decodedGeoms.get(id);
-            byte[] bytes = Encoders.encode(geom);
-            encodedGeoms.put(id, bytes);
-        }
-    }
+	public void doEncoding() {
+		encodedGeoms = new HashMap<Integer, byte[]>();
+		for (Integer id : decodedGeoms.keySet()) {
+			Geometry geom = decodedGeoms.get(id);
+			byte[] bytes = Encoders.encode(geom);
+			encodedGeoms.put(id, bytes);
+		}
+	}
 
-    public void test_encoding() {
-        for (Integer id : encodedGeoms.keySet()) {
-            assertTrue(
-                    "Wrong encoding for case " + id,
-                    Arrays.equals((byte[]) rawResults.get(id), encodedGeoms.get(id))
-            );
-        }
-    }
+	public void test_encoding() {
+		for (Integer id : encodedGeoms.keySet()) {
+			assertTrue(
+					"Wrong encoding for case " + id,
+					Arrays.equals((byte[]) rawResults.get(id), encodedGeoms.get(id))
+			);
+		}
+	}
 
-    public void test_decoding() {
-        for (Integer id : decodedGeoms.keySet()) {
-            Geometry expected = expectedGeoms.get(id);
-            Geometry received = decodedGeoms.get(id);
-            assertTrue("Wrong decoding for case " + id, expected.equalsExact(received));
-        }
-    }
+	public void test_decoding() {
+		for (Integer id : decodedGeoms.keySet()) {
+			Geometry expected = expectedGeoms.get(id);
+			Geometry received = decodedGeoms.get(id);
+			assertTrue("Wrong decoding for case " + id, expected.equalsExact(received));
+		}
+	}
 
-    @Override
-    protected Log getLogger() {
-        return LOG;
-    }
+	@Override
+	protected Log getLogger() {
+		return LOG;
+	}
 }

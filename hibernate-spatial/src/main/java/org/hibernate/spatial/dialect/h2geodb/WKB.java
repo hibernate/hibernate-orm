@@ -38,29 +38,29 @@ import com.vividsolutions.jts.io.WKBWriter;
  */
 class WKB {
 
-    static Geometry fromWKB(byte[] bytes, GeometryFactory factory) throws ParseException {
-        WKBReader reader = new WKBReader(factory);
-        return reader.read(bytes);
-    }
+	static Geometry fromWKB(byte[] bytes, GeometryFactory factory) throws ParseException {
+		WKBReader reader = new WKBReader(factory);
+		return reader.read(bytes);
+	}
 
-    /**
-     * Reads a EWKB byte (which is just a WKB prepended with an envelope of 32 bytes.
-     *
-     * @param bytes
-     * @param factory
-     * @return
-     * @throws ParseException
-     */
-    static Geometry fromEWKB(byte[] bytes, GeometryFactory factory) throws ParseException {
-        byte[] wkbBytes = new byte[bytes.length - 32];
-        System.arraycopy(bytes, 32, wkbBytes, 0, bytes.length - 32);
-        return fromWKB(wkbBytes, factory);
-    }
+	/**
+	 * Reads a EWKB byte (which is just a WKB prepended with an envelope of 32 bytes.
+	 *
+	 * @param bytes
+	 * @param factory
+	 * @return
+	 * @throws ParseException
+	 */
+	static Geometry fromEWKB(byte[] bytes, GeometryFactory factory) throws ParseException {
+		byte[] wkbBytes = new byte[bytes.length - 32];
+		System.arraycopy(bytes, 32, wkbBytes, 0, bytes.length - 32);
+		return fromWKB(wkbBytes, factory);
+	}
 
 
-    static byte[] toWKB(Geometry jtsGeom) {
-        WKBWriter writer = new WKBWriter(2, true);
-        return writer.write(jtsGeom);
-    }
+	static byte[] toWKB(Geometry jtsGeom) {
+		WKBWriter writer = new WKBWriter(2, true);
+		return writer.write(jtsGeom);
+	}
 }
 

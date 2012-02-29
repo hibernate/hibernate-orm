@@ -21,31 +21,38 @@
 
 package org.hibernate.spatial.dialect.h2geodb;
 
+import java.sql.Connection;
+
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
-import org.hibernate.spatial.dialect.AbstractJTSGeometryValueBinder;
-
-import java.sql.Connection;
+import org.hibernate.spatial.dialect.AbstractGeometryValueBinder;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Jan Boonen, Geodan IT b.v.
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 2/29/12
  */
-public class GeoDBValueBinder extends AbstractJTSGeometryValueBinder {
+public class GeoDBValueBinder<X> extends AbstractGeometryValueBinder {
 
-    private static Log LOG = LogFactory.make();
+	private static Log LOG = LogFactory.make();
 
-    @Override
-    protected Object toNative(Geometry jtsGeom, Connection connection) {
-        try {
-            return WKB.toWKB(jtsGeom);
-        } catch (Exception e) {
-            LOG.warn("Could not convert JTS Geometry to a database object.");
-            e.printStackTrace();
-            return null;
-        }
-    }
+	public GeoDBValueBinder(JavaTypeDescriptor<X> javaDescriptor) {
+		super( javaDescriptor, GeoDBGeometryTypeDescriptor.INSTANCE );
+	}
+
+	@Override
+	protected Object toNative(Geometry jtsGeom, Connection connection) {
+		try {
+			return WKB.toWKB( jtsGeom );
+		}
+		catch ( Exception e ) {
+			LOG.warn( "Could not convert JTS Geometry to a database object." );
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 }

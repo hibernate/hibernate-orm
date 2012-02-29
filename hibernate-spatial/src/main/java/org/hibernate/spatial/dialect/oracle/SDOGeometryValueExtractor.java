@@ -1,21 +1,57 @@
-package org.hibernate.spatial.dialect.oracle;
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
-import com.vividsolutions.jts.geom.*;
-import org.hibernate.HibernateException;
-import org.hibernate.spatial.Circle;
-import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MLineString;
+package org.hibernate.spatial.dialect.oracle;
 
 import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateSequence;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+
+import org.hibernate.HibernateException;
+import org.hibernate.spatial.jts.Circle;
+import org.hibernate.spatial.dialect.AbstractGeometryValueExtractor;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MLineString;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
-public class SDOGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
+public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor<X> {
+
+	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor) {
+		super( javaDescriptor, SDOGeometryTypeDescriptor.INSTANCE );
+	}
 
 	public Geometry toJTS(Object struct) {
 		if ( struct == null ) {
@@ -447,7 +483,7 @@ public class SDOGeometryValueExtractor extends AbstractJTSGeometryValueExtractor
 				coords = Circle.linearizeCircle( x1, y1, x2, y2, x3, y3 );
 			}
 			else {
-				coords = Circle.linearizeArc( x1, y1, x2, y2, x3, y3 );
+				coords = Circle.linearizeArc(x1, y1, x2, y2, x3, y3);
 			}
 
 			// if this is an LRS geometry, fill the measure values into
@@ -459,7 +495,7 @@ public class SDOGeometryValueExtractor extends AbstractJTSGeometryValueExtractor
 				mcoord[lastIndex] = MCoordinate.create2dWithMeasure( x3, y3, m3 );
 				// convert the middle coordinates to MCoordinate
 				for ( int i = 1; i < lastIndex; i++ ) {
-					mcoord[i] = MCoordinate.convertCoordinate(coords[i]);
+					mcoord[i] = MCoordinate.convertCoordinate( coords[i] );
 					// if we happen to split on the middle measure, then
 					// assign it
 					if ( Double.compare( mcoord[i].x, x2 ) == 0

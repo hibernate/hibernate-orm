@@ -1,7 +1,28 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.hibernate.spatial.dialect.postgis;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.GeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
@@ -13,7 +34,11 @@ import org.hibernate.type.StandardBasicTypes;
 public class PostgisNoSQLMM extends PostgisDialect {
 	@Override
 	protected void registerTypesAndFunctions() {
-		registerColumnType( java.sql.Types.STRUCT, "geometry" );
+
+		registerColumnType(
+				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE.getTypeName()
+		);
 
 		// registering OGC functions
 		// (spec_simplefeatures_sql_99-04.pdf)
@@ -42,7 +67,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		registerFunction(
 				"envelope", new StandardSQLFunction(
 				"envelope",
-				new GeometryType()
+				new JTSGeometryType()
 		)
 		);
 		registerFunction(
@@ -72,7 +97,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		registerFunction(
 				"boundary", new StandardSQLFunction(
 				"boundary",
-				new GeometryType()
+				new JTSGeometryType()
 		)
 		);
 
@@ -142,34 +167,34 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		registerFunction(
 				"buffer", new StandardSQLFunction(
 				"buffer",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 		registerFunction(
 				"convexhull", new StandardSQLFunction(
 				"convexhull",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 		registerFunction(
 				"difference", new StandardSQLFunction(
 				"difference",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 		registerFunction(
 				"intersection", new StandardSQLFunction(
-				"intersection", new GeometryType()
+				"intersection", new JTSGeometryType()
 		)
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "symdifference", GeometryType.INSTANCE )
+				new StandardSQLFunction( "symdifference", JTSGeometryType.INSTANCE )
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
 				"geomunion",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 
@@ -177,7 +202,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		registerFunction(
 				"extent", new StandardSQLFunction(
 				"extent",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 
@@ -185,7 +210,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		registerFunction(
 				"transform", new StandardSQLFunction(
 				"transform",
-				GeometryType.INSTANCE
+				JTSGeometryType.INSTANCE
 		)
 		);
 	}

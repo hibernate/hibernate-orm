@@ -1,37 +1,35 @@
-/**
- * $Id$
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
  *
- * This file is part of Hibernate Spatial, an extension to the 
- * hibernate ORM solution for geographic data. 
+ *  Copyright © 2007-2012 Geovise BVBA
  *
- * Copyright © 2007 Geovise BVBA
- * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * This work was partially supported by the European Commission, 
- * under the 6th Framework Programme, contract IST-2-004688-STP.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * For more information, visit: http://www.hibernatespatial.org/
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.hibernate.spatial.jts.mgeom;
 
-import com.vividsolutions.jts.geom.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateArrays;
+import com.vividsolutions.jts.geom.CoordinateSequence;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.LineString;
 
 /**
  * An implementation of the LineString class with the addition that the
@@ -250,11 +248,11 @@ public class MLineString extends LineString implements MGeometry {
 		else {
 			double[] measures = this.getMeasures();
 
-			if ( this.getMeasureDirection() == INCREASING) {
+			if ( this.getMeasureDirection() == INCREASING ) {
 				return measures[measures.length - 1];
 			}
 			else if ( this.getMeasureDirection() == DECREASING
-					|| this.getMeasureDirection() == CONSTANT) {
+					|| this.getMeasureDirection() == CONSTANT ) {
 				return measures[0];
 			}
 			else {
@@ -300,7 +298,7 @@ public class MLineString extends LineString implements MGeometry {
 					sseq.firstIndex = i;
 				}
 			}
-			if ( direction == INCREASING) {
+			if ( direction == INCREASING ) {
 				if ( m > toM ) {
 					break;
 				}
@@ -501,11 +499,11 @@ public class MLineString extends LineString implements MGeometry {
 		}
 		else {
 			double[] a = this.getMeasures();
-			if ( this.getMeasureDirection() == INCREASING) {
+			if ( this.getMeasureDirection() == INCREASING ) {
 				return a[0];
 			}
 			else if ( this.getMeasureDirection() == DECREASING
-					|| this.getMeasureDirection() == CONSTANT) {
+					|| this.getMeasureDirection() == CONSTANT ) {
 				return a[a.length - 1];
 			}
 			else {
@@ -706,11 +704,11 @@ public class MLineString extends LineString implements MGeometry {
 			);
 		}
 		Coordinate[] linecoar = l.getCoordinates();
-		if ( l.getMeasureDirection() == DECREASING) {
+		if ( l.getMeasureDirection() == DECREASING ) {
 			CoordinateArrays.reverse( linecoar );
 		}
 		Coordinate[] thiscoar = this.getCoordinates();
-		if ( this.getMeasureDirection() == DECREASING) {
+		if ( this.getMeasureDirection() == DECREASING ) {
 			CoordinateArrays.reverse( thiscoar );
 		}
 

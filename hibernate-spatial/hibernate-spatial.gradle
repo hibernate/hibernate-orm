@@ -1,44 +1,62 @@
+/*
+ * This file is part of Hibernate Spatial, an extension to the
+ *  hibernate ORM solution for spatial (geographic) data.
+ *
+ *  Copyright © 2007-2012 Geovise BVBA
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.11'] ) {
+    compile(project(':hibernate-core'))
+    compile([group: 'com.vividsolutions', name: 'jts', version: '1.12']) {
         transitive = false
     }
-    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.3'] )
-    compile( [group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'] )
+    compile([group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.3'])
+    compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])
 
 
-    compile( libraries.dom4j ) {
+    compile(libraries.dom4j) {
         transitive = false
     }
 
 
-    testCompile( libraries.junit )
-    testCompile( project(':hibernate-testing') )
-    testCompile( [group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
-//    testCompile([group: 'com.oracle.jdbc', name:'ojdbc6', version:'11.1.0.7.0'])
-//    testCompile([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
+    testCompile(libraries.junit)
+    testCompile(project(':hibernate-testing'))
+//    testRuntime([group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
+//    testRuntime([group: 'com.oracle.jdbc', name: 'ojdbc6', version: '11.2.0.3'])
+//    testRuntime([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
+//    testRuntime("org.opengeo:geodb:0.7")
 //    testRuntime("mysql:mysql-connector-java:5.1.15")
+    testCompile(libraries.validation)
+    testCompile(libraries.jandex)
+    testCompile(libraries.classmate)
+    testCompile(libraries.validator) {
+        // for test runtime
+        transitive = true
+    }
+    testRuntime('jaxen:jaxen:1.1')
+    testRuntime(libraries.javassist)
 
-    matrixRuntime( 'jaxen:jaxen:1.1' )
+//    matrixRuntime( 'jaxen:jaxen:1.1' )
 }
 
-sourceSets {
-    test {
-        // resources inherently exclude sources
-        resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
-        }
-    }
-    matrix {
-        java {
-            srcDir 'src/matrix/java'
-        }
-        resources {
-            srcDir 'src/matrix/resources'
-        }
-    }
+sourceSets.test.resources {
+    setSrcDirs(['src/test/java', 'src/test/resources'])
 }
 

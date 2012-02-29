@@ -47,8 +47,8 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
  *
- * @see Environment#QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES
- * @see Environment#QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES
+ * @see Environment#QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE
+ * @see Environment#QUERY_PLAN_CACHE_MAX_SIZE
  *
  * @author Steve Ebersole
  */
@@ -56,7 +56,6 @@ public class QueryPlanCache implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryPlanCache.class.getName());
 	
-	private static final boolean isTraceEnabled = LOG.isTraceEnabled();
 	/**
 	 * The default strong reference count.
 	 */
@@ -164,11 +163,11 @@ public class QueryPlanCache implements Serializable {
 		HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
 		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
 		if ( value == null ) {
-			if( isTraceEnabled ) LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
+			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
 			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
 			queryPlanCache.putIfAbsent( key, value );
 		} else {
-			if( isTraceEnabled ) LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
+			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
 		}
 		return value;
 	}
@@ -180,12 +179,12 @@ public class QueryPlanCache implements Serializable {
 		FilterQueryPlanKey key =  new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
 		FilterQueryPlan value = (FilterQueryPlan) queryPlanCache.get( key );
 		if(value == null){
-			if( isTraceEnabled ) LOG.tracev( "Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
+			LOG.tracev( "Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
 										collectionRole, filterString );
 			value = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters,factory );
 			queryPlanCache.putIfAbsent( key, value );
 		} else {
-			if( isTraceEnabled ) LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
+			LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
 		}
 		return value;
 	}
@@ -193,11 +192,11 @@ public class QueryPlanCache implements Serializable {
 	public NativeSQLQueryPlan getNativeSQLQueryPlan(final NativeSQLQuerySpecification spec) {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
 		if(value == null){
-			if( isTraceEnabled ) LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
+			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
 			value = new NativeSQLQueryPlan( spec, factory);
 			queryPlanCache.putIfAbsent( spec, value );
 		} else {
-			if( isTraceEnabled ) LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
+			LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
 		}
 		return value;
 	}
@@ -205,9 +204,7 @@ public class QueryPlanCache implements Serializable {
 
 	//clean up QueryPlanCache when Sessionfactory is closed
 	public void cleanup() {
-		if ( isTraceEnabled ) {
-			LOG.trace( "Cleaning QueryPlan Cache" );
-		}
+		LOG.trace( "Cleaning QueryPlan Cache" );
 		queryPlanCache.clear();
 		parameterMetadataCache.clear();
 	}

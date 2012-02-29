@@ -285,6 +285,9 @@ public class PropertyBinder {
 		}
 		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
 		if ( naturalId != null ) {
+			if ( ! entityBinder.isRootEntity() ) {
+				throw new AnnotationException( "@NaturalId only valid on root entity (or its @MappedSuperclasses)" );
+			}
 			if ( ! naturalId.mutable() ) {
 				updatable = false;
 			}

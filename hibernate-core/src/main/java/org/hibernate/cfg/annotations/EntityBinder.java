@@ -183,6 +183,11 @@ public class EntityBinder {
 		}
 	}
 
+	public boolean isRootEntity() {
+		// This is the best option I can think of here since PersistentClass is most likely not yet fully populated
+		return persistentClass instanceof RootClass;
+	}
+
 	public void setDiscriminatorValue(String discriminatorValue) {
 		this.discriminatorValue = discriminatorValue;
 	}

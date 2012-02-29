@@ -37,6 +37,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    public void evictAll() throws CacheException {
       Transaction tx = suspend();
       try {
+         invalidateRegion(); // Invalidate the local region and then go remote
          cacheAdapter.broadcastEvictAll();
       } finally {
          resume(tx);

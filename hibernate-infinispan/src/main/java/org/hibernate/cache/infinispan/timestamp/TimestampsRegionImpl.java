@@ -45,6 +45,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       // TODO Is this a valid operation on a timestamps cache?
       Transaction tx = suspend();
       try {
+         invalidateRegion(); // Invalidate the local region and then go remote
          cacheAdapter.broadcastEvictAll();
       } finally {
          resume(tx);

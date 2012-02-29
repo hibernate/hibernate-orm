@@ -90,14 +90,15 @@ import static java.util.Collections.unmodifiableMap;
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.
  *
+ * <p>This class is copied from Infinispan, and was originally written
+ * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
+ * released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain</p>
+ *
+ *
  * <p> Like {@link Hashtable} but unlike {@link HashMap}, this class
  * does <em>not</em> allow <tt>null</tt> to be used as a key or value.
  *
- * <p>This class is a member of the
- * <a href="{@docRoot}/../technotes/guides/collections/index.html">
- * Java Collections Framework</a>.
- *
- * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values

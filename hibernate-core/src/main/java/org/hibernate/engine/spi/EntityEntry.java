@@ -379,7 +379,7 @@ public final class EntityEntry implements Serializable {
 			throw new HibernateException( "PersistenceContext was null on attempt to update loaded state" );
 		}
 
-		persistenceContext.loadedStateUpdatedNotification( this, state );
+		persistenceContext.entityStateUpdatedNotification( this, state );
 	}
 	
 	private void notifyLoadedStateInserted(Object[] state) {
@@ -387,7 +387,7 @@ public final class EntityEntry implements Serializable {
 			throw new HibernateException( "PersistenceContext was null on attempt to insert loaded state" );
 		}
 
-		persistenceContext.loadedStateInsertedNotification( this, state );
+		persistenceContext.entityStateInsertedNotification( this, state );
 	}
 
 	private void notifyLoadedStateDeleted(Object[] deletedState) {
@@ -395,7 +395,7 @@ public final class EntityEntry implements Serializable {
 			throw new HibernateException( "PersistenceContext was null on attempt to delete loaded state" );
 		}
 
-		persistenceContext.loadedStateDeletedNotification( this, deletedState );
+		persistenceContext.entityStateDeletedNotification( this, deletedState );
 	}
 
 	/**

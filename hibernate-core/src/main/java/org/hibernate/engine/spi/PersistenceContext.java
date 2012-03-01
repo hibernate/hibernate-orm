@@ -683,25 +683,34 @@ public interface PersistenceContext {
 	 */
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 
-	public void loadedStateUpdatedNotification(EntityEntry entityEntry, Object[] state);
-	
-	public void loadedStateInsertedNotification(EntityEntry entityEntry, Object[] state);
-	
-	public void loadedStateDeletedNotification(EntityEntry entityEntry, Object[] deletedState);
+	/**
+	 * Callback used to signal that loaded entity state has changed.
+	 *
+	 * @param entityEntry The entry of the entity that has changed.
+	 * @param state The new state.
+	 */
+	public void entityStateUpdatedNotification(EntityEntry entityEntry, Object[] state);
+
+	/**
+	 * Callback used to signal that entity state has been inserted.
+	 *
+	 * @param entityEntry The entry of the inserted entity
+	 * @param state The new state
+	 */
+	public void entityStateInsertedNotification(EntityEntry entityEntry, Object[] state);
+
+	/**
+	 * Callback used to signal that entity state has been deleted.
+	 *
+	 * @param entityEntry The entry of the inserted entity
+	 * @param deletedState The state of the entity at the time of deletion
+	 */
+	public void entityStateDeletedNotification(EntityEntry entityEntry, Object[] deletedState);
 
 	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
 
 	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalId);
 
-	/**
-	 * The type of action the cache call is originating from
-	 */
-	public enum CachedNaturalIdValueSource {
-		LOAD,
-		INSERT,
-		UPDATE
-	}
-	
 	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId, CachedNaturalIdValueSource valueSource);
 	
 }

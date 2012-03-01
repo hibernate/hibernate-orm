@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.naturalid;
+package org.hibernate.test.naturalid.immutableentity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,6 +35,8 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -42,9 +44,9 @@ import org.junit.Test;
  * Test case for NaturalId annotation on an {@link Immutable} entity
  *
  * @author Eric Dalquist
- * @see https://hibernate.onjira.com/browse/HHH-7085
  */
 @SuppressWarnings("unchecked")
+@TestForIssue( jiraKey = "HHH-7085" )
 public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMappingProperties() {

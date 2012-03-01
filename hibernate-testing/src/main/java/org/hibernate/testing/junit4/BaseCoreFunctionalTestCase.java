@@ -23,20 +23,27 @@
  */
 package org.hibernate.testing.junit4;
 
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -44,6 +51,7 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
@@ -51,6 +59,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistry;
@@ -58,20 +67,15 @@ import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
@@ -418,6 +422,41 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 		assertAllDataRemoved();
 	}
+	
+	protected void deleteAllData() {
+		// Get all the entities the session factory knows about
+		final Map<String, ClassMetadata> allClassMetadata = this.sessionFactory().getAllClassMetadata();
+		Set<ClassMetadata> entityTypes = new LinkedHashSet<ClassMetadata>(allClassMetadata.values());
+
+        do {
+            final Set<ClassMetadata> failedEntitieTypes = new HashSet<ClassMetadata>();
+            
+            for (final ClassMetadata entityType : entityTypes) {
+                final String entityClassName = entityType.getEntityName();
+                
+                final Session s = openSession();
+                final Transaction tx = s.beginTransaction();
+                try {
+            		final Criteria criteria = s.createCriteria( entityClassName );
+                    final List<?> entities = criteria.list();
+                    for (final Object entity : entities) {
+                        s.delete( entity);
+                    }  
+
+            		tx.commit();
+                }
+                catch (ConstraintViolationException e) {
+                    failedEntitieTypes.add(entityType);
+                    tx.rollback();
+                }
+                finally {
+                	s.close();            
+                }
+            }
+            
+            entityTypes = failedEntitieTypes;
+        } while (!entityTypes.isEmpty());
+	}
 
 	protected void cleanupCache() {
 		if ( sessionFactory != null ) {
@@ -425,6 +464,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictDefaultQueryRegion();
 			sessionFactory.getCache().evictEntityRegions();
 			sessionFactory.getCache().evictQueryRegions();
+			sessionFactory.getCache().evictNaturalIdRegions();
 		}
 	}
 

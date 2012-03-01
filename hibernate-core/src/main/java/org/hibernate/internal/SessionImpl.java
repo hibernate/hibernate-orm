@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +81,6 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.query.spi.FilterQueryPlan;
@@ -2351,12 +2351,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return entityPersister;
 	}
 
-	private class NaturalIdLoadAccessImpl implements NaturalIdLoadAccess {
+	private abstract class BaseNaturalIdLoadAccessImpl  {
 		private final EntityPersister entityPersister;
-		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
 		private LockOptions lockOptions;
 
-		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
+		private BaseNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
 
 			if ( ! entityPersister.hasNaturalIdentifier() ) {
@@ -2364,6 +2363,49 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
 				);
 			}
+		}
+
+		private BaseNaturalIdLoadAccessImpl(String entityName) {
+			this( locateEntityPersister( entityName ) );
+		}
+
+		private BaseNaturalIdLoadAccessImpl(Class entityClass) {
+			this( entityClass.getName() );
+		}
+
+		public BaseNaturalIdLoadAccessImpl with(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		protected final Serializable resolveNaturalId(Map<String, Object> naturalIdParameters) {
+			final Set<Serializable> querySpaces = new LinkedHashSet<Serializable>();
+			for ( final Serializable querySpace : entityPersister.getQuerySpaces() ) {
+				querySpaces.add( querySpace );
+			}
+			
+			autoFlushIfRequired( querySpaces );
+			
+			final ResolveNaturalIdEvent event =
+					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
+			fireResolveNaturalId( event );
+			return event.getEntityId();
+		}
+
+		protected final IdentifierLoadAccess getIdentifierLoadAccess() {
+			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
+			if ( this.lockOptions != null ) {
+				identifierLoadAccess.with( lockOptions );
+			}
+			return identifierLoadAccess;
+		}
+	}
+
+	private class NaturalIdLoadAccessImpl extends BaseNaturalIdLoadAccessImpl implements NaturalIdLoadAccess {
+		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
+
+		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
+			super(entityPersister);
 		}
 
 		private NaturalIdLoadAccessImpl(String entityName) {
@@ -2373,11 +2415,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		private NaturalIdLoadAccessImpl(Class entityClass) {
 			this( entityClass.getName() );
 		}
-
+		
 		@Override
-		public final NaturalIdLoadAccess with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
+		public NaturalIdLoadAccessImpl with(LockOptions lockOptions) {
+			return (NaturalIdLoadAccessImpl) super.with( lockOptions );
 		}
 
 		@Override
@@ -2386,24 +2427,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return this;
 		}
 
-		protected Serializable resolveNaturalId() {
-			final ResolveNaturalIdEvent event =
-					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
-			fireResolveNaturalId( event );
-			return event.getEntityId();
-		}
-
-		protected IdentifierLoadAccess getIdentifierLoadAccess() {
-			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
-			if ( this.lockOptions != null ) {
-				identifierLoadAccess.with( lockOptions );
-			}
-			return identifierLoadAccess;
-		}
-
 		@Override
 		public final Object getReference() {
-			final Serializable entityId = resolveNaturalId();
+			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2412,7 +2438,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		@Override
 		public final Object load() {
-			final Serializable entityId = resolveNaturalId();
+			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2420,19 +2446,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class SimpleNaturalIdLoadAccessImpl implements SimpleNaturalIdLoadAccess {
-		private final EntityPersister entityPersister;
+	private class SimpleNaturalIdLoadAccessImpl extends BaseNaturalIdLoadAccessImpl implements SimpleNaturalIdLoadAccess {
 		private final String naturalIdAttributeName;
-		private LockOptions lockOptions;
 
 		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
-			this.entityPersister = entityPersister;
-
-			if ( ! entityPersister.hasNaturalIdentifier() ) {
-				throw new HibernateException(
-						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
-				);
-			}
+			super(entityPersister);
 
 			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {
 				throw new HibernateException(
@@ -2454,13 +2472,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		@Override
 		public final SimpleNaturalIdLoadAccessImpl with(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return this;
+			return (SimpleNaturalIdLoadAccessImpl) super.with( lockOptions );
+		}
+		
+		private Map<String, Object> getNaturalIdParameters(Object naturalIdValue) {
+			return Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
 		}
 
 		@Override
 		public Object getReference(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( naturalIdValue );
+			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2469,27 +2490,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		@Override
 		public Object load(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( naturalIdValue );
+			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}
 			return this.getIdentifierLoadAccess().load( entityId );
-		}
-
-		private Serializable resolveNaturalId(Object naturalIdValue) {
-			final Map<String,Object> naturalIdValueMap = Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
-			final ResolveNaturalIdEvent event =
-					new ResolveNaturalIdEvent( naturalIdValueMap, entityPersister, SessionImpl.this );
-			fireResolveNaturalId( event );
-			return event.getEntityId();
-		}
-
-		private IdentifierLoadAccess getIdentifierLoadAccess() {
-			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
-			if ( this.lockOptions != null ) {
-				identifierLoadAccess.with( lockOptions );
-			}
-			return identifierLoadAccess;
 		}
 	}
 }

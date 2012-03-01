@@ -39,6 +39,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 
 /**
  * Maintains a {@link org.hibernate.engine.spi.PersistenceContext}-level 2-way cross-reference (xref) between the 
@@ -74,11 +75,12 @@ public class NaturalIdXrefDelegate {
 			naturalIdResolutionCacheMap.put( persister, entityNaturalIdResolutionCache );
 		}
 
-		final CachedNaturalId cachedNaturalId = new CachedNaturalId( persister, naturalIdValues );
-		entityNaturalIdResolutionCache.pkToNaturalIdMap.put( pk, cachedNaturalId );
-		entityNaturalIdResolutionCache.naturalIdToPkMap.put( cachedNaturalId, pk );
+		final boolean justAddedToLocalCache = entityNaturalIdResolutionCache.cache( pk, naturalIdValues );
 
-		//If second-level caching is enabled cache the resolution there as well
+		// If second-level caching is enabled cache the resolution there as well
+		//		NOTE : the checks using 'justAddedToLocalCache' below protect only the stat journaling, not actually
+		//		putting into the shared cache.  we still put into the shared cache because that might have locking
+		//		semantics that we need to honor.
 		if ( persister.hasNaturalIdCache() ) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session() );
@@ -93,8 +95,8 @@ public class NaturalIdXrefDelegate {
 							session().getTimestamp(),
 							null
 					);
-
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+	
+					if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 					}
@@ -110,7 +112,7 @@ public class NaturalIdXrefDelegate {
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, pk );
 
-									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+									if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
 										factory.getStatisticsImplementor().naturalIdCachePut(
 												naturalIdCacheAccessStrategy.getRegion().getName() );
 									}
@@ -130,7 +132,7 @@ public class NaturalIdXrefDelegate {
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, pk, lock );
 
-									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+									if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
 										factory.getStatisticsImplementor().naturalIdCachePut(
 												naturalIdCacheAccessStrategy.getRegion().getName() );
 									}
@@ -310,16 +312,49 @@ public class NaturalIdXrefDelegate {
 
 	private static class NaturalIdResolutionCache implements Serializable {
 		private final EntityPersister persister;
+		private final Type[] naturalIdTypes;
+
+		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<Serializable, CachedNaturalId>();
+		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<CachedNaturalId, Serializable>();
 
 		private NaturalIdResolutionCache(EntityPersister persister) {
 			this.persister = persister;
+
+			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+			naturalIdTypes = new Type[ naturalIdPropertyIndexes.length ];
+			int i = 0;
+			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
+				naturalIdTypes[i++] = persister.getPropertyType( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
+			}
 		}
 
 		public EntityPersister getPersister() {
 			return persister;
 		}
 
-		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<Serializable, CachedNaturalId>();
-		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<CachedNaturalId, Serializable>();
+		public boolean cache(Serializable pk, Object[] naturalIdValues) {
+			final CachedNaturalId initial = pkToNaturalIdMap.get( pk );
+			if ( initial != null ) {
+				if ( areSame( naturalIdValues, initial.getValues() ) ) {
+					return false;
+				}
+			}
+
+			final CachedNaturalId cachedNaturalId = new CachedNaturalId( persister, naturalIdValues );
+			pkToNaturalIdMap.put( pk, cachedNaturalId );
+			naturalIdToPkMap.put( cachedNaturalId, pk );
+			
+			return true;
+		}
+
+		private boolean areSame(Object[] naturalIdValues, Object[] values) {
+			// lengths have already been verified at this point
+			for ( int i = 0; i < naturalIdTypes.length; i++ ) {
+				if ( naturalIdTypes[i].compare( naturalIdValues[i], values[i] ) != 0 ) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 }

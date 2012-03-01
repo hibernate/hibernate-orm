@@ -26,6 +26,8 @@ package org.hibernate.test.annotations.naturalid;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+
+import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
@@ -52,11 +54,16 @@ import static org.junit.Assert.assertTrue;
 public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( NaturalIdOnSingleManyToOneTest.class );
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		this.cleanupCache();
-		
-		this.deleteAllData();
+	@After
+	public void cleanupData() {
+		super.cleanupCache();
+		Session s = sessionFactory().openSession();
+		s.beginTransaction();
+		s.createQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
+		s.createQuery( "delete Citizen" ).executeUpdate();
+		s.createQuery( "delete State" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test

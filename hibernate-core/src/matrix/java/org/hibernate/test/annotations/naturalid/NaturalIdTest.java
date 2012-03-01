@@ -38,6 +38,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -48,13 +50,18 @@ import org.junit.Test;
  */
 @SuppressWarnings("unchecked")
 public class NaturalIdTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void cleanupTest() throws Exception {
-		this.cleanupCache();
-		
-		this.deleteAllData();
+	@After
+	public void cleanupData() {
+		super.cleanupCache();
+		Session s = sessionFactory().openSession();
+		s.beginTransaction();
+		s.createQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
+		s.createQuery( "delete Citizen" ).executeUpdate();
+		s.createQuery( "delete State" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
-	
+
 	@Test
 	public void testMappingProperties() {
 		ClassMetadata metaData = sessionFactory().getClassMetadata(

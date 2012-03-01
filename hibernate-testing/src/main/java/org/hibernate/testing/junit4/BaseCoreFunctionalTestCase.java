@@ -422,41 +422,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 		assertAllDataRemoved();
 	}
-	
-	protected void deleteAllData() {
-		// Get all the entities the session factory knows about
-		final Map<String, ClassMetadata> allClassMetadata = this.sessionFactory().getAllClassMetadata();
-		Set<ClassMetadata> entityTypes = new LinkedHashSet<ClassMetadata>(allClassMetadata.values());
-
-        do {
-            final Set<ClassMetadata> failedEntitieTypes = new HashSet<ClassMetadata>();
-            
-            for (final ClassMetadata entityType : entityTypes) {
-                final String entityClassName = entityType.getEntityName();
-                
-                final Session s = openSession();
-                final Transaction tx = s.beginTransaction();
-                try {
-            		final Criteria criteria = s.createCriteria( entityClassName );
-                    final List<?> entities = criteria.list();
-                    for (final Object entity : entities) {
-                        s.delete( entity);
-                    }  
-
-            		tx.commit();
-                }
-                catch (ConstraintViolationException e) {
-                    failedEntitieTypes.add(entityType);
-                    tx.rollback();
-                }
-                finally {
-                	s.close();            
-                }
-            }
-            
-            entityTypes = failedEntitieTypes;
-        } while (!entityTypes.isEmpty());
-	}
 
 	protected void cleanupCache() {
 		if ( sessionFactory != null ) {

@@ -1425,7 +1425,7 @@ public class Configuration implements Serializable {
 			if ( sp.isInPrimaryKey() ) {
 				String referenceEntityName = sp.getReferencedEntityName();
 				PersistentClass classMapping = getClassMapping( referenceEntityName );
-				String dependentTable = classMapping.getTable().getQuotedName();
+				String dependentTable = quotedTableName(classMapping.getTable());
 				if ( !isADependencyOf.containsKey( dependentTable ) ) {
 					isADependencyOf.put( dependentTable, new HashSet<FkSecondPass>() );
 				}
@@ -1495,7 +1495,7 @@ public class Configuration implements Serializable {
 		}
 
 		for ( FkSecondPass sp : dependencies ) {
-			String dependentTable = sp.getValue().getTable().getQuotedName();
+			String dependentTable = quotedTableName(sp.getValue().getTable());
 			if ( dependentTable.compareTo( startTable ) == 0 ) {
 				StringBuilder sb = new StringBuilder(
 						"Foreign key circularity dependency involving the following tables: "
@@ -1507,6 +1507,10 @@ public class Configuration implements Serializable {
 				orderedFkSecondPasses.add( 0, sp );
 			}
 		}
+	}
+
+	private String quotedTableName(Table table) {
+		return Table.qualify( table.getCatalog(), table.getQuotedSchema(), table.getQuotedName() );
 	}
 
 	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {

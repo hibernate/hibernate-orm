@@ -92,7 +92,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 				throw new AssertionFailure( "possible nonthreadsafe access to session" );
 			}
 			
-			entry.postInsert();
+			entry.postInsert( getState() );
 	
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( id, instance, getState(), session );

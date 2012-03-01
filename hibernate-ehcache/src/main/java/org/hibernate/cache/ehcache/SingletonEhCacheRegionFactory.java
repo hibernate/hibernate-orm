@@ -63,6 +63,7 @@ public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory 
      * {@inheritDoc}
      */
     public void start(Settings settings, Properties properties) throws CacheException {
+        this.settings = settings;
         try {
             String configurationResourceName = null;
             if ( properties != null ) {

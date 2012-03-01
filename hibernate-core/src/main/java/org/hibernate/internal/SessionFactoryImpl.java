@@ -343,9 +343,7 @@ public final class SessionFactoryImpl
 			if ( accessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
 				final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
 				if ( accessType != null ) {
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracev( "Building cache for entity data [{0}]", model.getEntityName() );
-					}
+					LOG.tracef( "Building shared cache region for entity data [%s]", model.getEntityName() );
 					EntityRegion entityRegion = regionFactory.buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
@@ -367,7 +365,12 @@ public final class SessionFactoryImpl
 								cacheDataDescription );
 					}
 					catch ( UnsupportedOperationException e ) {
-						LOG.warn( regionFactory.getClass().getName() +  " threw an UnsupportedOperationException for buildNaturalIdRegion, second-level NaturalId caching will not be enabled for " + model.getEntityName() );
+						LOG.warnf(
+								"Shared cache region factory [%s] does not support natural id caching; " +
+										"shared NaturalId caching will be disabled for not be enabled for %s",
+								regionFactory.getClass().getName(),
+								model.getEntityName()
+						);
 					}
 					
 					if (naturalIdRegion != null) {
@@ -400,9 +403,7 @@ public final class SessionFactoryImpl
 			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev("Building cache for collection data [{0}]", model.getRole() );
-				}
+				LOG.tracev( "Building shared cache region for collection data [{0}]", model.getRole() );
 				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl
 						.decode( model ) );
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );

@@ -63,9 +63,6 @@ libraries = [
         jandex:         'org.jboss:jandex:1.0.3.Final',
         classmate:      'com.fasterxml:classmate:0.5.4',
 
-        // Jakarta commons-collections  todo : get rid of commons-collections dependency
-        commons_collections:
-                        'commons-collections:commons-collections:3.2.1',
         // Dom4J
         dom4j:          'dom4j:dom4j:1.6.1@jar',
 

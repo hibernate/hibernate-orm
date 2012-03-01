@@ -238,9 +238,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
-		final Binder binder = new Binder( this );
+		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors )
-            binder.processEntityHierarchies( processor.extractEntityHierarchies() );
+            binder.bindEntities( processor.extractEntityHierarchies() );
 	}
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {

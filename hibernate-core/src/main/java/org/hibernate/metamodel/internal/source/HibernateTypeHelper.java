@@ -102,17 +102,16 @@ public class HibernateTypeHelper {
 	private static final Logger log = Logger.getLogger( HibernateTypeHelper.class );
 
 	private final Binder binder;
+	private final MetadataImplementor metadata;
 
-	public HibernateTypeHelper(Binder binder) {
+	public HibernateTypeHelper( Binder binder,
+	                            MetadataImplementor metadata ) {
 		this.binder = binder;
+		this.metadata = metadata;
 	}
 
 	private org.hibernate.metamodel.spi.domain.Type makeJavaType(String name) {
-		return binder.getCurrentBindingContext().makeJavaType( name );
-	}
-
-	private MetadataImplementor metadata() {
-		return binder.getMetadata();
+		return binder.bindingContext().makeJavaType( name );
 	}
 
 	public void bindSingularAttributeTypeInformation(
@@ -183,7 +182,7 @@ public class HibernateTypeHelper {
 		// TODO: not sure about the following...
 		pluralAttributeKeyTypeDescriptor.setToOne( referencedTypeDescriptor.isToOne() );
 		pluralAttributeKeyTypeDescriptor.getTypeParameters().putAll( referencedTypeDescriptor.getTypeParameters() );
-		
+
 		processPluralAttributeKeyInformation( keyBinding );
 	}
 
@@ -215,7 +214,7 @@ public class HibernateTypeHelper {
 			}
 		}
 	}
-	
+
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
@@ -262,7 +261,7 @@ public class HibernateTypeHelper {
 			HibernateTypeDescriptor hibernateTypeDescriptor) {
 		final String explicitTypeName = typeSource.getName();
 		if ( explicitTypeName != null ) {
-			final TypeDefinition typeDefinition = metadata().getTypeDefinition( explicitTypeName );
+			final TypeDefinition typeDefinition = metadata.getTypeDefinition( explicitTypeName );
 			if ( typeDefinition != null ) {
 				hibernateTypeDescriptor.setExplicitTypeName( typeDefinition.getTypeImplementorClass().getName() );
 				hibernateTypeDescriptor.getTypeParameters().putAll( typeDefinition.getParameters() );
@@ -318,7 +317,7 @@ public class HibernateTypeHelper {
 	private Type getHeuristicType(String typeName, Properties typeParameters) {
 		if ( typeName != null ) {
 			try {
-				return metadata().getTypeResolver().heuristicType( typeName, typeParameters );
+				return metadata.getTypeResolver().heuristicType( typeName, typeParameters );
 			}
 			catch (Exception ignore) {
 			}
@@ -452,7 +451,7 @@ public class HibernateTypeHelper {
 			if ( AbstractValue.class.isInstance( value ) ) {
 				( (AbstractValue) value ).setJdbcDataType(
 						new JdbcDataType(
-								resolvedHibernateType.sqlTypes( metadata() )[0],
+								resolvedHibernateType.sqlTypes( metadata )[0],
 								resolvedHibernateType.getName(),
 								resolvedHibernateType.getReturnedClass()
 						)
@@ -480,7 +479,7 @@ public class HibernateTypeHelper {
 		String typeName = attributeBinding.getHibernateTypeDescriptor().getExplicitTypeName();
 		if ( typeName != null ) {
 			resolvedType =
-					metadata().getTypeResolver()
+					metadata.getTypeResolver()
 							.getTypeFactory()
 							.customCollection(
 									typeName,
@@ -500,7 +499,7 @@ public class HibernateTypeHelper {
 	}
 
 	private Type determineHibernateTypeFromCollectionType(PluralAttributeBinding attributeBinding) {
-		final TypeFactory typeFactory = metadata().getTypeResolver().getTypeFactory();
+		final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
 		switch ( attributeBinding.getAttribute().getNature() ) {
 			case SET: {
 				return typeFactory.set(

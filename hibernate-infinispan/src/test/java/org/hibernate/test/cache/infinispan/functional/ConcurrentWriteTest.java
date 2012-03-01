@@ -220,7 +220,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 				Thread.sleep( LAUNCH_INTERVAL_MILLIS ); // rampup
 			}
 //         barrier.await(); // wait for all threads to be ready
-			barrier.await( 45, TimeUnit.SECONDS ); // wait for all threads to finish
+			barrier.await( 2, TimeUnit.MINUTES ); // wait for all threads to finish
 			log.info( "All threads finished, let's shutdown the executor and check whether any exceptions were reported" );
 			for ( Future<Void> future : futures ) {
 				future.get();

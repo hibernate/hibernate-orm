@@ -43,18 +43,34 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	private final Map<Class<?>,EntityTypeImpl<?>> entities;
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
 
+    /**
+   	 * Build the metamodel using the information from the collection of Hibernate
+   	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
+   	 *
+   	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
+   	 * @param sessionFactory The Hibernate session factry.
+   	 * @return The built metamodel
+   	 */
+   	public static MetamodelImpl buildMetamodel(
+   			Iterator<PersistentClass> persistentClasses,
+   			SessionFactoryImplementor sessionFactory) {
+        return buildMetamodel(persistentClasses, sessionFactory, false);
+   	}
+
 	/**
 	 * Build the metamodel using the information from the collection of Hibernate
 	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
 	 *
 	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
 	 * @param sessionFactory The Hibernate session factry.
+     * @param ignoreUnsupported ignore unsupported/unknown annotations (like @Any)
 	 * @return The built metamodel
 	 */
 	public static MetamodelImpl buildMetamodel(
 			Iterator<PersistentClass> persistentClasses,
-			SessionFactoryImplementor sessionFactory) {
-		MetadataContext context = new MetadataContext( sessionFactory );
+			SessionFactoryImplementor sessionFactory,
+            boolean ignoreUnsupported) {
+		MetadataContext context = new MetadataContext( sessionFactory, ignoreUnsupported );
 		while ( persistentClasses.hasNext() ) {
 			PersistentClass pc = persistentClasses.next();
 			if ( pc.getMappedClass() != null ) {

@@ -90,9 +90,12 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		//a safe guard till we are confident that metamodel is wll tested
-		if ( !"disabled".equalsIgnoreCase( cfg.getProperty( "hibernate.ejb.metamodel.generation" ) ) ) {
-			this.metamodel = MetamodelImpl.buildMetamodel( classes, ( SessionFactoryImplementor ) sessionFactory );
+		//a safe guard till we are confident that metamodel is well tested
+        // disabled: dont create metamodel
+        // ignoreUnsupported: create metamodel, but ignore unsupported/unknown annotations (like @Any) HHH-6589
+        final String ejbMetamodelGenerationProperty = cfg.getProperty( "hibernate.ejb.metamodel.generation" );
+		if ( !"disabled".equalsIgnoreCase( ejbMetamodelGenerationProperty ) ) {
+			this.metamodel = MetamodelImpl.buildMetamodel( classes, ( SessionFactoryImplementor ) sessionFactory, "ignoreUnsupported".equalsIgnoreCase( ejbMetamodelGenerationProperty ));
 		}
 		else {
 			this.metamodel = null;

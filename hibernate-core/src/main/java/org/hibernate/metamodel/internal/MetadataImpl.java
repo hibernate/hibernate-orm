@@ -44,7 +44,6 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.internal.source.Binder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;

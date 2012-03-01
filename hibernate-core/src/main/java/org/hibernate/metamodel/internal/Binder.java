@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source;
+package org.hibernate.metamodel.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,8 +173,6 @@ public class Binder {
 											final AttributeSource attributeSource ) {
 		// Return existing binding if available
 		final String attributeName = attributeSource.getName();
-		System.out.println( "bindAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " )" );
 		final AttributeBinding attributeBinding = attributeBindingContainer.locateAttributeBinding( attributeName );
 		if ( attributeBinding != null ) {
 			return attributeBinding;
@@ -187,7 +185,6 @@ public class Binder {
 
 	private void bindAttributes( final AttributeBindingContainer attributeBindingContainer,
 								 final AttributeSourceContainer attributeSourceContainer ) {
-		System.out.println( "bindAttributes( " + attributeBindingContainer.getAttributeContainer().getName() + " )" );
 		for ( final AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
 			bindAttribute( attributeBindingContainer, attributeSource );
 		}
@@ -214,8 +211,6 @@ public class Binder {
 													  final SingularAttributeSource attributeSource,
 													  SingularAttribute attribute ) {
 
-		System.out.println( "bindBasicAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " )" );
 		if ( attribute == null ) {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
@@ -440,8 +435,6 @@ public class Binder {
 	private CompositeAttributeBinding bindComponentAttribute( final AttributeBindingContainer attributeBindingContainer,
 															  final ComponentAttributeSource attributeSource,
 															  SingularAttribute attribute ) {
-		System.out.println( "bindComponentAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " )" );
 		Composite composite;
 		if ( attribute == null ) {
 			composite = new Composite( attributeSource.getPath(), attributeSource.getClassName(),
@@ -502,7 +495,6 @@ public class Binder {
 
 	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
 		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
-		System.out.println( "bindEntities(): rootEntitySource = " + rootEntitySource.getEntityName() );
 		// Return existing binding if available
 		EntityBinding rootEntityBinding = metadata.getEntityBinding( rootEntitySource.getEntityName() );
 		if ( rootEntityBinding != null ) {
@@ -556,8 +548,6 @@ public class Binder {
 
 	private EntityBinding bindEntity( final EntitySource entitySource,
 									  final EntityBinding superEntityBinding ) {
-		System.out.println( "bindEntity( entitySource = " + entitySource.getEntityName() + ", superEntityBinding = "
-							+ ( superEntityBinding == null ? "null" : superEntityBinding.getEntity().getName() ) + " )" );
 		// Return existing binding if available
 		EntityBinding entityBinding = metadata.getEntityBinding( entitySource.getEntityName() );
 		if ( entityBinding != null ) {
@@ -575,8 +565,6 @@ public class Binder {
 											  final Attribute attribute,
 											  final AbstractValue value ) {
 		String typeName = typeSource.getName();
-		System.out.println( "bindHibernateTypeDescriptor( typeSource = " + typeSource.getName() + ", attribute = "
-							+ attribute.getName() + " )" );
 		// Check if user specified a type
 		if ( typeName == null ) {
 			// Obtain Java type name from attribute
@@ -604,7 +592,6 @@ public class Binder {
 	private void bindIdentifier( final EntityBinding rootEntityBinding,
 								 final IdentifierSource identifierSource ) {
 		final Nature nature = identifierSource.getNature();
-		System.out.println( "bindIdentifier( " + rootEntityBinding.getEntity().getName() + " ): nature = " + nature );
 		if ( nature == Nature.SIMPLE ) {
 			bindSimpleIdentifier( rootEntityBinding, ( SimpleIdentifierSource ) identifierSource );
 		} else {
@@ -625,8 +612,6 @@ public class Binder {
 	private ManyToOneAttributeBinding bindManyToOneAttribute( final AttributeBindingContainer attributeBindingContainer,
 															  final ToOneAttributeSource attributeSource,
 															  SingularAttribute attribute ) {
-		System.out.println( "bindManyToOneAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " )" );
 		if ( attribute == null ) {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
@@ -662,14 +647,11 @@ public class Binder {
 		}
 		attributeBinding.setReferencedEntityName( referencedEntityName );
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
-		System.out.println( "bindManyToOneAttribute: referencedEntityBinding = " + referencedEntityBinding.getEntity().getName() );
 		final String referencedAttributeName = attributeSource.getReferencedEntityAttributeName();
-		System.out.println( "bindManyToOneAttribute: referencedAttributeName = " + referencedAttributeName );
 		attributeBinding.setReferencedAttributeName( referencedAttributeName );
 		final AttributeBinding referencedAttributeBinding = referencedAttributeName == null
 			? referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
 			: referencedEntityBinding.locateAttributeBinding( referencedAttributeName );
-		System.out.println( "bindManyToOneAttribute: referencedAttributeBinding = " + referencedAttributeBinding );
 		attributeBinding.resolveReference( referencedAttributeBinding );
 		referencedAttributeBinding.addEntityReferencingAttributeBinding( attributeBinding );
 		return attributeBinding;
@@ -678,8 +660,6 @@ public class Binder {
 	private AbstractPluralAttributeBinding bindPluralAttribute( final AttributeBindingContainer attributeBindingContainer,
 																final PluralAttributeSource attributeSource ) {
 		final PluralAttributeNature nature = attributeSource.getPluralAttributeNature();
-		System.out.println( "bindPluralAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " ): nature = " + nature );
 		final PluralAttribute attribute =
 			attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		AbstractPluralAttributeBinding attributeBinding;
@@ -732,7 +712,6 @@ public class Binder {
 
 	private void bindSecondaryTables( final EntityBinding entityBinding,
 									  final EntitySource entitySource ) {
-		System.out.println( "bindSecondaryTables( entityBinding = " + entitySource.getEntityName() + " )" );
 		final TableSpecification primaryTable = entityBinding.getPrimaryTable();
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
@@ -791,8 +770,6 @@ public class Binder {
 									   final SimpleIdentifierSource identifierSource ) {
 		final BasicAttributeBinding idAttributeBinding =
 			( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-		System.out.println( "bindSimpleIdentifier( " + rootEntityBinding.getEntity().getName() + ", "
-							+ identifierSource.getIdentifierAttributeSource().getName() + " )" );
 		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
@@ -811,8 +788,6 @@ public class Binder {
 	private SingularAttributeBinding bindSingularAttribute( final AttributeBindingContainer attributeBindingContainer,
 															final SingularAttributeSource attributeSource ) {
 		final SingularAttributeNature nature = attributeSource.getNature();
-		System.out.println( "bindSingularAttribute( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attributeSource.getName() + " ): nature = " + nature );
 		final SingularAttribute attribute =
 			attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
 		if ( nature == SingularAttributeNature.BASIC ) {
@@ -875,15 +850,11 @@ public class Binder {
 													   final RelationalValueSourceContainer valueSourceContainer,
 													   final Attribute attribute,
 													   final TableSpecification defaultTable ) {
-		System.out.println( "bindValues( " + attributeBindingContainer.getAttributeContainer().getName() + ", "
-							+ attribute.getName() + " )" );
 		final List< RelationalValueBinding > valueBindings = new ArrayList< RelationalValueBinding >();
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			final String columnName =
 				quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
 			final Column column = defaultTable.locateOrCreateColumn( columnName );
-			System.out.println( "bindValues: \"" + column.getColumnName().getName() + "\" column on primary table "
-								+ defaultTable.getLogicalName() );
 			column.setNullable( valueSourceContainer.areValuesNullableByDefault() );
 			valueBindings.add( new RelationalValueBinding( column ) );
 		} else {
@@ -921,7 +892,6 @@ public class Binder {
 		if ( versionAttributeSource == null ) {
 			return;
 		}
-		System.out.println( "bindVersion( " + rootEntityBinding.getEntity().getName() + " ): " + versionAttributeSource.getName() );
 		final EntityVersion version = rootEntityBinding.getHierarchyDetails().getEntityVersion();
 		version.setVersioningAttributeBinding( ( BasicAttributeBinding ) bindAttribute( rootEntityBinding,
 																								 versionAttributeSource ) );
@@ -962,8 +932,6 @@ public class Binder {
 
 	private EntityBinding createEntityBinding( final EntitySource entitySource,
 											   final EntityBinding superEntityBinding ) {
-		System.out.println( "createEntityBinding( entitySource = " + entitySource.getEntityName() + ", superEntityBinding = "
-							+ ( superEntityBinding == null ? "null" : superEntityBinding.getEntity().getName() ) + " )" );
 		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
 		bindingContexts.push( bindingContext );
 		try {
@@ -1048,7 +1016,6 @@ public class Binder {
 
 	private Identifier createIdentifier( String name,
 										 final String defaultName ) {
-		System.out.println( "createIdentifier( name = " + name + ", defaultName = " + defaultName + " )" );
 		if ( StringHelper.isEmpty( name ) ) {
 			name = defaultName;
 		}
@@ -1057,7 +1024,6 @@ public class Binder {
 	}
 
 	private void createIdentifierGenerator( final EntityBinding rootEntityBinding ) {
-		System.out.println( "createIdentifierGenerator( " + rootEntityBinding.getEntity().getName() + " )" );
 		final Properties properties = new Properties();
 		properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
 		if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
@@ -1124,18 +1090,15 @@ public class Binder {
 			final Identifier logicalTableId = Identifier.toIdentifier( tableName );
 			tableName = quotedIdentifier( bindingContext.getNamingStrategy().tableName( tableName ) );
 			final Identifier physicalTableId = Identifier.toIdentifier( tableName );
-			System.out.println( "createTable: table = " + logicalTableId );
 			final Table table = schema.locateTable( logicalTableId );
 			return ( table == null ? schema.createTable( logicalTableId, physicalTableId ) : table );
 		}
 		final InLineViewSource inLineViewSource = ( InLineViewSource ) tableSpecSource;
-		System.out.println( "createTable: inLineView = " + inLineViewSource.getLogicalName() );
 		return schema.createInLineView( Identifier.toIdentifier( inLineViewSource.getLogicalName() ),
 										inLineViewSource.getSelectStatement() );
 	}
 
 	private EntityBinding entityBinding( final String entityName ) {
-		System.out.println( "getEntityBinding( " + entityName + " )" );
 		// Check if binding has already been created
 		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
 		if ( entityBinding == null ) {

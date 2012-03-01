@@ -52,6 +52,13 @@ import static org.junit.Assert.assertTrue;
 public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( NaturalIdOnSingleManyToOneTest.class );
 
+	@Override
+	protected void cleanupTest() throws Exception {
+		this.cleanupCache();
+		
+		this.deleteAllData();
+	}
+
 	@Test
 	public void testMappingProperties() {
         log.warn("Commented out test");
@@ -109,37 +116,17 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		// first query
 		List results = criteria.list();
 		assertEquals( 1, results.size() );
-		assertEquals(
-				"Cache hits should be empty", 0, stats
-						.getNaturalIdCacheHitCount()
-		);
-		assertEquals(
-				"First query should be a miss", 1, stats
-						.getNaturalIdCacheMissCount()
-		);
-		assertEquals(
-				"Query result should be added to cache", 1, stats
-						.getNaturalIdCachePutCount()
-		);
-		assertEquals(
-				"Query count should be one", 1, stats
-						.getNaturalIdQueryExecutionCount()
-		);
+		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// query a second time - result should be in session cache
 		criteria.list();
-		assertEquals(
-				"Cache hits should be empty", 0, stats
-						.getNaturalIdCacheHitCount()
-		);
-		assertEquals(
-				"Second query should not be a miss", 1, stats
-						.getNaturalIdCacheMissCount()
-		);
-		assertEquals(
-				"Query count should be one", 1, stats
-						.getNaturalIdQueryExecutionCount()
-		);
+		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup
 		tx.rollback();

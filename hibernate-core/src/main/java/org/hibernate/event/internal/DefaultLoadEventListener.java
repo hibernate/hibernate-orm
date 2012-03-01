@@ -43,6 +43,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.PersistenceContext.CachedNaturalIdValueSource;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -442,6 +443,22 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				event.getLockOptions(),
 				source
 		);
+		
+		if (entity != null && persister.hasNaturalIdentifier()) {
+			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
+			final Object[] naturalId = new Object[naturalIdentifierProperties.length];
+			
+			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
+				naturalId[i] = persister.getPropertyValue( entity, naturalIdentifierProperties[i] );
+			}
+			
+			event.getSession().getPersistenceContext().cacheNaturalIdResolution(
+					persister,
+					event.getEntityId(),
+					naturalId,
+					CachedNaturalIdValueSource.LOAD
+			);
+		}
 
 		if ( event.isAssociationFetch() && source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			source.getFactory().getStatisticsImplementor().fetchEntity( event.getEntityClassName() );

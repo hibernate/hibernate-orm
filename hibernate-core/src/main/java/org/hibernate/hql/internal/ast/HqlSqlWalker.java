@@ -928,6 +928,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( namedParameters.size() > 0 ) {
 			throw new SemanticException( "cannot define positional parameter after any named parameters have been defined" );
 		}
+		LOG.warnf(
+				"[DEPRECATION] Encountered positional parameter near line %s, column %s.  Positional parameter " +
+						"are considered deprecated; use named parameters or JPA-style positional parameters instead.",
+				inputNode.getLine(),
+				inputNode.getColumn()
+		);
 		ParameterNode parameter = ( ParameterNode ) astFactory.create( PARAM, "?" );
 		PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
 				inputNode.getLine(),

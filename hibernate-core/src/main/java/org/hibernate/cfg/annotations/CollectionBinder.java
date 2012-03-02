@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -64,6 +65,7 @@ import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
@@ -71,6 +73,7 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
@@ -111,6 +114,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.TypeDef;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -160,6 +164,9 @@ public abstract class CollectionBinder {
 	private boolean declaringClassSet;
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
+
+	private String explicitType = "";
+	private Properties explicitTypeParameters = new Properties();
 
 	protected Mappings getMappings() {
 		return mappings;
@@ -324,6 +331,15 @@ public abstract class CollectionBinder {
 			);
 		}
 		result.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
+
+		final Type typeAnnotation = property.getAnnotation( Type.class );
+		if ( typeAnnotation != null ) {
+			result.explicitType = typeAnnotation.type();
+			for ( Parameter param : typeAnnotation.parameters() ) {
+				result.explicitTypeParameters.setProperty( param.name(), param.value() );
+			}
+		}
+
 		return result;
 	}
 
@@ -384,6 +400,19 @@ public abstract class CollectionBinder {
 							propertyHolder.getPath(), propertyName
 					)
 			);
+		}
+
+		// set explicit type information
+		if ( explicitType != null ) {
+			final TypeDef typeDef = mappings.getTypeDef( explicitType );
+			if ( typeDef == null ) {
+				collection.setTypeName( explicitType );
+				collection.setTypeParameters( explicitTypeParameters );
+			}
+			else {
+				collection.setTypeName( typeDef.getTypeClass() );
+				collection.setTypeParameters( typeDef.getParameters() );
+			}
 		}
 
 		//set laziness

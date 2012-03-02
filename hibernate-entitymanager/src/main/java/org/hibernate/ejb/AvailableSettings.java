@@ -313,6 +313,31 @@ public class AvailableSettings {
 	public static final String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
 
 	/**
+	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
+	 */
+	@Deprecated
+	public static final String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
+
+	/**
+	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         result in the population failing.
+	 *     </li>
+	 * </ul>
+	 *
+	 */
+	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+
+
+	/**
 	 * List of classes names
 	 * Internal use only
 	 */

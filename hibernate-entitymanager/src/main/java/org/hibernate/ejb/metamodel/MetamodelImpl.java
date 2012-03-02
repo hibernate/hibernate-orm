@@ -48,9 +48,12 @@ public class MetamodelImpl implements Metamodel, Serializable {
    	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
    	 *
    	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
-   	 * @param sessionFactory The Hibernate session factry.
+   	 * @param sessionFactory The Hibernate session factory.
    	 * @return The built metamodel
+	 * 
+	 * @deprecated use {@link #buildMetamodel(java.util.Iterator,org.hibernate.engine.spi.SessionFactoryImplementor,boolean)} instead
    	 */
+	@Deprecated
    	public static MetamodelImpl buildMetamodel(
    			Iterator<PersistentClass> persistentClasses,
    			SessionFactoryImplementor sessionFactory) {
@@ -62,7 +65,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
 	 *
 	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
-	 * @param sessionFactory The Hibernate session factry.
+	 * @param sessionFactory The Hibernate session factory.
      * @param ignoreUnsupported ignore unsupported/unknown annotations (like @Any)
 	 * @return The built metamodel
 	 */

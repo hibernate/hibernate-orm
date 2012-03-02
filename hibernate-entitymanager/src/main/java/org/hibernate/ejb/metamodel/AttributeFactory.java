@@ -83,20 +83,36 @@ public class AttributeFactory {
 	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
 		if ( property.isSynthetic() ) {
 			// hide synthetic/virtual properties (fabricated by Hibernate) from the JPA metamodel.
-            LOG.trace("Skipping synthetic property " + ownerType.getJavaType().getName() + "(" + property.getName() + ")");
+            LOG.tracef(
+					"Skipping synthetic property %s(%s)",
+					ownerType.getJavaType().getName(),
+					property.getName()
+			);
 			return null;
 		}
         LOG.trace("Building attribute [" + ownerType.getJavaType().getName() + "." + property.getName() + "]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
 				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
-        if (attributeMetadata == null) return null;
-        if (attributeMetadata.isPlural()) return buildPluralAttribute((PluralAttributeMetadata)attributeMetadata);
+        if (attributeMetadata == null) {
+			return null;
+		}
+        if (attributeMetadata.isPlural()) {
+			return buildPluralAttribute((PluralAttributeMetadata)attributeMetadata);
+		}
         final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>)attributeMetadata;
         final Type<Y> metaModelType = getMetaModelType(singularAttributeMetadata.getValueContext());
-        return new SingularAttributeImpl<X, Y>(attributeMetadata.getName(), attributeMetadata.getJavaType(), ownerType,
-                                               attributeMetadata.getMember(), false, false, property.isOptional(), metaModelType,
-                                               attributeMetadata.getPersistentAttributeType());
+        return new SingularAttributeImpl<X, Y>(
+				attributeMetadata.getName(),
+				attributeMetadata.getJavaType(),
+				ownerType,
+				attributeMetadata.getMember(),
+				false,
+				false,
+				property.isOptional(),
+				metaModelType,
+				attributeMetadata.getPersistentAttributeType()
+		);
 	}
 
 	private <X> AttributeContext<X> wrap(final AbstractManagedType<X> ownerType, final Property property) {
@@ -428,11 +444,12 @@ public class AttributeFactory {
         LOG.trace("    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]");
 
 		if ( type.isAnyType() ) {
+			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
             if ( context.isIgnoreUnsupported() ) {
-                // HHH-6589 Support "Any" mappings when building metamodel
                 return null;
-            } else {
-                throw new UnsupportedOperationException( "any not supported yet" );
+            }
+			else {
+                throw new UnsupportedOperationException( "ANY not supported" );
             }
 		}
 		else if ( type.isAssociationType() ) {

@@ -41,6 +41,8 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -51,6 +53,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
@@ -65,6 +68,9 @@ import org.hibernate.service.ServiceRegistry;
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private static final long serialVersionUID = 5423543L;
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
+
+	private static final Logger log = Logger.getLogger( EntityManagerFactoryImpl.class );
+
 	private final transient SessionFactory sessionFactory;
 	private final transient PersistenceUnitTransactionType transactionType;
 	private final transient boolean discardOnClose;
@@ -90,15 +96,16 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		//a safe guard till we are confident that metamodel is well tested
-        // disabled: dont create metamodel
-        // ignoreUnsupported: create metamodel, but ignore unsupported/unknown annotations (like @Any) HHH-6589
-        final String ejbMetamodelGenerationProperty = cfg.getProperty( "hibernate.ejb.metamodel.generation" );
-		if ( !"disabled".equalsIgnoreCase( ejbMetamodelGenerationProperty ) ) {
-			this.metamodel = MetamodelImpl.buildMetamodel( classes, ( SessionFactoryImplementor ) sessionFactory, "ignoreUnsupported".equalsIgnoreCase( ejbMetamodelGenerationProperty ));
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
+			this.metamodel = null;
 		}
 		else {
-			this.metamodel = null;
+			this.metamodel = MetamodelImpl.buildMetamodel(
+					classes,
+					( SessionFactoryImplementor ) sessionFactory,
+					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
+			);
 		}
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
@@ -116,6 +123,43 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
+	}
+	
+	private enum JpaMetaModelPopulationSetting {
+		ENABLED,
+		DISABLED,
+		IGNORE_UNSUPPORTED;
+		
+		private static JpaMetaModelPopulationSetting parse(String setting) {
+			if ( "enabled".equalsIgnoreCase( setting ) ) {
+				return ENABLED;
+			}
+			else if ( "disabled".equalsIgnoreCase( setting ) ) {
+				return DISABLED;
+			}
+			else {
+				return IGNORE_UNSUPPORTED;
+			}
+		}
+	}
+	
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+		String setting = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_POPULATION,
+				cfg.getProperties(),
+				null
+		);
+		if ( setting == null ) {
+			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, cfg.getProperties(), null );
+			if ( setting != null ) {
+				log.infof( 
+						"Encountered deprecated setting [%s], use [%s] instead",
+						AvailableSettings.JPA_METAMODEL_GENERATION,
+						AvailableSettings.JPA_METAMODEL_POPULATION
+				);
+			}
+		}
+		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
 	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {

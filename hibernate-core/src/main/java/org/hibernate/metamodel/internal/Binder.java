@@ -150,9 +150,7 @@ public class Binder {
 
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
 
-	public Binder(
-		final MetadataImplementor metadata,
-		final IdentifierGeneratorFactory identifierGeneratorFactory ) {
+	public Binder( final MetadataImplementor metadata, final IdentifierGeneratorFactory identifierGeneratorFactory ) {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		nameNormalizer = new ObjectNameNormalizer() {
@@ -244,8 +242,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void bindBasicElementSetTablePrimaryKey(
-		final SetBinding attributeBinding ) {
+	private void bindBasicElementSetTablePrimaryKey( final SetBinding attributeBinding ) {
 
 		final PrimaryKey primaryKey = attributeBinding.getCollectionTable().getPrimaryKey();
 		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
@@ -484,9 +481,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void bindDiscriminator(
-		final EntityBinding rootEntityBinding,
-		final RootEntitySource rootEntitySource ) {
+	private void bindDiscriminator( final EntityBinding rootEntityBinding, final RootEntitySource rootEntitySource ) {
 		final DiscriminatorSource discriminatorSource = rootEntitySource.getDiscriminatorSource();
 		if ( discriminatorSource == null ) {
 			return;
@@ -519,8 +514,7 @@ public class Binder {
 		resolveHibernateResolvedType( hibernateTypeDescriptor, typeName, value );
 	}
 
-	private EntityBinding bindEntities(
-		final EntityHierarchy entityHierarchy ) {
+	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
 		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
 		// Return existing binding if available
 		EntityBinding rootEntityBinding = metadata.getEntityBinding( rootEntitySource.getEntityName() );
@@ -555,8 +549,7 @@ public class Binder {
 		return rootEntityBinding;
 	}
 
-	public void bindEntities(
-		final Iterable< EntityHierarchy > entityHierarchies ) {
+	public void bindEntities( final Iterable< EntityHierarchy > entityHierarchies ) {
 		entitySourcesByName.clear();
 		attributeSourcesByName.clear();
 		inheritanceTypes.clear();
@@ -574,9 +567,7 @@ public class Binder {
 		}
 	}
 
-	private EntityBinding bindEntity(
-		final EntitySource entitySource,
-		final EntityBinding superEntityBinding ) {
+	private EntityBinding bindEntity( final EntitySource entitySource, final EntityBinding superEntityBinding ) {
 		// Return existing binding if available
 		EntityBinding entityBinding = metadata.getEntityBinding( entitySource.getEntityName() );
 		if ( entityBinding != null ) {
@@ -619,9 +610,7 @@ public class Binder {
 		resolveHibernateResolvedType( hibernateTypeDescriptor, typeName, value );
 	}
 
-	private void bindIdentifier(
-		final EntityBinding rootEntityBinding,
-		final IdentifierSource identifierSource ) {
+	private void bindIdentifier( final EntityBinding rootEntityBinding, final IdentifierSource identifierSource ) {
 		final Nature nature = identifierSource.getNature();
 		if ( nature == Nature.SIMPLE ) {
 			bindSimpleIdentifier( rootEntityBinding, ( SimpleIdentifierSource ) identifierSource );
@@ -734,9 +723,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void bindPrimaryTable(
-		final EntityBinding entityBinding,
-		final EntitySource entitySource ) {
+	private void bindPrimaryTable( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		entityBinding.setPrimaryTable( createTable( entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
 
 			@Override
@@ -746,9 +733,7 @@ public class Binder {
 		} ) );
 	}
 
-	private void bindSecondaryTables(
-		final EntityBinding entityBinding,
-		final EntitySource entitySource ) {
+	private void bindSecondaryTables( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		final TableSpecification primaryTable = entityBinding.getPrimaryTable();
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
@@ -803,9 +788,7 @@ public class Binder {
 			null );
 	}
 
-	private void bindSimpleIdentifier(
-		final EntityBinding rootEntityBinding,
-		final SimpleIdentifierSource identifierSource ) {
+	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
 		final BasicAttributeBinding idAttributeBinding =
 			( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
 		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
@@ -860,17 +843,13 @@ public class Binder {
 		}
 	}
 
-	private void bindSubEntities(
-		final EntityBinding entityBinding,
-		final EntitySource entitySource ) {
+	private void bindSubEntities( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		for ( final SubclassEntitySource subEntitySource : entitySource.subclassEntitySources() ) {
 			bindEntity( subEntitySource, entityBinding );
 		}
 	}
 
-	private void bindUniqueConstraints(
-		final EntityBinding entityBinding,
-		final EntitySource entitySource ) {
+	private void bindUniqueConstraints( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( constraintSource instanceof UniqueConstraintSource ) {
 				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
@@ -928,9 +907,7 @@ public class Binder {
 		return valueBindings;
 	}
 
-	private void bindVersion(
-		final EntityBinding rootEntityBinding,
-		final VersionAttributeSource versionAttributeSource ) {
+	private void bindVersion( final EntityBinding rootEntityBinding, final VersionAttributeSource versionAttributeSource ) {
 		if ( versionAttributeSource == null ) {
 			return;
 		}
@@ -973,9 +950,7 @@ public class Binder {
 		return column;
 	}
 
-	private EntityBinding createEntityBinding(
-		final EntitySource entitySource,
-		final EntityBinding superEntityBinding ) {
+	private EntityBinding createEntityBinding( final EntitySource entitySource, final EntityBinding superEntityBinding ) {
 		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
 		bindingContexts.push( bindingContext );
 		try {
@@ -1059,9 +1034,7 @@ public class Binder {
 		}
 	}
 
-	private Identifier createIdentifier(
-		String name,
-		final String defaultName ) {
+	private Identifier createIdentifier( String name, final String defaultName ) {
 		if ( StringHelper.isEmpty( name ) ) {
 			name = defaultName;
 		}
@@ -1069,8 +1042,7 @@ public class Binder {
 		return Identifier.toIdentifier( name );
 	}
 
-	private void createIdentifierGenerator(
-		final EntityBinding rootEntityBinding ) {
+	private void createIdentifierGenerator( final EntityBinding rootEntityBinding ) {
 		final Properties properties = new Properties();
 		properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
 		if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
@@ -1153,8 +1125,7 @@ public class Binder {
 			inLineViewSource.getSelectStatement() );
 	}
 
-	private EntityBinding entityBinding(
-		final String entityName ) {
+	private EntityBinding entityBinding( final String entityName ) {
 		// Check if binding has already been created
 		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
 		if ( entityBinding == null ) {
@@ -1174,8 +1145,7 @@ public class Binder {
 		return entityBinding;
 	}
 
-	private void mapSourcesByName(
-		final EntitySource entitySource ) {
+	private void mapSourcesByName( final EntitySource entitySource ) {
 		entitySourcesByName.put( entitySource.getEntityName(), entitySource );
 		for ( final AttributeSource attributeSource : entitySource.attributeSources() ) {
 			attributeSourcesByName.put( attributeSource.getName(), attributeSource );
@@ -1185,8 +1155,7 @@ public class Binder {
 		}
 	}
 
-	private PluralAttributeElementNature pluralAttributeElementNature(
-		final PluralAttributeSource attributeSource ) {
+	private PluralAttributeElementNature pluralAttributeElementNature( final PluralAttributeSource attributeSource ) {
 		return PluralAttributeElementNature.valueOf( attributeSource.getElementSource().getNature().name() );
 	}
 
@@ -1210,15 +1179,13 @@ public class Binder {
 		return ( SingularAttributeBinding ) referencedAttributeBinding;
 	}
 
-	private String propertyAccessorName(
-		final AttributeSource attributeSource ) {
+	private String propertyAccessorName( final AttributeSource attributeSource ) {
 		return attributeSource.getPropertyAccessorName() == null
 			? bindingContexts.peek().getMappingDefaults().getPropertyAccessorName()
 			: attributeSource.getPropertyAccessorName();
 	}
 
-	private String quotedIdentifier(
-		final String name ) {
+	private String quotedIdentifier( final String name ) {
 		return bindingContexts.peek().isGloballyQuotedIdentifiers() ? StringHelper.quote( name ) : name;
 	}
 
@@ -1242,9 +1209,7 @@ public class Binder {
 		}
 	}
 
-	private boolean toBoolean(
-		final TruthValue truthValue,
-		final boolean truthValueDefault ) {
+	private boolean toBoolean( final TruthValue truthValue, final boolean truthValueDefault ) {
 		if ( truthValue == TruthValue.TRUE ) {
 			return true;
 		}

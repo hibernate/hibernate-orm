@@ -101,14 +101,14 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, results.size() );
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// query a second time - result should be cached in session
 		criteria.list();
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup
@@ -141,7 +141,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( citizen );
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup
@@ -184,7 +184,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( citizen );
 		assertEquals( "NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup
@@ -231,7 +231,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( citizen );
 		assertEquals( "NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup

@@ -115,24 +115,23 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		assertEquals(
-				"Cache hits should be empty", 0, stats
-						.getNaturalIdCacheHitCount()
-		);
+		assertEquals( "NaturalId cache puts should be zero", 0, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId cache hits should be zero", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "NaturalId cache misses should be zero", 0, stats.getNaturalIdCacheMissCount() );
 
 		// first query
 		List results = criteria.list();
 		assertEquals( 1, results.size() );
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// query a second time - result should be in session cache
 		criteria.list();
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup

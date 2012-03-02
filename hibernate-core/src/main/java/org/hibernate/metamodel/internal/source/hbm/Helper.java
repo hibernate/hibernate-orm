@@ -390,8 +390,8 @@ public class Helper {
 	/**
 	 * Given a {@link ValueSourcesAdapter}, build the corresponding list of {@link RelationalValueSource}
 	 *
-	 * @param valueSourcesAdapter The adapter describing the "value sources.
-	 * @param bindingContext The HBM binding context
+	 * @param mappingDocument the mapping document
+	 * @param valueSourcesAdapter the adapter describing the value sources.
 	 *
 	 * @return The corresponding list.
 	 */

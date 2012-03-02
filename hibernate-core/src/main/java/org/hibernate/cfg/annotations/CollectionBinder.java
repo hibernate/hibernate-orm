@@ -165,7 +165,7 @@ public abstract class CollectionBinder {
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
 
-	private String explicitType = "";
+	private String explicitType;
 	private Properties explicitTypeParameters = new Properties();
 
 	protected Mappings getMappings() {

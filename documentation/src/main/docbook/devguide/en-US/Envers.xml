@@ -34,10 +34,14 @@
         </important>
 
         <para>
-            And that's all - you can create, modify and delete the entites as always. If you look at the generated
+            And that's all - you can create, modify and delete the entities as always. If you look at the generated
             schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.
             However, for each audited entity, a new table is introduced - <literal>entity_table_AUD</literal>,
-            which stores the historical data, whenever you commit a transaction.
+            which stores the historical data, whenever you commit a transaction. Envers automatically creates audit
+            tables if <literal>hibernate.hbm2ddl.auto</literal> option is set to <literal>create</literal>,
+            <literal>create-drop</literal> or <literal>update</literal>. Otherwise, to export complete database schema
+            programatically, use <literal>org.hibernate.tool.EnversSchemaGenerator</literal>. Appropriate DDL
+            statements can be also generated with Ant task described later in this manual.
         </para>
 
         <para>

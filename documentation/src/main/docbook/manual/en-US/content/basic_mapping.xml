@@ -2304,7 +2304,7 @@ public class Flight implements Serializable {
       </section>
     </section>
 
-    <section xml:id="mapping-declaration-property" revision="4">
+    <section xml:id="mapping-declaration-property" revision="5">
       <title>Property</title>
 
       <para>You need to decide which property needs to be made persistent in a
@@ -3061,10 +3061,10 @@ public class Person implements Serializable {
     Address homeAddress;
 
     @Embedded
-    @AttributeOverrides( {
+    @AttributeOverrides( [
             @AttributeOverride(name="iso2", column = @Column(name="bornIso2") ),
             @AttributeOverride(name="name", column = @Column(name="bornCountryName") )
-    } )
+    ] )
     Country bornIn;
     ...
 }          </programlisting>
@@ -3109,12 +3109,12 @@ public class Country implements Serializable {
       expressions.</para>
 
       <programlisting language="JAVA" role="JAVA">    @Embedded
-    @AttributeOverrides( {
+    @AttributeOverrides( [
             @AttributeOverride(name="city", column = @Column(name="fld_city") ),
             @AttributeOverride(name="nationality.iso2", column = @Column(name="nat_Iso2") ),
             @AttributeOverride(name="nationality.name", column = @Column(name="nat_CountryName") )
             //nationality columns in homeAddress are overridden
-    } )
+    ] )
     Address homeAddress;</programlisting>
 
       <para>Hibernate Annotations supports something that is not explicitly

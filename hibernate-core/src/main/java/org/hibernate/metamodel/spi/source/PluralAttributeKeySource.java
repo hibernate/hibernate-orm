@@ -32,7 +32,10 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
  */
 public interface PluralAttributeKeySource {
 	public List<RelationalValueSource> getValueSources();
+
 	public String getExplicitForeignKeyName();
+
 	public ForeignKey.ReferentialAction getOnDeleteAction();
+
 	public String getReferencedEntityAttributeName();
 }

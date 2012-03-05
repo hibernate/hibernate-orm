@@ -48,12 +48,14 @@ import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
 /**
@@ -296,25 +298,44 @@ public class PropertyBinder {
 		prop.setInsertable( insertable );
 		prop.setUpdateable( updatable );
 
-		OptimisticLock lockAnn = property != null ?
-				property.getAnnotation( OptimisticLock.class ) :
-				null;
-		if ( lockAnn != null ) {
-			prop.setOptimisticLocked( !lockAnn.excluded() );
-			//TODO this should go to the core as a mapping validation checking
-			if ( lockAnn.excluded() && (
-					property.isAnnotationPresent( javax.persistence.Version.class )
-							|| property.isAnnotationPresent( Id.class )
-							|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
-				throw new AnnotationException(
-						"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
-								+ StringHelper.qualify( holder.getPath(), name )
-				);
-			}
+		// this is already handled for collections in CollectionBinder...
+		if ( Collection.class.isInstance( value ) ) {
+			prop.setOptimisticLocked( ( (Collection) value ).isOptimisticLocked() );
 		}
+		else {
+			final OptimisticLock lockAnn = property != null
+					? property.getAnnotation( OptimisticLock.class )
+					: null;
+			if ( lockAnn != null ) {
+				//TODO this should go to the core as a mapping validation checking
+				if ( lockAnn.excluded() && (
+						property.isAnnotationPresent( javax.persistence.Version.class )
+								|| property.isAnnotationPresent( Id.class )
+								|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
+					throw new AnnotationException(
+							"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
+									+ StringHelper.qualify( holder.getPath(), name )
+					);
+				}
+			}
+			final boolean isOwnedValue = !isToOneValue( value ) || insertable; // && updatable as well???
+			final boolean includeInOptimisticLockChecks = ( lockAnn != null )
+					? ! lockAnn.excluded()
+					: isOwnedValue;
+			prop.setOptimisticLocked( includeInOptimisticLockChecks );
+		}
+
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		this.mappingProperty = prop;
 		return prop;
+	}
+
+	private boolean isCollection(Value value) {
+		return Collection.class.isInstance( value );
+	}
+
+	private boolean isToOneValue(Value value) {
+		return ToOne.class.isInstance( value );
 	}
 
 	public void setProperty(XProperty property) {

@@ -44,7 +44,6 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7138" )
 	public void testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -98,12 +97,6 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		Customer customer = new Customer();
 		customer.id = 1L;
 
-		Order order = new Order();
-		order.id = 1L;
-
-		order.customer = customer;
-		customer.orders.add( order );
-
 		Session session = openSession();
 		session.beginTransaction();
 		session.save( customer );
@@ -115,6 +108,19 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		session = openSession();
 		session.beginTransaction();
 		customer = (Customer) session.get( Customer.class, 1L );
+		assertEquals( initial, customer.version );
+		Order order = new Order();
+		order.id = 1L;
+		order.customer = customer;
+		customer.orders.add( order );
+		session.getTransaction().commit();
+		session.close();
+
+		assertEquals( initial, customer.version );
+
+		session = openSession();
+		session.beginTransaction();
+		customer = (Customer) session.get( Customer.class, 1L );
 		Order order2 = new Order();
 		order2.id = 2L;
 		order2.customer = customer;
@@ -122,6 +128,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		session.getTransaction().commit();
 		session.close();
 
+		assertEquals( initial, customer.version );
 
 		session = openSession();
 		session.beginTransaction();

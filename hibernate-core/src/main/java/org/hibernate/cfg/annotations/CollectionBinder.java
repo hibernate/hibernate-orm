@@ -436,8 +436,15 @@ public abstract class CollectionBinder {
 		}
 
 		collection.setMutable( !property.isAnnotationPresent( Immutable.class ) );
-		OptimisticLock lockAnn = property.getAnnotation( OptimisticLock.class );
-		if ( lockAnn != null ) collection.setOptimisticLocked( !lockAnn.excluded() );
+
+		//work on association
+		boolean isMappedBy = !BinderHelper.isEmptyAnnotationValue( mappedBy );
+
+		final OptimisticLock lockAnn = property.getAnnotation( OptimisticLock.class );
+		final boolean includeInOptimisticLockChecks = ( lockAnn != null )
+				? ! lockAnn.excluded()
+				: ! isMappedBy;
+		collection.setOptimisticLocked( includeInOptimisticLockChecks );
 
 		Persister persisterAnn = property.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
@@ -511,9 +518,6 @@ public abstract class CollectionBinder {
 		if ( loader != null ) {
 			collection.setLoaderName( loader.namedQuery() );
 		}
-
-		//work on association
-		boolean isMappedBy = !BinderHelper.isEmptyAnnotationValue( mappedBy );
 
 		if (isMappedBy
 				&& (property.isAnnotationPresent( JoinColumn.class )

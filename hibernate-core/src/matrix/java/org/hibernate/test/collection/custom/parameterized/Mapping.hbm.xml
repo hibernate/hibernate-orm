@@ -3,9 +3,9 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.usercollection.parameterized" default-access="field">
+<hibernate-mapping package="org.hibernate.test.collection.custom.parameterized" default-access="field">
 
-    <typedef name="DefaultableList" class="org.hibernate.test.usercollection.parameterized.DefaultableListType">
+    <typedef name="DefaultableList" class="org.hibernate.test.collection.custom.parameterized.DefaultableListType">
         <param name="default">Hello</param>
     </typedef>
 

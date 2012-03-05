@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.usercollection.parameterized;
+package org.hibernate.test.collection.custom.basic;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -35,35 +35,48 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tes for parameterized user collection types.
- *
- * @author Holger Brands
- * @author Steve Ebersole
+ * @author Max Rydahl Andersen
  */
-public class ParameterizedUserCollectionTypeTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
-		return new String[] { "usercollection/parameterized/Mapping.hbm.xml" };
+public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testBasicOperation() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Entity entity = new Entity( "tester" );
-		entity.getValues().add( "value-1" );
-		s.persist( entity );
+		User u = new User("max");
+		u.getEmailAddresses().add( new Email("max@hibernate.org") );
+		u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
+		s.persist(u);
+		t.commit();
+		s.close();
+		
+		s = openSession();
+		t = s.beginTransaction();
+		User u2 = (User) s.createCriteria(User.class).uniqueResult();
+		assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+		assertEquals( u2.getEmailAddresses().size(), 2 );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		entity = ( Entity ) s.get( Entity.class, "tester" );
-		assertTrue( Hibernate.isInitialized( entity.getValues() ) );
-		assertEquals( 1, entity.getValues().size() );
-        assertEquals( "Hello", ( ( DefaultableList ) entity.getValues() ).getDefaultValue() );
-		s.delete( entity );
+		u2 = ( User ) s.get( User.class, u.getUserName() );
+		u2.getEmailAddresses().size();
+		assertEquals( 2, MyListType.lastInstantiationRequest );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( u );
 		t.commit();
 		s.close();
 	}
+
 }
+

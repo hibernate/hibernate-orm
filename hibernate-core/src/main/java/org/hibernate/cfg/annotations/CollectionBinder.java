@@ -23,14 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.ElementCollection;
@@ -43,6 +35,14 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 import org.jboss.logging.Logger;
 
@@ -52,6 +52,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
@@ -73,7 +74,6 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
@@ -252,7 +252,8 @@ public abstract class CollectionBinder {
 			String entityName,
 			XProperty property,
 			boolean isIndexed,
-			boolean isHibernateExtensionMapping) {
+			boolean isHibernateExtensionMapping,
+			Mappings mappings) {
 		CollectionBinder result;
 		if ( property.isArray() ) {
 			if ( property.getElementClass().isPrimitive() ) {
@@ -332,11 +333,20 @@ public abstract class CollectionBinder {
 		}
 		result.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
 
-		final Type typeAnnotation = property.getAnnotation( Type.class );
+		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
 		if ( typeAnnotation != null ) {
-			result.explicitType = typeAnnotation.type();
-			for ( Parameter param : typeAnnotation.parameters() ) {
-				result.explicitTypeParameters.setProperty( param.name(), param.value() );
+			final String typeName = typeAnnotation.type();
+			// see if it names a type-def
+			final TypeDef typeDef = mappings.getTypeDef( typeName );
+			if ( typeDef != null ) {
+				result.explicitType = typeDef.getTypeClass();
+				result.explicitTypeParameters.putAll( typeDef.getParameters() );
+			}
+			else {
+				result.explicitType = typeName;
+				for ( Parameter param : typeAnnotation.parameters() ) {
+					result.explicitTypeParameters.setProperty( param.name(), param.value() );
+				}
 			}
 		}
 
@@ -359,6 +369,7 @@ public abstract class CollectionBinder {
 	}
 
 	public void setCollectionType(XClass collectionType) {
+		// NOTE: really really badly named.  This is actually NOT the collection-type, but rather the collection-element-type!
 		this.collectionType = collectionType;
 	}
 

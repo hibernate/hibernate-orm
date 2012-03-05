@@ -1,4 +1,4 @@
-package org.hibernate.test.usercollection.basic;
+package org.hibernate.test.collection.custom.basic;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.spi.SessionImplementor;
 

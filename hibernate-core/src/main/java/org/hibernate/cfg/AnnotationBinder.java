@@ -1697,9 +1697,8 @@ public final class AnnotationBinder {
 						propertyHolder.getEntityName(),
 						property,
 						!indexColumn.isImplicit(),
-						property.isAnnotationPresent( MapKeyType.class )
-
-						// || property.isAnnotationPresent( ManyToAny.class )
+						property.isAnnotationPresent( MapKeyType.class ),
+						mappings
 				);
 				collectionBinder.setIndexColumn( indexColumn );
 				collectionBinder.setMapKey( property.getAnnotation( MapKey.class ) );

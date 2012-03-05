@@ -7,13 +7,13 @@
     This mapping is a basic example of how to write a UserCollectionType.
 -->
 
-<hibernate-mapping package="org.hibernate.test.usercollection.basic">
+<hibernate-mapping package="org.hibernate.test.collection.custom.basic">
 	
 	<import class="Permission"/>
 
 	<class name="User" table="UC_BSC_USER">
 		<id name="userName"/>
-		<list name="emailAddresses" fetch="join" cascade="all, delete-orphan" collection-type="org.hibernate.test.usercollection.basic.MyListType">
+		<list name="emailAddresses" fetch="join" cascade="all, delete-orphan" collection-type="org.hibernate.test.collection.custom.basic.MyListType">
 			<key column="userName"/>
 			<list-index column="displayOrder" base="1"/>
 			<one-to-many class="Email"/>

@@ -29,17 +29,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.source.ConstraintSource;
-import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAttributeSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.ToOneAttributeSourceImpl;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.ConstraintSource;
+import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -187,7 +190,20 @@ public class EntitySourceImpl implements EntitySource {
 			);
 		}
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
-			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
+			switch ( associationAttribute.getAttributeNature() ) {
+				case ONE_TO_ONE:
+				case MANY_TO_ONE: {
+					attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
+					break;
+				}
+				case MANY_TO_MANY: {
+					attributeList.add( new PluralAttributeSourceImpl( (PluralAssociationAttribute) associationAttribute ) );
+					break;
+				}
+				default: {
+					throw new NotYetImplementedException();
+				}
+			}
 		}
 		return attributeList;
 	}

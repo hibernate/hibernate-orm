@@ -25,10 +25,9 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
-import org.hibernate.FetchMode;
-import org.hibernate.annotations.common.reflection.java.JavaXMember;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -38,11 +37,10 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Hardy Ferentschik
  */
-public class ManyToManyPluralAttributeElementSourceImpl
-		implements ManyToManyPluralAttributeElementSource {
-	private final CollectionAssociationAttribute associationAttribute;
+public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+	private final PluralAssociationAttribute associationAttribute;
 
-	public ManyToManyPluralAttributeElementSourceImpl(CollectionAssociationAttribute associationAttribute) {
+	public ManyToManyPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 	}
 
@@ -59,7 +57,13 @@ public class ManyToManyPluralAttributeElementSourceImpl
 
 	@Override
 	public Collection<String> getReferencedColumnNames() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		HashSet<String> referencedColumnNames = new HashSet<String>();
+		for ( Column column : associationAttribute.getColumnValues() ) {
+			if ( column.getReferencedColumnName() != null ) {
+				referencedColumnNames.add( column.getReferencedColumnName() );
+			}
+		}
+		return referencedColumnNames;
 	}
 
 	@Override

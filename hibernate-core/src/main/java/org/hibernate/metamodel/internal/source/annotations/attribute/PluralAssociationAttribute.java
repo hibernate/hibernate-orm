@@ -37,23 +37,24 @@ import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 
 /**
- * Represents an collection association attribute.
+ * Represents an collection (collection, list, set, map) association attribute.
  *
  * @author Hardy Ferentschik
  */
-public class CollectionAssociationAttribute extends AssociationAttribute {
+public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
 	private final String orderBy;
+
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
 
-	public static CollectionAssociationAttribute createPluralAssociationAttribute(String name,
-																				  Class<?> attributeType,
-																				  AttributeNature attributeNature,
-																				  String accessType,
-																				  Map<DotName, List<AnnotationInstance>> annotations,
-																				  EntityBindingContext context) {
-		return new CollectionAssociationAttribute(
+	public static PluralAssociationAttribute createPluralAssociationAttribute(String name,
+																			  Class<?> attributeType,
+																			  AttributeNature attributeNature,
+																			  String accessType,
+																			  Map<DotName, List<AnnotationInstance>> annotations,
+																			  EntityBindingContext context) {
+		return new PluralAssociationAttribute(
 				name,
 				attributeType,
 				attributeNature,
@@ -63,17 +64,28 @@ public class CollectionAssociationAttribute extends AssociationAttribute {
 		);
 	}
 
-	private CollectionAssociationAttribute(String name,
-										   Class<?> javaType,
-										   AttributeNature associationType,
-										   String accessType,
-										   Map<DotName, List<AnnotationInstance>> annotations,
-										   EntityBindingContext context) {
+	public String getWhereClause() {
+		return whereClause;
+	}
+
+	public String getOrderBy() {
+		return orderBy;
+	}
+
+	public String getInverseForeignKeyName() {
+		return inverseForeignKeyName;
+	}
+
+	private PluralAssociationAttribute(String name,
+									   Class<?> javaType,
+									   AttributeNature associationType,
+									   String accessType,
+									   Map<DotName, List<AnnotationInstance>> annotations,
+									   EntityBindingContext context) {
 		super( name, javaType, associationType, accessType, annotations, context );
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
 		this.inverseForeignKeyName = determineInverseForeignKeyName();
-
 	}
 
 	private String determineInverseForeignKeyName() {
@@ -136,18 +148,6 @@ public class CollectionAssociationAttribute extends AssociationAttribute {
 		}
 
 		return orderBy;
-	}
-
-	public String getWhereClause() {
-		return whereClause;
-	}
-
-	public String getOrderBy() {
-		return orderBy;
-	}
-
-	public String getInverseForeignKeyName() {
-		return inverseForeignKeyName;
 	}
 }
 

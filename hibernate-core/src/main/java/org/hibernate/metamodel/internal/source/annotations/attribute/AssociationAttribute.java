@@ -54,7 +54,6 @@ import org.hibernate.metamodel.spi.source.MappingException;
  * @author Hardy Ferentschik
  */
 public class AssociationAttribute extends MappedAttribute {
-	private final AttributeNature associationNature;
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
 	private final String mappedBy;
@@ -90,17 +89,16 @@ public class AssociationAttribute extends MappedAttribute {
 
 	AssociationAttribute(String name,
 						 Class<?> javaType,
-						 AttributeNature associationType,
+						 AttributeNature attributeNature,
 						 String accessType,
 						 Map<DotName, List<AnnotationInstance>> annotations,
 						 EntityBindingContext context) {
-		super( name, javaType, accessType, annotations, context );
-		this.associationNature = associationType;
+		super( name, javaType, attributeNature, accessType, annotations, context );
 		this.ignoreNotFound = ignoreNotFound();
 
 		AnnotationInstance associationAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
-				associationType.getAnnotationDotName()
+				attributeNature.getAnnotationDotName()
 		);
 
 		// using jandex we don't really care which exact type of annotation we are dealing with
@@ -127,10 +125,6 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public String getMappedBy() {
 		return mappedBy;
-	}
-
-	public AttributeNature getAssociationNature() {
-		return associationNature;
 	}
 
 	public Set<CascadeType> getCascadeTypes() {
@@ -324,8 +318,8 @@ public class AssociationAttribute extends MappedAttribute {
 			return null;
 		}
 
-		if ( !( AttributeNature.MANY_TO_ONE.equals( getAssociationNature() ) || AttributeNature.MANY_TO_ONE
-				.equals( getAssociationNature() ) ) ) {
+		if ( !( AttributeNature.MANY_TO_ONE.equals( getAttributeNature() ) || AttributeNature.MANY_TO_ONE
+				.equals( getAttributeNature() ) ) ) {
 			throw new MappingException(
 					"@MapsId can only be specified on a many-to-one or one-to-one associations",
 					getContext().getOrigin()

@@ -31,7 +31,6 @@ import java.util.List;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -60,8 +59,6 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Steve Ebersole
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger LOG = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
-
 	private final MetadataImplementor metadata;
 
 	private AnnotationBindingContext bindingContext;

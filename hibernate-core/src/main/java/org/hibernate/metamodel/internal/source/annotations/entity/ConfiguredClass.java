@@ -54,7 +54,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.metamodel.internal.source.annotations.attribute.CollectionAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
@@ -427,7 +427,7 @@ public class ConfiguredClass {
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
-						attributeName, attributeType, annotations, accessTypeString, getLocalBindingContext()
+						attributeName, attributeType, attributeNature, annotations, accessTypeString, getLocalBindingContext()
 				);
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
@@ -480,7 +480,7 @@ public class ConfiguredClass {
 			}
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
-				AssociationAttribute attribute = CollectionAssociationAttribute.createPluralAssociationAttribute(
+				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
 						attributeName,
 						attributeType,
 						attributeNature,

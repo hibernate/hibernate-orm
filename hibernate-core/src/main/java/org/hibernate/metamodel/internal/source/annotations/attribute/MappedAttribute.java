@@ -60,6 +60,11 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final Class<?> attributeType;
 
 	/**
+	 * The nature of the attribute
+	 */
+	AttributeNature attributeNature;
+
+	/**
 	 * The access type for this property. At the moment this is either 'field' or 'property', but Hibernate
 	 * also allows custom named accessors (see {@link org.hibernate.property.PropertyAccessorFactory}).
 	 */
@@ -83,15 +88,22 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final boolean isOptimisticLockable;
 
 	/**
+	 * Contains the SQL check condition specified via {@link org.hibernate.annotations.Check} or null if no annotation
+	 * is specified.
+	 */
+	private final String checkCondition;
+
+	/**
 	 * The binding context
 	 */
 	private final EntityBindingContext context;
 
-	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations, EntityBindingContext context) {
+	MappedAttribute(String name, Class<?> attributeType, AttributeNature attributeNature, String accessType, Map<DotName, List<AnnotationInstance>> annotations, EntityBindingContext context) {
 		this.context = context;
 		this.annotations = annotations;
 		this.name = name;
 		this.attributeType = attributeType;
+		this.attributeNature = attributeNature;
 		this.accessType = accessType;
 
 		//if this attribute has either @Id or @EmbeddedId, then it is an id attribute
@@ -101,7 +113,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				JPADotNames.EMBEDDED_ID
 		);
 		this.isId = ( idAnnotation != null || embeddedIdAnnotation != null );
+
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
+		this.checkCondition = checkCheckAnnotation();
 		checkColumnAnnotations( annotations );
 	}
 
@@ -135,6 +149,14 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public boolean isOptimisticLockable() {
 		return isOptimisticLockable;
+	}
+
+	public AttributeNature getAttributeNature() {
+		return attributeNature;
+	}
+
+	public String getCheckCondition() {
+		return checkCondition;
 	}
 
 	@Override
@@ -224,7 +246,15 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				columnValues.add( new Column( annotation ) );
 			}
 		}
+	}
 
+	private String checkCheckAnnotation() {
+		String checkCondition = null;
+		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.CHECK );
+		if ( checkAnnotation != null ) {
+			checkCondition = checkAnnotation.value( "constraints" ).toString();
+		}
+		return checkCondition;
 	}
 }
 

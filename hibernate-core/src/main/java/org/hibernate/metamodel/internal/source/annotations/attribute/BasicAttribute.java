@@ -93,23 +93,24 @@ public class BasicAttribute extends MappedAttribute {
 
 	private final String customWriteFragment;
 	private final String customReadFragment;
-	private final String checkCondition;
 	private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
+													   AttributeNature attributeNature,
 													   Map<DotName, List<AnnotationInstance>> annotations,
 													   String accessType,
 													   EntityBindingContext context) {
-		return new BasicAttribute( name, attributeType, accessType, annotations, context );
+		return new BasicAttribute( name, attributeType, attributeNature, accessType, annotations, context );
 	}
 
 	BasicAttribute(String name,
 				   Class<?> attributeType,
+				   AttributeNature attributeNature,
 				   String accessType,
 				   Map<DotName, List<AnnotationInstance>> annotations,
 				   EntityBindingContext context) {
-		super( name, attributeType, accessType, annotations, context );
+		super( name, attributeType, attributeNature, accessType, annotations, context );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
@@ -149,7 +150,7 @@ public class BasicAttribute extends MappedAttribute {
 		String[] readWrite = createCustomReadWrite( columnTransformerAnnotations );
 		this.customReadFragment = readWrite[0];
 		this.customWriteFragment = readWrite[1];
-		this.checkCondition = parseCheckAnnotation();
+
 	}
 
 	public boolean isVersioned() {
@@ -182,10 +183,6 @@ public class BasicAttribute extends MappedAttribute {
 
 	public String getCustomReadFragment() {
 		return customReadFragment;
-	}
-
-	public String getCheckCondition() {
-		return checkCondition;
 	}
 
 	public IdGenerator getIdGenerator() {
@@ -289,15 +286,6 @@ public class BasicAttribute extends MappedAttribute {
 			alreadyProcessedForColumn = true;
 		}
 		return readWrite;
-	}
-
-	private String parseCheckAnnotation() {
-		String checkCondition = null;
-		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.CHECK );
-		if ( checkAnnotation != null ) {
-			checkCondition = checkAnnotation.value( "constraints" ).toString();
-		}
-		return checkCondition;
 	}
 
 	private IdGenerator checkGeneratedValueAnnotation() {

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -35,16 +36,22 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  */
-@Target({TYPE, METHOD, FIELD})
+@Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface Cache {
-	/** concurrency strategy chosen */
-	CacheConcurrencyStrategy usage();
-	/** cache region name */
-	String region() default "";
 	/**
-	 * whether or not lazy-properties are included in the second level cache
-	 * default all, other value: non-lazy
+	 * @return Returns the concurrency strategy chosen
+	 */
+	CacheConcurrencyStrategy usage();
+
+	/**
+	 * @return Returns the cache region name
+	 */
+	String region() default "";
+
+	/**
+	 * @return Returns whether or not lazy-properties are included in the second level cache.
+	 *         Default is <i>all</i>, other value: <i>non-lazy</i>.
 	 */
 	String include() default "all";
 }

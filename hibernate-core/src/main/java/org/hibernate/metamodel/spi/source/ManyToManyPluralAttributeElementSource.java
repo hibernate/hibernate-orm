@@ -29,8 +29,7 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface ManyToManyPluralAttributeElementSource
-		extends PluralAttributeElementSource, CascadeStyleSource {
+public interface ManyToManyPluralAttributeElementSource extends PluralAttributeElementSource, CascadeStyleSource {
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();

@@ -160,7 +160,6 @@ public abstract class AbstractServiceRegistryImpl
 
 		// PHASE 4 : Start service
 		serviceBinding.getLifecycleOwner().startService( serviceBinding );
-		startService( serviceBinding );
 
 		return service;
 	}

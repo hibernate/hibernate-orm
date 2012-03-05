@@ -27,6 +27,7 @@ import org.hibernate.Session;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -43,6 +44,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-7138" )
 	public void testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded() {
 		Session session = openSession();
 		session.beginTransaction();

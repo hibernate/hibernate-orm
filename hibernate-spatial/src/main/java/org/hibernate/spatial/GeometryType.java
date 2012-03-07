@@ -42,7 +42,8 @@ public class GeometryType extends AbstractSingleColumnStandardBasicType<Geometry
 				com.vividsolutions.jts.geom.LineString.class.getCanonicalName(),
 				com.vividsolutions.jts.geom.MultiLineString.class.getCanonicalName(),
 				com.vividsolutions.jts.geom.MultiPoint.class.getCanonicalName(),
-				com.vividsolutions.jts.geom.GeometryCollection.class.getCanonicalName()
+				com.vividsolutions.jts.geom.GeometryCollection.class.getCanonicalName(),
+				"geometry"
 		};
 	}
 
@@ -52,7 +53,7 @@ public class GeometryType extends AbstractSingleColumnStandardBasicType<Geometry
 
 	@Override
 	public String getName() {
-		return "Geometry";
+		return "geometry";
 	}
 
 }

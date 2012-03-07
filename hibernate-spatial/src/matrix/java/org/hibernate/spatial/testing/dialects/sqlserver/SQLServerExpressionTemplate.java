@@ -29,7 +29,7 @@ import org.hibernate.spatial.testing.TestDataElement;
  */
 public class SQLServerExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into geomtest values (%d, '%s', Geometry::STGeomFromText('%s', %d))";
+	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', Geometry::STGeomFromText('%s', %d))";
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		return String.format(

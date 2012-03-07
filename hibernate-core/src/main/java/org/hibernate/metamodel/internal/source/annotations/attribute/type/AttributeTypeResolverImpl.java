@@ -30,8 +30,8 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
-import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 
 /**

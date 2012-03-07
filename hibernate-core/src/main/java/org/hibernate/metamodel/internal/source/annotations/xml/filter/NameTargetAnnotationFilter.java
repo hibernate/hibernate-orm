@@ -30,8 +30,8 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.MockHelper;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 
 /**
  * @author Strong Liu

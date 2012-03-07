@@ -30,6 +30,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**

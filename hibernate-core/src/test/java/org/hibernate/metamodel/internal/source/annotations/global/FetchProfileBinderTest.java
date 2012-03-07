@@ -34,7 +34,7 @@ import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;

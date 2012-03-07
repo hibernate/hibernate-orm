@@ -46,8 +46,8 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbSequenceGenerator;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSqlResultSetMapping;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
 
 /**
  * @author Strong Liu

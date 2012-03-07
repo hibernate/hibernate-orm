@@ -33,8 +33,8 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.

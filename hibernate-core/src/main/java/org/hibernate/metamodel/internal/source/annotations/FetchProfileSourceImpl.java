@@ -30,7 +30,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.metamodel.spi.binding.FetchProfile;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FetchProfileSource;
 
 /**

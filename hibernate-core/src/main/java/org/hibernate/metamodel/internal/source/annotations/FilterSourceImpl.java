@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FilterSource;
 
 /**

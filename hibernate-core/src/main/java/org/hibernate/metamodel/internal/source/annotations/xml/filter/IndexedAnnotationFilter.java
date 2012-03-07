@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.xml.filter;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.IndexBuilder;
 
 /**

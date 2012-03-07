@@ -33,7 +33,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
  * Base class for the mock jandex annotations created from orm.xml.

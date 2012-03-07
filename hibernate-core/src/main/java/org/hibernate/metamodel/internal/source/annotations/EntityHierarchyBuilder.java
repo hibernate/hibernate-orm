@@ -40,6 +40,8 @@ import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntitySourceImpl;

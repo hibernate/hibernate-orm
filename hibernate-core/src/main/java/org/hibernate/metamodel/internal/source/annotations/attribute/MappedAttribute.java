@@ -32,9 +32,9 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 

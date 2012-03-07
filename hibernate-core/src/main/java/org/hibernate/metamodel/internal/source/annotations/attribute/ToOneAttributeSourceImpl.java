@@ -29,7 +29,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.internal.source.annotations.EnumConversionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 

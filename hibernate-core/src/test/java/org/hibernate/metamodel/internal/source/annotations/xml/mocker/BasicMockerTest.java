@@ -33,7 +33,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 import static org.junit.Assert.assertEquals;
 

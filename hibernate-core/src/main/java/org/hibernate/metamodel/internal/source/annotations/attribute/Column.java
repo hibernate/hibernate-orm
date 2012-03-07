@@ -27,7 +27,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
  * Container for the properties defined by {@link javax.persistence.Column} or {@link javax.persistence.JoinColumn}.

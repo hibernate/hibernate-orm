@@ -96,10 +96,10 @@ libraries = [
 
 
         junit:          'junit:junit:' + junitVersion,
-        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
+        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.2.0.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
         shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
-        validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
+        validator:      'org.hibernate:hibernate-validator:4.3.0.Alpha1',
         h2:             'com.h2database:h2:' + h2Version,
 ]
 

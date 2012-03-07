@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
 

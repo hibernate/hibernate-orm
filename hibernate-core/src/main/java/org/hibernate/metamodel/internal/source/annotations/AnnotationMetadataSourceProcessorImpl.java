@@ -41,6 +41,8 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;

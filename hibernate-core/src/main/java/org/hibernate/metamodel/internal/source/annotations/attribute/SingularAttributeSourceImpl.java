@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.ExplicitHibernateTypeSourceImpl;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;

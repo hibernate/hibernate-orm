@@ -35,7 +35,6 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyBuilder;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableHierarchy;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.service.ServiceRegistryBuilder;

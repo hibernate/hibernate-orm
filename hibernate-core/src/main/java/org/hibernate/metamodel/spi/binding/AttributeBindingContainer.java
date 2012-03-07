@@ -105,8 +105,7 @@ public interface AttributeBindingContainer {
 	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
-	 * @param referencedEntityName
-	 * @param referencedEntityAttributeName
+	 * @param referencedAttributeBinding
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -116,8 +115,7 @@ public interface AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			String referencedEntityName,
-			String referencedEntityAttributeName,
+			AttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings);
 
 	/**

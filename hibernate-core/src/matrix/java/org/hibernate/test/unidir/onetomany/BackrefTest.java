@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.unidir;
+package org.hibernate.test.unidir.onetomany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertFalse;
 public class BackrefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "unidir/ParentChild.hbm.xml" };
+		return new String[] { "unidir/onetomany/ParentChild.hbm.xml" };
 	}
 
 	@Override

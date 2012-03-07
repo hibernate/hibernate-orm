@@ -4,7 +4,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping 
-	package="org.hibernate.test.unidir">
+	package="org.hibernate.test.unidir.onetomany">
 
 	<class name="Parent">
 		<id name="name"/>

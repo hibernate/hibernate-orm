@@ -48,19 +48,8 @@ public interface SingularAssociationAttributeBinding
 	 */
 	public String getReferencedEntityName();
 
-	/**
-	 * Set the name of the
-	 * @param referencedEntityName
-	 */
-	public void setReferencedEntityName(String referencedEntityName);
-
 	public String getReferencedAttributeName();
-	public void setReferencedAttributeName(String referencedAttributeName);
 
-
-	// "resolvable"
-	public void resolveReference(AttributeBinding attributeBinding);
-	public boolean isReferenceResolved();
 	public EntityBinding getReferencedEntityBinding();
 	public AttributeBinding getReferencedAttributeBinding();
 }

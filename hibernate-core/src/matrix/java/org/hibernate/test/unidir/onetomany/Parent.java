@@ -1,5 +1,5 @@
 //$Id: Parent.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.unidir;
+package org.hibernate.test.unidir.onetomany;
 import java.util.ArrayList;
 import java.util.List;
 

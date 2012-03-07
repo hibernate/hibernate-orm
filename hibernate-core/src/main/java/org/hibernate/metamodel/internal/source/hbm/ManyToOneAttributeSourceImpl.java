@@ -114,7 +114,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 
 	@Override
 	public boolean isLazy() {
-		return false;
+		return getFetchTiming() != FetchTiming.IMMEDIATE;
 	}
 
 	@Override

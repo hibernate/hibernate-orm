@@ -643,47 +643,44 @@ public class Binder {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
 		final List< RelationalValueBinding > relationalValueBindings =
-				bindValues(
-						attributeBindingContainer,
-						attributeSource,
-						attribute,
-						attributeBindingContainer.seekEntityBinding().getPrimaryTable() );
+			bindValues(
+				attributeBindingContainer,
+				attributeSource,
+				attribute,
+				attributeBindingContainer.seekEntityBinding().getPrimaryTable() );
+		final String referencedEntityName = attributeSource.getReferencedEntityName() != null
+				? attributeSource.getReferencedEntityName()
+				: HibernateTypeHelper.determineJavaType( attribute ).getName();
+		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
+		final AttributeBinding referencedAttributeBinding =
+				attributeSource.getReferencedEntityAttributeName() == null
+						? referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
+						: referencedEntityBinding.locateAttributeBinding( attributeSource.getReferencedEntityAttributeName() );
+		// todo : we should consider basing references on columns instead of property-ref, which would require a resolution (later) of property-ref to column names
 		final ManyToOneAttributeBinding attributeBinding =
-				attributeBindingContainer.makeManyToOneAttributeBinding(
-						attribute,
-						propertyAccessorName( attributeSource ),
-						attributeSource.isIncludedInOptimisticLocking(),
-						attributeSource.isLazy(),
-						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-						null, // this isn't passed to the binding constructor
-						null, // this isn't passed to the binding constructor
-						relationalValueBindings );
+			attributeBindingContainer.makeManyToOneAttributeBinding(
+				attribute,
+				propertyAccessorName( attributeSource ),
+				attributeSource.isIncludedInOptimisticLocking(),
+				attributeSource.isLazy(),
+				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
+				referencedAttributeBinding,
+				relationalValueBindings );
+		// TODO: is this needed?
+		referencedAttributeBinding.addEntityReferencingAttributeBinding( attributeBinding );
 		bindHibernateTypeDescriptor(
-				attributeBinding.getHibernateTypeDescriptor(),
-				attributeSource.getTypeInformation(),
-				attributeBinding.getAttribute(),
-				( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
-		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		attribute.resolveType( bindingContexts.peek().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
-
+			attributeBinding.getHibernateTypeDescriptor(),
+			attributeSource.getTypeInformation(),
+			attributeBinding.getAttribute(),
+			( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
 
-		String referencedEntityName = attributeSource.getReferencedEntityName();
-		if ( referencedEntityName == null ) {
-			referencedEntityName = attribute.getSingularAttributeType().getClassName();
-		}
-		attributeBinding.setReferencedEntityName( referencedEntityName );
-		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
-		final String referencedAttributeName = attributeSource.getReferencedEntityAttributeName();
-		attributeBinding.setReferencedAttributeName( referencedAttributeName );
-		final AttributeBinding referencedAttributeBinding =
-				referencedAttributeName == null
-						? referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
-						: referencedEntityBinding.locateAttributeBinding( referencedAttributeName );
-		attributeBinding.resolveReference( referencedAttributeBinding );
-		referencedAttributeBinding.addEntityReferencingAttributeBinding( attributeBinding );
+		typeHelper.bindManyToOneAttributeTypeInformation(
+				attributeSource,
+				attributeBinding
+		);
 		return attributeBinding;
 	}
 

@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.sql.Types;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
@@ -32,11 +32,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
@@ -47,10 +53,10 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -108,7 +114,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		addSourcesForManyToOne( sources );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
-		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
+		final String simpleEntityClassName = SimpleEntity.class.getName();
+		EntityBinding simpleEntityBinding = metadata.getEntityBinding( simpleEntityClassName );
 		assertIdAndSimpleProperty( simpleEntityBinding );
 
 		Set<SingularAssociationAttributeBinding> referenceBindings = simpleEntityBinding.locateAttributeBinding( "id" )
@@ -117,15 +124,67 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 		SingularAssociationAttributeBinding referenceBinding = referenceBindings.iterator().next();
 		EntityBinding referencedEntityBinding = referenceBinding.getReferencedEntityBinding();
-		// TODO - Is this assertion correct (HF)?
-		assertEquals( "Should be the same entity binding", referencedEntityBinding, simpleEntityBinding );
-
+		assertSame( "Should be the same entity binding", referencedEntityBinding, simpleEntityBinding );
+		
 		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( ManyToOneEntity.class.getName() );
-		Iterator<SingularAssociationAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings()
-				.iterator();
-		assertTrue( it.hasNext() );
-		assertSame( entityWithManyToOneBinding.locateAttributeBinding( "simpleEntity" ), it.next() );
-		assertFalse( it.hasNext() );
+
+		// binding model
+		AttributeBinding attributeBinding = entityWithManyToOneBinding.locateAttributeBinding( "simpleEntity" );
+		assertSame( referenceBinding,  attributeBinding );
+		assertTrue( attributeBinding.isAssociation() );
+		assertTrue(  attributeBinding.getEntityReferencingAttributeBindings().isEmpty() );
+		assertTrue( ManyToOneAttributeBinding.class.isInstance(  attributeBinding ) );
+		ManyToOneAttributeBinding manyToOneAttributeBinding = (ManyToOneAttributeBinding) attributeBinding;
+		assertEquals( simpleEntityClassName, manyToOneAttributeBinding.getReferencedEntityName() );
+		assertSame( simpleEntityBinding, manyToOneAttributeBinding.getReferencedEntityBinding() );
+		assertFalse( manyToOneAttributeBinding.isPropertyReference() );
+		assertSame( CascadeStyle.NONE, manyToOneAttributeBinding.getCascadeStyle() );
+		assertTrue( manyToOneAttributeBinding.isLazy() );
+		assertSame( FetchMode.SELECT, manyToOneAttributeBinding.getFetchMode() );
+		assertSame( FetchTiming.DELAYED, manyToOneAttributeBinding.getFetchTiming() );
+		assertSame( entityWithManyToOneBinding, manyToOneAttributeBinding.getContainer() );
+		Assert.assertEquals( "property", manyToOneAttributeBinding.getPropertyAccessorName() );
+		assertTrue( manyToOneAttributeBinding.isIncludedInOptimisticLocking() );
+		assertFalse( manyToOneAttributeBinding.isAlternateUniqueKey() );
+		HibernateTypeDescriptor hibernateTypeDescriptor = manyToOneAttributeBinding.getHibernateTypeDescriptor();
+		Assert.assertNull( hibernateTypeDescriptor.getExplicitTypeName() );
+		Assert.assertEquals( simpleEntityClassName, hibernateTypeDescriptor.getJavaTypeName() );
+		assertTrue( hibernateTypeDescriptor.isToOne() );
+		assertTrue( hibernateTypeDescriptor.getTypeParameters().isEmpty() );		
+
+		// domain model
+		Attribute simpleEntityAttribute= entityWithManyToOneBinding.getEntity().locateAttribute( "simpleEntity" );
+		assertEquals( "simpleEntity", simpleEntityAttribute.getName() );
+		Assert.assertSame( entityWithManyToOneBinding.getEntity(), simpleEntityAttribute.getAttributeContainer() ) ;
+		Assert.assertTrue( simpleEntityAttribute.isSingular() );
+		SingularAttribute simpleEntitySingularAttribute = ( SingularAttribute ) simpleEntityAttribute;
+		assertTrue( simpleEntitySingularAttribute.isTypeResolved() );
+		assertSame(
+				metadata.getEntityBinding( simpleEntityClassName ).getEntity(), 
+				simpleEntitySingularAttribute.getSingularAttributeType() 
+		);
+		Entity simpleEntityAttributeType = (Entity) simpleEntitySingularAttribute.getSingularAttributeType();
+		assertEquals( simpleEntityClassName, simpleEntityAttributeType.getName() );
+		Assert.assertEquals( simpleEntityClassName, simpleEntityAttributeType.getClassName());
+		Assert.assertTrue( simpleEntityAttributeType.isAssociation() );
+		assertFalse( simpleEntityAttributeType.isComponent() );
+
+		// relational
+		List<RelationalValueBinding> relationalValueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
+		Assert.assertEquals( 1, relationalValueBindings.size() );
+		RelationalValueBinding relationalValueBinding = relationalValueBindings.iterator().next();
+		assertFalse( relationalValueBinding.isDerived() );
+		assertTrue( relationalValueBinding.isIncludeInInsert() );
+		assertTrue( relationalValueBinding.isIncludeInUpdate() );
+		assertTrue( relationalValueBinding.isNullable() );
+		assertTrue( relationalValueBinding.getValue() instanceof Column );
+		Column column = ( Column ) relationalValueBinding.getValue();
+		Assert.assertEquals( Identifier.toIdentifier( "`simpleEntity`" ), column.getColumnName() );
+		assertFalse( column.isUnique() );
+		JdbcDataType jdbcDataType = column.getJdbcDataType();
+		Assert.assertEquals( Types.BIGINT, jdbcDataType.getTypeCode() );
+		assertSame( Long.class, jdbcDataType.getJavaType() );
+		assertEquals( "long", jdbcDataType.getTypeName() );
 	}
 
 	@Test
@@ -192,7 +251,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		BasicType basicNameAttributeType = (BasicType) singularNameAttribute.getSingularAttributeType();
 		assertSame( String.class, basicNameAttributeType.getClassReference() );
 		Assert.assertEquals( 1, nameBinding.getRelationalValueBindings().size() );
-		Value nameValue = (Value) nameBinding.getRelationalValueBindings().get( 0 ).getValue();
+		Value nameValue = nameBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertTrue( nameValue instanceof Column );
 		JdbcDataType nameDataType = nameValue.getJdbcDataType();
 		assertSame( String.class, nameDataType.getJavaType() );

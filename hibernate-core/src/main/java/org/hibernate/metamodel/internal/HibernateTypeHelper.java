@@ -34,6 +34,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
@@ -41,8 +42,10 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
@@ -51,6 +54,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.AbstractValue;
@@ -65,7 +69,9 @@ import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -127,9 +133,47 @@ public class HibernateTypeHelper {
 			}
 		}
 
-		bindHibernateTypeInformation( attributeSource.getTypeInformation(), hibernateTypeDescriptor );
+		bindHibernateTypeInformation( attributeSource.getTypeInformation(), false, hibernateTypeDescriptor );
 
 		processSingularAttributeTypeInformation( attributeSource, attributeBinding );
+	}
+
+	public void bindManyToOneAttributeTypeInformation(
+			ToOneAttributeSource attributeSource,
+			ManyToOneAttributeBinding attributeBinding) {
+		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+
+		if ( ! attributeBinding.getAttribute().isTypeResolved() ) {
+			EntityBinding referencedEntityBinding = metadata.getEntityBinding( attributeBinding.getReferencedEntityName() );
+			Entity referencedEntity = referencedEntityBinding == null ? null : referencedEntityBinding.getEntity();
+			if ( referencedEntity != null ) {
+				attributeBinding.getAttribute().resolveType( referencedEntity );
+			}
+		}
+
+		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
+			hibernateTypeDescriptor.setJavaTypeName( determineJavaType( attributeBinding.getAttribute() ).getName() );
+		}
+
+		bindHibernateTypeInformation( attributeSource.getTypeInformation(), true, hibernateTypeDescriptor );
+
+		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() == null ) {
+			Type resolvedType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+					attributeBinding.getReferencedEntityName(),
+					( attributeBinding.isPropertyReference() ? attributeBinding.getReferencedAttributeName() : null ),
+					attributeBinding.getFetchTiming() != FetchTiming.IMMEDIATE,
+					attributeBinding.getFetchTiming() == FetchTiming.DELAYED,
+					true, //TODO: is isEmbedded() obsolete?
+					false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+					false  //TODO: determine if isLogicalOneToOne
+			);
+
+			pushHibernateTypeInformationDown(
+					attributeBinding.getHibernateTypeDescriptor(),
+					attributeBinding.getRelationalValueBindings(),
+					resolvedType
+			);
+		}
 	}
 
 	public void bindPluralAttributeTypeInformation(
@@ -166,6 +210,7 @@ public class HibernateTypeHelper {
 
 		bindHibernateTypeInformation(
 				attributeSource.getTypeInformation(),
+				false,
 				attributeBinding.getHibernateTypeDescriptor()
 		);
 		processPluralAttributeTypeInformation( attributeSource, attributeBinding );
@@ -215,7 +260,8 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	private Class<?> determineJavaType(final SingularAttribute attribute) {
+	/* package-protected */
+	static Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
 			return ReflectHelper.reflectedPropertyClass( ownerClass, attribute.getName() );
@@ -254,10 +300,12 @@ public class HibernateTypeHelper {
 	 * Takes explicit source type information and applies it to the binding model.
 	 *
 	 * @param typeSource The source (user supplied) hibernate type information
+	 * @param isToOne Indicates if this for a to-one association
 	 * @param hibernateTypeDescriptor The binding model hibernate type information
 	 */
 	private void bindHibernateTypeInformation(
 			ExplicitHibernateTypeSource typeSource,
+			boolean isToOne,
 			HibernateTypeDescriptor hibernateTypeDescriptor) {
 		final String explicitTypeName = typeSource.getName();
 		if ( explicitTypeName != null ) {
@@ -274,6 +322,7 @@ public class HibernateTypeHelper {
 				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
 			}
 		}
+		hibernateTypeDescriptor.setToOne( isToOne );
 	}
 
 	/**
@@ -443,7 +492,14 @@ public class HibernateTypeHelper {
 			return;
 		}
 		final Value value = relationalValueBindings.get( 0 ).getValue();
-		pushHibernateTypeInformationDown( resolvedHibernateType, value );
+		pushHibernateTypeInformationDown(
+				(
+						resolvedHibernateType.isEntityType() ?
+						( ( EntityType ) resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata ) :
+						resolvedHibernateType
+				),
+				value
+		);
 	}
 
 	public void pushHibernateTypeInformationDown(Type resolvedHibernateType, Value value) {
@@ -556,6 +612,7 @@ public class HibernateTypeHelper {
 		if ( resolvedType == null ) {
 			bindHibernateTypeInformation(
 					elementSource.getExplicitHibernateTypeSource(),
+					false,
 					basicCollectionElementBinding.getHibernateTypeDescriptor() );
 			resolvedType = determineHibernateTypeFromDescriptor( basicCollectionElementBinding.getHibernateTypeDescriptor() );
 		}

@@ -185,8 +185,7 @@ public class CompositeAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			String referencedEntityName,
-			String referencedEntityAttributeName,
+			AttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
 				this,
@@ -195,6 +194,7 @@ public class CompositeAttributeBinding
 				includedInOptimisticLocking,
 				lazy,
 				metaAttributeContext,
+				referencedAttributeBinding,
 				valueBindings
 		);
 		registerAttributeBinding( attribute.getName(), binding );

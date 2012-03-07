@@ -47,9 +47,7 @@ public class ManyToOneAttributeBinding
 
 	private final List<RelationalValueBinding> relationalValueBindings;
 
-	private String referencedEntityName;
-	private String referencedAttributeName;
-	private AttributeBinding referencedAttributeBinding;
+	private final AttributeBinding referencedAttributeBinding;
 
 	private boolean isLogicalOneToOne;
 
@@ -64,6 +62,7 @@ public class ManyToOneAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
+			AttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
 		super(
 				container,
@@ -73,7 +72,15 @@ public class ManyToOneAttributeBinding
 				lazy,
 				metaAttributeContext
 		);
+		if ( referencedAttributeBinding == null ) {
+			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
+		}
+		if ( ! EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
+			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
+		}
+		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
+		// buildForeignKey();
 	}
 
 	@Override
@@ -100,27 +107,18 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public final boolean isPropertyReference() {
-		return referencedAttributeName != null;
+		return referencedAttributeBinding !=
+				getReferencedEntityBinding().getHierarchyDetails().getEntityIdentifier().getValueBinding();
 	}
 
 	@Override
 	public final String getReferencedEntityName() {
-		return referencedEntityName;
-	}
-
-	@Override
-	public void setReferencedEntityName(String referencedEntityName) {
-		this.referencedEntityName = referencedEntityName;
+		return getReferencedEntityBinding().getEntity().getName();
 	}
 
 	@Override
 	public final String getReferencedAttributeName() {
-		return referencedAttributeName;
-	}
-
-	@Override
-	public void setReferencedAttributeName(String referencedEntityAttributeName) {
-		this.referencedAttributeName = referencedEntityAttributeName;
+		return referencedAttributeBinding.getAttribute().getName();
 	}
 
 	@Override
@@ -189,41 +187,7 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
-	public final boolean isReferenceResolved() {
-		return referencedAttributeBinding != null;
-	}
-
-	@Override
-	public final void resolveReference(AttributeBinding referencedAttributeBinding) {
-		if ( ! EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
-			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
-		}
-		final EntityBinding entityBinding = (EntityBinding) referencedAttributeBinding.getContainer();
-		if ( !referencedEntityName.equals( entityBinding.getEntity().getName() ) ) {
-			throw new IllegalStateException(
-					"attempt to set EntityBinding with name: [" +
-							entityBinding.getEntity().getName() +
-							"; entity name should be: " + referencedEntityName
-			);
-		}
-		if ( referencedAttributeName == null ) {
-			referencedAttributeName = referencedAttributeBinding.getAttribute().getName();
-		}
-		else if ( !referencedAttributeName.equals( referencedAttributeBinding.getAttribute().getName() ) ) {
-			throw new IllegalStateException(
-					"Inconsistent attribute name; expected: " + referencedAttributeName +
-							"actual: " + referencedAttributeBinding.getAttribute().getName()
-			);
-		}
-		this.referencedAttributeBinding = referencedAttributeBinding;
-//		buildForeignKey();
-	}
-
-	@Override
 	public AttributeBinding getReferencedAttributeBinding() {
-		if ( !isReferenceResolved() ) {
-			throw new IllegalStateException( "Referenced AttributeBiding has not been resolved." );
-		}
 		return referencedAttributeBinding;
 	}
 

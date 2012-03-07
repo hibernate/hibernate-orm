@@ -78,7 +78,6 @@ public class EntityBinding implements AttributeBindingContainer {
 	private String discriminatorMatchValue;
 
 	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
-	private Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
 	private MetaAttributeContext metaAttributeContext;
 
@@ -286,10 +285,6 @@ public class EntityBinding implements AttributeBindingContainer {
 		filterDefinitions.add( filterDefinition );
 	}
 
-	public Iterable<SingularAssociationAttributeBinding> getEntityReferencingAttributeBindings() {
-		return entityReferencingAttributeBindings;
-	}
-
 	@Override
 	public EntityBinding seekEntityBinding() {
 		return this;
@@ -311,9 +306,6 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	protected void registerAttributeBinding(String name, AttributeBinding attributeBinding) {
-		if ( SingularAssociationAttributeBinding.class.isInstance( attributeBinding ) ) {
-			entityReferencingAttributeBindings.add( (SingularAssociationAttributeBinding) attributeBinding );
-		}
 		attributeBindingMap.put( name, attributeBinding );
 	}
 
@@ -539,8 +531,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			String referencedEntityName,
-			String referencedEntityAttributeName,
+			AttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
 				this,
@@ -549,6 +540,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				includedInOptimisticLocking,
 				lazy,
 				metaAttributeContext,
+				referencedAttributeBinding,
 				valueBindings
 		);
 		registerAttributeBinding( attribute.getName(), binding );

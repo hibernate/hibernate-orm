@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.test.unidir.manytoone" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<class name="Parent">
+		<id name="name"/>
+	</class>
+	
+	<class name="Child">
+		<id name="name"/>
+        <many-to-one name="Parent"/>
+	</class>
+
+</hibernate-mapping>

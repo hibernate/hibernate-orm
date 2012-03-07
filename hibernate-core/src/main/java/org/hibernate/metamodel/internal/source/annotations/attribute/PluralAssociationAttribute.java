@@ -30,11 +30,13 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.Caching;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
@@ -44,6 +46,8 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingC
 public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
 	private final String orderBy;
+	private final Caching caching;
+	private final String customPersister;
 
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
@@ -76,6 +80,14 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return inverseForeignKeyName;
 	}
 
+	public Caching getCaching() {
+		return caching;
+	}
+
+	public String getCustomPersister() {
+		return customPersister;
+	}
+
 	private PluralAssociationAttribute(String name,
 									   Class<?> javaType,
 									   AttributeNature associationType,
@@ -86,6 +98,19 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
 		this.inverseForeignKeyName = determineInverseForeignKeyName();
+		this.caching = determineCachingSettings();
+		this.customPersister = determineCustomPersister();
+	}
+
+	private String determineCustomPersister() {
+		String entityPersisterClass = null;
+		final AnnotationInstance persisterAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(), HibernateDotNames.PERSISTER
+		);
+		if ( persisterAnnotation != null ) {
+			entityPersisterClass = JandexHelper.getValue( persisterAnnotation, "impl", String.class );
+		}
+		return entityPersisterClass;
 	}
 
 	private String determineInverseForeignKeyName() {
@@ -148,6 +173,34 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 
 		return orderBy;
+	}
+
+	private Caching determineCachingSettings() {
+		Caching caching = null;
+		final AnnotationInstance hibernateCacheAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.CACHE
+		);
+		if ( hibernateCacheAnnotation != null ) {
+			org.hibernate.cache.spi.access.AccessType accessType;
+			if ( hibernateCacheAnnotation.value( "usage" ) == null ) {
+				accessType = getContext().getMappingDefaults().getCacheAccessType();
+			}
+			else {
+				accessType = CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() )
+						.toAccessType();
+			}
+
+			return new Caching(
+					hibernateCacheAnnotation.value( "region" ) == null
+							? getName()
+							: hibernateCacheAnnotation.value( "region" ).asString(),
+					accessType,
+					hibernateCacheAnnotation.value( "include" ) != null
+							&& "all".equals( hibernateCacheAnnotation.value( "include" ).asString() )
+			);
+		}
+		return caching;
 	}
 }
 

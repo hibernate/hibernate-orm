@@ -121,17 +121,17 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public Caching getCaching() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCaching();
 	}
 
 	@Override
 	public String getCustomPersisterClassName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCustomPersister();
 	}
 
 	@Override
 	public String getWhere() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getWhereClause();
 	}
 
 	@Override

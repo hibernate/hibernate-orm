@@ -29,6 +29,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.integration.GeomEntity;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -132,8 +133,13 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	public String[] getMappings() {
-		return new String[]{"GeomEntity.hbm.xml"};
+		return new String[]{}; //new String[]{"GeomEntity.hbm.xml"};
 	}
+
+	@Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[]{GeomEntity.class};
+    }
 
 	/**
 	 * Returns true if the spatial dialect supports the specified function

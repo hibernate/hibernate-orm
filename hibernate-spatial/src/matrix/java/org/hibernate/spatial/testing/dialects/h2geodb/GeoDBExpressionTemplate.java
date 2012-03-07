@@ -32,7 +32,7 @@ import org.hibernate.spatial.testing.TestDataElement;
  */
 public class GeoDBExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into GEOMTEST values (%d, '%s', ST_GeomFromText('%s', %d))";
+	final String SQL_TEMPLATE = "insert into GEOMTEST (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d))";
 
 	/*
 		  * (non-Javadoc)

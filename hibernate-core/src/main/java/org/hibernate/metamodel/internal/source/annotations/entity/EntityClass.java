@@ -23,6 +23,15 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.AccessType;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.PersistenceException;
@@ -33,15 +42,6 @@ import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -57,13 +57,13 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
+import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
-import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
@@ -103,9 +103,9 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isSelectBeforeUpdate;
 	private String customPersister;
 
-	private CustomSQL customInsert;
-	private CustomSQL customUpdate;
-	private CustomSQL customDelete;
+	private final CustomSQL customInsert;
+	private final CustomSQL customUpdate;
+	private final CustomSQL customDelete;
 
 	private boolean isLazy;
 	private String proxy;
@@ -146,8 +146,20 @@ public class EntityClass extends ConfiguredClass {
 		this.batchSize = determineBatchSize();
 		this.jpaCallbacks = determineEntityListeners();
 
+		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_INSERT,
+				getClassInfo().annotations()
+		);
+		this.customUpdate = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_UPDATE,
+				getClassInfo().annotations()
+		);
+		this.customDelete = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_DELETE,
+				getClassInfo().annotations()
+		);
+
 		processHibernateEntitySpecificAnnotations();
-		processCustomSqlAnnotations();
 		processProxyGeneration();
 		processDiscriminator();
 	}
@@ -666,7 +678,11 @@ public class EntityClass extends ConfiguredClass {
 					JPADotNames.SECONDARY_TABLES
 			);
 			if ( secondaryTables != null ) {
-				for ( AnnotationInstance secondaryTable : JandexHelper.getValue( secondaryTables, "value", AnnotationInstance[].class ) ) {
+				for ( AnnotationInstance secondaryTable : JandexHelper.getValue(
+						secondaryTables,
+						"value",
+						AnnotationInstance[].class
+				) ) {
 					secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
 				}
 			}
@@ -751,44 +767,6 @@ public class EntityClass extends ConfiguredClass {
 			customLoader = sqlLoaderAnnotation.value( "namedQuery" ).asString();
 		}
 		return customLoader;
-	}
-
-	private CustomSQL createCustomSQL(AnnotationInstance customSqlAnnotation) {
-		if ( customSqlAnnotation == null ) {
-			return null;
-		}
-
-		final String sql = customSqlAnnotation.value( "sql" ).asString();
-		final boolean isCallable = customSqlAnnotation.value( "callable" ) != null
-				&& customSqlAnnotation.value( "callable" ).asBoolean();
-
-		final ExecuteUpdateResultCheckStyle checkStyle = customSqlAnnotation.value( "check" ) == null
-				? isCallable
-				? ExecuteUpdateResultCheckStyle.NONE
-				: ExecuteUpdateResultCheckStyle.COUNT
-				: ExecuteUpdateResultCheckStyle.valueOf( customSqlAnnotation.value( "check" ).asEnum() );
-
-		return new CustomSQL( sql, isCallable, checkStyle );
-	}
-
-	private void processCustomSqlAnnotations() {
-		// Custom sql insert
-		final AnnotationInstance sqlInsertAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.SQL_INSERT
-		);
-		customInsert = createCustomSQL( sqlInsertAnnotation );
-
-		// Custom sql update
-		final AnnotationInstance sqlUpdateAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.SQL_UPDATE
-		);
-		customUpdate = createCustomSQL( sqlUpdateAnnotation );
-
-		// Custom sql delete
-		final AnnotationInstance sqlDeleteAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.SQL_DELETE
-		);
-		customDelete = createCustomSQL( sqlDeleteAnnotation );
 	}
 
 	private List<String> determineSynchronizedTableNames() {

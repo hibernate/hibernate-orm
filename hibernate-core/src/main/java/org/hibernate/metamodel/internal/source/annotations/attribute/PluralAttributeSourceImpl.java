@@ -146,17 +146,17 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public CustomSQL getCustomSqlInsert() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCustomInsert();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlUpdate() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCustomUpdate();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlDelete() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCustomDelete();
 	}
 
 	@Override

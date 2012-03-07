@@ -33,10 +33,12 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
@@ -48,6 +50,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String orderBy;
 	private final Caching caching;
 	private final String customPersister;
+	private final CustomSQL customInsert;
+	private final CustomSQL customUpdate;
+	private final CustomSQL customDelete;
+
 
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
@@ -88,6 +94,18 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return customPersister;
 	}
 
+	public CustomSQL getCustomInsert() {
+		return customInsert;
+	}
+
+	public CustomSQL getCustomUpdate() {
+		return customUpdate;
+	}
+
+	public CustomSQL getCustomDelete() {
+		return customDelete;
+	}
+
 	private PluralAssociationAttribute(String name,
 									   Class<?> javaType,
 									   AttributeNature associationType,
@@ -100,6 +118,15 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.inverseForeignKeyName = determineInverseForeignKeyName();
 		this.caching = determineCachingSettings();
 		this.customPersister = determineCustomPersister();
+		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_INSERT, annotations()
+		);
+		this.customUpdate = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_UPDATE, annotations()
+		);
+		this.customDelete = AnnotationParserHelper.processCustomSqlAnnotation(
+				HibernateDotNames.SQL_DELETE, annotations()
+		);
 	}
 
 	private String determineCustomPersister() {

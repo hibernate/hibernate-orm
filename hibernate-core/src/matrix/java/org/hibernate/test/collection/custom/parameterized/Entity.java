@@ -1,4 +1,5 @@
 package org.hibernate.test.collection.custom.parameterized;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -47,6 +48,7 @@ public class Entity {
 	@CollectionType( type = "DefaultableList" )
 	@JoinColumn( name = "ENT_ID" )
 	@OrderColumn( name = "POS" )
+	@Column(name = "VAL")
 	public List getValues() {
 		return values;
 	}

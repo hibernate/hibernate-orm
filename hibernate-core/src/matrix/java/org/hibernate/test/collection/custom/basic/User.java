@@ -30,6 +30,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.hibernate.annotations.CollectionType;
  * @author Steve Ebersole
  */
 @Entity
+@Table(name = "UC_BSC_USER")
 public class User {
 	private String userName;
 	private IMyList<Email> emailAddresses = new MyList<Email>();

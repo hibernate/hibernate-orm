@@ -86,19 +86,19 @@ libraries = [
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
         // logging for testing
-        slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
-        slf4j_log4j12:  'org.slf4j:slf4j-log4j12:' + slf4jVersion,
-        jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
+        slf4j_api:      "org.slf4j:slf4j-api:${slf4jVersion}",
+        slf4j_log4j12:  "org.slf4j:slf4j-log4j12:${slf4jVersion}",
+        jcl_slf4j:      "org.slf4j:jcl-over-slf4j:${slf4jVersion}",
         jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
 
-        junit:          'junit:junit:' + junitVersion,
+        junit:          "junit:junit:${junitVersion}",
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
         shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
         validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
-        h2:             'com.h2database:h2:' + h2Version,
+        h2:             "com.h2database:h2:${h2Version}"
 ]
 
 
@@ -109,7 +109,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.1.1-SNAPSHOT'
+    version = '4.1.1.Final'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"

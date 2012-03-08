@@ -5,6 +5,48 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.1.Final (2012.03.07)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11859
+
+** Bug
+    * [HHH-6883] - Informix dialect incorrectly reports that temp tables are not supported
+    * [HHH-7046] - Polymorphic query by natural ID broken
+    * [HHH-7073] - Audited entities with Many-to-Many relationships fail with NullPointerException
+    * [HHH-7085] - Entities marked as @Immutable that have a @NaturalId fail to be inserted with NPE
+    * [HHH-7089] - NPE during SessionFactoryImpl init when 2L caching is enabled and @NaturalIdCache is used with EHcache
+    * [HHH-7094] - Session is not flushed before NaturalIdLoadAccess is executed
+    * [HHH-7095] - Handle RegionFactory.buildNaturalIdRegion throwing UnsupportedOperationException
+    * [HHH-7096] - Settings not available in SingletonEhCacheRegionFactory
+    * [HHH-7097] - Entity load event doesn't result in naturalId->pk caching
+    * [HHH-7102] - Misleading error message is shown when no RegionFactory is manually set
+    * [HHH-7106] - Documentation doesnt explain how to create audited tables
+    * [HHH-7117] - MultipleLinesSqlCommandExtractor does not accept trailing white spaces after last statement
+    * [HHH-7127] - Query region evictAll not working on local mode
+    * [HHH-7129] - Throw exception when metadata attempts to spread @NaturalId across an entity hierarchy
+    * [HHH-7138] - Hibernate implements JPA @OneToMany collection versioning incorrectly
+    * [HHH-7147] - ServiceRegistry is starting services twice
+
+** Deprecation
+    * [HHH-7023] - Deprecate HQL-specific (JDBC-style) positional parameters
+
+** Improvement
+    * [HHH-5927] - Performance risk: Suboptimal synchronization in org.hibernate.engine.query.QueryPlanCache.getHQLQueryPlan
+    * [HHH-6589] - Skip non-JPA features populating JPA "static metamodel"
+    * [HHH-6946] - Add support for the AS400 (iSeries) system to StandardDialectResolver
+    * [HHH-6983] - remove common-collections dependency
+    * [HHH-7066] - Improve memory allocation on String extraction out of Clob fields
+    * [HHH-7128] - Upgrade to Infinispan 5.1.2.CR1
+
+** Patch
+    * [HHH-4417] - Add annotation support for UserCollectionType
+    * [HHH-6100] - Bug fix related to CriteriaQuery (JPA) when using XML mappings
+
+** Task
+    * [HHH-7062] - upgrade to jboss-logging 3.1.0.GA
+    * [HHH-7067] - Update build to work with Gradle m8
+    * [HHH-7153] - Update to newest jDocBook tool chain versions
+
 
 Changes in version 4.1.0.Final (2012.02.08)
 ------------------------------------------------------------------------------------------------------------------------

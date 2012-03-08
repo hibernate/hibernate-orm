@@ -69,9 +69,28 @@ h2,h3,h4,h5,h6{
 div.note {
     background-color:#849092;
     color:white;
+    background-image: url(../images/org/hibernate/docbook/note.png);
 }
 
-div.note h2 {color:white;}
+div.note h2 {
+    color:white;
+}
+
+div.tip {
+    background-image:url(../images/org/hibernate/docbook/tip.png);
+}
+
+div.important {
+    background-image:url(../images/org/hibernate/docbook/important.png);
+}
+
+div.caution {
+    background-image:url(../images/org/hibernate/docbook/caution.png);
+}
+
+div.warning {
+    background-image:url(../images/org/hibernate/docbook/warning.png);
+}
 
 div.note a:visited, div.tip a:visited, div.important a:visited, div.caution a:visited, div.warning a:visited, div.note a:link, div.tip a:link, div.important a:link, div.caution a:link, div.warning a:link {
     color: #f7f2d0;

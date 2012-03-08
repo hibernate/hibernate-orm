@@ -5,9 +5,7 @@ buildscript {
 	  mavenRepo name: 'jboss-nexus', url: "https://repository.jboss.org/nexus/content/groups/public/"
   }
   dependencies {
-      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.3'
-	  classpath "org.jboss.pressgang:pressgang-xslt:2.0.1"
-	  classpath "org.jboss.pressgang:pressgang-fonts:2.0.1"
+      classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.0"
   }
 }
 
@@ -15,10 +13,10 @@ apply plugin: "java"
 apply plugin: "jdocbook"
 
 dependencies {
-	jdocbookStyles( "org.jboss.pressgang:pressgang-jdocbook-style:2.0.1" ) {
-		exclude group: 'org.eclipse.wst.css'
-		exclude group: 'org.eclipse.wst.sse'
-	}
+    pressgangVersion = '3.0.0-SNAPSHOT'
+    jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
+    jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
+    jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
 }
 
 defaultTasks 'buildDocs'

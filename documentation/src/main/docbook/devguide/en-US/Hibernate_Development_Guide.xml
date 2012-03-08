@@ -24,7 +24,14 @@
             <holder>&copyrightHolder;</holder>
         </copyright>
 
-        <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+        <authorgroup xmlns:xl="http://www.w3.org/1999/xlink">
+            <author>
+                <orgname><link xl:href="http://hibernate.org">The Hibernate Team</link></orgname>
+            </author>
+            <othercredit>
+                <orgname><link xl:href="http://design.jboss.org/">The JBoss Visual Design Team</link></orgname>
+            </othercredit>
+        </authorgroup>
     </info>
 
 

@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
 
 <chapter xmlns="http://docbook.org/ns/docbook"
-         xmlns:xi="http://www.w3.org/2001/XInclude">
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+        xml:id="batch">
 
   <title>Batch Processing</title>
   <para>

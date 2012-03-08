@@ -42,10 +42,8 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
@@ -54,7 +52,6 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
-import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.AbstractValue;
@@ -69,7 +66,6 @@ import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -136,44 +132,6 @@ public class HibernateTypeHelper {
 		bindHibernateTypeInformation( attributeSource.getTypeInformation(), false, hibernateTypeDescriptor );
 
 		processSingularAttributeTypeInformation( attributeSource, attributeBinding );
-	}
-
-	public void bindManyToOneAttributeTypeInformation(
-			ToOneAttributeSource attributeSource,
-			ManyToOneAttributeBinding attributeBinding) {
-		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-
-		if ( ! attributeBinding.getAttribute().isTypeResolved() ) {
-			EntityBinding referencedEntityBinding = metadata.getEntityBinding( attributeBinding.getReferencedEntityName() );
-			Entity referencedEntity = referencedEntityBinding == null ? null : referencedEntityBinding.getEntity();
-			if ( referencedEntity != null ) {
-				attributeBinding.getAttribute().resolveType( referencedEntity );
-			}
-		}
-
-		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
-			hibernateTypeDescriptor.setJavaTypeName( determineJavaType( attributeBinding.getAttribute() ).getName() );
-		}
-
-		bindHibernateTypeInformation( attributeSource.getTypeInformation(), true, hibernateTypeDescriptor );
-
-		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() == null ) {
-			Type resolvedType = metadata.getTypeResolver().getTypeFactory().manyToOne(
-					attributeBinding.getReferencedEntityName(),
-					( attributeBinding.isPropertyReference() ? attributeBinding.getReferencedAttributeName() : null ),
-					attributeBinding.getFetchTiming() != FetchTiming.IMMEDIATE,
-					attributeBinding.getFetchTiming() == FetchTiming.DELAYED,
-					true, //TODO: is isEmbedded() obsolete?
-					false, //TODO: should be attributeBinding.isIgnoreNotFound(),
-					false  //TODO: determine if isLogicalOneToOne
-			);
-
-			pushHibernateTypeInformationDown(
-					attributeBinding.getHibernateTypeDescriptor(),
-					attributeBinding.getRelationalValueBindings(),
-					resolvedType
-			);
-		}
 	}
 
 	public void bindPluralAttributeTypeInformation(
@@ -260,8 +218,7 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	/* package-protected */
-	static Class<?> determineJavaType(final SingularAttribute attribute) {
+	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
 			return ReflectHelper.reflectedPropertyClass( ownerClass, attribute.getName() );

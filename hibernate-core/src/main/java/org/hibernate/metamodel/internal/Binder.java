@@ -36,6 +36,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -122,6 +123,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -230,12 +232,17 @@ public class Binder {
 						attributeSource.isLazy(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						attributeSource.getGeneration() );
-		bindHibernateTypeDescriptor(
-				attributeBinding.getHibernateTypeDescriptor(),
-				attributeSource.getTypeInformation(),
-				attributeBinding.getAttribute(),
-				( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+		bindHibernateTypeDescriptor(
+				hibernateTypeDescriptor,
+				attributeSource.getTypeInformation(),
+				attributeBinding.getAttribute()
+		);
+		resolveHibernateResolvedType( 
+				attributeBinding.getHibernateTypeDescriptor(),
+				getHeuristicType( hibernateTypeDescriptor ),
+				( AbstractValue ) relationalValueBindings.get( 0 ).getValue() 
+		);
 		attributeBinding.getAttribute().resolveType(
 				bindingContexts.peek().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		return attributeBinding;
@@ -515,7 +522,10 @@ public class Binder {
 						: "string";
 		final HibernateTypeDescriptor hibernateTypeDescriptor = discriminator.getExplicitHibernateTypeDescriptor();
 		hibernateTypeDescriptor.setExplicitTypeName( typeName );
-		resolveHibernateResolvedType( hibernateTypeDescriptor, typeName, value );
+		resolveHibernateResolvedType(
+				hibernateTypeDescriptor,
+				getHeuristicType( hibernateTypeDescriptor ),
+				value );
 	}
 
 	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
@@ -587,17 +597,12 @@ public class Binder {
 	private void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final ExplicitHibernateTypeSource typeSource,
-			final Attribute attribute,
-			final AbstractValue value ) {
+			final Attribute attribute) {
 		String typeName = typeSource.getName();
 		// Check if user specified a type
 		if ( typeName == null ) {
 			// Obtain Java type name from attribute
-			final Class< ? > attributeJavaType =
-					ReflectHelper.reflectedPropertyClass(
-							attribute.getAttributeContainer().getClassReference(),
-							attribute.getName() );
-			typeName = attributeJavaType.getName();
+			typeName = determineJavaType( attribute ).getName();
 			hibernateTypeDescriptor.setJavaTypeName( typeName );
 		} else {
 			// Check if user-specified name is of a User-Defined Type (UDT)
@@ -613,9 +618,15 @@ public class Binder {
 				hibernateTypeDescriptor.getTypeParameters().putAll( typeParameters );
 			}
 		}
-		resolveHibernateResolvedType( hibernateTypeDescriptor, typeName, value );
 	}
 
+	private Class<?> determineJavaType(Attribute attribute) {
+		return ReflectHelper.reflectedPropertyClass(
+				attribute.getAttributeContainer().getClassReference(),
+				attribute.getName()
+		);
+	}
+	
 	private void bindIdentifier( final EntityBinding rootEntityBinding, final IdentifierSource identifierSource ) {
 		final Nature nature = identifierSource.getNature();
 		if ( nature == Nature.SIMPLE ) {
@@ -642,6 +653,7 @@ public class Binder {
 		if ( attribute == null ) {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
+		// TODO: figure out which table is used (could be secondary table...)
 		final List< RelationalValueBinding > relationalValueBindings =
 			bindValues(
 				attributeBindingContainer,
@@ -650,7 +662,7 @@ public class Binder {
 				attributeBindingContainer.seekEntityBinding().getPrimaryTable() );
 		final String referencedEntityName = attributeSource.getReferencedEntityName() != null
 				? attributeSource.getReferencedEntityName()
-				: HibernateTypeHelper.determineJavaType( attribute ).getName();
+				: determineJavaType( attribute ).getName();
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
 		final AttributeBinding referencedAttributeBinding =
 				attributeSource.getReferencedEntityAttributeName() == null
@@ -668,19 +680,33 @@ public class Binder {
 				relationalValueBindings );
 		// TODO: is this needed?
 		referencedAttributeBinding.addEntityReferencingAttributeBinding( attributeBinding );
+		if ( ! attribute.isTypeResolved() ) {
+			attribute.resolveType( referencedEntityBinding.getEntity() );
+		}
+		Type resolvedType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+				attributeBinding.getReferencedEntityName(),
+				( attributeBinding.isPropertyReference() ? attributeBinding.getReferencedAttributeName() : null ),
+				attributeBinding.getFetchTiming() != FetchTiming.IMMEDIATE,
+				attributeBinding.getFetchTiming() == FetchTiming.DELAYED,
+				true, //TODO: is isEmbedded() obsolete?
+				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+				false  //TODO: determine if isLogicalOneToOne
+		);
+		// TODO: need to be able to deal with composite IDs
 		bindHibernateTypeDescriptor(
-			attributeBinding.getHibernateTypeDescriptor(),
-			attributeSource.getTypeInformation(),
-			attributeBinding.getAttribute(),
-			( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
+				attributeBinding.getHibernateTypeDescriptor(),
+				attributeSource.getTypeInformation(),
+				attributeBinding.getAttribute()
+		);
+		resolveHibernateResolvedType(
+				attributeBinding.getHibernateTypeDescriptor(),
+				resolvedType,
+				(AbstractValue) relationalValueBindings.get( 0 ).getValue()
+		);
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
 
-		typeHelper.bindManyToOneAttributeTypeInformation(
-				attributeSource,
-				attributeBinding
-		);
 		return attributeBinding;
 	}
 
@@ -1195,24 +1221,40 @@ public class Binder {
 
 	private void resolveHibernateResolvedType(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
-			final String typeName,
+			final Type resolvedType,
 			final AbstractValue value ) {
-		final Properties typeProperties = new Properties();
-		typeProperties.putAll( hibernateTypeDescriptor.getTypeParameters() );
-		final Type resolvedType = metadata.getTypeResolver().heuristicType( typeName, typeProperties );
 		// Configure relational value JDBC type from Hibernate type descriptor now that its configured
 		if ( resolvedType != null ) {
 			hibernateTypeDescriptor.setResolvedTypeMapping( resolvedType );
 			if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
 				hibernateTypeDescriptor.setJavaTypeName( resolvedType.getReturnedClass().getName() );
 			}
+			Type resolvedRelationalType;
+			if ( resolvedType.isEntityType() ) {
+				resolvedRelationalType = EntityType.class.cast( resolvedType ).getIdentifierOrUniqueKeyType( metadata );
+				hibernateTypeDescriptor.setToOne( true );
+			}
+			else {
+				resolvedRelationalType = resolvedType;
+				hibernateTypeDescriptor.setToOne( false );
+			}
 			value.setJdbcDataType( new JdbcDataType(
-					resolvedType.sqlTypes( metadata )[ 0 ],
-					resolvedType.getName(),
-					resolvedType.getReturnedClass() ) );
+					resolvedRelationalType.sqlTypes( metadata )[ 0 ],
+					resolvedRelationalType.getName(),
+					resolvedRelationalType.getReturnedClass() ) );
 		}
 	}
 
+	private Type getHeuristicType(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		final String typeName = 
+				hibernateTypeDescriptor.getExplicitTypeName() != null ?
+						hibernateTypeDescriptor.getExplicitTypeName() :
+						hibernateTypeDescriptor.getJavaTypeName();
+		final Properties properties = new Properties();
+		properties.putAll( hibernateTypeDescriptor.getTypeParameters() );
+		return metadata.getTypeResolver().heuristicType( typeName, properties );
+	}
+	
 	private boolean toBoolean( final TruthValue truthValue, final boolean truthValueDefault ) {
 		if ( truthValue == TruthValue.TRUE ) {
 			return true;

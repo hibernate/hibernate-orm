@@ -5,28 +5,19 @@ configurations {
 }
 
 dependencies {
-   infinispanVersion = '5.1.2.CR1'
-   jnpVersion = '5.0.3.GA'
+    infinispanVersion = '5.1.2.CR1'
+    jnpVersion = '5.0.3.GA'
 
-   compile(project(':hibernate-core'))
-   compile([group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '3.0.4'])
-   compile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion])
-   testCompile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion]) {
-      artifact {
-         name = "infinispan-core"
-         type = 'jar'
-      }
-      artifact {
-         name = "infinispan-core"
-         classifier = 'tests'
-         type = 'jar'
-      }
-   }
-   testCompile( project(':hibernate-testing') )
-   testCompile([group: 'org.jboss', name: 'jboss-common-core', version: '2.2.14.GA'])
-   testCompile([group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion])
-   testCompile([group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion])
-   testCompile([group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '1.4.0.B01'])
+    compile project( ':hibernate-core' )
+    compile "org.infinispan:infinispan-core:${infinispanVersion}"
+    compile "org.rhq.helpers:rhq-pluginAnnotations:3.0.4"
+
+    testCompile project( ':hibernate-testing' )
+    testCompile "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar"
+    testCompile "org.jboss:jboss-common-core:2.2.14.GA"
+    testCompile "org.jboss.naming:jnp-client:${jnpVersion}"
+    testCompile "org.jboss.naming:jnpserver:${jnpVersion}"
+    testCompile "org.rhq.helpers:rhq-pluginAnnotations:1.4.0.B01"
 }
 
 test {

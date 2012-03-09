@@ -1,7 +1,8 @@
 apply plugin: 'java'
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( [group: 'c3p0', name: 'c3p0', version: '0.9.1'] )
-    testCompile( project(':hibernate-testing') )
+    compile project( ':hibernate-core' )
+    compile "c3p0:c3p0:0.9.1"
+
+    testCompile project( ':hibernate-testing' )
 }

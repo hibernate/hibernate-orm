@@ -14,12 +14,15 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
+
     antlr( libraries.antlr )
+
     provided( libraries.jandex )
     provided( libraries.classmate )
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
+
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
@@ -28,6 +31,7 @@ dependencies {
         // for test runtime
         transitive = true
     }
+
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
 

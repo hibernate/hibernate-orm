@@ -45,8 +45,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private final PluralAttributeKeyBinding pluralAttributeKeyBinding;
 	private final AbstractPluralAttributeElementBinding pluralAttributeElementBinding;
 
-	private TableSpecification collectionTable;
-
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
 
@@ -160,15 +158,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	@Override
 	public boolean isAssociation() {
 		return pluralAttributeElementBinding.getPluralAttributeElementNature().isAssociation();
-	}
-
-	@Override
-	public TableSpecification getCollectionTable() {
-		return collectionTable;
-	}
-
-	public void setCollectionTable(TableSpecification collectionTable) {
-		this.collectionTable = collectionTable;
 	}
 
 	@Override

@@ -75,6 +75,10 @@ public class PluralAttributeKeyBinding {
 		return foreignKey;
 	}
 
+	public TableSpecification getCollectionTable() {
+		return foreignKey.getSourceTable();
+	}
+
 	/**
 	 * Is the plural attribute considered inverse?
 	 * <p/>
@@ -94,13 +98,15 @@ public class PluralAttributeKeyBinding {
 		return hibernateTypeDescriptor;
 	}
 
-	public void prepareForeignKey(String foreignKeyName, TableSpecification targetTable) {
+	public void prepareForeignKey(
+			String foreignKeyName,
+			TableSpecification collectionTable,
+			TableSpecification targetTable) {
 		if ( foreignKey != null ) {
 			throw new AssertionFailure( "Foreign key already initialized" );
 		}
-		final TableSpecification collectionTable = pluralAttributeBinding.getCollectionTable();
 		if ( collectionTable == null ) {
-			throw new AssertionFailure( "Collection table not yet bound" );
+			throw new AssertionFailure( "Collection table cannot be null" );
 		}
 
 		if ( foreignKeyName != null ) {

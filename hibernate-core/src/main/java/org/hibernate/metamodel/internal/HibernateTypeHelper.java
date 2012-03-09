@@ -34,42 +34,30 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.AbstractValue;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AttributeSource;
-import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 
 /**
  * Delegate for handling:<ol>
@@ -88,7 +76,6 @@ import org.hibernate.type.TypeFactory;
  * <p/>
  * Methods intended as entry points are:<ul>
  *     <li>{@link #bindSingularAttributeTypeInformation}</li>
- *     <li>{@link #bindPluralAttributeTypeInformation}</li>
  * </ul>
  * <p/>
  * Currently the following methods are also required to be non-private because of handling discriminators which
@@ -129,13 +116,12 @@ public class HibernateTypeHelper {
 			}
 		}
 
-		bindHibernateTypeInformation( attributeSource.getTypeInformation(), false, hibernateTypeDescriptor );
+		bindHibernateTypeInformation( attributeSource.getTypeInformation(), hibernateTypeDescriptor );
 
 		processSingularAttributeTypeInformation( attributeSource, attributeBinding );
 	}
 
-	public void bindPluralAttributeTypeInformation(
-			PluralAttributeSource attributeSource,
+	public ReflectedCollectionJavaTypes getReflectedCollectionJavaTypes(
 			PluralAttributeBinding attributeBinding) {
 		final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = determineJavaType( attributeBinding.getAttribute() );
 
@@ -165,57 +151,7 @@ public class HibernateTypeHelper {
 				}
 			}
 		}
-
-		bindHibernateTypeInformation(
-				attributeSource.getTypeInformation(),
-				false,
-				attributeBinding.getHibernateTypeDescriptor()
-		);
-		processPluralAttributeTypeInformation( attributeSource, attributeBinding );
-	}
-
-	private void processPluralAttributeKeyTypeInformation(PluralAttributeKeyBinding keyBinding) {
-		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
-		final HibernateTypeDescriptor referencedTypeDescriptor =
-				keyBinding.getReferencedAttributeBinding().getHibernateTypeDescriptor();
-
-		pluralAttributeKeyTypeDescriptor.setExplicitTypeName( referencedTypeDescriptor.getExplicitTypeName() );
-		pluralAttributeKeyTypeDescriptor.setJavaTypeName( referencedTypeDescriptor.getJavaTypeName() );
-
-		// TODO: not sure about the following...
-		pluralAttributeKeyTypeDescriptor.setToOne( referencedTypeDescriptor.isToOne() );
-		pluralAttributeKeyTypeDescriptor.getTypeParameters().putAll( referencedTypeDescriptor.getTypeParameters() );
-
-		processPluralAttributeKeyInformation( keyBinding );
-	}
-
-	private void processPluralAttributeKeyInformation(PluralAttributeKeyBinding keyBinding) {
-		if ( keyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
-			return;
-		}
-		// we can determine the Hibernate Type if either:
-		// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
-		// 		2) we know the java type of the attribute
-		Type resolvedType = determineHibernateTypeFromDescriptor( keyBinding.getHibernateTypeDescriptor() );
-		if ( resolvedType == null ) {
-			resolvedType = determineHibernateTypeFromAttributeJavaType(
-					keyBinding.getReferencedAttributeBinding().getAttribute()
-			);
-		}
-
-		if ( resolvedType != null ) {
-			Iterator<Column> fkColumnIterator = keyBinding.getForeignKey().getSourceColumns().iterator();
-
-			if ( resolvedType.isComponentType() ) {
-				ComponentType componentType = ( ComponentType ) resolvedType;
-				for ( Type subType : componentType.getSubtypes() ) {
-					pushHibernateTypeInformationDown( subType, fkColumnIterator.next() );
-				}
-			}
-			else {
-				pushHibernateTypeInformationDown( resolvedType, fkColumnIterator.next() );
-			}
-		}
+		return reflectedCollectionJavaTypes;
 	}
 
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
@@ -257,12 +193,10 @@ public class HibernateTypeHelper {
 	 * Takes explicit source type information and applies it to the binding model.
 	 *
 	 * @param typeSource The source (user supplied) hibernate type information
-	 * @param isToOne Indicates if this for a to-one association
 	 * @param hibernateTypeDescriptor The binding model hibernate type information
 	 */
 	private void bindHibernateTypeInformation(
 			ExplicitHibernateTypeSource typeSource,
-			boolean isToOne,
 			HibernateTypeDescriptor hibernateTypeDescriptor) {
 		final String explicitTypeName = typeSource.getName();
 		if ( explicitTypeName != null ) {
@@ -279,7 +213,6 @@ public class HibernateTypeHelper {
 				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
 			}
 		}
-		hibernateTypeDescriptor.setToOne( isToOne );
 	}
 
 	/**
@@ -414,12 +347,6 @@ public class HibernateTypeHelper {
 						SingularAttributeBinding.class.cast( subAttributeBinding )
 				);
 			}
-			else if ( AbstractPluralAttributeBinding.class.isInstance( subAttributeBinding ) ) {
-				processPluralAttributeTypeInformation(
-						( PluralAttributeSource ) subAttributeSource,
-						AbstractPluralAttributeBinding.class.cast( subAttributeBinding )
-				);
-			}
 			else {
 				throw new AssertionFailure( "Unknown type of AttributeBinding: " + attributeBinding.getClass().getName() );
 			}
@@ -473,116 +400,8 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	private void processPluralAttributeTypeInformation(
-			PluralAttributeSource attributeSource,
-			PluralAttributeBinding attributeBinding) {
-		processCollectionTypeInformation( attributeBinding );
-		processPluralAttributeElementTypeInformation( attributeSource.getElementSource(), attributeBinding.getPluralAttributeElementBinding() );
-		processPluralAttributeKeyTypeInformation( attributeBinding.getPluralAttributeKeyBinding() );
-	}
-
-	private void processCollectionTypeInformation(PluralAttributeBinding attributeBinding) {
-		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
-			return;
-		}
-
-		Type resolvedType;
-		// do NOT look at java type...
-		//String typeName = determineTypeName( attributeBinding.getHibernateTypeDescriptor() );
-		String typeName = attributeBinding.getHibernateTypeDescriptor().getExplicitTypeName();
-		if ( typeName != null ) {
-			resolvedType =
-					metadata.getTypeResolver()
-							.getTypeFactory()
-							.customCollection(
-									typeName,
-									getTypeParameters( attributeBinding.getHibernateTypeDescriptor() ),
-									attributeBinding.getAttribute().getName(),
-									attributeBinding.getReferencedPropertyName(),
-									attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() ==
-											PluralAttributeElementNature.COMPOSITE
-							);
-		}
-		else {
-			resolvedType = determineHibernateTypeFromCollectionType( attributeBinding );
-		}
-		if ( resolvedType != null ) {
-			attributeBinding.getHibernateTypeDescriptor().setResolvedTypeMapping( resolvedType );
-		}
-	}
-
-	private Type determineHibernateTypeFromCollectionType(PluralAttributeBinding attributeBinding) {
-		final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
-		switch ( attributeBinding.getAttribute().getNature() ) {
-			case SET: {
-				return typeFactory.set(
-						attributeBinding.getAttribute().getRole(),
-						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
-				);
-			}
-			case BAG: {
-				return typeFactory.bag(
-						attributeBinding.getAttribute().getRole(),
-						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getPluralAttributeElementBinding()
-								.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
-				);
-			}
-			default: {
-				throw new UnsupportedOperationException(
-						"Collection type not supported yet:" + attributeBinding.getAttribute().getNature()
-				);
-			}
-		}
-	}
-
-	private void processPluralAttributeElementTypeInformation(
-			PluralAttributeElementSource elementSource,
-			PluralAttributeElementBinding pluralAttributeElementBinding
-	) {
-		switch ( pluralAttributeElementBinding.getPluralAttributeElementNature() ) {
-			case BASIC: {
-				processBasicCollectionElementTypeInformation(
-						BasicPluralAttributeElementSource.class.cast( elementSource ),
-						BasicPluralAttributeElementBinding.class.cast( pluralAttributeElementBinding )
-				);
-				break;
-			}
-			case COMPOSITE:
-			case ONE_TO_MANY:
-			case MANY_TO_MANY:
-			case MANY_TO_ANY: {
-				throw new UnsupportedOperationException( "Collection element nature not supported yet: " + pluralAttributeElementBinding
-						.getPluralAttributeElementNature() );
-			}
-			default: {
-				throw new AssertionFailure( "Unknown collection element nature : " + pluralAttributeElementBinding.getPluralAttributeElementNature() );
-			}
-		}
-	}
-
-	private void processBasicCollectionElementTypeInformation(
-			BasicPluralAttributeElementSource elementSource,
-			BasicPluralAttributeElementBinding basicCollectionElementBinding) {
-		Type resolvedType = basicCollectionElementBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		if ( resolvedType == null ) {
-			bindHibernateTypeInformation(
-					elementSource.getExplicitHibernateTypeSource(),
-					false,
-					basicCollectionElementBinding.getHibernateTypeDescriptor() );
-			resolvedType = determineHibernateTypeFromDescriptor( basicCollectionElementBinding.getHibernateTypeDescriptor() );
-		}
-		if ( resolvedType != null ) {
-			pushHibernateTypeInformationDown(
-					basicCollectionElementBinding.getHibernateTypeDescriptor(),
-					basicCollectionElementBinding.getRelationalValueBindings(),
-					resolvedType
-			);
-		}
-	}
-
-	private static class ReflectedCollectionJavaTypes {
+	/* package-protected */
+	static class ReflectedCollectionJavaTypes {
 		private final Class<?> collectionType;
 		private final Class<?> collectionElementType;
 		private final Class<?> collectionIndexType;
@@ -594,6 +413,16 @@ public class HibernateTypeHelper {
 			this.collectionType = collectionType;
 			this.collectionElementType = collectionElementType;
 			this.collectionIndexType = collectionIndexType;
+		}
+		
+		public Class<?> getCollectionType() {
+			return collectionType;
+		}
+		public Class<?> getCollectionElementType() {
+			return collectionElementType;
+		}
+		public Class<?> getCollectionIndexType() {
+			return collectionIndexType;
 		}
 	}
 

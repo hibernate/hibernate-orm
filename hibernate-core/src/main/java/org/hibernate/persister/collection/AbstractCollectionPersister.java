@@ -654,7 +654,7 @@ public abstract class AbstractCollectionPersister
 		nodeName = null;
 		isMutable = collection.isMutable();
 
-		TableSpecification table = collection.getCollectionTable();
+		TableSpecification table = collection.getPluralAttributeKeyBinding().getCollectionTable();
 		fetchMode = collection.getFetchMode();
 		elementType = collection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
 		// isSet = collection.isSet();

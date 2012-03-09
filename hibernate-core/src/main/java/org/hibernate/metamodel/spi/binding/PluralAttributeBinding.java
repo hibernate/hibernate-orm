@@ -57,8 +57,6 @@ public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 	 */
 	public PluralAttributeElementBinding getPluralAttributeElementBinding();
 
-	public TableSpecification getCollectionTable();
-
 	public boolean isMutable();
 
 	public Caching getCaching();

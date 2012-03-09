@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -38,6 +37,7 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -93,8 +93,9 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		PluralAttributeBinding bagBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" );
 		assertNotNull( bagBinding );
 		assertSame( bagBinding, entityBinding.locateAttributeBinding( "theBag" ) );
-		assertNotNull( bagBinding.getCollectionTable() );
-		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theBag`" ), bagBinding.getCollectionTable().getLogicalName() );
+		TableSpecification bagCollectionTable =  bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertNotNull( bagCollectionTable );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theBag`" ), bagCollectionTable.getLogicalName() );
 		PluralAttributeKeyBinding bagKeyBinding = bagBinding.getPluralAttributeKeyBinding();
 		assertSame( bagBinding, bagKeyBinding.getPluralAttributeBinding() );
 		HibernateTypeDescriptor bagHibernateTypeDescriptor = bagBinding.getHibernateTypeDescriptor();
@@ -107,7 +108,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 
 		ForeignKey fkBag = bagKeyBinding.getForeignKey();
 		assertNotNull( fkBag );
-		assertSame( bagBinding.getCollectionTable(), fkBag.getSourceTable() );
+		assertSame( bagCollectionTable, fkBag.getSourceTable() );
 		assertEquals( 1, fkBag.getColumnSpan() );
 		Iterator<Column> fkBagColumnIterator = fkBag.getColumns().iterator();
 		Iterator<Column> fkBagSourceColumnIterator = fkBag.getSourceColumns().iterator();
@@ -129,7 +130,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				entityIdentifier.getValueBinding().getHibernateTypeDescriptor(),
 				bagKeyBinding.getHibernateTypeDescriptor()
 		);
-		assertEquals( 0, bagBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
+		assertEquals( 0, bagCollectionTable.getPrimaryKey().getColumnSpan() );
 		assertEquals(
 				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
 				bagKeyBinding.getForeignKey().getColumns().iterator().next().getJdbcDataType()
@@ -141,8 +142,9 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		PluralAttributeBinding setBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" );
 		assertNotNull( setBinding );
 		assertSame( setBinding, entityBinding.locateAttributeBinding( "theSet" ) );
-		assertNotNull( setBinding.getCollectionTable() );
-		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theSet`" ), setBinding.getCollectionTable().getLogicalName() );
+		TableSpecification setCollectionTable = setBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertNotNull( setCollectionTable );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_theSet`" ), setCollectionTable.getLogicalName() );
 		PluralAttributeKeyBinding setKeyBinding = setBinding.getPluralAttributeKeyBinding();
 		assertSame( setBinding, setKeyBinding.getPluralAttributeBinding() );
 		HibernateTypeDescriptor setHibernateTypeDescriptor = setBinding.getHibernateTypeDescriptor();
@@ -155,7 +157,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 
 		ForeignKey fkSet = setKeyBinding.getForeignKey();
 		assertNotNull( fkSet );
-		assertSame( setBinding.getCollectionTable(), fkSet.getSourceTable() );
+		assertSame( setCollectionTable, fkSet.getSourceTable() );
 		assertEquals( 1, fkSet.getColumnSpan() );
 		Iterator<Column> fkSetColumnIterator = fkSet.getColumns().iterator();
 		Iterator<Column> fkSetSourceColumnIterator = fkSet.getSourceColumns().iterator();
@@ -178,19 +180,19 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				setKeyBinding.getHibernateTypeDescriptor()
 		);
 		assertFalse( setKeyBinding.isInverse() );
-		assertEquals( 2, setBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
-		Iterator<Column> setPrimaryKeyIterator = setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator();
+		assertEquals( 2, setCollectionTable.getPrimaryKey().getColumnSpan() );
+		Iterator<Column> setPrimaryKeyIterator = setCollectionTable.getPrimaryKey().getColumns().iterator();
 		assertEquals(
 				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
 				setPrimaryKeyIterator.next().getJdbcDataType()
 		);
 		assertEquals(
-				setBinding.getCollectionTable().locateColumn( "`set_stuff`" ).getJdbcDataType(),
+				setCollectionTable.locateColumn( "`set_stuff`" ).getJdbcDataType(),
 				setPrimaryKeyIterator.next().getJdbcDataType()
 		);
 		assertFalse( setPrimaryKeyIterator.hasNext() );
 		assertSame(
-				setBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next(),
+				setCollectionTable.getPrimaryKey().getColumns().iterator().next(),
 				setKeyBinding.getForeignKey().getColumns().iterator().next()
 		);
 		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
@@ -199,8 +201,9 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		PluralAttributeBinding propertyRefSetBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" );
 		assertNotNull( propertyRefSetBinding );
 		assertSame( propertyRefSetBinding, entityBinding.locateAttributeBinding( "thePropertyRefSet" ) );
-		assertNotNull( propertyRefSetBinding.getCollectionTable() );
-		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_thePropertyRefSet`" ), propertyRefSetBinding.getCollectionTable().getLogicalName() );
+		TableSpecification propertyRefSetCollectionTable = propertyRefSetBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertNotNull( propertyRefSetCollectionTable );
+		assertEquals( Identifier.toIdentifier( "`EntityWithBasicCollections_thePropertyRefSet`" ), propertyRefSetCollectionTable.getLogicalName() );
 		PluralAttributeKeyBinding propertyRefSetKeyBinding = propertyRefSetBinding.getPluralAttributeKeyBinding();
 		assertSame( propertyRefSetBinding, propertyRefSetKeyBinding.getPluralAttributeBinding() );
 		HibernateTypeDescriptor propertyRefSetHibernateTypeDescriptor = propertyRefSetBinding.getHibernateTypeDescriptor();
@@ -216,7 +219,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 
 		ForeignKey fkPropertyRefSet = propertyRefSetKeyBinding.getForeignKey();
 		assertNotNull( fkPropertyRefSet );
-		assertSame( propertyRefSetBinding.getCollectionTable(), fkPropertyRefSet.getSourceTable() );
+		assertSame( propertyRefSetCollectionTable, fkPropertyRefSet.getSourceTable() );
 		assertEquals( 1, fkPropertyRefSet.getColumnSpan() );
 		Iterator<Column> fkPropertyRefSetColumnIterator = fkPropertyRefSet.getColumns().iterator();
 		Iterator<Column> fkPropertyRefSetSourceColumnIterator = fkPropertyRefSet.getSourceColumns().iterator();
@@ -239,19 +242,19 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				propertyRefSetKeyBinding.getHibernateTypeDescriptor()
 		);
 		assertFalse( propertyRefSetKeyBinding.isInverse() );
-		assertEquals( 2, propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumnSpan() );
-		Iterator<Column> propertyRefSetPrimaryKeyIterator = propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumns().iterator();
+		assertEquals( 2, propertyRefSetCollectionTable.getPrimaryKey().getColumnSpan() );
+		Iterator<Column> propertyRefSetPrimaryKeyIterator = propertyRefSetCollectionTable.getPrimaryKey().getColumns().iterator();
 		assertEquals(
 				entityBinding.getPrimaryTable().locateColumn( "`name`" ).getJdbcDataType(),
 				propertyRefSetPrimaryKeyIterator.next().getJdbcDataType()
 		);
 		assertEquals(
-				propertyRefSetBinding.getCollectionTable().locateColumn( "`property_ref_set_stuff`" ).getJdbcDataType(),
+				propertyRefSetCollectionTable.locateColumn( "`property_ref_set_stuff`" ).getJdbcDataType(),
 				propertyRefSetPrimaryKeyIterator.next().getJdbcDataType()
 		);
 		assertFalse( propertyRefSetPrimaryKeyIterator.hasNext() );
 		assertSame(
-				propertyRefSetBinding.getCollectionTable().getPrimaryKey().getColumns().iterator().next(),
+				propertyRefSetCollectionTable.getPrimaryKey().getColumns().iterator().next(),
 				propertyRefSetKeyBinding.getForeignKey().getColumns().iterator().next()
 		);
 		assertEquals( PluralAttributeElementNature.BASIC, propertyRefSetBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );

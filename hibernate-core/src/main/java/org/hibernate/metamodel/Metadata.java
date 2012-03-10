@@ -21,7 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.metamodel;
 
 import java.util.Map;
@@ -61,10 +60,26 @@ public interface Metadata {
 		public String getDefaultCatalogName();
 	}
 
+	/**
+	 * Retrieve the options used to build this {@link Metadata} instance.
+	 *
+	 * @return The options.
+	 */
 	public Options getOptions();
 
+	/**
+	 * Get the builder for {@link SessionFactory} instances based on this metamodel,
+	 *
+	 * @return The builder for {@link SessionFactory} instances.
+	 */
 	public SessionFactoryBuilder getSessionFactoryBuilder();
 
+	/**
+	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
+	 * option overrides.
+	 *
+	 * @return THe built SessionFactory.
+	 */
 	public SessionFactory buildSessionFactory();
 
 	public Iterable<EntityBinding> getEntityBindings();

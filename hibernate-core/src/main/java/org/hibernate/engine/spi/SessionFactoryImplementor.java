@@ -241,7 +241,19 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 
 	public void addObserver(SessionFactoryObserver observer);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.SessionFactory.SessionFactoryOptions#getCustomEntityDirtinessStrategy()}
+	 * instead.
+	 */
+	@Deprecated
+	@SuppressWarnings("JavaDoc")
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.SessionFactory.SessionFactoryOptions#getCustomEntityDirtinessStrategy()}
+	 * instead.
+	 */
+	@Deprecated
+	@SuppressWarnings("JavaDoc")
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 }

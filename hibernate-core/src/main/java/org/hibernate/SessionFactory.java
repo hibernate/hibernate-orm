@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
 
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -54,10 +55,19 @@ import org.hibernate.stat.Statistics;
 public interface SessionFactory extends Referenceable, Serializable {
 
 	public interface SessionFactoryOptions {
-		Interceptor getInterceptor();
-		EntityNotFoundDelegate getEntityNotFoundDelegate();
+		public Interceptor getInterceptor();
+		public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
+		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+		public SessionFactoryObserver[] getSessionFactoryObservers();
+		public EntityNameResolver[] getEntityNameResolvers();
+		public EntityNotFoundDelegate getEntityNotFoundDelegate();
 	}
 
+	/**
+	 * Gives (read only) access to the options used to build this SessionFactory.
+	 *
+	 * @return The options used to build this SessionFactory
+	 */
 	public SessionFactoryOptions getSessionFactoryOptions();
 
 	/**

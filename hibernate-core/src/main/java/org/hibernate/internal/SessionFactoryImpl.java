@@ -109,6 +109,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.config.StrategyInstanceResolver;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -210,40 +211,85 @@ public final class SessionFactoryImpl
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
-	private final transient CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
-	private final transient CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
 			final Configuration cfg,
 			Mapping mapping,
-			ServiceRegistry serviceRegistry,
+			final ServiceRegistry serviceRegistry,
 			Settings settings,
-			SessionFactoryObserver observer) throws HibernateException {
+			final SessionFactoryObserver userObserver) throws HibernateException {
 			LOG.debug( "Building session factory" );
 
 		sessionFactoryOptions = new SessionFactoryOptions() {
-			private EntityNotFoundDelegate entityNotFoundDelegate;
+			private final Interceptor interceptor;
+			private final CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+			private final CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+			private final SessionFactoryObserver observer;
+			private final EntityNotFoundDelegate entityNotFoundDelegate;
+
+			{
+				final StrategyInstanceResolver strategyInstanceResolver = new StrategyInstanceResolver(
+						serviceRegistry.getService( ClassLoaderService.class )
+				);
+
+				interceptor = cfg.getInterceptor();
+
+				customEntityDirtinessStrategy = strategyInstanceResolver.resolveDefaultableStrategyInstance(
+						cfg.getProperties().get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
+						CustomEntityDirtinessStrategy.class,
+						DefaultCustomEntityDirtinessStrategy.INSTANCE
+				);
+
+				currentTenantIdentifierResolver = cfg.getCurrentTenantIdentifierResolver() != null
+						? cfg.getCurrentTenantIdentifierResolver()
+						: strategyInstanceResolver.resolveStrategyInstance(
+								cfg.getProperties().get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER ),
+								CurrentTenantIdentifierResolver.class
+						);
+
+				observer = userObserver;
+
+				entityNotFoundDelegate = cfg.getEntityNotFoundDelegate() != null
+						? cfg.getEntityNotFoundDelegate()
+						: new EntityNotFoundDelegate() {
+					public void handleEntityNotFound(String entityName, Serializable id) {
+						throw new ObjectNotFoundException( id, entityName );
+					}
+				};
+
+			}
+
 
 			@Override
 			public Interceptor getInterceptor() {
-				return cfg.getInterceptor();
+				return interceptor;
+			}
+
+			@Override
+			public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+				return customEntityDirtinessStrategy;
+			}
+
+			@Override
+			public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+				return currentTenantIdentifierResolver;
+			}
+
+			@Override
+			public SessionFactoryObserver[] getSessionFactoryObservers() {
+				return observer == null
+						? new SessionFactoryObserver[0]
+						: new SessionFactoryObserver[] { observer };
+			}
+
+			@Override
+			public EntityNameResolver[] getEntityNameResolvers() {
+				return new EntityNameResolver[0];
 			}
 
 			@Override
 			public EntityNotFoundDelegate getEntityNotFoundDelegate() {
-				if ( entityNotFoundDelegate == null ) {
-					if ( cfg.getEntityNotFoundDelegate() != null ) {
-						entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();
-					}
-					else {
-						entityNotFoundDelegate = new EntityNotFoundDelegate() {
-							public void handleEntityNotFound(String entityName, Serializable id) {
-								throw new ObjectNotFoundException( id, entityName );
-							}
-						};
-					}
-				}
 				return entityNotFoundDelegate;
 			}
 		};
@@ -260,7 +306,7 @@ public final class SessionFactoryImpl
         this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
         this.dialect = this.jdbcServices.getDialect();
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
-		if ( observer != null ) {
+		for ( SessionFactoryObserver observer : sessionFactoryOptions.getSessionFactoryObservers() ) {
 			this.observer.addObserver( observer );
 		}
 
@@ -537,131 +583,12 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver(
-				cfg.getCurrentTenantIdentifierResolver(),
-				properties
-		);
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
 
-	@SuppressWarnings( {"unchecked"})
-	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy(Properties properties) {
-		final Object value = properties.get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY );
-		if ( value != null ) {
-			if ( CustomEntityDirtinessStrategy.class.isInstance( value ) ) {
-				return CustomEntityDirtinessStrategy.class.cast( value );
-			}
-			Class<CustomEntityDirtinessStrategy> customEntityDirtinessStrategyClass;
-			if ( Class.class.isInstance( value ) ) {
-				customEntityDirtinessStrategyClass = Class.class.cast( customEntityDirtinessStrategy );
-			}
-			else {
-				try {
-					customEntityDirtinessStrategyClass = serviceRegistry.getService( ClassLoaderService.class )
-							.classForName( value.toString() );
-				}
-				catch (Exception e) {
-					LOG.debugf(
-							"Unable to locate CustomEntityDirtinessStrategy implementation class %s",
-							value.toString()
-					);
-					customEntityDirtinessStrategyClass = null;
-				}
-			}
-			if ( customEntityDirtinessStrategyClass != null ) {
-				try {
-					return customEntityDirtinessStrategyClass.newInstance();
-				}
-				catch (Exception e) {
-					LOG.debugf(
-							"Unable to instantiate CustomEntityDirtinessStrategy class %s",
-							customEntityDirtinessStrategyClass.getName()
-					);
-				}
-			}
-		}
-
-		// last resort
-		return new CustomEntityDirtinessStrategy() {
-			@Override
-			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
-
-			@Override
-			public boolean isDirty(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
-
-			@Override
-			public void resetDirty(Object entity, EntityPersister persister, Session session) {
-			}
-
-			@Override
-			public void findDirty(
-					Object entity,
-					EntityPersister persister,
-					Session session,
-					DirtyCheckContext dirtyCheckContext) {
-				// todo : implement proper method body
-			}
-		};
-	}
-
-	@SuppressWarnings( {"unchecked"})
-	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
-			CurrentTenantIdentifierResolver explicitResolver,
-			Properties properties) {
-		if ( explicitResolver != null ) {
-			return explicitResolver;
-		}
-
-		final Object value = properties.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER );
-		if ( value == null ) {
-			return null;
-		}
-
-		if ( CurrentTenantIdentifierResolver.class.isInstance( value ) ) {
-			return CurrentTenantIdentifierResolver.class.cast( value );
-		}
-
-		Class<CurrentTenantIdentifierResolver> implClass;
-		if ( Class.class.isInstance( value ) ) {
-			implClass = Class.class.cast( customEntityDirtinessStrategy );
-		}
-		else {
-			try {
-				implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( value.toString() );
-			}
-			catch (Exception e) {
-				LOG.debugf(
-						"Unable to locate CurrentTenantIdentifierResolver implementation class %s",
-						value.toString()
-				);
-				return null;
-			}
-		}
-
-		try {
-			return implClass.newInstance();
-		}
-		catch (Exception e) {
-			LOG.debugf(
-					"Unable to instantiate CurrentTenantIdentifierResolver class %s",
-					implClass.getName()
-			);
-		}
-
-		return null;
-	}
-
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
-	public SessionFactoryImpl(
-			MetadataImplementor metadata,
-			SessionFactoryOptions sessionFactoryOptions,
-			SessionFactoryObserver observer) throws HibernateException {
+	public SessionFactoryImpl(MetadataImplementor metadata,SessionFactoryOptions sessionFactoryOptions) throws HibernateException {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
@@ -691,7 +618,7 @@ public final class SessionFactoryImpl
 		// TODO: get SQL functions from a new service
 		// this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 
-		if ( observer != null ) {
+		for ( SessionFactoryObserver observer : sessionFactoryOptions.getSessionFactoryObservers() ) {
 			this.observer.addObserver( observer );
 		}
 
@@ -979,8 +906,10 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( null, properties );
+		for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
+			registerEntityNameResolver( resolver );
+		}
+
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
@@ -1853,12 +1782,12 @@ public final class SessionFactoryImpl
 
 	@Override
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
-		return customEntityDirtinessStrategy;
+		return sessionFactoryOptions.getCustomEntityDirtinessStrategy();
 	}
 
 	@Override
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
-		return currentTenantIdentifierResolver;
+		return sessionFactoryOptions.getCurrentTenantIdentifierResolver();
 	}
 
 

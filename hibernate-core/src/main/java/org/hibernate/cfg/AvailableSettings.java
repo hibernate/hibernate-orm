@@ -570,4 +570,14 @@ public interface AvailableSettings {
 	public static final String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
 	public static final String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
+
+	/**
+	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the {@link org.hibernate.SessionFactory}
+	 * Can reference<ul>
+	 *     <li>Interceptor instance</li>
+	 *     <li>Interceptor implementation {@link Class} reference</li>
+	 *     <li>Interceptor implementation class name</li>
+	 * </ul>
+	 */
+	public static final String INTERCEPTOR = "hibernate.sessionFactory.interceptor";
 }

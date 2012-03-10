@@ -234,7 +234,10 @@ public class AvailableSettings {
 	/**
 	 * Interceptor class name, the class has to have a no-arg constructor
 	 * the interceptor instance is shared amongst all EntityManager of a given EntityManagerFactory
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} instead
 	 */
+	@Deprecated
 	public static final String INTERCEPTOR = "hibernate.ejb.interceptor";
 
 	/**

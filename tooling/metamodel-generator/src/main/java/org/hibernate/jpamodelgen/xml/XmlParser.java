@@ -219,7 +219,7 @@ public class XmlParser {
 			if ( context.containsMetaEntity( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurrence."
 				);
 			}
 			context.addMetaEntity( fqcn, metaEntity );
@@ -244,7 +244,7 @@ public class XmlParser {
 			if ( context.containsMetaEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurrence."
 				);
 			}
 			context.addMetaEmbeddable( fqcn, metaEntity );
@@ -271,10 +271,10 @@ public class XmlParser {
 					mappedSuperClass, pkg, getXmlMappedType( fqcn ), context
 			);
 
-			if ( context.containsMetaEmbeddable( fqcn ) ) {
+			if ( context.containsMetaEntity( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurrence."
 				);
 			}
 			context.addMetaEntity( fqcn, metaEntity );

@@ -67,6 +67,12 @@ public class AccessTypeTest extends CompilationTest {
 		assertAbsenceOfFieldInMetamodelFor(
 				Pet.class, "nonPersistent", "Collection of embeddable not taken care of"
 		);
+		
+		// see METAGEN-81
+		// access type should be inherited from the position of the @Id field annotation from the root entity
+		// via the @Embedded annotation
+		assertPresenceOfFieldInMetamodelFor( Hotel.class, "webmaster",
+				"Access type should be inherited from the hierarchy" );
 	}
 
 	@Test

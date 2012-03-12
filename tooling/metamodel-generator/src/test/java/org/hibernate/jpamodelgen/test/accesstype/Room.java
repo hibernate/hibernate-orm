@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-
 package org.hibernate.jpamodelgen.test.accesstype;
 
 import javax.persistence.Entity;
@@ -27,7 +26,6 @@ import javax.persistence.Id;
  */
 @Entity
 public class Room {
-	
 	@Id
 	private Integer id;
 
@@ -38,5 +36,4 @@ public class Room {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-
 }

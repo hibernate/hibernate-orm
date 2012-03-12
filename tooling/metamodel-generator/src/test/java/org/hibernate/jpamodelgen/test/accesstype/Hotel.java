@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-
 package org.hibernate.jpamodelgen.test.accesstype;
 
 import javax.persistence.Embeddable;
@@ -27,7 +26,7 @@ import javax.persistence.OneToOne;
  */
 @Embeddable
 public class Hotel {
-	
+
 	@OneToOne
 	private User webmaster;
 
@@ -38,5 +37,4 @@ public class Hotel {
 	public void setWebmaster(User webmaster) {
 		this.webmaster = webmaster;
 	}
-
 }

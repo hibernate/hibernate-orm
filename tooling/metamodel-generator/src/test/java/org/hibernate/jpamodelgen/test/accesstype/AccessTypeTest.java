@@ -23,6 +23,7 @@ import java.util.List;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
@@ -67,12 +68,13 @@ public class AccessTypeTest extends CompilationTest {
 		assertAbsenceOfFieldInMetamodelFor(
 				Pet.class, "nonPersistent", "Collection of embeddable not taken care of"
 		);
-		
-		// see METAGEN-81
-		// access type should be inherited from the position of the @Id field annotation from the root entity
-		// via the @Embedded annotation
+	}
+
+	@Test
+	@TestForIssue( jiraKey = " METAGEN-81")
+	public void testAccessTypeForEmbeddableDeterminedByIdAnnotationInRootEntity() {
 		assertPresenceOfFieldInMetamodelFor( Hotel.class, "webmaster",
-				"Access type should be inherited from the hierarchy" );
+				"Access type should be inherited position of the @Id field annotation in the root entity" );
 	}
 
 	@Test

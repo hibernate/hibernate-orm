@@ -23,24 +23,28 @@
  */
 package org.hibernate.service.jdbc.connections.internal;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import javax.sql.DataSource;
-import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.UnknownUnwrapTypeException;
-import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.Stoppable;
+
+import com.mchange.v2.c3p0.DataSources;
 
 import org.jboss.logging.Logger;
-import com.mchange.v2.c3p0.DataSources;
+
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.UnknownUnwrapTypeException;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
@@ -49,7 +53,8 @@ import com.mchange.v2.c3p0.DataSources;
  * @author various people
  * @see ConnectionProvider
  */
-public class C3P0ConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
+public class C3P0ConnectionProvider 
+		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 
     private static final C3P0MessageLogger LOG = Logger.getMessageLogger(C3P0MessageLogger.class, C3P0ConnectionProvider.class.getName());
 
@@ -72,9 +77,10 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 	private Integer isolation;
 	private boolean autocommit;
 
-	/**
-	 * {@inheritDoc}
-	 */
+	private ServiceRegistryImplementor serviceRegistry;
+
+	@Override
+	@SuppressWarnings("UnnecessaryUnboxing")
 	public Connection getConnection() throws SQLException {
 		final Connection c = ds.getConnection();
 		if ( isolation != null ) {
@@ -86,9 +92,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 		return c;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
 	}
@@ -115,9 +119,6 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     @SuppressWarnings( {"unchecked"})
 	public void configure(Map props) {
@@ -131,20 +132,15 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
         LOG.autoCommitMode( autocommit );
 
-        if (jdbcDriverClass == null) LOG.jdbcDriverNotSpecified(Environment.DRIVER);
+        if (jdbcDriverClass == null) {
+			LOG.jdbcDriverNotSpecified(Environment.DRIVER);
+		}
 		else {
 			try {
-				Class.forName( jdbcDriverClass );
+				serviceRegistry.getService( ClassLoaderService.class ).classForName( jdbcDriverClass );
 			}
-			catch ( ClassNotFoundException cnfe ) {
-				try {
-					ReflectHelper.classForName( jdbcDriverClass );
-				}
-				catch ( ClassNotFoundException e ) {
-                    String msg = LOG.jdbcDriverNotFound(jdbcDriverClass);
-                    LOG.error(msg, e);
-					throw new HibernateException( msg, e );
-				}
+			catch ( ClassLoadingException e ) {
+				throw new ClassLoadingException( LOG.jdbcDriverNotFound(jdbcDriverClass), e );
 			}
 		}
 
@@ -162,8 +158,11 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 
 			// turn hibernate.c3p0.* into c3p0.*, so c3p0
 			// gets a chance to see all hibernate.c3p0.*
-			for ( Iterator ii = props.keySet().iterator(); ii.hasNext(); ) {
-				String key = ( String ) ii.next();
+			for ( Object o : props.keySet() ) {
+				if ( ! String.class.isInstance( o ) ) {
+					continue;
+				}
+				final String key = (String) o;
 				if ( key.startsWith( "hibernate.c3p0." ) ) {
 					String newKey = key.substring( 15 );
 					if ( props.containsKey( newKey ) ) {
@@ -218,9 +217,6 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 
 	}
 
-    /**
-	 *
-	 */
 	public void close() {
 		try {
 			DataSources.destroy( ds );
@@ -230,9 +226,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}
@@ -258,5 +252,10 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 	@Override
 	public void stop() {
 		close();
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 }

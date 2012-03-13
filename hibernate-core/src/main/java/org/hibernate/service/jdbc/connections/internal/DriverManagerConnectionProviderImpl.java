@@ -36,11 +36,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -53,8 +56,8 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"UnnecessaryUnboxing"})
-public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
-
+public class DriverManagerConnectionProviderImpl
+		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DriverManagerConnectionProviderImpl.class.getName() );
 
 	private String url;
@@ -67,6 +70,8 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 	private int checkedOut = 0;
 
 	private boolean stopped;
+
+	private transient ServiceRegistryImplementor serviceRegistry;
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -90,19 +95,15 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
         LOG.usingHibernateBuiltInConnectionPool();
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-        if (driverClassName == null) LOG.jdbcDriverNotSpecified(AvailableSettings.DRIVER);
+        if (driverClassName == null) {
+			LOG.jdbcDriverNotSpecified( AvailableSettings.DRIVER );
+		}
 		else {
 			try {
-				// trying via forName() first to be as close to DriverManager's semantics
-				Class.forName( driverClassName );
+				serviceRegistry.getService( ClassLoaderService.class ).classForName( driverClassName );
 			}
-			catch ( ClassNotFoundException cnfe ) {
-				try {
-					ReflectHelper.classForName( driverClassName );
-				}
-				catch ( ClassNotFoundException e ) {
-					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " class not found", e );
-				}
+			catch ( ClassLoadingException e ) {
+				throw new ClassLoadingException( "Specified JDBC Driver " + driverClassName + " class not found", e );
 			}
 		}
 
@@ -213,5 +214,10 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 }

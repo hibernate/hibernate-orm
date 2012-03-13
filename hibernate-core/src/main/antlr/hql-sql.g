@@ -62,6 +62,8 @@ tokens
 	private boolean inFunctionCall = false;
 	private boolean inCase = false;
 	private boolean inFrom = false;
+	private boolean inCount = false;
+	private boolean inCountDistinct = false;
 	private int statementType;
 	private String statementTypeName;
 	// Note: currentClauseType tracks the current clause within the current
@@ -90,6 +92,14 @@ tokens
 
 	public final boolean isInCase() {
 		return inCase;
+	}
+
+	public final boolean isInCount() {
+		return inCount;
+	}
+
+	public final boolean isInCountDistinct() {
+		return inCountDistinct;
 	}
 
 	public final int getStatementType() {
@@ -392,7 +402,8 @@ selectExpr
 	;
 
 count
-	: #(COUNT ( DISTINCT | ALL )? ( aggregateExpr | ROW_STAR ) )
+	: #(COUNT  { inCount = true; } ( DISTINCT { inCountDistinct = true; } | ALL )? ( aggregateExpr | ROW_STAR ) )
+		{ inCount = false; inCountDistinct = false; }
 	;
 
 constructor

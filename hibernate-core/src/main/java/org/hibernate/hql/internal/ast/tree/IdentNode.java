@@ -149,11 +149,25 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	private boolean resolveAsAlias() {
 		// This is not actually a constant, but a reference to FROM element.
-		FromElement element = getWalker().getCurrentFromClause().getFromElement(getText());
-		if (element != null) {
-			setFromElement(element);
-			setText(element.getIdentityColumn());
-			setType(SqlTokenTypes.ALIAS_REF);
+		FromElement element = getWalker().getCurrentFromClause().getFromElement( getText() );
+		if ( element != null ) {
+			setType( SqlTokenTypes.ALIAS_REF );
+			setFromElement( element );
+			String[] columnExpressions = element.getIdentityColumns();
+			final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
+			final boolean isCompositePk = columnExpressions.length > 1;
+			if ( isCompositePk
+					&& isInNonDistinctCount
+					&& ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
+				setText( columnExpressions[0] );
+			}
+			else {
+				String joinedFragment = StringHelper.join( ", ", columnExpressions );
+				if ( ! getWalker().isInCount() ) {
+					joinedFragment = "(" + joinedFragment + ")";
+				}
+				setText( joinedFragment );
+			}
 			return true;
 		}
 		return false;

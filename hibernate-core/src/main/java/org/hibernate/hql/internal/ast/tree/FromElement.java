@@ -325,13 +325,23 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public String getIdentityColumn() {
+		final String[] cols = getIdentityColumns();
+		if ( cols.length == 1 ) {
+			return cols[0];
+		}
+		else {
+			return "(" + StringHelper.join( ", ", cols ) + ")";
+		}
+	}
+
+	public String[] getIdentityColumns() {
 		checkInitialized();
-		String table = getTableAlias();
+		final String table = getTableAlias();
 		if ( table == null ) {
 			throw new IllegalStateException( "No table alias for node " + this );
 		}
-		String[] cols;
-		String propertyName;
+
+		final String propertyName;
 		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
 				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
 			propertyName = getEntityPersister().getIdentifierPropertyName();
@@ -339,14 +349,13 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		else {
 			propertyName = EntityPersister.ENTITY_ID;
 		}
+
 		if ( getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
-			cols = getPropertyMapping( propertyName ).toColumns( table, propertyName );
+			return getPropertyMapping( propertyName ).toColumns( table, propertyName );
 		}
 		else {
-			cols = getPropertyMapping( propertyName ).toColumns( propertyName );
+			return getPropertyMapping( propertyName ).toColumns( propertyName );
 		}
-		String result = StringHelper.join( ", ", cols );
-		return  cols.length == 1 ? result : "(" + result + ")";
 	}
 
 	public void setCollectionJoin(boolean collectionJoin) {

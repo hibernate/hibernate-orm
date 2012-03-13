@@ -75,6 +75,27 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testDistinctCountOfEntityWithCompositeId() {
+		// today we do not account for Dialects supportsTupleDistinctCounts() is false.  though really the only
+		// "option" there is to throw an error.
+		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+				"select count(distinct o) from Order o",
+				false,
+				Collections.EMPTY_MAP
+		);
+		assertEquals( 1, plan.getTranslators().length );
+		final QueryTranslator translator = plan.getTranslators()[0];
+		final String generatedSql = translator.getSQLString();
+		System.out.println( "Generated SQL : " + generatedSql );
+
+		final int countExpressionListStart = generatedSql.indexOf( "count(" );
+		final int countExpressionListEnd = generatedSql.indexOf( ")", countExpressionListStart );
+		final String countExpressionFragment = generatedSql.substring( countExpressionListStart+6, countExpressionListEnd+1 );
+		assertTrue( countExpressionFragment.startsWith( "distinct" ) );
+		assertTrue( countExpressionFragment.contains( "," ) );
+	}
+
+	@Test
 	public void testQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

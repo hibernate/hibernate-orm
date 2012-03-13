@@ -152,7 +152,20 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		FromElement element = getWalker().getCurrentFromClause().getFromElement(getText());
 		if (element != null) {
 			setFromElement(element);
-			setText(element.getIdentityColumn());
+			String identityColumnText = element.getIdentityColumn();
+			if ( getWalker().isInCount() &&
+					! getWalker().isInCountDistinct() &&
+					identityColumnText.charAt( 0 ) == '(' &&
+					identityColumnText.charAt( identityColumnText.length() - 1 ) == ')' &&
+					! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts()) {
+				// If identityColumnText is enclosed in parentheses, then the ID
+				// has more than 1 column; since the dialect does not support tuple counts,
+				// set the text as "*".
+				setText( "*" );
+			}
+			else {
+				setText( identityColumnText);
+			}
 			setType(SqlTokenTypes.ALIAS_REF);
 			return true;
 		}

@@ -161,6 +161,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 	@Test
 	public void testSingleUser() throws Exception {
 		// setup
+sessionFactory().getStatistics().clear();
 		Customer customer = createCustomer( 0 );
 		final Integer customerId = customer.getId();
 		getCustomerIDs().add( customerId );

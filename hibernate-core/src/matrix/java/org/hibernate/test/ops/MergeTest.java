@@ -82,6 +82,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
+		rebuildSessionFactory();
 		Session s = openSession();
         s.beginTransaction();
 		Person p = new Person( "steve" );

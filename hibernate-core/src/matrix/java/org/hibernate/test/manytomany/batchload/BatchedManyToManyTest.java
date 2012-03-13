@@ -138,7 +138,6 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		cleanupTestData();
 	}
 
 	protected void prepareTestData() {
@@ -175,5 +174,10 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "delete Group" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 }

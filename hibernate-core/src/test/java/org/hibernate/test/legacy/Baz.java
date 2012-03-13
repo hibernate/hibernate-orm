@@ -19,7 +19,7 @@ public class Baz implements Named, Serializable, Comparable {
 	private int[] intArray;
 	private FooProxy[] fooArray;
 	private String[] stringArray;
-	private String code;
+	private String code="aaa";
 	private List customs;
 	private List topComponents;
 	private Set fooSet;

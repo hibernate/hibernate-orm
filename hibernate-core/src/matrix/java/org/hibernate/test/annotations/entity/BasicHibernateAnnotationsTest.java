@@ -55,6 +55,10 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testEntity() throws Exception {

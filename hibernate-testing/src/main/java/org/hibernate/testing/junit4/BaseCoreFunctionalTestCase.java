@@ -416,11 +416,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		if ( isCleanupTestDataRequired() ) {
+			cleanupTestData();
+		}
 		cleanupTest();
 
 		cleanupSession();
 
 		assertAllDataRemoved();
+
 	}
 
 	protected void cleanupCache() {
@@ -431,6 +435,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictQueryRegions();
 			sessionFactory.getCache().evictNaturalIdRegions();
 		}
+	}
+	protected boolean isCleanupTestDataRequired(){return false;}
+	protected void cleanupTestData() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 

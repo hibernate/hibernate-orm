@@ -59,7 +59,10 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
-
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
 		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
@@ -214,6 +217,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSQLQueryWithManyToOne() {
+		cleanupCache();
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
 		c.set( 2000, 2, 2 );
@@ -238,9 +242,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		Query q = s.getNamedQuery( "night&areaCached" );
+		q.setCacheable( true );
 		List result = q.list();
 		assertEquals( 1, result.size() );
 		assertEquals( 1, stats.getQueryCachePutCount() );
+		q.setCacheable( true );
 		q.list();
 		assertEquals( 1, stats.getQueryCacheHitCount() );
 		Night n2 = (Night) ( (Object[]) result.get( 0 ) )[0];

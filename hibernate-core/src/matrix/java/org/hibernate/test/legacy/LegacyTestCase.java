@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.legacy;
 
+import java.util.List;
+
 import org.junit.Before;
 
 import org.hibernate.Query;
@@ -64,6 +66,18 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 		catch( Throwable t ) {
 			return null;
 		}
+	}
+
+	@Override
+	protected void cleanupTestData() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		List list = s.createQuery( "from java.lang.Object" ).list();
+		for ( Object obj : list ) {
+			s.delete( obj );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Override

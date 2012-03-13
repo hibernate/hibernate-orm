@@ -108,7 +108,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 
 	private List<Long> createdAnimalIds = new ArrayList<Long>();
-
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 	@Override
 	public String[] getMappings() {
 		return new String[] {

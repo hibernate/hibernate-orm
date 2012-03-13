@@ -49,6 +49,10 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  */
 public class SubclassTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 	@Test
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();

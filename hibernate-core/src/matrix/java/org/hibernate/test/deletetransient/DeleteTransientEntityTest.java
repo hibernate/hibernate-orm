@@ -38,6 +38,10 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "deletetransient/Person.hbm.xml" };
 	}
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 
 	@Test
 	public void testTransientEntityDeletionNoCascades() {

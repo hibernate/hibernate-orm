@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.String;
 
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.apache.tools.ant.util.FileUtils;
@@ -119,35 +120,23 @@ public class Jdk {
 	private JavaVersion determineJdkVersion() {
 		String javaVersionString = extractFromSunJdk();
 		if ( javaVersionString == null ) {
-			throw new RuntimeException( "Could not determine Java version" );
+			javaVersionString = "1.6";//make 1.6 as default
 		}
 		return new JavaVersion( javaVersionString );
 	}
 
 	private String extractFromSunJdk() {
 		String version = null;
-		final String key = "java version \"";
+
 		try {
 			final File javaCommand = getJavaExecutable();
 			Process javaProcess = Runtime.getRuntime().exec( javaCommand.getAbsolutePath() + " -version" );
 
 			try {
-				BufferedReader br = new BufferedReader( new InputStreamReader( javaProcess.getErrorStream() ) );
-				String line;
-				while ( (line = br.readLine()) != null) {
-					if ( version == null && line.startsWith( key ) ) {
-						version = line.substring( key.length(), line.length() - 1 );
-					}
+				version = extractVersion( new BufferedReader( new InputStreamReader( javaProcess.getErrorStream() ) ) );
+				if( version == null || version.equals( "" )){
+					version = extractVersion( new BufferedReader( new InputStreamReader( javaProcess.getInputStream() ) ) );
 				}
-				br.close();
-
-				br = new BufferedReader( new InputStreamReader( javaProcess.getInputStream() ) );
-				while ( (line = br.readLine()) != null) {
-					if ( version == null && line.startsWith( key ) ) {
-						version = line.substring( key.length(), line.length() - 1 );
-					}
-				}
-				br.close();
 			}
 			finally {
 				javaProcess.destroy();
@@ -156,6 +145,19 @@ public class Jdk {
 		catch ( IOException e ) {
 			throw new RuntimeException( "Unable to determine Java version", e );
 		}
+		return version;
+	}
+	
+	private String extractVersion(BufferedReader br) throws IOException{
+		final String key = "version \"";
+		String line = null;
+		String version = null;
+		while ( (line = br.readLine()) != null) {
+			if ( version == null && line.contains( key ) ) {
+				version = line.substring( line.indexOf( key ) + key.length(), line.length() - 1 );
+			}
+		}
+		br.close();
 		return version;
 	}
 }

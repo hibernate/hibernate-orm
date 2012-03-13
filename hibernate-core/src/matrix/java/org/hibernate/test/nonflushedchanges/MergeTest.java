@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
  * @author Gavin King
  */
 public class MergeTest extends AbstractOperationTestCase {
+
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeStaleVersionFails() throws Exception {
@@ -62,9 +63,11 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
+		rebuildSessionFactory();
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Person p = new Person( "steve" );
+
 		new PersonalDetails( "I have big feet", p );
 		s.persist( p );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
@@ -120,6 +123,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
+
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testNoExtraUpdatesOnMerge() throws Exception {
@@ -155,7 +159,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+
 	}
 
 	@Test
@@ -197,7 +201,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+
 	}
 
 	@Test
@@ -238,7 +242,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+
 	}
 
 	@Test
@@ -285,7 +289,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+
 	}
 
 	@Test
@@ -342,7 +346,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
 
-		// cleanup();
+		//
 	}
 
 	@Test
@@ -366,7 +370,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -390,7 +394,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -554,7 +558,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
 
-		cleanup();
+
 	}
 
 	@Test
@@ -591,7 +595,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
 
-		cleanup();
+
 	}
 
 	@Test
@@ -645,7 +649,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -694,7 +698,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		);
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -744,7 +748,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		);
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -768,7 +772,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.merge( jboss.getEmployees().iterator().next() );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -794,7 +798,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
+
 	}
 
 	@Test
@@ -841,11 +845,10 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.delete( competition );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		cleanup();
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	private void cleanup() throws Exception {
+	protected void cleanupTestData() throws Exception {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		s.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();
@@ -866,6 +869,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		}
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 }
 

@@ -215,7 +215,7 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	private void cleanupTestData() {
+	public void cleanupTestData() {
 		Session session = openSession();
 		session.beginTransaction();
 		session.createQuery( "delete DataPoint" ).executeUpdate();

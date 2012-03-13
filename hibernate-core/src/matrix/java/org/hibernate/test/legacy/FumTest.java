@@ -55,6 +55,11 @@ public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 
 	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/FooBar.hbm.xml",

@@ -29,6 +29,10 @@ import static org.junit.Assert.assertTrue;
 
 public class MultiTableTest extends LegacyTestCase {
 	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/Multi.hbm.xml", "legacy/MultiExtends.hbm.xml" };
 	}

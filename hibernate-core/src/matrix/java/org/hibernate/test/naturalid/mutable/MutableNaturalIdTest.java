@@ -37,6 +37,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -53,6 +54,32 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
 		cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	}
+
+	@Test
+	public void testCacheSynchronizationOnMutation() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		User u = new User( "gavin", "hb", "secret" );
+		s.persist( u );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		u = (User) s.byId( User.class ).getReference( u.getId() );
+		u.setOrg( "ceylon" );
+		s.flush();
+		User oldNaturalId = (User) s.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load();
+		assertNotSame( u, oldNaturalId );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( u );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test

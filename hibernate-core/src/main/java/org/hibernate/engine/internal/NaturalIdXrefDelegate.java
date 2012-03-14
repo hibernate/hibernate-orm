@@ -338,6 +338,7 @@ public class NaturalIdXrefDelegate {
 				if ( areSame( naturalIdValues, initial.getValues() ) ) {
 					return false;
 				}
+				naturalIdToPkMap.remove( initial );
 			}
 
 			final CachedNaturalId cachedNaturalId = new CachedNaturalId( persister, naturalIdValues );

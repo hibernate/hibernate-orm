@@ -21,41 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA\
  */
-package org.hibernate.ejb.test.query;
+package org.hibernate.test.component.basic2;
 
-import javax.persistence.EntityManager;
-
-import org.hibernate.ejb.criteria.components.Client;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.Session;
 
 import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * Tests related to specifying joins on components (embedded values).
  *
  * @author Steve Ebersole
  */
-public class ComponentJoinsTest extends BaseEntityManagerFunctionalTestCase {
+public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] { Client.class };
+		return new Class[] { Person.class };
 	}
 
 	@Test
 	public void testComponentJoins() {
 		// Just checking proper query construction and syntax checking via database query parser...
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		Session session = openSession();
+		session.beginTransaction();
 		// use it in WHERE
-		em.createQuery( "select c from Client c join c.name as n where n.lastName like '%'" ).getResultList();
+		session.createQuery( "select p from Person p join p.name as n where n.lastName like '%'" ).list();
 		// use it in SELECT
-		em.createQuery( "select n.lastName from Client c join c.name as n" ).getResultList();
-		em.createQuery( "select n from Client c join c.name as n" ).getResultList();
+		session.createQuery( "select n.lastName from Person p join p.name as n" ).list();
+		session.createQuery( "select n from Person p join p.name as n" ).list();
 		// use it in ORDER BY
-		em.createQuery( "select n from Client c join c.name as n order by n.lastName" ).getResultList();
-		em.createQuery( "select n from Client c join c.name as n order by c" ).getResultList();
-		em.createQuery( "select n from Client c join c.name as n order by n" ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+		session.createQuery( "select n from Person p join p.name as n order by n.lastName" ).list();
+		session.createQuery( "select n from Person p join p.name as n order by p" ).list();
+		session.createQuery( "select n from Person p join p.name as n order by n" ).list();
+		session.getTransaction().commit();
+		session.close();
 	}
 }

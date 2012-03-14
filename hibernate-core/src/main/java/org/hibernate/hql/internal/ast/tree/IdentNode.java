@@ -31,6 +31,7 @@ import antlr.collections.AST;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -155,18 +156,27 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			setFromElement( element );
 			String[] columnExpressions = element.getIdentityColumns();
 			final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
-			final boolean isCompositePk = columnExpressions.length > 1;
-			if ( isCompositePk
-					&& isInNonDistinctCount
-					&& ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
-				setText( columnExpressions[0] );
+			final boolean isCompositeValue = columnExpressions.length > 1;
+			if ( isCompositeValue ) {
+				if ( isInNonDistinctCount && ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
+					setText( columnExpressions[0] );
+				}
+				else {
+					String joinedFragment = StringHelper.join( ", ", columnExpressions );
+					// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
+					// tuple syntax across databases..
+					final boolean shouldSkipWrappingInParenthesis =
+							getWalker().isInCount()
+							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
+							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
+					if ( ! shouldSkipWrappingInParenthesis ) {
+						joinedFragment = "(" + joinedFragment + ")";
+					}
+					setText( joinedFragment );
+				}
 			}
 			else {
-				String joinedFragment = StringHelper.join( ", ", columnExpressions );
-				if ( ! getWalker().isInCount() ) {
-					joinedFragment = "(" + joinedFragment + ")";
-				}
-				setText( joinedFragment );
+				setText( columnExpressions[0] );
 			}
 			return true;
 		}

@@ -350,7 +350,7 @@ public class NaturalIdXrefDelegate {
 		private boolean areSame(Object[] naturalIdValues, Object[] values) {
 			// lengths have already been verified at this point
 			for ( int i = 0; i < naturalIdTypes.length; i++ ) {
-				if ( naturalIdTypes[i].compare( naturalIdValues[i], values[i] ) != 0 ) {
+				if ( ! naturalIdTypes[i].isEqual( naturalIdValues[i], values[i] ) ) {
 					return false;
 				}
 			}

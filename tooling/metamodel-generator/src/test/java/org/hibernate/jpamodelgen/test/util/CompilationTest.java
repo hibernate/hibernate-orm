@@ -47,7 +47,6 @@ import static org.testng.FileAssert.fail;
 public abstract class CompilationTest {
 	private static final Logger log = LoggerFactory.getLogger( CompilationTest.class );
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
-	private static final String PROC_NONE = "-proc:none";
 	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";
 	private static final String OUT_BASE_DIR_PROPERTY = "outBaseDir";
 	private static final String sourceBaseDir;

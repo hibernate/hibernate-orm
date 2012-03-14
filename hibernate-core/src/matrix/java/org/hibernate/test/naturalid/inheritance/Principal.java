@@ -63,7 +63,7 @@ public abstract class Principal {
 		this.id = id;
 	}
 
-	@NaturalId
+	@NaturalId(mutable=true)
 	public String getUid() {
 		return uid;
 	}

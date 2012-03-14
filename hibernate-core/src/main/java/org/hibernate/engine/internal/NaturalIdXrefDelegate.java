@@ -40,6 +40,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeHelper;
 
 /**
  * Maintains a {@link org.hibernate.engine.spi.PersistenceContext}-level 2-way cross-reference (xref) between the 
@@ -67,6 +68,7 @@ public class NaturalIdXrefDelegate {
 			final Serializable pk,
 			Object[] naturalIdValues,
 			CachedNaturalIdValueSource valueSource) {
+		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -146,6 +148,10 @@ public class NaturalIdXrefDelegate {
 		}
 	}
 
+	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
+		return persistenceContext.getSession().getFactory().getEntityPersister( persister.getRootEntityName() );
+	}
+
 	protected void validateNaturalId(EntityPersister persister, Object[] naturalIdValues) {
 		if ( !persister.hasNaturalIdentifier() ) {
 			throw new IllegalArgumentException( "Entity did not define a natrual-id" );
@@ -156,6 +162,7 @@ public class NaturalIdXrefDelegate {
 	}
 
 	public void evictNaturalIdResolution(EntityPersister persister, final Serializable pk, Object[] deletedNaturalIdValues) {
+		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, deletedNaturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -184,6 +191,7 @@ public class NaturalIdXrefDelegate {
 	}
 
 	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
+		persister = locatePersisterForKey( persister );
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
 			return null;
@@ -198,6 +206,7 @@ public class NaturalIdXrefDelegate {
 	}
 
 	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -270,6 +279,7 @@ public class NaturalIdXrefDelegate {
 	private static class CachedNaturalId {
 		private final EntityPersister persister;
 		private final Object[] values;
+		private final Type[] naturalIdTypes;
 		private int hashCode;
 
 		public CachedNaturalId(EntityPersister persister, Object[] values) {
@@ -277,10 +287,21 @@ public class NaturalIdXrefDelegate {
 			this.values = values;
 
 			final int prime = 31;
-			int result = 1;
-			result = prime * result + ( ( persister == null ) ? 0 : persister.hashCode() );
-			result = prime * result + Arrays.hashCode( values );
-			this.hashCode = result;
+			int hashCodeCalculation = 1;
+			hashCodeCalculation = prime * hashCodeCalculation + persister.hashCode();
+
+			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+			naturalIdTypes = new Type[ naturalIdPropertyIndexes.length ];
+			int i = 0;
+			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
+				final Type type = persister.getPropertyType( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
+				naturalIdTypes[i] = type;
+				int elementHashCode = values[i] == null ? 0 :type.getHashCode( values[i], persister.getFactory() );
+				hashCodeCalculation = prime * hashCodeCalculation + elementHashCode;
+				i++;
+			}
+
+			this.hashCode = hashCodeCalculation;
 		}
 
 		public Object[] getValues() {
@@ -305,8 +326,17 @@ public class NaturalIdXrefDelegate {
 			}
 
 			final CachedNaturalId other = (CachedNaturalId) obj;
-			return persister.equals( other.persister )
-					&& Arrays.equals( values, other.values );
+			return persister.equals( other.persister ) && areSame( values, other.values );
+		}
+
+		private boolean areSame(Object[] values, Object[] otherValues) {
+			// lengths have already been verified at this point
+			for ( int i = 0; i < naturalIdTypes.length; i++ ) {
+				if ( ! naturalIdTypes[i].isEqual( values[i], otherValues[i], persister.getFactory() ) ) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 

@@ -36,6 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -95,15 +96,32 @@ public class DriverManagerConnectionProviderImpl
         LOG.usingHibernateBuiltInConnectionPool();
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-        if (driverClassName == null) {
+		if ( driverClassName == null ) {
 			LOG.jdbcDriverNotSpecified( AvailableSettings.DRIVER );
 		}
-		else {
+		else if ( serviceRegistry != null ) {
 			try {
 				serviceRegistry.getService( ClassLoaderService.class ).classForName( driverClassName );
 			}
 			catch ( ClassLoadingException e ) {
-				throw new ClassLoadingException( "Specified JDBC Driver " + driverClassName + " class not found", e );
+				throw new ClassLoadingException(
+						"Specified JDBC Driver " + driverClassName + " class not found",
+						e
+				);
+			}
+		}
+		// guard dog, mostly for making test pass
+		else {
+			try {
+				// trying via forName() first to be as close to DriverManager's semantics
+				Class.forName( driverClassName );
+			} catch ( ClassNotFoundException cnfe ) {
+				try{
+					ReflectHelper.classForName( driverClassName );
+				}
+				catch ( ClassNotFoundException e ) {
+					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " class not found", e );
+				}
 			}
 		}
 

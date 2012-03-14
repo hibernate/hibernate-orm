@@ -223,8 +223,6 @@ public abstract class AbstractEntityPersister
 	private final Map loaders = new HashMap();
 
 	// SQL strings
-	private String sqlEntityIdByNaturalIdString;
-	
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
 	private String sqlLazySelectString;
@@ -3377,26 +3375,37 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected void logStaticSQL() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debugf("Static SQL for entity: %s", getEntityName());
-            if (sqlLazySelectString != null) LOG.debugf(" Lazy select: %s", sqlLazySelectString);
-            if (sqlVersionSelectString != null) LOG.debugf(" Version select: %s", sqlVersionSelectString);
-            if (sqlSnapshotSelectString != null) LOG.debugf(" Snapshot select: %s", sqlSnapshotSelectString);
-			for ( int j = 0; j < getTableSpan(); j++ ) {
-                LOG.debugf(" Insert %s: %s", j, getSQLInsertStrings()[j]);
-                LOG.debugf(" Update %s: %s", j, getSQLUpdateStrings()[j]);
-                LOG.debugf(" Delete %s: %s", j, getSQLDeleteStrings()[j]);
+        if ( LOG.isDebugEnabled() ) {
+            LOG.debugf( "Static SQL for entity: %s", getEntityName() );
+            if ( sqlLazySelectString != null ) {
+				LOG.debugf( " Lazy select: %s", sqlLazySelectString );
 			}
-            if (sqlIdentityInsertString != null) LOG.debugf(" Identity insert: %s", sqlIdentityInsertString);
-            if (sqlUpdateByRowIdString != null) LOG.debugf(" Update by row id (all fields): %s", sqlUpdateByRowIdString);
-            if (sqlLazyUpdateByRowIdString != null) LOG.debugf(" Update by row id (non-lazy fields): %s",
-                                                               sqlLazyUpdateByRowIdString);
-            if (sqlInsertGeneratedValuesSelectString != null) LOG.debugf("Insert-generated property select: %s",
-                                                                         sqlInsertGeneratedValuesSelectString);
-            if (sqlUpdateGeneratedValuesSelectString != null) LOG.debugf("Update-generated property select: %s",
-                                                                         sqlUpdateGeneratedValuesSelectString);
-            if (sqlEntityIdByNaturalIdString != null) LOG.debugf("Id by Natural Id: %s",
-            													 sqlEntityIdByNaturalIdString);
+            if ( sqlVersionSelectString != null ) {
+				LOG.debugf( " Version select: %s", sqlVersionSelectString );
+			}
+            if ( sqlSnapshotSelectString != null ) {
+				LOG.debugf( " Snapshot select: %s", sqlSnapshotSelectString );
+			}
+			for ( int j = 0; j < getTableSpan(); j++ ) {
+                LOG.debugf( " Insert %s: %s", j, getSQLInsertStrings()[j] );
+                LOG.debugf( " Update %s: %s", j, getSQLUpdateStrings()[j] );
+                LOG.debugf( " Delete %s: %s", j, getSQLDeleteStrings()[j] );
+			}
+            if ( sqlIdentityInsertString != null ) {
+				LOG.debugf( " Identity insert: %s", sqlIdentityInsertString );
+			}
+            if ( sqlUpdateByRowIdString != null ) {
+				LOG.debugf( " Update by row id (all fields): %s", sqlUpdateByRowIdString );
+			}
+            if ( sqlLazyUpdateByRowIdString != null ) {
+				LOG.debugf( " Update by row id (non-lazy fields): %s", sqlLazyUpdateByRowIdString );
+			}
+            if ( sqlInsertGeneratedValuesSelectString != null ) {
+				LOG.debugf( " Insert-generated property select: %s", sqlInsertGeneratedValuesSelectString );
+			}
+            if ( sqlUpdateGeneratedValuesSelectString != null ) {
+				LOG.debugf( " Update-generated property select: %s", sqlUpdateGeneratedValuesSelectString );
+			}
 		}
 	}
 
@@ -3604,10 +3613,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void postInstantiate() throws MappingException {
-		if ( hasNaturalIdentifier() ) {
-		    sqlEntityIdByNaturalIdString = generateEntityIdByNaturalIdSql();
-		}
-
 		createLoaders();
 		createUniqueKeyLoaders();
 		createQueryLoader();
@@ -4512,7 +4517,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 	}
-    
+
 	@Override
 	public Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
@@ -4525,6 +4530,8 @@ public abstract class AbstractEntityPersister
 					MessageHelper.infoString( this )
 			);
 		}
+
+		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery();
 
 		try {
 			PreparedStatement ps = session.getTransactionCoordinator()
@@ -4546,7 +4553,6 @@ public abstract class AbstractEntityPersister
 						return null;
 					}
 
-					// entity ID has to be serializable right?
 					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
@@ -4570,11 +4576,24 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	private String pkByNaturalIdQuery;
+
+	private String determinePkByNaturalIdQuery() {
+		if ( ! hasNaturalIdentifier() ) {
+			throw new HibernateException( "Attempt to build natural-id -> PK resolution query for entity that does not define natural id" );
+		}
+
+		if ( pkByNaturalIdQuery == null ) {
+			pkByNaturalIdQuery = generateEntityIdByNaturalIdSql();
+		}
+		return pkByNaturalIdQuery;
+	}
+
 	private String generateEntityIdByNaturalIdSql() {
 		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
 		if ( rootPersister != this ) {
 			if ( rootPersister instanceof AbstractEntityPersister ) {
-				return ( (AbstractEntityPersister) rootPersister ).sqlEntityIdByNaturalIdString;
+				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql();
 			}
 		}
 

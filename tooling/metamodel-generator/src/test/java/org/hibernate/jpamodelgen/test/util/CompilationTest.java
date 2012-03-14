@@ -53,7 +53,7 @@ public abstract class CompilationTest {
 	private static final String sourceBaseDir;
 	private static final String outBaseDir;
 
-	public static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
+	public static final String DIRECTORY_SEPARATOR = File.separator;
 
 	private List<Diagnostic> compilationDiagnostics;
 
@@ -117,7 +117,7 @@ public abstract class CompilationTest {
 		List<File> javaFiles = new ArrayList<File>();
 		String packageDirName = baseDir;
 		if ( packageName != null ) {
-			packageDirName = packageDirName + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );
+			packageDirName = packageDirName + DIRECTORY_SEPARATOR + packageName.replace( ".", DIRECTORY_SEPARATOR );
 		}
 
 		File packageDir = new File( packageDirName );

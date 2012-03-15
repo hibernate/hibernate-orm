@@ -13,7 +13,7 @@ apply plugin: "java"
 apply plugin: "jdocbook"
 
 dependencies {
-    pressgangVersion = '3.0.1-SNAPSHOT'
+    pressgangVersion = '3.0.0'
     jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
     jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
     jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"

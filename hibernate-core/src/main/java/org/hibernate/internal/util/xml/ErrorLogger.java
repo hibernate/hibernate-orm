@@ -33,7 +33,7 @@ import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Implements an {@link ErrorHandler} that mainly just logs errors/warnings.  However, it does track
- * the intial error it encounters and makes it available via {@link #getError}.
+ * the initial error it encounters and makes it available via {@link #getError}.
  *
  * @author Steve Ebersole
  */

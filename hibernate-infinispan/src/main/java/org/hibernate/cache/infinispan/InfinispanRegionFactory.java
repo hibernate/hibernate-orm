@@ -33,6 +33,7 @@ import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.infinispan.AdvancedCache;
+import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.config.Configuration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
@@ -444,9 +445,16 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
       GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
-      // TODO: This is a hack, make it easier to retrieve in Infinispan!
-      return (CacheCommandFactory) ((Map) globalCr.getComponent("org.infinispan.modules.command.factories"))
-            .values().iterator().next();
+      Map<Byte, ModuleCommandFactory> factories =
+         (Map<Byte, ModuleCommandFactory>) globalCr.getComponent("org.infinispan.modules.command.factories");
+      for (ModuleCommandFactory factory : factories.values()) {
+         if (factory instanceof CacheCommandFactory)
+            return (CacheCommandFactory) factory;
+      }
+
+      throw new CacheException("Infinispan custom cache command factory not " +
+            "installed (possibly because the classloader where Infinispan " +
+            "lives couldn't find the Hibernate Infinispan cache provider)");
    }
 
    protected AdvancedCache createCacheWrapper(AdvancedCache cache) {

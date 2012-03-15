@@ -141,10 +141,10 @@ import org.hibernate.internal.util.StringHelper;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class JPAOverridenAnnotationReader implements AnnotationReader {
+public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       JPAOverridenAnnotationReader.class.getName());
+                                                                       JPAOverriddenAnnotationReader.class.getName());
 	private static final Map<Class, String> annotationToXml;
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more information";
 	private static final Filter FILTER = new Filter() {
@@ -244,7 +244,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		METHOD
 	}
 
-	public JPAOverridenAnnotationReader(AnnotatedElement el, XMLContext xmlContext) {
+	public JPAOverriddenAnnotationReader(AnnotatedElement el, XMLContext xmlContext) {
 		this.element = el;
 		this.xmlContext = xmlContext;
 		if ( el instanceof Class ) {
@@ -1741,7 +1741,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							JPAOverridenAnnotationReader.class
+							JPAOverriddenAnnotationReader.class
 					);
 				}
 				catch ( ClassNotFoundException e ) {
@@ -1778,7 +1778,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							JPAOverridenAnnotationReader.class
+							JPAOverriddenAnnotationReader.class
 					);
 				}
 				catch ( ClassNotFoundException e ) {
@@ -1928,7 +1928,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							JPAOverridenAnnotationReader.class
+							JPAOverriddenAnnotationReader.class
 					);
 				}
 				catch ( ClassNotFoundException e ) {

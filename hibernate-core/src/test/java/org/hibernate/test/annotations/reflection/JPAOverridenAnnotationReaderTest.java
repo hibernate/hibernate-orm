@@ -87,7 +87,7 @@ import org.xml.sax.SAXNotSupportedException;
 
 import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
+import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -107,14 +107,14 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext(
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( Organization.class, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( Organization.class, context );
 		assertTrue( reader.isAnnotationPresent( MappedSuperclass.class ) );
 	}
 
 	@Test
 	public void testEntityRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( Administration.class, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( Administration.class, context );
 		assertNotNull( reader.getAnnotation( Entity.class ) );
 		assertEquals(
 				"Default value in xml entity should not override @Entity.name", "JavaAdministration",
@@ -148,7 +148,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "wrong tble name", "tablehilo", reader.getAnnotation( TableGenerator.class ).table() );
 		assertEquals( "no schema overriding", "myschema", reader.getAnnotation( TableGenerator.class ).schema() );
 
-		reader = new JPAOverridenAnnotationReader( Match.class, context );
+		reader = new JPAOverriddenAnnotationReader( Match.class, context );
 		assertNotNull( reader.getAnnotation( Table.class ) );
 		assertEquals(
 				"Java annotation not taken into account", "matchtable", reader.getAnnotation( Table.class ).name()
@@ -196,10 +196,10 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		assertNotNull( reader.getAnnotation( ExcludeSuperclassListeners.class ) );
 		assertNotNull( reader.getAnnotation( ExcludeDefaultListeners.class ) );
 
-		reader = new JPAOverridenAnnotationReader( Competition.class, context );
+		reader = new JPAOverriddenAnnotationReader( Competition.class, context );
 		assertNotNull( reader.getAnnotation( MappedSuperclass.class ) );
 
-		reader = new JPAOverridenAnnotationReader( TennisMatch.class, context );
+		reader = new JPAOverriddenAnnotationReader( TennisMatch.class, context );
 		assertNull( "Mutualize PKJC into PKJCs", reader.getAnnotation( PrimaryKeyJoinColumn.class ) );
 		assertNotNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
 		assertEquals(
@@ -226,7 +226,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		);
 
 
-		reader = new JPAOverridenAnnotationReader( SocialSecurityPhysicalAccount.class, context );
+		reader = new JPAOverriddenAnnotationReader( SocialSecurityPhysicalAccount.class, context );
 		assertNotNull( reader.getAnnotation( IdClass.class ) );
 		assertEquals( "id-class not used", SocialSecurityNumber.class, reader.getAnnotation( IdClass.class ).value() );
 		assertEquals(
@@ -247,7 +247,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext(
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( Administration.class, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( Administration.class, context );
 		assertNotNull( reader.getAnnotation( Entity.class ) );
 		assertEquals(
 				"Metadata complete should ignore java annotations", "", reader.getAnnotation( Entity.class ).name()
@@ -256,7 +256,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
 		assertEquals( "Default schema not overriden", "myschema", reader.getAnnotation( Table.class ).schema() );
 
-		reader = new JPAOverridenAnnotationReader( Match.class, context );
+		reader = new JPAOverriddenAnnotationReader( Match.class, context );
 		assertNotNull( reader.getAnnotation( Table.class ) );
 		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
 		assertEquals( "Overriding not taken into account", "myschema", reader.getAnnotation( Table.class ).schema() );
@@ -267,14 +267,14 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		assertNull( reader.getAnnotation( NamedQueries.class ) );
 		assertNull( reader.getAnnotation( NamedNativeQueries.class ) );
 
-		reader = new JPAOverridenAnnotationReader( TennisMatch.class, context );
+		reader = new JPAOverriddenAnnotationReader( TennisMatch.class, context );
 		assertNull( reader.getAnnotation( PrimaryKeyJoinColumn.class ) );
 		assertNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
 
-		reader = new JPAOverridenAnnotationReader( Competition.class, context );
+		reader = new JPAOverriddenAnnotationReader( Competition.class, context );
 		assertNull( reader.getAnnotation( MappedSuperclass.class ) );
 
-		reader = new JPAOverridenAnnotationReader( SocialSecurityMoralAccount.class, context );
+		reader = new JPAOverriddenAnnotationReader( SocialSecurityMoralAccount.class, context );
 		assertNull( reader.getAnnotation( IdClass.class ) );
 		assertNull( reader.getAnnotation( DiscriminatorValue.class ) );
 		assertNull( reader.getAnnotation( DiscriminatorColumn.class ) );
@@ -286,11 +286,11 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 	public void testIdRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 		Method method = Administration.class.getDeclaredMethod( "getId" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( method, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( method, context );
 		assertNull( reader.getAnnotation( Id.class ) );
 		assertNull( reader.getAnnotation( Column.class ) );
 		Field field = Administration.class.getDeclaredField( "id" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Id.class ) );
 		assertNotNull( reader.getAnnotation( GeneratedValue.class ) );
 		assertEquals( GenerationType.SEQUENCE, reader.getAnnotation( GeneratedValue.class ).strategy() );
@@ -307,23 +307,23 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		method = Administration.class.getDeclaredMethod( "getId" );
-		reader = new JPAOverridenAnnotationReader( method, context );
+		reader = new JPAOverriddenAnnotationReader( method, context );
 		assertNotNull(
 				"Default access type when not defined in metadata complete should be property",
 				reader.getAnnotation( Id.class )
 		);
 		field = Administration.class.getDeclaredField( "id" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNull(
 				"Default access type when not defined in metadata complete should be property",
 				reader.getAnnotation( Id.class )
 		);
 
 		method = BusTrip.class.getDeclaredMethod( "getId" );
-		reader = new JPAOverridenAnnotationReader( method, context );
+		reader = new JPAOverriddenAnnotationReader( method, context );
 		assertNull( reader.getAnnotation( EmbeddedId.class ) );
 		field = BusTrip.class.getDeclaredField( "id" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( EmbeddedId.class ) );
 		assertNotNull( reader.getAnnotation( AttributeOverrides.class ) );
 		assertEquals( 1, reader.getAnnotation( AttributeOverrides.class ).value().length );
@@ -335,22 +335,22 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		Field field = BusTrip.class.getDeclaredField( "status" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( field, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Enumerated.class ) );
 		assertEquals( EnumType.STRING, reader.getAnnotation( Enumerated.class ).value() );
 		assertEquals( false, reader.getAnnotation( Basic.class ).optional() );
 		field = BusTrip.class.getDeclaredField( "serial" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Lob.class ) );
 		assertEquals( "serialbytes", reader.getAnnotation( Columns.class ).columns()[0].name() );
 		field = BusTrip.class.getDeclaredField( "terminusTime" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Temporal.class ) );
 		assertEquals( TemporalType.TIMESTAMP, reader.getAnnotation( Temporal.class ).value() );
 		assertEquals( FetchType.LAZY, reader.getAnnotation( Basic.class ).fetch() );
 
 		field = BusTripPk.class.getDeclaredField( "busDriver" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.isAnnotationPresent( Basic.class ) );
 	}
 
@@ -358,11 +358,11 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 	public void testVersionRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 		Method method = Administration.class.getDeclaredMethod( "getVersion" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( method, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( method, context );
 		assertNotNull( reader.getAnnotation( Version.class ) );
 
 		Field field = Match.class.getDeclaredField( "version" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Version.class ) );
 	}
 
@@ -371,12 +371,12 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Field field = Administration.class.getDeclaredField( "transientField" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( field, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Transient.class ) );
 		assertNull( reader.getAnnotation( Basic.class ) );
 
 		field = Match.class.getDeclaredField( "playerASSN" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( Embedded.class ) );
 	}
 
@@ -385,7 +385,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Field field = Administration.class.getDeclaredField( "defaultBusTrip" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( field, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( OneToOne.class ) );
 		assertNull( reader.getAnnotation( JoinColumns.class ) );
 		assertNotNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
@@ -398,7 +398,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		field = BusTrip.class.getDeclaredField( "players" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( OneToMany.class ) );
 		assertNotNull( reader.getAnnotation( JoinColumns.class ) );
 		assertEquals( 2, reader.getAnnotation( JoinColumns.class ).value().length );
@@ -407,7 +407,7 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "name", reader.getAnnotation( MapKey.class ).name() );
 
 		field = BusTrip.class.getDeclaredField( "roads" );
-		reader = new JPAOverridenAnnotationReader( field, context );
+		reader = new JPAOverriddenAnnotationReader( field, context );
 		assertNotNull( reader.getAnnotation( ManyToMany.class ) );
 		assertNotNull( reader.getAnnotation( JoinTable.class ) );
 		assertEquals( "bus_road", reader.getAnnotation( JoinTable.class ).name() );
@@ -423,20 +423,20 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Method method = Administration.class.getDeclaredMethod( "calculate" );
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( method, context );
+		JPAOverriddenAnnotationReader reader = new JPAOverriddenAnnotationReader( method, context );
 		assertTrue( reader.isAnnotationPresent( PrePersist.class ) );
 
-		reader = new JPAOverridenAnnotationReader( Administration.class, context );
+		reader = new JPAOverriddenAnnotationReader( Administration.class, context );
 		assertTrue( reader.isAnnotationPresent( EntityListeners.class ) );
 		assertEquals( 1, reader.getAnnotation( EntityListeners.class ).value().length );
 		assertEquals( LogListener.class, reader.getAnnotation( EntityListeners.class ).value()[0] );
 
 		method = LogListener.class.getDeclaredMethod( "noLog", Object.class );
-		reader = new JPAOverridenAnnotationReader( method, context );
+		reader = new JPAOverriddenAnnotationReader( method, context );
 		assertTrue( reader.isAnnotationPresent( PostLoad.class ) );
 
 		method = LogListener.class.getDeclaredMethod( "log", Object.class );
-		reader = new JPAOverridenAnnotationReader( method, context );
+		reader = new JPAOverriddenAnnotationReader( method, context );
 		assertTrue( reader.isAnnotationPresent( PrePersist.class ) );
 		assertFalse( reader.isAnnotationPresent( PostPersist.class ) );
 

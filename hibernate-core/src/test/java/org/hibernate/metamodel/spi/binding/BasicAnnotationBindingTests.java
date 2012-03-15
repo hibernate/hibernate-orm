@@ -53,7 +53,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	@Override
 	public void addSourcesForManyToOne(MetadataSources sources) {
-		sources.addAnnotatedClass( ManyToOneEntity.class );
+		sources.addAnnotatedClass( EntityWithManyToOnes.class );
 	}
 
 	@Override

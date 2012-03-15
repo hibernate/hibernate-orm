@@ -25,23 +25,27 @@ package org.hibernate.metamodel.spi.binding;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 /**
  * @author Gail Badner
  */
 @Entity
-public class ManyToOneEntity {
+public class EntityWithManyToOnes {
 	@Id
 	private Long id;
 	private String theName;
 	@ManyToOne
 	SimpleEntity simpleEntity;
+	@ManyToOne
+	@JoinColumn( name = "simplename", referencedColumnName = "name" )
+	SimpleEntity simpleEntityFromPropertyRef;
 
-	public ManyToOneEntity() {
+	public EntityWithManyToOnes() {
 	}
 
-	public ManyToOneEntity(String name) {
+	public EntityWithManyToOnes(String name) {
 		this.theName = name;
 	}
 
@@ -69,13 +73,22 @@ public class ManyToOneEntity {
 		this.simpleEntity = simpleEntity;
 	}
 
+	public SimpleEntity getSimpleEntityFromPropertyRef() {
+		return simpleEntityFromPropertyRef;
+	}
+
+	public void setSimpleEntityFromPropertyRef(SimpleEntity simpleEntityFromPropertyRef) {
+		this.simpleEntityFromPropertyRef = simpleEntityFromPropertyRef;
+	}	
+	
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append( "EntityWithManyToOne" );
+		sb.append( "EntityWithManyToOnes" );
 		sb.append( "{id=" ).append( id );
 		sb.append( ", theName='" ).append( theName ).append( '\'' );
 		sb.append( ", simpleEntity=" ).append( simpleEntity );
+		sb.append( ", simpleEntityFromPropertyRef=" ).append( simpleEntityFromPropertyRef );
 		sb.append( '}' );
 		return sb.toString();
 	}

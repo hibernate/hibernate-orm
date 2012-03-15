@@ -42,7 +42,7 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	}
 
 	public void addSourcesForManyToOne(MetadataSources sources) {
-		sources.addResource( "org/hibernate/metamodel/spi/binding/ManyToOneEntity.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithManyToOnes.hbm.xml" );
 	}
 
 	public void addSourcesForComponentBinding(MetadataSources sources) {

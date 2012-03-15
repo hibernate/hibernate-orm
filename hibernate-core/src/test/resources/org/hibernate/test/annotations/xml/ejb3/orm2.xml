@@ -7,6 +7,9 @@
         >
     <!-- use orm_1_0 on purpose (backward compatibility test -->
     <package>org.hibernate.test.annotations.xml.ejb3</package>
+    <named-query name="find.the.light">
+        <query>select l from Light l</query>
+    </named-query>
     <entity class="Light" access="FIELD" metadata-complete="true">
         <attributes>
             <id name="name">

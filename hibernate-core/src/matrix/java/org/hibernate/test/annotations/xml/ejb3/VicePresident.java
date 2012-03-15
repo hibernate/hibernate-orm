@@ -21,9 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.xml.ejb3;
-
 
 public class VicePresident {
 	int id;

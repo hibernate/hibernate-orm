@@ -61,7 +61,6 @@ import org.dom4j.Element;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXParseException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
@@ -105,6 +104,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.OriginImpl;
@@ -2002,11 +2002,11 @@ public class Configuration implements Serializable {
 	 */
 	protected Configuration doConfigure(InputStream stream, String resourceName) throws HibernateException {
 		try {
-			List errors = new ArrayList<SAXParseException>();
-			Document document = xmlHelper.createSAXReader( resourceName, errors, entityResolver )
+			ErrorLogger errorLogger = new ErrorLogger( resourceName );
+			Document document = xmlHelper.createSAXReader( errorLogger,  entityResolver )
 					.read( new InputSource( stream ) );
-			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid configuration", (Throwable) errors.get( 0 ) );
+			if ( errorLogger.hasErrors() ) {
+				throw new MappingException( "invalid configuration", errorLogger.getErrors().get( 0 ) );
 			}
 			doConfigure( document );
 		}

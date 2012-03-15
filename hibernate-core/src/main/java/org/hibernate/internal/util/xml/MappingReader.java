@@ -42,9 +42,11 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class MappingReader {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MappingReader.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			MappingReader.class.getName()
+	);
 
-	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 	public static final MappingReader INSTANCE = new MappingReader();
 
 	/**
@@ -74,8 +76,8 @@ public class MappingReader {
 			// first try with orm 2.0 xsd validation
 			setValidationFor( saxReader, "orm_2_0.xsd" );
 			document = saxReader.read( source );
-			if ( errorHandler.getError() != null ) {
-				throw errorHandler.getError();
+			if ( errorHandler.hasErrors() ) {
+				throw errorHandler.getErrors().get( 0 );
 			}
 			return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 		}
@@ -90,15 +92,16 @@ public class MappingReader {
 				// next try with orm 1.0 xsd validation
 				try {
 					setValidationFor( saxReader, "orm_1_0.xsd" );
-					document = saxReader.read(  new StringReader( document.asXML() ) );
-					if ( errorHandler.getError() != null ) {
-						throw errorHandler.getError();
+					document = saxReader.read( new StringReader( document.asXML() ) );
+					if ( errorHandler.hasErrors() ) {
+						errorHandler.logErrors();
+						throw errorHandler.getErrors().get( 0 );
 					}
 					return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 				}
 				catch ( Exception orm1Problem ) {
 					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf("Problem parsing XML using orm 1 xsd : %s", orm1Problem.getMessage());
+						LOG.debugf( "Problem parsing XML using orm 1 xsd : %s", orm1Problem.getMessage() );
 					}
 				}
 			}

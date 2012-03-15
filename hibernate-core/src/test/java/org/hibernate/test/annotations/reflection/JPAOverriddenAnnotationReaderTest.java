@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Basic;
@@ -89,6 +87,7 @@ import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -101,7 +100,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
+public class JPAOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	@Test
 	public void testMappedSuperclassAnnotations() throws Exception {
 		XMLContext context = buildContext(
@@ -121,8 +120,8 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 				reader.getAnnotation( Entity.class ).name()
 		);
 		assertNotNull( reader.getAnnotation( Table.class ) );
-		assertEquals( "@Table not overriden", "tbl_admin", reader.getAnnotation( Table.class ).name() );
-		assertEquals( "Default schema not overriden", "myschema", reader.getAnnotation( Table.class ).schema() );
+		assertEquals( "@Table not overridden", "tbl_admin", reader.getAnnotation( Table.class ).name() );
+		assertEquals( "Default schema not overridden", "myschema", reader.getAnnotation( Table.class ).schema() );
 		assertEquals(
 				"Proper @Table.uniqueConstraints", 2,
 				reader.getAnnotation( Table.class ).uniqueConstraints()[0].columnNames().length
@@ -450,8 +449,8 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		InputStream is = cl.getResourceAsStream( ormfile );
 		assertNotNull( "ORM.xml not found: " + ormfile, is );
 		XMLContext context = new XMLContext();
-		List errors = new ArrayList();
-		SAXReader saxReader = xmlHelper.createSAXReader( "XML InputStream", errors, EJB3DTDEntityResolver.INSTANCE );
+		ErrorLogger errorLogger = new ErrorLogger();
+		SAXReader saxReader = xmlHelper.createSAXReader( errorLogger, EJB3DTDEntityResolver.INSTANCE );
 		//saxReader.setValidation( false );
 		try {
 			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
@@ -461,16 +460,15 @@ public class JPAOverridenAnnotationReaderTest extends BaseUnitTestCase {
 		}
 		org.dom4j.Document doc;
 		try {
-			doc = saxReader
-					.read( new InputSource( new BufferedInputStream( is ) ) );
+			doc = saxReader.read( new InputSource( new BufferedInputStream( is ) ) );
 		}
 		finally {
 			is.close();
 		}
-		if ( errors.size() > 0 ) {
-			System.out.println( errors.get( 0 ) );
+		if ( errorLogger.hasErrors() ) {
+			System.out.println( errorLogger.getErrors().get( 0 ) );
 		}
-		assertEquals( 0, errors.size() );
+		assertFalse( errorLogger.hasErrors() );
 		context.addDocument( doc );
 		return context;
 	}

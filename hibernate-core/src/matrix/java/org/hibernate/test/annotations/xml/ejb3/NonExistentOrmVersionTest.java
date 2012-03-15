@@ -23,34 +23,35 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
+import java.io.InputStream;
+
 import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.MappingException;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-6271")
-public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
+public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testOrm1Support() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Light light = new Light();
-		light.name = "the light at the end of the tunnel";
-		s.persist( light );
-		s.flush();
-		s.clear();
-
-		assertEquals( 1, s.getNamedQuery( "find.the.light" ).list().size() );
-		tx.rollback();
-		s.close();
-	}
-
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] { "org/hibernate/test/annotations/xml/ejb3/orm2.xml" };
+	public void testNonExistentOrmVersion() {
+		try {
+			Configuration config = buildConfiguration();
+			String xmlFileName = "org/hibernate/test/annotations/xml/ejb3/orm5.xml";
+			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
+			config.addInputStream( is );
+			config.buildMappings();
+		}
+		catch ( MappingException mappingException ) {
+			Throwable cause = mappingException.getCause();
+			assertTrue(
+					cause.getMessage().contains(
+							"Value '3.0' of attribute 'version' of element 'entity-mappings' is not valid"
+					)
+			);
+		}
 	}
 }

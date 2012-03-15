@@ -39,7 +39,10 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class ErrorLogger implements ErrorHandler, Serializable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ErrorLogger.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ErrorLogger.class.getName()
+	);
 
 	private SAXParseException error; // capture the initial error
 
@@ -56,8 +59,11 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void error(SAXParseException error) {
-        LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
-        if (this.error == null) this.error = error;
+		//LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
+		// if error has not been set yet, keep the first error
+		if ( this.error == null ) {
+			this.error = error;
+		}
 	}
 
 	/**
@@ -71,7 +77,7 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void warning(SAXParseException warn) {
-        LOG.parsingXmlWarning(error.getLineNumber(), error.getMessage());
+		LOG.parsingXmlWarning( error.getLineNumber(), error.getMessage() );
 	}
 
 	public void reset() {

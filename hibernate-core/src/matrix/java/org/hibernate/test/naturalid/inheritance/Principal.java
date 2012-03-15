@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.naturalid.inheritance;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -64,6 +65,7 @@ public abstract class Principal {
 	}
 
 	@NaturalId(mutable=true)
+	@Column(name = "P_UID")
 	public String getUid() {
 		return uid;
 	}

@@ -24,6 +24,8 @@
 package org.hibernate.internal.util.xml;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.logging.Logger;
 import org.xml.sax.ErrorHandler;
@@ -33,9 +35,10 @@ import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Implements an {@link ErrorHandler} that mainly just logs errors/warnings.  However, it does track
- * the initial error it encounters and makes it available via {@link #getError}.
+ * the errors it encounters and makes them available via {@link #getErrors}.
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class ErrorLogger implements ErrorHandler, Serializable {
 
@@ -44,26 +47,25 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 			ErrorLogger.class.getName()
 	);
 
-	private SAXParseException error; // capture the initial error
+	// lazily initalized
+	private List<SAXParseException> errors;
+	private String file;
 
-	/**
-	 * Retrieve the initial error encountered, or null if no error was encountered.
-	 *
-	 * @return The initial error, or null if none.
-	 */
-	public SAXParseException getError() {
-		return error;
+	public ErrorLogger() {
+	}
+
+	public ErrorLogger(String file) {
+		this.file = file;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public void error(SAXParseException error) {
-		//LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
-		// if error has not been set yet, keep the first error
-		if ( this.error == null ) {
-			this.error = error;
+		if ( this.errors == null ) {
+			errors = new ArrayList<SAXParseException>();
 		}
+		errors.add( error );
 	}
 
 	/**
@@ -77,10 +79,34 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void warning(SAXParseException warn) {
-		LOG.parsingXmlWarning( error.getLineNumber(), error.getMessage() );
+		LOG.parsingXmlWarning( warn.getLineNumber(), warn.getMessage() );
+	}
+
+	/**
+	 * @return returns a list of encountered xml parsing errors, or the empty list if there was no error
+	 */
+	public List<SAXParseException> getErrors() {
+		return errors;
 	}
 
 	public void reset() {
-		error = null;
+		errors = null;
+	}
+
+	public boolean hasErrors() {
+		return errors != null && errors.size() > 0;
+	}
+
+	public void logErrors() {
+		if ( errors != null ) {
+			for ( SAXParseException e : errors ) {
+				if ( file == null ) {
+					LOG.parsingXmlError( e.getLineNumber(), e.getMessage() );
+				}
+				else {
+					LOG.parsingXmlErrorForFile( file, e.getLineNumber(), e.getMessage() );
+				}
+			}
+		}
 	}
 }

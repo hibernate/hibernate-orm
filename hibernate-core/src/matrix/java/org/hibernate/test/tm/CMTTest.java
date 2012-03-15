@@ -157,6 +157,8 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testConcurrentCachedQueries() throws Exception {
+		sessionFactory().getStatistics().clear();
+		cleanupCache();
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();

@@ -61,6 +61,7 @@ import org.dom4j.Element;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
@@ -1814,7 +1815,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @param propertyName The name of the property
 	 *
-	 * @return The value curently associated with that property name; may be null.
+	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
 		return properties.getProperty( propertyName );
@@ -2001,7 +2002,7 @@ public class Configuration implements Serializable {
 	 */
 	protected Configuration doConfigure(InputStream stream, String resourceName) throws HibernateException {
 		try {
-			List errors = new ArrayList();
+			List errors = new ArrayList<SAXParseException>();
 			Document document = xmlHelper.createSAXReader( resourceName, errors, entityResolver )
 					.read( new InputSource( stream ) );
 			if ( errors.size() != 0 ) {

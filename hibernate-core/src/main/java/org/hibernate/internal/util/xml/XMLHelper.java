@@ -52,10 +52,14 @@ public final class XMLHelper {
 	private SAXReader saxReader;
 
 	/**
-	 * Create a dom4j SAXReader which will append all validation errors
-	 * to errorList
+	 * @param file the file name of the xml file to parse
+	 * @param errorsList a list to which to add all occurring errors
+	 * @param entityResolver an xml entity resolver
+	 *
+	 * @return Create and return a dom4j {@code SAXReader} which will append all validation errors
+	 * to the passed error list
 	 */
-	public SAXReader createSAXReader(String file, List errorsList, EntityResolver entityResolver) {
+	public SAXReader createSAXReader(String file, List<SAXParseException> errorsList, EntityResolver entityResolver) {
 		SAXReader saxReader = resolveSAXReader();
 		saxReader.setEntityResolver(entityResolver);
 		saxReader.setErrorHandler( new ErrorLogger(file, errorsList) );
@@ -72,7 +76,7 @@ public final class XMLHelper {
 	}
 
 	/**
-	 * Create a dom4j DOMReader
+	 * @return create and return a dom4j DOMReader
 	 */
 	public DOMReader createDOMReader() {
 		if (domReader==null) domReader = new DOMReader();
@@ -83,7 +87,7 @@ public final class XMLHelper {
 		private String file;
 		private List<SAXParseException> errors;
 
-		private ErrorLogger(String file, List errors) {
+		private ErrorLogger(String file, List<SAXParseException> errors) {
 			this.file=file;
 			this.errors = errors;
 		}

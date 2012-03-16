@@ -49,6 +49,7 @@ idea {
 slf4jVersion = '1.6.1'
 junitVersion = '4.10'
 h2Version = '1.2.145'
+bytemanVersion = '1.5.2'
 
 libraries = [
         // Ant
@@ -93,12 +94,15 @@ libraries = [
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
 
-        junit:          "junit:junit:${junitVersion}",
-        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
-        shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
-        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
-        validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
-        h2:             "com.h2database:h2:${h2Version}"
+        junit:           "junit:junit:${junitVersion}",
+        byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
+        byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
+        byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
+        jpa_modelgen:    'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
+        shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
+        shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
+        validator:       'org.hibernate:hibernate-validator:4.2.0.Final',
+        h2:              "com.h2database:h2:${h2Version}"
 ]
 
 
@@ -145,6 +149,9 @@ subprojects { subProject ->
         dependencies {
             compile( libraries.logging )
             testCompile( libraries.junit )
+            testCompile( libraries.byteman )
+            testCompile( libraries.byteman_install )
+            testCompile( libraries.byteman_bmunit )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )
             testRuntime( libraries.jcl_slf4j )

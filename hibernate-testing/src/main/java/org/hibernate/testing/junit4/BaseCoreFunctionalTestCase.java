@@ -127,7 +127,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
-	private void buildSessionFactory() {
+	protected void buildSessionFactory() {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );

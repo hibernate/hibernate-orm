@@ -123,35 +123,7 @@ public class HibernateTypeHelper {
 
 	public ReflectedCollectionJavaTypes getReflectedCollectionJavaTypes(
 			PluralAttributeBinding attributeBinding) {
-		final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = determineJavaType( attributeBinding.getAttribute() );
-
-		if ( reflectedCollectionJavaTypes != null ) {
-			if ( reflectedCollectionJavaTypes.collectionType != null ) {
-				if ( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() == null ) {
-					attributeBinding.getHibernateTypeDescriptor().setJavaTypeName(
-							reflectedCollectionJavaTypes.collectionType.getName()
-					);
-				}
-			}
-			if ( reflectedCollectionJavaTypes.collectionElementType != null ) {
-				if ( attributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() == null ) {
-					attributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().setJavaTypeName(
-							reflectedCollectionJavaTypes.collectionElementType.getName()
-					);
-				}
-			}
-			if ( reflectedCollectionJavaTypes.collectionIndexType != null
-					&& IndexedPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
-				final PluralAttributeIndexBinding indexBinding
-						= ( (IndexedPluralAttributeBinding) attributeBinding ).getPluralAttributeIndexBinding();
-				if ( indexBinding.getHibernateTypeDescriptor().getJavaTypeName() == null ) {
-					indexBinding.getHibernateTypeDescriptor().setJavaTypeName(
-							reflectedCollectionJavaTypes.collectionIndexType.getName()
-					);
-				}
-			}
-		}
-		return reflectedCollectionJavaTypes;
+		return determineJavaType( attributeBinding.getAttribute() );
 	}
 
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
@@ -414,7 +386,7 @@ public class HibernateTypeHelper {
 			this.collectionElementType = collectionElementType;
 			this.collectionIndexType = collectionIndexType;
 		}
-		
+
 		public Class<?> getCollectionType() {
 			return collectionType;
 		}

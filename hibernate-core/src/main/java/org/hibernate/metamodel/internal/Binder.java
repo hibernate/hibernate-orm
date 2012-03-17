@@ -55,11 +55,13 @@ import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.EntityVersion;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
@@ -272,8 +274,9 @@ public class Binder {
 						attributeSource.getGeneration() );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		bindHibernateTypeDescriptor(
-				attributeBinding,
-				attributeSource.getTypeInformation()
+				attributeBinding.getHibernateTypeDescriptor(),
+				attributeSource.getTypeInformation(),
+				createSingularAttributeJavaType( attributeBinding.getAttribute() )
 		);
 		Type resolvedType = getHeuristicType( hibernateTypeDescriptor );
 		resolveHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
@@ -342,11 +345,12 @@ public class Binder {
 	private void bindCollectionIndex(
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource,
-			final String defaultElementJavaTypeNam) {
-		if ( attributeSource.getPluralAttributeNature() != PluralAttributeNature.LIST &&
-				attributeSource.getPluralAttributeNature() != PluralAttributeNature.MAP ) {
+			final String defaultElementJavaTypeName) {
+		if ( ! IndexedPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
 			return;
 		}
+		final PluralAttributeIndexBinding indexBinding
+				= ( (IndexedPluralAttributeBinding) attributeBinding ).getPluralAttributeIndexBinding();
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
@@ -516,13 +520,6 @@ public class Binder {
 			return;
 		}
 		if ( attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.BASIC ) {
-			bindHibernateTypeDescriptor(
-					attributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor(),
-					( (BasicPluralAttributeElementSource) attributeSource.getElementSource() ).getExplicitHibernateTypeSource(),
-					reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionElementType() != null ?
-							reflectedCollectionJavaTypes.getCollectionElementType().getName() :
-							null
-			);
 			if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.SET ) {
 				bindBasicElementSetTablePrimaryKey( ( SetBinding ) attributeBinding );
 			} else {
@@ -670,36 +667,15 @@ public class Binder {
 	}
 
 	private void bindHibernateTypeDescriptor(
-			final SingularAttributeBinding singularAttributeBinding,
-			final ExplicitHibernateTypeSource typeSource) {
-		bindHibernateTypeDescriptor(
-				singularAttributeBinding.getHibernateTypeDescriptor(),
-				typeSource,
-				determineJavaType( singularAttributeBinding.getAttribute() ).getName()
-		);
-	}
-
-	private void bindExplicitHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
-			final String typeName, 
-			final Map<String, String> typeParameters) {
-		// Check if user-specified name is of a User-Defined Type (UDT)
-		final TypeDefinition typeDef = metadata.getTypeDefinition( typeName );
-		if ( typeDef == null ) {
-			hibernateTypeDescriptor.setExplicitTypeName( typeName );
-		} else {
-			hibernateTypeDescriptor.setExplicitTypeName( typeDef.getTypeImplementorClass().getName() );
-			hibernateTypeDescriptor.setTypeParameters( typeDef.getParameters() );
-		}
-		if ( typeParameters != null ) {
-			hibernateTypeDescriptor.getTypeParameters().putAll( typeParameters );
-		}		
-	}
-	
-	private Class<?> determineJavaType(Attribute attribute) {
-		return ReflectHelper.reflectedPropertyClass(
-				attribute.getAttributeContainer().getClassReference(),
-				attribute.getName()
+			final ExplicitHibernateTypeSource explicitTypeSource,
+			final org.hibernate.internal.util.Value<Class<?>> defaultJavaType) {
+		// if there is an explicit type name specified, then there's no reason to
+		// initialize the default Java type name; simply pass a null default instead.
+		bindHibernateTypeDescriptor(
+				hibernateTypeDescriptor,
+				explicitTypeSource,
+				explicitTypeSource.getName() == null ? defaultJavaType.getValue().getName() : null
 		);
 	}
 
@@ -708,17 +684,59 @@ public class Binder {
 			final ExplicitHibernateTypeSource explicitTypeSource,
 			final String defaultJavaTypeName) {
 		if ( explicitTypeSource.getName() == null ) {
-			if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
-				hibernateTypeDescriptor.setJavaTypeName( defaultJavaTypeName );
+			if ( hibernateTypeDescriptor.getJavaTypeName() != null ) {
+				throw new MappingException( 
+						String.format( 
+								"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
+								hibernateTypeDescriptor.getJavaTypeName(),
+								defaultJavaTypeName
+						),
+						bindingContexts.peek().getOrigin()
+				);
 			}
+			hibernateTypeDescriptor.setJavaTypeName( defaultJavaTypeName );
 		}
 		else {
-			bindExplicitHibernateTypeDescriptor(
-					hibernateTypeDescriptor, explicitTypeSource.getName(), explicitTypeSource.getParameters()
-			);			
+			final String typeName = explicitTypeSource.getName();
+			final Map<String,String> typeParameters = explicitTypeSource.getParameters();
+			// Check if user-specified name is of a User-Defined Type (UDT)
+			final TypeDefinition typeDef = metadata.getTypeDefinition( typeName );
+			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
+				throw new MappingException(
+						String.format(
+								"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
+								hibernateTypeDescriptor.getExplicitTypeName(),
+								typeName
+						),
+						bindingContexts.peek().getOrigin()
+				);
+			}
+			if ( typeDef == null ) {
+				hibernateTypeDescriptor.setExplicitTypeName( typeName );
+			} else {
+				hibernateTypeDescriptor.setExplicitTypeName( typeDef.getTypeImplementorClass().getName() );
+				hibernateTypeDescriptor.setTypeParameters( typeDef.getParameters() );
+			}
+			if ( typeParameters != null ) {
+				hibernateTypeDescriptor.getTypeParameters().putAll( typeParameters );
+			}
 		}
 	}
-	
+
+	private static org.hibernate.internal.util.Value<Class<?>> createSingularAttributeJavaType(
+			final SingularAttribute attribute) {
+		org.hibernate.internal.util.Value.DeferredInitializer<Class<?>> deferredInitializer =
+				new org.hibernate.internal.util.Value.DeferredInitializer<Class<?>>() {
+					public Class<?> initialize() {
+						return ReflectHelper.reflectedPropertyClass(
+								attribute.getAttributeContainer().getClassReference(),
+								attribute.getName()
+						);
+					}
+				};
+		return new org.hibernate.internal.util.Value<Class<?>>( deferredInitializer );
+	}
+
 	private void bindIdentifier( final EntityBinding rootEntityBinding, final IdentifierSource identifierSource ) {
 		final Nature nature = identifierSource.getNature();
 		if ( nature == Nature.SIMPLE ) {
@@ -752,9 +770,11 @@ public class Binder {
 				attributeSource,
 				attribute,
 				attributeBindingContainer.seekEntityBinding().getPrimaryTable() );
+		org.hibernate.internal.util.Value<Class<?>> referencedJavaTypeValue =
+				createSingularAttributeJavaType( attribute );
 		final String referencedEntityName = attributeSource.getReferencedEntityName() != null
 				? attributeSource.getReferencedEntityName()
-				: determineJavaType( attribute ).getName();
+				: referencedJavaTypeValue.getValue().getName();
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
 		final AttributeBinding referencedAttributeBinding =
 				attributeSource.getReferencedEntityAttributeName() == null
@@ -786,8 +806,9 @@ public class Binder {
 		);
 		// TODO: need to be able to deal with composite IDs
 		bindHibernateTypeDescriptor(
-				attributeBinding,
-				attributeSource.getTypeInformation()
+				attributeBinding.getHibernateTypeDescriptor(),
+				attributeSource.getTypeInformation(),
+				referencedJavaTypeValue
 		);
 		resolveHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		resolveJdbcDataType( resolvedType, (AbstractValue) relationalValueBindings.get( 0 ).getValue() );

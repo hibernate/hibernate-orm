@@ -22,7 +22,7 @@
 
         <set name="thePropertyRefSet">
             <key column="pid" property-ref="name"/>
-            <element column="property_ref_set_stuff" type="Integer"/>
+            <element column="property_ref_set_stuff" type="integer"/>
         </set>
 
 	</class>

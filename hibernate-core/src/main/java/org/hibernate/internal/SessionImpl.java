@@ -100,6 +100,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
@@ -196,6 +197,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
+	private final transient boolean isTransactionCoordinatorShared;
+
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
 	 * of sessions for getCurrentSession().
@@ -228,27 +231,70 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.interceptor = interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
-		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
+
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
-		this.connectionReleaseMode = connectionReleaseMode;
-		this.autoJoinTransactions = autoJoinTransactions;
+		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 
 		if ( transactionCoordinator == null ) {
 			this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
 			this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
 					new ConnectionObserverStatsBridge( factory )
 			);
+			this.isTransactionCoordinatorShared = false;
+			this.connectionReleaseMode = connectionReleaseMode;
+			this.autoJoinTransactions = autoJoinTransactions;
 		}
 		else {
 			if ( connection != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
 			this.transactionCoordinator = transactionCoordinator;
+			this.isTransactionCoordinatorShared = true;
+			this.autoJoinTransactions = false;
+			if ( autoJoinTransactions ) {
+				LOG.debug(
+						"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
+								"with sharing JDBC connection between sessions; ignoring"
+				);
+			}
+			if ( connectionReleaseMode != transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnectionReleaseMode() ) {
+				LOG.debug(
+						"Session creation specified 'connectionReleaseMode', which is invalid in conjunction " +
+								"with sharing JDBC connection between sessions; ignoring"
+				);
+			}
+			this.connectionReleaseMode = transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnectionReleaseMode();
+
+			// add a transaction observer so that we can handle delegating managed actions back to THIS session
+			// versus the session that created (and therefore "owns") the transaction coordinator
+			transactionCoordinator.addObserver(
+					new TransactionObserver() {
+						@Override
+						public void afterBegin(TransactionImplementor transaction) {
+						}
+
+						@Override
+						public void beforeCompletion(TransactionImplementor transaction) {
+							if ( SessionImpl.this.flushBeforeCompletionEnabled ) {
+								SessionImpl.this.managedFlush();
+							}
+						}
+
+						@Override
+						public void afterCompletion(boolean successful, TransactionImplementor transaction) {
+							if ( SessionImpl.this.autoCloseSessionEnabled ) {
+								SessionImpl.this.managedClose();
+							}
+						}
+					}
+			);
 		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-		if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
+		if (factory.getStatistics().isStatisticsEnabled()) {
+			factory.getStatisticsImplementor().openSession();
+		}
 
 		LOG.debugf( "Opened session at timestamp: %s", timestamp );
 	}
@@ -282,7 +328,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		try {
-			return transactionCoordinator.close();
+			if ( !isTransactionCoordinatorShared ) {
+				return transactionCoordinator.close();
+			}
+			else {
+				return null; // ???
+			}
 		}
 		finally {
 			setClosed();
@@ -348,8 +399,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		// todo : why aren't these just part of the NonFlushedChanges API ?
-		replacePersistenceContext( ( ( NonFlushedChangesImpl ) nonFlushedChanges ).getPersistenceContext() );
-		replaceActionQueue( ( ( NonFlushedChangesImpl ) nonFlushedChanges ).getActionQueue() );
+		replacePersistenceContext( ((NonFlushedChangesImpl) nonFlushedChanges).getPersistenceContext() );
+		replaceActionQueue( ((NonFlushedChangesImpl) nonFlushedChanges).getActionQueue() );
 	}
 
 	private void replacePersistenceContext(StatefulPersistenceContext persistenceContextNew) {

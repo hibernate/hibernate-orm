@@ -37,7 +37,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  */
 public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     private final Number revision;

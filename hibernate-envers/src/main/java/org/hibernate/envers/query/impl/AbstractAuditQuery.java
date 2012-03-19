@@ -47,7 +47,7 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  */
 public abstract class AbstractAuditQuery implements AuditQuery {
     protected EntityInstantiator entityInstantiator;

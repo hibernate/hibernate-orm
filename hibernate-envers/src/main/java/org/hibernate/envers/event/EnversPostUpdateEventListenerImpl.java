@@ -32,7 +32,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  */
 public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener implements PostUpdateEventListener {

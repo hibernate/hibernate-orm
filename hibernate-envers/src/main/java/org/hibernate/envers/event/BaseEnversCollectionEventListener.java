@@ -47,7 +47,7 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
  * Base class for Envers' collection event related listeners
  *
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */

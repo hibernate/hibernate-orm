@@ -33,7 +33,7 @@ import java.io.Serializable;
 /**
  * Property mapper for not owning side of {@link OneToOne} relation.
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)  
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

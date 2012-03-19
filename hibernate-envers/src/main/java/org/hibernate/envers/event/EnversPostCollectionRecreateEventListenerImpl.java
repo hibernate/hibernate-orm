@@ -30,7 +30,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  */
 public class EnversPostCollectionRecreateEventListenerImpl

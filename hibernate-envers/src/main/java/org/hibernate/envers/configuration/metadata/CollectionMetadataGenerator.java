@@ -94,7 +94,7 @@ import org.hibernate.type.Type;
 /**
  * Generates metadata for a collection-valued property.
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  */
 public final class CollectionMetadataGenerator {
 

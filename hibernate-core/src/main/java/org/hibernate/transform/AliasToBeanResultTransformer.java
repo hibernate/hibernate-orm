@@ -57,6 +57,13 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 	// 		for performance), we really cannot properly define equality for
 	// 		this transformer
 
+    /**
+     * The string that will be the separator between inner fields.
+     * e.g: employee.deparment.name = employee_deparment_name
+     * Default is "_"
+     */
+     final static String SEPARATOR = "_";
+
 	private final Class resultClass;
 	private boolean isInitialized;
 	private String[] aliases;
@@ -91,8 +98,9 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			result = resultClass.newInstance();
 
 			for ( int i = 0; i < aliases.length; i++ ) {
-				if ( setters[i] != null ) {
-					setters[i].set( result, tuple[i], null );
+				if ( setters[i] != null ) {					
+					setValue(setters[i], aliases[i], tuple[i], result);
+                                        //setters[i].set(result, tuple[i], null);
 				}
 			}
 		}
@@ -119,7 +127,8 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			String alias = aliases[ i ];
 			if ( alias != null ) {
 				this.aliases[ i ] = alias;
-				setters[ i ] = propertyAccessor.getSetter( resultClass, alias );
+				setters[ i ] = getSetter(resultClass, alias);
+                                //setters[ i ] = propertyAccessor.getSetter(resultClass, alias);
 			}
 		}
 		isInitialized = true;
@@ -132,6 +141,82 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 							" cached=" + Arrays.asList( this.aliases ) );
 		}
 	}
+	
+     /**
+     * Set the property value from the given instance, even if the property name
+     * refence an inner field
+     * 
+     * @param setter the method to be executed to set the value of the tuple
+     * @param alias  The name of the property
+     * @param tuple The query result value
+     * @param ownerObject The object to set value
+     * @throws InstantiationException
+     *               if this {@code Class} represents an abstract class,
+     *               an interface, an array class, a primitive type, or void;
+     *               or if the class has no nullary constructor;
+     *               or if the instantiation fails for some other reason.
+     * @throws IllegalAccessException 
+     *               if the class or its nullary constructor is not accessible.
+     */
+    private static void setValue(Setter setter, String alias, Object tuple, Object ownerObject) 
+            throws InstantiationException, IllegalAccessException {
+        if (alias.contains(SEPARATOR)) {
+            PropertyAccessor propertyAccessor = new ChainedPropertyAccessor(
+                    new PropertyAccessor[]{
+                        PropertyAccessorFactory.getPropertyAccessor(ownerObject.getClass(), null),
+                        PropertyAccessorFactory.getPropertyAccessor("field")
+                    });
+
+            //the next field to deepen
+            String next = alias.substring(0, alias.indexOf(SEPARATOR));
+            //the other fields to be processed
+            alias = alias.substring(alias.indexOf(SEPARATOR) + 1);
+
+            Getter nextGetter = propertyAccessor.getGetter(ownerObject.getClass(), next);
+
+            Class nextClass = nextGetter.getReturnType();
+
+            Object nextObject = nextGetter.get(ownerObject);
+            if (nextObject == null) {
+                nextObject = nextClass.newInstance();
+            }
+
+            Setter nextSetter = propertyAccessor.getSetter(ownerObject.getClass(), next);
+            nextSetter.set(ownerObject, nextObject, null);
+
+            setValue(setter, alias, tuple, nextObject);
+            return;
+        }
+        setter.set(ownerObject, tuple, null);
+    }
+
+    /**
+     * Create a "setter" for the named attribute, even if the property name
+     * refence an inner field
+     *
+     * @param resultClass The class on which the property is defined.
+     * @param alias The name of the property
+     * @return the setter for the given alias
+     */
+    private static Setter getSetter(Class resultClass, String alias) {
+        PropertyAccessor propertyAccessor = new ChainedPropertyAccessor(
+                new PropertyAccessor[]{
+                    PropertyAccessorFactory.getPropertyAccessor(resultClass, null),
+                    PropertyAccessorFactory.getPropertyAccessor("field")
+                });
+        //if the alias reference to an inner field
+        if (alias.contains(SEPARATOR)) {
+            //the next field to deepen
+            String next = alias.substring(0, alias.indexOf(SEPARATOR));
+            //the other fields to be processed
+            alias = alias.substring(alias.indexOf(SEPARATOR) + 1);
+            //the resultClass of next field
+            Class nextClass = propertyAccessor.getGetter(resultClass, next).getReturnType();
+            return getSetter(nextClass, alias);
+        } else {
+            return propertyAccessor.getSetter(resultClass, alias);
+        }
+    }
 
 	public boolean equals(Object o) {
 		if ( this == o ) {

@@ -83,18 +83,13 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         this.audited = audited;
 
         Properties configurationProperties = new Properties();
+		configurationProperties.putAll( Environment.getProperties() );
         if (!audited) {
 			configurationProperties.setProperty(EnversIntegrator.AUTO_REGISTER, "false");
         }
-
-        configurationProperties.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
-        configurationProperties.setProperty(Environment.DIALECT, "org.hibernate.dialect.H2Dialect");
-        configurationProperties.setProperty(Environment.DRIVER, "org.h2.Driver");
-        configurationProperties.setProperty(Environment.USER, "sa");
-
-        // Separate database for each test class
-        configurationProperties.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName() + ";DB_CLOSE_DELAY=-1");
-
+		if ( createSchema() ) {
+			configurationProperties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		}
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
@@ -111,6 +106,9 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         newEntityManager();
     }
+	protected boolean createSchema() {
+		return true;
+	}
 
 	private BootstrapServiceRegistryBuilder createBootstrapRegistryBuilder() {
 		return new BootstrapServiceRegistryBuilder();

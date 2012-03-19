@@ -84,9 +84,6 @@ public class EnversRunner extends Suite {
 					return getPriority(fm2) - getPriority(fm1);
 				}
 			});
-			for(FrameworkMethod method: computedTestMethods){
-				System.out.println(method.getName());
-			}
 		}
     }
 

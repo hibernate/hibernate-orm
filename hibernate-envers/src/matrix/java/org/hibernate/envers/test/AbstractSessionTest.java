@@ -10,6 +10,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.service.ServiceRegistry;
@@ -35,9 +36,9 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
 	@BeforeClassOnce
     public void init() throws URISyntaxException {
         config = new Configuration();
-        URL url = Thread.currentThread().getContextClassLoader().getResource(getHibernateConfigurationFileName());
-        config.configure(new File(url.toURI()));
-
+		if ( createSchema() ) {
+			config.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		}
         String auditStrategy = getAuditStrategy();
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
@@ -48,18 +49,14 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		sessionFactory = config.buildSessionFactory( serviceRegistry );
     }
-
-	protected abstract void initMappings() throws MappingException, URISyntaxException ;
-
-	protected String getHibernateConfigurationFileName(){
-		return "hibernate.test.session-cfg.xml";
+	protected boolean createSchema() {
+		return true;
 	}
-
+	protected abstract void initMappings() throws MappingException, URISyntaxException ;
 
 	private SessionFactory getSessionFactory(){
 		return sessionFactory;
     }
-
 
     @Before
     public void newSessionFactory() {

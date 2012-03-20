@@ -85,8 +85,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			TransactionContext transactionContext) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( userSuppliedConnection, this );
-                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
-                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
+		this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+		this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = new ArrayList<TransactionObserver>();
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -105,8 +105,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			List<TransactionObserver> observers) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = jdbcCoordinator;
-                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
-                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
+		this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+		this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = observers;
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();

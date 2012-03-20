@@ -236,13 +236,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 
 		if ( transactionCoordinator == null ) {
+			this.isTransactionCoordinatorShared = false;
+			this.connectionReleaseMode = connectionReleaseMode;
+			this.autoJoinTransactions = autoJoinTransactions;
+
 			this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
 			this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
 					new ConnectionObserverStatsBridge( factory )
 			);
-			this.isTransactionCoordinatorShared = false;
-			this.connectionReleaseMode = connectionReleaseMode;
-			this.autoJoinTransactions = autoJoinTransactions;
 		}
 		else {
 			if ( connection != null ) {

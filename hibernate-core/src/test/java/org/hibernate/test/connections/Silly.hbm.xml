@@ -7,7 +7,7 @@
 
 	<class name="Silly">
 		<id name="id" type="long">
-			<generator class="native"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name"/>
         <many-to-one name="other" class="Other" cascade="all"/>
@@ -15,7 +15,7 @@
 
 	<class name="Other">
 		<id name="id" type="long">
-			<generator class="native"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name"/>
 	</class>

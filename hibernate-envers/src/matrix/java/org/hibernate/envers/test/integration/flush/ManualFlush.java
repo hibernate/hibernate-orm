@@ -86,7 +86,7 @@ public class ManualFlush extends AbstractFlushTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(StrTestEntity.class, id));
+        assertEquals(Arrays.asList(1, 2), getAuditReader().getRevisions(StrTestEntity.class, id));
     }
 
     @Test
@@ -94,13 +94,13 @@ public class ManualFlush extends AbstractFlushTest {
         StrTestEntity ver1 = new StrTestEntity("x", id);
         StrTestEntity ver2 = new StrTestEntity("z", id);
 
-        assert getAuditReader().find(StrTestEntity.class, id, 1).equals(ver1);
-        assert getAuditReader().find(StrTestEntity.class, id, 2).equals(ver2);
+        assertEquals(ver1, getAuditReader().find(StrTestEntity.class, id, 1));
+        assertEquals(ver2, getAuditReader().find(StrTestEntity.class, id, 2));
     }
 
     @Test
     public void testCurrent() {
-        assert getEntityManager().find(StrTestEntity.class, id).equals(new StrTestEntity("z", id));
+        assertEquals(new StrTestEntity("z", id), getEntityManager().find(StrTestEntity.class, id));
     }
 
     @Test

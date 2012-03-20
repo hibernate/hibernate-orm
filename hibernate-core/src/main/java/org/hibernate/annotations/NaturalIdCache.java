@@ -22,23 +22,28 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add caching strategy for the NaturalId to Id of a root entity that has a natural id
+ * Used to specify that the natural id values associated with the annotated entity should be cached in Hibernate's
+ * shared (L2) cache.  Can optionally name a custom cache region.
  *
  * @author Eric Dalquist
+ * @author Steve Ebersole
+ *
  * @see NaturalId
  */
-@Target({TYPE, METHOD, FIELD})
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface NaturalIdCache {
-	/** cache region name, defaults to full.entity.Name##NaturalId */
+	/**
+	 * The cache region name.  {@code null} or empty-string (the default) are interpreted as
+	 * {@code {entity-name}##NaturalId}
+	 */
 	String region() default "";
 }

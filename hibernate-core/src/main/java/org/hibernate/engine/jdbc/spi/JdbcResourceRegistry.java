@@ -28,7 +28,16 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Defines a registry of JDBC resources related to a particular unit of work.
+ * Defines a registry of JDBC resources related to a particular unit of work.  The main function of a 
+ * JdbcResourceRegistry is to make sure resources get cleaned up.  This is accomplished by registering all
+ * JDBC-related resources via the {@link #register(java.sql.Statement)} and {@link #register(java.sql.ResultSet)}
+ * methods.  When done with these resources, they should be released by the corollary 
+ * {@link #release(java.sql.Statement)} and {@link #release(java.sql.ResultSet)} methods.  Any un-released resources
+ * will be released automatically when this registry is closed via {@link #close()}.  Additionally,
+ * all registered resources can be released at any time using {@link #releaseResources()}.
+ * <p/>
+ * Additionally, a query can be registered as being able to be cancelled via the {@link #registerLastQuery}
+ * method.  Such statements can then be cancelled by calling {@link #cancelLastQuery()}
  *
  * @author Steve Ebersole
  */
@@ -39,10 +48,6 @@ public interface JdbcResourceRegistry extends Serializable {
 	 * @param statement The statement to register.
 	 */
 	public void register(Statement statement);
-
-	public void registerLastQuery(Statement statement);
-
-	public void cancelLastQuery();
 	
 	/**
 	 * Release a previously registered statement.
@@ -83,4 +88,16 @@ public interface JdbcResourceRegistry extends Serializable {
 	 * After execution, the registry is considered unusable.
 	 */
 	public void close();
+
+	/**
+	 * Register a query statement as being able to be cancelled.
+	 * 
+	 * @param statement The cancel-able query statement.
+	 */
+	public void registerLastQuery(Statement statement);
+
+	/**
+	 * Cancel the last query registered via {@link #registerLastQuery}
+	 */
+	public void cancelLastQuery();
 }

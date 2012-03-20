@@ -2193,12 +2193,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		@Override
 		public SharedSessionBuilder connection() {
-			return connection(
-					session.transactionCoordinator
-							.getJdbcCoordinator()
-							.getLogicalConnection()
-							.getDistinctConnectionProxy()
-			);
+			this.shareTransactionContext = true;
+			return this;
 		}
 
 		@Override
@@ -2221,10 +2217,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return flushBeforeCompletion( session.flushBeforeCompletionEnabled );
 		}
 
+		/**
+		 * @deprecated Use {@link #connection()} instead
+		 */
 		@Override
+		@Deprecated
 		public SharedSessionBuilder transactionContext() {
-			this.shareTransactionContext = true;
-			return this;
+			return connection();
 		}
 
 		@Override

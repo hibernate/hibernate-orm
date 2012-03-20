@@ -26,7 +26,6 @@ package org.hibernate.engine.jdbc.internal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,6 +60,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		this.exceptionHelper = exceptionHelper;
 	}
 
+	@Override
 	public void register(Statement statement) {
 		LOG.tracev( "Registering statement [{0}]", statement );
 		if ( xref.containsKey( statement ) ) {
@@ -69,6 +69,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		xref.put( statement, null );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public void registerLastQuery(Statement statement) {
 		LOG.tracev( "Registering last query statement [{0}]", statement );
@@ -80,6 +81,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		lastQuery = statement;
 	}
 
+	@Override
 	public void cancelLastQuery() {
 		try {
 			if (lastQuery != null) {
@@ -97,6 +99,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 	}
 
+	@Override
 	public void release(Statement statement) {
 		LOG.tracev( "Releasing statement [{0}]", statement );
 		Set<ResultSet> resultSets = xref.get( statement );
@@ -110,6 +113,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		close( statement );
 	}
 
+	@Override
 	public void register(ResultSet resultSet) {
 		LOG.tracev( "Registering result set [{0}]", resultSet );
 		Statement statement;
@@ -135,6 +139,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 	}
 
+	@Override
 	public void release(ResultSet resultSet) {
 		LOG.tracev( "Releasing result set [{0}]", resultSet );
 		Statement statement;
@@ -158,15 +163,19 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 		else {
 			boolean removed = unassociatedResultSets.remove( resultSet );
-			if (!removed) LOG.unregisteredResultSetWithoutStatement();
+			if ( !removed ) {
+				LOG.unregisteredResultSetWithoutStatement();
+			}
 		}
 		close( resultSet );
 	}
 
+	@Override
 	public boolean hasRegisteredResources() {
 		return ! xref.isEmpty() || ! unassociatedResultSets.isEmpty();
 	}
 
+	@Override
 	public void releaseResources() {
 		LOG.tracev( "Releasing JDBC container resources [{0}]", this );
 		cleanup();
@@ -191,6 +200,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		resultSets.clear();
 	}
 
+	@Override
 	public void close() {
 		LOG.tracev( "Closing JDBC container [{0}]", this );
 		cleanup();
@@ -230,10 +240,12 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 				lastQuery = null;
 			}
 		}
-		catch( SQLException sqle ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Unable to release statement [%s]", sqle.getMessage() );
-			}
+		catch( SQLException e ) {
+			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+		}
+		catch ( Exception e ) {
+			// try to handle general errors more elegantly
+			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
 		}
 	}
 
@@ -252,14 +264,11 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			resultSet.close();
 		}
 		catch( SQLException e ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Unable to release result set [%s]", e.getMessage() );
-			}
+			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
 		}
 		catch ( Exception e ) {
-			// sybase driver (jConnect) throwing NPE here in certain cases, but we'll just handle the
-			// general "unexpected" case
-			LOG.debugf( "Could not close a JDBC result set [%s]", e.getMessage() );
+			// try to handle general errors more elegantly
+			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
 		}
 	}
 }

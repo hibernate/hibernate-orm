@@ -144,6 +144,10 @@ subprojects { subProject ->
             }
 
         }
+        toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+		if(!toolsJar.exists()){
+			toolsJar = file("${System.getProperty('java.home')}/../Classes/classes.jar")
+		}
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
@@ -152,6 +156,7 @@ subprojects { subProject ->
             testCompile( libraries.byteman )
             testCompile( libraries.byteman_install )
             testCompile( libraries.byteman_bmunit )
+			testCompile files( toolsJar )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )
             testRuntime( libraries.jcl_slf4j )

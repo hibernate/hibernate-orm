@@ -9,7 +9,7 @@
 	
 	<class name="Child">
 		<id name="name"/>
-        <many-to-one name="Parent"/>
+        <many-to-one name="Parent" foreign-key="fk"/>
 	</class>
 
 </hibernate-mapping>

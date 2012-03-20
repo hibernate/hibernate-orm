@@ -531,7 +531,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			AttributeBinding referencedAttributeBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
 				this,

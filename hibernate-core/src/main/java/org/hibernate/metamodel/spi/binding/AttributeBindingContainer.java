@@ -115,7 +115,7 @@ public interface AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			AttributeBinding referencedAttributeBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings);
 
 	/**

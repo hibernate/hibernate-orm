@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.sql.Types;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -42,8 +43,10 @@ import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
@@ -133,7 +136,9 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				metadata,
 				entityWithManyToOneBinding,
 				attributeBinding,
-				simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding(),
+				SingularAttributeBinding.class.cast( 
+						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
+				),
 				"`simpleEntity`"
 		);
 
@@ -141,7 +146,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				metadata,
 				entityWithManyToOneBinding,
 				entityWithManyToOneBinding.locateAttributeBinding( "simpleEntityFromPropertyRef" ),
-				simpleEntityBinding.locateAttributeBinding( "name" ),
+				SingularAttributeBinding.class.cast( simpleEntityBinding.locateAttributeBinding( "name" ) ),
 				"`simplename`"
 		);
 	}
@@ -150,7 +155,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 			MetadataImplementor metadata,
 			EntityBinding entityWithManyToOneBinding,
 			AttributeBinding attributeBinding, 
-			AttributeBinding referencedAttributeBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			String manyToOneColumnName) {
 		final EntityBinding referencedEntityBinding = referencedAttributeBinding.getContainer().seekEntityBinding();
 		final String referencedEntityName = referencedEntityBinding.getEntity().getName();
@@ -223,6 +228,25 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertEquals( referencedJdbcDataType.getTypeCode(), jdbcDataType.getTypeCode() );
 		assertEquals( referencedJdbcDataType.getJavaType(), jdbcDataType.getJavaType() );
 		assertEquals( referencedJdbcDataType.getTypeName(), jdbcDataType.getTypeName() );
+		
+		// locate the foreignKey
+		boolean sourceColumnFound = false;
+		for ( ForeignKey fk : column.getTable().getForeignKeys() ) {
+			for ( Column sourceColumn : fk.getSourceColumns() ) {
+				if ( sourceColumn == column ) {
+					assertFalse( "source column not found in more than one foreign key", sourceColumnFound );
+					sourceColumnFound = true;
+					Iterator<Column> targetColumnIterator = fk.getTargetColumns().iterator();
+					assertTrue( targetColumnIterator.hasNext() );
+					assertSame( 
+							referencedAttributeBinding.getRelationalValueBindings().iterator().next().getValue(),
+							targetColumnIterator.next()							
+					);
+					assertFalse( targetColumnIterator.hasNext() );					
+				}
+			}
+		}
+		assertTrue( "foreign key with specified source column found", sourceColumnFound );
 	}
 
 	@Test

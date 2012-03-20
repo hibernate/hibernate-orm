@@ -47,7 +47,7 @@ public class ManyToOneAttributeBinding
 
 	private final List<RelationalValueBinding> relationalValueBindings;
 
-	private final AttributeBinding referencedAttributeBinding;
+	private final SingularAttributeBinding referencedAttributeBinding;
 
 	private boolean isLogicalOneToOne;
 
@@ -62,7 +62,7 @@ public class ManyToOneAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			AttributeBinding referencedAttributeBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
 		super(
 				container,
@@ -196,38 +196,6 @@ public class ManyToOneAttributeBinding
 		return (EntityBinding) referencedAttributeBinding.getContainer();
 	}
 
-//	private void buildForeignKey() {
-//		// TODO: move this stuff to relational model
-//		ForeignKey foreignKey = getValue().getTable()
-//				.createForeignKey( referencedAttributeBinding.getValue().getTable(), foreignKeyName );
-//		Iterator<SimpleValue> referencingValueIterator = getSimpleValues().iterator();
-//		Iterator<SimpleValue> targetValueIterator = referencedAttributeBinding.getSimpleValues().iterator();
-//		while ( referencingValueIterator.hasNext() ) {
-//			if ( !targetValueIterator.hasNext() ) {
-//				// TODO: improve this message
-//				throw new MappingException(
-//						"number of values in many-to-one reference is greater than number of values in target"
-//				);
-//			}
-//			SimpleValue referencingValue = referencingValueIterator.next();
-//			SimpleValue targetValue = targetValueIterator.next();
-//			if ( Column.class.isInstance( referencingValue ) ) {
-//				if ( !Column.class.isInstance( targetValue ) ) {
-//					// TODO improve this message
-//					throw new MappingException( "referencing value is a column, but target is not a column" );
-//				}
-//				foreignKey.addColumnMapping( Column.class.cast( referencingValue ), Column.class.cast( targetValue ) );
-//			}
-//			else if ( Column.class.isInstance( targetValue ) ) {
-//				// TODO: improve this message
-//				throw new MappingException( "referencing value is not a column, but target is a column." );
-//			}
-//		}
-//		if ( targetValueIterator.hasNext() ) {
-//			throw new MappingException( "target value has more simple values than referencing value" );
-//		}
-//	}
-//
 //	public void validate() {
 //		// can't check this until both the domain and relational states are initialized...
 //		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {

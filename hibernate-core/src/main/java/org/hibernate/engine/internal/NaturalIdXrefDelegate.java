@@ -71,6 +71,10 @@ public class NaturalIdXrefDelegate {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
+		Object[] previousNaturalIdValues = valueSource == CachedNaturalIdValueSource.UPDATE
+				? persistenceContext.getNaturalIdSnapshot( pk, persister )
+				: null;
+
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
 			entityNaturalIdResolutionCache = new NaturalIdResolutionCache( persister );
@@ -125,6 +129,10 @@ public class NaturalIdXrefDelegate {
 					break;
 				}
 				case UPDATE: {
+					final NaturalIdCacheKey previousCacheKey = new NaturalIdCacheKey( previousNaturalIdValues, persister, session() );
+					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
+					naturalIdCacheAccessStrategy.remove( previousCacheKey );
+
 					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
 					naturalIdCacheAccessStrategy.update( naturalIdCacheKey, pk );
 
@@ -132,6 +140,7 @@ public class NaturalIdXrefDelegate {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+									naturalIdCacheAccessStrategy.unlockRegion( removalLock );
 									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, pk, lock );
 
 									if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {

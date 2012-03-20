@@ -28,17 +28,24 @@ import org.hibernate.cache.spi.NaturalIdRegion;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId
- * data.  For cached naturalId data, all modification actions actually just
- * invalidate the entry(s).  The call sequence here is:
- * {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}
+ * data.  The expected call sequences related to various operations are:<ul>
+ *     <li><b>INSERTS</b> : {@link #insert} -> {@link #afterInsert}</li>
+ *     <li><b>UPDATES</b> : {@link #lockItem} -> {@link #remove} -> {@link #update} -> {@link #afterUpdate}</li>
+ *     <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
+ *     <li><b>LOADS</b> : {@link @putFromLoad}</li>
+ * </ul>
+ * Note the special case of <b>UPDATES</b> above.  Because the cache key itself has changed here we need to remove the
+ * old entry as well as
  * <p/>
  * There is another usage pattern that is used to invalidate entries
  * after performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  * <p/>
- * NaturalIds are not versioned so null will always be passed to the version parameter for
- * {@link #putFromLoad(Object, Object, long, Object)}, {@link #putFromLoad(Object, Object, long, Object, boolean)},
- * and {@link #lockItem(Object, Object)}
+ * IMPORTANT : NaturalIds are not versioned so {@code null} will always be passed to the version parameter to:<ul>
+ *     <li>{@link #putFromLoad(Object, Object, long, Object)}</li>
+ *     <li>{@link #putFromLoad(Object, Object, long, Object, boolean)}</li>
+ *     <li>{@link #lockItem(Object, Object)}</li>
+ * </ul>
  *
  * @author Gavin King
  * @author Steve Ebersole

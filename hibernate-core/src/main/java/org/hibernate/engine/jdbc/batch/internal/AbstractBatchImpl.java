@@ -172,6 +172,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	private void releaseStatements() {
 		for ( PreparedStatement statement : getStatements().values() ) {
 			try {
+				statement.clearBatch();
 				statement.close();
 			}
 			catch ( SQLException e ) {

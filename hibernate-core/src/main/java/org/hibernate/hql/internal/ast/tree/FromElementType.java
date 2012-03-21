@@ -345,13 +345,20 @@ class FromElementType {
 			LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery );
 			return new String[]{"(" + subquery + ")"};
 		}
+
         if (forceAlias) {
             return propertyMapping.toColumns(tableAlias, path);
-        } else if (fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT) {
+        }
+
+		if (fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT) {
             return propertyMapping.toColumns(tableAlias, path);
-        } else if (fromElement.getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SELECT) {
+        }
+
+		if (fromElement.getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SELECT) {
             return propertyMapping.toColumns(tableAlias, path);
-        } else if (fromElement.getWalker().isSubQuery()) {
+        }
+
+		if (fromElement.getWalker().isSubQuery()) {
             // for a subquery, the alias to use depends on a few things (we
             // already know this is not an overall SELECT):
             // 1) if this FROM_ELEMENT represents a correlation to the
@@ -366,15 +373,24 @@ class FromElementType {
             // table name as the column qualification
             // 2) otherwise (not correlated), use the given alias
             if (isCorrelation()) {
-                if (isMultiTable()) return propertyMapping.toColumns(tableAlias, path);
+                if (isMultiTable()) {
+					return propertyMapping.toColumns(tableAlias, path);
+				}
                 return propertyMapping.toColumns(extractTableName(), path);
 			}
             return propertyMapping.toColumns(tableAlias, path);
-        } else {
-			String[] columns = propertyMapping.toColumns( path );
-			LOG.tracev( "Using non-qualified column reference [{0} -> ({1})]", path, ArrayHelper.toString( columns ) );
-			return columns;
         }
+
+		if ( isManipulationQuery() && isMultiTable() && inWhereClause() ) {
+			// the actual where-clause will end up being ripped out the update/delete and used in
+			// a select to populate the temp table, so its ok to use the table alias to qualify the table refs
+			// and safer to do so to protect from same-named columns
+			return propertyMapping.toColumns( tableAlias, path );
+		}
+
+		String[] columns = propertyMapping.toColumns( path );
+		LOG.tracev( "Using non-qualified column reference [{0} -> ({1})]", path, ArrayHelper.toString( columns ) );
+		return columns;
 	}
 
 	private boolean isCorrelation() {
@@ -394,12 +410,19 @@ class FromElementType {
 		return fromElement.getQueryable().getTableName();
 	}
 
+	private boolean isManipulationQuery() {
+		return fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.UPDATE
+				|| fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.DELETE;
+	}
+
+	private boolean inWhereClause() {
+		return fromElement.getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.WHERE;
+	}
+
 	private static final List SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES = java.util.Arrays.asList(
-			new String[] {
-					CollectionPropertyNames.COLLECTION_INDEX,
-					CollectionPropertyNames.COLLECTION_MIN_INDEX,
-					CollectionPropertyNames.COLLECTION_MAX_INDEX
-			}
+			CollectionPropertyNames.COLLECTION_INDEX,
+			CollectionPropertyNames.COLLECTION_MIN_INDEX,
+			CollectionPropertyNames.COLLECTION_MAX_INDEX
 	);
 
 	PropertyMapping getPropertyMapping(String propertyName) {

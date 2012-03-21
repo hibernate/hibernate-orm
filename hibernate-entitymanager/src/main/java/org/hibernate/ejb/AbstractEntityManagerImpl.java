@@ -295,7 +295,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			// do the translation
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
 
-			// do some validation checking
+			// make sure the query is a select -> HHH-7192
+			final SessionImplementor session = unwrap( SessionImplementor.class );
+			final HQLQueryPlan queryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(
+					jpaqlString,
+					false,
+					session.getLoadQueryInfluencers().getEnabledFilters()
+			);
+			if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
+				throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
+			}
+
+			// do some return type validation checking
 			if ( Object[].class.equals( resultClass ) ) {
 				// no validation needed
 			}
@@ -304,12 +315,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				hqlQuery.setResultTransformer( tupleTransformer  );
 			}
 			else {
-				final SessionImplementor session = unwrap( SessionImplementor.class );
-				final HQLQueryPlan queryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(
-						jpaqlString,
-						false,
-						session.getLoadQueryInfluencers().getEnabledFilters()
-				);
 				final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
 				if ( dynamicInstantiationClass != null ) {
 					if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {

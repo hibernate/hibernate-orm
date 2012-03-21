@@ -39,6 +39,8 @@ import org.hibernate.ejb.test.Wallet;
 
 import org.junit.Test;
 
+import org.hibernate.testing.TestForIssue;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -46,8 +48,30 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
+	@Test
+	@TestForIssue( jiraKey = "HHH-7192" )
+	public void testTypedManipulationQueryError() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		try {
+			em.createQuery( "delete Item", Item.class );
+			fail();
+		}
+		catch (IllegalArgumentException expected) {
+		}
+
+		try {
+			em.createQuery( "update Item i set i.name = 'someName'", Item.class );
+			fail();
+		}
+		catch (IllegalArgumentException expected) {
+		}
+	}
+	
 	@Test
 	public void testPagedQuery() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

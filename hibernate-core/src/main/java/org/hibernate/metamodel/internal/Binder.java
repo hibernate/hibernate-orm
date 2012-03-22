@@ -142,8 +142,6 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-// todo: move to parent package
-// todo: chase unresolved attribute references
 public class Binder {
 
 	private static final Logger log = Logger.getLogger( Binder.class );
@@ -190,6 +188,18 @@ public class Binder {
 			}
 		};
 		typeHelper = new HibernateTypeHelper( this, metadata );
+	}
+
+	private AttributeBinding attributeBinding( final String entityName, final String attributeName ) {
+		// Check if binding has already been created
+		EntityBinding entityBinding = entityBinding( entityName );
+		AttributeSource attributeSource = attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
+		bindAttribute( entityBinding, attributeSource );
+		return entityBinding.locateAttributeBinding( attributeName );
+	}
+
+	private String attributeSourcesByNameKey( final String entityName, final String attributeName ) {
+		return entityName + "." + attributeName;
 	}
 
 	private AttributeBinding bindAttribute(
@@ -323,8 +333,8 @@ public class Binder {
 		if ( !IndexedPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
 			return;
 		}
-//		final PluralAttributeIndexBinding indexBinding =
-				( ( IndexedPluralAttributeBinding ) attributeBinding ).getPluralAttributeIndexBinding();
+		//		final PluralAttributeIndexBinding indexBinding =
+		( ( IndexedPluralAttributeBinding ) attributeBinding ).getPluralAttributeIndexBinding();
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
@@ -507,110 +517,6 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private ForeignKey createOrLocateForeignKey(
-			String foreignKeyName,
-			SingularAttributeBinding sourceAttributeBinding,
-			SingularAttributeBinding targetAttributeBinding) {
-		if ( sourceAttributeBinding.getRelationalValueBindings().isEmpty() ) {
-			throw new MappingException( 
-					String.format(
-							"Cannot create foreign key for attribute (%s) because it has no columns/derived values configured.",
-							sourceAttributeBinding.getAttribute().getName()
-					),
-					bindingContexts.peek().getOrigin() 
-			);
-		}
-		if ( targetAttributeBinding.getRelationalValueBindings().isEmpty() ) {
-			throw new MappingException(
-					String.format(
-							"Cannot create foreign key for attribute (%s) because the target attribute (%s) has no columns/derived values configured.",
-							sourceAttributeBinding.getAttribute().getName(),
-							targetAttributeBinding.getAttribute().getName()
-					),
-					bindingContexts.peek().getOrigin()
-			);
-		}
-		// TODO: deal with secondary tables
-		// for now just use the the EntityBinding primary table.
-		return createOrLocateForeignKey(
-				foreignKeyName,
-				sourceAttributeBinding.getContainer().seekEntityBinding().getPrimaryTable(),
-				targetAttributeBinding.getContainer().seekEntityBinding().getPrimaryTable()
-		);
-	}
-
-	private ForeignKey createOrLocateForeignKey(
-			String foreignKeyName,
-			TableSpecification sourceTable,
-			TableSpecification targetTable) {
-		ForeignKey foreignKey = null;
-		if ( foreignKeyName == null ) {
-			// todo: for now lets assume we have to create it, but eventually we should look through the
-			// candidate foreign keys referencing targetTable also...
-			foreignKey = sourceTable.createForeignKey( targetTable, null );
-		} else {
-			foreignKey = sourceTable.locateForeignKey( foreignKeyName );
-			if ( foreignKey == null ) {
-				foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
-			}
-		}
-		return foreignKey;
-	}
-
-	private void bindForeignKeyColumns(
-			ForeignKey foreignKey,
-			SingularAttributeBinding sourceAttributeBinding,
-			SingularAttributeBinding targetAttributeBinding) {
-		final List<RelationalValueBinding> sourceValues = sourceAttributeBinding.getRelationalValueBindings();
-		final List<RelationalValueBinding> targetValues = targetAttributeBinding.getRelationalValueBindings();
-		if ( sourceValues.size() != targetValues.size() ) {
-			throw new MappingException(
-					String.format(
-							"Cannot create foreign key because number of columns in source attribute (%s) is not the same as the number of columns in the target attribute (%s).",
-							sourceAttributeBinding.getAttribute().getName(),
-							targetAttributeBinding.getAttribute().getName()
-					),
-					bindingContexts.peek().getOrigin()
-			);
-		}
-		for ( int i = 0 ; i < sourceValues.size() ; i++ ) {
-			final Value sourceValue = sourceValues.get( i ).getValue();
-			final Value targetValue = targetValues.get( i ).getValue();
-			if ( Column.class.isInstance( sourceValue ) ) {
-				Column sourceColumn = Column.class.cast( sourceValue );
-				if ( !Column.class.isInstance( targetValue ) ) {
-					throw new MappingException( 
-							String.format( 
-									"Cannot create foreign key for (%s) because the source value is a column (%s) and the corresponding value in the target attribute (%s) is a derived value",
-									sourceAttributeBinding.getAttribute().getName(),
-									sourceColumn.getColumnName(),
-									targetAttributeBinding.getAttribute().getName()
-							),							
-							bindingContexts.peek().getOrigin()
-					);
-				}
-				foreignKey.addColumnMapping( Column.class.cast( sourceValue ), Column.class.cast( targetValue ) );
-			}
-			else {
-				if ( Column.class.isInstance( targetValue ) ) {
-					Column targetColumn = Column.class.cast( targetValue );
-					throw new MappingException(
-							String.format(
-									"Cannot create foreign key for (%s) because the source value is a derived value and the corresponding value in the target attribute (%s) is a column (%s).",
-									sourceAttributeBinding.getAttribute().getName(),
-									targetAttributeBinding.getAttribute().getName(),
-									targetColumn.getColumnName()
-							),
-							bindingContexts.peek().getOrigin()
-					);
-				}
-				throw new NotYetImplementedException(
-						"Derived values are not supported when creating a foreign key that targets attribute columns."
-				);
-			}
-		}
-	}
-	
 	private void bindDiscriminator( final EntityBinding rootEntityBinding, final RootEntitySource rootEntitySource ) {
 		final DiscriminatorSource discriminatorSource = rootEntitySource.getDiscriminatorSource();
 		if ( discriminatorSource == null ) {
@@ -722,6 +628,52 @@ public class Binder {
 		}
 	}
 
+	private void bindForeignKeyColumns(
+			ForeignKey foreignKey,
+			SingularAttributeBinding sourceAttributeBinding,
+			SingularAttributeBinding targetAttributeBinding ) {
+		final List< RelationalValueBinding > sourceValues = sourceAttributeBinding.getRelationalValueBindings();
+		final List< RelationalValueBinding > targetValues = targetAttributeBinding.getRelationalValueBindings();
+		if ( sourceValues.size() != targetValues.size() ) {
+			throw new MappingException(
+					String.format(
+							"Cannot create foreign key because number of columns in source attribute (%s) is not the same as the number of columns in the target attribute (%s).",
+							sourceAttributeBinding.getAttribute().getName(),
+							targetAttributeBinding.getAttribute().getName() ),
+					bindingContexts.peek().getOrigin() );
+		}
+		for ( int i = 0; i < sourceValues.size(); i++ ) {
+			final Value sourceValue = sourceValues.get( i ).getValue();
+			final Value targetValue = targetValues.get( i ).getValue();
+			if ( Column.class.isInstance( sourceValue ) ) {
+				Column sourceColumn = Column.class.cast( sourceValue );
+				if ( !Column.class.isInstance( targetValue ) ) {
+					throw new MappingException(
+							String.format(
+									"Cannot create foreign key for (%s) because the source value is a column (%s) and the corresponding value in the target attribute (%s) is a derived value",
+									sourceAttributeBinding.getAttribute().getName(),
+									sourceColumn.getColumnName(),
+									targetAttributeBinding.getAttribute().getName() ),
+							bindingContexts.peek().getOrigin() );
+				}
+				foreignKey.addColumnMapping( Column.class.cast( sourceValue ), Column.class.cast( targetValue ) );
+			} else {
+				if ( Column.class.isInstance( targetValue ) ) {
+					Column targetColumn = Column.class.cast( targetValue );
+					throw new MappingException(
+							String.format(
+									"Cannot create foreign key for (%s) because the source value is a derived value and the corresponding value in the target attribute (%s) is a column (%s).",
+									sourceAttributeBinding.getAttribute().getName(),
+									targetAttributeBinding.getAttribute().getName(),
+									targetColumn.getColumnName() ),
+							bindingContexts.peek().getOrigin() );
+				}
+				throw new NotYetImplementedException(
+						"Derived values are not supported when creating a foreign key that targets attribute columns." );
+			}
+		}
+	}
+
 	private void bindHibernateResolvedType( final HibernateTypeDescriptor hibernateTypeDescriptor, final Type resolvedType ) {
 		// Configure relational value JDBC type from Hibernate type descriptor now that its configured
 		if ( resolvedType != null ) {
@@ -821,12 +773,7 @@ public class Binder {
 		// TODO: figure out which table is used (could be secondary table...)
 		TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
 		final List< RelationalValueBinding > relationalValueBindings =
-				bindValues(
-						attributeBindingContainer,
-						attributeSource,
-						attribute,
-						table
-				);
+				bindValues( attributeBindingContainer, attributeSource, attribute, table );
 		org.hibernate.internal.util.Value< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
 		final String referencedEntityName =
 				attributeSource.getReferencedEntityName() != null
@@ -837,17 +784,14 @@ public class Binder {
 				attributeSource.getReferencedEntityAttributeName() == null
 						? referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
 						: referencedEntityBinding.locateAttributeBinding( attributeSource.getReferencedEntityAttributeName() );
-		if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw new MappingException(
-					String.format( "Many-to-one attribute (%s) references a plural attribute (%s)",
-							attribute.getName(),
-							referencedAttributeBinding.getAttribute().getName()
-					),
-					bindingContexts.peek().getOrigin()
-			);
+		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
+			throw new MappingException( String.format(
+					"Many-to-one attribute (%s) references a plural attribute (%s)",
+					attribute.getName(),
+					referencedAttributeBinding.getAttribute().getName() ), bindingContexts.peek().getOrigin() );
 		}
 		final SingularAttributeBinding singularReferencedAttributeBinding =
-				(SingularAttributeBinding) referencedAttributeBinding;
+				( SingularAttributeBinding ) referencedAttributeBinding;
 		// todo : we should consider basing references on columns instead of property-ref, which would require a resolution (later) of property-ref to column names
 		final ManyToOneAttributeBinding attributeBinding =
 				attributeBindingContainer.makeManyToOneAttributeBinding(
@@ -861,11 +805,11 @@ public class Binder {
 		// TODO: is this needed?
 		referencedAttributeBinding.addEntityReferencingAttributeBinding( attributeBinding );
 		// Foreign key...
-		ForeignKey foreignKey = createOrLocateForeignKey(
-				attributeSource.getForeignKeyName(),
-				attributeBinding,
-				singularReferencedAttributeBinding
-		);
+		ForeignKey foreignKey =
+				createOrLocateForeignKey(
+						attributeSource.getForeignKeyName(),
+						attributeBinding,
+						singularReferencedAttributeBinding );
 		bindForeignKeyColumns( foreignKey, attributeBinding, singularReferencedAttributeBinding );
 		// Type resolution...
 		if ( !attribute.isTypeResolved() ) {
@@ -972,9 +916,7 @@ public class Binder {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
 			// todo: really need a concept like SecondaryTableSource in the binding model as well
 			// so that EntityBinding can know the proper foreign key to use to build SQL statements.
-			ForeignKey foreignKey = createOrLocateForeignKey(
-					secondaryTableSource.getForeignKeyName(), table, primaryTable
-			);
+			ForeignKey foreignKey = createOrLocateForeignKey( secondaryTableSource.getForeignKeyName(), table, primaryTable );
 			for ( final PrimaryKeyJoinColumnSource joinColumnSource : secondaryTableSource.getJoinColumns() ) {
 				// todo : currently we only support columns here, not formulas
 				// todo : apply naming strategy to infer missing column name
@@ -1333,6 +1275,49 @@ public class Binder {
 		return subContext;
 	}
 
+	private ForeignKey createOrLocateForeignKey(
+			String foreignKeyName,
+			SingularAttributeBinding sourceAttributeBinding,
+			SingularAttributeBinding targetAttributeBinding ) {
+		if ( sourceAttributeBinding.getRelationalValueBindings().isEmpty() ) {
+			throw new MappingException( String.format(
+					"Cannot create foreign key for attribute (%s) because it has no columns/derived values configured.",
+					sourceAttributeBinding.getAttribute().getName() ), bindingContexts.peek().getOrigin() );
+		}
+		if ( targetAttributeBinding.getRelationalValueBindings().isEmpty() ) {
+			throw new MappingException(
+					String.format(
+							"Cannot create foreign key for attribute (%s) because the target attribute (%s) has no columns/derived values configured.",
+							sourceAttributeBinding.getAttribute().getName(),
+							targetAttributeBinding.getAttribute().getName() ),
+					bindingContexts.peek().getOrigin() );
+		}
+		// TODO: deal with secondary tables
+		// for now just use the the EntityBinding primary table.
+		return createOrLocateForeignKey(
+				foreignKeyName,
+				sourceAttributeBinding.getContainer().seekEntityBinding().getPrimaryTable(),
+				targetAttributeBinding.getContainer().seekEntityBinding().getPrimaryTable() );
+	}
+
+	private ForeignKey createOrLocateForeignKey(
+			String foreignKeyName,
+			TableSpecification sourceTable,
+			TableSpecification targetTable ) {
+		ForeignKey foreignKey = null;
+		if ( foreignKeyName == null ) {
+			// todo: for now lets assume we have to create it, but eventually we should look through the
+			// candidate foreign keys referencing targetTable also...
+			foreignKey = sourceTable.createForeignKey( targetTable, null );
+		} else {
+			foreignKey = sourceTable.locateForeignKey( foreignKeyName );
+			if ( foreignKey == null ) {
+				foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
+			}
+		}
+		return foreignKey;
+	}
+
 	private SingularAttribute createSingularAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource ) {
@@ -1426,14 +1411,13 @@ public class Binder {
 	}
 
 	private void mapSourcesByName( final EntitySource entitySource ) {
-		entitySourcesByName.put( entitySource.getEntityName(), entitySource );
-		log.debugf( "Mapped entity source \"%s\"", entitySource.getEntityName() );
+		String entityName = entitySource.getEntityName();
+		entitySourcesByName.put( entityName, entitySource );
+		log.debugf( "Mapped entity source \"%s\"", entityName );
 		for ( final AttributeSource attributeSource : entitySource.attributeSources() ) {
-			attributeSourcesByName.put( attributeSource.getName(), attributeSource );
-			log.debugf(
-					"Mapped attribute source \"%s\" for entity source \"%s\"",
-					attributeSource.getName(),
-					entitySource.getEntityName() );
+			String key = attributeSourcesByNameKey( entityName, attributeSource.getName() );
+			attributeSourcesByName.put( key, attributeSource );
+			log.debugf( "Mapped attribute source \"%s\" for entity source \"%s\"", key, entitySource.getEntityName() );
 		}
 		for ( final SubclassEntitySource subclassEntitySource : entitySource.subclassEntitySources() ) {
 			mapSourcesByName( subclassEntitySource );
@@ -1449,10 +1433,13 @@ public class Binder {
 			final PluralAttributeSource attributeSource ) {
 		final EntityBinding entityBinding = attributeBindingContainer.seekEntityBinding();
 		final String referencedAttributeName = attributeSource.getKeySource().getReferencedEntityAttributeName();
-		final AttributeBinding referencedAttributeBinding =
+		AttributeBinding referencedAttributeBinding =
 				referencedAttributeName == null
 						? entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding()
 						: entityBinding.locateAttributeBinding( referencedAttributeName );
+		if ( referencedAttributeBinding == null ) {
+			referencedAttributeBinding = attributeBinding( entityBinding.getEntity().getName(), referencedAttributeName );
+		}
 		if ( referencedAttributeBinding == null ) {
 			throw new MappingException( "Plural atttribute key references an attribute binding that does not exist: "
 					+ referencedAttributeBinding, bindingContexts.peek().getOrigin() );

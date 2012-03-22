@@ -8,6 +8,12 @@
     	<id name="id">
     		<generator class="increment"/>
     	</id>
+
+        <set name="thePropertyRefSet">
+            <key column="pid" property-ref="name"/>
+            <element column="property_ref_set_stuff" type="integer"/>
+        </set>
+
         <property name="name" unique="true"/>
 
         <bag name="theBag">
@@ -18,11 +24,6 @@
         <set name="theSet">
             <key column="pid"/>
             <element column="set_stuff" type="string"/>
-        </set>
-
-        <set name="thePropertyRefSet">
-            <key column="pid" property-ref="name"/>
-            <element column="property_ref_set_stuff" type="integer"/>
         </set>
 
 	</class>

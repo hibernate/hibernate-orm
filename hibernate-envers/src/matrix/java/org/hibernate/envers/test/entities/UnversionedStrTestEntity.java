@@ -25,11 +25,13 @@ package org.hibernate.envers.test.entities;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "UNVER_DATA")
 public class UnversionedStrTestEntity {
     @Id
     @GeneratedValue

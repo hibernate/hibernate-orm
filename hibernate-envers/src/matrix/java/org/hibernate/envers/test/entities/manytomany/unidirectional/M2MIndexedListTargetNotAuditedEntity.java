@@ -6,6 +6,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -15,6 +16,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
  * @author Vladimir Klyushnikov
  */
 @Entity
+@Table(name = "M2M_IDX_LIST")
 public class M2MIndexedListTargetNotAuditedEntity {
 
     @Id

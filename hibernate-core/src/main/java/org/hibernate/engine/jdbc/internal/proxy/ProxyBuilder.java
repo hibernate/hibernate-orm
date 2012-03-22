@@ -22,6 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -33,6 +36,7 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.internal.util.Value;
 
 /**
  * Centralized builder for proxy instances
@@ -48,13 +52,36 @@ public class ProxyBuilder {
 			JdbcWrapper.class
 	};
 
+	private static final Value<Constructor<Connection>> connectionProxyConstructorValue = new Value<Constructor<Connection>>(
+			new Value.DeferredInitializer<Constructor<Connection>>() {
+				@Override
+				public Constructor<Connection> initialize() {
+					try {
+						return locateConnectionProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated Connection proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<Connection> locateConnectionProxyClass() {
+					return (Class<Connection>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							CONNECTION_PROXY_INTERFACES
+					);
+				}
+			}
+	);
+
 	public static Connection buildConnection(LogicalConnectionImplementor logicalConnection) {
-		ConnectionProxyHandler proxyHandler = new ConnectionProxyHandler( logicalConnection );
-		return ( Connection ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				CONNECTION_PROXY_INTERFACES,
-				proxyHandler
-		);
+		final ConnectionProxyHandler proxyHandler = new ConnectionProxyHandler( logicalConnection );
+		try {
+			return connectionProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC Connection proxy", e );
+		}
 	}
 
 
@@ -66,20 +93,43 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
+	private static final Value<Constructor<Statement>> statementProxyConstructorValue = new Value<Constructor<Statement>>(
+			new Value.DeferredInitializer<Constructor<Statement>>() {
+				@Override
+				public Constructor<Statement> initialize() {
+					try {
+						return locateStatementProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated Statement proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<Statement> locateStatementProxyClass() {
+					return (Class<Statement>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							STMNT_PROXY_INTERFACES
+					);
+				}
+			}
+	);
+
 	public static Statement buildStatement(
 			Statement statement,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		BasicStatementProxyHandler proxyHandler = new BasicStatementProxyHandler(
+		final BasicStatementProxyHandler proxyHandler = new BasicStatementProxyHandler(
 				statement,
 				connectionProxyHandler,
 				connectionProxy
 		);
-		return ( Statement ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				STMNT_PROXY_INTERFACES,
-				proxyHandler
-		);
+		try {
+			return statementProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC Statement proxy", e );
+		}
 	}
 
 	public static Statement buildImplicitStatement(
@@ -89,12 +139,13 @@ public class ProxyBuilder {
 		if ( statement == null ) {
 			return null;
 		}
-		ImplicitStatementProxyHandler handler = new ImplicitStatementProxyHandler( statement, connectionProxyHandler, connectionProxy );
-		return ( Statement ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				STMNT_PROXY_INTERFACES,
-				handler
-		);
+		final ImplicitStatementProxyHandler proxyHandler = new ImplicitStatementProxyHandler( statement, connectionProxyHandler, connectionProxy );
+		try {
+			return statementProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC Statement proxy", e );
+		}
 	}
 
 
@@ -106,22 +157,45 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
+	private static final Value<Constructor<PreparedStatement>> preparedStatementProxyConstructorValue = new Value<Constructor<PreparedStatement>>(
+			new Value.DeferredInitializer<Constructor<PreparedStatement>>() {
+				@Override
+				public Constructor<PreparedStatement> initialize() {
+					try {
+						return locatePreparedStatementProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated Statement proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<PreparedStatement> locatePreparedStatementProxyClass() {
+					return (Class<PreparedStatement>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							PREPARED_STMNT_PROXY_INTERFACES
+					);
+				}
+			}
+	);
+
 	public static PreparedStatement buildPreparedStatement(
 			String sql,
 			Statement statement,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		PreparedStatementProxyHandler proxyHandler = new PreparedStatementProxyHandler(
+		final PreparedStatementProxyHandler proxyHandler = new PreparedStatementProxyHandler(
 				sql,
 				statement,
 				connectionProxyHandler,
 				connectionProxy
 		);
-		return ( PreparedStatement ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				PREPARED_STMNT_PROXY_INTERFACES,
-				proxyHandler
-		);
+		try {
+			return preparedStatementProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC PreparedStatement proxy", e );
+		}
 	}
 
 
@@ -133,22 +207,45 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
+	private static final Value<Constructor<CallableStatement>> callableStatementProxyConstructorValue = new Value<Constructor<CallableStatement>>(
+			new Value.DeferredInitializer<Constructor<CallableStatement>>() {
+				@Override
+				public Constructor<CallableStatement> initialize() {
+					try {
+						return locateCallableStatementProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated Statement proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<CallableStatement> locateCallableStatementProxyClass() {
+					return (Class<CallableStatement>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							CALLABLE_STMNT_PROXY_INTERFACES
+					);
+				}
+			}
+	);
+
 	public static CallableStatement buildCallableStatement(
 			String sql,
 			CallableStatement statement,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		CallableStatementProxyHandler proxyHandler = new CallableStatementProxyHandler(
+		final CallableStatementProxyHandler proxyHandler = new CallableStatementProxyHandler(
 				sql,
 				statement,
 				connectionProxyHandler,
 				connectionProxy
 		);
-		return ( CallableStatement ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				CALLABLE_STMNT_PROXY_INTERFACES,
-				proxyHandler
-		);
+		try {
+			return callableStatementProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC CallableStatement proxy", e );
+		}
 	}
 
 
@@ -160,29 +257,56 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
+	private static final Value<Constructor<ResultSet>> resultSetProxyConstructorValue = new Value<Constructor<ResultSet>>(
+			new Value.DeferredInitializer<Constructor<ResultSet>>() {
+				@Override
+				public Constructor<ResultSet> initialize() {
+					try {
+						return locateCallableStatementProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated ResultSet proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<ResultSet> locateCallableStatementProxyClass() {
+					return (Class<ResultSet>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							RESULTSET_PROXY_INTERFACES
+					);
+				}
+			}
+	);
 
 	public static ResultSet buildResultSet(
 			ResultSet resultSet,
 			AbstractStatementProxyHandler statementProxyHandler,
 			Statement statementProxy) {
-		ResultSetProxyHandler proxyHandler = new ResultSetProxyHandler( resultSet, statementProxyHandler, statementProxy );
-		return ( ResultSet ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				RESULTSET_PROXY_INTERFACES,
-				proxyHandler
-		);
+		final ResultSetProxyHandler proxyHandler = new ResultSetProxyHandler( resultSet, statementProxyHandler, statementProxy );
+		try {
+			return resultSetProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC ResultSet proxy", e );
+		}
 	}
 
 	public static ResultSet buildImplicitResultSet(
 			ResultSet resultSet,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler( resultSet, connectionProxyHandler, connectionProxy );
-		return ( ResultSet ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				RESULTSET_PROXY_INTERFACES,
-				proxyHandler
+		final ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler(
+				resultSet,
+				connectionProxyHandler,
+				connectionProxy
 		);
+		try {
+			return resultSetProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC ResultSet proxy", e );
+		}
 	}
 
 	public static ResultSet buildImplicitResultSet(
@@ -190,12 +314,18 @@ public class ProxyBuilder {
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy,
 			Statement sourceStatement) {
-		ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler( resultSet, connectionProxyHandler, connectionProxy, sourceStatement );
-		return ( ResultSet ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				RESULTSET_PROXY_INTERFACES,
-				proxyHandler
+		final ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler(
+				resultSet,
+				connectionProxyHandler,
+				connectionProxy,
+				sourceStatement
 		);
+		try {
+			return resultSetProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC ResultSet proxy", e );
+		}
 	}
 
 
@@ -206,15 +336,42 @@ public class ProxyBuilder {
 			JdbcWrapper.class
 	};
 
+	private static final Value<Constructor<DatabaseMetaData>> metadataProxyConstructorValue = new Value<Constructor<DatabaseMetaData>>(
+			new Value.DeferredInitializer<Constructor<DatabaseMetaData>>() {
+				@Override
+				public Constructor<DatabaseMetaData> initialize() {
+					try {
+						return locateDatabaseMetaDataProxyClass().getConstructor( InvocationHandler.class );
+					}
+					catch (NoSuchMethodException e) {
+						throw new JdbcProxyException( "Could not find proxy constructor in JDK generated DatabaseMetaData proxy class", e );
+					}
+				}
+
+				@SuppressWarnings("unchecked")
+				private Class<DatabaseMetaData> locateDatabaseMetaDataProxyClass() {
+					return (Class<DatabaseMetaData>) Proxy.getProxyClass(
+							JdbcWrapper.class.getClassLoader(),
+							METADATA_PROXY_INTERFACES
+					);
+				}
+			}
+	);
+
 	public static DatabaseMetaData buildDatabaseMetaData(
 			DatabaseMetaData metaData,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		DatabaseMetaDataProxyHandler handler = new DatabaseMetaDataProxyHandler( metaData, connectionProxyHandler, connectionProxy );
-		return ( DatabaseMetaData ) Proxy.newProxyInstance(
-				JdbcWrapper.class.getClassLoader(),
-				METADATA_PROXY_INTERFACES,
-				handler
+		final DatabaseMetaDataProxyHandler proxyHandler = new DatabaseMetaDataProxyHandler(
+				metaData,
+				connectionProxyHandler,
+				connectionProxy
 		);
+		try {
+			return metadataProxyConstructorValue.getValue().newInstance( proxyHandler );
+		}
+		catch (Exception e) {
+			throw new JdbcProxyException( "Could not instantiate JDBC DatabaseMetaData proxy", e );
+		}
 	}
 }

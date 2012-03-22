@@ -1872,5 +1872,58 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-7194")
+	public void testNestedCorrelatedSubquery() throws Exception {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+		
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		session.persist(course);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+		gavin.setPreferredCourse(course);
+		
+		Enrolment enrolment = new Enrolment();
+		enrolment.setCourse( course );
+		enrolment.setCourseCode( course.getCourseCode() );
+		enrolment.setSemester( ( short ) 1 );
+		enrolment.setYear( ( short ) 1999 );
+		enrolment.setStudent( gavin );
+		enrolment.setStudentNumber( gavin.getStudentNumber() );
+
+		session.persist(course);
+		session.persist(gavin);
+		session.persist(enrolment);
+		
+		session.flush();
+		session.clear();
+		
+		//execute a nested subquery
+		DetachedCriteria mainCriteria = DetachedCriteria.forClass(Student.class, "student");
+		
+		DetachedCriteria nestedSubQuery = DetachedCriteria.forClass( Enrolment.class, "maxStudentEnrolment" );
+		nestedSubQuery.add(Restrictions.eqProperty("student.preferredCourse", "maxStudentEnrolment.course"));
+		nestedSubQuery.setProjection(Projections.max("maxStudentEnrolment.year"));
+
+		DetachedCriteria subQuery = DetachedCriteria.forClass( Enrolment.class, "enrolment" );
+		subQuery.add(Subqueries.propertyEq("enrolment.year", nestedSubQuery));
+		subQuery.setProjection(Projections.property("student"));
+		
+		mainCriteria.add(Subqueries.exists(subQuery));
+
+		//query should complete and return gavin in the list
+		List results = mainCriteria.getExecutableCriteria(session).list();
+		assertEquals(1, results.size());
+		assertEquals(gavin.getStudentNumber(), ((Student) results.get(0)).getStudentNumber());
+		
+		t.rollback();
+		session.close();
+	}
 }
 

@@ -447,7 +447,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String getEntityName(Criteria criteria) {
-		return (( CriteriaInfoProvider ) criteriaInfoMap.get( criteria )).getName();
+		final CriteriaInfoProvider infoProvider = ( CriteriaInfoProvider ) criteriaInfoMap.get( criteria );
+		return infoProvider != null ? infoProvider.getName() : null;
 	}
 
 	public String getColumn(Criteria criteria, String propertyName) {
@@ -633,6 +634,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private PropertyMapping getPropertyMapping(String entityName)
 			throws MappingException {
 		CriteriaInfoProvider info = ( CriteriaInfoProvider )nameCriteriaInfoMap.get(entityName);
+		if (info==null) {
+			throw new HibernateException( "Unknown entity: " + entityName );
+		}
 		return info.getPropertyMapping();
 	}
 

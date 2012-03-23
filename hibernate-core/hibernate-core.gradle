@@ -5,12 +5,8 @@ apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     compile( libraries.jta )
-    compile( libraries.dom4j ) {
-        transitive = false
-    }
-    compile( libraries.commons_annotations ) {
-        transitive = false
-    }
+    compile( libraries.dom4j )
+    compile( libraries.commons_annotations )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )

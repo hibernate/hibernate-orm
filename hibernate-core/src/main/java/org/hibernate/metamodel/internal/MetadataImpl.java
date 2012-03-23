@@ -26,6 +26,9 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
@@ -39,6 +42,9 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.integrator.spi.TypeContributingIntegrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
@@ -65,7 +71,6 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
-import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -148,6 +153,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					}
 				}
 		);
+
+		//check for typeContributingIntegrators integrators
+		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+			if ( TypeContributingIntegrator.class.isInstance( integrator ) ) {
+				TypeContributingIntegrator.class.cast( integrator ).prepareTypes( this );
+			}
+		}
 
 		processTypeDefinitions( metadataSourceProcessors );
 		processFilterDefinitions( metadataSourceProcessors );

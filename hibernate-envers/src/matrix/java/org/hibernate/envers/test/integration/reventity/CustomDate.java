@@ -56,7 +56,8 @@ public class CustomDate extends AbstractEntityTest {
     public void initData() throws InterruptedException {
         timestamp1 = System.currentTimeMillis();
 
-        Thread.sleep(100);
+        Thread.sleep(1100); // CustomDateRevEntity.dateTimestamp field maps to date type which on some RDBMSs gets
+                            // truncated to seconds (for example MySQL 5.1).
 
         // Revision 1
         EntityManager em = getEntityManager();
@@ -68,7 +69,8 @@ public class CustomDate extends AbstractEntityTest {
 
         timestamp2 = System.currentTimeMillis();
 
-        Thread.sleep(100);
+        Thread.sleep(1100); // CustomDateRevEntity.dateTimestamp field maps to date type which on some RDBMSs gets
+                            // truncated to seconds (for example MySQL 5.1).
 
         // Revision 2
         em.getTransaction().begin();

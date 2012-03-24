@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
@@ -18,6 +20,7 @@ import org.hibernate.mapping.Table;
  * exist in a different database schema.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@RequiresDialect({H2Dialect.class})
 public class DifferentDBSchemaTest extends AbstractEntityTest {
     private static final String SCHEMA_NAME = "ENVERS_AUDIT";
     private Integer steId = null;

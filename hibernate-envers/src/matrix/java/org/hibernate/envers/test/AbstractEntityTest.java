@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
@@ -45,6 +46,8 @@ import org.hibernate.testing.BeforeClassOnce;
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractEntityTest extends AbstractEnversTest {
+    public static final Dialect DIALECT = Dialect.getDialect();
+
     private EntityManagerFactoryImpl emf;
     private EntityManager entityManager;
     private AuditReader auditReader;
@@ -55,6 +58,10 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     public abstract void configure(Ejb3Configuration cfg);
 
     public void addConfigurationProperties(Properties configuration) { }
+
+    protected static Dialect getDialect() {
+        return DIALECT;
+    }
 
     private void closeEntityManager() {
         if (entityManager != null) {

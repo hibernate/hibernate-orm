@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.hibernate.dialect.MySQL5Dialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -426,7 +427,12 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 			if (revendTimestamp == null) {
 				assert revEnd == null;
 			} else {
-				assert revendTimestamp.getTime() == revEnd.getTimestamp();
+				if (getDialect() instanceof MySQL5Dialect) {
+					// MySQL5 DATETIME column type does not contain milliseconds.
+					assert revendTimestamp.getTime() == (revEnd.getTimestamp() - (revEnd.getTimestamp() % 1000));
+				} else {
+					assert revendTimestamp.getTime() == revEnd.getTimestamp();
+				}
 			}
 		}
 	}

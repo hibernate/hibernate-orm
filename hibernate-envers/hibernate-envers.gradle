@@ -6,9 +6,7 @@ dependencies {
     compile( project( ':hibernate-entitymanager' ) )
     compile( libraries.commons_annotations )
     provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
-    compile( libraries.dom4j ) {
-        trasitive = false
-    }
+    compile( libraries.dom4j )
     provided( libraries.ant )
     testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )

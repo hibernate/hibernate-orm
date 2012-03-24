@@ -60,7 +60,7 @@ libraries = [
 
         // Annotations
         commons_annotations:
-                        'org.hibernate.common:hibernate-commons-annotations:4.0.1.Final',
+                        'org.hibernate.common:hibernate-commons-annotations:4.0.1.Final@jar',
         jandex:         'org.jboss:jandex:1.0.3.Final',
         classmate:      'com.fasterxml:classmate:0.5.4',
 
@@ -145,10 +145,6 @@ subprojects { subProject ->
 
         }
         toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-		if(!toolsJar.exists()){
-			toolsJar = file("${System.getProperty('java.home')}/../Classes/classes.jar")
-		}
-
         // appropriately inject the common dependencies into each sub-project
         dependencies {
             compile( libraries.logging )
@@ -156,7 +152,7 @@ subprojects { subProject ->
             testCompile( libraries.byteman )
             testCompile( libraries.byteman_install )
             testCompile( libraries.byteman_bmunit )
-			testCompile files( toolsJar )
+            testCompile files( toolsJar )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )
             testRuntime( libraries.jcl_slf4j )

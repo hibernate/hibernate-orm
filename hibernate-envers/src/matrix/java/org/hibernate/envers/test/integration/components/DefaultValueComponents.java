@@ -353,7 +353,7 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		Long entCount = (Long) em.createQuery(
 				"select count(s) from DefaultValueComponentTestEntity s where s.id = "
 						+ expectedId.toString()).getSingleResult();
-		BigInteger auditCount = (BigInteger) em.createNativeQuery(
+		Number auditCount = (Number) em.createNativeQuery(
 				"select count(ID) from DefaultValueComponentTestEntity_AUD s where s.id = "
 						+ expectedId.toString()).getSingleResult();
 		String comp2Str1Rev1 = (String) em
@@ -365,7 +365,7 @@ public class DefaultValueComponents extends AbstractEntityTest {
 						"select COMP2_STR1 from DefaultValueComponentTestEntity_AUD s where rev=2 and s.id = "
 								+ expectedId.toString()).getSingleResult();
 		assert Long.valueOf(1L).equals(entCount);
-		assert BigInteger.valueOf(2L).equals(auditCount);
+		assert Integer.valueOf(2).equals(auditCount.intValue());
 
 		if (expectedComp2Str1Rev1 == null) {
 			assert comp2Str1Rev1 == null;

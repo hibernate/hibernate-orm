@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.hibernate.dialect.SQLServerDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -99,8 +100,9 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends AbstractEntityT
 		session
 				.createSQLQuery(
 						"CREATE TABLE children_AUD(REV integer NOT NULL, REVEND integer, "
-								+ revendTimestampColumName
-								+ " timestamp, REVTYPE tinyint, "
+								+ revendTimestampColumName + " "
+								+ (getDialect() instanceof SQLServerDialect ? "datetime" : "timestamp")
+								+ ", REVTYPE tinyint, "
 								+ "parent_id integer, child1_id integer NULL, child2_id integer NULL)")
 				.executeUpdate();
 		em.getTransaction().commit();

@@ -73,6 +73,7 @@ public class PartialModifiedFlagsEntity {
 
 	@Audited(withModifiedFlag = true)
 	@ElementCollection
+	@MapKeyColumn(nullable=false)
     private Map<String, String> stringMap = new HashMap<String, String>();
 
 	@Audited(withModifiedFlag = true)

@@ -30,10 +30,13 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
 public class LobSerializables extends AbstractEntityTest {
     private Integer id1;
 

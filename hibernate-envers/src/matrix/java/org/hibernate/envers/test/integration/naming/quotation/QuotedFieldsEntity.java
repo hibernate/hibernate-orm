@@ -14,14 +14,14 @@ import org.hibernate.envers.Audited;
 public class QuotedFieldsEntity {
     @Id
     @GeneratedValue
-    @Column(name = "`id#`")
+    @Column(name = "`id`")
     private Long id;
 
-    @Column(name = "`#data1`")
+    @Column(name = "`data1`")
     @Audited
     private String data1;
 
-    @Column(name = "`#data2`")
+    @Column(name = "`data2`")
     @Audited
     private Integer data2;
 

@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.envers.Audited;
 
@@ -44,6 +45,7 @@ public class MapOwningEntity {
 
     @Audited
     @ManyToMany
+	@MapKeyColumn(nullable=false)
     private Map<String, MapOwnedEntity> references = new HashMap<String, MapOwnedEntity>();
 
     public MapOwningEntity() { }

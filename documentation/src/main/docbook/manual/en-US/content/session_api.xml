@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="objectstate">
+<chapter xml:id="objectstate" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Working with objects</title>
 
   <para>Hibernate is a full object/relational mapping solution that not only

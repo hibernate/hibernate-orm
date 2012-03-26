@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="collections">
+<chapter xml:id="collections" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Collection mapping</title>
 
   <section xml:id="collections-persistent" revision="3">

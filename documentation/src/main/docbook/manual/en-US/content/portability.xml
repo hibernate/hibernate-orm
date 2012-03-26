@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="portability">
+<chapter xml:id="portability" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Database Portability Considerations</title>
 
     <section xml:id="portability-basics">
@@ -106,7 +105,7 @@
 
         <para>
             Starting with version 3.2.3, Hibernate comes with a set of
-            <link xlink:href="http://in.relation.to/2082.lace" xmlns:xlink="http://www.w3.org/1999/xlink">enhanced</link>
+            <link xlink:href="http://in.relation.to/2082.lace">enhanced</link>
             identifier generators targetting
             portability in a much different way.
             <note>

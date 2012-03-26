@@ -168,7 +168,7 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
 
-        aptDumpDir = file( buildDirName + "/tmp/apt" )
+        aptDumpDir = file( "${buildDir}/tmp/apt" )
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -231,7 +231,7 @@ subprojects { subProject ->
                     include '**/*.properties'
                     include '**/*.xml'
                 }
-                into sourceSets.test.classesDir
+                into sourceSets.test.output.classesDir
             }
         } )
 

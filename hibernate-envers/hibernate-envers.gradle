@@ -38,7 +38,7 @@ compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-
 task generateJpaMetamodelClasses(type: Compile) {
     classpath = compileJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.main.originalJavaSrcDirs
-    destinationDir = file( buildDirName + "/tmp/apt" )
+    destinationDir = file( "${buildDir}/tmp/apt" )
     options.define(
             compilerArgs: [
                     "-proc:only",

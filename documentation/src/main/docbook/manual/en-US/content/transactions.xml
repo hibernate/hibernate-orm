@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="transactions" revision="2">
+<chapter xml:id="transactions" revision="2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Transactions and Concurrency</title>
 
     <para>
@@ -455,7 +454,7 @@ finally {
             <para>
                 You do not have to <literal>flush()</literal> the <literal>Session</literal> explicitly:
                 the call to <literal>commit()</literal> automatically triggers the synchronization depending
-	            on the <link linkend="objectstate-flushing">FlushMode</link> for the session.
+	            on the <xref linkend="objectstate-flushing">FlushMode</xref> for the session.
                 A call to <literal>close()</literal> marks the end of a session. The main implication
                 of <literal>close()</literal> is that the JDBC connection will be relinquished by the
                 session. This Java code is portable and runs in both non-managed and JTA environments.

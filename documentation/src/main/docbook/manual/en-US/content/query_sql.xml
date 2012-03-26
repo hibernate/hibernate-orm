@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="querysql" revision="2">
+<chapter xml:id="querysql" revision="2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Native SQL</title>
 
   <para>You can also express queries in the native SQL dialect of your

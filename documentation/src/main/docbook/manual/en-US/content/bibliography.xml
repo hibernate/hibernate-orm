@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE bibliography SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<bibliography>
+<bibliography  xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>References</title>
 
     <biblioentry xml:id="biblio-PoEAA">
@@ -31,7 +30,7 @@
         <subtitle>Second Edition of Hibernate in Action</subtitle>
         <biblioid class="isbn">1-932394-88-5</biblioid>
         <bibliomisc>
-            <link xlink:href="http://www.manning.com/bauer2" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+            <link xlink:href="http://www.manning.com/bauer2"/>
         </bibliomisc>
         <authorgroup>
             <author>

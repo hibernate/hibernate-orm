@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="session-configuration" revision="1">
+<chapter xml:id="session-configuration" revision="1" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Configuration</title>
 
   <para>Hibernate is designed to operate in many different environments and,
@@ -1205,7 +1204,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
           </para>
       </important>
 
-    <para>Hibernate utilizes <link xlink:href="http://www.slf4j.org/" xmlns:xlink="http://www.w3.org/1999/xlink">Simple Logging
+    <para>Hibernate utilizes <link xlink:href="http://www.slf4j.org/" >Simple Logging
     Facade for Java</link> (SLF4J) in order to log various system events.
     SLF4J can direct your logging output to several logging frameworks (NOP,
     Simple, log4j version 1.2, JDK 1.4 logging, JCL or logback) depending on
@@ -1213,7 +1212,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     <filename>slf4j-api.jar</filename> in your classpath together with the jar
     file for your preferred binding - <filename>slf4j-log4j12.jar</filename>
     in the case of Log4J. See the SLF4J
-        <link xlink:href="http://www.slf4j.org/manual.html" xmlns:xlink="http://www.w3.org/1999/xlink">documentation</link>
+        <link xlink:href="http://www.slf4j.org/manual.html">documentation</link>
         for more
     detail. To use Log4j you will also need to place a
     <filename>log4j.properties</filename> file in your classpath. An example

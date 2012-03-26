@@ -136,9 +136,9 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         }
         final SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);    //sourceSets.main
         final SourceSet unitTestSourceSet = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME); //sourceSets.test
-        sourceSet.compileClasspath = mainSourceSet.classes + unitTestSourceSet.classes + matrixCompileConfig
-        sourceSet.runtimeClasspath = sourceSet.classes + mainSourceSet.classes + unitTestSourceSet.classes + matrixRuntimeConfig
-        sourceSet.classesDir = new File(unitTestSourceSet.classesDir.parentFile, "matrix")
+        sourceSet.compileClasspath = mainSourceSet.output + unitTestSourceSet.output + matrixCompileConfig
+        sourceSet.runtimeClasspath = sourceSet.output + mainSourceSet.output + unitTestSourceSet.output + matrixRuntimeConfig
+        sourceSet.output.classesDir = new File(unitTestSourceSet.output.classesDir.parentFile, "matrix")
         sourceSet.resources {
             setSrcDirs(['src/matrix/java', 'src/matrix/resources'])
         }
@@ -170,7 +170,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         final Test nodeTask = project.tasks.add( taskName, Test );
         nodeTask.description = "Runs the matrix against ${node.name}"
         nodeTask.classpath = node.databaseProfile.testingRuntimeConfiguration + matrixSourceSet.runtimeClasspath
-        nodeTask.testClassesDir = matrixSourceSet.classesDir
+        nodeTask.testClassesDir = matrixSourceSet.output.classesDir
         nodeTask.ignoreFailures = true
         nodeTask.workingDir = node.baseOutputDirectory
         nodeTask.testReportDir = new File(node.baseOutputDirectory, "reports")
@@ -192,7 +192,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         final Test matrixUnitTask = project.tasks.add("matrixUnitTest", Test)
         matrixUnitTask.description = "Run matrix sources as unit test"
         matrixUnitTask.classpath = matrixSourceSet.runtimeClasspath
-        matrixUnitTask.testClassesDir = matrixSourceSet.classesDir
+        matrixUnitTask.testClassesDir = matrixSourceSet.output.classesDir
 
         matrixUnitTask.workingDir = test.workingDir
         matrixUnitTask.testReportDir = test.testReportDir
@@ -206,21 +206,21 @@ public class MatrixTestingPlugin implements Plugin<Project> {
                     include '**/*.properties'
                     include '**/*.xml'
                 }
-                into matrixSourceSet.classesDir
+                into matrixSourceSet.output.classesDir
             }
             project.copy {
                 from(sourceSets.test.resources.srcDirs) {
                     include '**/*.properties'
                     include '**/*.xml'
                 }
-                into matrixSourceSet.classesDir
+                into matrixSourceSet.output.classesDir
             }
             project.copy {
                 from(matrixSourceSet.java.srcDirs) {
                     include '**/*.properties'
                     include '**/*.xml'
                 }
-                into matrixSourceSet.classesDir
+                into matrixSourceSet.output.classesDir
             }
         })
 

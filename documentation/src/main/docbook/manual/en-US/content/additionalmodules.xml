@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="additionalmodules">
+<chapter xml:id="additionalmodules" xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
   <title>Additional modules</title>
 
   <para>Hibernate Core also offers integration with some external
@@ -229,7 +228,7 @@
 
       <para>
           For more information check the Hibernate Validator reference documentation at
-          <link xlink:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+          <link xl:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/"/>
       </para>
     </section>
   </section>
@@ -247,7 +246,7 @@
           model, querying mismatch...) Hibernate Search indexes your domain model thanks to a few annotations,
           takes care of the database / index synchronization and brings you back regular managed objects from
           free text queries. Hibernate Search is using
-          <link xlink:href="http://lucene.apache.org" xmlns:xlink="http://www.w3.org/1999/xlink">Apache Lucene</link>
+          <link xl:href="http://lucene.apache.org" >Apache Lucene</link>
           under the covers.
       </para>
     </section>
@@ -264,7 +263,7 @@
 
       <para>
           Check the Hibernate Search reference documentation (
-          <link xlink:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+          <link xl:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/" />
           ) for more information.
       </para>
     </section>

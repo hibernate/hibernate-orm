@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="performance">
+<chapter xml:id="performance" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Improving performance</title>
 
   <section xml:id="performance-fetching" revision="2">
@@ -616,7 +615,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
 
       <para>
           Currently only join style fetch profiles are supported, but they plan is to support additional styles. See
-          <link xlink:href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414" xmlns:xlink="http://www.w3.org/1999/xlink">HHH-3414</link>
+          <link xlink:href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</link>
           for details.
       </para>
     </section>

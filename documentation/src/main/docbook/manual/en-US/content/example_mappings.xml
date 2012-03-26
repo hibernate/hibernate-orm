@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="example-mappings">
+<chapter xml:id="example-mappings" xmlns="http://docbook.org/ns/docbook">
     <title>Example: Various Mappings</title>
    
 

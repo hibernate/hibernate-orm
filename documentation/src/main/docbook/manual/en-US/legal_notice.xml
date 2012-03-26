@@ -22,10 +22,7 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<!DOCTYPE legalnotice PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-
-]>
-<legalnotice id="Legal_Notice">
+<legalnotice xml:id="Legal_Notice" xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
     <title>Legal Notice</title>
     <para>
         <address>
@@ -40,7 +37,7 @@
     <para>
         Copyright <trademark class="copyright"/> 2007 by Red Hat, Inc.  This copyrighted material is made available to
         anyone wishing to use, modify, copy, or redistribute it subject to the terms and conditions of the
-        GNU <ulink url="http://www.gnu.org/licenses/lgpl-2.1.html">Lesser General Public License</ulink>, as published
+        GNU <link xl:href="http://www.gnu.org/licenses/lgpl-2.1.html">Lesser General Public License</link>, as published
         by the Free Software Foundation.
     </para>
     <para>

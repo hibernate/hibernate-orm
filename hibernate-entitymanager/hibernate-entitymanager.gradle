@@ -32,7 +32,7 @@ sourceSets {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JPA model-gen set up
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-aptDumpDir = file( buildDirName + "/tmp/apt" )
+aptDumpDir = file( "${buildDir}/tmp/apt" )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 'test' sourceSet specific JPA model-gen set up
@@ -94,7 +94,7 @@ compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-
 
 
 
-bundlesTargetDir = file( "$buildDirName/bundles" )
+bundlesTargetDir = file( "${buildDir}/bundles" )
 task copyBundleResources (type: Copy) {
     from file('src/test/bundles') 
     into bundlesTargetDir

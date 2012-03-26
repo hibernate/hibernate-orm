@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="queryhql" revision="1">
+<chapter xml:id="queryhql" revision="1" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>HQL: The Hibernate Query Language</title>
 
     <para>
@@ -1195,7 +1194,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <programlisting><![CDATA[from Person p order by p.name.first]]></programlisting>
 
         <para>
-            Another common use of components is in <link linkend="queryhql-tuple">row value constructors</link>.
+            Another common use of components is in <xref linkend="queryhql-tuple">row value constructors</xref>.
         </para>
     </section>
 

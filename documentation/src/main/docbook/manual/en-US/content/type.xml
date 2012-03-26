@@ -1,6 +1,5 @@
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
-        
-<chapter xml:id="types">
+<?xml version='1.0' encoding="UTF-8"?>
+<chapter xml:id="types" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Types</title>
 
     <para>

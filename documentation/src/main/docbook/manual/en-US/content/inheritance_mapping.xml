@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="inheritance">
+<chapter xml:id="inheritance" xmlns="http://docbook.org/ns/docbook">
     <title>Inheritance mapping</title>
 
     <section xml:id="inheritance-strategies" revision="3">

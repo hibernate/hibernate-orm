@@ -10,7 +10,7 @@ idea.module {
 
 // Javadocs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
+javadocBuildDir = mkdir(  "${buildDir}/documentation/javadocs" )
 
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
@@ -34,10 +34,10 @@ task aggregateJavadocs(type: Javadoc) {
                     source sourceSet.java
 
                     if( classpath ) {
-                        classpath += sourceSet.classes + sourceSet.compileClasspath
+                        classpath += sourceSet.output + sourceSet.compileClasspath
                     }
                     else {
-                        classpath = sourceSet.classes + sourceSet.compileClasspath
+                        classpath = sourceSet.output + sourceSet.compileClasspath
                     }
 
                     sourceSet.java.each { javaFile ->
@@ -63,7 +63,7 @@ task aggregateJavadocs(type: Javadoc) {
     // apply standard config
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
-    destinationDir = javadocBuildDir.dir
+    destinationDir = javadocBuildDir
     configure( options ) {
         overview = new File( projectDir, 'src/javadoc/overview.html' )
         stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
@@ -101,13 +101,13 @@ String determinePackageName(SourceDirectorySet sourceDirectorySet, File javaFile
 aggregateJavadocs.doLast {
     copy {
         from new File( projectDir, 'src/javadoc/images' )
-        into new File( javadocBuildDir.dir, "/images" )
+        into new File( javadocBuildDir, "/images" )
     }
 }
 
 // release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-releaseBuildDir = dir( buildDirName )
+releaseBuildDir = mkdir( buildDir )
 task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
 
 
@@ -120,7 +120,7 @@ releaseCopySpec = copySpec {
         into('lib/required') {
             from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
             from parent.project( 'hibernate-core' ).configurations.runtime
-            from parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+            from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
             // for now, 
             from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
         }
@@ -130,17 +130,17 @@ releaseCopySpec = copySpec {
 //        }
 
         into( 'lib/jpa' ) {
-            from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+            from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
         }
 
         into( 'lib/envers' ) {
             from(
-                    ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+                    ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
                             + parent.project( 'hibernate-envers' ).configurations.runtime )
                             - parent.project( 'hibernate-core' ).configurations.runtime
-                            - parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles
+                            - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
                             - parent.project( 'hibernate-entitymanager' ).configurations.runtime
-                            - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifactFiles
+                            - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
             )
         }
 
@@ -152,10 +152,10 @@ releaseCopySpec = copySpec {
 //            into('lib/optional/' + shortName) {
             owner.into('lib/optional/' + shortName) {
                 from (
-                        ( parent.project( feature ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+                        ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
                                 + parent.project( feature ).configurations.runtime )
                                 - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles
+                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
                 )
             }
         }
@@ -165,7 +165,7 @@ releaseCopySpec = copySpec {
         }
 
         into('documentation/javadocs') {
-            from javadocBuildDir.dir
+            from javadocBuildDir
         }
 
         into( 'project' ) {
@@ -198,14 +198,14 @@ releaseCopySpec = copySpec {
 task buildReleaseZip( type: Zip, dependsOn: [prepareReleaseBundles] ) {
     description = "Build release bundle in ZIP format"
     baseName = 'hibernate-release'
-    destinationDir = releaseBuildDir.dir
+    destinationDir = releaseBuildDir
     with project.releaseCopySpec
 }
 
 task buildReleaseTgz( type: Tar, dependsOn: [prepareReleaseBundles] ) {
     description = "Build release bundle in GZIP format"
     baseName = 'hibernate-release'
-    destinationDir = releaseBuildDir.dir
+    destinationDir = releaseBuildDir
     compression = Compression.GZIP
     with project.releaseCopySpec
 }

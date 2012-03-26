@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="example-weblog">
+<chapter xml:id="example-weblog" xmlns="http://docbook.org/ns/docbook">
     <title>Example: Weblog Application</title>
 
     <section xml:id="example-weblog-classes">

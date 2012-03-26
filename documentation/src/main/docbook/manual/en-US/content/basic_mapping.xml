@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="mapping">
+<chapter xml:id="mapping"  xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
   <title>Basic O/R Mapping</title>
 
   <section xml:id="mapping-declaration" revision="2">
@@ -1585,8 +1584,8 @@ public String getId() {</programlisting>
                         mac address and integrating it via the
                         <interfacename>org.hibernate.id.UUIDGenerationStrategy</interfacename>
                         contract. Two such libraries known at time of this
-                        writing include <link xlink:href="http://johannburkard.de/software/uuid/"/>
-                        and <link xlink:href="http://commons.apache.org/sandbox/id/uuid.html"/>
+                        writing include <link xl:href="http://johannburkard.de/software/uuid/"/>
+                        and <link xl:href="http://commons.apache.org/sandbox/id/uuid.html"/>
                         </para>
                       </listitem>
                     </itemizedlist></para>

@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="tutorial">
+<chapter xml:id="tutorial" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Tutorial</title>
 
     <para>
@@ -424,9 +423,9 @@ public class Event {
                 how to obtain connections.  For this tutorial we will be using a standalone connection
                 pool (as opposed to a <interfacename>javax.sql.DataSource</interfacename>).  Hibernate comes with
                 support for two third-party open source JDBC connection pools:
-                <link xlink:href="https://sourceforge.net/projects/c3p0" xmlns:xlink="http://www.w3.org/1999/xlink">c3p0</link>
+                <link xlink:href="https://sourceforge.net/projects/c3p0">c3p0</link>
                 and
-                <link xlink:href="http://proxool.sourceforge.net/" xmlns:xlink="http://www.w3.org/1999/xlink">proxool</link>.
+                <link xlink:href="http://proxool.sourceforge.net/">proxool</link>.
                 However, we will be using the Hibernate built-in connection pool for this tutorial.
             </para>
 
@@ -528,7 +527,7 @@ public class Event {
             <para>
                 We will now build the tutorial with Maven.  You will need to
                 have Maven installed; it is available from the
-                <link xlink:href="http://maven.apache.org/download.html" xmlns:xlink="http://www.w3.org/1999/xlink">Maven download page</link>.
+                <link xlink:href="http://maven.apache.org/download.html">Maven download page</link>.
                 Maven will read the <filename>/pom.xml</filename> file we created
                 earlier and know how to perform some basic project tasks.  First,
                 lets run the <literal>compile</literal> goal to make sure we can compile
@@ -1458,7 +1457,7 @@ public class EventManagerServlet extends HttpServlet {
 
             <para>
                 This coding style, with a mix of Java and HTML, would not scale
-                in a more complex application&mdash;keep in mind that we are only illustrating
+                in a more complex application;keep in mind that we are only illustrating
                 basic Hibernate concepts in this tutorial. The code prints an HTML
                 header and a footer. Inside this page, an HTML form for event entry and
                 a list of all events in the database are printed. The first method is

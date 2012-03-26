@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<chapter xml:id="filters">
+<chapter xml:id="filters" xmlns="http://docbook.org/ns/docbook" >
   <title>Filtering data</title>
 
   <para>Hibernate3 provides an innovative new approach to handling data with

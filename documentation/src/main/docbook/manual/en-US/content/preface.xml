@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!DOCTYPE preface SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<preface xml:id="preface">
+<preface xml:id="preface" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Preface</title>
 
     <para>
@@ -10,7 +9,7 @@
         objects versus relational databases.  Hibernate is an Object/Relational Mapping solution for Java environments.
         The term Object/Relational Mapping refers to the technique of mapping data from an object model representation
         to a relational data model representation (and visa versa).  See
-        <link xlink:href="http://en.wikipedia.org/wiki/Object-relational_mapping" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+        <link xlink:href="http://en.wikipedia.org/wiki/Object-relational_mapping"/>
         for a good high-level discussion.
     </para>
 
@@ -23,12 +22,12 @@
             <itemizedlist>
                 <listitem>
                     <para>
-                        <link xlink:href="http://www.agiledata.org/essays/dataModeling101.html" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                        <link xlink:href="http://www.agiledata.org/essays/dataModeling101.html" />
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <link xlink:href="http://en.wikipedia.org/wiki/Data_modeling" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                        <link xlink:href="http://en.wikipedia.org/wiki/Data_modeling" />
                     </para>
                 </listitem>
             </itemizedlist>
@@ -90,7 +89,7 @@
                 information.  Consider reading <biblioref linkend="biblio-JPwH"/>
                 if you need more help with application design, or if you prefer
                 a step-by-step tutorial. Also visit
-                <link xlink:href="http://caveatemptor.hibernate.org" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                <link xlink:href="http://caveatemptor.hibernate.org"/>
                 and download the example application from <biblioref linkend="biblio-JPwH"/>.
             </para>
         </listitem>
@@ -120,20 +119,20 @@
             <listitem>
                 <para>
                     Trying stuff out and reporting bugs.  See
-                    <link xlink:href="http://hibernate.org/issuetracker.html" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                    <link xlink:href="http://hibernate.org/issuetracker.html" />
                     details.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Trying your hand at fixing some bugs or implementing enhancements.  Again, see
-                    <link xlink:href="http://hibernate.org/issuetracker.html" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                    <link xlink:href="http://hibernate.org/issuetracker.html"/>
                     details.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <link xlink:href="http://hibernate.org/community.html" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                    <link xlink:href="http://hibernate.org/community.html"/>
                     lists a few ways to engage in the community.
                     <itemizedlist>
                         <listitem>
@@ -144,7 +143,7 @@
                         <listitem>
                             <para>
                                 There are also
-                                <link xlink:href="http://en.wikipedia.org/wiki/Internet_Relay_Chat" xmlns:xlink="http://www.w3.org/1999/xlink">IRC</link>
+                                <link xlink:href="http://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</link>
                                 channels for both user and developer discussions.
                             </para>
                         </listitem>

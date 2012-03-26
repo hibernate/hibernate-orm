@@ -24,16 +24,15 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Steve Ebersole

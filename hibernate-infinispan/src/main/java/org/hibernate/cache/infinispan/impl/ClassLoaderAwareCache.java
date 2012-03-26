@@ -1,4 +1,5 @@
 package org.hibernate.cache.infinispan.impl;
+
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.infinispan.AbstractDelegatingAdvancedCache;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.VisitableCommand;

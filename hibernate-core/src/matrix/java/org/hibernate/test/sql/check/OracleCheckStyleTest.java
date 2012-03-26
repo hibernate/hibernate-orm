@@ -24,7 +24,6 @@
 package org.hibernate.test.sql.check;
 
 import org.hibernate.dialect.Oracle9iDialect;
-
 import org.hibernate.testing.RequiresDialect;
 
 /**

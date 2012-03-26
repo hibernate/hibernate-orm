@@ -23,18 +23,19 @@
  */
 package org.hibernate.ejb.event;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.ExcludeDefaultListeners;
+import javax.persistence.ExcludeSuperclassListeners;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;

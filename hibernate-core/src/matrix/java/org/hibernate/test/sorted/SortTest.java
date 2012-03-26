@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sorted;
+
 import java.util.Iterator;
+
+import org.junit.Test;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

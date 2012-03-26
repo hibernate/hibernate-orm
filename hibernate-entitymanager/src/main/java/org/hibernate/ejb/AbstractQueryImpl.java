@@ -23,16 +23,16 @@
  */
 package org.hibernate.ejb;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import org.jboss.logging.Logger;
 

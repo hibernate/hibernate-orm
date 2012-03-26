@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -46,15 +48,12 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

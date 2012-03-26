@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.pagination;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.SQLServerDialect;
 
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

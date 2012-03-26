@@ -26,17 +26,17 @@ package org.hibernate.test.nonflushedchanges;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

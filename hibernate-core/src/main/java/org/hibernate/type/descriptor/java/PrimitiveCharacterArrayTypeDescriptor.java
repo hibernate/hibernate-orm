@@ -26,10 +26,8 @@ package org.hibernate.type.descriptor.java;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
-import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.CharacterStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 

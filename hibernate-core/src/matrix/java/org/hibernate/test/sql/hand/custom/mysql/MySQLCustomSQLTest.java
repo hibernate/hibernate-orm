@@ -24,9 +24,8 @@
 package org.hibernate.test.sql.hand.custom.mysql;
 
 import org.hibernate.dialect.MySQLDialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for MySQL

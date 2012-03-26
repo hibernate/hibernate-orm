@@ -27,17 +27,15 @@ import java.util.Set;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistryBuilder;
-
-import org.junit.Test;
-
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 import static org.junit.Assert.assertEquals;

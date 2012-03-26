@@ -28,9 +28,10 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.Before;
 
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -38,11 +39,8 @@ import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-
-import org.junit.Before;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Galder Zamarreño

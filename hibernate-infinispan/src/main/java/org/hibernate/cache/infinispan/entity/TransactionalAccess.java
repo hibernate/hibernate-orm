@@ -1,9 +1,10 @@
 package org.hibernate.cache.infinispan.entity;
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 
 /**
  * Transactional entity region access for Infinispan.

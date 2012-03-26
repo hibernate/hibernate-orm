@@ -1,10 +1,10 @@
 package org.hibernate.envers.test.integration.merge;
 
-import org.hibernate.envers.AuditTable;
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.expression.function;
+
 import java.io.Serializable;
 import java.sql.Date;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**

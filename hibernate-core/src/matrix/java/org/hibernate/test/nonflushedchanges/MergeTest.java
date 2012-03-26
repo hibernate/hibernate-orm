@@ -1,20 +1,25 @@
 //$Id: MergeTest.java 11037 2007-01-09 16:04:16Z steve.ebersole@jboss.com $
 package org.hibernate.test.nonflushedchanges;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.criterion.Projections;
-
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * adapted this from "ops" tests version

@@ -23,9 +23,6 @@
  */
 package org.hibernate.testing.cache;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;

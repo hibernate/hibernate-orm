@@ -1,6 +1,5 @@
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Iterator;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Transaction;

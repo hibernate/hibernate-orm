@@ -20,10 +20,17 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
+
 import java.util.Hashtable;
 import java.util.Properties;
-import org.hibernate.cache.spi.CacheDataDescription;
+
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -31,11 +38,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Settings;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * ClusterAwareRegionFactory.

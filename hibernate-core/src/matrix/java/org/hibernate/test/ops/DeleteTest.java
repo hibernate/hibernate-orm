@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.ops;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
+
+import org.hibernate.Session;
 
 /**
  * @author Steve Ebersole

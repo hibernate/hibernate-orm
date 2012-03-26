@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags.entities;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

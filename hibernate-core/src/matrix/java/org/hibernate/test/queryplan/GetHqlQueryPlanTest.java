@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.queryplan;
+
 import java.util.Map;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.SessionImplementor;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotSame;

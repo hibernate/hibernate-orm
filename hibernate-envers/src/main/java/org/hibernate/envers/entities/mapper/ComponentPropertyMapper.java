@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
+
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;

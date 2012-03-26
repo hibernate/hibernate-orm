@@ -23,13 +23,12 @@
  */
 package org.hibernate.test.dirtiness;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.annotations.GenericGenerator;
 

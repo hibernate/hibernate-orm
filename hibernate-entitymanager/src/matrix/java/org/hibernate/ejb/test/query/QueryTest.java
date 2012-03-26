@@ -23,22 +23,21 @@
  */
 package org.hibernate.ejb.test.query;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Wallet;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;

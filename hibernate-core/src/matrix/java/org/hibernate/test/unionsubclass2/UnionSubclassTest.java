@@ -26,15 +26,14 @@ package org.hibernate.test.unionsubclass2;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

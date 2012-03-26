@@ -22,7 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.readonly;
+
 import java.math.BigDecimal;
+
+import org.junit.Test;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
@@ -34,9 +37,6 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.predicate;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Subquery;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;

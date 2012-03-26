@@ -23,12 +23,12 @@
  */
 package org.hibernate.testing.jta;
 
-import javax.sql.DataSource;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
+import javax.sql.DataSource;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
 
 import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;

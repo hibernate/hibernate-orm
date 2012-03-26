@@ -35,7 +35,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;

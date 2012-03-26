@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +33,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
 

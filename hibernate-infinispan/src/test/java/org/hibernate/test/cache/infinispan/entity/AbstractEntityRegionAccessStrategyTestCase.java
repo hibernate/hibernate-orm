@@ -23,33 +23,29 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.cache.infinispan.util.CacheHelper;
+import junit.framework.AssertionFailedError;
 import org.infinispan.Cache;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
-
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.internal.CacheDataDescriptionImpl;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.compare.ComparableComparator;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import junit.framework.AssertionFailedError;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.internal.CacheDataDescriptionImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;

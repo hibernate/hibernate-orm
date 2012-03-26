@@ -24,11 +24,10 @@
 package org.hibernate.test.propertyref.component.complete;
 
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

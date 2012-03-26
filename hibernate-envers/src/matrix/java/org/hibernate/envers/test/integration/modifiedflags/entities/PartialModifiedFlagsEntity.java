@@ -23,16 +23,23 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags.entities;
 
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.Component1;
-import org.hibernate.envers.test.entities.components.Component2;
-
-import javax.persistence.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToOne;
+
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.entities.components.Component1;
+import org.hibernate.envers.test.entities.components.Component2;
 
 /**
  * @author Michal Skowronek (mskowr at o2 dot pl)

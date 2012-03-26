@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import java.util.Properties;
 
 import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;
@@ -40,19 +40,18 @@ import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.naming.NonSerializableFactory;
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
+import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

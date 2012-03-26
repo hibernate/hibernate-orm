@@ -25,6 +25,8 @@ package org.hibernate.test.annotations.embeddables.nested;
 
 import java.sql.Types;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -32,12 +34,8 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.CustomType;
 
 import static org.junit.Assert.assertEquals;
 

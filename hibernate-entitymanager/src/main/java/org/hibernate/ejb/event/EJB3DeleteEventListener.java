@@ -25,9 +25,9 @@ package org.hibernate.ejb.event;
 
 import java.io.Serializable;
 
+import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

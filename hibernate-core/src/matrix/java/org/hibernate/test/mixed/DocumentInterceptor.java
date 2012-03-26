@@ -1,8 +1,10 @@
 //$Id: DocumentInterceptor.java 8670 2005-11-25 17:36:29Z epbernard $
 package org.hibernate.test.mixed;
+
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Iterator;
+
 import org.hibernate.CallbackException;
 import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;

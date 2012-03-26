@@ -40,10 +40,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.internal.util.StringHelper;
+
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,6 +50,11 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
+
+import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Handler for persistence.xml files.

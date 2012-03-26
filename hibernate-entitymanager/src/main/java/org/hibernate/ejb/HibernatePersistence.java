@@ -29,6 +29,7 @@ import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
+
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
 /**

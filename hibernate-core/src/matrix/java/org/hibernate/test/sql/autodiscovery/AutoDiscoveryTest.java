@@ -30,13 +30,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
-import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
-
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.jdbc.Work;
+import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

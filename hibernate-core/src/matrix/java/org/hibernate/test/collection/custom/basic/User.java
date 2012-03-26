@@ -23,6 +23,9 @@
  */
 package org.hibernate.test.collection.custom.basic;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,9 +35,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.annotations.CollectionType;
 

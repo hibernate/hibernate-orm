@@ -24,18 +24,18 @@
  */
 package org.hibernate.ejb.test.ops;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
+import javax.persistence.RollbackException;
+
+import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

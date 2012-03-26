@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,9 +32,9 @@ import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 
 /**
  * Work on a JAR that can be accessed through a File

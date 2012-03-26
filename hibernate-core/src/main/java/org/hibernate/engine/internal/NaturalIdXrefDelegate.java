@@ -40,7 +40,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeHelper;
 
 /**
  * Maintains a {@link org.hibernate.engine.spi.PersistenceContext}-level 2-way cross-reference (xref) between the 

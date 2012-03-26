@@ -1,9 +1,8 @@
 package org.hibernate.envers.test.integration.inheritance.joined.relation;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Entity;
-import javax.persistence.Table;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

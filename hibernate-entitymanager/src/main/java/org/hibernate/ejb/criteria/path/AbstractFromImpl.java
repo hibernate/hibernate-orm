@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.path;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -43,6 +44,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+
 import org.hibernate.ejb.criteria.BasicPathUsageException;
 import org.hibernate.ejb.criteria.CollectionJoinImplementor;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;

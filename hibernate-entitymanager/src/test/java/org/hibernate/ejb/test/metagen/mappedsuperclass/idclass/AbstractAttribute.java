@@ -24,7 +24,6 @@
 package org.hibernate.ejb.test.metagen.mappedsuperclass.idclass;
 
 import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;

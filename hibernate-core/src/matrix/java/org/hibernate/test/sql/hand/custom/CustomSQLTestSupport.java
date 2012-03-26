@@ -26,19 +26,19 @@ package org.hibernate.test.sql.hand.custom;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
+
+import org.junit.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.collections.ArrayHelper;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.TextHolder;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

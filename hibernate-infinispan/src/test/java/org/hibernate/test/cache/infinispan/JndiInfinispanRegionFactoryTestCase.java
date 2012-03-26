@@ -1,5 +1,7 @@
 package org.hibernate.test.cache.infinispan;
+
 import java.util.Properties;
+
 import org.junit.Test;
 
 import org.hibernate.cfg.SettingsFactory;

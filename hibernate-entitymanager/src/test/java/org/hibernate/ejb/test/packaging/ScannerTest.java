@@ -23,24 +23,24 @@
  */
 package org.hibernate.ejb.test.packaging;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Persistence;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Persistence;
+
+import org.junit.Test;
 
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.Scanner;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

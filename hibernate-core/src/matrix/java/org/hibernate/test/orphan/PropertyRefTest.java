@@ -23,11 +23,10 @@
  */
 package org.hibernate.test.orphan;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

@@ -23,20 +23,18 @@
  */
 package org.hibernate.ejb.test.exception;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
-import java.util.Map;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.exception.ConstraintViolationException;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;

@@ -29,14 +29,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import junit.framework.AssertionFailedError;
-import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.ejb.metamodel.Product;
-import org.hibernate.ejb.metamodel.Product_;
 
+import junit.framework.AssertionFailedError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.ejb.metamodel.Product;
+import org.hibernate.ejb.metamodel.Product_;
 
 /**
  * @author Steve Ebersole

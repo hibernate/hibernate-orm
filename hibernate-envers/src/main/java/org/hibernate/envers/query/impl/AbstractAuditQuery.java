@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.query.impl;
 
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -44,6 +44,8 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.tools.query.QueryBuilder;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
 /**
  * @author Adam Warski (adam at warski dot org)

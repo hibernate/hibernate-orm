@@ -1,4 +1,5 @@
 package org.hibernate.ejb.test.cascade;
+
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -7,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+
 import org.hibernate.annotations.AccessType;
 
 @Entity

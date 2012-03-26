@@ -23,8 +23,8 @@
  */
 package org.hibernate.ejb;
 
-import javax.persistence.EntityManagerFactory;
 import java.io.Serializable;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.SessionFactory;
 

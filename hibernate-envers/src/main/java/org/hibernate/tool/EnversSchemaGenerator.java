@@ -1,13 +1,13 @@
 package org.hibernate.tool;
 
+import java.sql.Connection;
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import java.sql.Connection;
-import java.util.Properties;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

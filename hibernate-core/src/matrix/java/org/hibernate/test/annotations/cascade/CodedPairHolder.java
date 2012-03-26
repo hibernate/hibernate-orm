@@ -24,15 +24,11 @@
 package org.hibernate.test.annotations.cascade;
 
 import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Table;
-import org.hibernate.annotations.ForeignKey;
 
 @Entity
 @Table(name = "CODED_PAIR_HOLDER")

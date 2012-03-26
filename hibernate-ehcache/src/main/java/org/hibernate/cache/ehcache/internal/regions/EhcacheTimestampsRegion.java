@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.util.Properties;
+
 import net.sf.ehcache.Ehcache;
 
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
-
-import java.util.Properties;
 
 /**
  * A timestamps region specific wrapper around an Ehcache instance.

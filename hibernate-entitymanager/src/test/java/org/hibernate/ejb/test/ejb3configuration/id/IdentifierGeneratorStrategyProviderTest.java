@@ -23,7 +23,6 @@ package org.hibernate.ejb.test.ejb3configuration.id;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Test;
 

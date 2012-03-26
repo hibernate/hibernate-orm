@@ -24,9 +24,8 @@
 package org.hibernate.test.sql.hand.custom.db2;
 
 import org.hibernate.dialect.DB2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for DB2

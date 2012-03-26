@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.cascade.circle.sequence;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;

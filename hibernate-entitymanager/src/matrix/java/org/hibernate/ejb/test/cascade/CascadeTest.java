@@ -25,9 +25,10 @@ package org.hibernate.ejb.test.cascade;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Max Rydahl Andersen

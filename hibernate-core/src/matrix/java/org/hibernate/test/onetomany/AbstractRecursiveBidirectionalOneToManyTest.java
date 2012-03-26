@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.onetomany;
+
 import java.util.ArrayList;
-import org.hibernate.CacheMode;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import org.junit.Test;
 
+import org.hibernate.CacheMode;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

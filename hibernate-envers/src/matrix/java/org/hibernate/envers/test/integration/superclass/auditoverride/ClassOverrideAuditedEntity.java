@@ -1,10 +1,10 @@
 package org.hibernate.envers.test.integration.superclass.auditoverride;
 
+import javax.persistence.Entity;
+
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
-
-import javax.persistence.Entity;
 
 /**
  * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)

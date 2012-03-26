@@ -23,12 +23,12 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 
 /**
  * This specifies that a property is part of the natural id of the entity.

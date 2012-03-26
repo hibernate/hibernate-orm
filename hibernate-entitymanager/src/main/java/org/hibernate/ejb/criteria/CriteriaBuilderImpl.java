@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -40,6 +41,7 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
+
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CoalesceExpression;
@@ -77,7 +79,6 @@ import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ExistsPredicate;
-import org.hibernate.ejb.criteria.predicate.ImplicitNumericExpressionTypeDeterminer;
 import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.IsEmptyPredicate;
 import org.hibernate.ejb.criteria.predicate.LikePredicate;

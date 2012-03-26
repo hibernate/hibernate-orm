@@ -1,14 +1,14 @@
 package ee.estonia.entities;
 
-import org.hibernate.envers.Audited;
-
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

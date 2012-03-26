@@ -23,20 +23,19 @@
  */
 package org.hibernate.test.typeoverride;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

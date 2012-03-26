@@ -24,23 +24,18 @@
 package org.hibernate.serialization;
 
 
-import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import java.io.InvalidObjectException;
+import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.SerializationException;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.SerializationException;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;

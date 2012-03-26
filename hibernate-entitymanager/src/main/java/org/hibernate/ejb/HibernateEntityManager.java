@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
+
 import javax.persistence.EntityManager;
+
 import org.hibernate.Session;
 
 /**

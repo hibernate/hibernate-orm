@@ -25,6 +25,10 @@ package org.hibernate.test.locking;
 
 import java.util.concurrent.TimeoutException;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -32,19 +36,12 @@ import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.async.Executable;
 import org.hibernate.testing.async.TimedExecutor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 

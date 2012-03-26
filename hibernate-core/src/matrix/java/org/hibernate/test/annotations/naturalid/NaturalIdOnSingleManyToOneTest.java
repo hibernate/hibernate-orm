@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.naturalid;
 import java.util.List;
 
 import org.jboss.logging.Logger;
-
 import org.junit.After;
 import org.junit.Test;
 

@@ -23,14 +23,14 @@
  */
 package org.hibernate.ejb.test.beanvalidation;
 
+import java.math.BigDecimal;
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
 import javax.validation.ConstraintViolationException;
-import java.math.BigDecimal;
-
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sql.check;
-import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
-import org.hibernate.Session;
 
 import org.junit.Test;
 
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.fail;

@@ -27,10 +27,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
 
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;

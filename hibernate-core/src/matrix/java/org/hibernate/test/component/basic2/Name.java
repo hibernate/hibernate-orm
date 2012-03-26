@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.component.basic2;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import java.io.Serializable;
 
 /**
  * @author Steve Ebersole

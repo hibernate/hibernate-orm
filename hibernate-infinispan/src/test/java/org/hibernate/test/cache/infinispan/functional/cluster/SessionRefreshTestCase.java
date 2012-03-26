@@ -29,14 +29,12 @@ import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.test.TestingUtil;
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-
-import org.junit.Test;
-
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
 import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
 

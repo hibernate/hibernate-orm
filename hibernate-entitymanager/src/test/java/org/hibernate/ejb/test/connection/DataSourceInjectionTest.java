@@ -21,8 +21,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.connection;
+
 import java.io.File;
-import junit.framework.TestCase;
+
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sql.hand.quotedidentifiers;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
 
 import org.junit.Test;
 
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

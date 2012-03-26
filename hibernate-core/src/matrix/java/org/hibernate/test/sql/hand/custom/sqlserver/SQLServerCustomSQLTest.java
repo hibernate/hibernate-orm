@@ -24,9 +24,8 @@
 package org.hibernate.test.sql.hand.custom.sqlserver;
 
 import org.hibernate.dialect.SQLServerDialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for SQLServer

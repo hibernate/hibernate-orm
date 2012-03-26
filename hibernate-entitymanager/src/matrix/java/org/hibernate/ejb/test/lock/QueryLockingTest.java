@@ -23,17 +23,17 @@
  */
 package org.hibernate.ejb.test.lock;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
-import java.util.Map;
+
+import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.internal.SessionImpl;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

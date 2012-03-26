@@ -22,9 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.ops;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
@@ -32,8 +35,6 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

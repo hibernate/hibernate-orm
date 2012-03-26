@@ -20,13 +20,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.spi;
+
 import java.util.Iterator;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
-import org.jboss.logging.Logger;
 
 /**
  * Because of CascadingAction constructor visibility

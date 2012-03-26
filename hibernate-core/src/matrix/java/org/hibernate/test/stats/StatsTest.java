@@ -22,8 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.stats;
+
 import java.util.HashSet;
 import java.util.Iterator;
+
+import org.junit.Test;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -36,9 +39,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

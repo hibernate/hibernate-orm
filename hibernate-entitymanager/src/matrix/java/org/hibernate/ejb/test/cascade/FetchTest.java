@@ -23,17 +23,17 @@
  */
 package org.hibernate.ejb.test.cascade;
 
+import java.util.ArrayList;
+import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.Date;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.unionsubclass.alias;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import org.junit.Test;
 
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

@@ -25,7 +25,6 @@ package org.hibernate.stat.spi;
 
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.internal.ConcurrentSecondLevelCacheStatisticsImpl;
 
 /**
  * Statistics SPI for the Hibernate core.  This is essentially the "statistic collector" API, its the contract

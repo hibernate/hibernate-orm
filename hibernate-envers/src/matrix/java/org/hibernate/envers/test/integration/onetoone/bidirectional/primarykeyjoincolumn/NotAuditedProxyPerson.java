@@ -1,9 +1,14 @@
 package org.hibernate.envers.test.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
-import org.hibernate.annotations.Proxy;
-
-import javax.persistence.*;
 import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
+
+import org.hibernate.annotations.Proxy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

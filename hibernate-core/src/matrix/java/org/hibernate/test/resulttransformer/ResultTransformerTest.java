@@ -25,17 +25,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.resulttransformer;
+
 import java.util.List;
+
+import org.junit.Test;
+
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.transform.ResultTransformer;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.ResultTransformer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

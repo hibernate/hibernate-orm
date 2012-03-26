@@ -23,14 +23,16 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.metamodel.Address;
@@ -47,8 +49,6 @@ import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.ShelfLife;
 import org.hibernate.ejb.metamodel.Spouse;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

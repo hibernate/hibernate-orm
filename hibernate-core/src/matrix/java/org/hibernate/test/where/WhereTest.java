@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.where;
 
+import org.junit.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

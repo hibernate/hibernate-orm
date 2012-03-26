@@ -31,11 +31,10 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 
 /**

@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
+import java.io.Serializable;
+import javax.persistence.OneToOne;
+
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
-import javax.persistence.OneToOne;
-import java.io.Serializable;
 
 /**
  * Property mapper for not owning side of {@link OneToOne} relation.

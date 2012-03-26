@@ -23,6 +23,7 @@ package org.hibernate.cache.infinispan.tm;
 
 import java.util.Properties;
 import javax.transaction.TransactionManager;
+
 import org.hibernate.cfg.Settings;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 

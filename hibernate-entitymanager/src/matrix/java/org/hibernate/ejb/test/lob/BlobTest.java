@@ -23,18 +23,17 @@
  */
 package org.hibernate.ejb.test.lob;
 
-import javax.persistence.EntityManager;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.hibernate.Session;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 

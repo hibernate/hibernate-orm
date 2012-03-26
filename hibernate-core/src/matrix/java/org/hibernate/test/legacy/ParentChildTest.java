@@ -34,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -51,11 +53,8 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

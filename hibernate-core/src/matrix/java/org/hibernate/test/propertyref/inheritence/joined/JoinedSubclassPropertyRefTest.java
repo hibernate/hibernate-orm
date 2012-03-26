@@ -23,13 +23,12 @@
  */
 package org.hibernate.test.propertyref.inheritence.joined;
 
+import org.junit.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;

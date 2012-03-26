@@ -23,17 +23,19 @@
  */
 package org.hibernate.ejb.internal;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Cause;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-entitymanager module.  It reserves message ids ranging from

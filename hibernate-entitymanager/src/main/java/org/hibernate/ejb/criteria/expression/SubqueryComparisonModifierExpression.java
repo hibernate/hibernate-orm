@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.expression;
+
 import java.io.Serializable;
 import javax.persistence.criteria.Subquery;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
-import org.hibernate.ejb.criteria.expression.SubqueryComparisonModifierExpression.Modifier;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as

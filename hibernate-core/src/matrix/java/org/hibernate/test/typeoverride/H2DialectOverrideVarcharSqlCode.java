@@ -24,6 +24,7 @@
 package org.hibernate.test.typeoverride;
 
 import java.sql.Types;
+
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 

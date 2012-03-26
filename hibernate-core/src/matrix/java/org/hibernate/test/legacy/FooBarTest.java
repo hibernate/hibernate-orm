@@ -43,6 +43,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -83,14 +84,11 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.junit.Test;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

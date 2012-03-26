@@ -24,10 +24,9 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.junit.Test;
 
 import org.hibernate.cache.spi.access.AccessType;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

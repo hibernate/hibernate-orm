@@ -25,12 +25,13 @@ package org.hibernate.ejb.test.ops;
 
 import java.util.Map;
 import javax.persistence.EntityManager;
-import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Gavin King

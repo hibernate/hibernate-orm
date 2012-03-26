@@ -28,11 +28,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
 import org.jboss.logging.Logger;
-
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

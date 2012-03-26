@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.flush;
 
-import java.util.Collection;
-
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -39,7 +37,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

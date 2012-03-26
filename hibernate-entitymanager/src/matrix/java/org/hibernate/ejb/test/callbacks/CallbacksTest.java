@@ -1,16 +1,15 @@
 package org.hibernate.ejb.test.callbacks;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
-
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;

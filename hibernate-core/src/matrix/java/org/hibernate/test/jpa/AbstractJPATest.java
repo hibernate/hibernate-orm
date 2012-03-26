@@ -42,7 +42,6 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;

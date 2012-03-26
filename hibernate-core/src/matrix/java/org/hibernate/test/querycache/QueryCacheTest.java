@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -34,14 +36,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.transform.Transformers;
-
-import org.junit.Test;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.Transformers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

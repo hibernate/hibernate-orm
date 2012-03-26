@@ -29,23 +29,21 @@ import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.logging.Logger;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.cache.internal.StandardQueryCache;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cfg.Configuration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.internal.StandardQueryCache;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests entity and query caching when class of objects being cached are not visible to Infinispan's classloader. Also serves as a

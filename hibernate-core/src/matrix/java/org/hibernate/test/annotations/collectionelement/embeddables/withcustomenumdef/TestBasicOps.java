@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.annotations.collectionelement.embeddables.withcustomenumdef;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.Assert.assertEquals;

@@ -20,12 +20,11 @@
  */
 package org.hibernate.ejb.test.ejb3configuration;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 
 import org.junit.Assert;
 import org.junit.Test;

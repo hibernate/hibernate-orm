@@ -23,14 +23,12 @@
  */
 package org.hibernate.test.ops;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

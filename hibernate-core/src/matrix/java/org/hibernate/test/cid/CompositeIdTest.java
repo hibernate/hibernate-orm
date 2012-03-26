@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cid;
+
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Collections;
@@ -35,7 +36,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

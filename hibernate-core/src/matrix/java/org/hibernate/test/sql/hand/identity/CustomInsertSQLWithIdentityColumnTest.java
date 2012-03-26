@@ -23,15 +23,14 @@
  */
 package org.hibernate.test.sql.hand.identity;
 
-import org.hibernate.JDBCException;
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.JDBCException;
+import org.hibernate.Session;
+import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.sql.hand.Organization;
 
 import static org.junit.Assert.fail;
 

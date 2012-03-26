@@ -23,15 +23,16 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags;
 
+import java.util.List;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefIngEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;

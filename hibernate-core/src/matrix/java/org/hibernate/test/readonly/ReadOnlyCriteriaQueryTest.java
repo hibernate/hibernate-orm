@@ -25,6 +25,8 @@ package org.hibernate.test.readonly;
 
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -42,8 +44,6 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.testing.SkipForDialect;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.ops;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -31,9 +33,6 @@ import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

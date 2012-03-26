@@ -22,9 +22,11 @@
 
 //$Id$
 package org.hibernate.ejb;
+
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
+
 import java.util.List;
 import java.util.Map;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Selection;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleStateException;

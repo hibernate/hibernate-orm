@@ -23,13 +23,13 @@
  */
 package org.hibernate.service.jdbc.connections.internal;
 
-import static org.jboss.logging.Logger.Level.INFO;
-
-import org.hibernate.internal.CoreMessageLogger;
-
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
+import static org.jboss.logging.Logger.Level.INFO;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-proxool module.  It reserves message ids ranging from

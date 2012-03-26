@@ -23,13 +23,13 @@
  */
 package org.hibernate.testing.junit4;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
 import org.hibernate.testing.FailureExpected;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  * Centralized utility functionality

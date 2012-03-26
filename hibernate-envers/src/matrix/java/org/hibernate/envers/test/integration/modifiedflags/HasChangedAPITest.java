@@ -23,15 +23,16 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags;
 
+import java.util.List;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.auditReader.AuditedTestEntity;
 import org.hibernate.envers.test.integration.auditReader.NotAuditedTestEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;

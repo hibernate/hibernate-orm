@@ -28,9 +28,10 @@ import java.util.concurrent.TimeUnit;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;
 

@@ -1,6 +1,13 @@
 package org.hibernate.test.cache;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.hamcrest.CoreMatchers;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -18,14 +25,6 @@ import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;

@@ -23,14 +23,13 @@
  */
 package org.hibernate.ejb.test.metagen.mappedsuperclass.idclass;
 
-import static org.junit.Assert.assertNotNull;
-
-import org.hibernate.ejb.Ejb3Configuration;
-
 import org.junit.Test;
 
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Alexis Bataille

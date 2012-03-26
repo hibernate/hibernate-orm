@@ -1,5 +1,11 @@
 package org.hibernate.envers.test.integration.tools;
 
+import java.net.URISyntaxException;
+import java.util.Arrays;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
@@ -8,11 +14,6 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.EnversSchemaGenerator;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.net.URISyntaxException;
-import java.util.Arrays;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

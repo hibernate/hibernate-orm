@@ -23,23 +23,14 @@
  */
 package org.hibernate.test.naturalid.mutable.cached;
 
-import java.lang.reflect.Field;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.naturalid.mutable.User;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
 /**

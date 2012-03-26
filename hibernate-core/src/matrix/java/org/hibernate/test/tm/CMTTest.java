@@ -23,11 +23,13 @@
  */
 package org.hibernate.test.tm;
 
-import javax.transaction.Transaction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.transaction.Transaction;
+
+import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
@@ -37,9 +39,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-
-import org.junit.Test;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.jta.TestingJtaBootstrap;

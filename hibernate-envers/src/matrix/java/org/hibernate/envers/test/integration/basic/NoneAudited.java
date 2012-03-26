@@ -23,19 +23,16 @@
  */
 package org.hibernate.envers.test.integration.basic;
 
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.PersistentClass;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Adam Warski (adam at warski dot org)

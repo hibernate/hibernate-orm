@@ -23,19 +23,18 @@
  */
 package org.hibernate.test.nonflushedchanges;
 
-import javax.transaction.RollbackException;
 import java.util.ArrayList;
 import java.util.Collection;
+import javax.transaction.RollbackException;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.exception.ConstraintViolationException;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 import static org.junit.Assert.assertEquals;

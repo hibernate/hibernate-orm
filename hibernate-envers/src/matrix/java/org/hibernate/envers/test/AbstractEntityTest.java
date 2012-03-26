@@ -27,10 +27,10 @@ import java.io.IOException;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.Dialect;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.envers.AuditReader;

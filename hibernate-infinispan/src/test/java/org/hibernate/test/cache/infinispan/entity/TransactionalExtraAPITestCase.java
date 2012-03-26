@@ -21,16 +21,15 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cfg.Configuration;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;

@@ -1,13 +1,14 @@
 package org.hibernate.envers.test.integration.merge;
 
+import java.util.Arrays;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.Arrays;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

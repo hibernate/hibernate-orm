@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

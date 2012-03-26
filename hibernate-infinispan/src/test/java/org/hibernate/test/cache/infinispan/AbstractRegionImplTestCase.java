@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan;
+
 import java.util.Properties;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.internal.util.compare.ComparableComparator;
 
 /**

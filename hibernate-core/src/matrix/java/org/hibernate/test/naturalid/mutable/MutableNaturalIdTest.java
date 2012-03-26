@@ -22,7 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.naturalid.mutable;
+
 import java.lang.reflect.Field;
+
+import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -30,9 +33,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

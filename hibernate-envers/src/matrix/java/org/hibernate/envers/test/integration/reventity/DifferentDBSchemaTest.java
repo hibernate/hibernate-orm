@@ -4,16 +4,16 @@ import java.util.Arrays;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Tests simple auditing process (read and write operations) when <i>REVINFO</i> and audit tables

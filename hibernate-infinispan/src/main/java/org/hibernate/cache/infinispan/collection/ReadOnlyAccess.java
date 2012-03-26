@@ -1,8 +1,10 @@
 package org.hibernate.cache.infinispan.collection;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.SoftLock;
+
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * This defines the strategy for transactional access to collection data in a

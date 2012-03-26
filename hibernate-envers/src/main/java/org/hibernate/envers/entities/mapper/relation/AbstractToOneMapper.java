@@ -1,5 +1,9 @@
 package org.hibernate.envers.entities.mapper.relation;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -10,10 +14,6 @@ import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Base class for property mappers that manage to-one relation.

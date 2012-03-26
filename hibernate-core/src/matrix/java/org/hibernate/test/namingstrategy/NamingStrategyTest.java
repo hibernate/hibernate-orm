@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.namingstrategy;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

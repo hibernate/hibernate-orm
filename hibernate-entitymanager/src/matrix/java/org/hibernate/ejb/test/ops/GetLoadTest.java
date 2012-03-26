@@ -23,16 +23,16 @@
  */
 package org.hibernate.ejb.test.ops;
 
-import javax.persistence.EntityManager;
 import java.util.Map;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

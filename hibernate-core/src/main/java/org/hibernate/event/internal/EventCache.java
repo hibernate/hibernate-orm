@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
  * EventCache is a Map implementation that can be used by an event

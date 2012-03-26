@@ -7,15 +7,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.infinispan.util.AddressAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.util.AddressAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
 
 /**
  * Support for Infinispan {@link Region}s. Handles common "utility" methods for an underlying named

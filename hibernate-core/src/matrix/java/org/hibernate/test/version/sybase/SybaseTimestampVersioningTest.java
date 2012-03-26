@@ -23,17 +23,15 @@
  */
 package org.hibernate.test.version.sybase;
 
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.type.BinaryType;
-
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.BinaryType;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

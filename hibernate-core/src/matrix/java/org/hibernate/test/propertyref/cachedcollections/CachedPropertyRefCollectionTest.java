@@ -23,14 +23,13 @@
  */
 package org.hibernate.test.propertyref.cachedcollections;
 
+import org.junit.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

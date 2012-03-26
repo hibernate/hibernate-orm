@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
+
 import java.util.List;
 
 import org.junit.Test;
@@ -33,7 +34,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.SybaseASE157Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.testing.SkipForDialect;

@@ -26,7 +26,6 @@ package org.hibernate.testing.cache;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.internal.CoreMessageLogger;

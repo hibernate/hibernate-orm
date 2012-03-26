@@ -5,17 +5,19 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
+
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
 
 /**
  * Defines the behavior of the timestamps cache region for Infinispan.

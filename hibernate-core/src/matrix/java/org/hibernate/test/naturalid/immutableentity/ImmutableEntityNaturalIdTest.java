@@ -23,10 +23,7 @@
  */
 package org.hibernate.test.naturalid.immutableentity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
@@ -35,10 +32,13 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for NaturalId annotation on an {@link Immutable} entity

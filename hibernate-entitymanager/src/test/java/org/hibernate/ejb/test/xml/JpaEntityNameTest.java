@@ -1,6 +1,5 @@
 package org.hibernate.ejb.test.xml;
 
-import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;

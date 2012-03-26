@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.path;
+
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.util.Map;
@@ -34,6 +35,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.MapJoinImplementor;
 import org.hibernate.ejb.criteria.PathImplementor;

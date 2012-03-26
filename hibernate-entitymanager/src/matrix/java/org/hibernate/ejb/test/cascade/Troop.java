@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+
 import org.hibernate.annotations.OrderBy;
 
 /**

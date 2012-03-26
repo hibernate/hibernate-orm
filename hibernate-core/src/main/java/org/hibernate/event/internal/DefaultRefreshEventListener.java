@@ -42,7 +42,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;

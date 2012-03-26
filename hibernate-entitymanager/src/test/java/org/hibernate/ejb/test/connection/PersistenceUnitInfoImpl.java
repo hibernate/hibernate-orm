@@ -21,6 +21,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.connection;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import javax.persistence.spi.ClassTransformer;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.ejb.test.Distributor;

@@ -23,18 +23,18 @@
  */
 package org.hibernate.ejb.test.cascade;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static javax.persistence.CascadeType.DETACH;
 import static javax.persistence.CascadeType.REMOVE;

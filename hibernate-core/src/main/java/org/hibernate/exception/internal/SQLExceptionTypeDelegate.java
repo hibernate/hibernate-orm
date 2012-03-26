@@ -39,7 +39,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
-import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;

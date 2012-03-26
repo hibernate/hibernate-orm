@@ -25,8 +25,11 @@ package org.hibernate.ejb.criteria.idclass;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.*;
-import javax.persistence.criteria.*;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import junit.framework.Assert;
 import org.junit.After;

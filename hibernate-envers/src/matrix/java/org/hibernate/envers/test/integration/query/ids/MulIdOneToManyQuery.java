@@ -29,7 +29,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -38,6 +38,8 @@ import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
 import org.hibernate.envers.test.tools.TestTools;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)

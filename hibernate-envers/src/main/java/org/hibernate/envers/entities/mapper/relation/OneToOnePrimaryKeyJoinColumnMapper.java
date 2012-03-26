@@ -1,14 +1,14 @@
 package org.hibernate.envers.entities.mapper.relation;
 
+import java.io.Serializable;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-
-import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumn;
-import java.io.Serializable;
 
 /**
  * Property mapper for {@link OneToOne} with {@link PrimaryKeyJoinColumn} relation.

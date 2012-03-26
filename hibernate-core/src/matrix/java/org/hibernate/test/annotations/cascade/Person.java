@@ -24,7 +24,6 @@
 package org.hibernate.test.annotations.cascade;
 
 import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

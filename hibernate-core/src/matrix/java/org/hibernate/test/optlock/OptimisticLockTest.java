@@ -24,14 +24,13 @@
 package org.hibernate.test.optlock;
 
 
+import org.junit.Test;
+
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.SQLServerDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

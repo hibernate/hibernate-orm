@@ -26,6 +26,7 @@ package org.hibernate.test.stateless.fetching;
 import java.util.Date;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -33,9 +34,6 @@ import org.hibernate.StatelessSession;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.internal.util.StringHelper;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;

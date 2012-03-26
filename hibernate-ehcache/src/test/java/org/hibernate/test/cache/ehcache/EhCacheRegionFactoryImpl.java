@@ -1,11 +1,11 @@
 package org.hibernate.test.cache.ehcache;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-
-import java.lang.reflect.Field;
-import java.util.Map;
 
 /**
  * @author Alex Snaps

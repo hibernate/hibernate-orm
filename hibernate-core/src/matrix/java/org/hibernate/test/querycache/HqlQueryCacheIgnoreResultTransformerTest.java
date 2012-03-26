@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.querycache;
 
-import org.hibernate.CacheMode;
-
 import org.junit.Test;
 
+import org.hibernate.CacheMode;
 import org.hibernate.testing.FailureExpected;
 
 /**

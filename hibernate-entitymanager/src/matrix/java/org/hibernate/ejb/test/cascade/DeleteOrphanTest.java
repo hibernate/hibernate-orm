@@ -31,11 +31,12 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import org.hibernate.Hibernate;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.hibernate.Hibernate;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

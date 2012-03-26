@@ -36,8 +36,19 @@ import javax.naming.StringRefAddr;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import static org.junit.Assert.*;
+
 import org.enhydra.jdbc.standard.StandardXADataSource;
+import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+import org.jboss.util.naming.NonSerializableFactory;
+import org.jnp.interfaces.NamingContext;
+import org.jnp.server.Main;
+import org.jnp.server.NamingServer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -50,16 +61,9 @@ import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-import org.jboss.util.naming.NonSerializableFactory;
-import org.jnp.interfaces.NamingContext;
-import org.jnp.server.Main;
-import org.jnp.server.NamingServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * This is an example test based on http://community.jboss.org/docs/DOC-14617 that shows how to interact with

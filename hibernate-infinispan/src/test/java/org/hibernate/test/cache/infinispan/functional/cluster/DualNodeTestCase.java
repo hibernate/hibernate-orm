@@ -25,6 +25,8 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -32,10 +34,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**

@@ -30,6 +30,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+import org.junit.Ignore;
+import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -40,12 +46,6 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
-import org.junit.Ignore;
-import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}

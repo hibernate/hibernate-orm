@@ -25,9 +25,9 @@ package org.hibernate.ejb.test.xml;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 

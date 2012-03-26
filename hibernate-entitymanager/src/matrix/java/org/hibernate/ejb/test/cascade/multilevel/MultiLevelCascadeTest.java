@@ -23,8 +23,6 @@
  */
 package org.hibernate.ejb.test.cascade.multilevel;
 
-import static org.junit.Assert.*;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
@@ -32,6 +30,10 @@ import org.junit.Test;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 public class MultiLevelCascadeTest extends BaseEntityManagerFunctionalTestCase {
 

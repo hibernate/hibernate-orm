@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -153,7 +155,6 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.

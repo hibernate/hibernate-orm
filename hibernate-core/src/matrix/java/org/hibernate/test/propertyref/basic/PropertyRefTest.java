@@ -26,6 +26,8 @@ package org.hibernate.test.propertyref.basic;
 import java.util.Iterator;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -35,6 +37,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,10 +45,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Gavin King

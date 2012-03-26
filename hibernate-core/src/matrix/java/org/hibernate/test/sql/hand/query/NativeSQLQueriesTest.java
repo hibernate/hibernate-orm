@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -18,19 +20,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimestampType;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Group;
@@ -42,6 +31,16 @@ import org.hibernate.test.sql.hand.Product;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TimestampType;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertEquals;

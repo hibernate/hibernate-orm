@@ -21,12 +21,14 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.util;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.infinispan.remoting.transport.Address;
 
 /**

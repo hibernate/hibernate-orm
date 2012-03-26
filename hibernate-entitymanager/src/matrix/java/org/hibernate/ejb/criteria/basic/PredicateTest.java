@@ -23,22 +23,21 @@
  */
 package org.hibernate.ejb.criteria.basic;
 
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;

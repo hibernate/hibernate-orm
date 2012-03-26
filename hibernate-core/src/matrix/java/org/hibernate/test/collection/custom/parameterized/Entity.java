@@ -1,12 +1,13 @@
 package org.hibernate.test.collection.custom.parameterized;
+
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Parameter;

@@ -23,8 +23,6 @@
  */
 package org.hibernate.ejb.test.ejb3configuration;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -34,6 +32,8 @@ import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.junit.Test;
+
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
@@ -41,7 +41,8 @@ import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.Wallet;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard

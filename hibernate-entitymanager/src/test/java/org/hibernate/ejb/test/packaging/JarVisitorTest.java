@@ -23,11 +23,6 @@
  */
 package org.hibernate.ejb.test.packaging;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -35,10 +30,11 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.Set;
-
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+
+import org.junit.Test;
 
 import org.hibernate.ejb.packaging.ClassFilter;
 import org.hibernate.ejb.packaging.Entry;
@@ -54,7 +50,11 @@ import org.hibernate.ejb.packaging.PackageFilter;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard

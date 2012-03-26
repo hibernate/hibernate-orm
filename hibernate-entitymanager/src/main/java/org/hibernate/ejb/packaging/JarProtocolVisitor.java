@@ -20,9 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
+
 import org.hibernate.annotations.common.AssertionFailure;
 
 /**

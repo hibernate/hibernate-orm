@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.util;
+
 import javax.persistence.spi.LoadState;
 
 import org.junit.Test;
 
 import org.hibernate.ejb.util.PersistenceUtilHelper;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 /**
  * Tests for HHH-5094 and HHH-5334
  *

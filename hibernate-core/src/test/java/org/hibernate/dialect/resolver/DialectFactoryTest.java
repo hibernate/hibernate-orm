@@ -23,15 +23,14 @@
  */
 package org.hibernate.dialect.resolver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
@@ -63,8 +62,10 @@ import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole

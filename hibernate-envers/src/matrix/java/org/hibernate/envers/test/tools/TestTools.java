@@ -22,10 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.tools;
-import org.hibernate.envers.DefaultRevisionEntity;
-import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 
 /**
  * @author Adam Warski (adam at warski dot org)

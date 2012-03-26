@@ -27,9 +27,8 @@ import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for Sybase dialects

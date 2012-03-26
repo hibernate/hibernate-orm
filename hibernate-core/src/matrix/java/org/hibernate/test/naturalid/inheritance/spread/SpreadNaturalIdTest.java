@@ -23,11 +23,10 @@
  */
 package org.hibernate.test.naturalid.inheritance.spread;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.cfg.Configuration;
-
 import org.junit.Test;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

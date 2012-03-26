@@ -23,19 +23,19 @@
  */
 package org.hibernate.ejb.criteria.tuple;
 
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
-import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

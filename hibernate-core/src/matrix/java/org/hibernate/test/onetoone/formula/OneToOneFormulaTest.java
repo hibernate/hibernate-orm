@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.onetoone.formula;
 
+import org.junit.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -30,9 +32,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
-
-import org.junit.Test;
-
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;

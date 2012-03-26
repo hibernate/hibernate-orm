@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.ops;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

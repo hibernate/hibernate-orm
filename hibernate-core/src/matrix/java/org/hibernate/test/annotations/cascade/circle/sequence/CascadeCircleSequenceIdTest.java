@@ -23,14 +23,13 @@
  */
 package org.hibernate.test.annotations.cascade.circle.sequence;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import org.junit.Test;
 
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class CascadeCircleSequenceIdTest extends BaseCoreFunctionalTestCase {

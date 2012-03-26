@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -56,11 +55,11 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;

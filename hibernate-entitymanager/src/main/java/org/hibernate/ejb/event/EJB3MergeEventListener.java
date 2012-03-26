@@ -25,8 +25,8 @@ package org.hibernate.ejb.event;
 
 import java.io.Serializable;
 
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.internal.DefaultMergeEventListener;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation

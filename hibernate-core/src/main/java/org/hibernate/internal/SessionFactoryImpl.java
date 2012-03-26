@@ -39,9 +39,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -145,7 +146,6 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.jboss.logging.Logger;
 
 
 /**
@@ -1249,15 +1249,15 @@ public final class SessionFactoryImpl
 	}
 
 	public NamedQueryDefinition getNamedQuery(String queryName) {
-		return namedQueries.get(queryName);
+		return namedQueries.get( queryName );
 	}
 
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return namedSqlQueries.get(queryName);
+		return namedSqlQueries.get( queryName );
 	}
 
 	public ResultSetMappingDefinition getResultSetMapping(String resultSetName) {
-		return sqlResultSetMappings.get(resultSetName);
+		return sqlResultSetMappings.get( resultSetName );
 	}
 
 	public Type getIdentifierType(String className) throws MappingException {
@@ -1347,7 +1347,7 @@ public final class SessionFactoryImpl
 				}
 			}
 		}
-		return results.toArray( new String[ results.size() ] );
+		return results.toArray( new String[results.size()] );
 	}
 
 	public String getImportedClassName(String className) {

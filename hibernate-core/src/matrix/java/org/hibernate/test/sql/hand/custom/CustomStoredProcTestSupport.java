@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sql.hand.custom;
+
 import java.sql.SQLException;
 import java.util.List;
+
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;

@@ -21,16 +21,18 @@
  */
 package org.hibernate.test.cache.infinispan.functional.bulk;
 
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
+
+import org.junit.Test;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -39,13 +41,10 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.SecondLevelCacheStatistics;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

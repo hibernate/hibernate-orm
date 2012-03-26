@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.queryplan;
+
 import java.util.Collections;
 import java.util.HashMap;
+
+import org.junit.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;

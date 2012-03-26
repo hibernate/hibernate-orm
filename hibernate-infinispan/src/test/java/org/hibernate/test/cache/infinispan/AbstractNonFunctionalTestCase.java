@@ -27,12 +27,10 @@ import java.util.Set;
 
 import org.infinispan.Cache;
 import org.jboss.logging.Logger;
-
-import org.hibernate.cache.spi.RegionFactory;
-
 import org.junit.After;
 import org.junit.Before;
 
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 
 /**

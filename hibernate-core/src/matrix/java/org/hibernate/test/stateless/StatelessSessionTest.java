@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.stateless;
+
 import java.util.Date;
+
+import org.junit.Test;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

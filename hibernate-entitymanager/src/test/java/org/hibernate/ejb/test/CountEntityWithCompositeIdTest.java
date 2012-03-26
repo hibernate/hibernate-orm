@@ -23,13 +23,15 @@
  */
 package org.hibernate.ejb.test;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.core.Is.is;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+
 import org.junit.Test;
+
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 /**
  *

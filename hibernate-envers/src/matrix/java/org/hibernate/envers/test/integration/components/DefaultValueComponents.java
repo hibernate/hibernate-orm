@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.test.integration.components;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 

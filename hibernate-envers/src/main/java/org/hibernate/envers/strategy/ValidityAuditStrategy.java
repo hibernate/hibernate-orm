@@ -1,10 +1,10 @@
 package org.hibernate.envers.strategy;
 
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
@@ -19,6 +19,9 @@ import org.hibernate.envers.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 import org.hibernate.property.Getter;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  *  Audit strategy which persists and retrieves audit information using a validity algorithm, based on the 

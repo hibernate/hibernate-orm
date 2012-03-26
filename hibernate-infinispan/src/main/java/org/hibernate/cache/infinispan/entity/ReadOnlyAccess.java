@@ -1,8 +1,10 @@
 package org.hibernate.cache.infinispan.entity;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.SoftLock;
+
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * A specialization of {@link TransactionalAccess} that ensures we never update data. Infinispan

@@ -23,9 +23,9 @@
  */
 package org.hibernate.service.jdbc.connections.spi;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.sql.DataSource;
 
 import org.hibernate.service.UnknownUnwrapTypeException;
 

@@ -23,15 +23,12 @@
  */
 package org.hibernate.sharedSession;
 
-import org.hibernate.Criteria;
+import org.junit.Test;
+
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionContext;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

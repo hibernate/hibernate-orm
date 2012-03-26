@@ -1,8 +1,9 @@
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
+
+import org.hibernate.cache.infinispan.impl.BaseRegion;
 
 /**
  * Evict all command

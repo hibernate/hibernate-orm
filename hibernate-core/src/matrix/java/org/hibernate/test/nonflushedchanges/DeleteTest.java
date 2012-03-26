@@ -24,10 +24,9 @@
 package org.hibernate.test.nonflushedchanges;
 
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**

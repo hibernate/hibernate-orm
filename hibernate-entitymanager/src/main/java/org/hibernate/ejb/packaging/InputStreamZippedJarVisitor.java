@@ -20,15 +20,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 
 
 /**

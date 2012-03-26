@@ -28,8 +28,8 @@ import java.io.Serializable;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EJB3CascadeStyle;
 import org.hibernate.engine.spi.EJB3CascadingAction;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.internal.DefaultPersistEventListener;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation

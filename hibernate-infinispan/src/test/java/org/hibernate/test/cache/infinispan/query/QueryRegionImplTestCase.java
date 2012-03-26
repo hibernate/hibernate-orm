@@ -28,8 +28,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.hibernate.cache.spi.GeneralDataRegion;
+import junit.framework.AssertionFailedError;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -37,18 +36,17 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.internal.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.internal.StandardQueryCache;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.GeneralDataRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.Region;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistryBuilder;
-
-import junit.framework.AssertionFailedError;
-
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 

@@ -25,6 +25,8 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -34,7 +36,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities

@@ -25,13 +25,11 @@ package org.hibernate.testing.junit4;
 
 import javax.transaction.SystemException;
 
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
+import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.runner.RunWith;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**

@@ -1,8 +1,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

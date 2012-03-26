@@ -2,9 +2,9 @@ package org.hibernate.ejb.test.association;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

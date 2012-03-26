@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityExistsException;
@@ -63,6 +62,8 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -113,7 +114,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 
 /**

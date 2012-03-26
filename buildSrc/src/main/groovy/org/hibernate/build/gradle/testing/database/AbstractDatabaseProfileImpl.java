@@ -33,7 +33,6 @@ import java.util.Properties;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.Logging;
-
 import org.slf4j.Logger;
 
 import org.hibernate.build.qalab.DatabaseAllocation;

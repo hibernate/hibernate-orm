@@ -25,10 +25,10 @@ package org.hibernate.test.cache.infinispan.functional;
 
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

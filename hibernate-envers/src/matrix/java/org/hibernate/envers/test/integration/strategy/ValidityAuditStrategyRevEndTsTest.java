@@ -32,11 +32,11 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;

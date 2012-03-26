@@ -23,11 +23,10 @@
  */
 package org.hibernate.test.annotations.naturalid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
+
+import org.junit.After;
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
@@ -39,8 +38,9 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.junit.After;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for NaturalId annotation

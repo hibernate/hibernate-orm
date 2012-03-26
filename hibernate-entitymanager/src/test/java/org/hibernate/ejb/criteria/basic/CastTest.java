@@ -26,19 +26,17 @@ package org.hibernate.ejb.criteria.basic;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.ejb.metamodel.Product;
-import org.hibernate.ejb.metamodel.Product_;
-
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.ejb.metamodel.Product;
+import org.hibernate.ejb.metamodel.Product_;
 import org.hibernate.testing.TestForIssue;
 
 public class CastTest extends AbstractMetamodelSpecificTest {

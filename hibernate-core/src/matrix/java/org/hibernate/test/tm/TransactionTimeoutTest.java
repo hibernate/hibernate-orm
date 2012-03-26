@@ -30,8 +30,6 @@ import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction;
-
 import org.hibernate.test.jdbc.Person;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;

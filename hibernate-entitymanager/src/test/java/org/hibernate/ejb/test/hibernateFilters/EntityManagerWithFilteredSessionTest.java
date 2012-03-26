@@ -25,10 +25,10 @@ package org.hibernate.ejb.test.hibernateFilters;
 
 import javax.persistence.EntityManager;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 /**
  * @author Steve Ebersole

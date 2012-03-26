@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags;
 
+import java.util.List;
+import java.util.Properties;
+
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.test.AbstractEntityTest;
-
-import java.util.List;
-import java.util.Properties;
 
 /**
  * Base test for modified flags feature

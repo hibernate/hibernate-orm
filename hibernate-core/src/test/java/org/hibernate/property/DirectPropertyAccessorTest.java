@@ -24,8 +24,6 @@
  */
 package org.hibernate.property;
 
-import java.util.Date;
-
 import org.junit.Test;
 
 import org.hibernate.Hibernate;

@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.join;
-import java.math.BigDecimal;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;

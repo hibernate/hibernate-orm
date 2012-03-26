@@ -25,11 +25,11 @@ package org.hibernate.ejb.test.emops.cascade;
 
 import javax.persistence.EntityManager;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

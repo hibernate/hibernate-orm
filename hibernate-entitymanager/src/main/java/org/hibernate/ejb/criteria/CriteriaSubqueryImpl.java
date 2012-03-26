@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.path.RootImpl;
 

@@ -24,8 +24,6 @@
 package  org.hibernate.ejb.criteria.idclass;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 

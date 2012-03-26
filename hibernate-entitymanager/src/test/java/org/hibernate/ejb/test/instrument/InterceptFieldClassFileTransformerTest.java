@@ -1,9 +1,10 @@
 //$Id$
 package org.hibernate.ejb.test.instrument;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
+
 import org.junit.Assert;
 import org.junit.Test;
 

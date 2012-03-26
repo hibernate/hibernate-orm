@@ -30,6 +30,10 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.jboss.logging.Logger;
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -41,9 +45,6 @@ import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
 
 /**
  * A base class for all ejb tests.

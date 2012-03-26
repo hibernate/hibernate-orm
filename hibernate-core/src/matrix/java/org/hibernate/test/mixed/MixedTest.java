@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.mixed;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

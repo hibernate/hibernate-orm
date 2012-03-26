@@ -29,6 +29,8 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Synchronization;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -37,7 +39,6 @@ import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.

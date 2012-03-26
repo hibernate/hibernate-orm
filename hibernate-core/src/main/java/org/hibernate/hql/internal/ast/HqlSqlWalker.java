@@ -87,8 +87,6 @@ import org.hibernate.hql.internal.ast.util.SyntheticAndFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
-import org.hibernate.id.SequenceGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;

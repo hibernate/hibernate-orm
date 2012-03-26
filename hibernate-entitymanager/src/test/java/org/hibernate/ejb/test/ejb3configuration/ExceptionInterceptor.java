@@ -1,6 +1,8 @@
 //$Id$
 package org.hibernate.ejb.test.ejb3configuration;
+
 import java.io.Serializable;
+
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;

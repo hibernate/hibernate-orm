@@ -24,7 +24,6 @@
 package org.hibernate.test.annotations.cascade;
 
 import java.io.Serializable;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;

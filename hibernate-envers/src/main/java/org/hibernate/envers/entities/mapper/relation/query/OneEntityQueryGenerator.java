@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.entities.mapper.relation.query;
 
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
 import java.util.Collections;
+
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -35,6 +35,10 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  * Selects data from a relation middle-table only.

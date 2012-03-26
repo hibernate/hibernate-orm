@@ -1,15 +1,15 @@
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.impl.BaseRegion;
-import org.infinispan.commands.ReplicableCommand;
-import org.infinispan.commands.module.ExtendedModuleCommandFactory;
-import org.infinispan.commands.remote.CacheRpcCommand;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.module.ExtendedModuleCommandFactory;
+import org.infinispan.commands.remote.CacheRpcCommand;
+
+import org.hibernate.cache.infinispan.impl.BaseRegion;
 
 /**
  * Command factory

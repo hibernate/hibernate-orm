@@ -23,13 +23,13 @@
  */
 package org.hibernate.ejb.test.callbacks;
 
-import javax.persistence.EntityManager;
 import java.util.Iterator;
 import java.util.List;
-
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import javax.persistence.EntityManager;
 
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

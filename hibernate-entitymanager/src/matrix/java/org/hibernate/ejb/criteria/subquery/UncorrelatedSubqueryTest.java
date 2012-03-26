@@ -30,13 +30,13 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
+import org.junit.Test;
+
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
-
-import org.junit.Test;
 
 /**
  * @author Steve Ebersole

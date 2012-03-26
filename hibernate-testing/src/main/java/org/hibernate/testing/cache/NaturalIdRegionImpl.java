@@ -23,6 +23,8 @@
  */
 package org.hibernate.testing.cache;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -30,7 +32,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 
 /**
  * @author Eric Dalquist

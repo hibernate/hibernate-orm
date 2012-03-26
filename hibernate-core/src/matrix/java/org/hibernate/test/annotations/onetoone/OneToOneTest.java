@@ -40,7 +40,6 @@ import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

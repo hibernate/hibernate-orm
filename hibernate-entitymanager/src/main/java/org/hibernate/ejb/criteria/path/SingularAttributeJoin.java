@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.path;
+
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;

@@ -26,9 +26,7 @@ package org.hibernate.test.annotations.cascade.circle.identity;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

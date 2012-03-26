@@ -208,8 +208,8 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
                 .add(AuditEntity.relatedId("reference").eq(id3))
                 .add(AuditEntity.id().eq(id2))
                 .getSingleResult();
-		assertEquals( 0, rev1_related );
-		assertEquals( 0, rev2_related );
+		assertEquals( 0, rev1_related.size() );
+		assertEquals( 0, rev2_related.size() );
 		assertEquals( new SetRefIngMulIdEntity(id2, "y", null), rev3_related );
     }
 }

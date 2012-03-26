@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 import javax.transaction.TransactionManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -83,7 +84,7 @@ public class JtaExceptionListener extends AbstractEntityTest {
             newEntityManager();
 		    EntityManager em = getEntityManager();
             Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
-		    assert count == 0l;
+		    Assert.assertEquals( Long.valueOf( 0 ), count );
         } finally {
             tryCommit(tm);
         }

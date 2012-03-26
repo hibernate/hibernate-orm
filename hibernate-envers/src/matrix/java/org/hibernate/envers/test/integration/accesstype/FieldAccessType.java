@@ -27,6 +27,7 @@ package org.hibernate.envers.test.integration.accesstype;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -61,15 +62,14 @@ public class FieldAccessType extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(FieldAccessTypeEntity.class, id1));
+		Assert.assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions(FieldAccessTypeEntity.class, id1) );
     }
 
     @Test
     public void testHistoryOfId1() {
         FieldAccessTypeEntity ver1 = new FieldAccessTypeEntity(id1, "data");
         FieldAccessTypeEntity ver2 = new FieldAccessTypeEntity(id1, "data2");
-
-        assert getAuditReader().find(FieldAccessTypeEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(FieldAccessTypeEntity.class, id1, 2).equals(ver2);
+		Assert.assertEquals(getAuditReader().find(FieldAccessTypeEntity.class, id1, 1), ver1);
+		Assert.assertEquals(getAuditReader().find(FieldAccessTypeEntity.class, id1, 2), ver2);
     }
 }

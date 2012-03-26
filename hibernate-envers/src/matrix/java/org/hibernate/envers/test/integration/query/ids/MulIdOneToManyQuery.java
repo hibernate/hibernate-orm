@@ -29,7 +29,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
-
+import static org.junit.Assert.*;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -133,15 +133,13 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
                 .add(AuditEntity.property("reference").eq(new SetRefEdMulIdEntity(id3, null)))
                 .getResultList());
-
-        assert rev1.equals(rev1_related);
-        assert rev2.equals(rev2_related);
-        assert rev3.equals(rev3_related);
-
-        assert rev1.equals(TestTools.makeSet());
-        assert rev2.equals(TestTools.makeSet(new SetRefIngMulIdEntity(id1, "x", null)));
-        assert rev3.equals(TestTools.makeSet(new SetRefIngMulIdEntity(id1, "x", null),
-                new SetRefIngMulIdEntity(id2, "y", null)));
+		assertEquals( rev1, rev1_related );
+		assertEquals( rev2, rev2_related );
+		assertEquals( rev3, rev3_related );
+		assertEquals( rev1, TestTools.makeSet() );
+		assertEquals( rev2, TestTools.makeSet(new SetRefIngMulIdEntity(id1, "x", null)) );
+		assertEquals( rev3, TestTools.makeSet(new SetRefIngMulIdEntity(id1, "x", null),
+				new SetRefIngMulIdEntity(id2, "y", null)) );
     }
 
     @Test
@@ -160,10 +158,9 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
                 .add(AuditEntity.relatedId("reference").eq(id4))
                 .getResultList());
-
-        assert rev1_related.equals(TestTools.makeSet());
-        assert rev2_related.equals(TestTools.makeSet(new SetRefIngMulIdEntity(id2, "y", null)));
-        assert rev3_related.equals(TestTools.makeSet());
+		assertEquals( rev1_related, TestTools.makeSet(  ));
+		assertEquals( rev2_related, TestTools.makeSet(new SetRefIngMulIdEntity(id2, "y", null)));
+		assertEquals( rev3_related, TestTools.makeSet(  ));
     }
 
     @Test
@@ -185,10 +182,9 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
                 .add(AuditEntity.relatedId("reference").eq(id3))
                 .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
-
-        assert rev1_related.size() == 0;
-        assert rev2_related.equals(new SetRefIngMulIdEntity(id1, "x", null));
-        assert rev3_related.equals(new SetRefIngMulIdEntity(id1, "x", null));
+		assertEquals( 0, rev1_related.size() );
+		assertEquals( rev2_related,new SetRefIngMulIdEntity(id1, "x", null) );
+		assertEquals( rev3_related, new SetRefIngMulIdEntity(id1, "x", null) );
     }
 
     @Test
@@ -210,9 +206,8 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
                 .add(AuditEntity.relatedId("reference").eq(id3))
                 .add(AuditEntity.id().eq(id2))
                 .getSingleResult();
-
-        assert rev1_related.size() == 0;
-        assert rev2_related.size() == 0;
-        assert rev3_related.equals(new SetRefIngMulIdEntity(id2, "y", null));
+		 assertEquals( 0, rev1_related );
+		assertEquals( 0, rev2_related );
+		assertEquals( new SetRefIngMulIdEntity(id2, "y", null), rev3_related );
     }
 }

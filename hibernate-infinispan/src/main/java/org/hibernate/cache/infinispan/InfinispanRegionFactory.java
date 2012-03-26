@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.infinispan.impl.BaseRegion;
+import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
@@ -87,6 +88,15 @@ public class InfinispanRegionFactory implements RegionFactory {
     * @see #DEF_USE_SYNCHRONIZATION
     */
    public static final String INFINISPAN_USE_SYNCHRONIZATION_PROP = "hibernate.cache.infinispan.use_synchronization";
+   
+	private static final String NATURAL_ID_KEY = "naturalid";
+
+	/**
+	 * Name of the configuration that should be used for natural id caches.
+	 *
+	 * @see #DEF_ENTITY_RESOURCE
+	 */
+	public static final String NATURAL_ID_CACHE_RESOURCE_PROP = PREFIX + NATURAL_ID_KEY + CONFIG_SUFFIX;
 
    private static final String ENTITY_KEY = "entity";
    
@@ -196,12 +206,25 @@ public class InfinispanRegionFactory implements RegionFactory {
       startRegion(region, regionName);
       return region;
    }
-   
-   @Override
-   public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-         throws CacheException {
-      throw new UnsupportedOperationException(); //TODO
-   }
+
+	@Override
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building natural id cache region [" + regionName + "]" );
+		}
+		AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties );
+		CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance( cache );
+		NaturalIdRegionImpl region = new NaturalIdRegionImpl(
+				cacheAdapter,
+				regionName,
+				metadata,
+				transactionManager,
+				this
+		);
+		startRegion( region, regionName );
+		return region;
+	}
 	
    /**
     * {@inheritDoc}

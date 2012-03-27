@@ -869,7 +869,7 @@ public class Order {
       </section>
     </section>
 
-    <section xml:id="collections-ofvalues" revision="2">
+    <section xml:id="collections-ofvalues" revision="3">
       <title>Collections of basic types and embeddable objects</title>
 
       <para>In some situations you don't need to associate two entities but
@@ -919,9 +919,9 @@ public class User {
 
    @ElementCollection
    @CollectionTable(name="Addresses", joinColumns=@JoinColumn(name="user_id"))
-   @AttributeOverrides({
+   @AttributeOverrides([
       @AttributeOverride(name="street1", column=@Column(name="fld_street"))
-   })
+   ])
    public Set&lt;Address&gt; getAddresses() { ... } 
 }
 
@@ -945,10 +945,10 @@ public class Address {
         <programlisting language="JAVA" role="JAVA">@Entity
 public class User {
    @ElementCollection
-   @AttributeOverrides({
+   @AttributeOverrides([
       @AttributeOverride(name="key.street1", column=@Column(name="fld_street")),
       @AttributeOverride(name="value.stars", column=@Column(name="fld_note"))
-   })
+   ])
    public Map&lt;Address,Rating&gt; getFavHomes() { ... }</programlisting>
       </note>
 

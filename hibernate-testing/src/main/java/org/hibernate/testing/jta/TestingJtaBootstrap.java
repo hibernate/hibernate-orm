@@ -23,12 +23,14 @@
  */
 package org.hibernate.testing.jta;
 
+import javax.sql.DataSource;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
-import javax.sql.DataSource;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 
 import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
@@ -38,14 +40,13 @@ import org.enhydra.jdbc.standard.StandardXADataSource;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
 
 /**
  * Manages the {@link TransactionManager}, {@link UserTransaction} and {@link DataSource} instances used for testing.
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration", "unchecked"})
 public class TestingJtaBootstrap {
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
 
@@ -70,8 +71,8 @@ public class TestingJtaBootstrap {
 		this.userTransaction = com.arjuna.ats.jta.UserTransaction.userTransaction();
 
 		Properties environmentProperties = Environment.getProperties();
-		StandardXADataSource dataSource = new StandardXADataSource();
-		dataSource.setTransactionManager( com.arjuna.ats.jta.TransactionManager.transactionManager() );
+		JtaAwareDataSource dataSource = new JtaAwareDataSource();
+		dataSource.setTransactionManager( transactionManager );
 		try {
 			dataSource.setDriverName( environmentProperties.getProperty( Environment.DRIVER ) );
 		}
@@ -81,6 +82,8 @@ public class TestingJtaBootstrap {
 		dataSource.setUrl( environmentProperties.getProperty( Environment.URL ) );
 		dataSource.setUser( environmentProperties.getProperty( Environment.USER ) );
 		dataSource.setPassword( environmentProperties.getProperty( Environment.PASS ) );
+		environmentProperties.remove( Environment.USER );
+		environmentProperties.remove( Environment.PASS );
 		final String isolationString = environmentProperties.getProperty( Environment.ISOLATION );
 		if ( isolationString != null ) {
 			dataSource.setTransactionIsolation( Integer.valueOf( isolationString ) );
@@ -92,17 +95,74 @@ public class TestingJtaBootstrap {
 		return transactionManager;
 	}
 
-	public UserTransaction getUserTransaction() {
-		return userTransaction;
-	}
-
 	public DataSource getDataSource() {
 		return dataSource;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void prepare(Map configValues) {
-		configValues.put( AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
-		configValues.put( Environment.CONNECTION_PROVIDER, DatasourceConnectionProviderImpl.class.getName() );
+		configValues.put( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
+		configValues.put( Environment.CONNECTION_PROVIDER, JtaAwareDataSourceConnectionProvider.class.getName() );
 		configValues.put( Environment.DATASOURCE, INSTANCE.getDataSource() );
+		configValues.put( "javax.persistence.transactionType", "JTA" );
+	}
+
+	/**
+	 * Used by envers...
+	 */
+	public static void tryCommit() throws Exception {
+		if ( INSTANCE.transactionManager.getStatus() == Status.STATUS_MARKED_ROLLBACK ) {
+			INSTANCE.transactionManager.rollback();
+		}
+		else {
+			INSTANCE.transactionManager.commit();
+		}
+	}
+
+	// ReTarDed
+	public static class JtaAwareDataSource extends StandardXADataSource {
+		@Override
+		public Connection getConnection() throws SQLException {
+			if ( getTransactionManager() == null ) {
+				setTransactionManager( TestingJtaBootstrap.INSTANCE.transactionManager );
+			}
+			final Connection connection = getXAConnection().getConnection();
+			connection.setAutoCommit( false );
+			return connection;
+		}
+
+		@Override
+		public <T> T unwrap(Class<T> iface) throws SQLException {
+			return null;  // JDK6 stuff
+		}
+
+		@Override
+		public boolean isWrapperFor(Class<?> iface) throws SQLException {
+			return false;  // JDK6 stuff
+		}
+	}
+
+	public static class TestingJtaPlatformImpl extends AbstractJtaPlatform {
+		public static final TestingJtaPlatformImpl INSTANCE = new TestingJtaPlatformImpl();
+
+		@Override
+		protected TransactionManager locateTransactionManager() {
+			return TestingJtaBootstrap.INSTANCE.transactionManager;
+		}
+
+		@Override
+		protected UserTransaction locateUserTransaction() {
+			return TestingJtaBootstrap.INSTANCE.userTransaction;
+		}
+	}
+
+	public static class JtaAwareDataSourceConnectionProvider extends DatasourceConnectionProviderImpl {
+		public static final JtaAwareDataSourceConnectionProvider INSTANCE = new JtaAwareDataSourceConnectionProvider();
+
+		@Override
+		public Connection getConnection() throws SQLException {
+			// ignore username/password as it can cause infinite looping in the Enhydra code lol
+			return TestingJtaBootstrap.INSTANCE.dataSource.getConnection();
+		}
 	}
 }

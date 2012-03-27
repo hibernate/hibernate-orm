@@ -381,6 +381,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertFalse( s.isOpen() );
 
 		assertEquals( sessionFactory().getStatistics().getFlushCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getEntityInsertCount(), 0 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
@@ -395,6 +396,8 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		s.persist( "Item", item );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertFalse( s.isOpen() );
+		assertEquals( sessionFactory().getStatistics().getFlushCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getEntityInsertCount(), 1 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();

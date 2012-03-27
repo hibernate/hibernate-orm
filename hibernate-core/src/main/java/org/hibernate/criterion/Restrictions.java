@@ -91,6 +91,7 @@ public class Restrictions {
 	public static SimpleExpression like(String propertyName, String value, MatchMode matchMode) {
 		return new SimpleExpression(propertyName, matchMode.toMatchString(value), " like " );
 	}
+
 	/**
 	 * A case-insensitive "like", similar to Postgres <tt>ilike</tt>
 	 * operator
@@ -111,8 +112,12 @@ public class Restrictions {
 	 * @return Criterion
 	 */
 	public static Criterion ilike(String propertyName, Object value) {
-		return new LikeExpression(propertyName, value.toString());
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Comparison value passed to ilike cannot be null" );
+		}
+		return ilike( propertyName, value.toString(), MatchMode.ANYWHERE );
 	}
+
 	/**
 	 * Apply a "greater than" constraint to the named property
 	 * @param propertyName

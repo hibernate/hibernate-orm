@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.strategy;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -33,12 +34,15 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(SetOwningEntity.class);
         cfg.addAnnotatedClass(SetOwnedEntity.class);
-
-        cfg.setProperty("org.hibernate.envers.audit_strategy",
-                "org.hibernate.envers.strategy.ValidityAuditStrategy");
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		configuration.setProperty("org.hibernate.envers.audit_strategy",
+				"org.hibernate.envers.strategy.ValidityAuditStrategy");
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         final EntityManager em = getEntityManager();

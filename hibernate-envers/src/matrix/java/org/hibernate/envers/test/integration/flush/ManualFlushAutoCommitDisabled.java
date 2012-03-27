@@ -1,5 +1,8 @@
 package org.hibernate.envers.test.integration.flush;
 
+import java.util.Properties;
+
+import org.hibernate.FlushMode;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.testing.TestForIssue;
 
@@ -8,9 +11,10 @@ import org.hibernate.testing.TestForIssue;
  */
 @TestForIssue(jiraKey = "HHH-7017")
 public class ManualFlushAutoCommitDisabled extends ManualFlush {
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        super.configure(cfg);
-        cfg.setProperty("hibernate.connection.autocommit", "false");
-    }
+
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("hibernate.connection.autocommit", "false");
+	}
 }

@@ -3,6 +3,7 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -31,12 +32,18 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
 
     @Override
     public void configure(Ejb3Configuration cfg) {
-        cfg.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
+
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();

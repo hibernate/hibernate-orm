@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -68,17 +69,23 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends AbstractEntityT
 		cfg.addAnnotatedClass(Child1Entity.class);
 		cfg.addAnnotatedClass(Child2Entity.class);
         cfg.addAnnotatedClass(CustomDateRevEntity.class);
+	}
 
-		cfg.setProperty("org.hibernate.envers.audit_strategy",
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+
+		configuration.setProperty("org.hibernate.envers.audit_strategy",
 				"org.hibernate.envers.strategy.ValidityAuditStrategy");
-		cfg
+		configuration
 				.setProperty(
 						"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
 						"true");
-		cfg
+		configuration
 				.setProperty(
 						"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
 						revendTimestampColumName);
+
 	}
 
 	@Test

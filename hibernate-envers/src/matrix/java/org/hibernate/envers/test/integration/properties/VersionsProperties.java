@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.properties;
 
 import java.util.Arrays;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -41,13 +42,19 @@ public class VersionsProperties extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(PropertiesTestEntity.class);
 
-        cfg.setProperty("org.hibernate.envers.auditTablePrefix", "VP_");
-        cfg.setProperty("org.hibernate.envers.auditTableSuffix", "_VS");
-        cfg.setProperty("org.hibernate.envers.revisionFieldName", "ver_rev");
-        cfg.setProperty("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
+
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.auditTablePrefix", "VP_");
+		configuration.setProperty("org.hibernate.envers.auditTableSuffix", "_VS");
+		configuration.setProperty("org.hibernate.envers.revisionFieldName", "ver_rev");
+		configuration.setProperty("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();

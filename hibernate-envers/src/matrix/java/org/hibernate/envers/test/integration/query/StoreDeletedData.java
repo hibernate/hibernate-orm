@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.query;
 
 import java.util.List;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -44,10 +45,16 @@ public class StoreDeletedData extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrIntTestEntity.class);
-		cfg.setProperty("org.hibernate.envers.storeDataAtDelete", "true");
+
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.storeDataAtDelete", "true");
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         // Revision 1

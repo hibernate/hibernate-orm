@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.properties;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -44,7 +45,13 @@ public class UnversionedOptimisticLockingField extends AbstractEntityTest {
 	public void configure(Ejb3Configuration cfg) {
 		cfg.addAnnotatedClass(UnversionedOptimisticLockingFieldEntity.class);
 
-		cfg.setProperty("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
+	}
+
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
+
 	}
 
 	@Test

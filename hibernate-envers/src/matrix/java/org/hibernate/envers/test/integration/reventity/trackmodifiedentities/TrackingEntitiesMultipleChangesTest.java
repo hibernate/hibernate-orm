@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import java.util.Arrays;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -24,7 +25,14 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
+
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();

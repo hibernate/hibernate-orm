@@ -1,5 +1,7 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import java.util.Properties;
+
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -16,10 +18,16 @@ public class ExtendedRevisionEntityTest extends DefaultTrackingEntitiesTest {
     public void configure(Ejb3Configuration cfg) {
         super.configure(cfg);
         cfg.addAnnotatedClass(ExtendedRevisionEntity.class);
-        cfg.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "false");
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "false");
+
+	}
+
+	@Test
     public void testCommentPropertyValue() {
         ExtendedRevisionEntity ere = getAuditReader().findRevision(ExtendedRevisionEntity.class, 1);
 

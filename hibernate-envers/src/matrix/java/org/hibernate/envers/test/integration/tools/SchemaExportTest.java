@@ -26,14 +26,15 @@ public class SchemaExportTest extends AbstractSessionTest {
     protected void initMappings() throws MappingException, URISyntaxException {
         config.addAnnotatedClass(StrTestEntity.class);
         // Disable schema auto generation.
-        config.setProperty(Environment.HBM2DDL_AUTO, "");
     }
-
+	protected boolean createSchema() {
+		return false;
+	}
     @Test
     @Priority(10)
     public void testSchemaCreation() {
         // Generate complete schema.
-        new EnversSchemaGenerator(config).export().create(true, true);
+        new EnversSchemaGenerator(config).export().create( true, true );
 
         // Populate database with test data.
         Session session = getSession();
@@ -45,7 +46,13 @@ public class SchemaExportTest extends AbstractSessionTest {
         id = entity.getId();
     }
 
-    @Test
+	@Override
+	public void closeSessionFactory() {
+		new EnversSchemaGenerator(config).export().drop( true, true );
+		super.closeSessionFactory();
+	}
+
+	@Test
     public void testAuditDataRetrieval() {
         Assert.assertEquals(Arrays.asList(1), getAuditReader().getRevisions(StrTestEntity.class, id));
         Assert.assertEquals(new StrTestEntity("data", id), getAuditReader().find(StrTestEntity.class, id, 1));

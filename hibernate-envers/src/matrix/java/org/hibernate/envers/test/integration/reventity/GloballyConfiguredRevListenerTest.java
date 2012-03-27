@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.reventity;
 
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Assert;
@@ -18,10 +19,16 @@ import org.hibernate.testing.TestForIssue;
 public class GloballyConfiguredRevListenerTest extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.setProperty("org.hibernate.envers.revision_listener", "org.hibernate.envers.test.integration.reventity.CountingRevisionListener");
     }
 
-    @Test
+	@Override
+	public void addConfigurationProperties(Properties configuration) {
+		super.addConfigurationProperties( configuration );
+		configuration.setProperty("org.hibernate.envers.revision_listener", "org.hibernate.envers.test.integration.reventity.CountingRevisionListener");
+
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();

@@ -31,7 +31,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 /**
@@ -43,6 +42,7 @@ public class UnidirectionalManyToOneTest extends BaseCoreFunctionalTestCase {
 		return new String[] { "unidir/manytoone/ParentChild.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
@@ -90,10 +90,10 @@ public class UnidirectionalManyToOneTest extends BaseCoreFunctionalTestCase {
 		p = c2.getParent();
 		assertEquals( "Marc", p.getName() );
 		t.commit();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		s.createQuery( "delete from org.hibernate.test.unidir.manytoone.Child" ).executeUpdate();
+		s.createQuery( "delete from Child" ).executeUpdate();
 		s.createQuery( "delete from org.hibernate.test.unidir.manytoone.Parent" ).executeUpdate();
 		t.commit();
 		s.close();

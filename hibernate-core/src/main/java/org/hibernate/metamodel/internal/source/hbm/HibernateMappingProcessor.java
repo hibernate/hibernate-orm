@@ -28,8 +28,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping.JaxbImport;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.internal.util.StringHelper;
@@ -195,15 +197,21 @@ public class HibernateMappingProcessor {
 	}
 
 	private void processImports() {
-		if ( mappingRoot().getImport() == null ) {
-			return;
-		}
-
-		for ( JaxbHibernateMapping.JaxbImport importValue : mappingRoot().getImport() ) {
+		JaxbHibernateMapping root = mappingRoot();
+		for ( JaxbImport importValue : root.getImport() ) {
 			String className = mappingDocument.getMappingLocalBindingContext().qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
 			metadata.addImport( className, rename );
+		}
+		if ( root.isAutoImport() ) {
+			for ( Object obj : root.getClazzOrSubclassOrJoinedSubclass() ) {
+				EntityElement entityElement = ( EntityElement ) obj;
+				String qualifiedName = bindingContext().determineEntityName( entityElement );
+				metadata.addImport( entityElement.getEntityName() == null
+									? entityElement.getName()
+									: entityElement.getEntityName(), qualifiedName );
+			}
 		}
 	}
 

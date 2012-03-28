@@ -1,6 +1,7 @@
 package org.hibernate.cache.infinispan.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -26,8 +27,9 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
       allRegions.put(regionName, region);
    }
 
-   public void clearRegions() {
-      allRegions.clear();
+   public void clearRegions(List<String> regionNames) {
+      for (String regionName : regionNames)
+         allRegions.remove(regionName);
    }
 
    @Override

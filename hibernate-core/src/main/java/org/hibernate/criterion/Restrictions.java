@@ -243,6 +243,22 @@ public class Restrictions {
 		return new LogicalExpression(lhs, rhs, "and");
 	}
 	/**
+	 * Return the conjuction of multiple expressions
+	 *
+	 * @param predicates The predicates making up the initial junction
+	 *
+	 * @return The conjunction
+	 */
+	public static Conjunction and(Criterion... predicates) {
+		Conjunction conjunction = conjunction();
+		if ( predicates != null ) {
+			for ( Criterion predicate : predicates ) {
+				conjunction.add( predicate );
+			}
+		}
+		return conjunction;
+	}
+	/**
 	 * Return the disjuction of two expressions
 	 *
 	 * @param lhs
@@ -251,6 +267,22 @@ public class Restrictions {
 	 */
 	public static LogicalExpression or(Criterion lhs, Criterion rhs) {
 		return new LogicalExpression(lhs, rhs, "or");
+	}
+	/**
+	 * Return the disjuction of multiple expressions
+	 *
+	 * @param predicates The predicates making up the initial junction
+	 *
+	 * @return The conjunction
+	 */
+	public static Disjunction or(Criterion... predicates) {
+		Disjunction disjunction = disjunction();
+		if ( predicates != null ) {
+			for ( Criterion predicate : predicates ) {
+				disjunction.add( predicate );
+			}
+		}
+		return disjunction;
 	}
 	/**
 	 * Return the negation of an expression

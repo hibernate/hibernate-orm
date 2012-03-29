@@ -38,6 +38,7 @@
         <wkt>POINT(10 5)</wkt>
         <srid>4326</srid>
     </Element>
+
     <Element>
         <id>2</id>
         <type>POINT</type>
@@ -106,6 +107,7 @@
         </sdo>
         <srid>4326</srid>
     </Element>
+
     <Element>
         <id>19</id>
         <type>POLYGON</type>
@@ -126,6 +128,9 @@
         </sdo>
     </Element>
 
+    <!--
+    THE next two CASES don't work in Oracle11g, which seems useless on GeometryCollections....
+
     <Element>
         <id>22</id>
         <type>MULTIPOLYGON</type>
@@ -133,8 +138,7 @@
             134, 105 100)))
         </wkt>
         <sdo>SDO_GEOMETRY(2007, 4326, NULL, SDO_ELEM_INFO_ARRAY(1, 1003, 1, 11, 2003, 1, 21, 1003, 1),
-            SDO_ORDINATE_ARRAY(0, 0, 0, 50, 50, 50, 50, 0, 0, 0, 10, 10, 10, 20, 20, 20, 20, 10, 10, 10, 105, 100, 120,
-            140, 130, 134, 105, 100))
+            SDO_ORDINATE_ARRAY(0, 0, 0, 50, 50, 50, 50, 0, 0, 0, 10, 10, 10, 20, 20, 20, 20, 10, 10, 10, 105, 100, 120, 140, 130, 134, 105, 100))
         </sdo>
         <srid>4326</srid>
     </Element>
@@ -145,7 +149,7 @@
         <type>MULTIPOINT</type>
         <wkt>MULTIPOINT(21 2, 25 5, 30 3)</wkt>
         <srid>4326</srid>
-        <sdo>SDO_GEOMETRY(2005, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(21,2,25,5,30,3))</sdo>
+        <sdo>SDO_GEOMETRY(2005, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,3), SDO_ORDINATE_ARRAY(21,2,25,5,30,3))</sdo>
     </Element>
     <Element>
         <id>26</id>
@@ -154,7 +158,7 @@
         <srid>4326</srid>
         <sdo>SDO_GEOMETRY(2005, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(21,2))</sdo>
     </Element>
-
+    -->
 
     <!--
 

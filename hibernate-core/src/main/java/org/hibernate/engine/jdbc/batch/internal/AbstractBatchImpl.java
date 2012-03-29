@@ -39,7 +39,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Convenience base class for implementors of the Batch interface.
+ * Convenience base class for implementers of the Batch interface.
  *
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -203,7 +203,9 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	@Override
 	public void release() {
-        if (getStatements() != null && !getStatements().isEmpty()) LOG.batchContainedStatementsOnRelease();
+        if ( getStatements() != null && !getStatements().isEmpty() ) {
+			LOG.batchContainedStatementsOnRelease();
+		}
 		releaseStatements();
 		observers.clear();
 	}

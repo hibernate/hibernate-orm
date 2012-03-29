@@ -10,13 +10,13 @@ Resources
 
 To start with - here is a list of resources to obtain more information about Gradle:
 
-* The Gradle User Guide : http://gradle.org/latest/docs/userguide/userguide_single.html
-* Gradle DSL Guide : http://gradle.org/latest/docs/dsl/index.html
+* The Gradle User Guide : http://gradle.org/docs/current/userguide/userguide_single.html
+* Gradle DSL Guide : http://gradle.org/docs/current/dsl/index.html
 * Additional Hibernate/Gradle information : http://community.jboss.org/wiki/GradleFAQ
 
 Here is the link of how to set up ~/.m2/settings.xml to use JBoss Nexus repo.
 
-* JBoss Nexus User Guide ; http://community.jboss.org/wiki/MavenGettingStarted-Users
+* JBoss Nexus User Guide : http://community.jboss.org/wiki/MavenGettingStarted-Users
 
 Executing Tasks Across All Modules
 ----------------------------------

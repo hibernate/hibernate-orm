@@ -63,10 +63,10 @@ public class UnidirectionalManyToOneTest extends BaseCoreFunctionalTestCase {
 		Child c2 = new Child("Blase");
 		c.setParent( p );
 		c2.setParent( p );
-		s.save( p );
-		s.save(p2);
-		s.save( c );
-		s.save( c2 );
+		s.persist( p );
+		s.persist(p2);
+		s.persist( c );
+		s.persist( c2 );
 		t.commit();
 		s.close();
 

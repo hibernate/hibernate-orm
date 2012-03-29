@@ -64,4 +64,11 @@ public interface IdentifierSource {
 	 * @return The identifier source's nature.
 	 */
 	public Nature getNature();
+
+	/**
+	 * Obtain the value used for an identifier before an entity is persisted.
+	 *
+	 * @return the value used for an identifier before an entity is persisted.
+	 */
+	public String getUnsavedValue();
 }

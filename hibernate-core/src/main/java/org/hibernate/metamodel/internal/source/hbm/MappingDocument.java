@@ -34,10 +34,13 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.UnsavedValueStrategy;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -48,11 +51,11 @@ import org.hibernate.service.ServiceRegistry;
 public class MappingDocument {
 	private final JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot;
 	private final LocalBindingContextImpl mappingLocalBindingContext;
+	private final UnsavedValueStrategy unsavedValueStrategy = new UnsavedValueStrategyImpl();
 
 	public MappingDocument(JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot, MetadataImplementor metadata) {
 		this.hbmJaxbRoot = hbmJaxbRoot;
 		this.mappingLocalBindingContext = new LocalBindingContextImpl( metadata );
-
 	}
 
 	public JaxbHibernateMapping getMappingRoot() {
@@ -179,6 +182,31 @@ public class MappingDocument {
 		@Override
 		public MappingException makeMappingException(String message, Exception cause) {
 			return new MappingException( message, cause, getOrigin() );
+		}
+
+		@Override
+		public UnsavedValueStrategy getUnsavedValueStrategy() {
+			return unsavedValueStrategy;
+		}
+	}
+	
+	private class UnsavedValueStrategyImpl implements UnsavedValueStrategy{
+		@Override
+		public String getIdUnsavedValue(IdentifierSource identifierSource, boolean isIdAssigned) {
+			if ( identifierSource.getUnsavedValue() != null ) {
+				return identifierSource.getUnsavedValue();
+			}
+			else if ( isIdAssigned ) {
+				return "undefined";
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public String getVersionUnsavedValue(VersionAttributeSource versionAttributeSource) {
+			return versionAttributeSource.getUnsavedValue();
 		}
 	}
 }

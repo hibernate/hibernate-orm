@@ -64,6 +64,11 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	public IdGenerator getIdentifierGeneratorDescriptor() {
 		return attribute.getIdGenerator();
 	}
+
+	@Override
+	public String getUnsavedValue() {
+		return null;
+	}
 }
 
 

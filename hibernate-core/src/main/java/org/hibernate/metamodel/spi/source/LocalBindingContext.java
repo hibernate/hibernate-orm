@@ -30,4 +30,6 @@ import org.hibernate.internal.jaxb.Origin;
  */
 public interface LocalBindingContext extends BindingContext {
 	public Origin getOrigin();
+
+	public UnsavedValueStrategy getUnsavedValueStrategy();
 }

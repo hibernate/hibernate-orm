@@ -29,14 +29,18 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.spi.source.UnsavedValueStrategy;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -47,6 +51,7 @@ import org.hibernate.service.ServiceRegistry;
 public class EntityBindingContext implements LocalBindingContext, AnnotationBindingContext {
 	private final AnnotationBindingContext contextDelegate;
 	private final Origin origin;
+	private final UnsavedValueStrategy unsavedValueStrategy = new UnsavedValueStrategyImpl();
 
 	public EntityBindingContext(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
 		this.contextDelegate = contextDelegate;
@@ -126,5 +131,28 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	@Override
 	public ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type) {
 		return contextDelegate.resolveMemberTypes( type );
+	}
+
+	@Override
+	public UnsavedValueStrategy getUnsavedValueStrategy() {
+		return unsavedValueStrategy;
+	}
+
+	private class UnsavedValueStrategyImpl implements UnsavedValueStrategy{
+		@Override
+		public String getIdUnsavedValue(IdentifierSource identifierSource, boolean isIdAssigned) {
+			// TODO: is this correct???
+			if ( identifierSource.getNature() == IdentifierSource.Nature.SIMPLE ) {
+				return isIdAssigned ? "undefined" : null;
+			}
+			else {
+				throw new NotYetImplementedException( identifierSource.getNature().toString() );
+			}
+		}
+
+		@Override
+		public String getVersionUnsavedValue(VersionAttributeSource versionAttributeSource) {
+			return "undefined";
+		}
 	}
 }

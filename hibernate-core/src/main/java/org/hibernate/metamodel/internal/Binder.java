@@ -53,6 +53,7 @@ import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.EntityVersion;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -958,7 +959,8 @@ public class Binder {
 	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
 		final BasicAttributeBinding idAttributeBinding =
 				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+		final EntityIdentifier entityIdentifier = rootEntityBinding.getHierarchyDetails().getEntityIdentifier();
+		entityIdentifier.setValueBinding( idAttributeBinding );
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
@@ -966,7 +968,13 @@ public class Binder {
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
 			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
 		}
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
+
+		entityIdentifier.setIdGenerator( generator );
+		String unsavedValue =
+				bindingContexts.peek().getUnsavedValueStrategy().getIdUnsavedValue( 
+						identifierSource, "assigned".equals( generator.getStrategy() )
+				);
+		entityIdentifier.setUnsavedValue( unsavedValue );
 		// Configure primary key in relational model
 		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
 			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
@@ -1084,7 +1092,9 @@ public class Binder {
 		}
 		final EntityVersion version = rootEntityBinding.getHierarchyDetails().getEntityVersion();
 		version.setVersioningAttributeBinding( ( BasicAttributeBinding ) bindAttribute( rootEntityBinding, versionAttributeSource ) );
-		version.setUnsavedValue( versionAttributeSource.getUnsavedValue() );
+		String unsavedValue =
+				bindingContexts.peek().getUnsavedValueStrategy().getVersionUnsavedValue( versionAttributeSource );
+		version.setUnsavedValue( unsavedValue );
 	}
 
 	private TableSpecification createCollectionTable(

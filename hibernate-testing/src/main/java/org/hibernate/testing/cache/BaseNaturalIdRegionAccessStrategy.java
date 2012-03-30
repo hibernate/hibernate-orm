@@ -56,12 +56,12 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 
 	@Override
 	public boolean afterInsert(Object key, Object value ) throws CacheException {
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean update(Object key, Object value ) throws CacheException {
-		return false;
+		return putFromLoad( key, value, 0 , null );
 	}
 
 	@Override

@@ -85,7 +85,9 @@ public class NaturalIdXrefDelegate {
 		// If second-level caching is enabled cache the resolution there as well
 		//		NOTE : the checks using 'justAddedToLocalCache' below protect only the stat journaling, not actually
 		//		putting into the shared cache.  we still put into the shared cache because that might have locking
-		//		semantics that we need to honor.
+		//		semantics that we need to honor.  we protect the stat journaling in this manner because there
+		//		are cases where we have this method called multiple times and we want to avoid the multiple 'put'
+		// 		stats incrementing.
 		if ( persister.hasNaturalIdCache() ) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session() );
@@ -109,7 +111,11 @@ public class NaturalIdXrefDelegate {
 					break;
 				}
 				case INSERT: {
-					naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, pk );
+					final boolean put = naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, pk );
+					if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor()
+								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+					}
 
 					( (EventSource) session() ).getActionQueue().registerProcess(
 							new AfterTransactionCompletionProcess() {
@@ -118,8 +124,8 @@ public class NaturalIdXrefDelegate {
 									final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, pk );
 
 									if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
-										factory.getStatisticsImplementor().naturalIdCachePut(
-												naturalIdCacheAccessStrategy.getRegion().getName() );
+										factory.getStatisticsImplementor()
+												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 									}
 								}
 							}
@@ -133,7 +139,11 @@ public class NaturalIdXrefDelegate {
 					naturalIdCacheAccessStrategy.remove( previousCacheKey );
 
 					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
-					naturalIdCacheAccessStrategy.update( naturalIdCacheKey, pk );
+					final boolean put = naturalIdCacheAccessStrategy.update( naturalIdCacheKey, pk );
+					if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor()
+								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+					}
 
 					( (EventSource) session() ).getActionQueue().registerProcess(
 							new AfterTransactionCompletionProcess() {
@@ -143,9 +153,11 @@ public class NaturalIdXrefDelegate {
 									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, pk, lock );
 
 									if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
-										factory.getStatisticsImplementor().naturalIdCachePut(
-												naturalIdCacheAccessStrategy.getRegion().getName() );
+										factory.getStatisticsImplementor()
+												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 									}
+
+									naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
 								}
 							}
 					);

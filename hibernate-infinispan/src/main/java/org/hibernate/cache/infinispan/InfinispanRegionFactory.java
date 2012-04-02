@@ -29,7 +29,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
@@ -37,8 +36,6 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
-import org.hibernate.cache.infinispan.util.CacheCommandFactory;
-import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -323,7 +320,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       }
    }
 
-   protected HibernateTransactionManagerLookup createTransactionManagerLookup(
+   protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(
             Settings settings, Properties properties) {
       return new HibernateTransactionManagerLookup(settings, properties);
    }
@@ -332,13 +329,19 @@ public class InfinispanRegionFactory implements RegionFactory {
     * {@inheritDoc}
     */
    public void stop() {
-      log.debug("Clear region references and stop Infinispan cache manager");
-      getCacheCommandFactory(manager.getCache()).clearRegions(regionNames);
-      regionNames.clear();
+      log.debug("Stop region factory");
+      stopCacheRegions();
       stopCacheManager();
    }
 
+   protected void stopCacheRegions() {
+      log.debug("Clear region references");
+      getCacheCommandFactory(manager.getCache()).clearRegions(regionNames);
+      regionNames.clear();
+   }
+
    protected void stopCacheManager() {
+      log.debug("Stop cache manager");
       manager.stop();
    }
    
@@ -384,6 +387,9 @@ public class InfinispanRegionFactory implements RegionFactory {
       TypeOverrides collectionOverrides = new TypeOverrides();
       collectionOverrides.setCacheName(DEF_ENTITY_RESOURCE);
       typeOverrides.put(COLLECTION_KEY, collectionOverrides);
+      TypeOverrides naturalIdOverrides = new TypeOverrides();
+      naturalIdOverrides.setCacheName(DEF_ENTITY_RESOURCE);
+      typeOverrides.put(NATURAL_ID_KEY, naturalIdOverrides);
       TypeOverrides timestampOverrides = new TimestampTypeOverrides();
       timestampOverrides.setCacheName(DEF_TIMESTAMPS_RESOURCE);
       typeOverrides.put(TIMESTAMPS_KEY, timestampOverrides);

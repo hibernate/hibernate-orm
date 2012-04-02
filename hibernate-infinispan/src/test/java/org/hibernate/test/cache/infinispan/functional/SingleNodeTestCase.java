@@ -48,7 +48,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 	private static final Log log = LogFactory.getLog( SingleNodeTestCase.class );
-	private TransactionManager tm;
+	protected TransactionManager tm;
 
 	@Before
 	public void prepare() {

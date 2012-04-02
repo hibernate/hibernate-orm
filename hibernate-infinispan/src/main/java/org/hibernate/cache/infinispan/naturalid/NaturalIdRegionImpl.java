@@ -31,6 +31,7 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion implements 
 		}
 		throw new CacheException("Unsupported access type [" + accessType.getExternalName() + "]");
 	}
+
 	public PutFromLoadValidator getPutFromLoadValidator() {
 		return new PutFromLoadValidator(transactionManager);
 	}

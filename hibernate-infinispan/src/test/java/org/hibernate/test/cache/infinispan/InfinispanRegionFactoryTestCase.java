@@ -536,7 +536,7 @@ public class InfinispanRegionFactoryTestCase  {
    private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p) {
       final InfinispanRegionFactory factory = new InfinispanRegionFactory() {
          @Override
-         protected HibernateTransactionManagerLookup createTransactionManagerLookup(Settings settings, Properties properties) {
+         protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(Settings settings, Properties properties) {
             return new HibernateTransactionManagerLookup(null, null) {
                @Override
                public TransactionManager getTransactionManager() throws Exception {

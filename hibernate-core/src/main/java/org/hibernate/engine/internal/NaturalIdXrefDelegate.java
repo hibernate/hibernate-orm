@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.pretty.MessageHelper;
 import org.jboss.logging.Logger;
 
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
@@ -102,7 +103,7 @@ public class NaturalIdXrefDelegate {
 							session().getTimestamp(),
 							null
 					);
-	
+
 					if ( put && justAddedToLocalCache && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );

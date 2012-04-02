@@ -48,6 +48,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  */
 public class TransactionalAccessDelegate {
    private static final Log log = LogFactory.getLog(TransactionalAccessDelegate.class);
+   private static final boolean isTrace = log.isTraceEnabled();
    protected final CacheAdapter cacheAdapter;
    protected final BaseRegion region;
    protected final PutFromLoadValidator putValidator;
@@ -68,11 +69,15 @@ public class TransactionalAccessDelegate {
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-      if (!region.checkValid())
+      if (!region.checkValid()) {
+         if (isTrace) log.tracef("Region %s not valid", region.getName());
          return false;
+      }
 
-      if (!putValidator.acquirePutFromLoadLock(key))
+      if (!putValidator.acquirePutFromLoadLock(key)) {
+         if (isTrace) log.tracef("Put from load lock not acquired for key %s", key);
          return false;
+      }
 
       try {
          cacheAdapter.putForExternalRead(key, value);

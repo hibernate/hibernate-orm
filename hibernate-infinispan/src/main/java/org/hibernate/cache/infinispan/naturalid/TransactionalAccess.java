@@ -20,23 +20,13 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
-		return false;
-	}
-
-	@Override
 	public boolean insert(Object key, Object value) throws CacheException {
-		return false;
+      return delegate.insert(key, value, null);
 	}
 
 	@Override
 	public boolean update(Object key, Object value) throws CacheException {
-		return false;
-	}
-
-	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
-		return false;
+      return delegate.update(key, value, null, null);
 	}
 
 	@Override
@@ -59,7 +49,6 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 		return delegate.get( key, txTimestamp );
 	}
 
-
 	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return delegate.putFromLoad( key, value, txTimestamp, version );
@@ -81,7 +70,6 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 		delegate.removeAll();
 	}
 
-
 	@Override
 	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
@@ -100,5 +88,14 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	public void unlockRegion(SoftLock lock) throws CacheException {
 	}
 
+   @Override
+   public boolean afterInsert(Object key, Object value) throws CacheException {
+      return false;
+   }
+
+   @Override
+   public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+      return false;
+   }
 
 }

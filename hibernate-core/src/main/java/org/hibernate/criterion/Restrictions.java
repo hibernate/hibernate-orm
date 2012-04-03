@@ -115,7 +115,7 @@ public class Restrictions {
 		if ( value == null ) {
 			throw new IllegalArgumentException( "Comparison value passed to ilike cannot be null" );
 		}
-		return ilike( propertyName, value.toString(), MatchMode.ANYWHERE );
+		return ilike( propertyName, value.toString(), MatchMode.EXACT );
 	}
 
 	/**

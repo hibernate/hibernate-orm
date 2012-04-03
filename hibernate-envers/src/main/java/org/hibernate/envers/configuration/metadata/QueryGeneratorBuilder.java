@@ -68,14 +68,14 @@ public final class QueryGeneratorBuilder {
 
     RelationQueryGenerator build(MiddleComponentData... componentDatas) {
         if (idDatas.size() == 0) {
-            return new OneEntityQueryGenerator(verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+            return new OneEntityQueryGenerator(globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
                     componentDatas);
         } else if (idDatas.size() == 1) {
             if (idDatas.get(0).isAudited()) {
                 return new TwoEntityQueryGenerator(globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
                         idDatas.get(0), componentDatas);
             } else {
-                return new TwoEntityOneAuditedQueryGenerator(verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+                return new TwoEntityOneAuditedQueryGenerator(globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
                         idDatas.get(0), componentDatas);
             }
         } else if (idDatas.size() == 2) {

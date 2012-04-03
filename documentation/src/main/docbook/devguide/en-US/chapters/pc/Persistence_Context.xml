@@ -142,6 +142,60 @@
     </section>
 
     <section>
+        <title>Obtain an entity by natural-id</title>
+
+        <para>
+            In addition to allowing to load by identifier, Hibernate allows applications to load by declared
+            natural identifier.
+        </para>
+        <example>
+            <title>Example of simple natural-id access</title>
+            <programlisting role="JAVA"><xi:include href="extras/SimpleNaturalIdLoading.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <example>
+            <title>Example of natural-id access</title>
+            <programlisting role="JAVA"><xi:include href="extras/NaturalIdLoading.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            Just like we saw above, access entity data by natural id allows both the <methodname>load</methodname>
+            and <methodname>getReference</methodname> forms, with the same semantics.
+        </para>
+
+        <para>
+            Accessing persistent data by identifier and by natural-id is consistent in the Hibernate API.  Each defines
+            the same 2 data access methods:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><methodname>getReference</methodname></term>
+                <listitem>
+                    <para>
+                        Should be used in cases where the identifier is assumed to exist, where non-existence would be
+                        an actual error.  Should never be used to test existence.  That is because this method will
+                        prefer to create and return a proxy if the data is not already associated with the Session
+                        rather than hit the database.  The quintessential use-case for using this method is to create
+                        foreign-key based associations.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><methodname>load</methodname></term>
+                <listitem>
+                    <para>
+                        Will return the persistent data associated with the given identifier value or null if that
+                        identifier does not exist.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+        <para>
+            In addition to those 2 methods, each also defines the method <methodname>with</methodname> accepting
+            a <interfacename>org.hibernate.LockOptions</interfacename> argument.  Locking is discussed in a separate
+            chapter.
+        </para>
+    </section>
+
+    <section>
         <title>Refresh entity state</title>
 
         <para>

@@ -1,2 +1,2 @@
 Book book = new Book();
-book.setAuthor( session.load( Author.class, authorId ) );
+book.setAuthor( session.byId( Author.class ).getReference( authorId ) );

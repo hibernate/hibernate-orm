@@ -1,1 +1,1 @@
-session.get( Author.class, authorId );
+session.byId( Author.class ).load( authorId );

@@ -32,6 +32,7 @@ import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -76,6 +77,14 @@ public final class EntityUpdateAction extends EntityAction {
 		this.dirtyFields = dirtyProperties;
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
+
+		session.getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+				persister,
+				id,
+				state,
+				previousState,
+				CachedNaturalIdValueSource.UPDATE
+		);
 	}
 
 	@Override
@@ -173,6 +182,14 @@ public final class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
+
+		session.getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+				persister,
+				id,
+				state,
+				previousState,
+				CachedNaturalIdValueSource.UPDATE
+		);
 
 		postUpdate();
 

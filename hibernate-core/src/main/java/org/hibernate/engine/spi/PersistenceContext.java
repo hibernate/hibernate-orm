@@ -24,6 +24,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -684,33 +685,157 @@ public interface PersistenceContext {
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 
 	/**
-	 * Callback used to signal that loaded entity state has changed.
-	 *
-	 * @param entityEntry The entry of the entity that has changed.
-	 * @param state The new state.
+	 * Provides centralized access to natural-id-related functionality.
 	 */
-	public void entityStateUpdatedNotification(EntityEntry entityEntry, Object[] state);
+	public static interface NaturalIdHelper {
+		public static final Serializable INVALID_NATURAL_ID_REFERENCE = new Serializable() {};
+
+		/**
+		 * Given an array of "full entity state", extract the portions that represent the natural id
+		 * 
+		 * @param state The attribute state array
+		 * @param persister The persister representing the entity type.
+		 * 
+		 * @return The extracted natural id values
+		 */
+		public Object[] extractNaturalIdValues(Object[] state, EntityPersister persister);
+
+		/**
+		 * Given an entity instance, extract the values that represent the natural id
+		 *
+		 * @param entity The entity instance
+		 * @param persister The persister representing the entity type.
+		 *
+		 * @return The extracted natural id values
+		 */
+		public Object[] extractNaturalIdValues(Object entity, EntityPersister persister);
+
+		/**
+		 * Performs processing related to creating natural-id cross-reference entries on load.
+		 * Handles both the local (transactional) and shared (second-level) caches.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param id The primary key value
+		 * @param naturalIdValues The natural id values
+		 */
+		public void cacheNaturalIdCrossReferenceFromLoad(
+				EntityPersister persister, 
+				Serializable id, 
+				Object[] naturalIdValues);
+
+		/**
+		 * Creates necessary local cross-reference entries.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param id The primary key value
+		 * @param state Generally the "full entity state array", though could also be the natural id values array
+		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.  
+		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
+		 * @param source Enumeration representing how these values are coming into cache.
+		 */
+		public void manageLocalNaturalIdCrossReference(
+				EntityPersister persister,
+				Serializable id,
+				Object[] state,
+				Object[] previousState,
+				CachedNaturalIdValueSource source);
+
+		/**
+		 * Cleans up local cross-reference entries.
+		 * 
+		 * @param persister The persister representing the entity type.
+		 * @param id The primary key value
+		 * @param state Generally the "full entity state array", though could also be the natural id values array
+		 * 
+		 * @return The local cached natural id values (could be different from given values).
+		 */
+		public Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] state);
+
+		/**
+		 * Creates necessary shared (second level cache) cross-reference entries.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param id The primary key value
+		 * @param state Generally the "full entity state array", though could also be the natural id values array
+		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.  
+		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
+		 * @param source Enumeration representing how these values are coming into cache.
+		 */
+		public void manageSharedNaturalIdCrossReference(
+				EntityPersister persister,
+				Serializable id,
+				Object[] state,
+				Object[] previousState,
+				CachedNaturalIdValueSource source);
+
+		/**
+		 * Cleans up local cross-reference entries.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param id The primary key value
+		 * @param naturalIdValues The natural id values array
+		 */
+		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues);
+
+		/**
+		 * Given a persister and primary key, find the corresponding cross-referenced natural id values.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param pk The primary key value
+		 * 
+		 * @return The cross-referenced natural-id values, or {@code null}
+		 */
+		public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
+
+		/**
+		 * Given a persister and natural-id values, find the corresponding cross-referenced primary key. Will return
+		 * {@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE} if the given natural ids are known to
+		 * be invalid.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param naturalIdValues The natural id value(s)
+		 *
+		 * @return The corresponding cross-referenced primary key, 
+		 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
+		 * 		or {@code null}. 
+		 */
+		public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues);
+
+		/**
+		 * Find all the locally cached primary key cross-reference entries for the given persister.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * 
+		 * @return The primary keys
+		 */
+		public Collection<Serializable> getCachedPkResolutions(EntityPersister persister);
+
+		/**
+		 * Part of the "load synchronization process".  Responsible for maintaining cross-reference entries
+		 * when natural-id values were found to have changed.  Also responsible for tracking the old values 
+		 * as no longer valid until the next flush because otherwise going to the database would just re-pull
+		 * the old values as valid.  In this last responsibility, {@link #cleanupFromSynchronizations} is
+		 * the inverse process called after flush to clean up those entries.
+		 *
+		 * @param persister The persister representing the entity type.
+		 * @param pk The primary key
+		 * @param entity The entity instance
+		 * 
+		 * @see #cleanupFromSynchronizations
+		 */
+		public void handleSynchronization(EntityPersister persister, Serializable pk, Object entity);
+
+		/**
+		 * The clean up process of {@link #handleSynchronization}.  Responsible for cleaning up the tracking
+		 * of old values as no longer valid.
+		 */
+		public void cleanupFromSynchronizations();
+	}
 
 	/**
-	 * Callback used to signal that entity state has been inserted.
-	 *
-	 * @param entityEntry The entry of the inserted entity
-	 * @param state The new state
+	 * Access to the natural-id helper for this persistence context
+	 * 
+	 * @return This persistence context's natural-id helper
 	 */
-	public void entityStateInsertedNotification(EntityEntry entityEntry, Object[] state);
-
-	/**
-	 * Callback used to signal that entity state has been deleted.
-	 *
-	 * @param entityEntry The entry of the inserted entity
-	 * @param deletedState The state of the entity at the time of deletion
-	 */
-	public void entityStateDeletedNotification(EntityEntry entityEntry, Object[] deletedState);
-
-	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
-
-	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalId);
-
-	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId, CachedNaturalIdValueSource valueSource);
-	
+	public NaturalIdHelper getNaturalIdHelper();
 }

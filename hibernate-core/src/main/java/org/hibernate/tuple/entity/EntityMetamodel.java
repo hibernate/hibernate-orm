@@ -717,7 +717,7 @@ public class EntityMetamodel implements Serializable {
 		return naturalIdPropertyNumbers!=null;
 	}
 	
-	public boolean isNatrualIdentifierCached() {
+	public boolean isNaturalIdentifierCached() {
 		return hasNaturalIdentifier() && hasCacheableNaturalId;
 	}
 

@@ -30,6 +30,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -40,6 +41,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -102,15 +104,7 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 		
-		//Clear naturalId cache that was populated when putting the data
 		s.getSessionFactory().getCache().evictNaturalIdRegions();
-		
-		s = openSession();
-		tx = s.beginTransaction();
-		Criteria criteria = s.createCriteria( NaturalIdOnManyToOne.class );
-		criteria.add( Restrictions.naturalId().set( "citizen", c1 ) );
-		criteria.setCacheable( true );
-
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
@@ -118,6 +112,12 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "NaturalId cache hits should be zero", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId cache misses should be zero", 0, stats.getNaturalIdCacheMissCount() );
+
+		s = openSession();
+		tx = s.beginTransaction();
+		Criteria criteria = s.createCriteria( NaturalIdOnManyToOne.class );
+		criteria.add( Restrictions.naturalId().set( "citizen", c1 ) );
+		criteria.setCacheable( true );
 
 		// first query
 		List results = criteria.list();

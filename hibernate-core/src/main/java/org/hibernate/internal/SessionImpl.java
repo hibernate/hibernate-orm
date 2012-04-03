@@ -41,7 +41,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +80,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -90,6 +90,7 @@ import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -2406,6 +2407,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private abstract class BaseNaturalIdLoadAccessImpl  {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
+		private boolean synchronizationEnabled = true;
 
 		private BaseNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
@@ -2430,18 +2432,59 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return this;
 		}
 
+		protected void synchronizationEnabled(boolean synchronizationEnabled) {
+			this.synchronizationEnabled = synchronizationEnabled;
+		}
+
 		protected final Serializable resolveNaturalId(Map<String, Object> naturalIdParameters) {
-			final Set<Serializable> querySpaces = new LinkedHashSet<Serializable>();
-			for ( final Serializable querySpace : entityPersister.getQuerySpaces() ) {
-				querySpaces.add( querySpace );
-			}
-			
-			autoFlushIfRequired( querySpaces );
-			
+			performAnyNeededCrossReferenceSynchronizations();
+
 			final ResolveNaturalIdEvent event =
 					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
 			fireResolveNaturalId( event );
-			return event.getEntityId();
+
+			if ( event.getEntityId() == PersistenceContext.NaturalIdHelper.INVALID_NATURAL_ID_REFERENCE ) {
+				return null;
+			}
+			else {
+				return event.getEntityId();
+			}
+		}
+
+		protected void performAnyNeededCrossReferenceSynchronizations() {
+			if ( ! synchronizationEnabled ) {
+				// synchronization (this process) was disabled
+				return;
+			}
+			if ( ! isTransactionInProgress() ) {
+				// not in a transaction so skip synchronization
+				return;
+			}
+			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
+				// only mutable natural-ids need this processing 
+				return;
+			}
+
+			for ( Serializable pk : getPersistenceContext().getNaturalIdHelper().getCachedPkResolutions( entityPersister ) ) {
+				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
+				final Object entity = getPersistenceContext().getEntity( entityKey );
+				final EntityEntry entry = getPersistenceContext().getEntry( entity );
+
+				if ( !entry.requiresDirtyCheck( entity ) ) {
+					continue;
+				}
+
+				// MANAGED is the only status we care about here...
+				if ( entry.getStatus() != Status.MANAGED ) {
+					continue;
+				}
+
+				getPersistenceContext().getNaturalIdHelper().handleSynchronization(
+						entityPersister,
+						pk,
+						entity
+				);
+			}
 		}
 
 		protected final IdentifierLoadAccess getIdentifierLoadAccess() {
@@ -2450,6 +2493,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				identifierLoadAccess.with( lockOptions );
 			}
 			return identifierLoadAccess;
+		}
+
+		protected EntityPersister entityPersister() {
+			return entityPersister;
 		}
 	}
 
@@ -2476,6 +2523,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		@Override
 		public NaturalIdLoadAccess using(String attributeName, Object value) {
 			naturalIdParameters.put( attributeName, value );
+			return this;
+		}
+
+		@Override
+		public NaturalIdLoadAccessImpl setSynchronizationEnabled(boolean synchronizationEnabled) {
+			super.synchronizationEnabled( synchronizationEnabled );
 			return this;
 		}
 
@@ -2529,6 +2582,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		
 		private Map<String, Object> getNaturalIdParameters(Object naturalIdValue) {
 			return Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
+		}
+
+		@Override
+		public SimpleNaturalIdLoadAccessImpl setSynchronizationEnabled(boolean synchronizationEnabled) {
+			super.synchronizationEnabled( synchronizationEnabled );
+			return this;
 		}
 
 		@Override

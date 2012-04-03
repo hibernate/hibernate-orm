@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -47,6 +48,10 @@ import org.hibernate.MappingException;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.loading.internal.LoadContexts;
 import org.hibernate.engine.spi.AssociationKey;
@@ -58,8 +63,10 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
@@ -313,8 +320,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return null;
 		}
 
+		persister = locateProperPersister( persister );
+
 		// let's first see if it is part of the natural id cache...
-		final Object[] cachedValue = findCachedNaturalId( persister, id );
+		final Object[] cachedValue = naturalIdHelper.findCachedNaturalId( persister, id );
 		if ( cachedValue != null ) {
 			return cachedValue;
 		}
@@ -323,7 +332,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( persister.getEntityMetamodel().hasImmutableNaturalId() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
 			final Object[] dbValue = persister.getNaturalIdentifierSnapshot( id, session );
-			cacheNaturalIdResolution( persister, id, dbValue, CachedNaturalIdValueSource.LOAD );
+			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
+					persister,
+					id,
+					dbValue
+			);
 			return dbValue;
 		}
 		else {
@@ -339,9 +352,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			for ( int i = 0; i < props.length; i++ ) {
 				naturalIdSnapshotSubSet[i] = entitySnapshot[ props[i] ];
 			}
-			cacheNaturalIdResolution( persister, id, naturalIdSnapshotSubSet, CachedNaturalIdValueSource.LOAD );
+			naturalIdHelper.cacheNaturalIdCrossReferenceFromLoad(
+					persister,
+					id,
+					naturalIdSnapshotSubSet
+			);
 			return naturalIdSnapshotSubSet;
 		}
+	}
+
+	private EntityPersister locateProperPersister(EntityPersister persister) {
+		return session.getFactory().getEntityPersister( persister.getRootEntityName() );
 	}
 
 	/**
@@ -1091,7 +1112,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void setFlushing(boolean flushing) {
+		final boolean afterFlush = this.flushing && ! flushing;
 		this.flushing = flushing;
+		if ( afterFlush ) {
+			getNaturalIdHelper().cleanupFromSynchronizations();
+		}
 	}
 
 	/**
@@ -1699,58 +1724,293 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// NATURAL ID RESOLUTION HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private NaturalIdXrefDelegate naturalIdXrefDelegate = new NaturalIdXrefDelegate( this );
+	private final NaturalIdXrefDelegate naturalIdXrefDelegate = new NaturalIdXrefDelegate( this );
 
-	@Override
-	public void entityStateInsertedNotification(EntityEntry entityEntry, Object[] state) {
-		final EntityPersister persister = entityEntry.getPersister();
-		if ( !persister.hasNaturalIdentifier() ) {
-			// nothing to do
-			return;
+	private final NaturalIdHelper naturalIdHelper = new NaturalIdHelper() {
+		@Override
+		public void cacheNaturalIdCrossReferenceFromLoad(
+				EntityPersister persister,
+				Serializable id,
+				Object[] naturalIdValues) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return;
+			}
+
+			persister = locateProperPersister( persister );
+
+			// 'justAddedLocally' is meant to handle the case where we would get double stats jounaling
+			//	from a single load event.  The first put journal would come from the natural id resolution;
+			// the second comes from the entity loading.  In this condition, we want to avoid the multiple
+			// 'put' stats incrementing.
+			boolean justAddedLocally = naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+
+			if ( justAddedLocally && persister.hasNaturalIdCache() ) {
+				managedSharedCacheEntries( persister, id, naturalIdValues, CachedNaturalIdValueSource.LOAD );
+			}
 		}
 
-		final Object[] naturalIdValues = getNaturalIdValues( state, persister );
+		@Override
+		public void manageLocalNaturalIdCrossReference(
+				EntityPersister persister,
+				Serializable id,
+				Object[] state,
+				Object[] previousState,
+				CachedNaturalIdValueSource source) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return;
+			}
 
-		// cache
-		naturalIdXrefDelegate.cacheNaturalIdResolution(
-				persister,
-				entityEntry.getId(),
-				naturalIdValues,
-				CachedNaturalIdValueSource.INSERT
-		);
-	}
+			persister = locateProperPersister( persister );
+			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
 
-	@Override
-	public void entityStateUpdatedNotification(EntityEntry entityEntry, Object[] state) {
-		final EntityPersister persister = entityEntry.getPersister();
-		if ( !persister.hasNaturalIdentifier() ) {
-			// nothing to do
-			return;
+			// cache
+			naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
 		}
 
-		final Object[] naturalIdValues = getNaturalIdValues( state, persister );
+		@Override
+		public void manageSharedNaturalIdCrossReference(
+				EntityPersister persister,
+				final Serializable id,
+				Object[] state,
+				Object[] previousState,
+				CachedNaturalIdValueSource source) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return;
+			}
 
-		// re-cache
-		naturalIdXrefDelegate.cacheNaturalIdResolution(
-				persister,
-				entityEntry.getId(),
-				naturalIdValues,
-				CachedNaturalIdValueSource.UPDATE
-		);
-	}
+			if ( !persister.hasNaturalIdCache() ) {
+				// nothing to do
+				return;
+			}
 
-	@Override
-	public void entityStateDeletedNotification(EntityEntry entityEntry, Object[] deletedState) {
-		final EntityPersister persister = entityEntry.getPersister();
-		if ( !persister.hasNaturalIdentifier() ) {
-			// nothing to do
-			return;
+			persister = locateProperPersister( persister );
+			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
+
+			managedSharedCacheEntries( persister, id, naturalIdValues, source );
 		}
 
-		final Object[] naturalIdValues = getNaturalIdValues( deletedState, persister );
+		private void managedSharedCacheEntries(
+				EntityPersister persister,
+				final Serializable id,
+				Object[] naturalIdValues,
+				CachedNaturalIdValueSource source) {
+			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
+			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
 
-		// evict from cache
-		naturalIdXrefDelegate.evictNaturalIdResolution( persister, entityEntry.getId(), naturalIdValues );
+			final SessionFactoryImplementor factory = session.getFactory();
+
+			switch ( source ) {
+				case LOAD: {
+					final boolean put = naturalIdCacheAccessStrategy.putFromLoad(
+							naturalIdCacheKey,
+							id,
+							session.getTimestamp(),
+							null
+					);
+
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor().naturalIdCachePut(
+								naturalIdCacheAccessStrategy.getRegion()
+										.getName()
+						);
+					}
+
+					break;
+				}
+				case INSERT: {
+					final boolean put = naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, id );
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor()
+								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+					}
+
+					( (EventSource) session ).getActionQueue().registerProcess(
+							new AfterTransactionCompletionProcess() {
+								@Override
+								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+									final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, id );
+
+									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+										factory.getStatisticsImplementor()
+												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+									}
+								}
+							}
+					);
+
+					break;
+				}
+				case UPDATE: {
+					final Object[] previousNaturalIdValues = getNaturalIdSnapshot( id, persister );
+					final NaturalIdCacheKey previousCacheKey = new NaturalIdCacheKey( previousNaturalIdValues, persister, session );
+					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
+					naturalIdCacheAccessStrategy.remove( previousCacheKey );
+
+					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
+					final boolean put = naturalIdCacheAccessStrategy.update( naturalIdCacheKey, id );
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor()
+								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+					}
+
+					( (EventSource) session ).getActionQueue().registerProcess(
+							new AfterTransactionCompletionProcess() {
+								@Override
+								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+									naturalIdCacheAccessStrategy.unlockRegion( removalLock );
+									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, id, lock );
+
+									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+										factory.getStatisticsImplementor()
+												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+									}
+
+									naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
+								}
+							}
+					);
+
+					break;
+				}
+			}
+		}
+
+		@Override
+		public Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] state) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return null;
+			}
+
+			persister = locateProperPersister( persister );
+			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
+
+			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference( 
+					persister, 
+					id, 
+					naturalIdValues 
+			);
+
+			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;
+		}
+
+		@Override
+		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return;
+			}
+
+			if ( ! persister.hasNaturalIdCache() ) {
+				// nothing to do
+				return;
+			}
+
+			// todo : couple of things wrong here:
+			//		1) should be using access strategy, not plain evict..
+			//		2) should prefer session-cached values if any (requires interaction from removeLocalNaturalIdCrossReference
+
+			persister = locateProperPersister( persister );
+			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
+			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
+			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
+
+//			if ( sessionCachedNaturalIdValues != null
+//					&& !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
+//				final NaturalIdCacheKey sessionNaturalIdCacheKey = new NaturalIdCacheKey( sessionCachedNaturalIdValues, persister, session );
+//				naturalIdCacheAccessStrategy.evict( sessionNaturalIdCacheKey );
+//			}
+		}
+
+		@Override
+		public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
+			return naturalIdXrefDelegate.findCachedNaturalId( locateProperPersister( persister ), pk );
+		}
+
+		@Override
+		public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+			return naturalIdXrefDelegate.findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
+		}
+
+		@Override
+		public Object[] extractNaturalIdValues(Object[] state, EntityPersister persister) {
+			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+			if ( state.length == naturalIdPropertyIndexes.length ) {
+				return state;
+			}
+
+			final Object[] naturalIdValues = new Object[naturalIdPropertyIndexes.length];
+			for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
+				naturalIdValues[i] = state[naturalIdPropertyIndexes[i]];
+			}
+			return naturalIdValues;
+		}
+
+		@Override
+		public Object[] extractNaturalIdValues(Object entity, EntityPersister persister) {
+			if ( entity == null ) {
+				throw new AssertionFailure( "Entity from which to extract natural id value(s) cannot be null" );
+			}
+			if ( persister == null ) {
+				throw new AssertionFailure( "Persister to use in extracting natural id value(s) cannot be null" );
+			}
+
+			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
+			final Object[] naturalIdValues = new Object[naturalIdentifierProperties.length];
+
+			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
+				naturalIdValues[i] = persister.getPropertyValue( entity, naturalIdentifierProperties[i] );
+			}
+
+			return naturalIdValues;
+		}
+
+		@Override
+		public Collection<Serializable> getCachedPkResolutions(EntityPersister entityPersister) {
+			return naturalIdXrefDelegate.getCachedPkResolutions( entityPersister );
+		}
+
+		@Override
+		public void handleSynchronization(EntityPersister persister, Serializable pk, Object entity) {
+			if ( !persister.hasNaturalIdentifier() ) {
+				// nothing to do
+				return;
+			}
+
+			persister = locateProperPersister( persister );
+
+			final Object[] naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, persister );
+			final boolean changed = ! naturalIdXrefDelegate.sameAsCached(
+					persister,
+					pk,
+					naturalIdValuesFromCurrentObjectState
+			);
+
+			if ( changed ) {
+				final Object[] cachedNaturalIdValues = naturalIdXrefDelegate.findCachedNaturalId( persister, pk );
+				naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, pk, naturalIdValuesFromCurrentObjectState );
+				naturalIdXrefDelegate.stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
+
+				removeSharedNaturalIdCrossReference(
+						persister,
+						pk,
+						cachedNaturalIdValues
+				);
+			}
+		}
+
+		@Override
+		public void cleanupFromSynchronizations() {
+			naturalIdXrefDelegate.unStashInvalidNaturalIdReferences();
+		}
+	};
+
+	@Override
+	public NaturalIdHelper getNaturalIdHelper() {
+		return naturalIdHelper;
 	}
 
 	private Object[] getNaturalIdValues(Object[] state, EntityPersister persister) {
@@ -1762,25 +2022,5 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		return naturalIdValues;
-	}
-
-
-	@Override
-	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
-		return naturalIdXrefDelegate.findCachedNaturalId( persister, pk );
-	}
-
-	@Override
-	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
-		return naturalIdXrefDelegate.findCachedNaturalIdResolution( persister, naturalIdValues );
-	}
-
-	@Override
-	public void cacheNaturalIdResolution(
-			EntityPersister persister,
-			final Serializable pk,
-			Object[] naturalIdValues,
-			CachedNaturalIdValueSource valueSource) {
-		naturalIdXrefDelegate.cacheNaturalIdResolution( persister, pk, naturalIdValues, valueSource );
 	}
 }

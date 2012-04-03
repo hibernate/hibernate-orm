@@ -91,10 +91,8 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		assertEquals(
-				"Cache hits should be empty", 0, stats
-						.getNaturalIdCacheHitCount()
-		);
+		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "Cache puts should be empty", 0, stats.getNaturalIdCachePutCount() );
 
 		// first query
 		List results = criteria.list();

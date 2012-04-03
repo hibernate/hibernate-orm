@@ -69,8 +69,8 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		u = (User) s.byId( User.class ).getReference( u.getId() );
 		u.setOrg( "ceylon" );
-		s.flush();
 		User oldNaturalId = (User) s.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load();
+		assertNull( oldNaturalId );
 		assertNotSame( u, oldNaturalId );
 		s.getTransaction().commit();
 		s.close();

@@ -37,7 +37,6 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -445,18 +444,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		);
 		
 		if (entity != null && persister.hasNaturalIdentifier()) {
-			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
-			final Object[] naturalId = new Object[naturalIdentifierProperties.length];
-			
-			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {
-				naturalId[i] = persister.getPropertyValue( entity, naturalIdentifierProperties[i] );
-			}
-			
-			event.getSession().getPersistenceContext().cacheNaturalIdResolution(
+			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					event.getEntityId(),
-					naturalId,
-					CachedNaturalIdValueSource.LOAD
+					source.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( entity, persister )
 			);
 		}
 

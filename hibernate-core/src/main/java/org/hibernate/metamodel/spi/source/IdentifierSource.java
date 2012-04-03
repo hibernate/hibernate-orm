@@ -64,4 +64,10 @@ public interface IdentifierSource {
 	 * @return The identifier source's nature.
 	 */
 	public Nature getNature();
+
+	/**
+	 *  Returns the "unsaved" entity identifier value.
+	 *  @return the "unsaved" entity identifier value
+	 */
+	public String getUnsavedValue();
 }

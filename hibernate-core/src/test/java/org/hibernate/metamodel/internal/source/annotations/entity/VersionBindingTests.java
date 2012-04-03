@@ -107,6 +107,14 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 		assertTrue( descriptor.getTypeParameters().isEmpty() );
 	}
 
+	@Test
+	@Resources(annotatedClasses = VersionBindingTests.Item2.class)
+	public void testVersionUnsavedValue() {
+		EntityBinding binding = getEntityBinding( Item2.class );
+		assertTrue( binding.isVersioned() );
+		assertEquals( "undefined", binding.getHierarchyDetails().getEntityVersion().getUnsavedValue() );
+	}
+	
 	@Entity
 	class Item3 {
 		@Id

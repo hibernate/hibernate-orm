@@ -100,6 +100,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 				public Nature getNature() {
 					return Nature.SIMPLE;
 				}
+
+				@Override
+				public String getUnsavedValue() {
+					return entityElement().getId().getUnsavedValue();
+				}
 			};
 		}
 		return null;  //To change body of implemented methods use File | Settings | File Templates.

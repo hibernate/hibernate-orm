@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
@@ -967,12 +968,65 @@ public class Binder {
 			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
 		}
 		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
+				getIdentifierUnsavedValue( identifierSource, generator )
+		);
 		// Configure primary key in relational model
 		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
 			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
 		}
 	}
 
+	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
+		if ( identifierSource == null ) {
+			throw new IllegalArgumentException( "identifierSource must be non-null." );
+		}
+		if ( generator == null || StringHelper.isEmpty( generator.getStrategy() ) )	{
+			throw new IllegalArgumentException( "generator must be non-null and its strategy must be non-empty." );
+		}
+		String unsavedValue = null;
+		if ( identifierSource.getUnsavedValue() != null ) {
+			unsavedValue = identifierSource.getUnsavedValue();
+		}
+		else if ( "assigned".equals( generator.getStrategy() ) ) {
+			unsavedValue = "undefined";
+		}
+		else {
+			switch ( identifierSource.getNature() ) {
+				case SIMPLE: {
+					unsavedValue = null;
+					break;
+				}
+				case COMPOSITE: {
+					// The generator strategy should be "assigned" and processed above.
+					throw new IllegalStateException(
+							String.format(
+									"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
+									generator.getStrategy()
+							)
+					);
+				}
+				case AGGREGATED_COMPOSITE: {
+					// TODO: if the component only contains 1 attribute (when flattened)
+					// and it is not an association then null should be returned;
+					// otherwise "undefined" should be returned.
+					throw new NotYetImplementedException(
+							String.format(
+									"Unsaved value for (%s) identifier not implemented yet.",
+									identifierSource.getNature()
+							)
+					);
+				}
+				default: {
+					throw new AssertionFailure(
+							String.format( "Unexpected identifier nature: %s", identifierSource.getNature() )
+					);
+				}
+			}
+		}
+		return unsavedValue;
+	}
+	
 	private SingularAttributeBinding bindSingularAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource ) {
@@ -1084,9 +1138,11 @@ public class Binder {
 		}
 		final EntityVersion version = rootEntityBinding.getHierarchyDetails().getEntityVersion();
 		version.setVersioningAttributeBinding( ( BasicAttributeBinding ) bindAttribute( rootEntityBinding, versionAttributeSource ) );
-		version.setUnsavedValue( versionAttributeSource.getUnsavedValue() );
+		version.setUnsavedValue(
+			versionAttributeSource.getUnsavedValue() == null ? "undefined" : versionAttributeSource.getUnsavedValue()
+		);
 	}
-
+	
 	private TableSpecification createCollectionTable(
 			final AbstractPluralAttributeBinding pluralAttributeBinding,
 			final PluralAttributeSource attributeSource ) {

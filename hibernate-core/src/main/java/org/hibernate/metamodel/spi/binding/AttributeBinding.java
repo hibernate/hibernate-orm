@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Set;
-
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -51,8 +49,8 @@ public interface AttributeBinding {
 	/**
 	 * Obtain the descriptor for the Hibernate {@link org.hibernate.type.Type} for this binding.
 	 * <p/>
-	 * For information about the Java type, query the {@link org.hibernate.metamodel.spi.domain.Attribute} obtained from {@link #getAttribute()}
-	 * instead.
+	 * For information about the Java type, query the {@link org.hibernate.metamodel.spi.domain.Attribute}
+	 * obtained from {@link #getAttribute()} instead.
 	 *
 	 * @return The type descriptor
 	 */
@@ -76,6 +74,4 @@ public interface AttributeBinding {
 	public boolean isAlternateUniqueKey();
 
 	public boolean isLazy();
-
-	public void validate();
 }

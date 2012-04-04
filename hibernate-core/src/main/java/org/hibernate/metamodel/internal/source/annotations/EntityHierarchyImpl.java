@@ -48,6 +48,16 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	public RootEntitySource getRootEntitySource() {
 		return rootEntitySource;
 	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "EntityHierarchyImpl" );
+		sb.append( "{rootEntitySource=" ).append( rootEntitySource.getEntityName() );
+		sb.append( ", inheritanceType=" ).append( inheritanceType );
+		sb.append( '}' );
+		return sb.toString();
+	}
 }
 
 

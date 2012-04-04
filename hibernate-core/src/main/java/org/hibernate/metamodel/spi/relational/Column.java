@@ -173,13 +173,7 @@ public class Column extends AbstractValue {
 						! columnName.isQuoted() &&
 						! columnName.getName().toLowerCase().equals( "rowid" );
 		if ( ! useRawName ) {
-			String unique =
-					new StringBuilder()
-					.append( getPosition() )
-					.append( '_' )
-					.append( getTable().getTableNumber() )
-					.append( '_' )
-					.toString();
+			String unique = String.valueOf( getPosition() ) + '_' + getTable().getTableNumber() + '_';
 			if ( unique.length() >= dialect.getMaxAliasLength() ) {
 				throw new MappingException(
 						"Unique suffix [" + unique + "] length must be less than maximum [" + dialect.getMaxAliasLength() + "]"

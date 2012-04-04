@@ -237,6 +237,20 @@ public class EntitySourceImpl implements EntitySource {
 	public Set<SecondaryTableSource> getSecondaryTables() {
 		return entityClass.getSecondaryTableSources();
 	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "EntitySourceImpl" );
+		sb.append( "{entityClass=" ).append( entityClass.getName() );
+
+		sb.append( ", subclassEntitySources={" );
+		for(SubclassEntitySource subClass : subclassEntitySources) {
+			sb.append( subClass.getClassName() ).append( "," );
+		}
+		sb.append( "}}" );
+		return sb.toString();
+	}
 }
 
 

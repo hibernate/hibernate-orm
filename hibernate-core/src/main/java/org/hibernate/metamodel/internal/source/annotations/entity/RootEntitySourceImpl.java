@@ -146,14 +146,13 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		return getEntityClass().getCaching();
 	}
 
-
 	private class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIdentifierSource {
 		private final ComponentAttributeSourceImpl componentAttributeSource;
 
 		public AggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
 			// the entity class reference should contain one single id attribute...
-			Iterator<BasicAttribute> idAttributes = rootEntitySource.getEntityClass ().getIdAttributes().iterator();
-			if ( ! idAttributes.hasNext() ) {
+			Iterator<BasicAttribute> idAttributes = rootEntitySource.getEntityClass().getIdAttributes().iterator();
+			if ( !idAttributes.hasNext() ) {
 				throw rootEntitySource.getLocalBindingContext().makeMappingException(
 						String.format(
 								"Could not locate identifier attributes on entity %s",
@@ -276,7 +275,6 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}
-
 }
 
 

@@ -48,8 +48,6 @@ public class ManyToOneAttributeBinding
 	private final SingularAttributeBinding referencedAttributeBinding;
 	private final List<RelationalValueBinding> relationalValueBindings;
 
-	private boolean isLogicalOneToOne;
-
 	private CascadeStyle cascadeStyle;
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
@@ -71,9 +69,16 @@ public class ManyToOneAttributeBinding
 				lazy,
 				metaAttributeContext
 		);
+
+		if ( referencedAttributeBinding == null ) {
+			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
+		}
+		if ( !EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
+			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
+		}
+
 		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
-		// buildForeignKey();
 	}
 
 	@Override
@@ -124,7 +129,7 @@ public class ManyToOneAttributeBinding
 		}
 		else {
 			cascadeStyle = new CascadeStyle.MultipleCascadeStyle(
-					cascadeStyleList.toArray( new CascadeStyle[ cascadeStyleList.size() ] )
+					cascadeStyleList.toArray( new CascadeStyle[cascadeStyleList.size()] )
 			);
 		}
 	}
@@ -172,18 +177,6 @@ public class ManyToOneAttributeBinding
 	public final EntityBinding getReferencedEntityBinding() {
 		return referencedAttributeBinding.getContainer().seekEntityBinding();
 	}
-
-//	public void validate() {
-//		// can't check this until both the domain and relational states are initialized...
-//		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {
-//			if ( !isLogicalOneToOne ) {
-//				throw new MappingException(
-//						"many-to-one attribute [" + locateAttribute().getName() + "] does not support orphan delete as it is not unique"
-//				);
-//			}
-//		}
-//		//TODO: validate that the entity reference is resolved
-//	}
 
 	@Override
 	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {

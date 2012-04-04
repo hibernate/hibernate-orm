@@ -39,7 +39,6 @@
     <xi:include href="Database_Access.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="chapters/transactions/Transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="chapters/pc/Persistence_Context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-    <xi:include href="chapters/loading/Loading.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="Batch_Processing.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="Locking.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="Caching.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>

@@ -5,6 +5,35 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.2.Final (2012.04.04)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11951
+
+** Bug
+    * [HHH-1657] - hql update generate wrong sql with joined subclass hierarcy
+    * [HHH-6271] - deploying with a 1.0 orm.xml, gets unexpected error HHH00196
+    * [HHH-6915] - Restrictions.ilike(String propertyValue, Object value) does not correctly initialize LikeExpresison
+    * [HHH-7017] - Envers does not work in case of resource-local transactions and manual session flush mode
+    * [HHH-7020] - Connection leak with nested sessions
+    * [HHH-7090] - Temporary session closing affects original session
+    * [HHH-7133] - NaturalIdLoadAccess not correctly working on mutable NaturalId's
+    * [HHH-7158] - Regression: null values on NaturalId's at persist-time are causing subsequent NPE's and wrong behaviour
+    * [HHH-7159] - Database keywords causes failure of some tests in org.hibernate.test.collection.custom
+    * [HHH-7160] - NaturalIdXrefDelegate#cache() needs to remove obsolete entries in shared cache when NaturalId values changed
+    * [HHH-7165] - count() query on classes using EmbeddedId should not use id column tuple on Dialects which dont support non-distinct tuple counts
+    * [HHH-7166] - Infinispan Hibernate RegionFactory doesn't allow user to have their own custom CommandFactory
+    * [HHH-7167] - The new natural id code introduced in 4.1.1 depends on the order the entity persisters are loaded which leads to fatal errors
+    * [HHH-7174] - org.hibernate.test.tm.CMTTest.testConcurrentCachedQueries fails due to test cases interdependent
+    * [HHH-7184] - Missing StaticModels for envers revision entity
+    * [HHH-7191] - NaturalIdCache improperly declared
+    * [HHH-7192] - NullPointerException in QueryTranslatorImpl on erroneously typed delete query
+    * [HHH-7193] - Transaction Rollback not clearing statement batch on Prepared Statement causes issues with statement caching
+    * [HHH-7194] - NullPointerExeption with nested subqueries using Criteria API
+    * [HHH-7200] - SessionFactoryObservers should be notified of the close event in reverse order of the create event
+    * [HHH-7204] - improve tracking of regions created in the Infinispan region factory
+    * [HHH-7210] - Natural-id cache put stats not being correctly updated on insert for "asynch" cache providers
+
+
 Changes in version 4.1.1.Final (2012.03.07)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11859

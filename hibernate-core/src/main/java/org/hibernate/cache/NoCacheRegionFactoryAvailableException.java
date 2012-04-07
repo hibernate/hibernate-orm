@@ -32,9 +32,9 @@ import org.hibernate.cfg.Environment;
  */
 public class NoCacheRegionFactoryAvailableException extends CacheException {
 	private static final String MSG = "Second-level cache is used in the application, but property "
-			+ Environment.CACHE_REGION_FACTORY + "is not gaven, please either disable second level cache" +
+			+ Environment.CACHE_REGION_FACTORY + " is not given, please either disable second level cache" +
 			" or set correct region factory class name to property "+Environment.CACHE_REGION_FACTORY+
-			" (and make sure the second level cache provider, hibernate-infinispan, for example, available in the classpath).";
+			" (and make sure the second level cache provider, hibernate-infinispan, for example, is available in the classpath).";
 	public NoCacheRegionFactoryAvailableException() {
 		super( MSG );
 	}

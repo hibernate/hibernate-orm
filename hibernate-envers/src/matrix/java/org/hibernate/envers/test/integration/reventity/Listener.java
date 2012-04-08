@@ -28,8 +28,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -50,6 +52,10 @@ public class Listener extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(ListenerRevEntity.class);
     }
 

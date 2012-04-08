@@ -13,15 +13,15 @@ public class Car {
 	
 	private long id;
 	
-	private int number;
+	private int registrationNumber;
 	
 	private List<Person> owners;
 
 	
 	public Car() { }
 
-	public Car(int number, List<Person> owners) {
-		this.number = number;
+	public Car(int registrationNumber, List<Person> owners) {
+		this.registrationNumber = registrationNumber;
 		this.owners = owners;
 	}
 
@@ -42,12 +42,12 @@ public class Car {
 		this.owners = owners;
 	}	
 
-	public int getNumber() {
-		return number;
+	public int getRegistrationNumber() {
+		return registrationNumber;
 	}
 
-	public void setNumber(int number) {
-		this.number = number;
+	public void setRegistrationNumber(int registrationNumber) {
+		this.registrationNumber = registrationNumber;
 	}
 
 

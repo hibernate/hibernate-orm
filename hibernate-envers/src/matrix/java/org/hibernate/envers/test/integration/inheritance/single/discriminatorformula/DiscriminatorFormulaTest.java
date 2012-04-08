@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -93,7 +94,7 @@ public class DiscriminatorFormulaTest extends AbstractEntityTest {
             Object o = iterator.next();
             if (o instanceof Formula) {
                 Formula formula = (Formula) o;
-                assert formula.getText().equals(ParentEntity.DISCRIMINATOR_QUERY);
+                Assert.assertEquals(ParentEntity.DISCRIMINATOR_QUERY, formula.getText());
                 return;
             }
         }
@@ -102,31 +103,31 @@ public class DiscriminatorFormulaTest extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ChildEntity.class, childVer1.getId()));
-        assert Arrays.asList(2, 4).equals(getAuditReader().getRevisions(ParentEntity.class, parentVer1.getId()));
+        Assert.assertEquals(Arrays.asList(1, 3), getAuditReader().getRevisions(ChildEntity.class, childVer1.getId()));
+        Assert.assertEquals(Arrays.asList(2, 4), getAuditReader().getRevisions(ParentEntity.class, parentVer1.getId()));
     }
 
     @Test
     public void testHistoryOfParent() {
-        assert getAuditReader().find(ParentEntity.class, parentVer1.getId(), 2).equals(parentVer1);
-        assert getAuditReader().find(ParentEntity.class, parentVer2.getId(), 4).equals(parentVer2);
+        Assert.assertEquals(parentVer1, getAuditReader().find(ParentEntity.class, parentVer1.getId(), 2));
+        Assert.assertEquals(parentVer2, getAuditReader().find(ParentEntity.class, parentVer2.getId(), 4));
     }
 
     @Test
     public void testHistoryOfChild() {
-        assert getAuditReader().find(ChildEntity.class, childVer1.getId(), 1).equals(childVer1);
-        assert getAuditReader().find(ChildEntity.class, childVer2.getId(), 3).equals(childVer2);
+        Assert.assertEquals(childVer1, getAuditReader().find(ChildEntity.class, childVer1.getId(), 1));
+        Assert.assertEquals(childVer2, getAuditReader().find(ChildEntity.class, childVer2.getId(), 3));
     }
 
     @Test
     public void testPolymorphicQuery() {
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ChildEntity.class, 1).getSingleResult().equals(childVer1);
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ParentEntity.class, 1).getSingleResult().equals(childVer1);
+        Assert.assertEquals(childVer1, getAuditReader().createQuery().forEntitiesAtRevision(ChildEntity.class, 1).getSingleResult());
+        Assert.assertEquals(childVer1, getAuditReader().createQuery().forEntitiesAtRevision(ParentEntity.class, 1).getSingleResult());
 
         List childEntityRevisions = getAuditReader().createQuery().forRevisionsOfEntity(ChildEntity.class, true, false).getResultList();
-        assert Arrays.asList(childVer1, childVer2).equals(childEntityRevisions);
+        Assert.assertEquals(Arrays.asList(childVer1, childVer2), childEntityRevisions);
 
         List parentEntityRevisions = getAuditReader().createQuery().forRevisionsOfEntity(ParentEntity.class, true, false).getResultList();
-        assert Arrays.asList(childVer1, parentVer1, childVer2, parentVer2).equals(parentEntityRevisions);
+        Assert.assertEquals(Arrays.asList(childVer1, parentVer1, childVer2, parentVer2), parentEntityRevisions);
     }
 }

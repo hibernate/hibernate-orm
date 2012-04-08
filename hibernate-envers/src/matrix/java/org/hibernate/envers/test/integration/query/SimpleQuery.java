@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -218,9 +220,15 @@ public class SimpleQuery extends AbstractEntityTest {
         assert ((Object []) result.get(1))[0].equals(new StrIntTestEntity("c", 10, id1));
         assert ((Object []) result.get(2))[0].equals(new StrIntTestEntity(null, null, id1));
 
-        assert ((DefaultRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
-        assert ((DefaultRevisionEntity) ((Object []) result.get(1))[1]).getId() == 2;
-        assert ((DefaultRevisionEntity) ((Object []) result.get(2))[1]).getId() == 4;
+        if (getDialect() instanceof Oracle8iDialect) {
+            assert ((OracleRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+            assert ((OracleRevisionEntity) ((Object []) result.get(1))[1]).getId() == 2;
+            assert ((OracleRevisionEntity) ((Object []) result.get(2))[1]).getId() == 4;
+        } else {
+            assert ((DefaultRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+            assert ((DefaultRevisionEntity) ((Object []) result.get(1))[1]).getId() == 2;
+            assert ((DefaultRevisionEntity) ((Object []) result.get(2))[1]).getId() == 4;
+        }
 
         assert ((Object []) result.get(0))[2].equals(RevisionType.ADD);
         assert ((Object []) result.get(1))[2].equals(RevisionType.MOD);

@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.entities.onetomany.detached.inheritance;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -9,6 +10,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "ChildIdxJoinColBiRefIng")
 @Audited
 public class ChildIndexedListJoinColumnBidirectionalRefIngEntity extends ParentIndexedListJoinColumnBidirectionalRefIngEntity {
     private String data2;

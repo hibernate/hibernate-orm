@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.manytomany.ternary;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -174,10 +175,10 @@ public class TernaryMap extends AbstractEntityTest {
         TernaryMapEntity rev3 = getAuditReader().find(TernaryMapEntity.class, map1_id, 3);
         TernaryMapEntity rev4 = getAuditReader().find(TernaryMapEntity.class, map1_id, 4);
 
-        assert rev1.getMap().equals(TestTools.makeMap(int1, str1));
-        assert rev2.getMap().equals(TestTools.makeMap(int1, str2));
-        assert rev3.getMap().equals(TestTools.makeMap(int1, str2));
-        assert rev4.getMap().equals(TestTools.makeMap(int1, str2, int2, str2));
+        Assert.assertEquals(TestTools.makeMap(int1, str1), rev1.getMap());
+        Assert.assertEquals(TestTools.makeMap(int1, str2), rev2.getMap());
+        Assert.assertEquals(TestTools.makeMap(int1, str2), rev3.getMap());
+        Assert.assertEquals(TestTools.makeMap(int1, str2, int2, str2), rev4.getMap());
     }
 
     @Test

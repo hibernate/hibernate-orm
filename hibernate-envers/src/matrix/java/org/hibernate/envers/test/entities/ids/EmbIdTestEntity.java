@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.entities.ids;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -31,6 +32,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "EmbIdEnt")
 public class EmbIdTestEntity {
     @EmbeddedId
     private EmbId id;

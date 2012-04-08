@@ -25,8 +25,10 @@ package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -48,6 +50,10 @@ public class CustomPropertyAccess extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(CustomPropertyAccessRevEntity.class);
     }
 

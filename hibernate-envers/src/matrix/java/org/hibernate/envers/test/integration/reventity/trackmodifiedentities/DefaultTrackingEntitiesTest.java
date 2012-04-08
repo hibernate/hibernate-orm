@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.OracleTrackingModifiedEntitiesRevisionEntity;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -40,7 +43,6 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
 	public void addConfigurationProperties(Properties configuration) {
 		super.addConfigurationProperties( configuration );
 		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
-
 	}
 
 	@Test

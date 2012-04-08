@@ -28,8 +28,12 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -50,7 +54,15 @@ public class Inherited extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(InheritedRevEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
+        if (dialect instanceof Oracle8iDialect) {
+            cfg.addAnnotatedClass(OracleRevisionEntity.class);
+        } else {
+            cfg.addAnnotatedClass(InheritedRevEntity.class);
+        }
     }
 
     @Test
@@ -113,11 +125,13 @@ public class Inherited extends AbstractEntityTest {
     public void testFindRevision() {
         AuditReader vr = getAuditReader();
 
-        long rev1Timestamp = vr.findRevision(InheritedRevEntity.class, 1).getTimestamp();
+        long rev1Timestamp = getDialect() instanceof Oracle8iDialect ? vr.findRevision(OracleRevisionEntity.class, 1).getTimestamp()
+                                                                     : vr.findRevision(InheritedRevEntity.class, 1).getTimestamp();
         assert rev1Timestamp > timestamp1;
         assert rev1Timestamp <= timestamp2;
 
-        long rev2Timestamp = vr.findRevision(InheritedRevEntity.class, 2).getTimestamp();
+        long rev2Timestamp = getDialect() instanceof Oracle8iDialect ? vr.findRevision(OracleRevisionEntity.class, 2).getTimestamp()
+                                                                     : vr.findRevision(InheritedRevEntity.class, 2).getTimestamp();
         assert rev2Timestamp > timestamp2;
         assert rev2Timestamp <= timestamp3;
     }
@@ -129,11 +143,13 @@ public class Inherited extends AbstractEntityTest {
         Set<Number> revNumbers = new HashSet<Number>();
         revNumbers.add(1);
         revNumbers.add(2);
-        
-        Map<Number, InheritedRevEntity> revisionMap = vr.findRevisions(InheritedRevEntity.class, revNumbers);
+
+        Class<?> revisionClass = getDialect() instanceof Oracle8iDialect ? OracleRevisionEntity.class
+                                                                         : InheritedRevEntity.class;
+        Map revisionMap = vr.findRevisions(revisionClass, revNumbers);
         assert(revisionMap.size() == 2);
-        assert(revisionMap.get(1).equals(vr.findRevision(InheritedRevEntity.class, 1)));
-        assert(revisionMap.get(2).equals(vr.findRevision(InheritedRevEntity.class, 2)));
+        assert(revisionMap.get(1).equals(vr.findRevision(revisionClass, 1)));
+        assert(revisionMap.get(2).equals(vr.findRevision(revisionClass, 2)));
     }
 
     @Test

@@ -29,6 +29,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -36,6 +37,7 @@ import org.hibernate.envers.Audited;
  * @author Erik-Berndt Scheper
  */
 @Entity
+@Table(name = "DefaultValueComponent")
 @Audited
 public class DefaultValueComponentTestEntity {
 	@Id

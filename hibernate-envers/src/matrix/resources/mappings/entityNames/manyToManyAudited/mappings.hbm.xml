@@ -28,7 +28,7 @@
 			<generator class="native" />
 		</id>
 
-		<property name="number" type="int" not-null="true" />
+		<property name="registrationNumber" type="int" not-null="true" />
 
 		<bag name="owners" cascade="all" table="PERSON_CAR" >
 			<key column="ID_PERSON" />

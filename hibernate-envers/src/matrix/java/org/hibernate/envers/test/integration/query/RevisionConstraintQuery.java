@@ -24,9 +24,12 @@
 package org.hibernate.envers.test.integration.query;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.hibernate.envers.test.tools.TestTools;
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -107,7 +110,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.revisionNumber().lt(3))
                 .getResultList();
 
-        assert Arrays.asList(1, 2).equals(result);
+        Assert.assertEquals(Arrays.asList(1, 2), result);
     }
 
     @Test
@@ -118,7 +121,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.revisionNumber().ge(2))
                 .getResultList();
 
-        assert Arrays.asList(2, 3, 4).equals(result);
+        Assert.assertEquals(TestTools.makeSet(2, 3, 4), new HashSet(result));
     }
 
     @Test
@@ -130,7 +133,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.property("str1").eq("a"))
                 .getResultList();
 
-        assert Arrays.asList(1).equals(result);
+        Assert.assertEquals(Arrays.asList(1), result);
     }
 
     @Test
@@ -142,7 +145,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.property("number").lt(10))
                 .getResultList();
 
-        assert Arrays.asList(3, 4).equals(result);
+        Assert.assertEquals(Arrays.asList(3, 4), result);
     }
 
     @Test
@@ -156,10 +159,10 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
-        assert (Integer) result[0] == 4;
-        assert (Long) result[1] == 4;
-        assert (Long) result[2] == 4;
-        assert (Integer) result[3] == 1;
+        Assert.assertEquals(Integer.valueOf(4), (Integer) result[0]);
+        Assert.assertEquals(Long.valueOf(4), (Long) result[1]);
+        Assert.assertEquals(Long.valueOf(4), result[2]);
+        Assert.assertEquals(Integer.valueOf(1), (Integer) result[3]);
     }
 
     @Test
@@ -171,7 +174,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .addOrder(AuditEntity.revisionNumber().desc())
                 .getResultList();
 
-        assert Arrays.asList(4, 3, 2, 1).equals(result);
+        Assert.assertEquals(Arrays.asList(4, 3, 2, 1), result);
     }
 
     @Test
@@ -183,7 +186,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
-        assert (Long) result == 4;
+        Assert.assertEquals(Long.valueOf(4), (Long) result);
     }
 
     @Test
@@ -195,10 +198,10 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.revisionType().eq(RevisionType.MOD))
                 .getResultList();
         
-        assert results.size() == 3;
-        assert results.get(0).equals(new StrIntTestEntity("d", 10, id1));
-        assert results.get(1).equals(new StrIntTestEntity("d", 1, id1));
-        assert results.get(2).equals(new StrIntTestEntity("d", 5, id1));
+        Assert.assertEquals(3, results.size());
+        Assert.assertEquals(new StrIntTestEntity("d", 10, id1), results.get(0));
+        Assert.assertEquals(new StrIntTestEntity("d", 1, id1), results.get(1));
+        Assert.assertEquals(new StrIntTestEntity("d", 5, id1), results.get(2));
     }
 
     @Test
@@ -210,7 +213,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .add(AuditEntity.revisionType().ne(RevisionType.MOD))
                 .getResultList();
 
-        assert results.size() == 1;
-        assert results.get(0).equals(new StrIntTestEntity("a", 10, id1));
+        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(new StrIntTestEntity("a", 10, id1), results.get(0));
     }
 }

@@ -25,11 +25,14 @@ package org.hibernate.envers.test.integration.reventity;
 
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
+
+import java.util.Properties;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -37,6 +40,10 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 public class ExceptionListener extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 

@@ -9,6 +9,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.AuditMappedBy;
@@ -21,6 +22,7 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @Audited
+@Table(name = "ParentIdxJoinColBiRefIng")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class ParentIndexedListJoinColumnBidirectionalRefIngEntity {
     @Id

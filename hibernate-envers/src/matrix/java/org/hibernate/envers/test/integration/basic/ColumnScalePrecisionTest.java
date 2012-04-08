@@ -44,7 +44,7 @@ public class ColumnScalePrecisionTest extends AbstractEntityTest {
 
     @Test
     public void testColumnScalePrecision() {
-        Column testColumn = new Column("number");
+        Column testColumn = new Column("wholeNumber");
         Column scalePrecisionAuditColumn = auditTable.getColumn(testColumn);
         Column scalePrecisionColumn = originalTable.getColumn(testColumn);
 

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Date;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -55,7 +56,7 @@ public class Dates extends AbstractEntityTest {
 
         em.getTransaction().begin();
         dte = em.find(DateTestEntity.class, id1);
-        dte.setDate(new Date(45678000));
+        dte.setDateValue(new Date(45678000));
         em.getTransaction().commit();
     }
 
@@ -69,7 +70,7 @@ public class Dates extends AbstractEntityTest {
         DateTestEntity ver1 = new DateTestEntity(id1, new Date(12345000));
         DateTestEntity ver2 = new DateTestEntity(id1, new Date(45678000));
 
-        assert getAuditReader().find(DateTestEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(DateTestEntity.class, id1, 2).equals(ver2);
+        Assert.assertEquals(ver1, getAuditReader().find(DateTestEntity.class, id1, 1));
+        Assert.assertEquals(ver2, getAuditReader().find(DateTestEntity.class, id1, 2));
     }
 }

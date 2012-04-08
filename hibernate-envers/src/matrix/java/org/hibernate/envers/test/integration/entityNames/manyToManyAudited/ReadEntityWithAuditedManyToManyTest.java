@@ -83,12 +83,12 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
     	// navigate through relations to load objects
     	for (Person owner : car1_2.getOwners()) {
     		for (Car ownedCar : owner.getCars()) {
-    			ownedCar.getNumber();
+    			ownedCar.getRegistrationNumber();
 			}
 		}
     	for (Person owner : car2_2.getOwners()) {
     		for (Car ownedCar : owner.getCars()) {
-				ownedCar.getNumber();
+				ownedCar.getRegistrationNumber();
 			}
 		}
     	

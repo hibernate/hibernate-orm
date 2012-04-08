@@ -24,8 +24,10 @@
 package org.hibernate.envers.test.integration.query;
 
 import java.util.List;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -45,8 +47,12 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     private Long timestamp;
 
     public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(CustomRevEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
+        cfg.addAnnotatedClass(CustomRevEntity.class);
     }
 
     @Test

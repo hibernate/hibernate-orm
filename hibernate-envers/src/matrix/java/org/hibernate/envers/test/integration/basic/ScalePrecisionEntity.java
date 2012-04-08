@@ -19,18 +19,18 @@ public class ScalePrecisionEntity implements Serializable {
     private Long id;
 
     @Column(precision = 3, scale = 0)
-    private Double number;
+    private Double wholeNumber;
 
     public ScalePrecisionEntity() {
     }
 
-    public ScalePrecisionEntity(Double number) {
-        this.number = number;
+    public ScalePrecisionEntity(Double wholeNumber) {
+        this.wholeNumber = wholeNumber;
     }
 
-    public ScalePrecisionEntity(Double number, Long id) {
+    public ScalePrecisionEntity(Double wholeNumber, Long id) {
         this.id = id;
-        this.number = number;
+        this.wholeNumber = wholeNumber;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class ScalePrecisionEntity implements Serializable {
         ScalePrecisionEntity that = (ScalePrecisionEntity) o;
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (number != null ? !number.equals(that.number) : that.number != null) return false;
+        if (wholeNumber != null ? !wholeNumber.equals(that.wholeNumber) : that.wholeNumber != null) return false;
 
         return true;
     }
@@ -49,13 +49,13 @@ public class ScalePrecisionEntity implements Serializable {
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (number != null ? number.hashCode() : 0);
+        result = 31 * result + (wholeNumber != null ? wholeNumber.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "ScalePrecisionEntity(id = " + id + ", number = " + number + ")";
+        return "ScalePrecisionEntity(id = " + id + ", wholeNumber = " + wholeNumber + ")";
     }
 
     public Long getId() {
@@ -66,11 +66,11 @@ public class ScalePrecisionEntity implements Serializable {
         this.id = id;
     }
 
-    public Double getNumber() {
-        return number;
+    public Double getWholeNumber() {
+        return wholeNumber;
     }
 
-    public void setNumber(Double number) {
-        this.number = number;
+    public void setWholeNumber(Double wholeNumber) {
+        this.wholeNumber = wholeNumber;
     }
 }

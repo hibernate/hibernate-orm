@@ -29,6 +29,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -37,6 +38,7 @@ import org.hibernate.envers.test.entities.StrTestEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "IdMapKey")
 public class IdMapKeyEntity {
     @Id
     @GeneratedValue

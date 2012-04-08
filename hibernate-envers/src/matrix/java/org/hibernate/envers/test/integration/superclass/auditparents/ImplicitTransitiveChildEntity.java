@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -8,6 +9,7 @@ import org.hibernate.envers.Audited;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
+@Table(name = "ImplicitTransitiveChild")
 @Audited
 public class ImplicitTransitiveChildEntity extends TransitiveParentEntity {
     private String child;

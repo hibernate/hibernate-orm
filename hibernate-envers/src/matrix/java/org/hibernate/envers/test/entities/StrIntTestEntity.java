@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -41,6 +42,7 @@ public class StrIntTestEntity {
     private String str1;
 
     @Audited
+    @Column(name = "NUM_VAL")
     private Integer number;
 
     public StrIntTestEntity() {

@@ -27,10 +27,10 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
@@ -46,6 +46,10 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
 public class JtaExceptionListener extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 

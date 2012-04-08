@@ -25,7 +25,9 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Iterator;
+import java.util.Properties;
 
+import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -43,9 +45,13 @@ import static org.junit.Assert.assertEquals;
  */
 public class LongRevEntityInheritanceChildAuditing extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(LongRevNumberRevEntity.class);
         cfg.addAnnotatedClass(ChildEntity.class);
         cfg.addAnnotatedClass(ParentEntity.class);
+    }
+
+    @Override
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
+        cfg.addAnnotatedClass(LongRevNumberRevEntity.class);
     }
 
     @Test

@@ -69,7 +69,7 @@ public class FieldAccessType extends AbstractEntityTest {
     public void testHistoryOfId1() {
         FieldAccessTypeEntity ver1 = new FieldAccessTypeEntity(id1, "data");
         FieldAccessTypeEntity ver2 = new FieldAccessTypeEntity(id1, "data2");
-		Assert.assertEquals(getAuditReader().find(FieldAccessTypeEntity.class, id1, 1), ver1);
-		Assert.assertEquals(getAuditReader().find(FieldAccessTypeEntity.class, id1, 2), ver2);
+		Assert.assertEquals(ver1, getAuditReader().find(FieldAccessTypeEntity.class, id1, 1));
+		Assert.assertEquals(ver2, getAuditReader().find(FieldAccessTypeEntity.class, id1, 2));
     }
 }

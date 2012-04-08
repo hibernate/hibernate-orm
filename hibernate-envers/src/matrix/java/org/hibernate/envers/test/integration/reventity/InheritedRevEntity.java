@@ -33,5 +33,4 @@ import org.hibernate.envers.RevisionEntity;
 @Entity
 @RevisionEntity
 public class InheritedRevEntity extends DefaultRevisionEntity {
-    
 }

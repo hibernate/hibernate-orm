@@ -61,7 +61,7 @@ public class ChildNullAuditing extends AbstractEntityTest {
         em.getTransaction().begin();
         ce = em.find(ChildEntity.class, id1);
         ce.setData(null);
-        ce.setNumber(2l);
+        ce.setNumVal(2l);
         em.getTransaction().commit();
     }
 

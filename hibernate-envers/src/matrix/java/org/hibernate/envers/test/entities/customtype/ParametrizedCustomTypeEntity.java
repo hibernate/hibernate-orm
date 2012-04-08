@@ -25,6 +25,7 @@ package org.hibernate.envers.test.entities.customtype;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -37,6 +38,7 @@ import org.hibernate.envers.Audited;
 @Entity
 @TypeDef(name = "param", typeClass = ParametrizedTestUserType.class,
         parameters = { @Parameter(name="param1", value = "x"), @Parameter(name="param2", value = "y") })
+@Table(name = "ParamCustType")
 public class ParametrizedCustomTypeEntity {
     @Id
     @GeneratedValue

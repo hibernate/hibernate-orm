@@ -2,6 +2,10 @@ package org.hibernate.envers.test;
 
 import java.net.URISyntaxException;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
+import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.OracleTrackingModifiedEntitiesRevisionEntity;
 import org.junit.Before;
 
 import org.hibernate.MappingException;
@@ -20,9 +24,10 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * Base class for testing envers with Session.
  *
  * @author Hern&aacute;n Chanfreau
- *
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractSessionTest extends AbstractEnversTest {
+    public static final Dialect DIALECT = Dialect.getDialect();
 
 	protected Configuration config;
 	private ServiceRegistry serviceRegistry;
@@ -30,6 +35,9 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
 	private Session session ;
 	private AuditReader auditReader;
 
+    protected static Dialect getDialect() {
+        return DIALECT;
+    }
 
 	@BeforeClassOnce
     public void init() throws URISyntaxException {
@@ -43,6 +51,7 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
         }
 
         this.initMappings();
+        revisionEntityForDialect(config, getDialect());
 
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		sessionFactory = config.buildSessionFactory( serviceRegistry );
@@ -51,6 +60,16 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
 		return true;
 	}
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
+
+    protected void revisionEntityForDialect(Configuration cfg, Dialect dialect) {
+        if (dialect instanceof Oracle8iDialect) {
+            if (Boolean.parseBoolean(config.getProperty("org.hibernate.envers.track_entities_changed_in_revision"))) {
+                cfg.addAnnotatedClass(OracleTrackingModifiedEntitiesRevisionEntity.class);
+            } else {
+                cfg.addAnnotatedClass(OracleRevisionEntity.class);
+            }
+        }
+    }
 
 	private SessionFactory getSessionFactory(){
 		return sessionFactory;

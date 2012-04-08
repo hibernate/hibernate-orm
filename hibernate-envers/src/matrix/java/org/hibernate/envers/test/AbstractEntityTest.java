@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
+import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.OracleTrackingModifiedEntitiesRevisionEntity;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
@@ -44,6 +47,7 @@ import org.hibernate.testing.BeforeClassOnce;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractEntityTest extends AbstractEnversTest {
     public static final Dialect DIALECT = Dialect.getDialect();
@@ -56,6 +60,16 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
+
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
+        if (dialect instanceof Oracle8iDialect) {
+            if (Boolean.parseBoolean(configurationProperties.getProperty("org.hibernate.envers.track_entities_changed_in_revision"))) {
+                cfg.addAnnotatedClass(OracleTrackingModifiedEntitiesRevisionEntity.class);
+            } else {
+                cfg.addAnnotatedClass(OracleRevisionEntity.class);
+            }
+        }
+    }
 
     public void addConfigurationProperties(Properties configuration) { }
 
@@ -105,6 +119,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         cfg = new Ejb3Configuration();
         configure(cfg);
+        revisionEntityForDialect(cfg, getDialect(), configurationProperties);
         cfg.configure(configurationProperties);
 
         emf = (EntityManagerFactoryImpl) cfg.buildEntityManagerFactory( createBootstrapRegistryBuilder() );
@@ -113,6 +128,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         newEntityManager();
     }
+
 	protected boolean createSchema() {
 		return true;
 	}
@@ -120,7 +136,6 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 	private BootstrapServiceRegistryBuilder createBootstrapRegistryBuilder() {
 		return new BootstrapServiceRegistryBuilder();
 	}
-
 
 	@AfterClassOnce
     public void close() {

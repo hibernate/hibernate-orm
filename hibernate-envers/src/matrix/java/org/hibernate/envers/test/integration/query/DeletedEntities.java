@@ -26,6 +26,8 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -95,7 +97,11 @@ public class DeletedEntities extends AbstractEntityTest {
         assert result.size() == 1;
 
         assert ((Object []) result.get(0))[0].equals(new StrIntTestEntity("b", 11, id2));
-        assert ((DefaultRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+        if (getDialect() instanceof Oracle8iDialect) {
+            assert ((OracleRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+        } else {
+            assert ((DefaultRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+        }
         assert ((Object []) result.get(0))[2].equals(RevisionType.ADD);
     }
 }

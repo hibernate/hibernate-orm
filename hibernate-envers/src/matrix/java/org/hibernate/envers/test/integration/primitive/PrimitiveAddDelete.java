@@ -59,8 +59,8 @@ public class PrimitiveAddDelete extends AbstractEntityTest {
 		// Revision 2
         em.getTransaction().begin();
         pte = em.find(PrimitiveTestEntity.class, id1);
-        pte.setNumber(20);
-		pte.setNumber2(21);
+        pte.setNumVal1(20);
+		pte.setNumVal2(21);
         em.getTransaction().commit();
 
 		// Revision 3

@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.AuditMappedBy;
@@ -18,6 +19,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "IdxListJoinColBiRefIng")
 @Audited
 public class IndexedListJoinColumnBidirectionalRefIngEntity {
     @Id

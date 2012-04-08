@@ -28,6 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -36,6 +37,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "MapOwning")
 public class MapOwningEntity {
     @Id
     private Integer id;

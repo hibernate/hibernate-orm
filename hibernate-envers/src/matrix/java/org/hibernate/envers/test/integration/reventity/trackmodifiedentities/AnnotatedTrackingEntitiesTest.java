@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import java.util.Properties;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.AnnotatedTrackingRevisionEntity;
@@ -12,10 +13,8 @@ import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.Annota
  */
 public class AnnotatedTrackingEntitiesTest extends DefaultTrackingEntitiesTest {
     @Override
-    public void configure(Ejb3Configuration cfg) {
-        super.configure(cfg);
+    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(AnnotatedTrackingRevisionEntity.class);
-
     }
 
 	@Override

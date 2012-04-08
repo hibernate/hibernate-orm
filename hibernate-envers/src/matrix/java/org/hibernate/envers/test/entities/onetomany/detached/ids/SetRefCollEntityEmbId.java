@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.EmbId;
@@ -36,6 +37,7 @@ import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "SetRefCollEmbId")
 public class SetRefCollEntityEmbId {
     @EmbeddedId
     private EmbId id;

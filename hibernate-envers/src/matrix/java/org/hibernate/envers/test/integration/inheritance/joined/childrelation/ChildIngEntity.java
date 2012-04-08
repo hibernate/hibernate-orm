@@ -36,7 +36,7 @@ import org.hibernate.envers.Audited;
 @Audited
 public class ChildIngEntity extends ParentNotIngEntity {
     @Basic
-    private Long number;
+    private Long numVal;
 
     @ManyToOne
     private ReferencedEntity referenced;
@@ -44,17 +44,17 @@ public class ChildIngEntity extends ParentNotIngEntity {
     public ChildIngEntity() {
     }
 
-    public ChildIngEntity(Integer id, String data, Long number) {
+    public ChildIngEntity(Integer id, String data, Long numVal) {
         super(id, data);
-        this.number = number;
+        this.numVal = numVal;
     }
 
-    public Long getNumber() {
-        return number;
+    public Long getNumVal() {
+        return numVal;
     }
 
-    public void setNumber(Long number) {
-        this.number = number;
+    public void setNumVal(Long numVal) {
+        this.numVal = numVal;
     }
 
     public ReferencedEntity getReferenced() {
@@ -72,18 +72,18 @@ public class ChildIngEntity extends ParentNotIngEntity {
 
         ChildIngEntity childEntity = (ChildIngEntity) o;
 
-        if (number != null ? !number.equals(childEntity.number) : childEntity.number != null) return false;
+        if (numVal != null ? !numVal.equals(childEntity.numVal) : childEntity.numVal != null) return false;
 
         return true;
     }
 
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (number != null ? number.hashCode() : 0);
+        result = 31 * result + (numVal != null ? numVal.hashCode() : 0);
         return result;
     }
 
     public String toString() {
-        return "ChildIngEntity(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
+        return "ChildIngEntity(id = " + getId() + ", data = " + getData() + ", numVal = " + numVal + ")";
     }
 }

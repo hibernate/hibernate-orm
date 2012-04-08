@@ -1,8 +1,10 @@
 package org.hibernate.envers.test.integration.readwriteexpression;
 
+import java.math.BigDecimal;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +40,12 @@ public class ReadWriteExpressionChange extends AbstractEntityTest {
         EntityManager em = getEntityManager();
         List resultList = em.createNativeQuery("select size_in_cm from t_staff_AUD where id ="+id).getResultList();
         Assert.assertEquals(1, resultList.size());
-        Double sizeInCm = (Double) resultList.get(0);
+        Double sizeInCm = null;
+        if (getDialect() instanceof Oracle8iDialect) {
+            sizeInCm = ((BigDecimal) resultList.get(0)).doubleValue();
+        } else {
+            sizeInCm = (Double) resultList.get(0);
+        }
         Assert.assertEquals(HEIGHT_CENTIMETERS, sizeInCm.doubleValue(), 0.00000001);
     }
 

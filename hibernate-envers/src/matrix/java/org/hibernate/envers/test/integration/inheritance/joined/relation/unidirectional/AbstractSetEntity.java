@@ -31,6 +31,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -38,6 +39,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "AbstrSet")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Audited
 public abstract class AbstractSetEntity {

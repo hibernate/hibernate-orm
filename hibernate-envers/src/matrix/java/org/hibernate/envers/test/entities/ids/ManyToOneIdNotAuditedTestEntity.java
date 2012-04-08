@@ -2,11 +2,13 @@ package org.hibernate.envers.test.entities.ids;
 import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "ManyToOneIdNotAud")
 public class ManyToOneIdNotAuditedTestEntity implements Serializable {
     @EmbeddedId
     private ManyToOneNotAuditedEmbId id;

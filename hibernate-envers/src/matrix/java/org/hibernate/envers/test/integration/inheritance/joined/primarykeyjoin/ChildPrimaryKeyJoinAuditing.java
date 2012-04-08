@@ -64,7 +64,7 @@ public class ChildPrimaryKeyJoinAuditing extends AbstractEntityTest {
         em.getTransaction().begin();
         ce = em.find(ChildPrimaryKeyJoinEntity.class, id1);
         ce.setData("y");
-        ce.setNumber(2l);
+        ce.setNumVal(2l);
         em.getTransaction().commit();
     }
 

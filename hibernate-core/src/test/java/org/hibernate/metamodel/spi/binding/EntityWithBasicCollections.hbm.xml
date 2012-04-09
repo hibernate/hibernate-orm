@@ -26,6 +26,12 @@
             <element column="set_stuff" type="string"/>
         </set>
 
+        <list name="theList">
+            <key column="pid"/>
+            <list-index column="list_index"/>
+            <element column="list_stuff" type="string"/>
+        </list>
+
 	</class>
 
 </hibernate-mapping>

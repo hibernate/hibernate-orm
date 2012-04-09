@@ -180,7 +180,13 @@ public abstract class AbstractEntitySourceImpl
 				);
 			}
 			else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
+				results.add(
+						new ListAttributeSourceImpl(
+								sourceMappingDocument(),
+								JaxbListElement.class.cast( attributeElement ),
+								this
+						)
+				);
 			}
 			else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
 				// todo : implement

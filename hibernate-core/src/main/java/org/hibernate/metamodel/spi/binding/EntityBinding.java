@@ -572,6 +572,31 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
+	public ListBinding makeListAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			int base ) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
+		final ListBinding binding = new ListBinding(
+				this,
+				attribute,
+				nature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				base );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,
@@ -644,10 +669,9 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	/**
-	 * Gets the attribute bindings for this EntityBinding and all of its
+	 * @return the attribute bindings for this EntityBinding and all of its
 	 * sub-EntityBinding, starting from the root of the hierarchy; includes
 	 * the identifier and attribute bindings defined as part of a join.
-	 * @return
 	 */
 	public Iterable<AttributeBinding> getSubEntityAttributeBindingClosure() {
 		List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>();

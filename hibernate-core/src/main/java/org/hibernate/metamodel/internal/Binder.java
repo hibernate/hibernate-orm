@@ -45,12 +45,14 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
+import org.hibernate.metamodel.internal.source.hbm.ListAttributeSourceImpl;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
@@ -59,10 +61,12 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
@@ -107,6 +111,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.Orderable;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
@@ -292,7 +297,7 @@ public class Binder {
 		bindJdbcDataType( resolvedElementType, ( AbstractValue ) elementBinding.getRelationalValueBindings().get( 0 ).getValue() );
 	}
 
-	private void bindBasicElementSetTablePrimaryKey( final SetBinding attributeBinding ) {
+	private void bindBasicElementTablePrimaryKey( final PluralAttributeBinding attributeBinding ) {
 		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
 		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
 		final BasicPluralAttributeElementBinding elementBinding =
@@ -328,16 +333,24 @@ public class Binder {
 	}
 
 	private void bindCollectionIndex(
-			final AbstractPluralAttributeBinding attributeBinding,
-			final PluralAttributeSource attributeSource,
-			final String defaultElementJavaTypeName ) {
-		if ( !IndexedPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
-			return;
-		}
-		//		final PluralAttributeIndexBinding indexBinding =
-		( ( IndexedPluralAttributeBinding ) attributeBinding ).getPluralAttributeIndexBinding();
-		// todo : implement
-		throw new NotYetImplementedException();
+			final IndexedPluralAttributeBinding attributeBinding,
+			final PluralAttributeIndexSource attributeSource,
+			final String defaultIndexJavaTypeName ) {
+		IndexedPluralAttributeBinding indexedAttributeBinding = attributeBinding;
+		final BasicPluralAttributeIndexBinding indexBinding =
+				( BasicPluralAttributeIndexBinding ) indexedAttributeBinding.getPluralAttributeIndexBinding();
+		indexBinding.setIndexRelationalValue( bindValues(
+				indexedAttributeBinding.getContainer(),
+				attributeSource,
+				indexedAttributeBinding.getAttribute(),
+				indexedAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable() ).get( 0 ).getValue() );
+		bindHibernateTypeDescriptor(
+				indexBinding.getHibernateTypeDescriptor(),
+				attributeSource.explicitHibernateTypeSource(),
+				defaultIndexJavaTypeName );
+		Type resolvedElementType = heuristicType( indexBinding.getHibernateTypeDescriptor() );
+		bindHibernateResolvedType( indexBinding.getHibernateTypeDescriptor(), resolvedElementType );
+		bindJdbcDataType( resolvedElementType, ( AbstractValue ) indexBinding.getIndexRelationalValue() );
 	}
 
 	private void bindCollectionKey(
@@ -468,13 +481,16 @@ public class Binder {
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource,
 			final HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes ) {
+		PluralAttributeNature pluralAttributeNature = attributeSource.getPluralAttributeNature();
 		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY
-				|| attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
+				|| pluralAttributeNature == PluralAttributeNature.BAG ) {
 			return;
 		}
 		if ( attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.BASIC ) {
-			if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.SET ) {
-				bindBasicElementSetTablePrimaryKey( ( SetBinding ) attributeBinding );
+			if ( pluralAttributeNature == PluralAttributeNature.SET ) {
+				bindBasicElementTablePrimaryKey( attributeBinding );
+			} else if ( pluralAttributeNature == PluralAttributeNature.LIST ) {
+				bindIndexedTablePrimaryKey( ( IndexedPluralAttributeBinding ) attributeBinding );
 			} else {
 				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
 			}
@@ -747,6 +763,19 @@ public class Binder {
 		}
 	}
 
+	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {
+		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
+		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
+		final PluralAttributeIndexBinding indexBinding = attributeBinding.getPluralAttributeIndexBinding();
+		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
+			primaryKey.addColumn( foreignKeyColumn );
+		}
+		final Value value = indexBinding.getIndexRelationalValue();
+		if ( value instanceof Column ) {
+			primaryKey.addColumn( ( Column ) value );
+		}
+	}
+
 	LocalBindingContext bindingContext() {
 		return bindingContexts.peek();
 	}
@@ -762,6 +791,24 @@ public class Binder {
 					resolvedRelationalType.getName(),
 					resolvedRelationalType.getReturnedClass() ) );
 		}
+	}
+
+	private AbstractPluralAttributeBinding bindListAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final PluralAttributeSource attributeSource,
+			PluralAttribute attribute ) {
+		if ( attribute == null ) {
+			attribute = attributeBindingContainer.getAttributeContainer().createList( attributeSource.getName() );
+		}
+		return attributeBindingContainer.makeListAttributeBinding(
+				attribute,
+				pluralAttributeElementNature( attributeSource ),
+				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
+				propertyAccessorName( attributeSource ),
+				attributeSource.isIncludedInOptimisticLocking(),
+				false,
+				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
+				((ListAttributeSourceImpl)attributeSource).getIndexSource().base() );
 	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
@@ -854,6 +901,9 @@ public class Binder {
 		} else if ( nature == PluralAttributeNature.SET ) {
 			attributeBinding = bindSetAttribute( attributeBindingContainer, attributeSource, attribute );
 			resolvedType = resolveSetType( ( SetBinding ) attributeBinding );
+		} else if ( nature == PluralAttributeNature.LIST ) {
+			attributeBinding = bindListAttribute( attributeBindingContainer, attributeSource, attribute );
+			resolvedType = resolveListType( ( ListBinding ) attributeBinding );
 		} else {
 			throw new NotYetImplementedException( nature.toString() );
 		}
@@ -894,7 +944,12 @@ public class Binder {
 					attributeSource.getElementSource().getNature() ) );
 		}
 
-		bindCollectionIndex( attributeBinding, attributeSource, defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes ) );
+		if (attributeSource instanceof ListAttributeSourceImpl) {
+			bindCollectionIndex(
+					(IndexedPluralAttributeBinding) attributeBinding,
+					( (ListAttributeSourceImpl) attributeSource ).getIndexSource(),
+					defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes ) );
+		}
 
 		bindCollectionTablePrimaryKey( attributeBinding, attributeSource, reflectedCollectionJavaTypes );
 		metadata.addCollection( attributeBinding );
@@ -1538,6 +1593,17 @@ public class Binder {
 				pluralAttributeBinding.getAttribute().getName(),
 				pluralAttributeBinding.getReferencedPropertyName(),
 				pluralAttributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+	}
+
+	private Type resolveListType( ListBinding listBinding ) {
+		if ( listBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
+			return resolveCustomCollectionType( listBinding );
+		} else {
+			return metadata.getTypeResolver().getTypeFactory().list(
+					listBinding.getAttribute().getRole(),
+					listBinding.getReferencedPropertyName(),
+					listBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+		}
 	}
 
 	private Type resolveSetType( SetBinding setBinding ) {

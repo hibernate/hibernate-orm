@@ -73,6 +73,12 @@ public interface AttributeBindingContainer {
 	 * Factory method for basic attribute bindings.
 	 *
 	 * @param attribute The attribute for which to make a binding.
+	 * @param relationalValueBindings
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
+	 * @param generation
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -89,6 +95,11 @@ public interface AttributeBindingContainer {
 	 * Factory method for component attribute bindings.
 	 *
 	 * @param attribute The attribute for which to make a binding.
+	 * @param parentReferenceAttribute
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -105,7 +116,12 @@ public interface AttributeBindingContainer {
 	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
 	 * @param referencedAttributeBinding
+	 * @param valueBindings
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -123,6 +139,11 @@ public interface AttributeBindingContainer {
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
+	 * @param referencedAttributeBinding
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -140,6 +161,36 @@ public interface AttributeBindingContainer {
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
+	 * @param referencedAttributeBinding
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
+	 * @param base
+	 *
+	 * @return The attribute binding instance.
+	 */
+	public ListBinding makeListAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			int base );
+
+	/**
+	 * Factory method for bag attribute bindings.
+	 *
+	 * @param attribute The attribute for which to make a binding.
+	 * @param nature The nature of the collection elements.
+	 * @param referencedAttributeBinding
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
+	 * @param comparator
 	 *
 	 * @return The attribute binding instance.
 	 */

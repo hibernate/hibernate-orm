@@ -26,7 +26,9 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -42,6 +44,7 @@ public class EntityWithBasicCollections {
 	private Collection<String> theBag = new ArrayList<String>();
 	private Set<String> theSet = new HashSet<String>();
 	private Set<Integer> thePropertyRefSet = new HashSet<Integer>();
+	private List<String> theList = new ArrayList<String>();
 
 	public EntityWithBasicCollections() {
 	}
@@ -92,5 +95,14 @@ public class EntityWithBasicCollections {
 
 	public void setThePropertyRefSet(Set<Integer> thePropertyRefSet) {
 		this.thePropertyRefSet = thePropertyRefSet;
+	}
+
+	@ElementCollection
+	public List<String> getTheList() {
+		return theList;
+	}
+
+	public void setTheList(List<String> theList) {
+		this.theList = theList;
 	}
 }

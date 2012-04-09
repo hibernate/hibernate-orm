@@ -1696,17 +1696,8 @@ public abstract class Loader {
 		boolean hasFirstRow = getFirstRow( selection ) > 0;
 		boolean useLimitOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
-
-		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
-		final boolean useScrollableResultSetToSkip = hasFirstRow &&
-				!useLimitOffset && canScroll;
 		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-//
-//		if(canScroll && ( scroll || useScrollableResultSetToSkip )){
-//			 scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;
-//		}else{
-//			scrollMode = null;
-//		}
+
 		if ( useLimit ) {
 			sql = dialect.getLimitString(
 					sql.trim(), //use of trim() here is ugly?

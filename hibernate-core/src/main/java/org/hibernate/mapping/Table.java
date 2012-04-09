@@ -60,6 +60,7 @@ public class Table implements RelationalModel, Serializable {
 	private final int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;
+	private boolean catalogQuoted;
 	private static int tableCounter = 0;
 	private List checkConstraints = new ArrayList();
 	private String rowId;
@@ -117,7 +118,7 @@ public class Table implements RelationalModel, Serializable {
 				getQuotedSchema( dialect );
 		String usedCatalog = catalog == null ?
 				defaultCatalog :
-				catalog;
+				getQuotedCatalog( dialect );
 		return qualify( usedCatalog, usedSchema, quotedName );
 	}
 
@@ -164,6 +165,18 @@ public class Table implements RelationalModel, Serializable {
 		return schemaQuoted ?
 				dialect.openQuote() + schema + dialect.closeQuote() :
 				schema;
+	}
+
+	public String getQuotedCatalog() {
+		return catalogQuoted ?
+				"`" + catalog + "`" :
+				catalog;
+	}
+
+	public String getQuotedCatalog(Dialect dialect) {
+		return catalogQuoted ?
+				dialect.openQuote() + catalog + dialect.closeQuote() :
+				catalog;
 	}
 
 	public void setName(String name) {
@@ -651,7 +664,13 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public void setCatalog(String catalog) {
-		this.catalog = catalog;
+		if ( catalog != null && catalog.charAt( 0 ) == '`' ) {
+			catalogQuoted = true;
+			this.catalog = catalog.substring( 1, catalog.length() - 1 );
+		}
+		else {
+			this.catalog = catalog;
+		}
 	}
 
 	public int getUniqueInteger() {
@@ -668,6 +687,9 @@ public class Table implements RelationalModel, Serializable {
 
 	public boolean isSchemaQuoted() {
 		return schemaQuoted;
+	}
+	public boolean isCatalogQuoted() {
+		return catalogQuoted;
 	}
 
 	public boolean isQuoted() {

@@ -2804,7 +2804,7 @@ public class Configuration implements Serializable {
 		}
 
 		public String getLogicalTableName(Table table) throws MappingException {
-			return getLogicalTableName( table.getQuotedSchema(), table.getCatalog(), table.getQuotedName() );
+			return getLogicalTableName( table.getQuotedSchema(), table.getQuotedCatalog(), table.getQuotedName() );
 		}
 
 		private String getLogicalTableName(String schema, String catalog, String physicalName) throws MappingException {
@@ -2919,7 +2919,7 @@ public class Configuration implements Serializable {
 					finalName = ( String ) binding.logicalToPhysical.get( logicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
+						currentTable.getQuotedSchema(), currentTable.getQuotedCatalog(), currentTable.getQuotedName()
 				);
 				TableDescription description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {
@@ -2948,7 +2948,7 @@ public class Configuration implements Serializable {
 					logical = ( String ) binding.physicalToLogical.get( physicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
+						currentTable.getQuotedSchema(), currentTable.getQuotedCatalog(), currentTable.getQuotedName()
 				);
 				description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {

@@ -71,6 +71,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -3996,6 +3997,15 @@ public abstract class AbstractEntityPersister
 				);
 				fieldInterceptor.dirty();
 			}
+		}
+		if ( hasNaturalIdentifier() ) {
+			final Serializable id = getIdentifier( entity, session );
+			final NaturalIdHelper helper = session.getPersistenceContext().getNaturalIdHelper();
+			helper.cacheNaturalIdCrossReferenceFromLoad( // TODO rename cacheNaturalIdCrossReferenceFromLoad ?
+				this,
+				id,
+				helper.extractNaturalIdValues( getPropertyValues(entity), this )
+			);
 		}
 	}
 

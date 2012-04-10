@@ -97,7 +97,8 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         }
 		if ( createSchema() ) {
 			configurationProperties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-            configurationProperties.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+//            Setting this property causes manual flush tests failures
+//            configurationProperties.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
             configurationProperties.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
 		}
         if (auditStrategy != null && !"".equals(auditStrategy)) {

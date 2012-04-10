@@ -2,7 +2,6 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -17,7 +16,6 @@ import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.Custom
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.envers.test.tools.TestTools;
 
-import java.util.Properties;
 
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}
@@ -34,10 +32,6 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(ModifiedEntityTypeEntity.class);
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
-    }
-
-    @Override
-    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
         cfg.addAnnotatedClass(CustomTrackingRevisionEntity.class);
     }
 

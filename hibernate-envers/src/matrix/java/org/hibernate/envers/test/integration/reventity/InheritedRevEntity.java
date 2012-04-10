@@ -24,7 +24,7 @@
 package org.hibernate.envers.test.integration.reventity;
 import javax.persistence.Entity;
 
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 
 /**

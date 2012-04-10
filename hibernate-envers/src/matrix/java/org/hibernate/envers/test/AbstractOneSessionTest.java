@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.hibernate.cfg.Environment;
 import org.junit.Before;
 
 import org.hibernate.MappingException;
@@ -41,6 +42,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
+        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+        config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
 		addProperties(config);
 
         this.initMappings();

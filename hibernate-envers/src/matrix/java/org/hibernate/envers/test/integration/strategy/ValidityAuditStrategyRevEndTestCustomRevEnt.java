@@ -33,7 +33,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.junit.Test;
 
@@ -72,10 +71,6 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends AbstractEntityT
 		cfg.addAnnotatedClass(Child2Entity.class);
         cfg.addAnnotatedClass(CustomDateRevEntity.class);
 	}
-
-    @Override
-    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
-    }
 
 	@Override
 	public void addConfigurationProperties(Properties configuration) {

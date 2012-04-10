@@ -40,14 +40,23 @@ import org.hibernate.mapping.Formula;
  */
 public class MetadataTools {
 
-	public static Element addNativelyGeneratedId(Element parent, String name, String type) {
+	public static Element addNativelyGeneratedId(Element parent, String name, String type,
+                                                 boolean useEnhancedRevisionEntity) {
         Element id_mapping = parent.addElement("id");
         id_mapping.addAttribute("name", name).addAttribute("type", type);
 
         Element generator_mapping = id_mapping.addElement("generator");
-        generator_mapping.addAttribute("class", "native");
-        /*generator_mapping.addAttribute("class", "sequence");
-        generator_mapping.addElement("param").addAttribute("name", "sequence").setText("custom");*/
+        if (useEnhancedRevisionEntity) {
+            generator_mapping.addAttribute("class", "org.hibernate.id.enhanced.SequenceStyleGenerator");
+            generator_mapping.addElement("param").addAttribute("name", "sequence_name").setText("REVISION_GENERATOR");
+            generator_mapping.addElement("param").addAttribute("name", "table_name").setText("REVISION_GENERATOR");
+            generator_mapping.addElement("param").addAttribute("name", "initial_value").setText("1");
+            generator_mapping.addElement("param").addAttribute("name", "increment_size").setText("1");
+        } else {
+            generator_mapping.addAttribute("class", "native");
+        }
+//        generator_mapping.addAttribute("class", "sequence");
+//        generator_mapping.addElement("param").addAttribute("name", "sequence").setText("custom");
 
         return id_mapping;
     }

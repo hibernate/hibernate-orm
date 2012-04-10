@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
-import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.OracleTrackingModifiedEntitiesRevisionEntity;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
@@ -60,16 +57,6 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
-
-    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
-        if (dialect instanceof Oracle8iDialect) {
-            if (Boolean.parseBoolean(configurationProperties.getProperty("org.hibernate.envers.track_entities_changed_in_revision"))) {
-                cfg.addAnnotatedClass(OracleTrackingModifiedEntitiesRevisionEntity.class);
-            } else {
-                cfg.addAnnotatedClass(OracleRevisionEntity.class);
-            }
-        }
-    }
 
     public void addConfigurationProperties(Properties configuration) { }
 
@@ -110,6 +97,8 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         }
 		if ( createSchema() ) {
 			configurationProperties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+            configurationProperties.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+            configurationProperties.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
 		}
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
@@ -119,7 +108,6 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         cfg = new Ejb3Configuration();
         configure(cfg);
-        revisionEntityForDialect(cfg, getDialect(), configurationProperties);
         cfg.configure(configurationProperties);
 
         emf = (EntityManagerFactoryImpl) cfg.buildEntityManagerFactory( createBootstrapRegistryBuilder() );

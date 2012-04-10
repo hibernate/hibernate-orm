@@ -25,9 +25,11 @@ public class SchemaExportTest extends AbstractSessionTest {
     @Override
     protected void initMappings() throws MappingException, URISyntaxException {
         config.addAnnotatedClass(StrTestEntity.class);
-        // Disable schema auto generation.
+        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+        config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
     }
 	protected boolean createSchema() {
+		// Disable schema auto generation.
 		return false;
 	}
     @Test

@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;

@@ -26,9 +26,7 @@ package org.hibernate.envers.test.integration.basic;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
-import org.hibernate.dialect.Dialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,11 +45,6 @@ public class NoneAudited extends AbstractEntityTest {
     @Override
     public void newEntityManager() {
         // The AuditReader shouldn't be created
-    }
-
-    @Override
-    protected void revisionEntityForDialect(Ejb3Configuration cfg, Dialect dialect, Properties configurationProperties) {
-        // Do not add any dialect-specific Envers configuration.
     }
 
     @Test

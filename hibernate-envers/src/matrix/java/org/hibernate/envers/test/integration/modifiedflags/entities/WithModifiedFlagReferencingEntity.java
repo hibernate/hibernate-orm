@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.modifiedflags.entities;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -33,6 +34,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "WithModFlagRefIng")
 @Audited(withModifiedFlag = true)
 public class WithModifiedFlagReferencingEntity {
     @Id

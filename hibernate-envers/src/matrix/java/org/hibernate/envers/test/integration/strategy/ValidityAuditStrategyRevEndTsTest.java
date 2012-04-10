@@ -34,7 +34,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.envers.test.entities.reventity.OracleRevisionEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,7 +41,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
@@ -427,29 +426,19 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		return resultList;
 	}
 
-	private void verifyRevEndTimeStamps(String debugInfo,
-			List<Map<String, Object>> revisionEntities) {
+	private void verifyRevEndTimeStamps(String debugInfo, List<Map<String, Object>> revisionEntities) {
 		for (Map<String, Object> revisionEntity : revisionEntities) {
-
 			Date revendTimestamp = (Date) revisionEntity.get(revendTimestampColumName);
-			if (getDialect() instanceof Oracle8iDialect) {
-				OracleRevisionEntity revEnd = (OracleRevisionEntity) revisionEntity.get("REVEND");
-				if (revendTimestamp == null) {
-					Assert.assertNull(revEnd);
+			DefaultRevisionEntity revEnd = (DefaultRevisionEntity) revisionEntity.get("REVEND");
+
+			if (revendTimestamp == null) {
+				Assert.assertNull(revEnd);
+			} else {
+				if (getDialect() instanceof MySQL5Dialect) {
+					// MySQL5 DATETIME column type does not contain milliseconds.
+					Assert.assertEquals(revendTimestamp.getTime(), (revEnd.getTimestamp() - (revEnd.getTimestamp() % 1000)));
 				} else {
 					Assert.assertEquals(revendTimestamp.getTime(), revEnd.getTimestamp());
-				}
-			} else {
-				DefaultRevisionEntity revEnd = (DefaultRevisionEntity) revisionEntity.get("REVEND");
-				if (revendTimestamp == null) {
-					Assert.assertNull(revEnd);
-				} else {
-					if (getDialect() instanceof MySQL5Dialect) {
-						// MySQL5 DATETIME column type does not contain milliseconds.
-						Assert.assertEquals(revendTimestamp.getTime(), (revEnd.getTimestamp() - (revEnd.getTimestamp() % 1000)));
-					} else {
-						Assert.assertEquals(revendTimestamp.getTime(), revEnd.getTimestamp());
-					}
 				}
 			}
 		}

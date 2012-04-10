@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;

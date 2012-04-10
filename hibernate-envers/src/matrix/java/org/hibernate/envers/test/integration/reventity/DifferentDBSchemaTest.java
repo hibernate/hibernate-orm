@@ -59,7 +59,7 @@ public class DifferentDBSchemaTest extends AbstractEntityTest {
 
     @Test
     public void testRevinfoSchemaName() {
-        Table revisionTable = getCfg().getClassMapping("org.hibernate.envers.DefaultRevisionEntity").getTable();
+        Table revisionTable = getCfg().getClassMapping("org.hibernate.envers.enhanced.DefaultRevisionEntity").getTable();
         assert SCHEMA_NAME.equals(revisionTable.getSchema());
     }
 

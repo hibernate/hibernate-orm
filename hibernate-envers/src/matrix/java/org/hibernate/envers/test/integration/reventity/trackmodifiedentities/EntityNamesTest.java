@@ -1,12 +1,8 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.OracleTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.envers.test.tools.TestTools;

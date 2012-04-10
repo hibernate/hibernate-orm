@@ -80,8 +80,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
@@ -105,7 +107,7 @@ import org.hibernate.type.Type;
 
 /**
  * Base implementation of the <tt>QueryableCollection</tt> interface.
- * 
+ *
  * @author Gavin King
  * @see BasicCollectionPersister
  * @see OneToManyPersister
@@ -636,14 +638,14 @@ public abstract class AbstractCollectionPersister
 		dialect = factory.getDialect();
 		sqlExceptionHelper = factory.getSQLExceptionHelper();
 		if ( !collection.getHibernateTypeDescriptor().getResolvedTypeMapping().isCollectionType() ) {
-			throw new MappingException( 
-					String.format( 
+			throw new MappingException(
+					String.format(
 							"Unexpected resolved type for %s; expected a CollectionType; instead it is %s",
 							collection.getAttribute().getRole(),
-							collection.getHibernateTypeDescriptor().getResolvedTypeMapping() ) 
+							collection.getHibernateTypeDescriptor().getResolvedTypeMapping() )
 			);
 		}
-		
+
 		collectionType = (CollectionType) collection.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		role = collection.getAttribute().getRole();
 		entityName = collection.getContainer().seekEntityBinding().getEntity().getName();
@@ -660,8 +662,8 @@ public abstract class AbstractCollectionPersister
 		// isSet = collection.isSet();
 		// isSorted = collection.isSorted();
 		isArray = collectionType.isArrayType();
-		isPrimitiveArray = 
-				collectionType.isArrayType() && 
+		isPrimitiveArray =
+				collectionType.isArrayType() &&
 						PrimitiveType.class.isInstance(
 								collection.getPluralAttributeElementBinding()
 										.getHibernateTypeDescriptor()
@@ -720,7 +722,7 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		PluralAttributeElementBinding elementBinding = collection.getPluralAttributeElementBinding();
+		// PluralAttributeElementBinding elementBinding = collection.getPluralAttributeElementBinding();
 		//TODO: is elemNode needed?
 		String elemNode = null;
 		//String elemNode = collection.getElementNodeName();
@@ -792,14 +794,22 @@ public abstract class AbstractCollectionPersister
 		// INDEX AND ROW SELECT
 
 		hasIndex = collection.getAttribute().getNature().isIndexed();
-		// TODO: Fix this when index relational binding is created
-		//if ( hasIndex ) {
-		//	// NativeSQL: collect index column and auto-aliases
-		//	PluralAttributeIndexBinding indexBinding = ( (IndexedPluralAttributeBinding) collection ).getPluralAttributeIndexBinding();
-		//	indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		//}
-		//else {
-			indexContainsFormula = false;
+		indexContainsFormula = false;
+		indexNodeName = null;
+		if ( hasIndex ) {
+			// NativeSQL: collect index column and auto-aliases
+			IndexedPluralAttributeBinding indexedBinding = (IndexedPluralAttributeBinding) collection;
+			// TODO: indexNodeName = indexedBinding.getIndexNodeName();
+			PluralAttributeIndexBinding indexBinding = indexedBinding.getPluralAttributeIndexBinding();
+			indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+			baseIndex = indexBinding instanceof ListBinding ? ( ( ListBinding ) indexBinding ).base() : 0;
+			Column column = (Column) indexBinding.getIndexRelationalValue();
+			indexColumnNames = new String[] { column.getQuotedName( dialect ) };
+			indexColumnAliases = new String[] { column.getAlias( dialect ) };
+			indexFormulaTemplates = new String[1];
+			indexFormulas = new String[1];
+			indexColumnIsSettable = new boolean[] { true };
+		} else {
 			indexColumnIsSettable = null;
 			indexFormulaTemplates = null;
 			indexFormulas = null;
@@ -807,8 +817,7 @@ public abstract class AbstractCollectionPersister
 			indexColumnNames = null;
 			indexColumnAliases = null;
 			baseIndex = 0;
-			indexNodeName = null;
-		//}
+		}
 
 		hasIdentifier = collection.getAttribute().getNature() == PluralAttributeNature.IDBAG;
 		// TODO: fix this when IdBags are supported.
@@ -986,7 +995,7 @@ public abstract class AbstractCollectionPersister
 		}
 		return templateString;
 	}
-	
+
 	public void postInstantiate() throws MappingException {
 		initializer = queryLoaderName == null ?
 				createCollectionInitializer( LoadQueryInfluencers.NONE ) :
@@ -1777,12 +1786,12 @@ public abstract class AbstractCollectionPersister
 										expectation
 										);
 							}
-							if ( st == null ) {
+//							if ( st == null ) {
 								st = session.getTransactionCoordinator()
 										.getJdbcCoordinator()
 										.getBatch( insertBatchKey )
 										.getBatchStatement( sql, callable );
-							}
+//							}
 						}
 						else {
 							st = session.getTransactionCoordinator()
@@ -2235,7 +2244,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Intended for internal use only. In fact really only currently used from
 	 * test suite for assertion purposes.
-	 * 
+	 *
 	 * @return The default collection initializer for this persister/collection.
 	 */
 	public CollectionInitializer getInitializer() {

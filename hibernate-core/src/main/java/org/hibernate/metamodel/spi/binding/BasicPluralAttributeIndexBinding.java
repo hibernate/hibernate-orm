@@ -33,25 +33,12 @@ public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBin
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private Value value;
-	private int base;
 
 	/**
 	 * @param pluralAttributeBinding
-	 * @param base
 	 */
-	public BasicPluralAttributeIndexBinding( final AbstractPluralAttributeBinding pluralAttributeBinding, int base ) {
+	public BasicPluralAttributeIndexBinding( final AbstractPluralAttributeBinding pluralAttributeBinding ) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
-		this.base = base;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding#base()
-	 */
-	@Override
-	public int base() {
-		return base;
 	}
 
 	/**

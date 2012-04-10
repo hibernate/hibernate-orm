@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -99,6 +100,64 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 		};
 
 		base = Integer.parseInt( indexElement.getBase() );
+	}
+
+	public PluralAttributeIndexSourceImpl(
+			MappingDocument mappingDocument,
+			final JaxbIndexElement indexElement,
+			final AttributeSourceContainer container ) {
+		super( mappingDocument );
+		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
+
+			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null
+					? Collections.EMPTY_LIST
+					: Collections.singletonList( indexElement.getColumn() );
+
+			@Override
+			public String getColumnAttribute() {
+				return indexElement.getColumnAttribute();
+			}
+
+			@Override
+			public List getColumnOrFormulaElements() {
+				return columnElements;
+			}
+
+			@Override
+			public String getContainingTableName() {
+				return null;
+			}
+
+			@Override
+			public String getFormulaAttribute() {
+				return null;
+			}
+
+			@Override
+			public boolean isIncludedInInsertByDefault() {
+				return areValuesIncludedInInsertByDefault();
+			}
+
+			@Override
+			public boolean isIncludedInUpdateByDefault() {
+				return areValuesIncludedInUpdateByDefault();
+			}
+		} );
+
+		typeSource = new ExplicitHibernateTypeSource() {
+
+			@Override
+			public String getName() {
+				return "integer";
+			}
+
+			@Override
+			public Map< String, String > getParameters() {
+				return java.util.Collections.< String, String >emptyMap();
+			}
+		};
+
+		base = 0;
 	}
 
 	/**

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
@@ -45,7 +46,12 @@ public class ListAttributeSourceImpl extends AbstractPluralAttributeSourceImpl {
 			JaxbListElement listElement,
 			AttributeSourceContainer container ) {
 		super( sourceMappingDocument, listElement, container );
-		this.indexSource = new PluralAttributeIndexSourceImpl( sourceMappingDocument(), listElement.getListIndex(), container );
+		JaxbListIndexElement listIndexElement = listElement.getListIndex();
+		if ( listIndexElement == null ) {
+			this.indexSource = new PluralAttributeIndexSourceImpl( sourceMappingDocument(), listElement.getIndex(), container );
+		} else {
+			this.indexSource = new PluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement, container );
+		}
 	}
 
 	public PluralAttributeIndexSource getIndexSource() {

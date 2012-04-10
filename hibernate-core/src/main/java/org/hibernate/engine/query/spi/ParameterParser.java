@@ -81,6 +81,10 @@ public class ParameterParser {
 				inQuote = true;
 				recognizer.other( c );
 			}
+			else if ( '\\' == c ) {
+				// skip sending the backslash and instead send then next character, treating is as a literal
+				recognizer.other( sqlString.charAt( ++indx ) );
+			}
 			else {
 				if ( c == ':' ) {
 					// named parameter

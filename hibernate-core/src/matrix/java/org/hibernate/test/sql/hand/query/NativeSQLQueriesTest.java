@@ -13,12 +13,14 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.QueryException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
@@ -32,6 +34,7 @@ import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.BasicTransformerAdapter;
@@ -830,6 +833,17 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				.uniqueResult();
 		assertTrue( ArrayHelper.isEquals( photo, photoRead ) );
 		s.delete( holder );
+		t.commit();
+		s.close();
+	}
+	@Test
+	@RequiresDialect(MySQL5Dialect.class)
+	public void testEscapeColonInSQL() throws QueryException {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		SQLQuery query = s.createSQLQuery( "SELECT @row \\:= 1" );
+		List list = query.list();
+		assertTrue( list.get( 0 ).toString().equals( "1" ) );
 		t.commit();
 		s.close();
 	}

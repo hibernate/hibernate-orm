@@ -4532,16 +4532,37 @@ public abstract class AbstractEntityPersister
 		}
 
 		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery();
+		String sql = sqlEntityIdByNaturalIdString;
+		for (Object o : naturalIdValues) {
+			if (o == null) { // needs null-values processing, thus sql must be reconstructed
+				StringTokenizer tokenizer = new StringTokenizer(sqlEntityIdByNaturalIdString,"=?");
+				sql = "";
+				for (Object obj : naturalIdValues) {
+					String token = tokenizer.nextToken();
+					if (obj != null) {
+						sql += token + "=?";
+					}
+					else {
+						sql += token + " is null";
+					}
+				}
+				break;
+			}
+		}
 
 		try {
 			PreparedStatement ps = session.getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getStatementPreparer()
-					.prepareStatement( sqlEntityIdByNaturalIdString );
+					.prepareStatement( sql );
 			try {
 				int positions = 1;
 				int loop = 0;
 				for ( int idPosition : getNaturalIdentifierProperties() ) {
+					if (naturalIdValues[loop] == null) {
+						loop++;
+						continue;
+					}
 					final Type type = getPropertyTypes()[idPosition];
 					type.nullSafeSet( ps, naturalIdValues[loop++], positions, session );
 					positions += type.getColumnSpan( session.getFactory() );
@@ -4571,7 +4592,7 @@ public abstract class AbstractEntityPersister
 							naturalIdValues,
 							MessageHelper.infoString( this )
 					),
-					sqlEntityIdByNaturalIdString
+					sql
 			);
 		}
 	}

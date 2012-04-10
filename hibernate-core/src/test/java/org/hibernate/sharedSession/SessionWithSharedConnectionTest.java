@@ -23,6 +23,11 @@
  */
 package org.hibernate.sharedSession;
 
+import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.*;
+import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import org.hibernate.IrrelevantEntity;
@@ -32,10 +37,10 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import java.lang.reflect.Field;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Steve Ebersole
@@ -183,7 +188,117 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		session.getTransaction().commit();
 		session.close();
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7239" )
+	@FailureExpected(jiraKey = "HHH-7239" )
+	public void testSessionRemovedFromObserversOnClose() throws Exception {
+		Session session = sessionFactory().openSession();
+		session.getTransaction().begin();
 
+		//get the initial count of observers (use reflection as the observers property isn't exposed) 
+		Field field = TransactionCoordinatorImpl.class.getDeclaredField( "observers" );
+		field.setAccessible(true);
+		List observers = (List) field.get( ( ( SessionImplementor ) session ).getTransactionCoordinator() );
+		int originalObserverSize = observers.size();
+		
+		//opening 2nd session registers it with the TransactionCoordinator currently as an observer
+		Session secondSession = session.sessionWithOptions()
+				.connection()
+				.flushBeforeCompletion( false )
+				.autoClose( false )
+				.openSession();
+		
+		observers = (List) field.get( ( ( SessionImplementor ) session ).getTransactionCoordinator() );
+		//the observer size should be larger
+		final int observerSizeWithSecondSession = observers.size();
+		assertTrue( observerSizeWithSecondSession > originalObserverSize);
+
+		//don't need to actually even do anything with the 2nd session
+		secondSession.close();
+		
+		//the second session should be released from the observers on close since it didn't have any after transaction actions
+		observers = (List) field.get( ( ( SessionImplementor ) session ).getTransactionCoordinator() );
+
+		assertEquals( originalObserverSize, observers.size() );
+
+		//store the transaction coordinator here since it's not available after session close
+		TransactionCoordinator transactionCoordinator = ((SessionImplementor) session).getTransactionCoordinator();
+		
+		session.getTransaction().commit();
+		session.close();
+		
+		//on original session close all observers should be released
+		observers = (List) field.get( transactionCoordinator );
+		assertEquals( 0, observers.size() );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-7239" )
+	@FailureExpected(jiraKey = "HHH-7239" )
+	public void testChildSessionCallsAfterTransactionAction() throws Exception {
+		Session session = openSession();
+
+		final String postCommitMessage = "post commit was called";
+		
+		EventListenerRegistry eventListenerRegistry = sessionFactory().getServiceRegistry().getService(EventListenerRegistry.class);
+		//register a post commit listener
+		eventListenerRegistry.appendListeners( EventType.POST_COMMIT_INSERT, new PostInsertEventListener(){
+			@Override
+			public void onPostInsert(PostInsertEvent event) {
+				((IrrelevantEntity) event.getEntity()).setName( postCommitMessage );
+			}
+		});
+		
+		session.getTransaction().begin();
+		
+		IrrelevantEntity irrelevantEntityMainSession = new IrrelevantEntity();
+		irrelevantEntityMainSession.setName( "main session" );
+		session.save( irrelevantEntityMainSession );
+		
+		//open secondary session to also insert an entity
+		Session secondSession = session.sessionWithOptions()
+				.connection()
+				.flushBeforeCompletion( true )
+				.autoClose( true )
+				.openSession();
+
+		IrrelevantEntity irrelevantEntitySecondarySession = new IrrelevantEntity();
+		irrelevantEntitySecondarySession.setName( "secondary session" );
+		secondSession.save( irrelevantEntitySecondarySession );
+
+		session.getTransaction().commit();
+		
+		//both entities should have their names updated to the postCommitMessage value
+		assertEquals(postCommitMessage, irrelevantEntityMainSession.getName());
+		assertEquals(postCommitMessage, irrelevantEntitySecondarySession.getName());
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-7239" )
+	@FailureExpected(jiraKey = "HHH-7239" )
+	public void testChildSessionTwoTransactions() throws Exception {
+		Session session = openSession();
+		
+		session.getTransaction().begin();
+		
+		//open secondary session with managed options
+		Session secondarySession = session.sessionWithOptions()
+				.connection()
+				.flushBeforeCompletion( true )
+				.autoClose( true )
+				.openSession();
+		
+		//the secondary session should be automatically closed after the commit
+		session.getTransaction().commit();
+		
+		assertFalse( secondarySession.isOpen() );
+
+		//should be able to create a new transaction and carry on using the original session
+		session.getTransaction().begin();
+		session.getTransaction().commit();
+	}
+	
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { IrrelevantEntity.class };

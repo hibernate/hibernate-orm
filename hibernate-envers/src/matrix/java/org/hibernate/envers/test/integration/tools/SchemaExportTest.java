@@ -25,7 +25,8 @@ public class SchemaExportTest extends AbstractSessionTest {
     @Override
     protected void initMappings() throws MappingException, URISyntaxException {
         config.addAnnotatedClass(StrTestEntity.class);
-        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+//        Setting this property causes manual flush tests failures
+//        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
         config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
     }
 	protected boolean createSchema() {

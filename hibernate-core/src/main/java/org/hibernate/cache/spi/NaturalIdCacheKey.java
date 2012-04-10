@@ -76,7 +76,7 @@ public class NaturalIdCacheKey implements Serializable {
 			final Type type = propertyTypes[naturalIdPropertyIndexes[i]];
 			final Object value = naturalIdValues[i];
 			
-			result = prime * result + type.getHashCode( value, factory );
+			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
 			
 			disassembledNaturalId[i] = type.disassemble( value, session, null );
 			

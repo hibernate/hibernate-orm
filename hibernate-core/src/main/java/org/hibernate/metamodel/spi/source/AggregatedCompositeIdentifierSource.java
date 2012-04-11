@@ -21,35 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations;
-
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
-
-import org.hibernate.metamodel.spi.binding.IdGenerator;
-import org.hibernate.metamodel.spi.source.BindingContext;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
+package org.hibernate.metamodel.spi.source;
 
 /**
- * Defines an interface for providing additional annotation related context information.
+ * Additional contract describing the source of an identifier mapping whose {@link #getNature() nature} is
+ * {@link IdentifierSource.Nature#AGGREGATED_COMPOSITE aggregated-composite}.  This equates to an identifier which is
+ * made up of multiple values which are defined as part of a component/embedded.
  *
+ * @author Strong Liu
  * @author Steve Ebersole
- * @author Hardy Ferentschik
  */
-public interface AnnotationBindingContext extends BindingContext {
-	Index getIndex();
-
-	ClassInfo getClassInfo(String name);
-
-	void resolveAllTypes(String className);
-
-	ResolvedType getResolvedType(Class<?> clazz);
-
-	ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type);
-
-	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container);
-
-	public IdGenerator findIdGenerator(String name);
+public interface AggregatedCompositeIdentifierSource extends CompositeIdentifierSource {
+    /**
+     * Obtain the source descriptor for the identifier attribute.
+     *
+     * @return The identifier attribute source.
+     */
+    public ComponentAttributeSource getIdentifierAttributeSource();
 }

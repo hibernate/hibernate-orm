@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -63,6 +63,7 @@ import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
@@ -118,7 +119,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.serviceRegistry =  metadataSources.getServiceRegistry();
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
-				//new DefaultIdentifierGeneratorFactory( dialect );
 		this.database = new Database( options );
 
 		this.mappingDefaults = new MappingDefaultsImpl();
@@ -243,7 +243,38 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	// identifier generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void processIdentifierGenerators(MetadataSourceProcessor[] metadataSourceProcessors) {
-		// HHH-7040
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
+				addIdGenerator(
+						new IdGenerator(
+								identifierGeneratorSource.getGeneratorName(),
+								identifierGeneratorSource.getGeneratorImplementationName(),
+								identifierGeneratorSource.getParameters()
+						)
+				);
+			}
+		}
+	}
+
+	@Override
+	public void addIdGenerator(IdGenerator generator) {
+		if ( generator == null || generator.getName() == null ) {
+			throw new IllegalArgumentException( "ID generator object or name is null." );
+		}
+		idGenerators.put( generator.getName(), generator );
+	}
+
+	@Override
+	public IdGenerator getIdGenerator(String name) {
+		if ( name == null ) {
+			throw new IllegalArgumentException( "null is not a valid generator name" );
+		}
+		return idGenerators.get( name );
+	}
+
+	@Override
+	public void registerIdentifierGenerator(String name, String generatorClassName) {
+		identifierGeneratorFactory.register( name, classLoaderService().classForName( generatorClassName ) );
 	}
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
@@ -264,26 +295,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
 		}
 		fetchProfiles.put( profile.getName(), profile );
-	}
-
-	@Override
-	public void addIdGenerator(IdGenerator generator) {
-		if ( generator == null || generator.getName() == null ) {
-			throw new IllegalArgumentException( "ID generator object or name is null." );
-		}
-		idGenerators.put( generator.getName(), generator );
-	}
-
-	@Override
-	public IdGenerator getIdGenerator(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "null is not a valid generator name" );
-		}
-		return idGenerators.get( name );
-	}
-	@Override
-	public void registerIdentifierGenerator(String name, String generatorClassName) {
-		 identifierGeneratorFactory.register( name, classLoaderService().classForName( generatorClassName ) );
 	}
 
 	@Override

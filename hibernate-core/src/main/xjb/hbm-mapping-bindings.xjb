@@ -58,6 +58,12 @@
         <jaxb:bindings node="//xsd:element[@name='id']/xsd:complexType">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:element[@name='composite-id']/xsd:complexType">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='component-element']">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement</inheritance:implements>
+        </jaxb:bindings>
 <!--
         <jaxb:bindings node="//xsd:element[@name='version']/xsd:complexType">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>

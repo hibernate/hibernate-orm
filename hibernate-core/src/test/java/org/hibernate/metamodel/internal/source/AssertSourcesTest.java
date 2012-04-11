@@ -30,6 +30,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -68,10 +69,10 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		testUserEntitySources( hbmProcessor );
 
 // breaking from HHH-7040
-//		MetadataSources ann = new MetadataSources( serviceRegistry );
-//		ann.addAnnotatedClass( User.class );
-//		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
-//		testUserEntitySources( annProcessor );
+		MetadataSources ann = new MetadataSources( serviceRegistry );
+		ann.addAnnotatedClass( User.class );
+		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
+		testUserEntitySources( annProcessor );
 	}
 
 	private MetadataImpl buildMetadata(MetadataSources sources) {
@@ -125,7 +126,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		assertFalse( identifierAttributeSource.isLazy() );
 		assertEquals( SingularAttributeNature.BASIC, identifierAttributeSource.getNature() );
 		assertEquals( PropertyGeneration.INSERT, identifierAttributeSource.getGeneration() );
-		assertNull( identifierAttributeSource.getPropertyAccessorName() );
+//		assertNull( identifierAttributeSource.getPropertyAccessorName() );
 
 		// todo : here is an interesting question in terms of who is responsible for semantic interpretation
 		//		really an attribute for identifier should never be included in updates
@@ -161,7 +162,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 //		assertFalse( columnSource.isIncludedInUpdate() );
 //		assertFalse( columnSource.isNullable() );
 
-		assertEquals( 2, entitySource.attributeSources().size() );
+		assertEquals( 3, entitySource.attributeSources().size() );
 
 
 	}

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -32,8 +32,11 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+
+import static java.util.Collections.emptyList;
 
 /**
  * The {@link org.hibernate.metamodel.spi.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
@@ -83,6 +86,11 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 			processor.collectFilterDefSources( filterDefinitionSources );
 		}
 		return filterDefinitionSources;
+	}
+
+	@Override
+	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources() {
+		return emptyList();
 	}
 
 	@Override

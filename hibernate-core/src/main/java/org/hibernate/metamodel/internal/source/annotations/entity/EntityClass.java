@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -548,11 +548,6 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo(), JPADotNames.CACHEABLE
 		);
 
-		boolean cacheable = true; // true is the default
-		if ( jpaCacheableAnnotation != null && jpaCacheableAnnotation.value() != null ) {
-			cacheable = jpaCacheableAnnotation.value().asBoolean();
-		}
-
 		final boolean doCaching;
 		switch ( getLocalBindingContext().getMetadataImplementor().getOptions().getSharedCacheMode() ) {
 			case ALL: {
@@ -560,11 +555,13 @@ public class EntityClass extends ConfiguredClass {
 				break;
 			}
 			case ENABLE_SELECTIVE: {
-				doCaching = cacheable;
+				doCaching = jpaCacheableAnnotation != null
+						&& JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class );
 				break;
 			}
 			case DISABLE_SELECTIVE: {
-				doCaching = jpaCacheableAnnotation == null || cacheable;
+				doCaching = jpaCacheableAnnotation == null
+						|| !JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class );
 				break;
 			}
 			default: {

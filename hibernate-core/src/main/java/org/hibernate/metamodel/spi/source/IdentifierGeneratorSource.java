@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.spi.source;
+
+import java.util.Map;
 
 /**
- * An enum for the type of id configuration for an entity.
- *
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public enum IdType {
+public interface IdentifierGeneratorSource {
 	/**
-	 * single @Id annotation.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#SIMPLE}
+	 * Retrieve the name of the generator specification.  This is the name used in
+	 * {@link javax.persistence.GeneratedValue}, not the name of the underlying table/sequence!
+	 *
+	 * @return The generator name
 	 */
-	SIMPLE,
+	public String getGeneratorName();
 
 	/**
-	 * multiple @Id annotations.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#COMPOSITE}
+	 * Retrieve the name of the generator implementation name.  This is either<ul>
+	 *     <li>an FQN naming the {@link org.hibernate.id.IdentifierGenerator} implementation</li>
+	 *     <li>the recognized "short name" of a built-in {@link org.hibernate.id.IdentifierGenerator} implementation</li>
+	 * </ul>
+	 *
+	 * @return the generator implementation name
 	 */
-	COMPOSED,
+	public String getGeneratorImplementationName();
 
 	/**
-	 * Indicates encountered {@code @EmbeddedId} annotation.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#AGGREGATED_COMPOSITE}
+	 * Retrieve the generator config parameters
+	 *
+	 * @return generator configuration parameters
 	 */
-	//
-	EMBEDDED,
-
-	/**
-	 * does not contain any identifier mappings
-	 */
-	NONE
+	public Map<String, String> getParameters();
 }

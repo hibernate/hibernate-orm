@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
@@ -121,80 +120,76 @@ public abstract class AbstractEntitySourceImpl
 			String logicalTableName,
 			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
 		for ( Object attributeElement : attributeElements ) {
-			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new PropertyAttributeSourceImpl(
-								sourceMappingDocument(),
-								JaxbPropertyElement.class.cast( attributeElement ),
-								logicalTableName,
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new ComponentAttributeSourceImpl(
-								sourceMappingDocument(),
-								(JaxbComponentElement) attributeElement,
-								this,
-								logicalTableName,
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new ManyToOneAttributeSourceImpl(
-								sourceMappingDocument(),
-								JaxbManyToOneElement.class.cast( attributeElement ),
-								logicalTableName,
-								naturalIdMutability
-						)
-				);
-			}
-			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new BagAttributeSourceImpl(
-								sourceMappingDocument(),
-								JaxbBagElement.class.cast( attributeElement ),
-								this
-						)
-				);
-			}
-			else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new SetAttributeSourceImpl(
-								sourceMappingDocument(),
-								JaxbSetElement.class.cast( attributeElement ),
-								this
-						)
-				);
-			}
-			else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
-				results.add(
-						new ListAttributeSourceImpl(
-								sourceMappingDocument(),
-								JaxbListElement.class.cast( attributeElement ),
-								this
-						)
-				);
-			}
-			else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
-				// todo : implement
-			}
-			else {
-				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
-			}
+			results.add( buildAttributeSource( attributeElement, logicalTableName, naturalIdMutability ) );
 		}
+	}
+
+	protected AttributeSource buildAttributeSource(
+			Object attributeElement,
+			String logicalTableName,
+			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
+		if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
+			return new PropertyAttributeSourceImpl(
+					sourceMappingDocument(),
+					JaxbPropertyElement.class.cast( attributeElement ),
+					logicalTableName,
+					naturalIdMutability
+			);
+		}
+		else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
+			return new ComponentAttributeSourceImpl(
+					sourceMappingDocument(),
+					(JaxbComponentElement) attributeElement,
+					this,
+					logicalTableName,
+					naturalIdMutability
+			);
+		}
+		else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
+			return new ManyToOneAttributeSourceImpl(
+					sourceMappingDocument(),
+					JaxbManyToOneElement.class.cast( attributeElement ),
+					logicalTableName,
+					naturalIdMutability
+			);
+		}
+		else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
+			// todo : implement
+		}
+		else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
+			// todo : implement
+		}
+		else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
+			return new BagAttributeSourceImpl(
+					sourceMappingDocument(),
+					JaxbBagElement.class.cast( attributeElement ),
+					this
+			);
+		}
+		else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
+			// todo : implement
+		}
+		else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
+			return new SetAttributeSourceImpl(
+					sourceMappingDocument(),
+					JaxbSetElement.class.cast( attributeElement ),
+					this
+			);
+		}
+		else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
+			return new ListAttributeSourceImpl(
+					sourceMappingDocument(),
+					JaxbListElement.class.cast( attributeElement ),
+					this
+			);
+		}
+		else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
+			// todo : implement
+		}
+
+		throw new UnexpectedAttributeSourceTypeException(
+				"Unexpected attribute element type encountered : " + attributeElement.getClass().getName()
+		);
 	}
 
 	private Set<SecondaryTableSource> buildSecondaryTables() {

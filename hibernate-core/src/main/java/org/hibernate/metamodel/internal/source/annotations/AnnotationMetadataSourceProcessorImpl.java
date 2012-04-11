@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -42,12 +43,14 @@ import org.hibernate.metamodel.internal.source.annotations.global.FetchProfilePr
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -96,6 +99,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
 			metadata.setGloballyQuotedIdentifiers( true );
 		}
+
 		bindingContext = new AnnotationBindingContextImpl( metadata, index );
 	}
 
@@ -154,6 +158,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	@Override
+	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources() {
+		assertBindingContextExists();
+
+		return bindingContext.extractIdentifierGeneratorSources(
+				new GlobalIdentifierGeneratorSourceContainer( bindingContext )
+		);
+	}
+
+	@Override
 	public Iterable<EntityHierarchy> extractEntityHierarchies() {
 		assertBindingContextExists();
 		// need to order our annotated entities into an order we can process
@@ -184,6 +197,39 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 		catch ( IOException e ) {
 			throw new HibernateException( "Unable to open input stream for class " + className, e );
+		}
+	}
+
+	private class GlobalIdentifierGeneratorSourceContainer implements IdentifierGeneratorSourceContainer {
+		private final AnnotationBindingContext bindingContext;
+
+		public GlobalIdentifierGeneratorSourceContainer(AnnotationBindingContext bindingContext) {
+			this.bindingContext = bindingContext;
+		}
+
+		@Override
+		public List<AnnotationInstance> getSequenceGeneratorSources() {
+			return bindingContext.getIndex().getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
+		}
+
+		@Override
+		public List<AnnotationInstance> getTableGeneratorSources() {
+			return bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
+		}
+
+		@Override
+		public List<AnnotationInstance> getGenericGeneratorSources() {
+			List<AnnotationInstance> annotations = new ArrayList<AnnotationInstance>();
+
+			annotations.addAll( bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR ) );
+
+			for ( AnnotationInstance generatorsAnnotation : bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
+				Collections.addAll(
+						annotations,
+						JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
+				);
+			}
+			return annotations;
 		}
 	}
 }

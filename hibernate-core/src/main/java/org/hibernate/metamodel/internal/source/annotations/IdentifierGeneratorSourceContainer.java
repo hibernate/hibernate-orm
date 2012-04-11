@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,33 +23,18 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
+import java.util.List;
 
-import org.hibernate.metamodel.spi.binding.IdGenerator;
-import org.hibernate.metamodel.spi.source.BindingContext;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
- * Defines an interface for providing additional annotation related context information.
+ * Basically defines a source of identifier generator sources.  Used to abstract where the identifier generator
+ * specifications come from so that we can share the process code.
  *
  * @author Steve Ebersole
- * @author Hardy Ferentschik
  */
-public interface AnnotationBindingContext extends BindingContext {
-	Index getIndex();
-
-	ClassInfo getClassInfo(String name);
-
-	void resolveAllTypes(String className);
-
-	ResolvedType getResolvedType(Class<?> clazz);
-
-	ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type);
-
-	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container);
-
-	public IdGenerator findIdGenerator(String name);
+public interface IdentifierGeneratorSourceContainer {
+	public List<AnnotationInstance> getSequenceGeneratorSources();
+	public List<AnnotationInstance> getTableGeneratorSources();
+	public List<AnnotationInstance> getGenericGeneratorSources();
 }

@@ -36,7 +36,9 @@ import org.jboss.jandex.Index;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
@@ -52,6 +54,8 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	private final TypeResolver typeResolver = new TypeResolver();
 	private final Map<Class<?>, ResolvedType> resolvedTypeCache = new HashMap<Class<?>, ResolvedType>();
 
+	private final IdentifierGeneratorExtractionDelegate identifierGeneratorSourceCreationDelegate;
+
 	public AnnotationBindingContextImpl(MetadataImplementor metadata, Index index) {
 		this.metadata = metadata;
 		this.classLoaderService = new Value<ClassLoaderService>(
@@ -65,6 +69,9 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 				}
 		);
 		this.index = index;
+		this.identifierGeneratorSourceCreationDelegate = new IdentifierGeneratorExtractionDelegate(
+				metadata.getOptions().useNewIdentifierGenerators()
+		);
 	}
 
 	@Override
@@ -104,6 +111,16 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 		// todo : is there a reason we create this resolver every time?
 		MemberResolver memberResolver = new MemberResolver( typeResolver );
 		return memberResolver.resolve( type, null, null );
+	}
+
+	@Override
+	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container) {
+		return identifierGeneratorSourceCreationDelegate.extractIdentifierGeneratorSources( container );
+	}
+
+	@Override
+	public IdGenerator findIdGenerator(String name) {
+		return getMetadataImplementor().getIdGenerator( name );
 	}
 
 	@Override

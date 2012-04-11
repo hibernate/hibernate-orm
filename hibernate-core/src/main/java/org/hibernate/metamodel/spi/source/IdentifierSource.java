@@ -33,6 +33,11 @@ import org.hibernate.metamodel.spi.binding.IdGenerator;
 public interface IdentifierSource {
     /**
      * Obtain the identifier generator source.
+	 *
+	 * @todo this should name a source as well, no?
+	 * 		Basically, not sure it should be up to the sources to build binding objects.
+	 * 		IdentifierGeneratorSource, possibly as a hierarchy as well to account for differences
+	 * 		in "global" versus "local" declarations
      *
      * @return The generator source.
      */
@@ -47,13 +52,15 @@ public interface IdentifierSource {
 
 		/**
 		 * What we used to term an "embedded composite identifier", which is not to be confused with the JPA
-		 * term embedded.  Specifically a composite id where there is no component class, though there may be an
-		 * {@code @IdClass}.
+		 * term embedded.  Specifically a composite id where there is no component class (though there may be an
+		 * {@code @IdClass}).  Indicates that the {@link IdentifierSource} is castable to
+		 * {@link NonAggregatedCompositeIdentifierSource}
 		 */
 		COMPOSITE,
 
 		/**
-		 * Composite identifier with an actual component class used to aggregate the individual attributes
+		 * Composite identifier with an actual component class used to aggregate the individual attributes.  Indicates
+		 * that the {@link IdentifierSource} is castable to {@link AggregatedCompositeIdentifierSource}
 		 */
 		AGGREGATED_COMPOSITE
 	}
@@ -67,6 +74,9 @@ public interface IdentifierSource {
 
 	/**
 	 *  Returns the "unsaved" entity identifier value.
+	 *
+	 *  @todo Not sure this is relevant for anything other than simple identifiers.  Move to SimpleIdentifierSource ?
+	 *
 	 *  @return the "unsaved" entity identifier value
 	 */
 	public String getUnsavedValue();

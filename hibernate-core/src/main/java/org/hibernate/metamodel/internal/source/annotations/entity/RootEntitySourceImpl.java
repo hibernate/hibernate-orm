@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -30,11 +35,19 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SimpleIdentifierSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.VersionAttributeSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
+import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
+import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
+import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
@@ -54,13 +67,15 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 				return new SimpleIdentifierSourceImpl( attribute, getEntityClass().getAttributeOverrideMap() );
 			}
 			case COMPOSED: {
-				throw new NotYetImplementedException( "Composed ids must still be implemented." );
+				return new NonAggregatedCompositeIdentifierSourceImpl( this );
 			}
 			case EMBEDDED: {
-				throw new NotYetImplementedException( "Embedded ids must still be implemented." );
+				return new AggregatedCompositeIdentifierSourceImpl( this );
 			}
 			default: {
-				throw new AssertionFailure( "The root entity needs to specify an identifier" );
+				throw new AssertionFailure(
+						String.format( "Entity [%s] did not define an identifier", getEntityName() )
+				);
 			}
 		}
 	}
@@ -117,6 +132,100 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	public Caching getCaching() {
 		return getEntityClass().getCaching();
 	}
+
+
+	private class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIdentifierSource {
+		private final ComponentAttributeSourceImpl componentAttributeSource;
+
+		public AggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
+			componentAttributeSource = null;
+			throw new NotYetImplementedException( "Not really yet implemented because we cannot find the component attribute defining the id yet" );
+		}
+
+		@Override
+		public ComponentAttributeSource getIdentifierAttributeSource() {
+			return componentAttributeSource;
+		}
+
+		@Override
+		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+			// for now, return null.  this is that stupid specj bs
+			return null;
+		}
+
+		@Override
+		public IdGenerator getIdentifierGeneratorDescriptor() {
+			// annotations do not currently allow generators to be attached to composite identifiers as a whole
+			return null;
+		}
+
+		@Override
+		public Nature getNature() {
+			return Nature.AGGREGATED_COMPOSITE;
+		}
+
+		@Override
+		public String getUnsavedValue() {
+			return null;
+		}
+	}
+
+	private class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedCompositeIdentifierSource {
+		private final RootEntitySourceImpl rootEntitySource;
+
+		public NonAggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
+			this.rootEntitySource = rootEntitySource;
+		}
+
+		@Override
+		public Class getLookupIdClass() {
+			final AnnotationInstance idClassAnnotation = JandexHelper.getSingleAnnotation(
+					rootEntitySource.getEntityClass().getClassInfo(),
+					JPADotNames.ID_CLASS
+			);
+			if ( idClassAnnotation == null ) {
+				return null;
+			}
+
+			return rootEntitySource.getLocalBindingContext().locateClassByName(
+					JandexHelper.getValue( idClassAnnotation, "value", String.class )
+			);
+		}
+
+		@Override
+		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
+			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
+			for ( BasicAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
+				attributeSources.add( new SingularAttributeSourceImpl( attr ) );
+			}
+			return attributeSources;
+		}
+
+		@Override
+		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+			// for now, return null.  this is that stupid specj bs
+			return null;
+		}
+
+		@Override
+		public IdGenerator getIdentifierGeneratorDescriptor() {
+			// annotations do not currently allow generators to be attached to composite identifiers as a whole
+			return null;
+		}
+
+		@Override
+		public Nature getNature() {
+			return Nature.COMPOSITE;
+		}
+
+		@Override
+		public String getUnsavedValue() {
+			return null;
+		}
+	}
+
+
+
 }
 
 

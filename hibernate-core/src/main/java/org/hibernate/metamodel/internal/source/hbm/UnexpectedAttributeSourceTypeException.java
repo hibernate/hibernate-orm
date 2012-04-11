@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.metamodel.internal.source.hbm;
 
-package org.hibernate.metamodel.spi.source;
+import org.hibernate.HibernateException;
 
 /**
- * @author Strong Liu
+ * @author Steve Ebersole
  */
-public interface ComponentIdentifierSource extends IdentifierSource {
-    /**
-     * Obtain the source descriptor for the identifier attribute.
-     *
-     * @return The identifier attribute source.
-     */
-    public ComponentAttributeSource getIdentifierAttributeSource();
+public class UnexpectedAttributeSourceTypeException extends HibernateException {
+	public UnexpectedAttributeSourceTypeException(String message) {
+		super( message );
+	}
 }

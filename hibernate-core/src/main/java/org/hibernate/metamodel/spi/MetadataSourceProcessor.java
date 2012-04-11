@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.spi;
 
+import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
@@ -46,6 +48,13 @@ public interface MetadataSourceProcessor {
 	 * @return The filter def sources.
 	 */
 	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources();
+
+	/**
+	 * Retrieve the sources of "global" identifier generator specifications.
+	 *
+	 * @return The identifier generator sources.
+	 */
+	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources();
 
 	/**
 	 * Retrieve the entity hierarchies.

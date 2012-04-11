@@ -23,26 +23,36 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.metamodel.spi.relational.Column;
 
 /**
- * Binds the entity identifier.
+ * Hold information about the entity identifier.  At a high-level, can be one of 2-types:<ul>
+ *     <li>single-attribute identifier - this includes both simple identifiers and aggregated composite identifiers</li>
+ *     <li>multiple-attribute identifier - non-aggregated composite identifiers</li>
+ * </ul>
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
-	private SingularAttributeBinding attributeBinding;
-	private IdentifierGenerator identifierGenerator;
+
+	private BoundType boundType;
+
 	private IdGenerator idGenerator;
-	private boolean isIdentifierMapper = false;
-	// todo : mappers, etc
 	private String unsavedValue;
+
+	private Class idClassClass; // the class named in @IdClass
+
+	private IdentifierGenerator identifierGenerator;
+
+	private SingularNonAssociationAttributeBinding attributeBinding;
+	private List<SingularAttributeBinding> nonAggregatedCompositeAttributeBindings;
 
 	/**
 	 * Create an identifier
@@ -53,32 +63,58 @@ public class EntityIdentifier {
 		this.entityBinding = entityBinding;
 	}
 
-	public SingularAttributeBinding getValueBinding() {
+	public void bindAsSingleAttributeIdentifier(
+			SingularNonAssociationAttributeBinding attributeBinding,
+			IdGenerator idGenerator,
+			String unsavedValue) {
+		if ( boundType != null ) {
+			throw new IllegalStateException( "Entity identifier was already bound" );
+		}
+		this.boundType = BoundType.SINGLE_ATTRIBUTE;
+		this.attributeBinding = attributeBinding;
+		this.idGenerator = idGenerator;
+		this.unsavedValue = unsavedValue;
+
+		// Configure primary key in relational model
+		for ( final RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
+			entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
+		}
+	}
+
+	public void bindAsMultipleAttributeIdentifier(
+			List<SingularAttributeBinding> nonAggregatedCompositeAttributeBindings,
+			Class idClassClass) {
+		if ( boundType != null ) {
+			throw new IllegalStateException( "Entity identifier was already bound" );
+		}
+		this.boundType = BoundType.MULTIPLE_ATTRIBUTE;
+		this.nonAggregatedCompositeAttributeBindings = nonAggregatedCompositeAttributeBindings;
+		this.idClassClass = idClassClass;
+	}
+
+	public SingularNonAssociationAttributeBinding getValueBinding() {
 		return attributeBinding;
 	}
 
-	public void setValueBinding(SingularAttributeBinding attributeBinding) {
-		if ( this.attributeBinding != null ) {
-			throw new AssertionFailure(
-					String.format(
-							"Identifier value binding already existed for %s",
-							entityBinding.getEntity().getName()
-					)
-			);
-		}
-		this.attributeBinding = attributeBinding;
+	public List<SingularAttributeBinding> getNonAggregatedCompositeAttributeBindings() {
+		return nonAggregatedCompositeAttributeBindings;
 	}
 
-	public void setIdGenerator(IdGenerator idGenerator) {
-		this.idGenerator = idGenerator;
+	public String getUnsavedValue() {
+		return unsavedValue;
 	}
 
 	public boolean isEmbedded() {
-		return attributeBinding.getRelationalValueBindings().size() > 1;
+		return boundType == BoundType.SINGLE_ATTRIBUTE && attributeBinding.getRelationalValueBindings().size() > 1;
+	}
+
+	public Class getIdClassClass() {
+		return idClassClass;
 	}
 
 	public boolean isIdentifierMapper() {
-		return isIdentifierMapper;
+		// i think
+		return boundType == BoundType.MULTIPLE_ATTRIBUTE && idClassClass != null;
 	}
 
 	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
@@ -94,11 +130,8 @@ public class EntityIdentifier {
 		return identifierGenerator;
 	}
 
-	public String getUnsavedValue() {
-		return unsavedValue;
-	}
-
-	public void setUnsavedValue(String unsavedValue) {
-		this.unsavedValue = unsavedValue;
+	private static enum BoundType {
+		SINGLE_ATTRIBUTE,
+		MULTIPLE_ATTRIBUTE
 	}
 }

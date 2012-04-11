@@ -772,9 +772,10 @@ public class Binder {
 	}
 
 	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
+		// locate the attribute binding
 		final BasicAttributeBinding idAttributeBinding =
 				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
@@ -782,14 +783,15 @@ public class Binder {
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
 			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
 		}
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
-				getIdentifierUnsavedValue( identifierSource, generator )
+
+		// determine the unsaved value mapping
+		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+				idAttributeBinding,
+				generator,
+				unsavedValue
 		);
-		// Configure primary key in relational model
-		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
-			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
-		}
 	}
 
 	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
@@ -845,9 +847,10 @@ public class Binder {
 	private void bindAggregatedCompositeIdentifier(
 			EntityBinding rootEntityBinding,
 			AggregatedCompositeIdentifierSource identifierSource) {
+		// locate the attribute binding
 		final CompositeAttributeBinding idAttributeBinding =
 				( CompositeAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
@@ -855,20 +858,32 @@ public class Binder {
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
 			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
 		}
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
-				getIdentifierUnsavedValue( identifierSource, generator )
+
+		// determine the unsaved value mapping
+		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+				idAttributeBinding,
+				generator,
+				unsavedValue
 		);
-		// Configure primary key in relational model
-		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
-			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
-		}
 	}
 
 	private void bindNonAggregatedCompositeIdentifier(
 			EntityBinding rootEntityBinding,
 			NonAggregatedCompositeIdentifierSource identifierSource) {
-		throw new NotYetImplementedException( Nature.COMPOSITE.name() );
+		// locate the attribute bindings
+		List<SingularAttributeBinding> idAttributeBindings = new ArrayList<SingularAttributeBinding>();
+		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
+			idAttributeBindings.add(
+					(SingularAttributeBinding) bindAttribute( rootEntityBinding, attributeSource )
+			);
+		}
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsMultipleAttributeIdentifier(
+				idAttributeBindings,
+				identifierSource.getLookupIdClass()
+		);
 	}
 
 	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {

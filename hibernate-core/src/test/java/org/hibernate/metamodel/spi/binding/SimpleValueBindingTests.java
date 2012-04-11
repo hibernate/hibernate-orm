@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -91,8 +92,11 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 
-		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( attributeBinding );
-		//attributeBinding.setValue( idColumn );
+		entityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+				attributeBinding,
+				new IdGenerator( "assigned", "assigned", Collections.<String,String>emptyMap() ),
+				"null"
+		);
 	}
 
 	Value<Class<?>> makeJavaType(final String name) {

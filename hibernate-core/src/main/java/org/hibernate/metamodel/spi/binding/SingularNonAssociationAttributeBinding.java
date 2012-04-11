@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,37 +23,17 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**
- * Specialized binding contract for singular (non-collection) attributes
- *
  * @author Steve Ebersole
  */
-public interface SingularAttributeBinding extends AttributeBinding {
-
-	@Override
-	public SingularAttribute getAttribute();
-
-	public List<RelationalValueBinding> getRelationalValueBindings();
-
+public interface SingularNonAssociationAttributeBinding extends SingularAttributeBinding {
 	/**
-	 * Convenience method to determine if any {@link RelationalValueBinding simple value bindings} are derived values
-	 * (formula mappings).
-	 *
-	 * @return {@code true} indicates that the binding contains a derived value; {@code false} indicates it does not.
+	 * Ugh
 	 */
-	public boolean hasDerivedValue();
-
-	/**
-	 * Convenience method to determine if all {@link RelationalValueBinding simple value bindings} allow nulls.
-	 *
-	 * @return {@code true} indicates that all values allow {@code null}; {@code false} indicates one or more do not
-	 */
-	public boolean isNullable();
+	public IdentifierGenerator createIdentifierGenerator(IdGenerator idGenerator, IdentifierGeneratorFactory factory, Properties properties);
 }

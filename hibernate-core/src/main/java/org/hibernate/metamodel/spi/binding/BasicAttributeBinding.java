@@ -44,7 +44,8 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  * @author Steve Ebersole
  */
 public class BasicAttributeBinding
-		extends AbstractSingularAttributeBinding {
+		extends AbstractSingularAttributeBinding
+		implements SingularNonAssociationAttributeBinding {
 
 	private final List<RelationalValueBinding> relationalValueBindings;
 	private boolean hasDerivedValue;
@@ -99,6 +100,7 @@ public class BasicAttributeBinding
 		return generation;
 	}
 
+	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdGenerator idGenerator,
 			IdentifierGeneratorFactory identifierGeneratorFactory,

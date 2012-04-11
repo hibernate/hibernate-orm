@@ -104,14 +104,6 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(
-			IdGenerator idGenerator,
-			IdentifierGeneratorFactory factory,
-			Properties properties) {
-		return null;
-	}
-
-	@Override
 	public boolean isAssociation() {
 		return true;
 	}

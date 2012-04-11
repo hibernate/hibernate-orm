@@ -45,7 +45,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  */
 public class CompositeAttributeBinding
 		extends AbstractSingularAttributeBinding
-		implements AttributeBindingContainer {
+		implements SingularNonAssociationAttributeBinding, AttributeBindingContainer {
 	private final String path;
 	private final SingularAttribute parentReference;
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();

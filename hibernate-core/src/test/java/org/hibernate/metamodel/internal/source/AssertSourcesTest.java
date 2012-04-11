@@ -62,13 +62,37 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 	final ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().buildServiceRegistry() ;
 
 	@Test
+	public void testOrderEntitySources() {
+		MetadataSources ann = new MetadataSources( serviceRegistry );
+		ann.addAnnotatedClass( Order.class );
+		ann.addAnnotatedClass( Order.class );
+		ann.addAnnotatedClass( Order.OrderPk.class );
+		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
+		testOrderEntitySources( annProcessor );
+	}
+
+	private void testOrderEntitySources(MetadataSourceProcessor processor) {
+		Iterator<EntityHierarchy> hierarchies = processor.extractEntityHierarchies().iterator();
+		assertTrue( hierarchies.hasNext() );
+		EntityHierarchy hierarchy = hierarchies.next();
+		assertFalse( hierarchies.hasNext() );
+		assertTrue( hierarchy.getHierarchyInheritanceType() == InheritanceType.NO_INHERITANCE );
+
+		RootEntitySource entitySource = hierarchy.getRootEntitySource();
+		assertFalse( entitySource.subclassEntitySources().iterator().hasNext() );
+
+		assertEquals( Order.class.getName(), entitySource.getClassName() );
+		assertEquals( Order.class.getName(), entitySource.getEntityName() );
+		assertNull( Order.class.getName(), entitySource.getJpaEntityName() );
+	}
+
+	@Test
 	public void testUserEntitySources() {
 		MetadataSources hbm = new MetadataSources( serviceRegistry );
 		hbm.addResource( getClass().getPackage().getName().replace( '.', '/' ) + "/User.hbm.xml" );
 		MetadataSourceProcessor hbmProcessor = new HbmMetadataSourceProcessorImpl( buildMetadata( hbm ), hbm );
 		testUserEntitySources( hbmProcessor );
 
-// breaking from HHH-7040
 		MetadataSources ann = new MetadataSources( serviceRegistry );
 		ann.addAnnotatedClass( User.class );
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );

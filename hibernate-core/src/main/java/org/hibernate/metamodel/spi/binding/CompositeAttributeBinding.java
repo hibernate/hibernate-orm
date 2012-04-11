@@ -28,7 +28,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Composite;
@@ -117,6 +120,13 @@ public class CompositeAttributeBinding
 	public boolean isNullable() {
 		// todo : not sure this is even relevant for components
 		return false;
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			IdGenerator idGenerator, IdentifierGeneratorFactory factory, Properties properties) {
+		// for now...
+		return null;
 	}
 
 	@Override

@@ -449,7 +449,10 @@ public class ConfiguredClass {
 				throw new NotYetImplementedException( "Element collections must still be implemented." );
 			}
 			case EMBEDDED_ID: {
-				throw new NotYetImplementedException( "Embedded ids must still be implemented." );
+				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
+						attributeName, attributeType, attributeNature, annotations, accessTypeString, getLocalBindingContext()
+				);
+				idAttributeMap.put( attributeName, attribute );
 			}
 			case EMBEDDED: {
 				AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(

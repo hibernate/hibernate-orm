@@ -37,7 +37,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
  */
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
-	private BasicAttributeBinding attributeBinding;
+	private SingularAttributeBinding attributeBinding;
 	private IdentifierGenerator identifierGenerator;
 	private IdGenerator idGenerator;
 	private boolean isIdentifierMapper = false;
@@ -53,11 +53,11 @@ public class EntityIdentifier {
 		this.entityBinding = entityBinding;
 	}
 
-	public BasicAttributeBinding getValueBinding() {
+	public SingularAttributeBinding getValueBinding() {
 		return attributeBinding;
 	}
 
-	public void setValueBinding(BasicAttributeBinding attributeBinding) {
+	public void setValueBinding(SingularAttributeBinding attributeBinding) {
 		if ( this.attributeBinding != null ) {
 			throw new AssertionFailure(
 					String.format(

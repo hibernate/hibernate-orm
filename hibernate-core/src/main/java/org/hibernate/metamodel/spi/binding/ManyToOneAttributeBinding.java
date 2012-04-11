@@ -26,12 +26,15 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -98,6 +101,14 @@ public class ManyToOneAttributeBinding
 	public boolean isNullable() {
 		// todo : not sure this is even relevant for many-to-one
 		return false;
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			IdGenerator idGenerator,
+			IdentifierGeneratorFactory factory,
+			Properties properties) {
+		return null;
 	}
 
 	@Override

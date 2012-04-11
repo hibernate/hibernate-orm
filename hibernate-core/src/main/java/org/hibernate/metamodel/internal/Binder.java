@@ -90,6 +90,7 @@ import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
@@ -110,6 +111,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -750,17 +752,123 @@ public class Binder {
 
 	private void bindIdentifier( final EntityBinding rootEntityBinding, final IdentifierSource identifierSource ) {
 		final Nature nature = identifierSource.getNature();
-		if ( nature == Nature.SIMPLE ) {
-			bindSimpleIdentifier( rootEntityBinding, ( SimpleIdentifierSource ) identifierSource );
-		} else {
-			throw new NotYetImplementedException( nature.toString() );
-			// } else if ( nature == Nature.AGGREGATED_COMPOSITE ) {
-			// // composite id with an actual component class
-			// } else if ( nature == Nature.COMPOSITE ) {
-			// // what we used to term an "embedded composite identifier", which is not to be confused with the JPA
-			// // term embedded. Specifically a composite id where there is no component class, though there may
-			// // be a @IdClass :/
+		switch ( nature ) {
+			case SIMPLE: {
+				bindSimpleIdentifier( rootEntityBinding, ( SimpleIdentifierSource ) identifierSource );
+				break;
+			}
+			case AGGREGATED_COMPOSITE: {
+				bindAggregatedCompositeIdentifier( rootEntityBinding, (AggregatedCompositeIdentifierSource) identifierSource );
+				break;
+			}
+			case COMPOSITE: {
+				bindNonAggregatedCompositeIdentifier( rootEntityBinding, (NonAggregatedCompositeIdentifierSource) identifierSource );
+				break;
+			}
+			default: {
+				throw bindingContext().makeMappingException( "Unknown identifier nature : " + nature.name() );
+			}
 		}
+	}
+
+	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
+		final BasicAttributeBinding idAttributeBinding =
+				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+		// Configure ID generator
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			final Map< String, String > params = new HashMap< String, String >();
+			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
+				getIdentifierUnsavedValue( identifierSource, generator )
+		);
+		// Configure primary key in relational model
+		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
+			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
+		}
+	}
+
+	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
+		if ( identifierSource == null ) {
+			throw new IllegalArgumentException( "identifierSource must be non-null." );
+		}
+		if ( generator == null || StringHelper.isEmpty( generator.getStrategy() ) )	{
+			throw new IllegalArgumentException( "generator must be non-null and its strategy must be non-empty." );
+		}
+		String unsavedValue = null;
+		if ( identifierSource.getUnsavedValue() != null ) {
+			unsavedValue = identifierSource.getUnsavedValue();
+		}
+		else if ( "assigned".equals( generator.getStrategy() ) ) {
+			unsavedValue = "undefined";
+		}
+		else {
+			switch ( identifierSource.getNature() ) {
+				case SIMPLE: {
+					unsavedValue = null;
+					break;
+				}
+				case COMPOSITE: {
+					// The generator strategy should be "assigned" and processed above.
+					throw new IllegalStateException(
+							String.format(
+									"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
+									generator.getStrategy()
+							)
+					);
+				}
+				case AGGREGATED_COMPOSITE: {
+					// TODO: if the component only contains 1 attribute (when flattened)
+					// and it is not an association then null should be returned;
+					// otherwise "undefined" should be returned.
+					throw new NotYetImplementedException(
+							String.format(
+									"Unsaved value for (%s) identifier not implemented yet.",
+									identifierSource.getNature()
+							)
+					);
+				}
+				default: {
+					throw new AssertionFailure(
+							String.format( "Unexpected identifier nature: %s", identifierSource.getNature() )
+					);
+				}
+			}
+		}
+		return unsavedValue;
+	}
+
+	private void bindAggregatedCompositeIdentifier(
+			EntityBinding rootEntityBinding,
+			AggregatedCompositeIdentifierSource identifierSource) {
+		final CompositeAttributeBinding idAttributeBinding =
+				( CompositeAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+		// Configure ID generator
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			final Map< String, String > params = new HashMap< String, String >();
+			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
+				getIdentifierUnsavedValue( identifierSource, generator )
+		);
+		// Configure primary key in relational model
+		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
+			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
+		}
+	}
+
+	private void bindNonAggregatedCompositeIdentifier(
+			EntityBinding rootEntityBinding,
+			NonAggregatedCompositeIdentifierSource identifierSource) {
+		throw new NotYetImplementedException( Nature.COMPOSITE.name() );
 	}
 
 	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {
@@ -1009,77 +1117,6 @@ public class Binder {
 				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 				null );
-	}
-
-	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
-		final BasicAttributeBinding idAttributeBinding =
-				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
-		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
-		if ( generator == null ) {
-			final Map< String, String > params = new HashMap< String, String >();
-			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
-		}
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( generator );
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().setUnsavedValue(
-				getIdentifierUnsavedValue( identifierSource, generator )
-		);
-		// Configure primary key in relational model
-		for ( final RelationalValueBinding valueBinding : idAttributeBinding.getRelationalValueBindings() ) {
-			rootEntityBinding.getPrimaryTable().getPrimaryKey().addColumn( ( Column ) valueBinding.getValue() );
-		}
-	}
-
-	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
-		if ( identifierSource == null ) {
-			throw new IllegalArgumentException( "identifierSource must be non-null." );
-		}
-		if ( generator == null || StringHelper.isEmpty( generator.getStrategy() ) )	{
-			throw new IllegalArgumentException( "generator must be non-null and its strategy must be non-empty." );
-		}
-		String unsavedValue = null;
-		if ( identifierSource.getUnsavedValue() != null ) {
-			unsavedValue = identifierSource.getUnsavedValue();
-		}
-		else if ( "assigned".equals( generator.getStrategy() ) ) {
-			unsavedValue = "undefined";
-		}
-		else {
-			switch ( identifierSource.getNature() ) {
-				case SIMPLE: {
-					unsavedValue = null;
-					break;
-				}
-				case COMPOSITE: {
-					// The generator strategy should be "assigned" and processed above.
-					throw new IllegalStateException(
-							String.format(
-									"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
-									generator.getStrategy()
-							)
-					);
-				}
-				case AGGREGATED_COMPOSITE: {
-					// TODO: if the component only contains 1 attribute (when flattened)
-					// and it is not an association then null should be returned;
-					// otherwise "undefined" should be returned.
-					throw new NotYetImplementedException(
-							String.format(
-									"Unsaved value for (%s) identifier not implemented yet.",
-									identifierSource.getNature()
-							)
-					);
-				}
-				default: {
-					throw new AssertionFailure(
-							String.format( "Unexpected identifier nature: %s", identifierSource.getNature() )
-					);
-				}
-			}
-		}
-		return unsavedValue;
 	}
 	
 	private SingularAttributeBinding bindSingularAttribute(

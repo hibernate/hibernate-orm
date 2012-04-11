@@ -24,7 +24,10 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
+import java.util.Properties;
 
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
@@ -54,4 +57,9 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	 * @return {@code true} indicates that all values allow {@code null}; {@code false} indicates one or more do not
 	 */
 	public boolean isNullable();
+
+	/**
+	 * Ugh
+	 */
+	public IdentifierGenerator createIdentifierGenerator(IdGenerator idGenerator, IdentifierGeneratorFactory factory, Properties properties);
 }

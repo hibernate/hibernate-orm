@@ -45,6 +45,4 @@ public interface HbmBindingContext extends LocalBindingContext {
 
 	public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName);
 
-	public MappingException makeMappingException(String message);
-	public MappingException makeMappingException(String message, Exception cause);
 }

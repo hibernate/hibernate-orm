@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -32,6 +34,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SimpleIdentifierSourceImpl;
@@ -138,8 +141,36 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		private final ComponentAttributeSourceImpl componentAttributeSource;
 
 		public AggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
-			componentAttributeSource = null;
-			throw new NotYetImplementedException( "Not really yet implemented because we cannot find the component attribute defining the id yet" );
+			// the entity class reference should contain one single id attribute...
+			Iterator<BasicAttribute> idAttributes = rootEntitySource.getEntityClass ().getIdAttributes().iterator();
+			if ( ! idAttributes.hasNext() ) {
+				throw rootEntitySource.getLocalBindingContext().makeMappingException(
+						String.format(
+								"Could not locate identifier attributes on entity %s",
+								rootEntitySource.getEntityName()
+						)
+				);
+			}
+			final BasicAttribute idAttribute = idAttributes.next();
+			if ( idAttributes.hasNext() ) {
+				throw rootEntitySource.getLocalBindingContext().makeMappingException(
+						String.format(
+								"Encountered multiple identifier attributes on entity %s",
+								rootEntitySource.getEntityName()
+						)
+				);
+			}
+
+			final EmbeddableClass embeddableClass = rootEntitySource.getEntityClass().getEmbeddedClasses().get( idAttribute.getName() );
+			if ( embeddableClass == null ) {
+				throw rootEntitySource.getLocalBindingContext().makeMappingException(
+						"Could not locate embedded identifier class metadata"
+				);
+			}
+
+			// todo : no idea how to obtain overrides here...
+			Map<String, AttributeOverride> overrides = getEntityClass().getAttributeOverrideMap();
+			componentAttributeSource = new ComponentAttributeSourceImpl( embeddableClass, "", overrides );
 		}
 
 		@Override

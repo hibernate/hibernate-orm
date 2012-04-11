@@ -99,7 +99,7 @@ public class BasicAttributeBinding
 		return generation;
 	}
 
-	IdentifierGenerator createIdentifierGenerator(
+	public IdentifierGenerator createIdentifierGenerator(
 			IdGenerator idGenerator,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Properties properties) {

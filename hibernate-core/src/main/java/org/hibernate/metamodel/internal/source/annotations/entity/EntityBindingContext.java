@@ -48,6 +48,7 @@ import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.service.ServiceRegistry;
@@ -125,6 +126,16 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	@Override
 	public Origin getOrigin() {
 		return origin;
+	}
+
+	@Override
+	public MappingException makeMappingException(String message) {
+		return new MappingException( message, getOrigin() );
+	}
+
+	@Override
+	public MappingException makeMappingException(String message, Exception cause) {
+		return new MappingException( message, cause, getOrigin() );
 	}
 
 	@Override

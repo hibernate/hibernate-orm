@@ -403,7 +403,7 @@ public class Event {
 
             <note>
                 <para>
-                    We do this do that the data remains between runs.
+                    We do this so that the data remains between runs.
                 </para>
             </note>
 

@@ -177,14 +177,18 @@ public abstract class AbstractEntitySourceImpl
 			);
 		}
 		else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
-			return new ListAttributeSourceImpl(
+			return new ListAttributeSource(
 					sourceMappingDocument(),
 					JaxbListElement.class.cast( attributeElement ),
 					this
 			);
 		}
 		else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
-			// todo : implement
+			return new MapAttributeSource(
+					sourceMappingDocument(),
+					JaxbMapElement.class.cast( attributeElement ),
+					this
+			);
 		}
 
 		throw new UnexpectedAttributeSourceTypeException(

@@ -30,7 +30,6 @@ import java.util.Map;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
-import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -38,16 +37,13 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  *
  */
-public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
+public class ListAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
 
 	private final List< RelationalValueSource > valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final int base;
 
-	public PluralAttributeIndexSourceImpl(
-			MappingDocument mappingDocument,
-			final JaxbListIndexElement indexElement,
-			final AttributeSourceContainer container ) {
+	public ListAttributeIndexSource( MappingDocument mappingDocument, final JaxbListIndexElement indexElement ) {
 		super( mappingDocument );
 		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
 
@@ -85,7 +81,6 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 				return areValuesIncludedInUpdateByDefault();
 			}
 		} );
-
 		typeSource = new ExplicitHibernateTypeSource() {
 
 			@Override
@@ -98,20 +93,13 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 				return java.util.Collections.< String, String >emptyMap();
 			}
 		};
-
 		base = Integer.parseInt( indexElement.getBase() );
 	}
 
-	public PluralAttributeIndexSourceImpl(
-			MappingDocument mappingDocument,
-			final JaxbIndexElement indexElement,
-			final AttributeSourceContainer container ) {
+	// TODO: What do we do with the length property?
+	public ListAttributeIndexSource( MappingDocument mappingDocument, final JaxbIndexElement indexElement ) {
 		super( mappingDocument );
 		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
-
-			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null
-					? Collections.EMPTY_LIST
-					: Collections.singletonList( indexElement.getColumn() );
 
 			@Override
 			public String getColumnAttribute() {
@@ -120,7 +108,7 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 
 			@Override
 			public List getColumnOrFormulaElements() {
-				return columnElements;
+				return indexElement.getColumn();
 			}
 
 			@Override
@@ -143,12 +131,11 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 				return areValuesIncludedInUpdateByDefault();
 			}
 		} );
-
 		typeSource = new ExplicitHibernateTypeSource() {
 
 			@Override
 			public String getName() {
-				return "integer";
+				return indexElement.getType();
 			}
 
 			@Override
@@ -156,7 +143,6 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 				return java.util.Collections.< String, String >emptyMap();
 			}
 		};
-
 		base = 0;
 	}
 
@@ -190,12 +176,6 @@ public class PluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implem
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.PluralAttributeIndexSource#base()
-	 */
-	@Override
 	public int base() {
 		return base;
 	}

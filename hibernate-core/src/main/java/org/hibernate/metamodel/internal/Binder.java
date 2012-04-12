@@ -45,7 +45,8 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
-import org.hibernate.metamodel.internal.source.hbm.ListAttributeSourceImpl;
+import org.hibernate.metamodel.internal.source.hbm.ListAttributeSource;
+import org.hibernate.metamodel.internal.source.hbm.MapAttributeSource;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
@@ -63,6 +64,7 @@ import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
@@ -105,6 +107,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource.Nature;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
+import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
@@ -167,6 +170,55 @@ public class Binder {
 		return new org.hibernate.internal.util.Value< Class< ? >>( deferredInitializer );
 	}
 
+	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
+		if ( identifierSource == null ) {
+			throw new IllegalArgumentException( "identifierSource must be non-null." );
+		}
+		if ( generator == null || StringHelper.isEmpty( generator.getStrategy() ) )	{
+			throw new IllegalArgumentException( "generator must be non-null and its strategy must be non-empty." );
+		}
+		String unsavedValue = null;
+		if ( identifierSource.getUnsavedValue() != null ) {
+			unsavedValue = identifierSource.getUnsavedValue();
+		}
+		else if ( "assigned".equals( generator.getStrategy() ) ) {
+			unsavedValue = "undefined";
+		}
+		else {
+			switch ( identifierSource.getNature() ) {
+				case SIMPLE: {
+					// unsavedValue = null;
+					break;
+				}
+				case COMPOSITE: {
+					// The generator strategy should be "assigned" and processed above.
+					throw new IllegalStateException(
+							String.format(
+									"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
+									generator.getStrategy()
+							)
+					);
+				}
+				case AGGREGATED_COMPOSITE: {
+					// TODO: if the component only contains 1 attribute (when flattened)
+					// and it is not an association then null should be returned;
+					// otherwise "undefined" should be returned.
+					throw new NotYetImplementedException(
+							String.format(
+									"Unsaved value for (%s) identifier not implemented yet.",
+									identifierSource.getNature()
+							)
+					);
+				}
+				default: {
+					throw new AssertionFailure(
+							String.format( "Unexpected identifier nature: %s", identifierSource.getNature() )
+					);
+				}
+			}
+		}
+		return unsavedValue;
+	}
 	private final MetadataImplementor metadata;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 	private final ObjectNameNormalizer nameNormalizer;
@@ -176,6 +228,7 @@ public class Binder {
 	private final HashMap< String, AttributeSource > attributeSourcesByName = new HashMap< String, AttributeSource >();
 	private final LinkedList< LocalBindingContext > bindingContexts = new LinkedList< LocalBindingContext >();
 	private final LinkedList< InheritanceType > inheritanceTypes = new LinkedList< InheritanceType >();
+
 	private final LinkedList< EntityMode > entityModes = new LinkedList< EntityMode >();
 
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
@@ -208,6 +261,31 @@ public class Binder {
 
 	private String attributeSourcesByNameKey( final String entityName, final String attributeName ) {
 		return entityName + "." + attributeName;
+	}
+
+	private void bindAggregatedCompositeIdentifier(
+			EntityBinding rootEntityBinding,
+			AggregatedCompositeIdentifierSource identifierSource) {
+		// locate the attribute binding
+		final CompositeAttributeBinding idAttributeBinding =
+				( CompositeAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+
+		// Configure ID generator
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			final Map< String, String > params = new HashMap< String, String >();
+			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
+
+		// determine the unsaved value mapping
+		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+				idAttributeBinding,
+				generator,
+				unsavedValue
+		);
 	}
 
 	private AttributeBinding bindAttribute(
@@ -491,7 +569,7 @@ public class Binder {
 		if ( attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.BASIC ) {
 			if ( pluralAttributeNature == PluralAttributeNature.SET ) {
 				bindBasicElementTablePrimaryKey( attributeBinding );
-			} else if ( pluralAttributeNature == PluralAttributeNature.LIST ) {
+			} else if ( pluralAttributeNature == PluralAttributeNature.LIST || pluralAttributeNature == PluralAttributeNature.MAP ) {
 				bindIndexedTablePrimaryKey( ( IndexedPluralAttributeBinding ) attributeBinding );
 			} else {
 				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
@@ -771,121 +849,6 @@ public class Binder {
 		}
 	}
 
-	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
-		// locate the attribute binding
-		final BasicAttributeBinding idAttributeBinding =
-				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-
-		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
-		if ( generator == null ) {
-			final Map< String, String > params = new HashMap< String, String >();
-			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
-		}
-
-		// determine the unsaved value mapping
-		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
-
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
-				idAttributeBinding,
-				generator,
-				unsavedValue
-		);
-	}
-
-	private static String getIdentifierUnsavedValue(IdentifierSource identifierSource, IdGenerator generator) {
-		if ( identifierSource == null ) {
-			throw new IllegalArgumentException( "identifierSource must be non-null." );
-		}
-		if ( generator == null || StringHelper.isEmpty( generator.getStrategy() ) )	{
-			throw new IllegalArgumentException( "generator must be non-null and its strategy must be non-empty." );
-		}
-		String unsavedValue = null;
-		if ( identifierSource.getUnsavedValue() != null ) {
-			unsavedValue = identifierSource.getUnsavedValue();
-		}
-		else if ( "assigned".equals( generator.getStrategy() ) ) {
-			unsavedValue = "undefined";
-		}
-		else {
-			switch ( identifierSource.getNature() ) {
-				case SIMPLE: {
-					unsavedValue = null;
-					break;
-				}
-				case COMPOSITE: {
-					// The generator strategy should be "assigned" and processed above.
-					throw new IllegalStateException(
-							String.format(
-									"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
-									generator.getStrategy()
-							)
-					);
-				}
-				case AGGREGATED_COMPOSITE: {
-					// TODO: if the component only contains 1 attribute (when flattened)
-					// and it is not an association then null should be returned;
-					// otherwise "undefined" should be returned.
-					throw new NotYetImplementedException(
-							String.format(
-									"Unsaved value for (%s) identifier not implemented yet.",
-									identifierSource.getNature()
-							)
-					);
-				}
-				default: {
-					throw new AssertionFailure(
-							String.format( "Unexpected identifier nature: %s", identifierSource.getNature() )
-					);
-				}
-			}
-		}
-		return unsavedValue;
-	}
-
-	private void bindAggregatedCompositeIdentifier(
-			EntityBinding rootEntityBinding,
-			AggregatedCompositeIdentifierSource identifierSource) {
-		// locate the attribute binding
-		final CompositeAttributeBinding idAttributeBinding =
-				( CompositeAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
-
-		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
-		if ( generator == null ) {
-			final Map< String, String > params = new HashMap< String, String >();
-			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
-		}
-
-		// determine the unsaved value mapping
-		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
-
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
-				idAttributeBinding,
-				generator,
-				unsavedValue
-		);
-	}
-
-	private void bindNonAggregatedCompositeIdentifier(
-			EntityBinding rootEntityBinding,
-			NonAggregatedCompositeIdentifierSource identifierSource) {
-		// locate the attribute bindings
-		List<SingularAttributeBinding> idAttributeBindings = new ArrayList<SingularAttributeBinding>();
-		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
-			idAttributeBindings.add(
-					(SingularAttributeBinding) bindAttribute( rootEntityBinding, attributeSource )
-			);
-		}
-
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsMultipleAttributeIdentifier(
-				idAttributeBindings,
-				identifierSource.getLookupIdClass()
-		);
-	}
-
 	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {
 		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
 		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
@@ -918,7 +881,7 @@ public class Binder {
 
 	private AbstractPluralAttributeBinding bindListAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final PluralAttributeSource attributeSource,
+			final ListAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createList( attributeSource.getName() );
@@ -931,7 +894,7 @@ public class Binder {
 				attributeSource.isIncludedInOptimisticLocking(),
 				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-				((ListAttributeSourceImpl)attributeSource).getIndexSource().base() );
+				attributeSource.getIndexSource().base() );
 	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
@@ -1010,6 +973,40 @@ public class Binder {
 		return attributeBinding;
 	}
 
+	private AbstractPluralAttributeBinding bindMapAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final MapAttributeSource attributeSource,
+			PluralAttribute attribute ) {
+		if ( attribute == null ) {
+			attribute = attributeBindingContainer.getAttributeContainer().createMap( attributeSource.getName() );
+		}
+		return attributeBindingContainer.makeMapAttributeBinding(
+				attribute,
+				pluralAttributeElementNature( attributeSource ),
+				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
+				propertyAccessorName( attributeSource ),
+				attributeSource.isIncludedInOptimisticLocking(),
+				false,
+				createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
+	}
+
+	private void bindNonAggregatedCompositeIdentifier(
+			EntityBinding rootEntityBinding,
+			NonAggregatedCompositeIdentifierSource identifierSource) {
+		// locate the attribute bindings
+		List<SingularAttributeBinding> idAttributeBindings = new ArrayList<SingularAttributeBinding>();
+		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
+			idAttributeBindings.add(
+					(SingularAttributeBinding) bindAttribute( rootEntityBinding, attributeSource )
+			);
+		}
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsMultipleAttributeIdentifier(
+				idAttributeBindings,
+				identifierSource.getLookupIdClass()
+		);
+	}
+
 	private AbstractPluralAttributeBinding bindPluralAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource ) {
@@ -1025,8 +1022,11 @@ public class Binder {
 			attributeBinding = bindSetAttribute( attributeBindingContainer, attributeSource, attribute );
 			resolvedType = resolveSetType( ( SetBinding ) attributeBinding );
 		} else if ( nature == PluralAttributeNature.LIST ) {
-			attributeBinding = bindListAttribute( attributeBindingContainer, attributeSource, attribute );
+			attributeBinding = bindListAttribute( attributeBindingContainer, ( ListAttributeSource ) attributeSource, attribute );
 			resolvedType = resolveListType( ( ListBinding ) attributeBinding );
+		} else if ( nature == PluralAttributeNature.MAP ) {
+			attributeBinding = bindMapAttribute( attributeBindingContainer, ( MapAttributeSource ) attributeSource, attribute );
+			resolvedType = resolveMapType( ( MapBinding ) attributeBinding );
 		} else {
 			throw new NotYetImplementedException( nature.toString() );
 		}
@@ -1067,10 +1067,10 @@ public class Binder {
 					attributeSource.getElementSource().getNature() ) );
 		}
 
-		if (attributeSource instanceof ListAttributeSourceImpl) {
+		if ( attributeSource instanceof IndexedPluralAttributeSource ) {
 			bindCollectionIndex(
 					(IndexedPluralAttributeBinding) attributeBinding,
-					( (ListAttributeSourceImpl) attributeSource ).getIndexSource(),
+					( (IndexedPluralAttributeSource) attributeSource ).getIndexSource(),
 					defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes ) );
 		}
 
@@ -1133,7 +1133,30 @@ public class Binder {
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 				null );
 	}
-	
+
+	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
+		// locate the attribute binding
+		final BasicAttributeBinding idAttributeBinding =
+				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+
+		// Configure ID generator
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			final Map< String, String > params = new HashMap< String, String >();
+			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
+
+		// determine the unsaved value mapping
+		final String unsavedValue = getIdentifierUnsavedValue( identifierSource, generator );
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+				idAttributeBinding,
+				generator,
+				unsavedValue
+		);
+	}
+
 	private SingularAttributeBinding bindSingularAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource ) {
@@ -1249,7 +1272,7 @@ public class Binder {
 			versionAttributeSource.getUnsavedValue() == null ? "undefined" : versionAttributeSource.getUnsavedValue()
 		);
 	}
-	
+
 	private TableSpecification createCollectionTable(
 			final AbstractPluralAttributeBinding pluralAttributeBinding,
 			final PluralAttributeSource attributeSource ) {
@@ -1655,6 +1678,17 @@ public class Binder {
 					listBinding.getAttribute().getRole(),
 					listBinding.getReferencedPropertyName(),
 					listBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+		}
+	}
+
+	private Type resolveMapType( MapBinding mapBinding ) {
+		if ( mapBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
+			return resolveCustomCollectionType( mapBinding );
+		} else {
+			return metadata.getTypeResolver().getTypeFactory().map(
+					mapBinding.getAttribute().getRole(),
+					mapBinding.getReferencedPropertyName(),
+					mapBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
 		}
 	}
 

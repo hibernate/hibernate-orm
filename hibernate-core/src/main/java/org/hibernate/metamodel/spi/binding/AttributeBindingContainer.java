@@ -157,7 +157,7 @@ public interface AttributeBindingContainer {
 			MetaAttributeContext metaAttributeContext);
 
 	/**
-	 * Factory method for bag attribute bindings.
+	 * Factory method for list attribute bindings.
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
@@ -181,7 +181,29 @@ public interface AttributeBindingContainer {
 			int base );
 
 	/**
-	 * Factory method for bag attribute bindings.
+	 * Factory method for map attribute bindings.
+	 *
+	 * @param attribute The attribute for which to make a binding.
+	 * @param nature The nature of the collection elements.
+	 * @param referencedAttributeBinding
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
+	 *
+	 * @return The attribute binding instance.
+	 */
+	public MapBinding makeMapAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext );
+
+	/**
+	 * Factory method for set attribute bindings.
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.

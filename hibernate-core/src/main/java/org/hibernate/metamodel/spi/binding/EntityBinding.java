@@ -597,6 +597,29 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
+	public MapBinding makeMapAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementNature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext ) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
+		final MapBinding binding = new MapBinding(
+				this,
+				attribute,
+				nature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementNature nature,

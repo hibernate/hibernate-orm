@@ -32,6 +32,12 @@
             <element column="list_stuff" type="string"/>
         </list>
 
+        <map name="theMap">
+            <key column="pid"/>
+            <map-key column="map_key" type="string"/>
+            <element column="map_value" type="string"/>
+        </map>
+
 	</class>
 
 </hibernate-mapping>

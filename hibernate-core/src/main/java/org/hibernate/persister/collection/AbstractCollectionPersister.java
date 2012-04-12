@@ -70,7 +70,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
@@ -87,6 +86,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -312,7 +312,7 @@ public abstract class AbstractCollectionPersister
 		int k = 0;
 		while ( iter.hasNext() ) {
 			// NativeSQL: collect key column and auto-aliases
-			Column col = ( (Column) iter.next() );
+			org.hibernate.mapping.Column col = ( (org.hibernate.mapping.Column) iter.next() );
 			keyColumnNames[k] = col.getQuotedName( dialect );
 			keyColumnAliases[k] = col.getAlias( dialect, collection.getOwner().getRootTable() );
 			k++;
@@ -360,7 +360,7 @@ public abstract class AbstractCollectionPersister
 				elementFormulas[j] = form.getFormula();
 			}
 			else {
-				Column col = (Column) selectable;
+				org.hibernate.mapping.Column col = (org.hibernate.mapping.Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
 				elementColumnWriters[j] = col.getWriteExpr();
 				elementColumnReaders[j] = col.getReadExpr( dialect );
@@ -409,7 +409,7 @@ public abstract class AbstractCollectionPersister
 					hasFormula = true;
 				}
 				else {
-					Column indexCol = (Column) s;
+					org.hibernate.mapping.Column indexCol = (org.hibernate.mapping.Column) s;
 					indexColumnNames[i] = indexCol.getQuotedName( dialect );
 					indexColumnIsSettable[i] = true;
 				}
@@ -442,7 +442,7 @@ public abstract class AbstractCollectionPersister
 			IdentifierCollection idColl = (IdentifierCollection) collection;
 			identifierType = idColl.getIdentifier().getType();
 			iter = idColl.getIdentifier().getColumnIterator();
-			Column col = (Column) iter.next();
+			org.hibernate.mapping.Column col = (org.hibernate.mapping.Column) iter.next();
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
 			// unquotedIdentifierColumnName = identifierColumnAlias;
@@ -711,7 +711,7 @@ public abstract class AbstractCollectionPersister
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		for ( org.hibernate.metamodel.spi.relational.Column keyColumn : keyBinding.getForeignKey().getSourceColumns() ) {
+		for ( Column keyColumn : keyBinding.getForeignKey().getSourceColumns() ) {
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnNames[k] = keyColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
 			// TODO: does the owner root table need to be in alias?
@@ -765,7 +765,7 @@ public abstract class AbstractCollectionPersister
 					elementFormulas[j] = form.getExpression();
 				}
 				else {
-					org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) value;
+					Column col = (Column) value;
 					elementColumnNames[j] = col.getColumnName().encloseInQuotesIfQuoted( dialect );
 					elementColumnWriters[j] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 					elementColumnReaders[j] = col.getReadFragment() == null ?
@@ -803,12 +803,23 @@ public abstract class AbstractCollectionPersister
 			PluralAttributeIndexBinding indexBinding = indexedBinding.getPluralAttributeIndexBinding();
 			indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 			baseIndex = indexBinding instanceof ListBinding ? ( ( ListBinding ) indexBinding ).base() : 0;
-			Column column = (Column) indexBinding.getIndexRelationalValue();
-			indexColumnNames = new String[] { column.getQuotedName( dialect ) };
-			indexColumnAliases = new String[] { column.getAlias( dialect ) };
-			indexFormulaTemplates = new String[1];
-			indexFormulas = new String[1];
-			indexColumnIsSettable = new boolean[] { true };
+			// TODO: Deal with multiple columns/formulas
+			indexColumnAliases = new String[ 1 ];
+			indexColumnNames = new String[ 1 ];
+			indexColumnIsSettable = new boolean[ 1 ];
+			indexFormulaTemplates = new String[ 1 ];
+			indexFormulas = new String[ 1 ];
+			Value value = indexBinding.getIndexRelationalValue();
+			indexColumnAliases[ 0 ] = value.getAlias( dialect );
+			if ( value instanceof Column ) {
+				indexColumnIsSettable[ 0 ] = true;
+				Column column = ( Column ) value;
+				indexColumnNames[ 0 ] = column.getColumnName().encloseInQuotesIfQuoted( dialect );
+			} else {
+				DerivedValue derivedValue = ( DerivedValue ) value;
+				indexFormulaTemplates[ 0 ] = getTemplateFromString( derivedValue.getExpression(), factory);
+				indexFormulas[ 0 ] = derivedValue.getExpression();
+			}
 		} else {
 			indexColumnIsSettable = null;
 			indexFormulaTemplates = null;

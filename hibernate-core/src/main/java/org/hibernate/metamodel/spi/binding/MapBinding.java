@@ -29,12 +29,11 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 /**
  *
  */
-public class ListBinding extends AbstractPluralAttributeBinding implements IndexedPluralAttributeBinding {
+public class MapBinding extends AbstractPluralAttributeBinding implements IndexedPluralAttributeBinding {
 
 	private final PluralAttributeIndexBinding pluralAttributeIndexBinding;
-	private final int base;
 
-	public ListBinding(
+	public MapBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
 			PluralAttributeElementNature pluralAttributeElementNature,
@@ -42,8 +41,7 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean isLazy,
-			MetaAttributeContext metaAttributeContext,
-			int base ) {
+			MetaAttributeContext metaAttributeContext ) {
 		super(
 				container,
 				attribute,
@@ -54,11 +52,6 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 				isLazy,
 				metaAttributeContext );
 		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this );
-		this.base = base;
-	}
-
-	public int base() {
-		return base;
 	}
 
 	/**
@@ -70,4 +63,5 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 	public PluralAttributeIndexBinding getPluralAttributeIndexBinding() {
 		return pluralAttributeIndexBinding;
 	}
+
 }

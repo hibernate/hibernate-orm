@@ -25,8 +25,10 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.ElementCollection;
@@ -41,15 +43,16 @@ import javax.persistence.Id;
 public class EntityWithBasicCollections {
 	private Long id;
 	private String name;
-	private Collection<String> theBag = new ArrayList<String>();
-	private Set<String> theSet = new HashSet<String>();
-	private Set<Integer> thePropertyRefSet = new HashSet<Integer>();
-	private List<String> theList = new ArrayList<String>();
+	private Collection< String > theBag = new ArrayList< String >();
+	private Set< String > theSet = new HashSet< String >();
+	private Set< Integer > thePropertyRefSet = new HashSet< Integer >();
+	private List< String > theList = new ArrayList< String >();
+	private Map< String, String > theMap = new HashMap< String, String >();
 
 	public EntityWithBasicCollections() {
 	}
 
-	public EntityWithBasicCollections(String name) {
+	public EntityWithBasicCollections( String name ) {
 		this.name = name;
 	}
 
@@ -58,7 +61,7 @@ public class EntityWithBasicCollections {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId( Long id ) {
 		this.id = id;
 	}
 
@@ -66,43 +69,52 @@ public class EntityWithBasicCollections {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName( String name ) {
 		this.name = name;
 	}
 
 	@ElementCollection
-	public Collection<String> getTheBag() {
+	public Collection< String > getTheBag() {
 		return theBag;
 	}
 
-	public void setTheBag(Collection<String> theBag) {
+	public void setTheBag( Collection< String > theBag ) {
 		this.theBag = theBag;
 	}
 
 	@ElementCollection
-	public Set<String> getTheSet() {
+	public Set< String > getTheSet() {
 		return theSet;
 	}
 
-	public void setTheSet(Set<String> theSet) {
+	public void setTheSet( Set< String > theSet ) {
 		this.theSet = theSet;
 	}
 
 	@ElementCollection
-	public Set<Integer> getThePropertyRefSet() {
+	public Set< Integer > getThePropertyRefSet() {
 		return thePropertyRefSet;
 	}
 
-	public void setThePropertyRefSet(Set<Integer> thePropertyRefSet) {
+	public void setThePropertyRefSet( Set< Integer > thePropertyRefSet ) {
 		this.thePropertyRefSet = thePropertyRefSet;
 	}
 
 	@ElementCollection
-	public List<String> getTheList() {
+	public List< String > getTheList() {
 		return theList;
 	}
 
-	public void setTheList(List<String> theList) {
+	public void setTheList( List< String > theList ) {
 		this.theList = theList;
+	}
+
+	@ElementCollection
+	public Map< String, String > getTheMap() {
+		return theMap;
+	}
+
+	public void setTheMap( Map< String, String > theMap ) {
+		this.theMap = theMap;
 	}
 }

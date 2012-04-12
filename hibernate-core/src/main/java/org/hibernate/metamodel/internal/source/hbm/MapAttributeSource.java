@@ -23,44 +23,47 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement.JaxbMapKey;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 
 /**
  *
  */
-public class ListAttributeSourceImpl extends AbstractPluralAttributeSourceImpl {
+public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
 
-	private final PluralAttributeIndexSource indexSource;
+	private final MapAttributeIndexSource indexSource;
 
 	/**
 	 * @param sourceMappingDocument
-	 * @param listElement
+	 * @param pluralAttributeElement
 	 * @param container
 	 */
-	public ListAttributeSourceImpl(
+	public MapAttributeSource(
 			MappingDocument sourceMappingDocument,
-			JaxbListElement listElement,
+			JaxbMapElement mapElement,
 			AttributeSourceContainer container ) {
-		super( sourceMappingDocument, listElement, container );
-		JaxbListIndexElement listIndexElement = listElement.getListIndex();
-		if ( listIndexElement == null ) {
-			this.indexSource = new PluralAttributeIndexSourceImpl( sourceMappingDocument(), listElement.getIndex(), container );
+		super( sourceMappingDocument, mapElement, container );
+		JaxbMapKey mapKey = mapElement.getMapKey();
+		if ( mapKey == null ) {
+			throw new NotYetImplementedException(
+					"<map-key-many-to-many>, <composite-map-key>, <index>, <composite-index>, <index-many-to-many>, and <index-many-to-any>" );
 		} else {
-			this.indexSource = new PluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement, container );
+			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument(), mapKey );
 		}
 	}
 
-	public PluralAttributeIndexSource getIndexSource() {
+	@Override
+	public MapAttributeIndexSource getIndexSource() {
 		return indexSource;
 	}
 
 	@Override
-	public JaxbListElement getPluralAttributeElement() {
-		return ( JaxbListElement ) super.getPluralAttributeElement();
+	public JaxbMapElement getPluralAttributeElement() {
+		return ( JaxbMapElement ) super.getPluralAttributeElement();
 	}
 
 	/**
@@ -70,6 +73,6 @@ public class ListAttributeSourceImpl extends AbstractPluralAttributeSourceImpl {
 	 */
 	@Override
 	public PluralAttributeNature getPluralAttributeNature() {
-		return PluralAttributeNature.LIST;
+		return PluralAttributeNature.MAP;
 	}
 }

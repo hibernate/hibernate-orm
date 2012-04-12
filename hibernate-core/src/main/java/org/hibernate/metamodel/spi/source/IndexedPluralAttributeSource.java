@@ -26,7 +26,7 @@ package org.hibernate.metamodel.spi.source;
 /**
  *
  */
-public interface PluralAttributeIndexSource extends RelationalValueSourceContainer {
+public interface IndexedPluralAttributeSource extends PluralAttributeSource {
 
-	ExplicitHibernateTypeSource explicitHibernateTypeSource();
+	PluralAttributeIndexSource getIndexSource();
 }

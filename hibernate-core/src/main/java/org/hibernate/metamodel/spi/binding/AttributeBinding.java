@@ -77,9 +77,5 @@ public interface AttributeBinding {
 
 	public boolean isLazy();
 
-	public void addEntityReferencingAttributeBinding(SingularAssociationAttributeBinding attributeBinding);
-
-	public Set<SingularAssociationAttributeBinding> getEntityReferencingAttributeBindings();
-
 	public void validate();
 }

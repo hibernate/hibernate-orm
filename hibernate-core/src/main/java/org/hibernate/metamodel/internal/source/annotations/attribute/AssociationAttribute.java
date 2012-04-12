@@ -71,12 +71,13 @@ public class AssociationAttribute extends MappedAttribute {
 	private boolean isUpdatable = true;
 	private AttributeTypeResolver resolver;
 
-	public static AssociationAttribute createAssociationAttribute(String name,
-																  Class<?> attributeType,
-																  AttributeNature attributeNature,
-																  String accessType,
-																  Map<DotName, List<AnnotationInstance>> annotations,
-																  EntityBindingContext context) {
+	public static AssociationAttribute createAssociationAttribute(
+			String name,
+			Class<?> attributeType,
+			AttributeNature attributeNature,
+			String accessType,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
 		return new AssociationAttribute(
 				name,
 				attributeType,
@@ -87,12 +88,13 @@ public class AssociationAttribute extends MappedAttribute {
 		);
 	}
 
-	AssociationAttribute(String name,
-						 Class<?> javaType,
-						 AttributeNature attributeNature,
-						 String accessType,
-						 Map<DotName, List<AnnotationInstance>> annotations,
-						 EntityBindingContext context) {
+	AssociationAttribute(
+			String name,
+			Class<?> javaType,
+			AttributeNature attributeNature,
+			String accessType,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
 		super( name, javaType, attributeNature, accessType, annotations, context );
 		this.ignoreNotFound = ignoreNotFound();
 

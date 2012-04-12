@@ -120,7 +120,7 @@ public interface AttributeBindingContainer {
 	 * @param includedInOptimisticLocking
 	 * @param lazy
 	 * @param metaAttributeContext
-	 * @param referencedAttributeBinding
+	 * @param referencedEntityBinding
 	 * @param valueBindings
 	 *
 	 * @return The attribute binding instance.
@@ -131,7 +131,7 @@ public interface AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			SingularAttributeBinding referencedAttributeBinding,
+			EntityBinding referencedEntityBinding,
 			List<RelationalValueBinding> valueBindings);
 
 	/**

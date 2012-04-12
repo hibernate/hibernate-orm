@@ -55,7 +55,7 @@ public abstract class AbstractConstraint implements Constraint {
 		return name;
 	}
 
-	public Iterable<Column> getColumns() {
+	public List<Column> getColumns() {
 		return columns;
 	}
 

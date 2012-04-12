@@ -23,13 +23,20 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+
+import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
@@ -62,8 +69,65 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
-	public String getReferencedEntityAttributeName() {
-		return associationAttribute.getMappedBy();
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		// Column does not (yet?) deal with formulas at all...
+		//
+		// not sure how to handle "mixed" cases either.  what happens if some @JoinColumns name
+		// a column, but others do not?  For now, lets just throw an error in those cases
+		int alternateColumnReferences = 0;
+		for ( Column column : associationAttribute.getColumnValues() ) {
+			if ( column.getReferencedColumnName() != null ) {
+				alternateColumnReferences++;
+			}
+		}
+		if ( alternateColumnReferences == 0 ) {
+			return null;
+		}
+		else {
+			if ( alternateColumnReferences != associationAttribute.getColumnValues().size() ) {
+				throw associationAttribute.getContext().makeMappingException(
+						"Encountered multiple JoinColumns mixing primary-target-columns and alternate-target-columns"
+				);
+			}
+			return new JoinColumnResolutionDelegate() {
+				private final String logicalJoinTableName = resolveLogicalJoinTableName();
+
+				@Override
+				public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+					final List<Value> values = new ArrayList<Value>();
+					for ( Column column : associationAttribute.getColumnValues() ) {
+						values.add(
+								context.resolveColumn(
+										column.getReferencedColumnName(),
+										logicalJoinTableName,
+										null,
+										null
+								)
+						);
+					}
+					return values;
+				}
+
+				@Override
+				public String getReferencedAttributeName() {
+					return null;
+				}
+			};
+		}
+	}
+
+	private String resolveLogicalJoinTableName() {
+		final AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+				associationAttribute.annotations(),
+				JPADotNames.JOIN_TABLE
+		);
+
+		if ( joinTableAnnotation != null ) {
+			return JandexHelper.getValue( joinTableAnnotation, "table", String.class );
+		}
+
+		// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...
+		return null;
 	}
 
 	@Override

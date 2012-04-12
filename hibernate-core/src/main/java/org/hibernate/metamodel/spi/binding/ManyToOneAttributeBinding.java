@@ -26,15 +26,12 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -48,9 +45,8 @@ public class ManyToOneAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularAssociationAttributeBinding {
 
+	private final EntityBinding referencedEntityBinding;
 	private final List<RelationalValueBinding> relationalValueBindings;
-
-	private final SingularAttributeBinding referencedAttributeBinding;
 
 	private boolean isLogicalOneToOne;
 
@@ -65,7 +61,7 @@ public class ManyToOneAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			SingularAttributeBinding referencedAttributeBinding,
+			EntityBinding referencedEntityBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
 		super(
 				container,
@@ -75,13 +71,7 @@ public class ManyToOneAttributeBinding
 				lazy,
 				metaAttributeContext
 		);
-		if ( referencedAttributeBinding == null ) {
-			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
-		}
-		if ( ! EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
-			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
-		}
-		this.referencedAttributeBinding = referencedAttributeBinding;
+		this.referencedEntityBinding = referencedEntityBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 		// buildForeignKey();
 	}
@@ -109,19 +99,8 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
-	public final boolean isPropertyReference() {
-		return referencedAttributeBinding !=
-				getReferencedEntityBinding().getHierarchyDetails().getEntityIdentifier().getValueBinding();
-	}
-
-	@Override
 	public final String getReferencedEntityName() {
 		return getReferencedEntityBinding().getEntity().getName();
-	}
-
-	@Override
-	public final String getReferencedAttributeName() {
-		return referencedAttributeBinding.getAttribute().getName();
 	}
 
 	@Override
@@ -190,13 +169,8 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
-	public AttributeBinding getReferencedAttributeBinding() {
-		return referencedAttributeBinding;
-	}
-
-	@Override
 	public final EntityBinding getReferencedEntityBinding() {
-		return (EntityBinding) referencedAttributeBinding.getContainer();
+		return referencedEntityBinding;
 	}
 
 //	public void validate() {

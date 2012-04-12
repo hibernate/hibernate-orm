@@ -31,6 +31,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -263,12 +264,26 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public String getReferencedEntityAttributeName() {
-		return manyToOneElement.getPropertyRef();
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		return manyToOneElement.getPropertyRef() == null
+				? null
+				: new JoinColumnResolutionDelegateImpl();
 	}
 
 	@Override
 	public String getForeignKeyName() {
 		return manyToOneElement.getForeignKey();
+	}
+
+	public class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+		@Override
+		public String getReferencedAttributeName() {
+			return manyToOneElement.getPropertyRef();
+		}
+
+		@Override
+		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			return context.resolveRelationalValuesForAttribute( manyToOneElement.getPropertyRef() );
+		}
 	}
 }

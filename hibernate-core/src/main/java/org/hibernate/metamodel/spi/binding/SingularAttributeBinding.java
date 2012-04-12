@@ -24,10 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
-import java.util.Properties;
 
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**

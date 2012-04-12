@@ -30,17 +30,7 @@ package org.hibernate.metamodel.spi.binding;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"JavaDoc", "UnusedDeclaration"})
-public interface SingularAssociationAttributeBinding
-		extends SingularAttributeBinding, Cascadeable, Fetchable {
-	/**
-	 * Is this association based on a property reference (non PK column(s) as target of FK)?
-	 * <p/>
-	 * Convenience form of checking {@link #getReferencedAttributeName()} for {@code null}.
-	 * 
-	 * @return
-	 */
-	public boolean isPropertyReference();
-
+public interface SingularAssociationAttributeBinding extends SingularAttributeBinding, Cascadeable, Fetchable {
 	/**
 	 * Obtain the name of the referenced entity.
 	 *
@@ -48,8 +38,5 @@ public interface SingularAssociationAttributeBinding
 	 */
 	public String getReferencedEntityName();
 
-	public String getReferencedAttributeName();
-
 	public EntityBinding getReferencedEntityBinding();
-	public AttributeBinding getReferencedAttributeBinding();
 }

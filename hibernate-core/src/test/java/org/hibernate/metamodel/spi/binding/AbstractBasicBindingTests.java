@@ -26,35 +26,34 @@ package org.hibernate.metamodel.spi.binding;
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+
+import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.domain.Attribute;
+import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.BasicType;
-import org.hibernate.metamodel.spi.domain.Entity;
-import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
-import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.JdbcDataType;
-import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -121,17 +120,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		EntityBinding simpleEntityBinding = metadata.getEntityBinding( simpleEntityClassName );
 		assertIdAndSimpleProperty( simpleEntityBinding );
 
-		Set<SingularAssociationAttributeBinding> referenceBindings = simpleEntityBinding.locateAttributeBinding( "id" )
-				.getEntityReferencingAttributeBindings();
-		assertEquals( "There should be only one reference binding", 1, referenceBindings.size() );
-
-		SingularAssociationAttributeBinding referenceBinding = referenceBindings.iterator().next();
-		EntityBinding referencedEntityBinding = referenceBinding.getReferencedEntityBinding();
-		assertSame( "Should be the same entity binding", referencedEntityBinding, simpleEntityBinding );
-		
 		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( EntityWithManyToOnes.class.getName() );
 		AttributeBinding attributeBinding = entityWithManyToOneBinding.locateAttributeBinding( "simpleEntity" );
-		assertSame( referenceBinding,  attributeBinding );
 		checkManyToOneAttributeBinding(
 				metadata,
 				entityWithManyToOneBinding,
@@ -172,15 +162,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				
 		// binding model
 		assertTrue( attributeBinding.isAssociation() );
-		assertTrue(  attributeBinding.getEntityReferencingAttributeBindings().isEmpty() );
 		assertTrue( ManyToOneAttributeBinding.class.isInstance(  attributeBinding ) );
 		ManyToOneAttributeBinding manyToOneAttributeBinding = (ManyToOneAttributeBinding) attributeBinding;
 		assertEquals( referencedEntityName, manyToOneAttributeBinding.getReferencedEntityName() );
 		assertSame( referencedEntityBinding, manyToOneAttributeBinding.getReferencedEntityBinding() );
-		assertEquals(
-				referencedAttributeBinding != referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding(),
-				manyToOneAttributeBinding.isPropertyReference()
-		);
 		assertSame( CascadeStyle.NONE, manyToOneAttributeBinding.getCascadeStyle() );
 		assertTrue( manyToOneAttributeBinding.isLazy() );
 		assertSame( FetchMode.SELECT, manyToOneAttributeBinding.getFetchMode() );

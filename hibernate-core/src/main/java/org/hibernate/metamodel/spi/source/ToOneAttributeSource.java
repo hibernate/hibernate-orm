@@ -29,27 +29,12 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface ToOneAttributeSource
-		extends SingularAttributeSource, FetchableAttributeSource, CascadeStyleSource {
+		extends SingularAttributeSource, ForeignKeyContributingSource, FetchableAttributeSource, CascadeStyleSource {
+
 	/**
 	 * Obtain the name of the referenced entity.
 	 *
 	 * @return The name of the referenced entity
 	 */
 	public String getReferencedEntityName();
-
-	/**
-	 * Obtain the name of the referenced attribute.  Typically the reference is built based on the identifier
-	 * attribute of the {@link #getReferencedEntityName() referenced entity}, but this value allows using a different
-	 * attribute instead.
-	 *
-	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
-	 */
-	public String getReferencedEntityAttributeName();
-
-	/**
-	 * Retrieve the name of the foreign key as supplied by the user, or {@code null} if the user supplied none.
-	 *
-	 * @return The user supplied foreign key name.
-	 */
-	public String getForeignKeyName();
 }

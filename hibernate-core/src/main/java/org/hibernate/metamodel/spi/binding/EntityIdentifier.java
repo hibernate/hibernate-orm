@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -42,7 +44,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
 
-	private BoundType boundType;
+	private List<SingularAttributeBinding> identifierAttributeBindings = new ArrayList<SingularAttributeBinding>();
 
 	private IdGenerator idGenerator;
 	private String unsavedValue;
@@ -50,9 +52,7 @@ public class EntityIdentifier {
 	private Class idClassClass; // the class named in @IdClass
 
 	private IdentifierGenerator identifierGenerator;
-
-	private SingularNonAssociationAttributeBinding attributeBinding;
-	private List<SingularAttributeBinding> nonAggregatedCompositeAttributeBindings;
+	private int columnCount;
 
 	/**
 	 * Create an identifier
@@ -67,13 +67,11 @@ public class EntityIdentifier {
 			SingularNonAssociationAttributeBinding attributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue) {
-		if ( boundType != null ) {
-			throw new IllegalStateException( "Entity identifier was already bound" );
-		}
-		this.boundType = BoundType.SINGLE_ATTRIBUTE;
-		this.attributeBinding = attributeBinding;
+		ensureNotBound();
+		identifierAttributeBindings.add( attributeBinding );
 		this.idGenerator = idGenerator;
 		this.unsavedValue = unsavedValue;
+		this.columnCount = attributeBinding.getRelationalValueBindings().size();
 
 		// Configure primary key in relational model
 		for ( final RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
@@ -81,23 +79,52 @@ public class EntityIdentifier {
 		}
 	}
 
+	private void ensureNotBound() {
+		if ( ! identifierAttributeBindings.isEmpty() ) {
+			throw new IllegalStateException( "Entity identifier was already bound" );
+		}
+	}
+
 	public void bindAsMultipleAttributeIdentifier(
 			List<SingularAttributeBinding> nonAggregatedCompositeAttributeBindings,
 			Class idClassClass) {
-		if ( boundType != null ) {
-			throw new IllegalStateException( "Entity identifier was already bound" );
+		ensureNotBound();
+		for ( SingularAttributeBinding attributeBinding : nonAggregatedCompositeAttributeBindings ) {
+			identifierAttributeBindings.add( attributeBinding );
+			columnCount += attributeBinding.getRelationalValueBindings().size();
+
+			// Configure primary key in relational model
+			for ( final RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
+				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
+			}
 		}
-		this.boundType = BoundType.MULTIPLE_ATTRIBUTE;
-		this.nonAggregatedCompositeAttributeBindings = nonAggregatedCompositeAttributeBindings;
 		this.idClassClass = idClassClass;
 	}
 
-	public SingularNonAssociationAttributeBinding getValueBinding() {
-		return attributeBinding;
+	public boolean isSingleAttribute() {
+		ensureBound();
+		return identifierAttributeBindings.size() == 1;
 	}
 
-	public List<SingularAttributeBinding> getNonAggregatedCompositeAttributeBindings() {
-		return nonAggregatedCompositeAttributeBindings;
+	public List<SingularAttributeBinding> getIdentifierAttributeBindings() {
+		return Collections.unmodifiableList( identifierAttributeBindings );
+	}
+
+	public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+		for ( SingularAttributeBinding identifierAttributeBinding : identifierAttributeBindings ) {
+			if ( identifierAttributeBinding.equals( attributeBinding ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected SingularNonAssociationAttributeBinding getSingleIdentifierAttributeBinding() {
+		if ( ! isSingleAttribute() ) {
+			throw new IllegalStateException( "Entity identifier is made up of multiple attributes" );
+		}
+
+		return (SingularNonAssociationAttributeBinding) identifierAttributeBindings.get( 0 );
 	}
 
 	public String getUnsavedValue() {
@@ -105,7 +132,7 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return boundType == BoundType.SINGLE_ATTRIBUTE && attributeBinding.getRelationalValueBindings().size() > 1;
+		return isSingleAttribute() && columnCount > 1;
 	}
 
 	public Class getIdClassClass() {
@@ -113,25 +140,39 @@ public class EntityIdentifier {
 	}
 
 	public boolean isIdentifierMapper() {
-		// i think
-		return boundType == BoundType.MULTIPLE_ATTRIBUTE && idClassClass != null;
+		// i think this is the intended check for this method
+		return ! isSingleAttribute() && idClassClass != null;
 	}
 
 	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
 	// maybe some sort of visitor pattern here!? (HF)
 	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties) {
-		if ( idGenerator != null ) {
-			identifierGenerator = attributeBinding.createIdentifierGenerator( idGenerator, factory, properties );
+		ensureBound();
+		if ( identifierGenerator == null ) {
+			if ( isSingleAttribute() && idGenerator != null ) {
+				identifierGenerator = getSingleIdentifierAttributeBinding().createIdentifierGenerator(
+						idGenerator,
+						factory,
+						properties
+				);
+			}
 		}
 		return identifierGenerator;
 	}
 
 	public IdentifierGenerator getIdentifierGenerator() {
+		ensureBound();
 		return identifierGenerator;
 	}
 
-	private static enum BoundType {
-		SINGLE_ATTRIBUTE,
-		MULTIPLE_ATTRIBUTE
+	protected void ensureBound() {
+		if ( identifierAttributeBindings.isEmpty() ) {
+			throw new IllegalStateException( "Entity identifier was not yet bound" );
+		}
+	}
+
+	public int getColumnCount() {
+		ensureBound();
+		return columnCount;
 	}
 }

@@ -426,7 +426,7 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateableNaturalIdProperty = false;
 
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == rootEntityIdentifier ) {
+			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				// skip the identifier attribute binding
 				continue;
 			}

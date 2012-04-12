@@ -775,14 +775,11 @@ public abstract class AbstractEntityPersister
 			final SessionFactoryImplementor factory) throws HibernateException {
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		this.isLazyPropertiesCacheable =
-				entityBinding.getHierarchyDetails().getCaching() == null ?
-						false :
-						entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
-		this.cacheEntryStructure =
-				factory.getSettings().isStructuredCacheEntriesEnabled() ?
-						new StructuredCacheEntry(this) :
-						new UnstructuredCacheEntry();
+		this.isLazyPropertiesCacheable = entityBinding.getHierarchyDetails().getCaching() != null
+				&& entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
+		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled()
+				? new StructuredCacheEntry(this)
+				: new UnstructuredCacheEntry();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 		int batch = entityBinding.getBatchSize();
@@ -791,24 +788,20 @@ public abstract class AbstractEntityPersister
 		}
 		batchSize = batch;
 		hasSubselectLoadableCollections = entityBinding.hasSubselectLoadableCollections();
+		rowIdName = entityBinding.getRowId();
+		loaderName = entityBinding.getCustomLoaderName();
 
 		propertyMapping = new BasicEntityPropertyMapping( this );
 
+
 		// IDENTIFIER
 
-		identifierColumnSpan = entityBinding.getHierarchyDetails()
-				.getEntityIdentifier()
-				.getValueBinding()
-				.getRelationalValueBindings()
-				.size();
+		identifierColumnSpan = entityBinding.getHierarchyDetails().getEntityIdentifier().getColumnCount();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
 		identifierAliases = new String[identifierColumnSpan];
 
-		rowIdName = entityBinding.getRowId();
-
-		loaderName = entityBinding.getCustomLoaderName();
 
 		int i = 0;
 		for ( org.hibernate.metamodel.spi.relational.Column col : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
@@ -882,7 +875,7 @@ public abstract class AbstractEntityPersister
 		i = 0;
 		boolean foundFormula = false;
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
+			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}
@@ -985,7 +978,7 @@ public abstract class AbstractEntityPersister
 		List<Boolean> propNullables = new ArrayList<Boolean>();
 
 		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
+			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}

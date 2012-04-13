@@ -20,47 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
- NOTICE: File changed by Wim Ockerman @ CISCO on 2011/10/20
- *         Reasons of change:
- *         1. The EventCache is used during the merging of object graphs
- *            to persisted objects. During this process the EventCache
- *            builds up a map of entities (persistable objects) to
- *            copies (original detached objects or loaded entities).
- *            At certain places in the merge algorithm the inverse relation
- *            is needed, see
- *             ...def.AbstractSaveEventListener.performSaveOrReplicate
- *              -> calling persister.getPropertyValuesToInsert(.., getMergeMap(),..)
- *            The getMergeMap() call calls through this this class' invertMap method.
- *
- *            In the original implementation of invertMap() a map was created on the spot
- *            and all the elements in the entityToCopyMap where put in, now as copy
- *            to entity pair.
- *            Because this action can happen a lot in a big detached graph wile merging, the size
- *            of the entityToCopyMap can become substantial and thus also the creation of the
- *            inverted map.
- *            Tests with large graphs thus showed quadratic loss of performance. From a certain
- *            graph size this became substantial.
- *
- *
- *            As solution an inverseEntitiyToCopyMap (so a copyToEntityMap) is maintained now
- *            along with the changes to the entityToCopyMap.
- *
- *            This made the merge action more linear in terms of performance.
- *
- *            The changes are covered by a new UnitTest.
- *
- *
- *            Changes in the code have preceding comments of format
- *            CHANGE Wim Ockerman <date> [:<comment>]
- *            And end with:
- *            END OF CHANGE
  */
 package org.hibernate.event.internal;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,15 +51,14 @@ import org.hibernate.AssertionFailure;
  * @author Gail Badner
  */
 class EventCache implements Map {
-	private Map entityToCopyMap = new IdentityHashMap(10);
+	private Map<Object,Object> entityToCopyMap = new IdentityHashMap<Object,Object>(10);
 		// key is an entity involved with the operation performed by the listener;
 		// value can be either a copy of the entity or the entity itself
 
-	// CHANGE Wim Ockerman 2011/10/20: maintains the inverse of the entityToCopyMap for performance reasons.
-	private Map copyToEntityMap = new IdentityHashMap( 10 );
-	// END OF CHANGE
+	private Map<Object,Object> copyToEntityMap = new IdentityHashMap<Object,Object>( 10 );
+		// maintains the inverse of the entityToCopyMap for performance reasons.
 
-	private Map entityToOperatedOnFlagMap = new IdentityHashMap( 10 );
+	private Map<Object,Boolean> entityToOperatedOnFlagMap = new IdentityHashMap<Object,Boolean>( 10 );
 	    // key is an entity involved with the operation performed by the listener;
 	    // value is a flag indicating if the listener explicitly operates on the entity
 
@@ -103,11 +67,7 @@ class EventCache implements Map {
 	 */
 	public void clear() {
 		entityToCopyMap.clear();
-		
-		// CHANGE Wim Ockerman 2011/10/20
 		copyToEntityMap.clear();
-		// END OF CHANGE
-		
 		entityToOperatedOnFlagMap.clear();
 	}
 
@@ -134,15 +94,17 @@ class EventCache implements Map {
 		if ( copy == null ) {
 			throw new NullPointerException( "null copies are not supported by " + getClass().getName() );
 		}
-		return entityToCopyMap.containsValue( copy );
+		return copyToEntityMap.containsKey( copy );
 	}
 
 	/**
-	 * Returns a set view of the entity-to-copy mappings contained in this EventCache.
-	 * @return set view of the entity-to-copy mappings contained in this EventCache
+	 * Returns an unmodifiable set view of the entity-to-copy mappings contained in this EventCache.
+	 * @return an unmodifiable set view of the entity-to-copy mappings contained in this EventCache
+	 *
+	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
 	public Set entrySet() {
-		return entityToCopyMap.entrySet();
+		return Collections.unmodifiableSet( entityToCopyMap.entrySet() );
 	}
 
 	/**
@@ -167,11 +129,13 @@ class EventCache implements Map {
 	}
 
 	/**
-	 * Returns a set view of the entities contained in this EventCache
-	 * @return a set view of the entities contained in this EventCache
+	 * Returns an unmodifiable set view of the entities contained in this EventCache
+	 * @return an unmodifiable set view of the entities contained in this EventCache
+	 *
+	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
 	public Set keySet() {
-		return entityToCopyMap.keySet();
+		return Collections.unmodifiableSet( entityToCopyMap.keySet() );
 	}
 
 	/**
@@ -183,14 +147,7 @@ class EventCache implements Map {
 	 * @throws NullPointerException if entity or copy is null
 	 */
 	public Object put(Object entity, Object copy) {
-		if ( entity == null || copy == null ) {
-			throw new NullPointerException( "null entities and copies are not supported by " + getClass().getName() );
-		}
-		entityToOperatedOnFlagMap.put( entity, Boolean.FALSE );
-		// CHANGE Wim Ockerman 2011/10/20
-		copyToEntityMap.put(copy, entity);
-		// END OF CHANGE
-		return entityToCopyMap.put( entity, copy );
+		return put( entity, copy, Boolean.FALSE );
 	}
 
 	/**
@@ -207,11 +164,35 @@ class EventCache implements Map {
 		if ( entity == null || copy == null ) {
 			throw new NullPointerException( "null entities and copies are not supported by " + getClass().getName() );
 		}
-		entityToOperatedOnFlagMap.put( entity, Boolean.valueOf( isOperatedOn ) );
-		// CHANGE Wim Ockerman 2011/10/20
-		copyToEntityMap.put(copy, entity);
-		// END OF CHANGE
-		return entityToCopyMap.put( entity, copy );
+
+		Object oldCopy = entityToCopyMap.put( entity, copy );
+		Boolean oldOperatedOn = entityToOperatedOnFlagMap.put( entity, isOperatedOn );
+		Object oldEntity = copyToEntityMap.put( copy, entity );
+
+		if ( oldCopy == null ) {
+			if  ( oldEntity != null ) {
+				throw new IllegalStateException( "An entity copy is already assigned to a different entity." );
+			}
+			if ( oldOperatedOn != null ) {
+				throw new IllegalStateException( "entityToOperatedOnFlagMap contains an entity, but entityToCopyMap does not." );
+			}
+		}
+		else {
+			if ( oldEntity == null ) {
+				throw new IllegalStateException( "An entity already had a copy in entityToCopyMap, but the specified copy was not in copyToEntityMap." );
+			}
+			if ( oldOperatedOn == null ) {
+				throw new IllegalStateException( "entityToCopyMap contained an entity, but entityToOperatedOnFlagMap did not." );
+			}
+			if ( oldEntity != entity ) {
+				throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
+			}
+			if ( oldCopy != copy ) {
+				throw new IllegalStateException( "An entity was already associated with a copy that is different from the copy provided." );
+			}
+		}
+
+		return oldCopy;
 	}
 
 	/**
@@ -220,16 +201,9 @@ class EventCache implements Map {
 	 * @throws NullPointerException if any map keys or values are null
 	 */
 	public void putAll(Map map) {
-		for ( Iterator it=map.entrySet().iterator(); it.hasNext(); ) {
-			Map.Entry entry = ( Map.Entry ) it.next();
-			if ( entry.getKey() == null || entry.getValue() == null ) {
-				throw new NullPointerException( "null entities and copies are not supported by " + getClass().getName() );
-			}
-			entityToCopyMap.put( entry.getKey(), entry.getValue() );
-			// CHANGE Wim Ockerman 2011/10/20
-			copyToEntityMap.put(entry.getValue(), entry.getKey());
-			// END OF CHANGE
-			entityToOperatedOnFlagMap.put( entry.getKey(), Boolean.FALSE );
+		for ( Object o : map.entrySet() ) {
+			Entry entry = (Entry) o;
+			put( entry.getKey(), entry.getValue() );
 		}
 	}
 
@@ -243,12 +217,28 @@ class EventCache implements Map {
 		if ( entity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
-		entityToOperatedOnFlagMap.remove( entity );
-		// CHANGE Wim Ockerman 2011/10/20
-		Object result = entityToCopyMap.remove( entity ); 
-		copyToEntityMap.remove(result);
-		// END OF CHANGE
-		return result;
+		Boolean oldOperatedOn = entityToOperatedOnFlagMap.remove( entity );
+		Object oldCopy = entityToCopyMap.remove( entity );
+		Object oldEntity = oldCopy != null ? copyToEntityMap.remove( oldCopy ) : null;
+
+		if ( oldCopy == null ) {
+			if ( oldOperatedOn != null ) {
+				throw new IllegalStateException( "Removed entity from entityToOperatedOnFlagMap, but entityToCopyMap did not contain the entity." );
+			}
+		}
+		else {
+			if ( oldEntity == null ) {
+				throw new IllegalStateException( "Removed entity from entityToCopyMap, but copyToEntityMap did not contain the entity." );
+			}
+			if ( oldOperatedOn == null ) {
+				throw new IllegalStateException( "entityToCopyMap contained an entity, but entityToOperatedOnFlagMap did not." );
+			}
+			if ( oldEntity != entity ) {
+				throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
+			}
+		}
+
+		return oldCopy;
 	}
 
 	/**
@@ -260,11 +250,13 @@ class EventCache implements Map {
 	}
 
 	/**
-	 * Returns a collection view of the entity copies contained in this EventCache.
-	 * @return a collection view of the entity copies contained in this EventCache
+	 * Returns an unmodifiable set view of the entity copies contained in this EventCache.
+	 * @return an unmodifiable set view of the entity copies contained in this EventCache
+	 *
+	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
 	public Collection values() {
-		return entityToCopyMap.values();
+		return Collections.unmodifiableCollection( entityToCopyMap.values() );
 	}
 
 	/**
@@ -277,13 +269,12 @@ class EventCache implements Map {
 		if ( entity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
-		return ( ( Boolean ) entityToOperatedOnFlagMap.get( entity ) ).booleanValue();
+		return entityToOperatedOnFlagMap.get( entity );
 	}
 
 	/**
 	 * Set flag to indicate if the listener is performing the operation on the specified entity.
 	 * @param entity must be non-null and this EventCache must contain a mapping for this entity
-	 * @return true if the listener is performing the operation on the specified entity
 	 * @throws NullPointerException if entity is null
 	 * @throws AssertionFailure if this EventCache does not contain a mapping for the specified entity
 	 */
@@ -295,16 +286,16 @@ class EventCache implements Map {
 			! entityToCopyMap.containsKey( entity ) ) {
 			throw new AssertionFailure( "called EventCache.setOperatedOn() for entity not found in EventCache" );
 		}
-		entityToOperatedOnFlagMap.put( entity, Boolean.valueOf( isOperatedOn ) );
+		entityToOperatedOnFlagMap.put( entity, isOperatedOn );
 	}
 
 	/**
-	 * Returns the copy-entity mappings
-	 * @return the copy-entity mappings
+	 * Returns an unmodifiable map view of the copy-entity mappings
+	 * @return an unmodifiable map view of the copy-entity mappings
+	 *
+	 * @see {@link Collections#unmodifiableMap(java.util.Map)}
 	 */
 	public Map invertMap() {
-		// CHANGE Wim Ockerman 2011/10/20
-		return copyToEntityMap;
-		// END OF CHANGE
+		return Collections.unmodifiableMap( copyToEntityMap );
 	}
 }

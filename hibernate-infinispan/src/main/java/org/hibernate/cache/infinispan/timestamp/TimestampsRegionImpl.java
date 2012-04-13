@@ -99,6 +99,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
     * @param event
     */
    @CacheEntryModified
+   @SuppressWarnings("unused")
    public void nodeModified(CacheEntryModifiedEvent event) {
       if (!event.isPre())
          localCache.put(event.getKey(), event.getValue());
@@ -110,6 +111,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
     * @param event
     */
    @CacheEntryRemoved
+   @SuppressWarnings("unused")
    public void nodeRemoved(CacheEntryRemovedEvent event) {
       if (event.isPre()) return;
       localCache.remove(event.getKey());

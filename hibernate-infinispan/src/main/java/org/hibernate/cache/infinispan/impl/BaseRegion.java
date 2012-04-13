@@ -46,7 +46,6 @@ public abstract class BaseRegion implements Region {
       this.transactionManager = transactionManager;
       this.replication = cacheAdapter.isClusteredReplication();
       this.address = this.cacheAdapter.getAddress();
-      this.cacheAdapter.addListener(this);
       this.factory = factory;
    }
 

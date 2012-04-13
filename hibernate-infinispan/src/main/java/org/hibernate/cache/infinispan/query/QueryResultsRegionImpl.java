@@ -4,8 +4,6 @@ import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.infinispan.notifications.Listener;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
@@ -18,7 +16,6 @@ import org.hibernate.cache.spi.RegionFactory;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Listener
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
    private boolean localOnly;
 

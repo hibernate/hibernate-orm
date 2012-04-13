@@ -2,8 +2,6 @@ package org.hibernate.cache.infinispan.collection;
 
 import javax.transaction.TransactionManager;
 
-import org.infinispan.notifications.Listener;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
@@ -19,7 +17,6 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Listener
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
 
    public CollectionRegionImpl(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, 

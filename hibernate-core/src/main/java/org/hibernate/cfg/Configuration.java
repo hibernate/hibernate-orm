@@ -1126,22 +1126,23 @@ public class Configuration implements Serializable {
 		Iterator iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
 				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
 						table.getName(),
-						( table.getSchema() == null ) ? defaultSchema : table.getSchema(),
-						( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog(),
-								table.isQuoted()
-
-					);
+						tableSchema,
+						tableCatalog,
+						table.isQuoted()
+				);
 				if ( tableInfo == null ) {
 					script.add(
 							table.sqlCreateString(
 									dialect,
 									mapping,
-									defaultCatalog,
-									defaultSchema
+									tableCatalog,
+									tableSchema
 								)
 						);
 				}
@@ -1150,8 +1151,8 @@ public class Configuration implements Serializable {
 							dialect,
 							mapping,
 							tableInfo,
-							defaultCatalog,
-							defaultSchema
+							tableCatalog,
+							tableSchema
 						);
 					while ( subiter.hasNext() ) {
 						script.add( subiter.next() );
@@ -1169,12 +1170,14 @@ public class Configuration implements Serializable {
 		iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
 				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
 						table.getName(),
-						table.getSchema(),
-						table.getCatalog(),
+						tableSchema,
+						tableCatalog,
 						table.isQuoted()
 					);
 
@@ -1195,8 +1198,8 @@ public class Configuration implements Serializable {
 										fk.sqlCreateString(
 												dialect,
 												mapping,
-												defaultCatalog,
-												defaultSchema
+												tableCatalog,
+												tableSchema
 											)
 									);
 							}
@@ -1218,8 +1221,8 @@ public class Configuration implements Serializable {
 							index.sqlCreateString(
 									dialect,
 									mapping,
-									defaultCatalog,
-									defaultSchema
+									tableCatalog,
+									tableSchema
 							)
 					);
 				}

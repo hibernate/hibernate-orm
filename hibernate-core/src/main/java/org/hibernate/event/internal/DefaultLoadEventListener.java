@@ -411,13 +411,21 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if ( entity != null ) {
 			if ( traceEnabled ) LOG.tracev( "Resolved object in second-level cache: {0}",
 						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() ) );
-			return entity;
 		}
-
-		if ( traceEnabled ) LOG.tracev( "Object not resolved in any cache: {0}",
+		else {
+			if ( traceEnabled ) LOG.tracev( "Object not resolved in any cache: {0}",
 					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() ) );
 
-		return loadFromDatasource(event, persister, keyToLoad, options);
+			entity = loadFromDatasource(event, persister, keyToLoad, options);
+		}
+		if (entity != null && persister.hasNaturalIdentifier()) {
+			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+					persister,
+					event.getEntityId(),
+					event.getSession().getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( entity, persister )
+			);
+		}
+		return entity;
 	}
 
 	/**
@@ -442,14 +450,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				event.getLockOptions(),
 				source
 		);
-		
-		if (entity != null && persister.hasNaturalIdentifier()) {
-			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
-					persister,
-					event.getEntityId(),
-					source.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( entity, persister )
-			);
-		}
 
 		if ( event.isAssociationFetch() && source.getFactory().getStatistics().isStatisticsEnabled() ) {
 			source.getFactory().getStatisticsImplementor().fetchEntity( event.getEntityClassName() );

@@ -45,7 +45,7 @@ public class ManyToOneAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularAssociationAttributeBinding {
 
-	private final EntityBinding referencedEntityBinding;
+	private final SingularAttributeBinding referencedAttributeBinding;
 	private final List<RelationalValueBinding> relationalValueBindings;
 
 	private boolean isLogicalOneToOne;
@@ -61,7 +61,7 @@ public class ManyToOneAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
 		super(
 				container,
@@ -71,7 +71,7 @@ public class ManyToOneAttributeBinding
 				lazy,
 				metaAttributeContext
 		);
-		this.referencedEntityBinding = referencedEntityBinding;
+		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 		// buildForeignKey();
 	}
@@ -170,7 +170,7 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public final EntityBinding getReferencedEntityBinding() {
-		return referencedEntityBinding;
+		return referencedAttributeBinding.getContainer().seekEntityBinding();
 	}
 
 //	public void validate() {

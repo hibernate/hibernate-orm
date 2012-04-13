@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyElement;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -95,6 +96,23 @@ public class PluralAttributeKeySourceImpl
 	}
 
 	@Override
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		return keyElement.getPropertyRef() == null
+				? null
+				: new JoinColumnResolutionDelegate() {
+			@Override
+			public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+				return context.resolveRelationalValuesForAttribute( keyElement.getPropertyRef() );
+			}
+
+			@Override
+			public String getReferencedAttributeName() {
+				return keyElement.getPropertyRef();
+			}
+		};
+	}
+
+	@Override
 	public ForeignKey.ReferentialAction getOnDeleteAction() {
 		return "cascade".equals( keyElement.getOnDelete() )
 				? ForeignKey.ReferentialAction.CASCADE
@@ -102,7 +120,22 @@ public class PluralAttributeKeySourceImpl
 	}
 
 	@Override
-	public String getReferencedEntityAttributeName() {
-		return keyElement.getPropertyRef();
+	public List<RelationalValueSource> relationalValueSources() {
+		return valueSources;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return false;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return false;
 	}
 }

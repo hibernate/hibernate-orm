@@ -95,21 +95,6 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 	}
 
 	@Override
-	public String getExplicitSchemaName() {
-		return null;
-	}
-
-	@Override
-	public String getExplicitCatalogName() {
-		return null;
-	}
-
-	@Override
-	public String getExplicitCollectionTableName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
 	public String getCollectionTableComment() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}

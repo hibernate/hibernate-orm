@@ -271,7 +271,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public String getForeignKeyName() {
+	public String getExplicitForeignKeyName() {
 		return manyToOneElement.getForeignKey();
 	}
 

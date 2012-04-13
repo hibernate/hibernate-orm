@@ -121,7 +121,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertFalse( fkBagColumnIterator.hasNext() );
 		assertFalse( fkBagSourceColumnIterator.hasNext() );
 		assertSame( entityBinding.getPrimaryTable(), fkBag.getTargetTable() );
-		assertSame( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
+		assertSameElements( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getDeleteRule() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getUpdateRule() );
 		// FK name is null because no default FK name is generated until HHH-7092 is fixed
@@ -170,7 +170,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertFalse( fkSetColumnIterator.hasNext() );
 		assertFalse( fkSetSourceColumnIterator.hasNext() );
 		assertSame( entityBinding.getPrimaryTable(), fkSet.getTargetTable() );
-		assertSame( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
+		assertSameElements( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getDeleteRule() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getUpdateRule() );
 		// FK is null because no default FK name is generated until HHH-7092 is fixed
@@ -259,6 +259,13 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		);
 		assertEquals( PluralAttributeElementNature.BASIC, propertyRefSetBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
 		assertEquals( Integer.class.getName(), propertyRefSetBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
+	}
+
+	protected void assertSameElements(Iterable iterable, Iterable iterable2) {
+		Iterator itr2 = iterable2.iterator();
+		for ( Object it : iterable ) {
+			assertSame( it, itr2.next() );
+		}
 	}
 
 	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {

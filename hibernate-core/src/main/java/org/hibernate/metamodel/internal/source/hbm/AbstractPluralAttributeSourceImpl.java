@@ -157,21 +157,6 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public String getExplicitSchemaName() {
-		return pluralAttributeElement.getSchema();
-	}
-
-	@Override
-	public String getExplicitCatalogName() {
-		return pluralAttributeElement.getCatalog();
-	}
-
-	@Override
-	public String getExplicitCollectionTableName() {
-		return pluralAttributeElement.getTable();
-	}
-
-	@Override
 	public String getCollectionTableComment() {
 		return pluralAttributeElement.getComment();
 	}

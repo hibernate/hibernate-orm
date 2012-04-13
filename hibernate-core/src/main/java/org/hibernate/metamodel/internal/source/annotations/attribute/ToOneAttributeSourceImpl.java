@@ -131,7 +131,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
-	public String getForeignKeyName() {
+	public String getExplicitForeignKeyName() {
 		return null;
 	}
 

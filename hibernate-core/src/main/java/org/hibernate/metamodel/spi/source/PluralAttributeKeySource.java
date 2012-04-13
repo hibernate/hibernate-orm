@@ -28,14 +28,12 @@ import java.util.List;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 
 /**
+ * Describes the source mapping of plural-attribute (collection) foreign-key information.
+ *
  * @author Steve Ebersole
  */
-public interface PluralAttributeKeySource {
+public interface PluralAttributeKeySource extends ForeignKeyContributingSource, RelationalValueSourceContainer {
 	public List<RelationalValueSource> getValueSources();
 
-	public String getExplicitForeignKeyName();
-
 	public ForeignKey.ReferentialAction getOnDeleteAction();
-
-	public String getReferencedEntityAttributeName();
 }

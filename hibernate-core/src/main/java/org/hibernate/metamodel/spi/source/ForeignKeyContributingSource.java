@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.source;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -40,7 +39,7 @@ public interface ForeignKeyContributingSource {
 	 *
 	 * @return The user supplied foreign key name.
 	 */
-	public String getForeignKeyName();
+	public String getExplicitForeignKeyName();
 
 	/**
 	 * Retrieve the delegate for resolving foreign key target columns.  This corresponds directly to
@@ -68,6 +67,12 @@ public interface ForeignKeyContributingSource {
 		 */
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context);
 
+		/**
+		 * Retrieves the explicitly named attribute that maps to the non-PK foreign-key target columns.
+		 *
+		 * @return The explicitly named referenced attribute, or {@code null}.  This most likely always {@code null}
+		 * 		from annotations cases.
+		 */
 		public String getReferencedAttributeName();
 	}
 

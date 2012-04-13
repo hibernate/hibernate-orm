@@ -531,7 +531,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
 				this,
@@ -540,7 +540,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				includedInOptimisticLocking,
 				lazy,
 				metaAttributeContext,
-				referencedEntityBinding,
+				referencedAttributeBinding,
 				valueBindings
 		);
 		registerAttributeBinding( attribute.getName(), binding );

@@ -101,7 +101,7 @@ public class PluralAttributeKeyBinding {
 	public void prepareForeignKey(
 			String foreignKeyName,
 			TableSpecification collectionTable,
-			TableSpecification targetTable) {
+			TableSpecification ownerTable) {
 		if ( foreignKey != null ) {
 			throw new AssertionFailure( "Foreign key already initialized" );
 		}
@@ -116,7 +116,7 @@ public class PluralAttributeKeyBinding {
 			}
 		}
 
-		foreignKey = collectionTable.createForeignKey( targetTable, foreignKeyName );
+		foreignKey = collectionTable.createForeignKey( ownerTable, foreignKeyName );
 	}
 
 }

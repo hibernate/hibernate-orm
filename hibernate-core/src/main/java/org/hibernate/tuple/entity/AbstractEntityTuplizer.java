@@ -642,6 +642,15 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				: propertyPath;
 		}
 		index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
+		if ( index == null ) {
+			throw new HibernateException(
+					String.format(
+							"Unable to properly resolve property path [%s] on entity [%s]",
+							propertyPath,
+							getEntityName()
+					)
+			);
+		}
 		final Object baseValue = getPropertyValue( entity, index.intValue() );
 		if ( loc > 0 ) {
 			if ( baseValue == null ) {

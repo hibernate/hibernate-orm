@@ -24,8 +24,10 @@
 package org.hibernate.envers.test.integration.data;
 
 import java.util.Arrays;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -43,6 +45,15 @@ public class Lobs extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(LobTestEntity.class);
+    }
+
+    @Override
+    public void addConfigurationProperties(Properties configuration) {
+        super.addConfigurationProperties(configuration);
+        if (getDialect() instanceof PostgreSQL82Dialect) {
+            // In PostgreSQL LOBs cannot be used in auto-commit mode.
+            configuration.setProperty("hibernate.connection.autocommit", "false");
+        }
     }
 
     @Test

@@ -1,9 +1,10 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -11,6 +12,7 @@ import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -21,7 +23,6 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
 
     @Override
     public void configure(Ejb3Configuration cfg) {
-        cfg.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
@@ -69,7 +70,7 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("x", steId1);
         StrTestEntity ste2 = new StrTestEntity("y", steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(1));
+        Assert.assertEquals(TestTools.makeSet(ste1, ste2), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(1)));
     }
 
     @Test
@@ -77,14 +78,14 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("z", steId1);
         StrTestEntity ste2 = new StrTestEntity(null, steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(2));
+        Assert.assertEquals(TestTools.makeSet(ste1, ste2), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(2)));
     }
 
     @Test
     public void testTrackUpdateAndRemoveTheSameEntity() {
         StrTestEntity ste1 = new StrTestEntity(null, steId1);
 
-        assert Arrays.asList(ste1).equals(getCrossTypeRevisionChangesReader().findEntities(3));
+        Assert.assertEquals(TestTools.makeSet(ste1), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(3)));
     }
 
     private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() {

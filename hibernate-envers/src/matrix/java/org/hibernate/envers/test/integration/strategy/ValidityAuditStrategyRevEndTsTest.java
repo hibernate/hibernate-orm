@@ -39,6 +39,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.enhanced.DefaultRevisionEntity;
@@ -111,8 +112,9 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 						"CREATE TABLE children_AUD(REV integer NOT NULL, REVEND integer, "
 								+ revendTimestampColumName + " "
 								+ (getDialect() instanceof SQLServerDialect ? "datetime" : "timestamp")
-								+ ", REVTYPE " + (getDialect() instanceof Oracle8iDialect ? "number(3,0)" : "tinyint") + ", "
-								+ "parent_id integer, child1_id integer NULL, child2_id integer NULL)")
+								+ ", REVTYPE " + (getDialect() instanceof Oracle8iDialect ? "number(3,0)"
+								: (getDialect() instanceof PostgreSQL82Dialect ? "smallint" : "tinyint"))
+								+ ", parent_id integer, child1_id integer NULL, child2_id integer NULL)")
 				.executeUpdate();
 		em.getTransaction().commit();
 		em.clear();

@@ -56,6 +56,7 @@ public class ManualFlush extends AbstractFlushTest {
 
         StrTestEntity fe = new StrTestEntity("x");
         em.persist(fe);
+        em.flush();
 
         em.getTransaction().commit();
 

@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -15,6 +16,7 @@ import org.hibernate.envers.Audited;
 @Audited
 public class Person implements Serializable {
     @Id
+    @Column(name = "PERSON_ID")
     @GeneratedValue
     private Long personId;
 

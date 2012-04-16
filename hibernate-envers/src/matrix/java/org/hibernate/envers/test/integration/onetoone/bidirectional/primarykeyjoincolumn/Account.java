@@ -1,12 +1,15 @@
 package org.hibernate.envers.test.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.envers.Audited;
 
 /**
@@ -16,13 +19,16 @@ import org.hibernate.envers.Audited;
 @Audited
 public class Account implements Serializable {
     @Id
-    @GeneratedValue
+    @Column(name = "ACCOUNT_ID")
+    @GeneratedValue(generator = "AccountForeignKeyGenerator")
+    @GenericGenerator(name = "AccountForeignKeyGenerator", strategy = "foreign",
+                      parameters = {@Parameter(name = "property", value = "owner")})
     private Long accountId;
 
     private String type;
 
     @OneToOne(optional = false)
-    @PrimaryKeyJoinColumn
+    @PrimaryKeyJoinColumn(name = "ACCOUNT_ID", referencedColumnName = "PERSON_ID")
     private Person owner;
 
     public Account() {

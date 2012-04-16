@@ -42,10 +42,9 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
-//        Setting this property causes manual flush tests failures
-//        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
         config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
-		addProperties(config);
+        addProperties(config);
 
         this.initMappings();
 

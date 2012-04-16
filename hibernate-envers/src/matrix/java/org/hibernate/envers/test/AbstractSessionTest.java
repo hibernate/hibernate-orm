@@ -41,9 +41,8 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
         config = new Configuration();
 		if ( createSchema() ) {
 			config.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-//            Setting this property causes manual flush tests failures
-//            config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-            config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+			config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+			config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
 		}
         String auditStrategy = getAuditStrategy();
         if (auditStrategy != null && !"".equals(auditStrategy)) {

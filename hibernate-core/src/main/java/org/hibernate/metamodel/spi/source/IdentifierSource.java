@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 
 /**
@@ -43,34 +44,12 @@ public interface IdentifierSource {
      */
     IdGenerator getIdentifierGeneratorDescriptor();
 
-    public static enum Nature {
-		/**
-		 * A single, simple identifier.  Equivalent of an {@code <id/>} mapping or a single {@code @Id}
-		 * annotation.  Indicates the {@link IdentifierSource} is castable to {@link SimpleIdentifierSource}.
-		 */
-		SIMPLE,
-
-		/**
-		 * What we used to term an "embedded composite identifier", which is not to be confused with the JPA
-		 * term embedded.  Specifically a composite id where there is no component class (though there may be an
-		 * {@code @IdClass}).  Indicates that the {@link IdentifierSource} is castable to
-		 * {@link NonAggregatedCompositeIdentifierSource}
-		 */
-		COMPOSITE,
-
-		/**
-		 * Composite identifier with an actual component class used to aggregate the individual attributes.  Indicates
-		 * that the {@link IdentifierSource} is castable to {@link AggregatedCompositeIdentifierSource}
-		 */
-		AGGREGATED_COMPOSITE
-	}
-
 	/**
 	 * Obtain the nature of this identifier source.
 	 *
 	 * @return The identifier source's nature.
 	 */
-	public Nature getNature();
+	public EntityIdentifierNature getNature();
 
 	/**
 	 *  Returns the "unsaved" entity identifier value.
@@ -80,4 +59,6 @@ public interface IdentifierSource {
 	 *  @return the "unsaved" entity identifier value
 	 */
 	public String getUnsavedValue();
+
+	public Iterable<MetaAttributeSource> getMetaAttributeSources();
 }

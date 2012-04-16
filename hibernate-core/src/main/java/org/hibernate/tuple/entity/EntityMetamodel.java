@@ -390,7 +390,9 @@ public class EntityMetamodel implements Serializable {
 		boolean hasLazy = false;
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		SingularNonAssociationAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+		SingularNonAssociationAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getAttributeBinding();
 		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
 		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
 		propertySpan = rootEntityIdentifier == null ?

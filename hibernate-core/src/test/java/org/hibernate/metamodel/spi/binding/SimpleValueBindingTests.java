@@ -92,7 +92,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 
-		entityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+		entityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsSimpleIdentifier(
 				attributeBinding,
 				new IdGenerator( "assigned", "assigned", Collections.<String,String>emptyMap() ),
 				"null"

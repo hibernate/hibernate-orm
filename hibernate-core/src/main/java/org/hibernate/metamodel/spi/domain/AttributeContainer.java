@@ -43,6 +43,13 @@ public interface AttributeContainer extends Type {
 	public String getRoleBaseName();
 
 	/**
+	 * Retrieve the attributes contained in this container.
+	 *
+	 * @return The contained attributes
+	 */
+	public Set<Attribute> attributes();
+
+	/**
 	 * Retrieve an attribute by name.
 	 *
 	 * @param name The name of the attribute to retrieve.
@@ -50,33 +57,21 @@ public interface AttributeContainer extends Type {
 	 * @return The attribute matching the given name, or null.
 	 */
 	public Attribute locateAttribute(String name);
-
-	/**
-	 * Retrieve the attributes contained in this container.
-	 *
-	 * @return The contained attributes
-	 */
-	public Set<Attribute> attributes();
-
 	public SingularAttribute locateSingularAttribute(String name);
-	public SingularAttribute createSingularAttribute(String name);
-	public SingularAttribute createVirtualSingularAttribute(String name);
-
 	public SingularAttribute locateCompositeAttribute(String name);
-	public SingularAttribute createCompositeAttribute(String name, Composite composite);
-
 	public PluralAttribute locatePluralAttribute(String name);
-
 	public PluralAttribute locateBag(String name);
-	public PluralAttribute createBag(String name);
-
 	public PluralAttribute locateSet(String name);
-	public PluralAttribute createSet(String name);
-
 	public IndexedPluralAttribute locateList(String name);
-	public IndexedPluralAttribute createList(String name);
-
 	public IndexedPluralAttribute locateMap(String name);
+
+	public SingularAttribute createSingularAttribute(String name);
+	public SingularAttribute createCompositeAttribute(String name, Composite composite);
+	public PluralAttribute createBag(String name);
+	public PluralAttribute createSet(String name);
+	public IndexedPluralAttribute createList(String name);
 	public IndexedPluralAttribute createMap(String name);
 
+	public SingularAttribute createSyntheticSingularAttribute(String name);
+	public SingularAttribute createSyntheticCompositeAttribute(String name, Hierarchical container);
 }

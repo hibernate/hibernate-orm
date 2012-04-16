@@ -111,7 +111,7 @@ public class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
 
-		final SingularAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+		final SingularAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.

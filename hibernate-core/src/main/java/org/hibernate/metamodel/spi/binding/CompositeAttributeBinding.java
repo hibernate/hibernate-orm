@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +49,7 @@ public class CompositeAttributeBinding
 		implements SingularNonAssociationAttributeBinding, AttributeBindingContainer {
 	private final String path;
 	private final SingularAttribute parentReference;
-	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Map<String, AttributeBinding> attributeBindingMap;
 
 	public CompositeAttributeBinding(
 			AttributeBindingContainer container,
@@ -58,6 +59,45 @@ public class CompositeAttributeBinding
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttribute parentReference) {
+		this(
+				container,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				metaAttributeContext,
+				parentReference,
+				null
+		);
+	}
+
+	public CompositeAttributeBinding(
+			AttributeBindingContainer container,
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			MetaAttributeContext metaAttributeContext,
+			List<SingularAttributeBinding> subAttributeBindings) {
+		this(
+				container,
+				attribute,
+				propertyAccessorName,
+				false,
+				false,
+				metaAttributeContext,
+				null,
+				subAttributeBindings
+		);
+	}
+
+	private CompositeAttributeBinding(
+			AttributeBindingContainer container,
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			MetaAttributeContext metaAttributeContext,
+			SingularAttribute parentReference,
+			List<SingularAttributeBinding> subAttributeBindings) {
 		super(
 				container,
 				attribute,
@@ -66,8 +106,20 @@ public class CompositeAttributeBinding
 				lazy,
 				metaAttributeContext
 		);
+
 		this.parentReference = parentReference;
 		this.path = container.getPathBase() + '.' + attribute.getName();
+
+		if ( subAttributeBindings == null ) {
+			attributeBindingMap = new HashMap<String, AttributeBinding>();
+		}
+		else {
+			HashMap<String, AttributeBinding> map = new HashMap<String, AttributeBinding>();
+			for ( SingularAttributeBinding attributeBinding : subAttributeBindings ) {
+				attributeBindingMap.put( attributeBinding.getAttribute().getName(), attributeBinding );
+			}
+			attributeBindingMap = Collections.unmodifiableMap( map );
+		}
 	}
 
 	@Override

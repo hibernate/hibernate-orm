@@ -31,19 +31,19 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 public enum IdType {
 	/**
 	 * single @Id annotation.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#SIMPLE}
+	 * {@link org.hibernate.id.EntityIdentifierNature#SIMPLE}
 	 */
 	SIMPLE,
 
 	/**
 	 * multiple @Id annotations.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#COMPOSITE}
+	 * {@link org.hibernate.id.EntityIdentifierNature#COMPOSITE}
 	 */
 	COMPOSED,
 
 	/**
 	 * Indicates encountered {@code @EmbeddedId} annotation.  Corresponds to
-	 * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#AGGREGATED_COMPOSITE}
+	 * {@link org.hibernate.id.EntityIdentifierNature#AGGREGATED_COMPOSITE}
 	 */
 	//
 	EMBEDDED,

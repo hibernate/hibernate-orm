@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 
@@ -44,6 +43,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	private final String className;
 	private final Value<Class<?>> classReference;
 	private final Hierarchical superType;
+
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
@@ -100,41 +100,13 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public SingularAttribute createSingularAttribute(String name) {
-		SingularAttribute attribute = new SingularAttributeImpl( name, this );
-		addAttribute( attribute );
-		return attribute;
-	}
-
-	@Override
-	public SingularAttribute createVirtualSingularAttribute(String name) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
 	public SingularAttribute locateCompositeAttribute(String name) {
 		return (SingularAttributeImpl) locateAttribute( name );
 	}
 
 	@Override
-	public SingularAttribute createCompositeAttribute(String name, Composite composite) {
-		SingularAttributeImpl attribute = new SingularAttributeImpl( name, this );
-		attribute.resolveType( composite );
-		addAttribute( attribute );
-		return attribute;
-	}
-
-	@Override
 	public PluralAttribute locatePluralAttribute(String name) {
 		return (PluralAttribute) locateAttribute( name );
-	}
-
-	protected PluralAttribute createPluralAttribute(String name, PluralAttributeNature nature) {
-		PluralAttribute attribute = nature.isIndexed()
-				? new IndexedPluralAttributeImpl( name, nature, this )
-				: new PluralAttributeImpl( name, nature, this );
-		addAttribute( attribute );
-		return attribute;
 	}
 
 	@Override
@@ -143,18 +115,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public PluralAttribute createBag(String name) {
-		return createPluralAttribute( name, PluralAttributeNature.BAG );
-	}
-
-	@Override
 	public PluralAttribute locateSet(String name) {
 		return locatePluralAttribute( name );
-	}
-
-	@Override
-	public PluralAttribute createSet(String name) {
-		return createPluralAttribute( name, PluralAttributeNature.SET );
 	}
 
 	@Override
@@ -163,18 +125,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public IndexedPluralAttribute createList(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.LIST );
-	}
-
-	@Override
 	public IndexedPluralAttribute locateMap(String name) {
 		return (IndexedPluralAttribute) locatePluralAttribute( name );
-	}
-
-	@Override
-	public IndexedPluralAttribute createMap(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.MAP );
 	}
 
 	@Override
@@ -187,8 +139,66 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		return sb.toString();
 	}
 
+
+	@Override
+	public SingularAttribute createSyntheticSingularAttribute(String name) {
+		SingularAttribute attribute = new SingularAttributeImpl( this, name, true );
+		addAttribute( attribute );
+		return attribute;
+	}
+
+	@Override
+	public SingularAttribute createSyntheticCompositeAttribute(String name, Hierarchical type) {
+		SingularAttributeImpl attribute = new SingularAttributeImpl( this, name, true );
+		attribute.resolveType( type );
+		addAttribute( attribute );
+		return attribute;
+	}
+
+	@Override
+	public SingularAttribute createSingularAttribute(String name) {
+		SingularAttribute attribute = new SingularAttributeImpl( this, name, false );
+		addAttribute( attribute );
+		return attribute;
+	}
+
+	@Override
+	public SingularAttribute createCompositeAttribute(String name, Composite composite) {
+		SingularAttributeImpl attribute = new SingularAttributeImpl( this, name, false );
+		attribute.resolveType( composite );
+		addAttribute( attribute );
+		return attribute;
+	}
+
+	@Override
+	public PluralAttribute createBag(String name) {
+		return createPluralAttribute( name, PluralAttributeNature.BAG );
+	}
+
+	protected PluralAttribute createPluralAttribute(String name, PluralAttributeNature nature) {
+		PluralAttribute attribute = nature.isIndexed()
+				? new IndexedPluralAttributeImpl( this, name, nature )
+				: new PluralAttributeImpl( this, name, nature );
+		addAttribute( attribute );
+		return attribute;
+	}
+
+	@Override
+	public PluralAttribute createSet(String name) {
+		return createPluralAttribute( name, PluralAttributeNature.SET );
+	}
+
+	@Override
+	public IndexedPluralAttribute createList(String name) {
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.LIST );
+	}
+
+	@Override
+	public IndexedPluralAttribute createMap(String name) {
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.MAP );
+	}
+
 	protected void addAttribute(Attribute attribute) {
-		// todo : how to best "secure" this?
 		if ( attributeMap.put( attribute.getName(), attribute ) != null ) {
 			throw new IllegalArgumentException( "Attribute with name [" + attribute.getName() + "] already registered" );
 		}
@@ -200,11 +210,13 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class SingularAttributeImpl implements SingularAttribute {
 		private final AttributeContainer attributeContainer;
 		private final String name;
+		private final boolean synthetic;
 		private Type type;
 
-		public SingularAttributeImpl(String name, AttributeContainer attributeContainer) {
-			this.name = name;
+		public SingularAttributeImpl(AttributeContainer attributeContainer, String name, boolean synthetic) {
 			this.attributeContainer = attributeContainer;
+			this.name = name;
+			this.synthetic = synthetic;
 		}
 
 		public boolean isTypeResolved() {
@@ -237,6 +249,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		public boolean isSingular() {
 			return true;
 		}
+
+		@Override
+		public boolean isSynthetic() {
+			return synthetic;
+		}
 	}
 
 	public static class PluralAttributeImpl implements PluralAttribute {
@@ -246,10 +263,10 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 		private Type elementType;
 
-		public PluralAttributeImpl(String name, PluralAttributeNature nature, AttributeContainer attributeContainer) {
+		public PluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature nature) {
+			this.attributeContainer = attributeContainer;
 			this.name = name;
 			this.nature = nature;
-			this.attributeContainer = attributeContainer;
 		}
 
 		@Override
@@ -259,6 +276,12 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 		@Override
 		public boolean isSingular() {
+			return false;
+		}
+
+		@Override
+		public boolean isSynthetic() {
+			// don't think there are ever any synthetic plural attributes created...
 			return false;
 		}
 
@@ -291,8 +314,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class IndexedPluralAttributeImpl extends PluralAttributeImpl implements IndexedPluralAttribute {
 		private Type indexType;
 
-		public IndexedPluralAttributeImpl(String name, PluralAttributeNature nature, AttributeContainer attributeContainer) {
-			super( name, nature, attributeContainer );
+		public IndexedPluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature nature) {
+			super( attributeContainer, name, nature );
 		}
 
 		@Override

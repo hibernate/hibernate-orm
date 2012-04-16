@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
@@ -39,6 +41,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -106,7 +109,6 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
-import org.hibernate.metamodel.spi.source.IdentifierSource.Nature;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -143,7 +145,8 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
@@ -438,7 +441,8 @@ public class Binder {
 		if ( !attribute.isTypeResolved() ) {
 			attribute.resolveType( referencedEntityBinding.getEntity() );
 		}
-		final boolean isRefToPk = referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() == referencedAttributeBinding;
+		final boolean isRefToPk = referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
+				.isIdentifierAttributeBinding( referencedAttributeBinding );
 		final String uniqueKeyAttributeName = isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
 		Type resolvedType = metadata.getTypeResolver().getTypeFactory().manyToOne(
 				attributeBinding.getReferencedEntityName(),
@@ -999,7 +1003,7 @@ public class Binder {
 	}
 
 	private void bindIdentifier( final EntityBinding rootEntityBinding, final IdentifierSource identifierSource ) {
-		final Nature nature = identifierSource.getNature();
+		final EntityIdentifierNature nature = identifierSource.getNature();
 		switch ( nature ) {
 			case SIMPLE: {
 				bindSimpleIdentifier( rootEntityBinding, ( SimpleIdentifierSource ) identifierSource );
@@ -1035,7 +1039,7 @@ public class Binder {
 		// determine the unsaved value mapping
 		final String unsavedValue = interpretIdentifierUnsavedValue( identifierSource, generator );
 
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsSimpleIdentifier(
 				idAttributeBinding,
 				generator,
 				unsavedValue
@@ -1060,7 +1064,7 @@ public class Binder {
 		// determine the unsaved value mapping
 		final String unsavedValue = interpretIdentifierUnsavedValue( identifierSource, generator );
 
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsSingleAttributeIdentifier(
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsAggregatedCompositeIdentifier(
 				idAttributeBinding,
 				generator,
 				unsavedValue
@@ -1070,7 +1074,7 @@ public class Binder {
 	private void bindNonAggregatedCompositeIdentifier(
 			EntityBinding rootEntityBinding,
 			NonAggregatedCompositeIdentifierSource identifierSource) {
-		// locate the attribute bindings
+		// locate the attribute bindings for the real attributes
 		List<SingularAttributeBinding> idAttributeBindings = new ArrayList<SingularAttributeBinding>();
 		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
 			idAttributeBindings.add(
@@ -1078,8 +1082,21 @@ public class Binder {
 			);
 		}
 
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().bindAsMultipleAttributeIdentifier(
+		// Create the synthetic attribute
+		SingularAttribute syntheticAttribute = rootEntityBinding.getEntity().createSyntheticCompositeAttribute(
+				SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME,
+				rootEntityBinding.getEntity()
+		);
+
+		// Create the synthetic attribute binding.
+		final CompositeAttributeBinding syntheticAttributeBinding = rootEntityBinding.makeVirtualComponentAttributeBinding(
+				syntheticAttribute,
 				idAttributeBindings,
+				createMetaAttributeContext( rootEntityBinding, identifierSource.getMetaAttributeSources() )
+		);
+
+		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsNonAggregatedCompositeIdentifier(
+				syntheticAttributeBinding,
 				identifierSource.getLookupIdClass()
 		);
 	}
@@ -1150,13 +1167,8 @@ public class Binder {
 			AttributeBindingContainer sourceAttributeBindingContainer,
 			EntityBinding referencedEntityBinding,
 			ForeignKey foreignKey) {
-		// todo : currently only works for simple and embedded identifiers...
 		if ( resolutionDelegate == null ) {
-			// this needs to change when I integrate HHH-7240 in
-			if ( referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() == null ) {
-				throw new NotYetImplementedException( "reference to non-aggregated composite identifier not yet supported" );
-			}
-			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
@@ -1480,9 +1492,19 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource ) {
 		return createMetaAttributeContext(
-				attributeSource.metaAttributes(),
+				attributeBindingContainer,
+				attributeSource.metaAttributes()
+		);
+	}
+
+	private MetaAttributeContext createMetaAttributeContext(
+			final AttributeBindingContainer attributeBindingContainer,
+			final Iterable<MetaAttributeSource> metaAttributeSources ) {
+		return createMetaAttributeContext(
+				metaAttributeSources,
 				false,
-				attributeBindingContainer.getMetaAttributeContext() );
+				attributeBindingContainer.getMetaAttributeContext()
+		);
 	}
 
 	private MetaAttributeContext createMetaAttributeContext(
@@ -1553,7 +1575,7 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource ) {
 		return attributeSource.isVirtualAttribute()
-				? attributeBindingContainer.getAttributeContainer().createVirtualSingularAttribute( attributeSource.getName() )
+				? attributeBindingContainer.getAttributeContainer().createSyntheticSingularAttribute( attributeSource.getName() )
 				: attributeBindingContainer.getAttributeContainer().createSingularAttribute( attributeSource.getName() );
 	}
 
@@ -1666,13 +1688,8 @@ public class Binder {
 		final ForeignKeyContributingSource.JoinColumnResolutionDelegate resolutionDelegate =
 				attributeSource.getKeySource().getForeignKeyTargetColumnResolutionDelegate();
 
-		// todo : currently only works for simple and embedded identifiers...
 		if ( resolutionDelegate == null ) {
-			// this needs to change when I integrate HHH-7240 in
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() == null ) {
-				throw new NotYetImplementedException( "reference to non-aggregated composite identifier not yet supported" );
-			}
-			return entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+			return entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();

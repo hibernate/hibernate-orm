@@ -23,14 +23,17 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.relational.Column;
+
+import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 
 /**
  * Hold information about the entity identifier.  At a high-level, can be one of 2-types:<ul>
@@ -43,8 +46,9 @@ import org.hibernate.metamodel.spi.relational.Column;
  */
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
+	private EntityIdentifierNature nature;
 
-	private List<SingularAttributeBinding> identifierAttributeBindings = new ArrayList<SingularAttributeBinding>();
+	private SingularNonAssociationAttributeBinding identifierAttributeBinding;
 
 	private IdGenerator idGenerator;
 	private String unsavedValue;
@@ -63,12 +67,29 @@ public class EntityIdentifier {
 		this.entityBinding = entityBinding;
 	}
 
-	public void bindAsSingleAttributeIdentifier(
+	public void prepareAsSimpleIdentifier(
+			SingularNonAssociationAttributeBinding attributeBinding,
+			IdGenerator idGenerator,
+			String unsavedValue) {
+		prepareAsSingleAttributeIdentifier( SIMPLE, attributeBinding, idGenerator, unsavedValue );
+	}
+
+	public void prepareAsAggregatedCompositeIdentifier(
+			SingularNonAssociationAttributeBinding attributeBinding,
+			IdGenerator idGenerator,
+			String unsavedValue) {
+		prepareAsSingleAttributeIdentifier( AGGREGATED_COMPOSITE, attributeBinding, idGenerator, unsavedValue );
+	}
+
+	protected void prepareAsSingleAttributeIdentifier(
+			EntityIdentifierNature nature,
 			SingularNonAssociationAttributeBinding attributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue) {
 		ensureNotBound();
-		identifierAttributeBindings.add( attributeBinding );
+
+		this.nature = nature;
+		this.identifierAttributeBinding = attributeBinding;
 		this.idGenerator = idGenerator;
 		this.unsavedValue = unsavedValue;
 		this.columnCount = attributeBinding.getRelationalValueBindings().size();
@@ -79,52 +100,57 @@ public class EntityIdentifier {
 		}
 	}
 
-	private void ensureNotBound() {
-		if ( ! identifierAttributeBindings.isEmpty() ) {
-			throw new IllegalStateException( "Entity identifier was already bound" );
-		}
-	}
-
-	public void bindAsMultipleAttributeIdentifier(
-			List<SingularAttributeBinding> nonAggregatedCompositeAttributeBindings,
+	public void prepareAsNonAggregatedCompositeIdentifier(
+			CompositeAttributeBinding syntheticCompositeAttributeBinding,
 			Class idClassClass) {
 		ensureNotBound();
-		for ( SingularAttributeBinding attributeBinding : nonAggregatedCompositeAttributeBindings ) {
-			identifierAttributeBindings.add( attributeBinding );
-			columnCount += attributeBinding.getRelationalValueBindings().size();
+
+		this.nature = COMPOSITE;
+		this.identifierAttributeBinding = syntheticCompositeAttributeBinding;
+		this.idClassClass = idClassClass;
+
+		for ( AttributeBinding attributeBinding : syntheticCompositeAttributeBinding.attributeBindings() ) {
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				throw new AssertionFailure( "Expecting all singular attribute bindings as part of composite identifier" );
+			}
+			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			columnCount += singularAttributeBinding.getRelationalValueBindings().size();
 
 			// Configure primary key in relational model
-			for ( final RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
+			for ( final RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
 				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
 			}
 		}
-		this.idClassClass = idClassClass;
+	}
+
+	public EntityIdentifierNature getNature() {
+		return nature;
 	}
 
 	public boolean isSingleAttribute() {
 		ensureBound();
-		return identifierAttributeBindings.size() == 1;
+		return getNature() != COMPOSITE;
 	}
 
-	public List<SingularAttributeBinding> getIdentifierAttributeBindings() {
-		return Collections.unmodifiableList( identifierAttributeBindings );
+	public SingularNonAssociationAttributeBinding getAttributeBinding() {
+		ensureBound();
+		return identifierAttributeBinding;
 	}
 
 	public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
-		for ( SingularAttributeBinding identifierAttributeBinding : identifierAttributeBindings ) {
-			if ( identifierAttributeBinding.equals( attributeBinding ) ) {
-				return true;
+		ensureBound();
+		if ( getNature() == COMPOSITE ) {
+			for ( AttributeBinding identifierAttributeBinding
+					: ( (CompositeAttributeBinding) this.identifierAttributeBinding ).attributeBindings() ) {
+				if ( identifierAttributeBinding.equals( attributeBinding ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
-	}
-
-	protected SingularNonAssociationAttributeBinding getSingleIdentifierAttributeBinding() {
-		if ( ! isSingleAttribute() ) {
-			throw new IllegalStateException( "Entity identifier is made up of multiple attributes" );
+		else {
+			return identifierAttributeBinding.equals( attributeBinding );
 		}
-
-		return (SingularNonAssociationAttributeBinding) identifierAttributeBindings.get( 0 );
 	}
 
 	public String getUnsavedValue() {
@@ -150,7 +176,7 @@ public class EntityIdentifier {
 		ensureBound();
 		if ( identifierGenerator == null ) {
 			if ( isSingleAttribute() && idGenerator != null ) {
-				identifierGenerator = getSingleIdentifierAttributeBinding().createIdentifierGenerator(
+				identifierGenerator = identifierAttributeBinding.createIdentifierGenerator(
 						idGenerator,
 						factory,
 						properties
@@ -166,9 +192,19 @@ public class EntityIdentifier {
 	}
 
 	protected void ensureBound() {
-		if ( identifierAttributeBindings.isEmpty() ) {
+		if ( ! isBound() ) {
 			throw new IllegalStateException( "Entity identifier was not yet bound" );
 		}
+	}
+
+	protected void ensureNotBound() {
+		if ( isBound() ) {
+			throw new IllegalStateException( "Entity identifier was already bound" );
+		}
+	}
+
+	protected boolean isBound() {
+		return nature != null;
 	}
 
 	public int getColumnCount() {

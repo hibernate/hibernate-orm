@@ -52,4 +52,13 @@ public interface Attribute {
 	 * @return True if attribute is singular; false if plural.
 	 */
 	public boolean isSingular();
+
+	/**
+	 * Synthetic attributes do not really exist in the users domain classes.  Hibernate sometimes generates these
+	 * synthetic attributes for various reasons.  Some parts of the code base use the phrase "virtual" as well.
+	 *
+	 * @return {@code true} indicates this attribute is synthetic; {@code false} indicates it is non-synthetic
+	 * (an actual attribute).
+	 */
+	public boolean isSynthetic();
 }

@@ -31,6 +31,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TruthValue;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
@@ -282,13 +284,18 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Nature getNature() {
-			return Nature.SIMPLE;
+		public EntityIdentifierNature getNature() {
+			return EntityIdentifierNature.SIMPLE;
 		}
 
 		@Override
 		public String getUnsavedValue() {
 			return entityElement().getId().getUnsavedValue();
+		}
+
+		@Override
+		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
 		}
 	}
 
@@ -327,13 +334,18 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Nature getNature() {
-			return Nature.AGGREGATED_COMPOSITE;
+		public EntityIdentifierNature getNature() {
+			return EntityIdentifierNature.AGGREGATED_COMPOSITE;
 		}
 
 		@Override
 		public String getUnsavedValue() {
 			return entityElement().getCompositeId().getUnsavedValue();
+		}
+
+		@Override
+		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
 		}
 	}
 
@@ -486,13 +498,18 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Nature getNature() {
-			return Nature.COMPOSITE;
+		public EntityIdentifierNature getNature() {
+			return EntityIdentifierNature.COMPOSITE;
 		}
 
 		@Override
 		public String getUnsavedValue() {
 			return entityElement().getCompositeId().getUnsavedValue();
+		}
+
+		@Override
+		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
 		}
 	}
 }

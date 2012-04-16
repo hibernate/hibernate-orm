@@ -25,7 +25,7 @@ package org.hibernate.metamodel.spi.source;
 
 /**
  * Additional contract describing the source of an identifier mapping whose {@link #getNature() nature} is
- * {@link IdentifierSource.Nature#AGGREGATED_COMPOSITE aggregated-composite}.  This equates to an identifier which is
+ * {@link org.hibernate.id.EntityIdentifierNature#AGGREGATED_COMPOSITE aggregated-composite}.  This equates to an identifier which is
  * made up of multiple values which are defined as part of a component/embedded.
  *
  * @author Strong Liu

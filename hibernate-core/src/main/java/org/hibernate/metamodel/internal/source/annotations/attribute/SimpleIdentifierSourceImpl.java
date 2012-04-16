@@ -26,7 +26,9 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
@@ -51,8 +53,8 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.SIMPLE;
+	public EntityIdentifierNature getNature() {
+		return EntityIdentifierNature.SIMPLE;
 	}
 
 	@Override
@@ -67,6 +69,11 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 
 	@Override
 	public String getUnsavedValue() {
+		return null;
+	}
+
+	@Override
+	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
 		return null;
 	}
 }

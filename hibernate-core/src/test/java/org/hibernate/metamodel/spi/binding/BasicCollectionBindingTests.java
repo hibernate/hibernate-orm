@@ -127,7 +127,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		// FK name is null because no default FK name is generated until HHH-7092 is fixed
 		assertNull( fkBag.getName() );
 		checkEquals(
-				entityIdentifier.getValueBinding().getHibernateTypeDescriptor(),
+				entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
 				bagKeyBinding.getHibernateTypeDescriptor()
 		);
 		assertEquals( 0, bagCollectionTable.getPrimaryKey().getColumnSpan() );
@@ -176,7 +176,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		// FK is null because no default FK name is generated until HHH-7092 is fixed
 		assertNull( fkSet.getName() );
 		checkEquals(
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().getHibernateTypeDescriptor(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getHibernateTypeDescriptor(),
 				setKeyBinding.getHibernateTypeDescriptor()
 		);
 		assertFalse( setKeyBinding.isInverse() );

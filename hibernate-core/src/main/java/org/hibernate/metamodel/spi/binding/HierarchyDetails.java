@@ -35,7 +35,6 @@ public class HierarchyDetails {
 	private final EntityMode entityMode;
 
 	private final EntityIdentifier entityIdentifier;
-
 	private EntityDiscriminator entityDiscriminator;
 
 	private OptimisticLockStyle optimisticLockStyle;

@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * Additional contract describing the source of an identifier mapping whose {@link #getNature() nature} is
- * {@link org.hibernate.metamodel.spi.source.IdentifierSource.Nature#SIMPLE simple}.
+ * {@link org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
  *
  * @author Steve Ebersole
  */

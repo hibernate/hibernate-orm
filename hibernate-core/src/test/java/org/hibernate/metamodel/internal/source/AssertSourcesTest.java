@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source;
 import java.util.Iterator;
 
 import org.hibernate.EntityMode;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
@@ -116,7 +117,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		IdentifierSource identifierSource = entitySource.getIdentifierSource();
 		assertNotNull( identifierSource );
-		assertEquals( IdentifierSource.Nature.SIMPLE, identifierSource.getNature() );
+		assertEquals( EntityIdentifierNature.SIMPLE, identifierSource.getNature() );
 		SimpleIdentifierSource simpleIdentifierSource = (SimpleIdentifierSource) identifierSource;
 		SingularAttributeSource identifierAttributeSource = simpleIdentifierSource.getIdentifierAttributeSource();
 		assertEquals( "id", identifierAttributeSource.getName() );

@@ -39,6 +39,10 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
  * @author Steve Ebersole
  */
 public final class PropertyAccessorFactory {
+	public static final String BASIC_ACCESSOR_NAME = "property";
+	public static final String FIELD_ACCESSOR_NAME = "field";
+	public static final String EMBEDDED_ACCESSOR_NAME = "embedded";
+	public static final String NOOP_ACCESSOR_NAME = "noop";
 
 	private static final PropertyAccessor BASIC_PROPERTY_ACCESSOR = new BasicPropertyAccessor();
 	private static final PropertyAccessor DIRECT_PROPERTY_ACCESSOR = new DirectPropertyAccessor();
@@ -110,16 +114,16 @@ public final class PropertyAccessorFactory {
 	 * @return An appropriate accessor.
 	 */
 	private static PropertyAccessor getPojoPropertyAccessor(String pojoAccessorStrategy) {
-		if ( StringHelper.isEmpty( pojoAccessorStrategy ) || "property".equals( pojoAccessorStrategy ) ) {
+		if ( StringHelper.isEmpty( pojoAccessorStrategy ) || BASIC_ACCESSOR_NAME.equals( pojoAccessorStrategy ) ) {
 			return BASIC_PROPERTY_ACCESSOR;
 		}
-		else if ( "field".equals( pojoAccessorStrategy ) ) {
+		else if ( FIELD_ACCESSOR_NAME.equals( pojoAccessorStrategy ) ) {
 			return DIRECT_PROPERTY_ACCESSOR;
 		}
-		else if ( "embedded".equals( pojoAccessorStrategy ) ) {
+		else if ( EMBEDDED_ACCESSOR_NAME.equals( pojoAccessorStrategy ) ) {
 			return EMBEDDED_PROPERTY_ACCESSOR;
 		}
-		else if ( "noop".equals(pojoAccessorStrategy) ) {
+		else if ( NOOP_ACCESSOR_NAME.equals( pojoAccessorStrategy ) ) {
 			return NOOP_ACCESSOR;
 		}
 		else {
@@ -157,11 +161,19 @@ public final class PropertyAccessorFactory {
 
 	// todo : this eventually needs to be removed
 	public static PropertyAccessor getPropertyAccessor(String type) throws MappingException {
-		if ( type==null || "property".equals(type) ) return BASIC_PROPERTY_ACCESSOR;
-		if ( "field".equals(type) ) return DIRECT_PROPERTY_ACCESSOR;
+		if ( type==null || BASIC_ACCESSOR_NAME.equals(type) ) {
+			return BASIC_PROPERTY_ACCESSOR;
+		}
+		if ( FIELD_ACCESSOR_NAME.equals(type) ) {
+			return DIRECT_PROPERTY_ACCESSOR;
+		}
 		if ( "map".equals(type) ) return MAP_ACCESSOR;
-		if ( "embedded".equals(type) ) return EMBEDDED_PROPERTY_ACCESSOR;
-		if ( "noop".equals(type)) return NOOP_ACCESSOR;
+		if ( EMBEDDED_ACCESSOR_NAME.equals(type) ) {
+			return EMBEDDED_PROPERTY_ACCESSOR;
+		}
+		if ( NOOP_ACCESSOR_NAME.equals(type) ) {
+			return NOOP_ACCESSOR;
+		}
 
 		return resolveCustomAccessor(type);
 	}

@@ -539,10 +539,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
-		return entityBinding
-				.getHierarchyDetails()
-				.getEntityIdentifier()
-				.getValueBinding()
+		return entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
 				.getHibernateTypeDescriptor()
 				.getResolvedTypeMapping();
 	}
@@ -553,7 +550,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
-		AttributeBinding idBinding = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+		AttributeBinding idBinding = entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		return idBinding == null ? null : idBinding.getAttribute().getName();
 	}
 

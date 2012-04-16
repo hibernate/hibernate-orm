@@ -46,6 +46,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -524,6 +525,26 @@ public class EntityBinding implements AttributeBindingContainer {
 		return binding;
 	}
 
+	public CompositeAttributeBinding makeVirtualComponentAttributeBinding(
+			SingularAttribute syntheticAttribute,
+			List<SingularAttributeBinding> subAttributeBindings,
+			MetaAttributeContext metaAttributeContext) {
+		if ( ! syntheticAttribute.isSynthetic() ) {
+			throw new AssertionFailure(
+					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
+			);
+		}
+		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
+				this,
+				syntheticAttribute,
+				PropertyAccessorFactory.EMBEDDED_ACCESSOR_NAME,
+				metaAttributeContext,
+				subAttributeBindings
+		);
+		registerAttributeBinding( syntheticAttribute.getName(), binding );
+		return binding;
+	}
+
 	@Override
 	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,
@@ -714,5 +735,4 @@ public class EntityBinding implements AttributeBindingContainer {
     public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
         return jpaCallbackClasses;
     }
-
 }

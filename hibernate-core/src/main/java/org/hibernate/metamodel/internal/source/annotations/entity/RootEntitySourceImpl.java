@@ -32,8 +32,8 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
@@ -48,6 +48,7 @@ import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -161,7 +162,9 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 				);
 			}
 
-			final EmbeddableClass embeddableClass = rootEntitySource.getEntityClass().getEmbeddedClasses().get( idAttribute.getName() );
+			final EmbeddableClass embeddableClass = rootEntitySource.getEntityClass().getEmbeddedClasses().get(
+					idAttribute.getName()
+			);
 			if ( embeddableClass == null ) {
 				throw rootEntitySource.getLocalBindingContext().makeMappingException(
 						"Could not locate embedded identifier class metadata"
@@ -191,13 +194,18 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		}
 
 		@Override
-		public Nature getNature() {
-			return Nature.AGGREGATED_COMPOSITE;
+		public EntityIdentifierNature getNature() {
+			return EntityIdentifierNature.AGGREGATED_COMPOSITE;
 		}
 
 		@Override
 		public String getUnsavedValue() {
 			return null;
+		}
+
+		@Override
+		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}
 
@@ -245,17 +253,20 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		}
 
 		@Override
-		public Nature getNature() {
-			return Nature.COMPOSITE;
+		public EntityIdentifierNature getNature() {
+			return EntityIdentifierNature.COMPOSITE;
 		}
 
 		@Override
 		public String getUnsavedValue() {
 			return null;
 		}
+
+		@Override
+		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
 	}
-
-
 
 }
 

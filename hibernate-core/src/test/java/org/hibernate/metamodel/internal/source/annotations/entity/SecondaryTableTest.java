@@ -29,12 +29,18 @@ import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Table;
 
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -63,6 +69,12 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 		assertEquals( 1, table.values().size() );
 		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 0 );
 		assertEquals( "Wrong column name", "name", column.getColumnName().getName() );
+
+		BasicAttributeBinding nameAttrBinding = (BasicAttributeBinding) binding.locateAttributeBinding( "name" );
+		assertEquals( 1, nameAttrBinding.getRelationalValueBindings().size() );
+		RelationalValueBinding valueBinding = nameAttrBinding.getRelationalValueBindings().get( 0 );
+		assertFalse( valueBinding.isDerived() );
+		assertSame( table, valueBinding.getValue().getTable() );
 	}
 
 	@Test

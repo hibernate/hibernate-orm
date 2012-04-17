@@ -1206,28 +1206,90 @@ public class Binder {
 
 	private void bindSecondaryTables( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		final TableSpecification primaryTable = entityBinding.getPrimaryTable();
+		int position = 0;
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
-			// todo: really need a concept like SecondaryTableSource in the binding model as well
-			// so that EntityBinding can know the proper foreign key to use to build SQL statements.
-			ForeignKey foreignKey = createOrLocateForeignKey( secondaryTableSource.getForeignKeyName(), table, primaryTable );
-			for ( final PrimaryKeyJoinColumnSource joinColumnSource : secondaryTableSource.getJoinColumns() ) {
-				// todo : currently we only support columns here, not formulas
+			final ForeignKey foreignKey = createOrLocateForeignKey( secondaryTableSource.getExplicitForeignKeyName(), table, primaryTable );
+
+			final List<Column> fkTargetColumns = determineForeignKeyTargetColumns( entityBinding, secondaryTableSource );
+			final List<ColumnSource> pkColumnSources = secondaryTableSource.getPrimaryKeyColumnSources();
+
+			if ( fkTargetColumns.size() != pkColumnSources.size() ) {
+				throw bindingContext().makeMappingException(
+						String.format(
+								"Non-matching number columns in secondary table primary key [%s : %s] and primary table [%s : %s]",
+								table.getLogicalName().getName(),
+								pkColumnSources.size(),
+								primaryTable.getLogicalName().getName(),
+								fkTargetColumns.size()
+						)
+				);
+			}
+
+			for ( final ColumnSource joinColumnSource : pkColumnSources ) {
 				// todo : apply naming strategy to infer missing column name
-				Column column = table.locateColumn( joinColumnSource.getColumnName() );
+				Column column = table.locateColumn( joinColumnSource.getName() );
 				if ( column == null ) {
-					column = table.createColumn( joinColumnSource.getColumnName() );
-					if ( joinColumnSource.getColumnDefinition() != null ) {
-						column.setSqlType( joinColumnSource.getColumnDefinition() );
+					column = table.createColumn( joinColumnSource.getName() );
+					if ( joinColumnSource.getSqlType() != null ) {
+						column.setSqlType( joinColumnSource.getSqlType() );
 					}
 				}
-				if ( joinColumnSource.getReferencedColumnName() == null ) {
-					foreignKey.addColumn( column );
-				} else {
-					foreignKey.addColumnMapping( column, primaryTable.locateColumn( joinColumnSource.getReferencedColumnName() ) );
-				}
+
+				foreignKey.addColumnMapping( column, fkTargetColumns.get( position++ ) );
 			}
 			entityBinding.addSecondaryTable( new SecondaryTable( table, foreignKey ) );
+		}
+	}
+
+	private List<Column> determineForeignKeyTargetColumns(
+			final EntityBinding entityBinding,
+			ForeignKeyContributingSource foreignKeyContributingSource) {
+		final ForeignKeyContributingSource.JoinColumnResolutionDelegate fkColumnResolutionDelegate =
+				foreignKeyContributingSource.getForeignKeyTargetColumnResolutionDelegate();
+
+		if ( fkColumnResolutionDelegate == null ) {
+			return entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
+		}
+		else {
+			final List<Column> columns = new ArrayList<Column>();
+			final ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext = new ForeignKeyContributingSource.JoinColumnResolutionContext() {
+				@Override
+				public List<Value> resolveRelationalValuesForAttribute(String attributeName) {
+					final AttributeBinding referencedAttributeBinding = entityBinding.locateAttributeBinding( attributeName );
+					if ( referencedAttributeBinding == null ) {
+						throw bindingContext().makeMappingException(
+								String.format(
+										"Could not resolve named property-ref [%s] against entity [%s]",
+										attributeName,
+										entityBinding.getEntity().getName()
+								)
+						);
+					}
+					return null;  //To change body of implemented methods use File | Settings | File Templates.
+				}
+
+				@Override
+				public Column resolveColumn(
+						String logicalColumnName,
+						String logicalTableName,
+						String logicalSchemaName,
+						String logicalCatalogName) {
+					// ignore table, schema, catalog name
+					Column column = entityBinding.getPrimaryTable().locateColumn( logicalColumnName );
+					if ( column == null ) {
+						entityBinding.getPrimaryTable().createColumn( logicalColumnName );
+					}
+					return column;
+				}
+			};
+			for ( Value relationalValue : fkColumnResolutionDelegate.getJoinColumns( resolutionContext ) ) {
+				if ( ! Column.class.isInstance( relationalValue ) ) {
+					throw bindingContext().makeMappingException( "Foreign keys can currently only name columns, not formulas" );
+				}
+				columns.add( (Column) relationalValue );
+			}
+			return columns;
 		}
 	}
 

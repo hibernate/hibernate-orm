@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface SecondaryTableSource {
+public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	/**
 	 * Obtain the table being joined to.
 	 *
@@ -37,16 +37,11 @@ public interface SecondaryTableSource {
 	public TableSpecificationSource getTableSource();
 
 	/**
-	 * Retrieves the columns used to define the foreign key back to the entity table.
-	 * 
-	 * @return The columns used to define the foreign key for this secondary table
-	 */
-	public List<PrimaryKeyJoinColumnSource> getJoinColumns();
-
-	/**
-	 * Retrieve any user-specified foreign key name.
+	 * Retrieves the columns defines as making up this secondary tables primary key.  Each entry should have
+	 * a corresponding entry in the foreign-key columns described by the {@link ForeignKeyContributingSource}
+	 * aspect of this contract.
 	 *
-	 * @return The user-specified foreign key name, or {@code null} if the user did not specify.
+	 * @return The columns defining the primary key for this secondary table
 	 */
-	public String getForeignKeyName();
+	public List<ColumnSource> getPrimaryKeyColumnSources();
 }

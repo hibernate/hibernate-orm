@@ -26,10 +26,11 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinElement;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -40,60 +41,56 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements SecondaryTableSource {
 	private final JaxbJoinElement joinElement;
 	private final TableSpecificationSource joinTable;
-	private final List<PrimaryKeyJoinColumnSource> joinColumns;
+	private final List<ColumnSource> columnSources;
+	private final JoinColumnResolutionDelegate fkJoinColumnResolutionDelegate;
 
+	@SuppressWarnings("unchecked")
 	public SecondaryTableSourceImpl(
 			MappingDocument sourceMappingDocument,
-			JaxbJoinElement joinElement,
+			final JaxbJoinElement joinElement,
 			Helper.InLineViewNameInferrer inLineViewNameInferrer) {
 		super( sourceMappingDocument );
 		this.joinElement = joinElement;
 		this.joinTable = Helper.createTableSource( sourceMappingDocument(), joinElement, inLineViewNameInferrer );
 
-		joinColumns = new ArrayList<PrimaryKeyJoinColumnSource>();
-		if ( joinElement.getKey().getColumnAttribute() != null ) {
-			if ( joinElement.getKey().getColumn().size() > 0 ) {
-				throw makeMappingException( "<join/> defined both column attribute and nested <column/>" );
-			}
-			joinColumns.add(
-					new PrimaryKeyJoinColumnSource() {
-						@Override
-						public String getColumnName() {
-							return SecondaryTableSourceImpl.this.joinElement.getKey().getColumnAttribute();
-						}
+		// the cast is ok here because the adapter should never be returning formulas since the schema does not allow it
+		this.columnSources = extractColumnSources();
 
-						@Override
-						public String getReferencedColumnName() {
-							return null;
-						}
+		fkJoinColumnResolutionDelegate = joinElement.getKey().getPropertyRef() == null
+				? null
+				: new JoinColumnResolutionDelegateImpl( joinElement );
+	}
 
-						@Override
-						public String getColumnDefinition() {
-							return null;
-						}
+	private List<ColumnSource> extractColumnSources() {
+		final List<ColumnSource> columnSources = new ArrayList<ColumnSource>();
+		final List<RelationalValueSource> valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
+				new Helper.ValueSourcesAdapter() {
+					@Override
+					public String getContainingTableName() {
+						return joinElement.getTable();
 					}
-			);
-		}
-		for ( final JaxbColumnElement columnElement : joinElement.getKey().getColumn() ) {
-			joinColumns.add(
-					new PrimaryKeyJoinColumnSource() {
-						@Override
-						public String getColumnName() {
-							return columnElement.getName();
-						}
 
-						@Override
-						public String getReferencedColumnName() {
-							return null;
-						}
-
-						@Override
-						public String getColumnDefinition() {
-							return columnElement.getSqlType();
-						}
+					@Override
+					public String getColumnAttribute() {
+						return joinElement.getKey().getColumnAttribute();
 					}
-			);
+
+					@Override
+					public List getColumnOrFormulaElements() {
+						return joinElement.getKey().getColumn();
+					}
+
+					@Override
+					public boolean isForceNotNull() {
+						return true;
+					}
+				}
+		);
+		for ( RelationalValueSource valueSource : valueSources ) {
+			columnSources.add( (ColumnSource) valueSource );
 		}
+		return columnSources;
 	}
 
 	@Override
@@ -102,18 +99,41 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	}
 
 	@Override
-	public String getForeignKeyName() {
+	public List<ColumnSource> getPrimaryKeyColumnSources() {
+		return columnSources;
+	}
+
+	@Override
+	public String getExplicitForeignKeyName() {
 		return joinElement.getKey().getForeignKey();
 	}
 
 	@Override
-	public List<PrimaryKeyJoinColumnSource> getJoinColumns() {
-		return joinColumns;
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		return fkJoinColumnResolutionDelegate;
 	}
 
 	public String getLogicalTableNameForContainedColumns() {
 		return TableSource.class.isInstance( joinTable )
 				? ( (TableSource) joinTable ).getExplicitTableName()
 				: ( (InLineViewSource) joinTable ).getLogicalName();
+	}
+
+	private static class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+		private final JaxbJoinElement joinElement;
+
+		public JoinColumnResolutionDelegateImpl(JaxbJoinElement joinElement) {
+			this.joinElement = joinElement;
+		}
+
+		@Override
+		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			return context.resolveRelationalValuesForAttribute( getReferencedAttributeName() );
+		}
+
+		@Override
+		public String getReferencedAttributeName() {
+			return joinElement.getKey().getPropertyRef();
+		}
 	}
 }

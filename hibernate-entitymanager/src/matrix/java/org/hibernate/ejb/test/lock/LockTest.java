@@ -34,6 +34,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.LockTimeoutException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PessimisticLockException;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
 
@@ -45,7 +47,12 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -83,7 +90,59 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7252" )
+//	@FailureExpected( jiraKey = "HHH-7252" )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
+		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
+                              jiraKey = "HHH-7252" )
+	public void testFindWithImmediateTimeoutHintVerifyException() {
+		Lock lock = new Lock();
+		lock.setName( "name" );
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
 
+		EntityManager em2 = createIsolatedEntityManager();
+		em2.getTransaction().begin();
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+		Lock lock2 = em2.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
+		assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, em2.getLockMode( lock2 ) );
+		
+		EntityManager em3 = createIsolatedEntityManager();
+		em3.getTransaction().begin();
+		try {
+			Lock lock3 = em3.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
+			assertFalse("Exception should be thrown", true);
+		} catch (LockTimeoutException lte) {
+			assertTrue("Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.", true);
+		} catch (PessimisticLockException pe) {
+			assertTrue("Find with immediate timeout should have thrown LockTimeoutException.", false);
+		} catch (PersistenceException pe) {
+			log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+				      "This is likely a consequence of the Dialect not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+				      "See HHH-7251 for an example of one such situation.", pe);
+			assertTrue("EntityManager should be throwing LockTimeoutException.", false);
+		} finally {
+			if (em3.getTransaction().getRollbackOnly()) {
+				em3.getTransaction().rollback();
+			} else {
+				em3.getTransaction().commit();
+			}
+			em3.close();
+		}
+		
+		em2.getTransaction().commit();
+		em2.getTransaction().begin();
+		em2.remove( lock2 );
+		em2.getTransaction().commit();
+		em2.close();
+	}
+	
 	@Test
 	public void testLockRead() throws Exception {
 		Lock lock = new Lock();

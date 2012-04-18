@@ -163,4 +163,10 @@ abstract public class DialectChecks {
 			return dialect.supportsLobValueChangePropogation();
 		}
 	}
+	
+	public static class SupportsLockTimeouts implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsLockTimeouts();
+		}
+	}
 }

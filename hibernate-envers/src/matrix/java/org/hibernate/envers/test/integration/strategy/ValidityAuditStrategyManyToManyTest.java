@@ -2,13 +2,13 @@ package org.hibernate.envers.test.integration.strategy;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwningEntity;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
  * @author Oliver Lorenz
  * @since 3.6.5
  */
-public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
+public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctionalTestCase {
 
     private Integer ing_id;
 
@@ -37,9 +37,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		configuration.setProperty("org.hibernate.envers.audit_strategy",
-				"org.hibernate.envers.strategy.ValidityAuditStrategy");
+	protected void addConfigOptions(Map options) {
+		options.put("org.hibernate.envers.audit_strategy", "org.hibernate.envers.strategy.ValidityAuditStrategy");
 	}
 
 	@Test

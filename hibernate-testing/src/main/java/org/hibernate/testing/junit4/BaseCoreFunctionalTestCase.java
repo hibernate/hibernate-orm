@@ -88,7 +88,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
-	private Session session;
+	protected Session session;
 
 	protected static Dialect getDialect() {
 		return DIALECT;

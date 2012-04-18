@@ -2,33 +2,31 @@ package org.hibernate.envers.test.integration.jta;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.Map;
 
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
  * @author Adam Warski (adam at warski dot org)
  */
-public class JtaTransaction extends AbstractEntityTest {
+public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(IntTestEntity.class);
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{IntTestEntity.class};
     }
 
     @Override
-    public void addConfigurationProperties(Properties configuration) {
-        super.addConfigurationProperties(configuration);
-        TestingJtaBootstrap.prepare( configuration );
+    protected void addConfigOptions(Map options) {
+        TestingJtaBootstrap.prepare(options);
     }
 
     @Test
@@ -39,7 +37,6 @@ public class JtaTransaction extends AbstractEntityTest {
         EntityManager em;
         IntTestEntity ite;
         try {
-            newEntityManager();
             em = getEntityManager();
             ite = new IntTestEntity(10);
             em.persist(ite);
@@ -47,19 +44,18 @@ public class JtaTransaction extends AbstractEntityTest {
         } finally {
 			TestingJtaBootstrap.tryCommit();
         }
-
-        //
+        em.close();
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
         try {
-            newEntityManager();
             em = getEntityManager();
             ite = em.find(IntTestEntity.class, id1);
             ite.setNumber(20);
         } finally {
 			TestingJtaBootstrap.tryCommit();
         }
+        em.close();
     }
 
     @Test

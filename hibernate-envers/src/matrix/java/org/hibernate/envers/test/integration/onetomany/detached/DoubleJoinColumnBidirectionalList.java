@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
  * (and thus owns the relation), and the other uses a @ManyToOne(insertable=false, updatable=false).
  * @author Adam Warski (adam at warski dot org)
  */
-public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
+public class DoubleJoinColumnBidirectionalList extends BaseEnversJPAFunctionalTestCase {
     private Integer ed1_1_id;
     private Integer ed2_1_id;
     private Integer ed1_2_id;

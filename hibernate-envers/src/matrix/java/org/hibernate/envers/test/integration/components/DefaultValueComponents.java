@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent1;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent2;
@@ -45,7 +45,7 @@ import org.hibernate.envers.test.entities.components.DefaultValueComponentTestEn
  *
  * @author Erik-Berndt Scheper
  */
-public class DefaultValueComponents extends AbstractEntityTest {
+public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DefaultValueComponents.class );
 
 	private Integer id0;

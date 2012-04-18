@@ -1,34 +1,28 @@
 package org.hibernate.envers.test.integration.tools;
 
-import java.net.URISyntaxException;
-import java.util.Arrays;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.MappingException;
 import org.hibernate.Session;
-import org.hibernate.cfg.Environment;
-import org.hibernate.envers.test.AbstractSessionTest;
+import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.EnversSchemaGenerator;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.Arrays;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7106")
-public class SchemaExportTest extends AbstractSessionTest {
+public class SchemaExportTest extends BaseEnversFunctionalTestCase  {
     private Integer id = null;
 
     @Override
-    protected void initMappings() throws MappingException, URISyntaxException {
-        config.addAnnotatedClass(StrTestEntity.class);
-//        Setting this property causes manual flush tests failures
-//        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-        config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[] {StrTestEntity.class};
     }
+
 	protected boolean createSchema() {
 		// Disable schema auto generation.
 		return false;
@@ -37,7 +31,7 @@ public class SchemaExportTest extends AbstractSessionTest {
     @Priority(10)
     public void testSchemaCreation() {
         // Generate complete schema.
-        new EnversSchemaGenerator(config).export().create( true, true );
+        new EnversSchemaGenerator(configuration()).export().create( true, true );
 
         // Populate database with test data.
         Session session = getSession();
@@ -49,15 +43,16 @@ public class SchemaExportTest extends AbstractSessionTest {
         id = entity.getId();
     }
 
-	@Override
-	public void closeSessionFactory() {
-		new EnversSchemaGenerator(config).export().drop( true, true );
-		super.closeSessionFactory();
-	}
-
 	@Test
+    @Priority(9)
     public void testAuditDataRetrieval() {
         Assert.assertEquals(Arrays.asList(1), getAuditReader().getRevisions(StrTestEntity.class, id));
         Assert.assertEquals(new StrTestEntity("data", id), getAuditReader().find(StrTestEntity.class, id, 1));
+    }
+
+    @Test
+    @Priority(8)
+    public void testSchemaDrop() {
+        new EnversSchemaGenerator(configuration()).export().drop( true, true );
     }
 }

@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
 /**
@@ -37,7 +37,7 @@ import org.hibernate.envers.test.Priority;
  * will both be stored.
  * @author Adam Warski (adam at warski dot org)
  */
-public class SameIds extends AbstractEntityTest {
+public class SameIds extends BaseEnversJPAFunctionalTestCase {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(SameIdTestEntity1.class);
         cfg.addAnnotatedClass(SameIdTestEntity2.class);

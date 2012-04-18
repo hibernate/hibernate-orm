@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
@@ -39,7 +39,7 @@ import org.hibernate.mapping.Column;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ChildPrimaryKeyJoinAuditing extends AbstractEntityTest {
+public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {

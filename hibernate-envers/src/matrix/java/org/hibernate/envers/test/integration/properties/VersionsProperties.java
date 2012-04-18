@@ -24,19 +24,20 @@
 package org.hibernate.envers.test.integration.properties;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class VersionsProperties extends AbstractEntityTest {
+public class VersionsProperties extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
@@ -46,12 +47,12 @@ public class VersionsProperties extends AbstractEntityTest {
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.auditTablePrefix", "VP_");
-		configuration.setProperty("org.hibernate.envers.auditTableSuffix", "_VS");
-		configuration.setProperty("org.hibernate.envers.revisionFieldName", "ver_rev");
-		configuration.setProperty("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put("org.hibernate.envers.auditTablePrefix", "VP_");
+		options.put("org.hibernate.envers.auditTableSuffix", "_VS");
+		options.put("org.hibernate.envers.revisionFieldName", "ver_rev");
+		options.put("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
 	}
 
 	@Test

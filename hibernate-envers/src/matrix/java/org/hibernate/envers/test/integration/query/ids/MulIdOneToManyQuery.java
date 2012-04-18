@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
-public class MulIdOneToManyQuery extends AbstractEntityTest {
+public class MulIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
     private MulId id1;
     private MulId id2;
 

@@ -41,7 +41,7 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
@@ -55,7 +55,7 @@ import org.hibernate.envers.test.tools.TestTools;
  * 
  * @author Erik-Berndt Scheper
  */
-public class ValidityAuditStrategyRevEndTestCustomRevEnt extends AbstractEntityTest {
+public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFunctionalTestCase {
 	private final String revendTimestampColumName = "REVEND_TIMESTAMP";
 
 	private Integer p1_id;
@@ -74,21 +74,12 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends AbstractEntityT
 	}
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-
-		configuration.setProperty("org.hibernate.envers.audit_strategy",
-				"org.hibernate.envers.strategy.ValidityAuditStrategy");
-		configuration
-				.setProperty(
-						"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
-						"true");
-		configuration
-				.setProperty(
-						"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
-						revendTimestampColumName);
-
-	}
+	protected void addConfigOptions(Map options) {
+        super.addConfigOptions( options );
+        options.put("org.hibernate.envers.audit_strategy", "org.hibernate.envers.strategy.ValidityAuditStrategy");
+        options.put("org.hibernate.envers.audit_strategy_validity_store_revend_timestamp", "true");
+        options.put("org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name", revendTimestampColumName);
+    }
 
 	@Test
     @Priority(10)

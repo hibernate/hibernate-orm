@@ -32,7 +32,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
@@ -41,7 +41,7 @@ import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicSetWithMulId extends AbstractEntityTest {
+public class BasicSetWithMulId extends BaseEnversJPAFunctionalTestCase {
     private MulId ed1_id;
     private MulId ed2_id;
 

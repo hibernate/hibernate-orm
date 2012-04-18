@@ -9,10 +9,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
-public class ReadWriteExpressionChange extends AbstractEntityTest {
+public class ReadWriteExpressionChange extends BaseEnversJPAFunctionalTestCase {
 
     private static final Double HEIGHT_INCHES = 73.0d;
     private static final Double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;

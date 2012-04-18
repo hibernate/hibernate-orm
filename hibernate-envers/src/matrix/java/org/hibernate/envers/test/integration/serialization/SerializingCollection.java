@@ -32,7 +32,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
@@ -40,7 +40,7 @@ import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SerializingCollection extends AbstractEntityTest {
+public class SerializingCollection extends BaseEnversJPAFunctionalTestCase {
     private Integer ed1_id;
     private Integer ing1_id;
 

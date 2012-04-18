@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -26,7 +26,7 @@ import org.hibernate.mapping.Table;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @SuppressWarnings({"unchecked"})
-public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
+public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId = null;
     private Integer siteId = null;
 
@@ -37,9 +37,9 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
+	public void addConfigOptions(Map configuration) {
+		super.addConfigOptions( configuration );
+		configuration.put("org.hibernate.envers.track_entities_changed_in_revision", "true");
 	}
 
 	@Test

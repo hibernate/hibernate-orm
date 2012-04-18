@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.SetJoinColumnRefCollEntity;
@@ -39,7 +39,7 @@ import org.hibernate.envers.test.tools.TestTools;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicJoinColumnSet extends AbstractEntityTest {
+public class BasicJoinColumnSet extends BaseEnversJPAFunctionalTestCase {
     private Integer str1_id;
     private Integer str2_id;
 

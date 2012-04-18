@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
@@ -43,7 +43,7 @@ import org.hibernate.envers.test.tools.TestTools;
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
-public class EmbIdOneToManyQuery extends AbstractEntityTest {
+public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
     private EmbId id1;
     private EmbId id2;
 

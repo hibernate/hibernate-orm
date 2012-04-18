@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -23,7 +23,7 @@ import org.hibernate.envers.test.tools.TestTools;
  * added, modified or removed, so that changed entity name can be persisted.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class CustomTrackingEntitiesTest extends AbstractEntityTest {
+public class CustomTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId = null;
     private Integer siteId = null;
     

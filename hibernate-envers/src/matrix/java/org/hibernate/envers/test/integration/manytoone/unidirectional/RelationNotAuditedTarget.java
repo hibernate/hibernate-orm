@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAuditedEntity;
@@ -41,7 +41,7 @@ import org.hibernate.proxy.HibernateProxyHelper;
 /**
  * @author Tomasz Bech
  */
-public class RelationNotAuditedTarget extends AbstractEntityTest {
+public class RelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 	private Integer tnae1_id;
 	private Integer tnae2_id;
 

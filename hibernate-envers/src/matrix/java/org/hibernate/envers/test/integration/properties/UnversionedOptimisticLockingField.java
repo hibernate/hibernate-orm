@@ -25,13 +25,13 @@ package org.hibernate.envers.test.integration.properties;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -39,7 +39,7 @@ import org.hibernate.mapping.Property;
 /**
  * @author Nicolas Doroskevich
  */
-public class UnversionedOptimisticLockingField extends AbstractEntityTest {
+public class UnversionedOptimisticLockingField extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 
 	public void configure(Ejb3Configuration cfg) {
@@ -48,9 +48,9 @@ public class UnversionedOptimisticLockingField extends AbstractEntityTest {
 	}
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
+	public void addConfigOptions(Map configuration) {
+		super.addConfigOptions( configuration );
+		configuration.put("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
 
 	}
 

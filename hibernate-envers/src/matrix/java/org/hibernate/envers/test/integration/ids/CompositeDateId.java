@@ -29,8 +29,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.CompositeDateIdTestEntity;
 import org.hibernate.envers.test.entities.ids.DateEmbId;
@@ -38,11 +37,12 @@ import org.hibernate.envers.test.entities.ids.DateEmbId;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CompositeDateId extends AbstractEntityTest {
+public class CompositeDateId extends BaseEnversJPAFunctionalTestCase {
     private DateEmbId id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(CompositeDateIdTestEntity.class);
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{CompositeDateIdTestEntity.class};
     }
 
     @Test

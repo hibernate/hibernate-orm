@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefIngEntity;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  * and the other uses a @ManyToOne(insertable=false, updatable=false).
  * @author Adam Warski (adam at warski dot org)
  */
-public class IndexedJoinColumnBidirectionalList extends AbstractEntityTest {
+public class IndexedJoinColumnBidirectionalList extends BaseEnversJPAFunctionalTestCase {
     private Integer ed1_id;
     private Integer ed2_id;
     private Integer ed3_id;

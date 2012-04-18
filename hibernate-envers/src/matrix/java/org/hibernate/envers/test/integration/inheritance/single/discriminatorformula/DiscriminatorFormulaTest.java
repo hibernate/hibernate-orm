@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -17,7 +17,7 @@ import org.hibernate.mapping.PersistentClass;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class DiscriminatorFormulaTest extends AbstractEntityTest {
+public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
     private PersistentClass parentAudit = null;
     private ChildEntity childVer1 = null;
     private ChildEntity childVer2 = null;

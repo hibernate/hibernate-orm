@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import java.util.HashSet;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Assert;
@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -17,7 +17,7 @@ import org.hibernate.envers.test.tools.TestTools;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
+public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId1 = null;
     private Integer steId2 = null;
 
@@ -27,10 +27,9 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
-
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( "org.hibernate.envers.track_entities_changed_in_revision", "true" ) ;
 	}
 
 	@Test

@@ -26,12 +26,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.envers.test.AbstractEntityTest;
-
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractPerformanceTest extends AbstractEntityTest {
+public abstract class AbstractPerformanceTest extends AbstractEntityManagerTest {
     protected String getSecondsString(long milliseconds) {
         return (milliseconds/1000) + "." + (milliseconds%1000);
     }

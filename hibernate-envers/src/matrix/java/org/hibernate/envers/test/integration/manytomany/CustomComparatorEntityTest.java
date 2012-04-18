@@ -33,7 +33,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class CustomComparatorEntityTest extends AbstractEntityTest {
+public class CustomComparatorEntityTest extends BaseEnversJPAFunctionalTestCase {
 
     private Integer id1;
     private Integer id2;

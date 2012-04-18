@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning2Entity;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicBiowned extends AbstractEntityTest {
+public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
     private Integer o1_1_id;
     private Integer o1_2_id;
     private Integer o2_1_id;

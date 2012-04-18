@@ -7,14 +7,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
 /**
  * @author Hern�n Chanfreau
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractAllAuditedTest extends AbstractEntityTest {
+public abstract class AbstractAllAuditedTest extends BaseEnversJPAFunctionalTestCase {
 	private long ai_id;
 	private long nai_id;
 	

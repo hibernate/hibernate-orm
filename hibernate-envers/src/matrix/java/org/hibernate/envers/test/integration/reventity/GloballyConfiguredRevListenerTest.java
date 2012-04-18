@@ -1,13 +1,13 @@
 package org.hibernate.envers.test.integration.reventity;
 
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
@@ -16,16 +16,15 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6696")
-public class GloballyConfiguredRevListenerTest extends AbstractEntityTest {
+public class GloballyConfiguredRevListenerTest extends BaseEnversJPAFunctionalTestCase {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.revision_listener", "org.hibernate.envers.test.integration.reventity.CountingRevisionListener");
-
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put("org.hibernate.envers.revision_listener", "org.hibernate.envers.test.integration.reventity.CountingRevisionListener");
 	}
 
 	@Test

@@ -7,7 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -17,7 +17,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7003")
-public class ColumnScalePrecisionTest extends AbstractEntityTest {
+public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
     private Table auditTable = null;
     private Table originalTable = null;
     private Long id = null;

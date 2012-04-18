@@ -7,7 +7,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -15,7 +15,7 @@ import org.hibernate.mapping.Table;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class QuotedFieldsTest extends AbstractEntityTest {
+public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
     private Long qfeId1 = null;
     private Long qfeId2 = null;
 

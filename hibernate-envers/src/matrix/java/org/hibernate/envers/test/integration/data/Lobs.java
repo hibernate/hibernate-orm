@@ -24,14 +24,14 @@
 package org.hibernate.envers.test.integration.data;
 
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -40,7 +40,7 @@ import org.hibernate.testing.RequiresDialectFeature;
  * @author Adam Warski (adam at warski dot org)
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-public class Lobs extends AbstractEntityTest {
+public class Lobs extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
@@ -48,11 +48,11 @@ public class Lobs extends AbstractEntityTest {
     }
 
     @Override
-    public void addConfigurationProperties(Properties configuration) {
-        super.addConfigurationProperties(configuration);
+    protected void addConfigOptions(Map options) {
+        super.addConfigOptions(options);
         if (getDialect() instanceof PostgreSQL82Dialect) {
             // In PostgreSQL LOBs cannot be used in auto-commit mode.
-            configuration.setProperty("hibernate.connection.autocommit", "false");
+            options.put("hibernate.connection.autocommit", "false");
         }
     }
 

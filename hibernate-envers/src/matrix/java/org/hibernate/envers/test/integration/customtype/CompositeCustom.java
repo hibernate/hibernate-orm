@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.Component;
 import org.hibernate.envers.test.entities.customtype.CompositeCustomTypeEntity;
@@ -37,7 +37,7 @@ import org.hibernate.envers.test.entities.customtype.CompositeCustomTypeEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CompositeCustom extends AbstractEntityTest {
+public class CompositeCustom extends BaseEnversJPAFunctionalTestCase {
     private Integer ccte_id;
 
     public void configure(Ejb3Configuration cfg) {

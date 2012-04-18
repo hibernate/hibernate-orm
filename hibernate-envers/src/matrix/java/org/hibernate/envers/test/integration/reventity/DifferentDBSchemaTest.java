@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -9,7 +9,7 @@ import org.junit.Test;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.mapping.Table;
@@ -21,17 +21,17 @@ import org.hibernate.testing.RequiresDialect;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialect({H2Dialect.class})
-public class DifferentDBSchemaTest extends AbstractEntityTest {
+public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
     private static final String SCHEMA_NAME = "ENVERS_AUDIT";
     private Integer steId = null;
 
     @Override
-    public void addConfigurationProperties(Properties configuration) {
-        super.addConfigurationProperties(configuration);
-
+    protected void addConfigOptions(Map options) {
+        super.addConfigOptions(options);
         // Creates new schema after establishing connection
-        configuration.setProperty(Environment.URL, configuration.getProperty(Environment.URL) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME);
-        configuration.setProperty("org.hibernate.envers.default_schema", SCHEMA_NAME);
+        options.putAll(Environment.getProperties());
+        options.put(Environment.URL, options.get(Environment.URL) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME);
+        options.put("org.hibernate.envers.default_schema", SCHEMA_NAME);
     }
 
     @Override

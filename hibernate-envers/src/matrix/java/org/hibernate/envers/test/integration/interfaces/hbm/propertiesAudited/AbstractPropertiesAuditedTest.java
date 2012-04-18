@@ -5,14 +5,14 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 
 /**
  * @author Hern�n Chanfreau
  * 
  */
-public abstract class AbstractPropertiesAuditedTest extends AbstractEntityTest {
+public abstract class AbstractPropertiesAuditedTest extends BaseEnversJPAFunctionalTestCase  {
 	private long ai_id;
 	private long nai_id;
 

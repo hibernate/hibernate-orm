@@ -1,22 +1,24 @@
 package org.hibernate.envers.test.integration.collection.norevision;
 
-import java.net.URISyntaxException;
-import java.util.List;
-
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractSessionTest;
-import org.hibernate.envers.test.Priority;
+import java.util.List;
 
-public abstract class AbstractCollectionChangeTest extends AbstractSessionTest {
+public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalTestCase  {
     protected Integer personId;
 
     @Override
-    protected void initMappings() throws MappingException, URISyntaxException {
-        config.addAnnotatedClass(Person.class);
-        config.addAnnotatedClass(Name.class);
-        config.setProperty("org.hibernate.envers.revision_on_collection_change", getCollectionChangeValue());
+    protected void configure(Configuration configuration) {
+        configuration.setProperty("org.hibernate.envers.revision_on_collection_change", getCollectionChangeValue());
+    }
+
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{Person.class, Name.class};
     }
 
     protected abstract String getCollectionChangeValue();
@@ -26,29 +28,29 @@ public abstract class AbstractCollectionChangeTest extends AbstractSessionTest {
     @Test
     @Priority(10)
     public void initData() {
-    	newSessionFactory();
+    	Session session = openSession();
 
         // Rev 1
-        getSession().getTransaction().begin();        
+        session.getTransaction().begin();        
         Person p = new Person();
         Name n = new Name();
         n.setName("name1");
         p.getNames().add(n);
-        getSession().saveOrUpdate(p);
-        getSession().getTransaction().commit();
+        session.saveOrUpdate(p);
+        session.getTransaction().commit();
 
         // Rev 2
-        getSession().getTransaction().begin();
+        session.getTransaction().begin();
         n.setName("Changed name");
-        getSession().saveOrUpdate(p);
-        getSession().getTransaction().commit();
+        session.saveOrUpdate(p);
+        session.getTransaction().commit();
 
         // Rev 3
-        getSession().getTransaction().begin();
+        session.getTransaction().begin();
         Name n2 = new Name();
         n2.setName("name2");
         p.getNames().add(n2);
-        getSession().getTransaction().commit();
+        session.getTransaction().commit();
 
         personId = p.getId();
     }

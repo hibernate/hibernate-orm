@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.mapping.Column;
@@ -19,7 +19,7 @@ import org.hibernate.mapping.Table;
  * property. Child entity may mark explicitly its parent as audited or not.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TransitiveAuditParentsTest extends AbstractEntityTest {
+public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
     private long childImpTransId = 1L;
     private long childExpTransId = 2L;
     

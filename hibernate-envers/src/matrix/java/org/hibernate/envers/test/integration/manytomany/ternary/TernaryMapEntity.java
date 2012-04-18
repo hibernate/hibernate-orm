@@ -30,8 +30,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.IntTestEntity;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;
+import org.hibernate.envers.test.entities.StrTestPrivSeqEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,10 +45,10 @@ public class TernaryMapEntity {
     @Audited
     @ManyToMany
     @javax.persistence.MapKeyJoinColumn
-    private Map<IntTestEntity, StrTestEntity> map;
+    private Map<IntTestPrivSeqEntity, StrTestPrivSeqEntity> map;
 
     public TernaryMapEntity() {
-        map = new HashMap<IntTestEntity, StrTestEntity>();
+        map = new HashMap<IntTestPrivSeqEntity, StrTestPrivSeqEntity>();
     }
 
     public Integer getId() {
@@ -59,11 +59,11 @@ public class TernaryMapEntity {
         this.id = id;
     }
 
-    public Map<IntTestEntity, StrTestEntity> getMap() {
+    public Map<IntTestPrivSeqEntity, StrTestPrivSeqEntity> getMap() {
         return map;
     }
 
-    public void setMap(Map<IntTestEntity, StrTestEntity> map) {
+    public void setMap(Map<IntTestPrivSeqEntity, StrTestPrivSeqEntity> map) {
         this.map = map;
     }
 

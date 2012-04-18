@@ -29,14 +29,14 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class PolymorphicCollection extends AbstractEntityTest {
+public class PolymorphicCollection extends BaseEnversJPAFunctionalTestCase {
     private Integer ed_id1;
     private Integer c_id;
     private Integer p_id;

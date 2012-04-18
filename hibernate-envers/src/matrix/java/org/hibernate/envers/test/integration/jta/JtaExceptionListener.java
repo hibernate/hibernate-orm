@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.test.integration.jta;
 
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 
@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
@@ -42,16 +42,15 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.
  * @author Adam Warski (adam at warski dot org)
  */
-public class JtaExceptionListener extends AbstractEntityTest {
+public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 
     @Override
-    public void addConfigurationProperties(Properties configuration) {
-        super.addConfigurationProperties(configuration);
-        TestingJtaBootstrap.prepare( configuration );
+    protected void addConfigOptions(Map options) {
+        TestingJtaBootstrap.prepare(options);
     }
 
     @Test(expected = RollbackException.class)
@@ -60,7 +59,6 @@ public class JtaExceptionListener extends AbstractEntityTest {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
         try {
-			newEntityManager();
 			EntityManager em = getEntityManager();
 
             // Trying to persist an entity - however the listener should throw an exception, so the entity
@@ -78,7 +76,6 @@ public class JtaExceptionListener extends AbstractEntityTest {
 
         try {
     		// Checking if the entity became persisted
-            newEntityManager();
 		    EntityManager em = getEntityManager();
             long count = em.createQuery("from StrTestEntity s where s.str = 'x'").getResultList().size();
 		    Assert.assertEquals( 0, count );

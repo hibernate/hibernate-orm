@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity;
@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class MixedInheritanceStrategiesEntityTest extends AbstractEntityTest {
+public class MixedInheritanceStrategiesEntityTest extends BaseEnversJPAFunctionalTestCase  {
 
 	private ActivityId id2;
 	private ActivityId id1;

@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
@@ -44,7 +44,7 @@ import org.hibernate.envers.test.tools.TestTools;
  * Test which checks that auditing entities which contain multiple mappings to same tables work.
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicSametable extends AbstractEntityTest {
+public class BasicSametable extends BaseEnversJPAFunctionalTestCase  {
     private Integer p1_id;
     private Integer p2_id;
     private Integer c1_1_id;

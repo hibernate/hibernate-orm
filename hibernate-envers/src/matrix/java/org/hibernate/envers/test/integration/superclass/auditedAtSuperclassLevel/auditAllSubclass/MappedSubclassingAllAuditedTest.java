@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.AuditedAllMappedSuperclass;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.NotAuditedSubclassEntity;
@@ -41,7 +41,7 @@ import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel
  * @author Hern&aacut;n Chanfreau
  * 
  */
-public class MappedSubclassingAllAuditedTest extends AbstractEntityTest {
+public class MappedSubclassingAllAuditedTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer id2_1;
 	private Integer id1_1;
 

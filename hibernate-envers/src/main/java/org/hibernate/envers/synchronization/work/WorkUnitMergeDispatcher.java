@@ -30,7 +30,7 @@ package org.hibernate.envers.synchronization.work;
  */
 public interface WorkUnitMergeDispatcher {
     /**
-     * Shuold be invoked on the second work unit.
+     * Should be invoked on the second work unit.
      * @param first First work unit (that is, the one added earlier).
      * @return The work unit that is the result of the merge.
      */

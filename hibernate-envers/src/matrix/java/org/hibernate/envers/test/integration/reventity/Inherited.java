@@ -32,25 +32,23 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class Inherited extends AbstractEntityTest {
+public class Inherited extends BaseEnversJPAFunctionalTestCase {
     private Integer id;
     private long timestamp1;
     private long timestamp2;
     private long timestamp3;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(InheritedRevEntity.class);
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{StrTestEntity.class, InheritedRevEntity.class};
     }
 
     @Test

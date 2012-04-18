@@ -29,14 +29,14 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BidirectionalReference extends AbstractEntityTest {
+public class BidirectionalReference extends BaseEnversJPAFunctionalTestCase {
     private Long set1_id;
     private Long set2_id;
 

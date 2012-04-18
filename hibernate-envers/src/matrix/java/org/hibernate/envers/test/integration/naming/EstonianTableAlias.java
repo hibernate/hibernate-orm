@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.TestForIssue;
@@ -17,7 +17,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6738")
-public class EstonianTableAlias extends AbstractEntityTest {
+public class EstonianTableAlias extends BaseEnversJPAFunctionalTestCase {
     private Long parentId = null;
     private Long childId = null;
 

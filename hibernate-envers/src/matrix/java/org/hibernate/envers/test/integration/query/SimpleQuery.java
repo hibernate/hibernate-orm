@@ -35,7 +35,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -45,7 +45,7 @@ import org.hibernate.envers.test.tools.TestTools;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @SuppressWarnings({"unchecked"})
-public class SimpleQuery extends AbstractEntityTest {
+public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
     private Integer id2;
     private Integer id3;

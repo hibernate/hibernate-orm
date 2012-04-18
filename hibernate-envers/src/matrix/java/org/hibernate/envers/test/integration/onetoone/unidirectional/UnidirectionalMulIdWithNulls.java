@@ -5,7 +5,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class UnidirectionalMulIdWithNulls extends AbstractEntityTest {
+public class UnidirectionalMulIdWithNulls extends BaseEnversJPAFunctionalTestCase {
     private EmbId ei;
     
     public void configure(Ejb3Configuration cfg) {

@@ -7,7 +7,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MIndexedListTargetNotAuditedEntity;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vladimir Klyushnikov
  * @author Adam Warski
  */
-public class M2MIndexedListNotAuditedTarget extends AbstractEntityTest {
+public class M2MIndexedListNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
     private Integer itnae1_id;
     private Integer itnae2_id;
 

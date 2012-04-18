@@ -24,14 +24,14 @@
 package org.hibernate.envers.test.integration.query;
 
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 
@@ -40,18 +40,17 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
-public class StoreDeletedData extends AbstractEntityTest {
+public class StoreDeletedData extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrIntTestEntity.class);
-
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.storeDataAtDelete", "true");
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( "org.hibernate.envers.storeDataAtDelete", "true" );
 	}
 
 	@Test

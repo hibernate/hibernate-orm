@@ -31,13 +31,13 @@ import org.junit.Before;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractFlushTest extends AbstractEntityTest {
+public abstract class AbstractFlushTest extends BaseEnversJPAFunctionalTestCase {
     public abstract FlushMode getFlushMode();
 
     public void configure(Ejb3Configuration cfg) {

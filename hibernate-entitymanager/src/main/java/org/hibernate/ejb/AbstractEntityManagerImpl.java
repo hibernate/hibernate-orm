@@ -792,9 +792,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			getSession().setCacheMode( cacheMode );
 			if ( lockModeType != null ) {
+				lockOptions = getLockRequest( lockModeType, properties );
 				return ( A ) getSession().get(
-						entityClass, ( Serializable ) primaryKey,
-						getLockRequest( lockModeType, properties )
+						entityClass, ( Serializable ) primaryKey, 
+						lockOptions
 				);
 			}
 			else {
@@ -919,7 +920,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
 			if ( lockModeType != null ) {
-				getSession().refresh( entity, ( lockOptions = getLockRequest( lockModeType, properties ) ) );
+				lockOptions = getLockRequest( lockModeType, properties );
+				getSession().refresh( entity, lockOptions );
 			}
 			else {
 				getSession().refresh( entity );
@@ -1096,8 +1098,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
-			getSession().buildLockRequest( ( lockOptions = getLockRequest( lockModeType, properties ) ) )
-					.lock( entity );
+			lockOptions = getLockRequest( lockModeType, properties );
+			getSession().buildLockRequest( lockOptions ).lock( entity );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he, lockOptions );

@@ -21,12 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test;
+package org.hibernate.envers.test.performance;
 
 import java.io.IOException;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.envers.test.AbstractEnversTest;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
@@ -46,7 +47,7 @@ import org.hibernate.testing.BeforeClassOnce;
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public abstract class AbstractEntityTest extends AbstractEnversTest {
+public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
     public static final Dialect DIALECT = Dialect.getDialect();
 
     private EntityManagerFactoryImpl emf;

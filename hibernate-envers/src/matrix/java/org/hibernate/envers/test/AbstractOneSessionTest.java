@@ -29,7 +29,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
 	protected Configuration config;
 	private ServiceRegistry serviceRegistry;
 	private SessionFactory sessionFactory;
-	private Session session ;
+	private Session session;
 	private AuditReader auditReader;
 
 	@BeforeClassOnce
@@ -59,7 +59,6 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
 	protected String getHibernateConfigurationFileName(){
 		return "hibernate.test.session-cfg.xml";
 	}
-
 
 	private SessionFactory getSessionFactory(){
 		return sessionFactory;

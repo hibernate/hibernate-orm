@@ -24,7 +24,7 @@
 package org.hibernate.envers.test.integration.reventity;
 import javax.persistence.Entity;
 
-import org.hibernate.envers.enhanced.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 
 /**
@@ -32,5 +32,5 @@ import org.hibernate.envers.RevisionEntity;
  */
 @Entity
 @RevisionEntity
-public class InheritedRevEntity extends DefaultRevisionEntity {
+public class InheritedRevEntity extends SequenceIdRevisionEntity {
 }

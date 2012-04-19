@@ -32,13 +32,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Extension of standard {@link DefaultRevisionEntity} that allows tracking entity names changed in each revision.
+ * Extension of standard {@link SequenceIdRevisionEntity} that allows tracking entity names changed in each revision.
  * This revision entity is implicitly used when {@code org.hibernate.envers.track_entities_changed_in_revision}
  * parameter is set to {@code true}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @MappedSuperclass
-public class DefaultTrackingModifiedEntitiesRevisionEntity extends DefaultRevisionEntity {
+public class SequenceIdTrackingModifiedEntitiesRevisionEntity extends SequenceIdRevisionEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYNAME")
@@ -56,10 +56,10 @@ public class DefaultTrackingModifiedEntitiesRevisionEntity extends DefaultRevisi
 
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DefaultTrackingModifiedEntitiesRevisionEntity)) return false;
+        if (!(o instanceof SequenceIdTrackingModifiedEntitiesRevisionEntity )) return false;
         if (!super.equals(o)) return false;
 
-        DefaultTrackingModifiedEntitiesRevisionEntity that = (DefaultTrackingModifiedEntitiesRevisionEntity) o;
+        SequenceIdTrackingModifiedEntitiesRevisionEntity that = (SequenceIdTrackingModifiedEntitiesRevisionEntity) o;
 
         if (modifiedEntityNames != null ? !modifiedEntityNames.equals(that.modifiedEntityNames)
                                         : that.modifiedEntityNames != null) return false;
@@ -74,6 +74,6 @@ public class DefaultTrackingModifiedEntitiesRevisionEntity extends DefaultRevisi
     }
 
     public String toString() {
-        return "DefaultTrackingModifiedEntitiesRevisionEntity(" + super.toString() + ", modifiedEntityNames = " + modifiedEntityNames + ")";
+        return "SequenceIdTrackingModifiedEntitiesRevisionEntity(" + super.toString() + ", modifiedEntityNames = " + modifiedEntityNames + ")";
     }
 }

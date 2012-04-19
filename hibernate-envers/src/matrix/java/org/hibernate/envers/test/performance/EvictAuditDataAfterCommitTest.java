@@ -1,6 +1,5 @@
 package org.hibernate.envers.test.performance;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -9,12 +8,11 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.enhanced.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
@@ -101,7 +99,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
                 assert false : "Audit data shall not be stored in the session level cache. This causes performance issues.";
             }
             Assert.assertFalse("Revision entity shall not be stored in the session level cache. This causes performance issues.",
-                               DefaultRevisionEntity.class.getName().equals(entityEntry.getEntityName()));
+                               SequenceIdRevisionEntity.class.getName().equals(entityEntry.getEntityName()));
         }
     }
 }

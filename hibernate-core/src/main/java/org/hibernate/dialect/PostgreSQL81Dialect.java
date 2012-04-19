@@ -38,7 +38,6 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
@@ -376,11 +375,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
 		if (delegate == null) {
-			delegate = new SQLStateConversionDelegate(this) {
-	
+			delegate = new SQLExceptionConversionDelegate() {
 				@Override
 				public JDBCException convert(SQLException sqlException, String message, String sql) {
-					JDBCException exception = super.convert(sqlException, message, sql);
+					JDBCException exception = null;
 					
 					if (exception == null) {
 						String sqlState = JdbcExceptionHelper.extractSqlState(sqlException);

@@ -28,6 +28,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -35,6 +36,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "AbstrContained")
 @Audited
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class AbstractContainedEntity {

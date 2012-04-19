@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.superclass.auditoverride;
 
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
@@ -10,6 +11,7 @@ import org.hibernate.envers.Audited;
  * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)
  */
 @Entity
+@Table(name = "ClassOverrideNotAudited")
 @AuditOverrides({@AuditOverride(forClass = AuditedBaseEntity.class, isAudited = false)})
 public class ClassOverrideNotAuditedEntity extends AuditedBaseEntity {
     @Audited

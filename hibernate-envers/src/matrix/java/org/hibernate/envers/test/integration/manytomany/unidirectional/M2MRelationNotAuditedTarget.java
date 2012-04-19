@@ -31,7 +31,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MTargetNotAuditedEntity;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  * A test for auditing a many-to-many relation where the target entity is not audited.
  * @author Adam Warski
  */
-public class M2MRelationNotAuditedTarget extends AbstractEntityTest {
+public class M2MRelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 	private Integer tnae1_id;
 	private Integer tnae2_id;
 

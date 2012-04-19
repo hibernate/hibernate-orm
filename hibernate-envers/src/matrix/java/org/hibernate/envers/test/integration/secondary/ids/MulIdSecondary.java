@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.mapping.Join;
@@ -38,7 +38,7 @@ import org.hibernate.mapping.Join;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class MulIdSecondary extends AbstractEntityTest {
+public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
     private MulId id;
 
     public void configure(Ejb3Configuration cfg) {

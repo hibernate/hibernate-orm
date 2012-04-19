@@ -26,6 +26,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -33,6 +34,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "CompTest")
 public class ComponentTestEntity {
     @Id
     @GeneratedValue
@@ -108,4 +110,3 @@ public class ComponentTestEntity {
         return "CTE(id = " + id + ", comp1 = " + comp1 + ", comp2 = " + comp2 + ")"; 
     }
 }
-

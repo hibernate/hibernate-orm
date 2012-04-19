@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.CustomEnum;
 import org.hibernate.envers.test.entities.ids.EmbId;
@@ -42,7 +42,7 @@ import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CompositeIds extends AbstractEntityTest {
+public class CompositeIds extends BaseEnversJPAFunctionalTestCase {
     private EmbId id1;
     private EmbId id2;
     private MulId id3;

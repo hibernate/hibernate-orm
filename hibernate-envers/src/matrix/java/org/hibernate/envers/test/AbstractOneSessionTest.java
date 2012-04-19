@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.hibernate.cfg.Environment;
 import org.junit.Before;
 
 import org.hibernate.MappingException;
@@ -28,7 +29,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
 	protected Configuration config;
 	private ServiceRegistry serviceRegistry;
 	private SessionFactory sessionFactory;
-	private Session session ;
+	private Session session;
 	private AuditReader auditReader;
 
 	@BeforeClassOnce
@@ -41,7 +42,9 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
-		addProperties(config);
+        config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+        config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+        addProperties(config);
 
         this.initMappings();
 
@@ -56,7 +59,6 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
 	protected String getHibernateConfigurationFileName(){
 		return "hibernate.test.session-cfg.xml";
 	}
-
 
 	private SessionFactory getSessionFactory(){
 		return sessionFactory;

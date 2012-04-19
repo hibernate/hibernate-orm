@@ -1,35 +1,35 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.HashSet;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
+public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId1 = null;
     private Integer steId2 = null;
 
     @Override
     public void configure(Ejb3Configuration cfg) {
-        cfg.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
-
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( "org.hibernate.envers.track_entities_changed_in_revision", "true" ) ;
 	}
 
 	@Test
@@ -69,7 +69,7 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("x", steId1);
         StrTestEntity ste2 = new StrTestEntity("y", steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(1));
+        Assert.assertEquals(TestTools.makeSet(ste1, ste2), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(1)));
     }
 
     @Test
@@ -77,14 +77,14 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("z", steId1);
         StrTestEntity ste2 = new StrTestEntity(null, steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(2));
+        Assert.assertEquals(TestTools.makeSet(ste1, ste2), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(2)));
     }
 
     @Test
     public void testTrackUpdateAndRemoveTheSameEntity() {
         StrTestEntity ste1 = new StrTestEntity(null, steId1);
 
-        assert Arrays.asList(ste1).equals(getCrossTypeRevisionChangesReader().findEntities(3));
+        Assert.assertEquals(TestTools.makeSet(ste1), new HashSet<Object>(getCrossTypeRevisionChangesReader().findEntities(3)));
     }
 
     private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() {

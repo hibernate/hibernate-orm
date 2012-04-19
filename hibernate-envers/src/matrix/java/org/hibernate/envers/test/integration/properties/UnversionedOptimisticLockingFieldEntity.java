@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.properties;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.envers.Audited;
@@ -33,6 +34,7 @@ import org.hibernate.envers.Audited;
  * @author Nicolas Doroskevich
  */
 @Audited
+@Table(name = "UnverOptimLockField")
 @Entity
 public class UnversionedOptimisticLockingFieldEntity {
 	

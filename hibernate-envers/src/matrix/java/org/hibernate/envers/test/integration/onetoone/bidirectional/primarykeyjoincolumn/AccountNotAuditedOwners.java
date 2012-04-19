@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -17,6 +18,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 @Audited
 public class AccountNotAuditedOwners implements Serializable {
     @Id
+    @Column(name = "ACCOUNT_ID")
     @GeneratedValue
     private Long accountId;
 

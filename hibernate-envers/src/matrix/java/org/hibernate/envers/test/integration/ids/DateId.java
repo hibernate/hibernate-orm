@@ -30,14 +30,14 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.DateIdTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class DateId extends AbstractEntityTest {
+public class DateId extends BaseEnversJPAFunctionalTestCase {
     private Date id1;
 
     public void configure(Ejb3Configuration cfg) {

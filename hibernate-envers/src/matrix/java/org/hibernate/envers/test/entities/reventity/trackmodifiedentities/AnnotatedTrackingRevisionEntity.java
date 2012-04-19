@@ -8,7 +8,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
@@ -19,10 +22,19 @@ import org.hibernate.envers.RevisionTimestamp;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
+@Table(name = "AnnotatedTrackRevInfo")
+@GenericGenerator(name = "EnversTestingRevisionGenerator",
+                  strategy = "org.hibernate.id.enhanced.TableGenerator",
+                  parameters = {@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
+                                @Parameter(name = "initial_value", value = "1"),
+                                @Parameter(name = "increment_size", value = "1"),
+                                @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
+                  }
+)
 @RevisionEntity
 public class AnnotatedTrackingRevisionEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "EnversTestingRevisionGenerator")
     @RevisionNumber
     private int customId;
 

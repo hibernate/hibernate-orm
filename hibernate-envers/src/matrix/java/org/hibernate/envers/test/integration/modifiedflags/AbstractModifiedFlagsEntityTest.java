@@ -24,26 +24,24 @@
 package org.hibernate.envers.test.integration.modifiedflags;
 
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 
 /**
  * Base test for modified flags feature
  * 
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public abstract class AbstractModifiedFlagsEntityTest extends AbstractEntityTest {
-
+public abstract class AbstractModifiedFlagsEntityTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties(configuration);
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions(options);
 		if (forceModifiedFlags()) {
-			configuration.setProperty(
-					GlobalConfiguration.GLOBAL_WITH_MODIFIED_FLAG_PROPERTY, "true");
+			options.put(GlobalConfiguration.GLOBAL_WITH_MODIFIED_FLAG_PROPERTY, "true");
 		}
 	}
 

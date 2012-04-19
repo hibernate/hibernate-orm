@@ -5,21 +5,23 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
 @Entity
+@Table(name = "ManyToOneNotIns")
 @Audited
 public class ManyToOneNotInsertableEntity {
     @Id
     private Integer id;
 
     @Basic
-	@Column(name = "number")
+	@Column(name = "numVal")
     private Integer number;
 
 	@ManyToOne
-	@JoinColumn(name = "number", insertable = false, updatable = false)
+	@JoinColumn(name = "numVal", insertable = false, updatable = false)
 	private NotInsertableEntityType type;
 
 	public ManyToOneNotInsertableEntity() { }

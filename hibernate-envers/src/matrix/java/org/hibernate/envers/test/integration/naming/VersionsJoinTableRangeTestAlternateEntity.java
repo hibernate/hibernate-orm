@@ -10,7 +10,7 @@ import javax.persistence.Table;
  * @see VersionsJoinTableRangeTestEntitySuperClass
  */
 @Entity
-@Table(name = "RANGE_TEST_ALTERNATE_ENTITY")
+@Table(name = "RANGE_TEST_ALTERNATE_ENT")
 @org.hibernate.envers.Audited
 public class VersionsJoinTableRangeTestAlternateEntity extends
 		VersionsJoinTableRangeTestEntitySuperClass {

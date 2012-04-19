@@ -38,22 +38,22 @@ import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 @PrimaryKeyJoinColumn(name = "other_id")
 public class ChildPrimaryKeyJoinEntity extends ParentEntity {
     @Basic
-    private Long number;
+    private Long namVal;
 
     public ChildPrimaryKeyJoinEntity() {
     }
 
-    public ChildPrimaryKeyJoinEntity(Integer id, String data, Long number) {
+    public ChildPrimaryKeyJoinEntity(Integer id, String data, Long namVal) {
         super(id, data);
-        this.number = number;
+        this.namVal = namVal;
     }
 
-    public Long getNumber() {
-        return number;
+    public Long getNumVal() {
+        return namVal;
     }
 
-    public void setNumber(Long number) {
-        this.number = number;
+    public void setNumVal(Long namVal) {
+        this.namVal = namVal;
     }
 
     public boolean equals(Object o) {
@@ -64,18 +64,18 @@ public class ChildPrimaryKeyJoinEntity extends ParentEntity {
         ChildPrimaryKeyJoinEntity childPrimaryKeyJoinEntity = (ChildPrimaryKeyJoinEntity) o;
 
         //noinspection RedundantIfStatement
-        if (number != null ? !number.equals(childPrimaryKeyJoinEntity.number) : childPrimaryKeyJoinEntity.number != null) return false;
+        if (namVal != null ? !namVal.equals(childPrimaryKeyJoinEntity.namVal) : childPrimaryKeyJoinEntity.namVal != null) return false;
 
         return true;
     }
 
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (number != null ? number.hashCode() : 0);
+        result = 31 * result + (namVal != null ? namVal.hashCode() : 0);
         return result;
     }
 
     public String toString() {
-        return "CPKJE(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
+        return "CPKJE(id = " + getId() + ", data = " + getData() + ", namVal = " + namVal + ")";
     }
 }

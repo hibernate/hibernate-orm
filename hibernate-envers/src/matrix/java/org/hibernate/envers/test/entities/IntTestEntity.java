@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -38,6 +39,7 @@ public class IntTestEntity {
     private Integer id;
 
     @Audited
+    @Column(name = "NUMERIC_VALUE")
     private Integer number;
 
     public IntTestEntity() {
@@ -81,8 +83,7 @@ public class IntTestEntity {
     }
 
     public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
+        int result = (id != null ? id.hashCode() : 0);
         result = 31 * result + (number != null ? number.hashCode() : 0);
         return result;
     }

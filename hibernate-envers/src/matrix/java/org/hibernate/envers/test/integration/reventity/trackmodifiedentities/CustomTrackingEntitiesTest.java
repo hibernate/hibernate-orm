@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -16,22 +16,23 @@ import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.Custom
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.envers.test.tools.TestTools;
 
+
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}
  * interface. {@link CustomTrackingRevisionListener} shall be notified whenever an entity instance has been
  * added, modified or removed, so that changed entity name can be persisted.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class CustomTrackingEntitiesTest extends AbstractEntityTest {
+public class CustomTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId = null;
     private Integer siteId = null;
     
     @Override
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(ModifiedEntityTypeEntity.class);
-        cfg.addAnnotatedClass(CustomTrackingRevisionEntity.class);
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
+        cfg.addAnnotatedClass(CustomTrackingRevisionEntity.class);
     }
 
     @Test

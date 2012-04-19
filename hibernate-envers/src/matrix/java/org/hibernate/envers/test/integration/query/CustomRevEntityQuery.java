@@ -26,11 +26,11 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
@@ -39,14 +39,14 @@ import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
-public class CustomRevEntityQuery extends AbstractEntityTest {
+public class CustomRevEntityQuery extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
     private Integer id2;
     private Long timestamp;
 
     public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(CustomRevEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
+        cfg.addAnnotatedClass(CustomRevEntity.class);
     }
 
     @Test

@@ -32,25 +32,23 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class Inherited extends AbstractEntityTest {
+public class Inherited extends BaseEnversJPAFunctionalTestCase {
     private Integer id;
     private long timestamp1;
     private long timestamp2;
     private long timestamp3;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(InheritedRevEntity.class);
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{StrTestEntity.class, InheritedRevEntity.class};
     }
 
     @Test
@@ -129,8 +127,8 @@ public class Inherited extends AbstractEntityTest {
         Set<Number> revNumbers = new HashSet<Number>();
         revNumbers.add(1);
         revNumbers.add(2);
-        
-        Map<Number, InheritedRevEntity> revisionMap = vr.findRevisions(InheritedRevEntity.class, revNumbers);
+
+        Map revisionMap = vr.findRevisions(InheritedRevEntity.class, revNumbers);
         assert(revisionMap.size() == 2);
         assert(revisionMap.get(1).equals(vr.findRevision(InheritedRevEntity.class, 1)));
         assert(revisionMap.get(2).equals(vr.findRevision(InheritedRevEntity.class, 2)));

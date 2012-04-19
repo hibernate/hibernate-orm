@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringSetEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -38,7 +38,7 @@ import org.hibernate.envers.test.tools.TestTools;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class StringSet extends AbstractEntityTest {
+public class StringSet extends BaseEnversJPAFunctionalTestCase {
     private Integer sse1_id;
     private Integer sse2_id;
 

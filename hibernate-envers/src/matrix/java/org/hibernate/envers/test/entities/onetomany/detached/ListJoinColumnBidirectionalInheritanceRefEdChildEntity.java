@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.entities.onetomany.detached;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -10,6 +11,7 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
+@Table(name = "ListJoinColBiInhRefEdChild")
 @DiscriminatorValue("2")
 @Audited
 public class ListJoinColumnBidirectionalInheritanceRefEdChildEntity extends ListJoinColumnBidirectionalInheritanceRefEdParentEntity {

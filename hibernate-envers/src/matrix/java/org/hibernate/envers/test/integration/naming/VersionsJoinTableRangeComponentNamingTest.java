@@ -31,7 +31,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.mapping.Column;
@@ -44,7 +44,7 @@ import org.hibernate.mapping.PersistentClass;
  * @author Erik-Berndt Scheper
  */
 public class VersionsJoinTableRangeComponentNamingTest extends
-		AbstractEntityTest {
+		BaseEnversJPAFunctionalTestCase {
 	private Integer vjrcte_id;
 	private Integer vjtrte_id;
 	private Integer vjtrtae_id1;

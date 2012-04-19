@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
@@ -43,7 +43,7 @@ import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class Custom extends AbstractEntityTest {
+public class Custom extends BaseEnversJPAFunctionalTestCase {
     private Integer id;
     private long timestamp1;
     private long timestamp2;

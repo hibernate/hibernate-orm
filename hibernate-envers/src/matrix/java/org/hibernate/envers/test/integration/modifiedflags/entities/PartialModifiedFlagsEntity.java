@@ -32,10 +32,13 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -45,6 +48,7 @@ import org.hibernate.envers.test.entities.components.Component2;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 @Entity
+@Table(name = "PartialModFlags")
 @Audited(withModifiedFlag = false)
 public class PartialModifiedFlagsEntity {
     @Id
@@ -71,6 +75,8 @@ public class PartialModifiedFlagsEntity {
 
     @Audited(withModifiedFlag = true)
     @ElementCollection
+    @JoinTable(name = "PartialModFlags_StrSet")
+    @AuditJoinTable(name = "PartialModFlags_StrSet_AUD")
     private Set<String> stringSet = new HashSet<String>();
 
 	@Audited(withModifiedFlag = true)
@@ -81,6 +87,8 @@ public class PartialModifiedFlagsEntity {
 	@Audited(withModifiedFlag = true)
 	@ElementCollection
 	@MapKeyColumn(nullable=false)
+    @JoinTable(name = "PartialModFlags_StrMap")
+    @AuditJoinTable(name = "PartialModFlags_StrMap_AUD")
     private Map<String, String> stringMap = new HashMap<String, String>();
 
 	@Audited(withModifiedFlag = true)

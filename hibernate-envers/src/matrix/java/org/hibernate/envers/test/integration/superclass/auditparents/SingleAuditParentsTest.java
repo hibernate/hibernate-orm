@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -21,16 +21,13 @@ import org.hibernate.mapping.Table;
  * All supperclasses are marked with {@link MappedSuperclass} annotation but not {@link Audited}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class SingleAuditParentsTest extends AbstractEntityTest {
+public class SingleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
     private long childSingleId = 1L;
     private Integer siteSingleId = null;
 
     @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(MappedGrandparentEntity.class);
-        cfg.addAnnotatedClass(MappedParentEntity.class);
-        cfg.addAnnotatedClass(ChildSingleParentEntity.class);
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[]{MappedGrandparentEntity.class, MappedParentEntity.class, ChildSingleParentEntity.class, StrIntTestEntity.class};
     }
 
     @Test
@@ -44,6 +41,7 @@ public class SingleAuditParentsTest extends AbstractEntityTest {
         em.persist(new ChildSingleParentEntity(childSingleId, "grandparent 1", "notAudited 1", "parent 1", "child 1", siteSingle));
         em.getTransaction().commit();
         siteSingleId = siteSingle.getId();
+        em.close();
     }
 
     @Test

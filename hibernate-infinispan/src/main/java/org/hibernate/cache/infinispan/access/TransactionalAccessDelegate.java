@@ -68,11 +68,24 @@ public class TransactionalAccessDelegate {
       return val;
    }
 
-   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) {
+      return putFromLoad(key, value, txTimestamp, version, false);
+   }
+
+   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+            throws CacheException {
       if (!region.checkValid()) {
          if (isTrace) log.tracef("Region %s not valid", region.getName());
          return false;
       }
+
+      // In theory, since putForExternalRead is already as minimal as it can
+      // get, we shouldn't be need this check. However, without the check and
+      // without https://issues.jboss.org/browse/ISPN-1986, it's impossible to
+      // know whether the put actually occurred. Knowing this is crucial so
+      // that Hibernate can expose accurate statistics.
+      if (minimalPutOverride && cacheAdapter.containsKey(key))
+         return false;
 
       if (!putValidator.acquirePutFromLoadLock(key)) {
          if (isTrace) log.tracef("Put from load lock not acquired for key %s", key);
@@ -86,14 +99,6 @@ public class TransactionalAccessDelegate {
       }
 
       return true;
-   }
-
-   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
-            throws CacheException {
-      // We ignore minimalPutOverride. Infinispan putForExternalRead is
-      // already about as minimal as we can get; it will promptly return
-      // if it discovers that the node we want to write to already exists
-      return putFromLoad(key, value, txTimestamp, version);
    }
 
    public SoftLock lockItem(Object key, Object version) throws CacheException {

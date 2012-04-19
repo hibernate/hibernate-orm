@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
@@ -39,7 +39,7 @@ import org.hibernate.envers.test.tools.TestTools;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ComponentMapKey extends AbstractEntityTest {
+public class ComponentMapKey extends BaseEnversJPAFunctionalTestCase {
     private Integer cmke_id;
 
     private Integer cte1_id;

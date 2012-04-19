@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -15,12 +16,11 @@ public class AnnotatedTrackingEntitiesTest extends DefaultTrackingEntitiesTest {
     public void configure(Ejb3Configuration cfg) {
         super.configure(cfg);
         cfg.addAnnotatedClass(AnnotatedTrackingRevisionEntity.class);
-
     }
 
 	@Override
-	public void addConfigurationProperties(Properties configuration) {
-		super.addConfigurationProperties( configuration );
-		configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "false");
+	public void addConfigOptions(Map configuration) {
+		super.addConfigOptions( configuration );
+		configuration.put("org.hibernate.envers.track_entities_changed_in_revision", "false");
 	}
 }

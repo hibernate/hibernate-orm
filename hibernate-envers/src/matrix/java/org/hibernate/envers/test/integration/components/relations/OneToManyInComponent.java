@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
@@ -38,7 +38,7 @@ import org.hibernate.envers.test.entities.components.relations.OneToManyComponen
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class OneToManyInComponent extends AbstractEntityTest {
+public class OneToManyInComponent extends BaseEnversJPAFunctionalTestCase  {
     private Integer otmcte_id1;
 	private Integer ste_id1;
 	private Integer ste_id2;

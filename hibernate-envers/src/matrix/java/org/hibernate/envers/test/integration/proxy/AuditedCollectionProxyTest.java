@@ -28,7 +28,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.ListRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.ListRefIngEntity;
@@ -41,7 +41,7 @@ import org.hibernate.proxy.HibernateProxy;
  * @author Erik-Berndt Scheper
  * 
  */
-public class AuditedCollectionProxyTest extends AbstractEntityTest {
+public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase {
 
     Integer id_ListRefEdEntity1;
 

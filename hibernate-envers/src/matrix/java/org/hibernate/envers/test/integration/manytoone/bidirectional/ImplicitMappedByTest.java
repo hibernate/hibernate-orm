@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.TestForIssue;
@@ -18,7 +18,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4962")
-public class ImplicitMappedByTest extends AbstractEntityTest {
+public class ImplicitMappedByTest extends BaseEnversJPAFunctionalTestCase {
     private Long ownedId = null;
     private Long owning1Id = null;
     private Long owning2Id = null;

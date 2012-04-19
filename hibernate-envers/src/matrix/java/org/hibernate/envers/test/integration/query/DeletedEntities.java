@@ -29,17 +29,17 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class DeletedEntities extends AbstractEntityTest {
+public class DeletedEntities extends BaseEnversJPAFunctionalTestCase {
     private Integer id2;
 
     public void configure(Ejb3Configuration cfg) {

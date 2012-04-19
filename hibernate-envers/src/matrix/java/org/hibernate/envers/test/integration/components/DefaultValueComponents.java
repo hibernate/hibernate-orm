@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent1;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent2;
@@ -45,7 +45,7 @@ import org.hibernate.envers.test.entities.components.DefaultValueComponentTestEn
  *
  * @author Erik-Berndt Scheper
  */
-public class DefaultValueComponents extends AbstractEntityTest {
+public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DefaultValueComponents.class );
 
 	private Integer id0;
@@ -353,15 +353,15 @@ public class DefaultValueComponents extends AbstractEntityTest {
 				"select count(s) from DefaultValueComponentTestEntity s where s.id = "
 						+ expectedId.toString()).getSingleResult();
 		Number auditCount = (Number) em.createNativeQuery(
-				"select count(ID) from DefaultValueComponentTestEntity_AUD s where s.id = "
+				"select count(ID) from DefaultValueComponent_AUD s where s.id = "
 						+ expectedId.toString()).getSingleResult();
 		String comp2Str1Rev1 = (String) em
 				.createNativeQuery(
-						"select COMP2_STR1 from DefaultValueComponentTestEntity_AUD s where rev=1 and s.id = "
+						"select COMP2_STR1 from DefaultValueComponent_AUD s where rev=1 and s.id = "
 								+ expectedId.toString()).getSingleResult();
 		String comp2Str1Rev2 = (String) em
 				.createNativeQuery(
-						"select COMP2_STR1 from DefaultValueComponentTestEntity_AUD s where rev=2 and s.id = "
+						"select COMP2_STR1 from DefaultValueComponent_AUD s where rev=2 and s.id = "
 								+ expectedId.toString()).getSingleResult();
 		assert Long.valueOf(1L).equals(entCount);
 		assert Integer.valueOf(2).equals(auditCount.intValue());

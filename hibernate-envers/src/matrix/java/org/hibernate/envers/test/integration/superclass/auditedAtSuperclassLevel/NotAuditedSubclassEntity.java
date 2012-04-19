@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLeve
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 
 /**
@@ -34,6 +35,7 @@ import javax.persistence.Id;
  * 
  */
 @Entity
+@Table(name = "NotAuditedSubclass")
 public class NotAuditedSubclassEntity extends AuditedAllMappedSuperclass {
 	@Id
 	@GeneratedValue

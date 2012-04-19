@@ -31,20 +31,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NoneAudited extends AbstractEntityTest {
+public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(BasicTestEntity3.class);
-    }
-
-    @Override
-    public void newEntityManager() {
-        // The AuditReader shouldn't be created
     }
 
     @Test

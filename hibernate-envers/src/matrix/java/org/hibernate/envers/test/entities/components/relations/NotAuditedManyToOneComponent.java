@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.entities.components.relations;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
@@ -32,6 +33,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 @Embeddable
+@Table(name = "NotAudM2OCompEmb")
 public class NotAuditedManyToOneComponent {
 	@ManyToOne
 	@NotAudited

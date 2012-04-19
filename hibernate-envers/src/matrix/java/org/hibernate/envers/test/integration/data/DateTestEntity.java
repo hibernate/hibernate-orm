@@ -39,18 +39,18 @@ public class DateTestEntity {
     private Integer id;
 
     @Audited
-    private Date date;
+    private Date dateValue;
 
     public DateTestEntity() {
     }
 
-    public DateTestEntity(Date date) {
-        this.date = date;
+    public DateTestEntity(Date dateValue) {
+        this.dateValue = dateValue;
     }
 
     public DateTestEntity(Integer id, Date date) {
         this.id = id;
-        this.date = date;
+        this.dateValue = dateValue;
     }
 
     public Integer getId() {
@@ -61,12 +61,12 @@ public class DateTestEntity {
         this.id = id;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getDateValue() {
+        return dateValue;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setDateValue(Date dateValue) {
+        this.dateValue = dateValue;
     }
 
     public boolean equals(Object o) {
@@ -75,12 +75,12 @@ public class DateTestEntity {
 
         DateTestEntity that = (DateTestEntity) o;
 
-        if (date != null) {
-            if (that.date == null) {
+        if (dateValue != null) {
+            if (that.dateValue == null) {
                 return false;
             }
 
-            if (date.getTime() != that.date.getTime()) {
+            if (dateValue.getTime() != that.dateValue.getTime()) {
                 return false;
             }
         }
@@ -93,7 +93,7 @@ public class DateTestEntity {
     public int hashCode() {
         int result;
         result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (date != null ? date.hashCode() : 0);
+        result = 31 * result + (dateValue != null ? dateValue.hashCode() : 0);
         return result;
     }
 }

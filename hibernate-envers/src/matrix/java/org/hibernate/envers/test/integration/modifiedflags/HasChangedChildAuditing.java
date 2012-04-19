@@ -67,7 +67,7 @@ public class HasChangedChildAuditing extends AbstractModifiedFlagsEntityTest {
         em.getTransaction().begin();
         ce = em.find(ChildEntity.class, id1);
         ce.setData("y");
-        ce.setNumber(2l);
+        ce.setNumVal(2l);
         em.getTransaction().commit();
     }
 
@@ -77,14 +77,14 @@ public class HasChangedChildAuditing extends AbstractModifiedFlagsEntityTest {
 		assertEquals(2, list.size());
 		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
-		list = queryForPropertyHasChanged(ChildEntity.class, id1, "number");
+		list = queryForPropertyHasChanged(ChildEntity.class, id1, "numVal");
 		assertEquals(2, list.size());
 		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ChildEntity.class, id1, "data");
 		assertEquals(0, list.size());
 
-		list = queryForPropertyHasNotChanged(ChildEntity.class, id1, "number");
+		list = queryForPropertyHasNotChanged(ChildEntity.class, id1, "numVal");
 		assertEquals(0, list.size());
 	}
 

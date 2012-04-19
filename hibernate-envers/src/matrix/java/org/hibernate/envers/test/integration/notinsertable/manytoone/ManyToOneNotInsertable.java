@@ -6,10 +6,10 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
-public class ManyToOneNotInsertable extends AbstractEntityTest {
+public class ManyToOneNotInsertable extends BaseEnversJPAFunctionalTestCase {
     private Integer mto_id1;
     private Integer type_id1;
     private Integer type_id2;

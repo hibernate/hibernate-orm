@@ -36,18 +36,18 @@ public class IntNoAutoIdTestEntity {
     private Integer id;
 
     @Audited
-    private Integer number;
+    private Integer numVal;
 
     public IntNoAutoIdTestEntity() {
     }
 
-    public IntNoAutoIdTestEntity(Integer number, Integer id) {
+    public IntNoAutoIdTestEntity(Integer numVal, Integer id) {
         this.id = id;
-        this.number = number;
+        this.numVal = numVal;
     }
 
-    public IntNoAutoIdTestEntity(Integer number) {
-        this.number = number;
+    public IntNoAutoIdTestEntity(Integer numVal) {
+        this.numVal = numVal;
     }
 
     public Integer getId() {
@@ -58,12 +58,12 @@ public class IntNoAutoIdTestEntity {
         this.id = id;
     }
 
-    public Integer getNumber() {
-        return number;
+    public Integer getNumVal() {
+        return numVal;
     }
 
-    public void setNumber(Integer number) {
-        this.number = number;
+    public void setNumVal(Integer numVal) {
+        this.numVal = numVal;
     }
 
     public boolean equals(Object o) {
@@ -74,7 +74,7 @@ public class IntNoAutoIdTestEntity {
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         //noinspection RedundantIfStatement
-        if (number != null ? !number.equals(that.number) : that.number != null) return false;
+        if (numVal != null ? !numVal.equals(that.numVal) : that.numVal != null) return false;
 
         return true;
     }
@@ -82,11 +82,11 @@ public class IntNoAutoIdTestEntity {
     public int hashCode() {
         int result;
         result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (number != null ? number.hashCode() : 0);
+        result = 31 * result + (numVal != null ? numVal.hashCode() : 0);
         return result;
     }
 
     public String toString() {
-        return "INATE(id = " + id + ", number = " + number + ")";
+        return "INATE(id = " + id + ", numVal = " + numVal + ")";
     }
 }

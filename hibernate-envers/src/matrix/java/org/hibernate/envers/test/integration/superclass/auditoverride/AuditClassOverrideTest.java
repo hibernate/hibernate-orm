@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -16,7 +16,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
-public class AuditClassOverrideTest extends AbstractEntityTest {
+public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
     private Integer classAuditedEntityId = null;
     private Integer classNotAuditedEntityId = null;
     private Table classAuditedTable = null;

@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomDataRevEntity;
@@ -38,7 +38,7 @@ import org.hibernate.envers.test.entities.reventity.CustomDataRevEntity;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CustomNoListener extends AbstractEntityTest {
+public class CustomNoListener extends BaseEnversJPAFunctionalTestCase {
     private Integer id;
 
     public void configure(Ejb3Configuration cfg) {

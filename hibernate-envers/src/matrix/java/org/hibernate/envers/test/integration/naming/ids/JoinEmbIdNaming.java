@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 
@@ -41,7 +41,7 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class JoinEmbIdNaming extends AbstractEntityTest {
+public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
     private EmbIdNaming ed_id1;
     private EmbIdNaming ed_id2;
     private EmbIdNaming ing_id1;

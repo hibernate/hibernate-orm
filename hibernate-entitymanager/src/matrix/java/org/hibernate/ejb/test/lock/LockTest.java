@@ -23,6 +23,17 @@
  */
 package org.hibernate.ejb.test.lock;
 
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.*;
+import org.jboss.logging.Logger;
+import org.junit.Test;
+
+import javax.persistence.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,35 +41,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PessimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.QueryTimeoutException;
 
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Emmanuel Bernard
@@ -116,7 +100,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em3 = createIsolatedEntityManager();
 		em3.getTransaction().begin();
 		try {
-			Lock lock3 = em3.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
+			em3.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
 			assertFalse("Exception should be thrown", true);
 		} catch (LockTimeoutException lte) {
 			assertTrue("Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.", true);
@@ -635,8 +619,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( value = { Oracle10gDialect.class, PostgreSQL81Dialect.class })
+    @RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();

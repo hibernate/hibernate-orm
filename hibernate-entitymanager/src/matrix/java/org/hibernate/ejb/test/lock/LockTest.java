@@ -49,6 +49,7 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -93,7 +94,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7252" )
-//	@FailureExpected( jiraKey = "HHH-7252" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
@@ -123,11 +123,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		} catch (PessimisticLockException pe) {
 			assertTrue("Find with immediate timeout should have thrown LockTimeoutException.", false);
 		} catch (PersistenceException pe) {
-			log.warn("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-				      "This is likely a consequence of the Dialect not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+			log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+				      "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
 				      "See HHH-7251 for an example of one such situation.", pe);
-			// Ideally, I'd like to see this here. It would ensure that the proper lock exceptions were being mapped for each dialect.
-			//assertTrue("EntityManager should be throwing LockTimeoutException.", false);
+			assertTrue("EntityManager should be throwing LockTimeoutException.", false);
 		} finally {
 			if (em3.getTransaction().getRollbackOnly()) {
 				em3.getTransaction().rollback();
@@ -454,14 +453,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticReadLockTimeout() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testContendedPessimisticReadLockTimeout" );
-			return;
-		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask = null;
@@ -550,15 +546,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testContendedPessimisticWriteLockTimeout" );
-			return;
-		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask;
@@ -642,15 +635,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testContendedPessimisticWriteLockNoWait" );
-			return;
-		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask;
@@ -734,15 +724,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testQueryTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testQueryTimeout" );
-			return;
-		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask;
@@ -830,12 +817,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testQueryTimeoutEMProps() throws Exception {
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testQueryTimeout" );
-			return;
-		}
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> queryTimeoutProps = new HashMap<String, Object>();
 		queryTimeoutProps.put( "javax.persistence.query.timeout", 500 ); // 1 sec timeout (should round up)
@@ -926,17 +910,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect( value = Oracle10gDialect.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testLockTimeoutEMProps() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> TimeoutProps = new HashMap<String, Object>();
 		TimeoutProps.put( "javax.persistence.lock.timeout", 1000 ); // 1 second timeout
 		final EntityManager em2 = createIsolatedEntityManager( TimeoutProps );
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
-			log.info( "skipping testLockTimeoutEMProps" );
-			return;
-		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask;

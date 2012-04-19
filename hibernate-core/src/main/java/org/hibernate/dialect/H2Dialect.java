@@ -23,21 +23,25 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-
-import org.jboss.logging.Logger;
-
+import org.hibernate.JDBCException;
+import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
+import org.jboss.logging.Logger;
+
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * A dialect compatible with the H2 database.
@@ -292,6 +296,33 @@ public class H2Dialect extends Dialect {
 			return constraintName;
 		}
 	};
+	
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
+		if (delegate == null) {
+			delegate = new SQLExceptionConversionDelegate() {
+
+				@Override
+				public JDBCException convert(SQLException sqlException, String message, String sql) {
+                    JDBCException exception = null;
+
+                    int errorCode = JdbcExceptionHelper.extractErrorCode(sqlException);
+
+                    if (40001 == errorCode) { // DEADLOCK DETECTED
+                        exception = new LockAcquisitionException(message, sqlException, sql);
+                    }
+
+                    if (50200 == errorCode) { // LOCK NOT AVAILABLE
+                        exception = new PessimisticLockException(message, sqlException, sql);
+                    }
+
+					return exception;
+				}
+			};
+		}
+		return delegate;
+	}
 
 	@Override
 	public boolean supportsTemporaryTables() {

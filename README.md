@@ -10,7 +10,7 @@ Quickstart
 
      git clone git://github.com/hibernate/hibernate-orm.git
      cd hibernate-orm
-     ./gradle clean build
+     ./gradlew clean build
      
 If you are having problems with unresolved dependencies you need to configure access to the JBoss Nexus repository
 (see below)_.

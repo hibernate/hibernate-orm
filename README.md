@@ -3,7 +3,18 @@ How to build
 
 *Starting with development of version 4.0, Hibernate uses [Gradle](http://gradle.org) as its build tool.*
 
-This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly. More information can be found on the Hibernate [wiki](https://community.jboss.org/wiki/BuildingHibernateORM4x).
+This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly.
+
+Quickstart
+----------
+
+     git clone git://github.com/hibernate/hibernate-orm.git
+     cd hibernate-orm
+     ./gradle clean build
+     
+If you are having problems with unresolved dependencies you need to configure access to the JBoss Nexus repository
+(see below)_.
+
 
 Resources
 ---------

@@ -1,38 +1,47 @@
 How to build
 ============
 
-*Starting with development of version 4.0, Hibernate uses Gradle (http://gradle.org) as its build tool.*
+*Starting with development of version 4.0, Hibernate uses [Gradle](http://gradle.org) as its build tool.*
 
-This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly.
+This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly. More information can be found on the Hibernate [wiki](https://community.jboss.org/wiki/BuildingHibernateORM4x).
 
 Resources
 ---------
 
-To start with - here is a list of resources to obtain more information about Gradle:
+### General
 
-* The Gradle User Guide : http://gradle.org/docs/current/userguide/userguide_single.html
-* Gradle DSL Guide : http://gradle.org/docs/current/dsl/index.html
-* Additional Hibernate/Gradle information : http://community.jboss.org/wiki/GradleFAQ
+* [Building Hibernate ORM](https://community.jboss.org/wiki/BuildingHibernateORM4x)
 
-Here is the link of how to set up ~/.m2/settings.xml to use JBoss Nexus repo.
+### JBoss Nexus
 
-* JBoss Nexus User Guide : http://community.jboss.org/wiki/MavenGettingStarted-Users
+* [JBoss Nexus User Guide](http://community.jboss.org/wiki/MavenGettingStarted-Users) - explains how to set up _~/.m2/settings.xml_ to use JBoss Nexus repo.
 
-Executing Tasks Across All Modules
-----------------------------------
+### Gradle
+
+* [Gradle User Guide](http://gradle.org/docs/current/userguide/userguide_single.html)
+* [Gradle DSL Guide](http://gradle.org/docs/current/dsl/index.html)
+
+Executing Tasks
+---------------
+
+Gradle uses the concept of build tasks (equivalent to Ant targets). You can get a list of available tasks 
+via 
+
+    gradle --tasks
+    
+### Executing Tasks Across All Modules
 
 To execute a task across all modules, simply perform that task from the root directory.  Gradle will visit each
 subproject and execute that task if the subproject defines it.
 
-Executing Tasks In Specific Module
-----------------------------------
+### Executing Tasks In Specific Module
 
 To execute a task in a specific module you can either:
+
 1. `cd` into that module directory and execute the task
 2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
 
-Common Java-module tasks
-------------------------
+### Common Java related tasks
 
 * _build_ - Assembles (jars) and tests this project
 * _buildDependents_ - Assembles and tests this project and all projects that depend on it.  So think of running this in hibernnate-entitymanager, Gradle would assemble and test hibernate-entitymanager as well as hibernate-envers (because envers depends on entitymanager)

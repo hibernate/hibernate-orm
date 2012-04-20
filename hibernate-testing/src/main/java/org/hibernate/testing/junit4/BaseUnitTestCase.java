@@ -30,7 +30,7 @@ import org.junit.After;
 import org.junit.runner.RunWith;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**
  * The base unit test adapter.
@@ -43,10 +43,10 @@ public abstract class BaseUnitTestCase {
 
 	@After
 	public void releaseTransactions() {
-		if ( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) ) {
+		if ( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {
 			log.warn( "Cleaning up unfinished transaction" );
 			try {
-				TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 			}
 			catch (SystemException ignored) {
 			}

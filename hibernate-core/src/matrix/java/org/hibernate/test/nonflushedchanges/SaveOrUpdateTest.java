@@ -33,7 +33,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -63,7 +63,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	public void testSaveOrUpdateDeepTree() throws Exception {
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
@@ -75,7 +75,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		child = ( Node ) getOldToNewEntityRefMap().get( child );
 		grandchild = ( Node ) getOldToNewEntityRefMap().get( grandchild );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
@@ -85,12 +85,12 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		Node grandchild2 = new Node( "grandchild2" );
 		child.addChild( grandchild2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 1 );
@@ -101,17 +101,17 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		child2.addChild( grandchild3 );
 		root.addChild( child2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( grandchild );
 		s.delete( grandchild2 );
@@ -119,7 +119,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s.delete( child );
 		s.delete( child2 );
 		s.delete( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -128,7 +128,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
@@ -140,7 +140,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		child = ( NumberedNode ) getOldToNewEntityRefMap().get( child );
 		grandchild = ( NumberedNode ) getOldToNewEntityRefMap().get( grandchild );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
@@ -152,12 +152,12 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		NumberedNode grandchild2 = new NumberedNode( "grandchild2" );
 		child.addChild( grandchild2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( instrumented ? 1 : 3 );
@@ -168,22 +168,22 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		child2.addChild( grandchild3 );
 		root.addChild( child2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( instrumented ? 0 : 4 );
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from NumberedNode where name like 'grand%'" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode where name like 'child%'" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode" ).executeUpdate();
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -191,7 +191,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	public void testSaveOrUpdateTree() throws Exception {
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
@@ -200,7 +200,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		child = ( Node ) getOldToNewEntityRefMap().get( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -212,20 +212,20 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 
 		root.addChild( secondChild );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Node where parent is not null" ).executeUpdate();
 		s.createQuery( "delete from Node" ).executeUpdate();
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -233,7 +233,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	public void testSaveOrUpdateTreeWithGeneratedId() throws Exception {
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
@@ -242,7 +242,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		child = ( NumberedNode ) getOldToNewEntityRefMap().get( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -254,34 +254,34 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 
 		root.addChild( secondChild );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode" ).executeUpdate();
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateManaged() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.get( NumberedNode.class, root.getId() );
 		NumberedNode child = new NumberedNode( "child" );
@@ -299,12 +299,12 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		child = ( NumberedNode ) getOldToNewEntityRefMap().get( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertTrue( root.getChildren().contains( child ) );
 		assertEquals( root.getChildren().size(), 1 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				Long.valueOf( 2 ),
@@ -314,7 +314,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		);
 		s.delete( root );
 		s.delete( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -324,29 +324,29 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( instrumented ? 0 : 1 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.get( NumberedNode.class, Long.valueOf( root.getId() ) );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -354,11 +354,11 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		Hibernate.initialize( root.getChildren() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		NumberedNode child = new NumberedNode( "child" );
 		root.addChild( child );
@@ -368,12 +368,12 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		assertTrue( Hibernate.isInitialized( root.getChildren() ) );
 		child = ( NumberedNode ) root.getChildren().iterator().next();
 		assertTrue( s.contains( child ) );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( instrumented ? 0 : 1 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				s.createCriteria( NumberedNode.class )
@@ -383,7 +383,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		);
 		s.delete( root );
 		s.delete( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -391,29 +391,29 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	public void testSaveOrUpdateGotWithMutableProp() throws Exception {
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node root = new Node( "root" );
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.saveOrUpdate( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 0 );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( Node ) s.get( Node.class, "root" );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -421,11 +421,11 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		Hibernate.initialize( root.getChildren() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		Node child = new Node( "child" );
 		root.addChild( child );
@@ -437,12 +437,12 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		child = ( Node ) getOldToNewEntityRefMap().get( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		//assertUpdateCount( 1 ); //note: will fail here if no second-level cache
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				Long.valueOf( 2 ),
@@ -452,13 +452,13 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		);
 		s.delete( root );
 		s.delete( child );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testEvictThenSaveOrUpdate() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node parent = new Node( "1:parent" );
 		Node child = new Node( "2:child" );
@@ -467,9 +467,9 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		child.addChild( grandchild );
 		s.saveOrUpdate( parent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
 		child = ( Node ) s1.load( Node.class, "2:child" );
 		s1 = applyNonFlushedChangesToNewSessionCloseOldSession( s1 );
@@ -492,9 +492,9 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		assertFalse( s1.contains( child ) );
 		assertTrue( s1.contains( child.getParent() ) );
 
-		javax.transaction.Transaction tx1 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
+		javax.transaction.Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		try {
 			s2.getTransaction().begin();
@@ -505,13 +505,13 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 			// expected because parent is connected to s1
 		}
 		finally {
-			TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 		}
 
 		s1.evict( child.getParent() );
 		assertFalse( s1.contains( child.getParent() ) );
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s2 = openSession();
  		s2.saveOrUpdate( child );
 		s2 = applyNonFlushedChangesToNewSessionCloseOldSession( s2 );
@@ -530,18 +530,18 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		assertTrue( Hibernate.isInitialized( child.getParent() ) );
 		s1 = applyNonFlushedChangesToNewSessionCloseOldSession( s1 );
 		s2 = applyNonFlushedChangesToNewSessionCloseOldSession( s2 );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx1 );
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 //		tx1.commit();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( s.get( Node.class, "3:grandchild" ) );
 		s.delete( s.get( Node.class, "2:child" ) );
 		s.delete( s.get( Node.class, "1:parent" ) );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 }

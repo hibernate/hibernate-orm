@@ -114,7 +114,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
         ejb3Configuration
 				.getHibernateConfiguration()
-				.setProperty( "org.hibernate.envers.use_enhanced_revision_entity", "true" );
+				.setProperty( "org.hibernate.envers.use_revision_entity_with_native_id", "false" );
 
 		ejb3Configuration
 				.getHibernateConfiguration()

@@ -28,7 +28,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -42,7 +41,7 @@ import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.enhanced.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -66,7 +65,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	private Integer c1_2_id;
 	private Integer c2_1_id;
 	private Integer c2_2_id;
-	private Map<Number, DefaultRevisionEntity> revisions;
+	private Map<Number, SequenceIdRevisionEntity> revisions;
 
 	public void configure(Ejb3Configuration cfg) {
 		cfg.addAnnotatedClass(ParentEntity.class);
@@ -204,7 +203,8 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 
 		Set<Number> revisionNumbers = new HashSet<Number>();
 		revisionNumbers.addAll(Arrays.asList(1, 2, 3, 4, 5));
-		revisions = getAuditReader().findRevisions(DefaultRevisionEntity.class,
+		revisions = getAuditReader().findRevisions(
+				SequenceIdRevisionEntity.class,
 				revisionNumbers);
 
 		assert revisions.size() == 5;
@@ -423,7 +423,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	private void verifyRevEndTimeStamps(String debugInfo, List<Map<String, Object>> revisionEntities) {
 		for (Map<String, Object> revisionEntity : revisionEntities) {
 			Date revendTimestamp = (Date) revisionEntity.get(revendTimestampColumName);
-			DefaultRevisionEntity revEnd = (DefaultRevisionEntity) revisionEntity.get("REVEND");
+			SequenceIdRevisionEntity revEnd = (SequenceIdRevisionEntity) revisionEntity.get("REVEND");
 
 			if (revendTimestamp == null) {
 				Assert.assertNull(revEnd);

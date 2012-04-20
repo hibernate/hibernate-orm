@@ -8,6 +8,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -60,7 +61,7 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
 
     @Test
     public void testRevisionsCounts() throws Exception {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
+        Assert.assertEquals(Arrays.asList(1, 2), getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
     @Test
@@ -68,7 +69,7 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
         IntTestEntity ver1 = new IntTestEntity(10, id1);
         IntTestEntity ver2 = new IntTestEntity(20, id1);
 
-        assert getAuditReader().find(IntTestEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(IntTestEntity.class, id1, 2).equals(ver2);
+        Assert.assertEquals(ver1, getAuditReader().find(IntTestEntity.class, id1, 1));
+        Assert.assertEquals(ver2, getAuditReader().find(IntTestEntity.class, id1, 2));
     }
 }

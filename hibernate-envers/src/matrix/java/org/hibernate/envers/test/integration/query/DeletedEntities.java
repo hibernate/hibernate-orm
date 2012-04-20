@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.enhanced.DefaultRevisionEntity;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -95,7 +95,7 @@ public class DeletedEntities extends BaseEnversJPAFunctionalTestCase {
         assert result.size() == 1;
 
         assert ((Object []) result.get(0))[0].equals(new StrIntTestEntity("b", 11, id2));
-        assert ((DefaultRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
+        assert ((SequenceIdRevisionEntity) ((Object []) result.get(0))[1]).getId() == 1;
         assert ((Object []) result.get(0))[2].equals(RevisionType.ADD);
     }
 }

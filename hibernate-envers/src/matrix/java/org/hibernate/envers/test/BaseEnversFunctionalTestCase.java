@@ -49,7 +49,7 @@ public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTes
     @Override
     protected Configuration constructConfiguration() {
         Configuration configuration = super.constructConfiguration();
-        configuration.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+        configuration.setProperty("org.hibernate.envers.use_revision_entity_with_native_id", "false");
         return configuration;
     }
 

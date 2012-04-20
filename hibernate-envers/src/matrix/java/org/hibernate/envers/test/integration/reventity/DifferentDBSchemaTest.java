@@ -59,7 +59,7 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
 
     @Test
     public void testRevinfoSchemaName() {
-        Table revisionTable = getCfg().getClassMapping("org.hibernate.envers.enhanced.DefaultRevisionEntity").getTable();
+        Table revisionTable = getCfg().getClassMapping("org.hibernate.envers.enhanced.SequenceIdRevisionEntity").getTable();
         assert SCHEMA_NAME.equals(revisionTable.getSchema());
     }
 

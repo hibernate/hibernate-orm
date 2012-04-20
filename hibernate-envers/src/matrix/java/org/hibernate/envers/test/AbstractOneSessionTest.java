@@ -43,7 +43,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
         config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-        config.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+        config.setProperty("org.hibernate.envers.use_revision_entity_with_native_id", "false");
         addProperties(config);
 
         this.initMappings();

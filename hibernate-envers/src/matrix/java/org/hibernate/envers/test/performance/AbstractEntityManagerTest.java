@@ -99,7 +99,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 		if ( createSchema() ) {
 			configurationProperties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 			configurationProperties.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-			configurationProperties.setProperty("org.hibernate.envers.use_enhanced_revision_entity", "true");
+			configurationProperties.setProperty("org.hibernate.envers.use_revision_entity_with_native_id", "false");
 		}
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);

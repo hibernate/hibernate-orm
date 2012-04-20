@@ -253,6 +253,25 @@
                     </row>
                     <row>
                         <entry>
+                            <property>org.hibernate.envers.use_revision_entity_with_native_id</property>
+                        </entry>
+                        <entry>
+                            true
+                        </entry>
+                        <entry>
+                            Boolean flag that determines the strategy of revision number generation. Default
+                            implementation of revision entity uses native identifier generator. If current database
+                            engine does not support identity columns, users are advised to set this property to false.
+                            In this case revision numbers are created by preconfigured
+                            <classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>. See:
+                            <orderedlist>
+                                <listitem><classname>org.hibernate.envers.DefaultRevisionEntity</classname></listitem>
+                                <listitem><classname>org.hibernate.envers.enhanced.SequenceIdRevisionEntity</classname></listitem>
+                            </orderedlist>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
                             <property>org.hibernate.envers.track_entities_changed_in_revision</property>
                         </entry>
                         <entry>

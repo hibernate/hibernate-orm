@@ -70,8 +70,8 @@ public class GlobalConfiguration {
 	// Suffix to be used for modified flags columns
 	private String modifiedFlagSuffix;
 
-    // Use enhanced default revision entity (only for internal use)
-    private final boolean useEnhancedRevisionEntity;
+    // Use revision entity with native id generator
+    private final boolean useRevisionEntityWithNativeId;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -112,11 +112,11 @@ public class GlobalConfiguration {
         		"false");
         trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
 
-        String useEnhancedRevisionEntityStr = getProperty(properties,
-        		"org.hibernate.envers.use_enhanced_revision_entity",
-        		"org.hibernate.envers.use_enhanced_revision_entity",
-        		"false");
-        useEnhancedRevisionEntity = Boolean.parseBoolean(useEnhancedRevisionEntityStr);
+        String useRevisionEntityWithNativeIdStr = getProperty(properties,
+        		"org.hibernate.envers.use_revision_entity_with_native_id",
+        		"org.hibernate.envers.use_revision_entity_with_native_id",
+        		"true");
+        useRevisionEntityWithNativeId = Boolean.parseBoolean(useRevisionEntityWithNativeIdStr);
 
 		hasGlobalSettingForWithModifiedFlag =
 				properties.getProperty(GLOBAL_WITH_MODIFIED_FLAG_PROPERTY) != null;
@@ -191,7 +191,7 @@ public class GlobalConfiguration {
 		return modifiedFlagSuffix;
 	}
 
-    public boolean isUseEnhancedRevisionEntity() {
-        return useEnhancedRevisionEntity;
+    public boolean isUseRevisionEntityWithNativeId() {
+        return useRevisionEntityWithNativeId;
     }
 }

@@ -41,7 +41,7 @@ import java.util.Date;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @MappedSuperclass
-public class DefaultRevisionEntity implements Serializable {
+public class SequenceIdRevisionEntity implements Serializable {
     private static final long serialVersionUID = 4159156677698841902L;
     
     @Id
@@ -83,9 +83,9 @@ public class DefaultRevisionEntity implements Serializable {
 
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DefaultRevisionEntity)) return false;
+        if (!(o instanceof SequenceIdRevisionEntity )) return false;
 
-        DefaultRevisionEntity that = (DefaultRevisionEntity) o;
+        SequenceIdRevisionEntity that = (SequenceIdRevisionEntity) o;
 
         if (id != that.id) return false;
         if (timestamp != that.timestamp) return false;
@@ -100,6 +100,6 @@ public class DefaultRevisionEntity implements Serializable {
     }
 
     public String toString() {
-        return "DefaultRevisionEntity(id = " + id + ", revisionDate = " + DateFormat.getDateTimeInstance().format(getRevisionDate()) + ")";
+        return "SequenceIdRevisionEntity(id = " + id + ", revisionDate = " + DateFormat.getDateTimeInstance().format(getRevisionDate()) + ")";
     }
 }

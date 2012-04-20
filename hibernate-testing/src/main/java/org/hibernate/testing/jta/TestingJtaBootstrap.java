@@ -23,23 +23,16 @@
  */
 package org.hibernate.testing.jta;
 
-import javax.sql.DataSource;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
 /**
- * Manages the {@link TransactionManager}, {@link UserTransaction} and {@link DataSource} instances used for testing.
- *
  * @author Steve Ebersole
  */
 public class TestingJtaBootstrap {
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
-
 
 	@SuppressWarnings("unchecked")
 	public static void prepare(Map configValues) {
@@ -48,15 +41,4 @@ public class TestingJtaBootstrap {
 		configValues.put( "javax.persistence.transactionType", "JTA" );
 	}
 
-	/**
-	 * Used by envers...
-	 */
-	public static void tryCommit() throws Exception {
-		if ( TestingJtaPlatformImpl.transactionManager().getStatus() == Status.STATUS_MARKED_ROLLBACK ) {
-			TestingJtaPlatformImpl.transactionManager().rollback();
-		}
-		else {
-			TestingJtaPlatformImpl.transactionManager().commit();
-		}
-	}
 }

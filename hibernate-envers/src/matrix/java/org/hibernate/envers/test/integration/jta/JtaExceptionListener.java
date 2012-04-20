@@ -37,6 +37,7 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.
@@ -56,7 +57,7 @@ public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
     @Test(expected = RollbackException.class)
     @Priority(5) // must run before testDataNotPersisted()
     public void testTransactionRollback() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
         try {
 			EntityManager em = getEntityManager();
@@ -66,13 +67,13 @@ public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
             StrTestEntity te = new StrTestEntity("x");
             em.persist(te);
         } finally {
-			TestingJtaBootstrap.tryCommit();
+			TestingJtaPlatformImpl.tryCommit();
         }
     }
 
     @Test
     public void testDataNotPersisted() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
         try {
     		// Checking if the entity became persisted
@@ -80,7 +81,7 @@ public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
             long count = em.createQuery("from StrTestEntity s where s.str = 'x'").getResultList().size();
 		    Assert.assertEquals( 0, count );
         } finally {
-			TestingJtaBootstrap.tryCommit();
+			TestingJtaPlatformImpl.tryCommit();
         }
     }
 }

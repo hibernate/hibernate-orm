@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
@@ -33,7 +34,7 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
     @Test
     @Priority(10)
     public void initData() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
         EntityManager em;
         IntTestEntity ite;
@@ -43,18 +44,18 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
             em.persist(ite);
             id1 = ite.getId();
         } finally {
-			TestingJtaBootstrap.tryCommit();
+			TestingJtaPlatformImpl.tryCommit();
         }
         em.close();
 
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
         try {
             em = getEntityManager();
             ite = em.find(IntTestEntity.class, id1);
             ite.setNumber(20);
         } finally {
-			TestingJtaBootstrap.tryCommit();
+			TestingJtaPlatformImpl.tryCommit();
         }
         em.close();
     }

@@ -73,6 +73,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 				transferSetting( Environment.CONNECTION_PREFIX + '.' + setting, configurationValues, connectionSettings );
 			}
 		}
+		connectionSettings.setProperty( Environment.AUTOCOMMIT, "false" );
 
 		delegate = new DriverManagerConnectionProviderImpl();
 		delegate.configure( connectionSettings );

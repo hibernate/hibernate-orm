@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.jta;
 
+import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
@@ -37,8 +38,10 @@ import org.hibernate.service.jta.platform.internal.SynchronizationRegistryAccess
 import org.hibernate.service.jta.platform.internal.SynchronizationRegistryBasedSynchronizationStrategy;
 
 /**
-* @author Steve Ebersole
-*/
+ * A test-specific implementation of the JtaPlatform contract for testing JTA-based functionality.
+ *
+ * @author Steve Ebersole
+ */
 public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
 	public static final TestingJtaPlatformImpl INSTANCE = new TestingJtaPlatformImpl();
 
@@ -86,6 +89,18 @@ public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
 
 	public static TransactionSynchronizationRegistry synchronizationRegistry() {
 		return INSTANCE.synchronizationRegistry;
+	}
+
+	/**
+	 * Used by envers...
+	 */
+	public static void tryCommit() throws Exception {
+		if ( transactionManager().getStatus() == Status.STATUS_MARKED_ROLLBACK ) {
+			transactionManager().rollback();
+		}
+		else {
+			transactionManager().commit();
+		}
 	}
 
 	@Override

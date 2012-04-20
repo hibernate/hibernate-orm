@@ -13,7 +13,7 @@ Quickstart
      ./gradlew clean build
      
 If you are having problems with unresolved dependencies you need to configure access to the JBoss Nexus repository
-(see below)_.
+(see below).
 
 
 Resources

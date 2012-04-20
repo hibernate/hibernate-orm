@@ -81,7 +81,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
-	public void testFindWithImmediateTimeoutHintVerifyException() {
+	public void testFindWithPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
 		EntityManager em = getOrCreateEntityManager();

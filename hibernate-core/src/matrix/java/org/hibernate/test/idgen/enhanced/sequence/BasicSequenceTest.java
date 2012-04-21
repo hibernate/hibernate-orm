@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
@@ -36,11 +37,12 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "idgen/enhanced/sequence/Basic.hbm.xml" };
+		return new String[] { "idgen/enhanced/sequence/Basic.hbm.xml", "idgen/enhanced/sequence/Dedicated.hbm.xml" };
 	}
 
 	@Test
@@ -70,5 +72,26 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 		}
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-6790")
+	public void testSequencePerEntity() {
+		final String overriddenEntityName = "SpecialEntity";
+		EntityPersister persister = sessionFactory().getEntityPersister( overriddenEntityName );
+		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
+		SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
+		assertEquals( overriddenEntityName + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX, generator.getDatabaseStructure().getName() );
+
+		Session s = openSession();
+		s.beginTransaction();
+		Entity entity1 = new Entity( "1" );
+		s.save( overriddenEntityName, entity1 );
+		Entity entity2 = new Entity( "2" );
+		s.save( overriddenEntityName, entity2 );
+		s.getTransaction().commit();
+
+		assertEquals( 1, entity1.getId().intValue() );
+		assertEquals( 2, entity2.getId().intValue() );
 	}
 }

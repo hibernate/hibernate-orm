@@ -31,7 +31,9 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +45,7 @@ import static org.junit.Assert.assertTrue;
  * hibernate generators using the new scheme
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -51,8 +54,15 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 				MinimalSequenceEntity.class,
 				CompleteSequenceEntity.class,
 				AutoEntity.class,
-				MinimalTableEntity.class
+				MinimalTableEntity.class,
+				DedicatedSequenceEntity1.class,
+				DedicatedSequenceEntity2.class
 		};
+	}
+
+	@Override
+	protected String[] getAnnotatedPackages() {
+		return new String[] { this.getClass().getPackage().getName() };
 	}
 
 	@Override
@@ -118,5 +128,29 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		// 50 is the annotation default
 		assertEquals( 50, tabGenerator.getIncrementSize() );
 		assertTrue( OptimizerFactory.PooledOptimizer.class.isInstance( tabGenerator.getOptimizer() ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-6790")
+	public void testSequencePerEntity() {
+		// Checking first entity.
+		EntityPersister persister = sessionFactory().getEntityPersister( DedicatedSequenceEntity1.class.getName() );
+		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
+		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		assertEquals(
+				StringHelper.unqualifyEntityName( DedicatedSequenceEntity1.class.getName() ) + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
+				seqGenerator.getDatabaseStructure().getName()
+		);
+
+		// Checking second entity.
+		persister = sessionFactory().getEntityPersister( DedicatedSequenceEntity2.class.getName() );
+		generator = persister.getIdentifierGenerator();
+		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
+		seqGenerator = (SequenceStyleGenerator) generator;
+		assertEquals(
+				DedicatedSequenceEntity2.ENTITY_NAME + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
+				seqGenerator.getDatabaseStructure().getName()
+		);
 	}
 }

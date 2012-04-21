@@ -48,6 +48,12 @@ import org.hibernate.type.Type;
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
  * <p/>
+ * <b>NOTE</b> that by default we utilize a single database sequence for all
+ * generators.  The configuration parameter {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
+ * can be used to create dedicated sequence for each entity based on its name.
+ * Sequence suffix can be controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
+ * option.
+ * <p/>
  * General configuration parameters:
  * <table>
  * 	 <tr>
@@ -96,6 +102,7 @@ import org.hibernate.type.Type;
  * </table>
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
@@ -118,6 +125,10 @@ public class SequenceStyleGenerator
 	public static final String OPT_PARAM = "optimizer";
 
 	public static final String FORCE_TBL_PARAM = "force_table_use";
+
+	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
+	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
+	public static final String DEF_SEQUENCE_SUFFIX = "_SEQ";
 
 
 	// table-specific parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,8 +220,13 @@ public class SequenceStyleGenerator
 	 * @return The sequence name
 	 */
 	protected String determineSequenceName(Properties params, Dialect dialect) {
+		String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
+		String sequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
+				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
+				: DEF_SEQUENCE_NAME;
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, DEF_SEQUENCE_NAME );
+		sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, sequenceName );
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
 			sequenceName = normalizer.normalizeIdentifierQuoting( sequenceName );
 			String schemaName = params.getProperty( SCHEMA );

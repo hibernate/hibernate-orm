@@ -28,6 +28,8 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
+import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
+import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
 import org.hibernate.test.annotations.id.sequences.entities.BreakDance;
 import org.hibernate.test.annotations.id.sequences.entities.Computer;
@@ -47,6 +49,7 @@ import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -54,6 +57,7 @@ import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @SuppressWarnings("unchecked")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
@@ -292,6 +296,23 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-6790")
+	public void testSequencePerEntity() {
+		Session session = openSession();
+		session.beginTransaction();
+		DedicatedSequenceEntity1 entity1 = new DedicatedSequenceEntity1();
+		DedicatedSequenceEntity2 entity2 = new DedicatedSequenceEntity2();
+		session.persist( entity1 );
+		session.persist( entity2 );
+		session.getTransaction().commit();
+
+		assertEquals( 1, entity1.getId().intValue() );
+		assertEquals( 1, entity2.getId().intValue() );
+
+		session.close();
+	}
+
+	@Test
 	public void testColumnDefinition() {
 		Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
 				.getIdentifierProperty().getValue().getColumnIterator().next();
@@ -325,7 +346,8 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 				Department.class, Dog.class, Computer.class, Home.class,
 				Phone.class, Tree.class, FirTree.class, Footballer.class,
 				SoundSystem.class, Furniture.class, GoalKeeper.class,
-				BreakDance.class, Monkey.class
+				BreakDance.class, Monkey.class, DedicatedSequenceEntity1.class,
+				DedicatedSequenceEntity2.class
 		};
 	}
 
@@ -333,7 +355,8 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 	protected String[] getAnnotatedPackages() {
 		return new String[] {
 				"org.hibernate.test.annotations",
-				"org.hibernate.test.annotations.id"
+				"org.hibernate.test.annotations.id",
+				"org.hibernate.test.annotations.id.generationmappings"
 		};
 	}
 

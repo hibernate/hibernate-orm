@@ -1884,6 +1884,19 @@ class Person {
             </listitem>
 
             <listitem>
+              <para><literal>prefer_sequence_per_entity</literal> (optional -
+              defaults to <literal>false</literal>): should we create
+              separate sequence for each entity that share current generator
+              based on its name?</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>sequence_per_entity_suffix</literal> (optional -
+              defaults to <literal>_SEQ</literal>): suffix added to the name
+              of a dedicated sequence.</para>
+            </listitem>
+
+            <listitem>
               <para><literal>optimizer</literal> (optional - defaults to
               <literal>none</literal>): See <xref
               linkend="mapping-declaration-id-enhanced-optimizers" /></para>

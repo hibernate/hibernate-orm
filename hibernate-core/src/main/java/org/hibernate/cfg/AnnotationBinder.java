@@ -2125,6 +2125,20 @@ public final class AnnotationBinder {
 		if ( isComponent ) {
 			generatorType = "assigned";
 		} //a component must not have any generator
+		else if ( generatedValue != null ) {
+			// add "increment" generator to localGenerators only when type
+			// is AUTO and there is no generator in mappings or localGenerators
+			// named "increment".
+			final String incrementGeneratorName = "increment";
+			if ( incrementGeneratorName.equals( generatorName ) &&
+					generatedValue.strategy() == GenerationType.AUTO &&
+					mappings.getGenerator( incrementGeneratorName, localGenerators ) == null ) {
+				IdGenerator incrementGenerator = new IdGenerator();
+				incrementGenerator.setIdentifierGeneratorStrategy( incrementGeneratorName );
+				incrementGenerator.setName( incrementGeneratorName );
+				localGenerators.put( incrementGeneratorName, incrementGenerator );
+			}
+		}
 		BinderHelper.makeIdGenerator( idValue, generatorType, generatorName, mappings, localGenerators );
 
 		if ( LOG.isTraceEnabled() ) {

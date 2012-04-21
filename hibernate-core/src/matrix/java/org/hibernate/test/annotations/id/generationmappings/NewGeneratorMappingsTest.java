@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
@@ -51,7 +52,8 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 				MinimalSequenceEntity.class,
 				CompleteSequenceEntity.class,
 				AutoEntity.class,
-				MinimalTableEntity.class
+				MinimalTableEntity.class,
+				IncrementEntity.class
 		};
 	}
 
@@ -118,5 +120,12 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		// 50 is the annotation default
 		assertEquals( 50, tabGenerator.getIncrementSize() );
 		assertTrue( OptimizerFactory.PooledOptimizer.class.isInstance( tabGenerator.getOptimizer() ) );
+	}
+
+	@Test
+	public void testIncrementEntity() {
+		final EntityPersister persister = sessionFactory().getEntityPersister( IncrementEntity.class.getName() );
+		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		assertTrue( IncrementGenerator.class.isInstance( generator ) );
 	}
 }

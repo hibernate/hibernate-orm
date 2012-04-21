@@ -125,7 +125,6 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		entityManager.close();
 
-		//assertTrue( entityManager.isOpen() );
 		hibernateTransaction.registerSynchronization(
 				new Synchronization() {
 					public void beforeCompletion() {

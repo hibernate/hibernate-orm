@@ -40,6 +40,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
@@ -102,7 +103,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				.createSQLQuery(
 						"CREATE TABLE children_AUD(REV integer NOT NULL, REVEND integer, "
 								+ revendTimestampColumName + " "
-								+ (getDialect() instanceof SQLServerDialect ? "datetime" : "timestamp")
+								+ ((getDialect() instanceof SQLServerDialect || getDialect() instanceof SybaseASE15Dialect ) ? "datetime" : "timestamp")
 								+ ", REVTYPE " + (getDialect() instanceof Oracle8iDialect ? "number(3,0)"
 								: (getDialect() instanceof PostgreSQL82Dialect ? "smallint" : "tinyint"))
 								+ ", parent_id integer, child1_id integer NULL, child2_id integer NULL)")
@@ -431,6 +432,11 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				if (getDialect() instanceof MySQL5Dialect) {
 					// MySQL5 DATETIME column type does not contain milliseconds.
 					Assert.assertEquals(revendTimestamp.getTime(), (revEnd.getTimestamp() - (revEnd.getTimestamp() % 1000)));
+				} else if (getDialect() instanceof SybaseASE15Dialect) {
+					// Sybase "DATETIME values are accurate to 1/300 second on platforms that support this level of granularity".
+					Assert.assertEquals(
+							revendTimestamp.getTime() / 1000.0, revEnd.getTimestamp() / 1000.0, 1.0 / 300.0
+					);
 				} else {
 					Assert.assertEquals(revendTimestamp.getTime(), revEnd.getTimestamp());
 				}

@@ -93,7 +93,8 @@ public class PartialModifiedFlagsEntity {
 
 	@Audited(withModifiedFlag = true)
     @ManyToMany
-	@CollectionTable(name = "ENTITIESMAP")
+    @CollectionTable(name = "ENTITIESMAP")
+    @MapKeyColumn(nullable = false)
     private Map<String, StrTestEntity> entitiesMap =
 			new HashMap<String, StrTestEntity>();
 

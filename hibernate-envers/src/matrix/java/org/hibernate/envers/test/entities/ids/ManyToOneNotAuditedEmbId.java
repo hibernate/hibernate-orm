@@ -10,7 +10,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
  */
 @Embeddable
 public class ManyToOneNotAuditedEmbId implements Serializable {
-    @ManyToOne
+    @ManyToOne(optional = false)
     private UnversionedStrTestEntity id;
 
     public ManyToOneNotAuditedEmbId() {

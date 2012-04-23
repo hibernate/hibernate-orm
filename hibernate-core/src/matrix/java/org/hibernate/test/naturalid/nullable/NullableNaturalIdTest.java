@@ -28,13 +28,16 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 /**
  * @author Steve Ebersole
  */
 public class NullableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { C.class };
+		return new Class[] { A.class, B.class, C.class };
 	}
 
 	@Test
@@ -50,6 +53,37 @@ public class NullableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		session.beginTransaction();
 		session.delete( c );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testUniqueAssociation() {
+		Session session = openSession();
+		session.beginTransaction();
+		A a = new A();
+		B b = new B();
+		b.naturalid = 100;
+		session.persist( a );
+		session.persist( b ); //b.assA is declared NaturalId, his value is null this moment
+		b.assA = a;
+		a.assB.add( b );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		// this is OK
+		assertNotNull( session.byNaturalId( B.class ).using( "naturalid", 100 ).using( "assA", a ).load() );
+		// this fails, cause EntityType.compare(Object x, Object y) always returns 0 !
+		assertNull( session.byNaturalId( B.class ).using( "naturalid", 100 ).using( "assA", null ).load() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( b );
+		session.delete( a );
 		session.getTransaction().commit();
 		session.close();
 	}

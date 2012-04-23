@@ -142,23 +142,23 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			String[] lhsColumns,
 			final boolean nullable,
 			final int currentDepth) throws MappingException {
-		JoinType ret;
+		final JoinType resolvedJoinType;
 		if ( translator.isJoin( path.getFullPath() ) ) {
-			ret = translator.getJoinType( path.getFullPath() );
+			resolvedJoinType = translator.getJoinType( path.getFullPath() );
 		}
 		else {
 			if ( translator.hasProjection() ) {
-				ret = JoinType.NONE;
+				resolvedJoinType = JoinType.NONE;
 			}
 			else {
 				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path.getFullPath() );
 				if ( isDefaultFetchMode( fetchMode ) ) {
 					if ( persister != null ) {
 						if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
-							ret = getJoinType( nullable, currentDepth );
+							resolvedJoinType = getJoinType( nullable, currentDepth );
 						}
 						else {
-							ret = super.getJoinType(
+							resolvedJoinType = super.getJoinType(
 									persister,
 									path,
 									propertyNumber,
@@ -173,7 +173,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 						}
 					}
 					else {
-						ret = super.getJoinType(
+						resolvedJoinType = super.getJoinType(
 								associationType,
 								metadataFetchMode,
 								path,
@@ -189,15 +189,15 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				else {
 					if ( fetchMode == FetchMode.JOIN ) {
 						isDuplicateAssociation( lhsTable, lhsColumns, associationType ); //deliberately ignore return value!
-						ret = getJoinType( nullable, currentDepth );
+						resolvedJoinType = getJoinType( nullable, currentDepth );
 					}
 					else {
-						ret = JoinType.NONE;
+						resolvedJoinType = JoinType.NONE;
 					}
 				}
 			}
 		}
-		return ret;
+		return resolvedJoinType;
 	}
 
 	protected JoinType getJoinType(

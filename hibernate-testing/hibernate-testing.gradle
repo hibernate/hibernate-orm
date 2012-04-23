@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 dependencies {
     compile project( ':hibernate-core' )
-    compile "junit:junit:4.8.2"
+    compile( libraries.junit )
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )

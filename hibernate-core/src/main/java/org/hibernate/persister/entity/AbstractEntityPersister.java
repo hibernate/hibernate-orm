@@ -4531,7 +4531,8 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery();
+		final boolean[] valueNullness = determineValueNullness( naturalIdValues );
+		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery( valueNullness );
 
 		try {
 			PreparedStatement ps = session.getTransactionCoordinator()
@@ -4542,9 +4543,12 @@ public abstract class AbstractEntityPersister
 				int positions = 1;
 				int loop = 0;
 				for ( int idPosition : getNaturalIdentifierProperties() ) {
-					final Type type = getPropertyTypes()[idPosition];
-					type.nullSafeSet( ps, naturalIdValues[loop++], positions, session );
-					positions += type.getColumnSpan( session.getFactory() );
+					final Object naturalIdValue = naturalIdValues[loop++];
+					if ( naturalIdValue != null ) {
+						final Type type = getPropertyTypes()[idPosition];
+						type.nullSafeSet( ps, naturalIdValue, positions, session );
+						positions += type.getColumnSpan( session.getFactory() );
+					}
 				}
 				ResultSet rs = ps.executeQuery();
 				try {
@@ -4576,24 +4580,62 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private String pkByNaturalIdQuery;
+	private boolean[] determineValueNullness(Object[] naturalIdValues) {
+		boolean[] nullness = new boolean[ naturalIdValues.length ];
+		for ( int i = 0; i < naturalIdValues.length; i++ ) {
+			nullness[i] = naturalIdValues[i] == null;
+		}
+		return nullness;
+	}
 
-	private String determinePkByNaturalIdQuery() {
+	private Boolean naturalIdIsNonNullable;
+	private String cachedPkByNonNullableNaturalIdQuery;
+
+	private String determinePkByNaturalIdQuery(boolean[] valueNullness) {
 		if ( ! hasNaturalIdentifier() ) {
 			throw new HibernateException( "Attempt to build natural-id -> PK resolution query for entity that does not define natural id" );
 		}
 
-		if ( pkByNaturalIdQuery == null ) {
-			pkByNaturalIdQuery = generateEntityIdByNaturalIdSql();
+		// performance shortcut for cases where the natural-id is defined as completely non-nullable
+		if ( isNaturalIdNonNullable() ) {
+			if ( valueNullness != null && ! ArrayHelper.isAllFalse( valueNullness ) ) {
+				throw new HibernateException( "Null value(s) passed to lookup by non-nullable natural-id" );
+			}
+			if ( cachedPkByNonNullableNaturalIdQuery == null ) {
+				cachedPkByNonNullableNaturalIdQuery = generateEntityIdByNaturalIdSql( null );
+			}
+			return cachedPkByNonNullableNaturalIdQuery;
 		}
-		return pkByNaturalIdQuery;
+
+		// Otherwise, regenerate it each time
+		return generateEntityIdByNaturalIdSql( valueNullness );
 	}
 
-	private String generateEntityIdByNaturalIdSql() {
+	@SuppressWarnings("UnnecessaryUnboxing")
+	protected boolean isNaturalIdNonNullable() {
+		if ( naturalIdIsNonNullable == null ) {
+			naturalIdIsNonNullable = determineNaturalIdNullability();
+		}
+		return naturalIdIsNonNullable.booleanValue();
+	}
+
+	private boolean determineNaturalIdNullability() {
+		boolean[] nullability = getPropertyNullability();
+		for ( int position : getNaturalIdentifierProperties() ) {
+			// if any individual property is nullable, return false
+			if ( nullability[position] ) {
+				return false;
+			}
+		}
+		// return true if we found no individually nullable properties
+		return true;
+	}
+
+	private String generateEntityIdByNaturalIdSql(boolean[] valueNullness) {
 		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
 		if ( rootPersister != this ) {
 			if ( rootPersister instanceof AbstractEntityPersister ) {
-				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql();
+				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql( valueNullness );
 			}
 		}
 
@@ -4610,7 +4652,9 @@ public abstract class AbstractEntityPersister
 		final StringBuilder whereClause = new StringBuilder();
 		final int[] propertyTableNumbers = getPropertyTableNumbers();
 		final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
+		int valuesIndex = -1;
 		for ( int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++ ) {
+			valuesIndex++;
 			if ( propIdx > 0 ) {
 				whereClause.append( " and " );
 			}
@@ -4620,7 +4664,12 @@ public abstract class AbstractEntityPersister
 			final String[] propertyColumnNames = getPropertyColumnNames( naturalIdIdx );
 			final String[] aliasedPropertyColumns = StringHelper.qualify( tableAlias, propertyColumnNames );
 
-			whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+			if ( valueNullness != null && valueNullness[valuesIndex] ) {
+				whereClause.append( StringHelper.join( " is null and ", aliasedPropertyColumns ) ).append( " is null" );
+			}
+			else {
+				whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+			}
 		}
 
 		whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );

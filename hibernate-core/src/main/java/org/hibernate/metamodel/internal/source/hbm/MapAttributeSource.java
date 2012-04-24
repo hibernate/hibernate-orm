@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement.JaxbMapKey;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -48,11 +49,15 @@ public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implem
 			AttributeSourceContainer container ) {
 		super( sourceMappingDocument, mapElement, container );
 		JaxbMapKey mapKey = mapElement.getMapKey();
-		if ( mapKey == null ) {
+		if ( mapKey != null ) {
+			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, mapKey );
+		} else {
+			JaxbIndexElement indexElement = mapElement.getIndex();
+			if ( indexElement != null ) {
+				this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, indexElement );
+			}
 			throw new NotYetImplementedException(
 					"<map-key-many-to-many>, <composite-map-key>, <index>, <composite-index>, <index-many-to-many>, and <index-many-to-any>" );
-		} else {
-			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument(), mapKey );
 		}
 	}
 

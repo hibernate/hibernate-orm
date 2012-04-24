@@ -43,9 +43,9 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 	private final ExplicitHibernateTypeSource typeSource;
 	private final int base;
 
-	public ListAttributeIndexSource( MappingDocument mappingDocument, final JaxbListIndexElement indexElement ) {
-		super( mappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
+	public ListAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbListIndexElement indexElement ) {
+		super( sourceMappingDocument );
+		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
 
 			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null
 					? Collections.EMPTY_LIST
@@ -96,10 +96,9 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 		base = Integer.parseInt( indexElement.getBase() );
 	}
 
-	// TODO: What do we do with the length property?
-	public ListAttributeIndexSource( MappingDocument mappingDocument, final JaxbIndexElement indexElement ) {
-		super( mappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
+	public ListAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement ) {
+		super( sourceMappingDocument );
+		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
 
 			@Override
 			public String getColumnAttribute() {

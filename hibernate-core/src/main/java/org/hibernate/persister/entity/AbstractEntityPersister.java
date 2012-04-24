@@ -71,6 +71,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -3982,7 +3983,6 @@ public abstract class AbstractEntityPersister
 //	}
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
-		//if ( hasLazyProperties() ) {
 		if ( getEntityMetamodel().getInstrumentationMetadata().isInstrumented() ) {
 			FieldInterceptor interceptor = getEntityMetamodel().getInstrumentationMetadata().extractInterceptor( entity );
 			if ( interceptor != null ) {
@@ -3998,15 +3998,26 @@ public abstract class AbstractEntityPersister
 				fieldInterceptor.dirty();
 			}
 		}
-		if ( hasNaturalIdentifier() ) {
-			final Serializable id = getIdentifier( entity, session );
-			final NaturalIdHelper helper = session.getPersistenceContext().getNaturalIdHelper();
-			helper.cacheNaturalIdCrossReferenceFromLoad( // TODO rename cacheNaturalIdCrossReferenceFromLoad ?
-				this,
-				id,
-				helper.extractNaturalIdValues( getPropertyValues(entity), this )
-			);
+
+		handleNaturalIdReattachment( entity, session );
+	}
+
+	private void handleNaturalIdReattachment(Object entity, SessionImplementor session) {
+		if ( ! hasNaturalIdentifier() ) {
+			return;
 		}
+
+		if ( getEntityMetamodel().hasImmutableNaturalId() ) {
+			return;
+		}
+
+		final Serializable id = getIdentifier( entity, session );
+		final NaturalIdHelper helper = session.getPersistenceContext().getNaturalIdHelper();
+		helper.cacheNaturalIdCrossReferenceFromLoad( // TODO rename cacheNaturalIdCrossReferenceFromLoad ?
+			this,
+			id,
+			helper.extractNaturalIdValues( getPropertyValues(entity), this )
+		);
 	}
 
 	public Boolean isTransient(Object entity, SessionImplementor session) throws HibernateException {

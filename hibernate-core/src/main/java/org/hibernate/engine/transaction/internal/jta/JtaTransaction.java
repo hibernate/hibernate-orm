@@ -208,6 +208,9 @@ public class JtaTransaction extends AbstractTransactionImpl {
 	public void markRollbackOnly() {
 		LOG.trace( "Marking transaction for rollback only" );
 		try {
+			if(userTransaction==null){
+				userTransaction=jtaPlatform().retrieveUserTransaction();
+			}
 			userTransaction.setRollbackOnly();
 			LOG.debug( "set JTA UserTransaction to rollback only" );
 		}

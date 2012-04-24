@@ -1860,7 +1860,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-									naturalIdCacheAccessStrategy.unlockRegion( removalLock );
+									naturalIdCacheAccessStrategy.unlockItem( previousCacheKey, removalLock );
 									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, id, lock );
 
 									if ( put && factory.getStatistics().isStatisticsEnabled() ) {

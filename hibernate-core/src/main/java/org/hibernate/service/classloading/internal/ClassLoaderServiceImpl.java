@@ -135,7 +135,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@SuppressWarnings( {"unchecked"})
 	public <T> Class<T> classForName(String className) {
 		try {
-			return (Class<T>) classClassLoader.loadClass( className );
+			return (Class<T>) Class.forName( className, true, classClassLoader );
 		}
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );

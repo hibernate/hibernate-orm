@@ -115,7 +115,8 @@ public class DriverManagerConnectionProviderImpl
 			try {
 				// trying via forName() first to be as close to DriverManager's semantics
 				Class.forName( driverClassName );
-			} catch ( ClassNotFoundException cnfe ) {
+			}
+			catch ( ClassNotFoundException cnfe ) {
 				try{
 					ReflectHelper.classForName( driverClassName );
 				}

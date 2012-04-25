@@ -55,7 +55,7 @@ class DatabaseAllocator {
             "mysql50", "mysql51","mysql55",
             "db2-91", "db2-97",
             "mssql2005", "mssql2008R1", "mssql2008R2",
-            "sybase155"
+            "sybase155", "sybase157"
     ];
 
 	private Map<String,DatabaseAllocation> databaseAllocationMap = new HashMap<String, DatabaseAllocation>();

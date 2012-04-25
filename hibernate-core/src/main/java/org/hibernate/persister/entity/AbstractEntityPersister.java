@@ -61,8 +61,10 @@ import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -4008,15 +4010,32 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( getEntityMetamodel().hasImmutableNaturalId() ) {
+			// we assume there were no changes to natural id during detachment for now, that is validated later
+			// during flush.
 			return;
 		}
 
+		final NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
 		final Serializable id = getIdentifier( entity, session );
-		final NaturalIdHelper helper = session.getPersistenceContext().getNaturalIdHelper();
-		helper.cacheNaturalIdCrossReferenceFromLoad( // TODO rename cacheNaturalIdCrossReferenceFromLoad ?
-			this,
-			id,
-			helper.extractNaturalIdValues( getPropertyValues(entity), this )
+
+		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
+		// database, because we have no other way to know if the state changed while detached.
+		final Object[] naturalIdSnapshot;
+		final Object[] entitySnapshot = session.getPersistenceContext().getDatabaseSnapshot( id, this );
+		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
+			naturalIdSnapshot = null;
+		}
+		else {
+			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
+		}
+
+		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot );
+		naturalIdHelper.manageLocalNaturalIdCrossReference(
+				this,
+				id,
+				naturalIdHelper.extractNaturalIdValues( entity, this ),
+				naturalIdSnapshot,
+				CachedNaturalIdValueSource.UPDATE
 		);
 	}
 

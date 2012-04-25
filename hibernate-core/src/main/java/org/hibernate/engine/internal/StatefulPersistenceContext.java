@@ -1746,7 +1746,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			boolean justAddedLocally = naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
 
 			if ( justAddedLocally && persister.hasNaturalIdCache() ) {
-				managedSharedCacheEntries( persister, id, naturalIdValues, CachedNaturalIdValueSource.LOAD );
+				managedSharedCacheEntries( persister, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
 			}
 		}
 
@@ -1788,14 +1788,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			persister = locateProperPersister( persister );
 			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
+			final Object[] previousNaturalIdValues = previousState == null ? null : extractNaturalIdValues( previousState, persister );
 
-			managedSharedCacheEntries( persister, id, naturalIdValues, source );
+			managedSharedCacheEntries( persister, id, naturalIdValues, previousNaturalIdValues, source );
 		}
 
 		private void managedSharedCacheEntries(
 				EntityPersister persister,
 				final Serializable id,
 				Object[] naturalIdValues,
+				Object[] previousNaturalIdValues,
 				CachedNaturalIdValueSource source) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
@@ -1844,7 +1846,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				case UPDATE: {
-					final Object[] previousNaturalIdValues = getNaturalIdSnapshot( id, persister );
 					final NaturalIdCacheKey previousCacheKey = new NaturalIdCacheKey( previousNaturalIdValues, persister, session );
 					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
 					naturalIdCacheAccessStrategy.remove( previousCacheKey );

@@ -39,6 +39,7 @@ import org.hibernate.annotations.NaturalIdCache;
 public class Another {
 	private Integer id;
 	private String name;
+	private String surname;
 
 	public Another() {
 	}
@@ -65,5 +66,13 @@ public class Another {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getSurname() {
+		return surname;
+	}
+
+	public void setSurname(String surname) {
+		this.surname = surname;
 	}
 }

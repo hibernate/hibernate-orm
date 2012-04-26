@@ -1801,6 +1801,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				CachedNaturalIdValueSource source) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
+			if (naturalIdCacheAccessStrategy.get(naturalIdCacheKey, session.getTimestamp()) != null) {
+				return; // prevent identical re-cachings
+			}
 
 			final SessionFactoryImplementor factory = session.getFactory();
 

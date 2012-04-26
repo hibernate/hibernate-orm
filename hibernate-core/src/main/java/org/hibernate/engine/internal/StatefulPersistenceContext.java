@@ -1833,11 +1833,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-									final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, id );
+									if (success) {
+										final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, id );
 
-									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-										factory.getStatisticsImplementor()
+										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+											factory.getStatisticsImplementor()
 												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+										}
+									}
+									else {
+										naturalIdCacheAccessStrategy.remove(naturalIdCacheKey);
 									}
 								}
 							}
@@ -1862,14 +1867,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									naturalIdCacheAccessStrategy.unlockItem( previousCacheKey, removalLock );
-									final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, id, lock );
+									if (success) {
+										final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, id, lock );
 
-									if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-										factory.getStatisticsImplementor()
+										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+											factory.getStatisticsImplementor()
 												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+										}
 									}
-
-									naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
+									else {
+										naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
+									}
 								}
 							}
 					);

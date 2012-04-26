@@ -261,7 +261,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public String getForUpdateString() {
-		return " for read only with rs";
+		return " for read only with rs use and keep update locks";
 	}
 
 	public boolean useMaxForLimit() {

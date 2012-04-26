@@ -29,7 +29,9 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -113,6 +115,115 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		session.delete( it );
 		session.getTransaction().commit();
 		session.close();
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7278" )
+	public void testInsertedNaturalIdCachedAfterTransactionSuccess() {
+		
+		Session session = openSession();
+		session.getSessionFactory().getStatistics().clear();
+		session.beginTransaction();
+		Another it = new Another( "it");
+		session.save( it );
+		session.flush();
+		session.getTransaction().commit();
+		session.close();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		assertNotNull(it);
+		session.delete(it);
+		session.getTransaction().commit();
+		assertEquals(1, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7278" )
+	public void testInsertedNaturalIdNotCachedAfterTransactionFailure() {
+		
+		Session session = openSession();
+		session.getSessionFactory().getStatistics().clear();
+		session.beginTransaction();
+		Another it = new Another( "it");
+		session.save( it );
+		session.flush();
+		session.getTransaction().rollback();
+		session.close();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		assertNull(it);
+		assertEquals(0, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7278" )
+	public void testChangedNaturalIdCachedAfterTransactionSuccess() {
+		Session session = openSession();
+		session.beginTransaction();
+		Another it = new Another( "it");
+		session.save( it );
+		session.getTransaction().commit();
+		session.close();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		assertNotNull(it);
+		
+		it.setName("modified");
+		session.flush();
+		session.getTransaction().commit(); 
+		session.close();
+		
+		session.getSessionFactory().getStatistics().clear();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("modified");
+		assertNotNull(it);
+		session.delete(it);
+		session.getTransaction().commit(); 
+		session.close();
+		
+		assertEquals(1, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7278" )
+	public void testChangedNaturalIdNotCachedAfterTransactionFailure() {
+		Session session = openSession();
+		session.beginTransaction();
+		Another it = new Another( "it");
+		session.save( it );
+		session.getTransaction().commit();
+		session.close();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		assertNotNull(it);
+		
+		it.setName("modified");
+		session.flush();
+		session.getTransaction().rollback(); 
+		session.close();
+		
+		session.getSessionFactory().getStatistics().clear();
+		
+		session = openSession();
+		session.beginTransaction();
+		it = (Another) session.bySimpleNaturalId(Another.class).load("modified");
+		assertNull(it);
+		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		session.delete(it);
+		session.getTransaction().commit(); 
+		session.close();
+		
+		assertEquals(0, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
 	}
 }
 

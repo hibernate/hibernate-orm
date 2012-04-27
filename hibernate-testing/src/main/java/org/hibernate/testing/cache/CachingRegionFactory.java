@@ -28,7 +28,6 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.Timestamper;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;

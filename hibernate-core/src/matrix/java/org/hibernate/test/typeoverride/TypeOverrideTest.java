@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.SkipForDialect;
@@ -69,7 +70,7 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
-		else if ( PostgreSQLDialect.class.isInstance( getDialect() ) )  {
+		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) )  {
 			assertSame(
 					BlobTypeDescriptor.BLOB_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )

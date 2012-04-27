@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.testing.DialectCheck;
@@ -39,7 +40,7 @@ public class CustomSQLTest extends LegacyTestCase {
 
 	@Test
     @RequiresDialectFeature( NonIdentityGeneratorChecker.class )
-    @SkipForDialect( value = PostgreSQLDialect.class, jiraKey = "HHH-6704")
+    @SkipForDialect( value = PostgreSQL81Dialect.class, jiraKey = "HHH-6704")
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testInsert() throws HibernateException, SQLException {
 		Session s = openSession();

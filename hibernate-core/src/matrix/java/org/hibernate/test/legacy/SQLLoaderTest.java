@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.FailureExpected;
@@ -373,7 +374,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { HSQLDialect.class, PostgreSQLDialect.class } )
+	@SkipForDialect( { HSQLDialect.class, PostgreSQL81Dialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
 		Session session = openSession();
 		session.beginTransaction();

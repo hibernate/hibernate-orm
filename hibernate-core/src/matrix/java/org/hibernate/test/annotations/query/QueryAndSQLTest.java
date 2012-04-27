@@ -37,6 +37,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
@@ -353,7 +354,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = { PostgreSQLDialect.class },
+	@SkipForDialect(value = { PostgreSQL81Dialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache() throws Exception {
 		Session s;

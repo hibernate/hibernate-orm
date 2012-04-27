@@ -28,7 +28,9 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -145,6 +147,11 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 		@Override
 		public boolean jdbcCompliant() {
 			return false;
+		}
+
+		public Logger getParentLogger()
+				throws SQLFeatureNotSupportedException {
+			throw new SQLFeatureNotSupportedException();
 		}
 	}
 

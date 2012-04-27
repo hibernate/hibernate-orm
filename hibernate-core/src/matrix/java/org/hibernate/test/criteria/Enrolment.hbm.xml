@@ -62,7 +62,7 @@
                     <key column="studentId" />
                     <list-index column="ind" />
                     <composite-element class="org.hibernate.test.criteria.StudyAbroad">
-                        <property name="date" />
+                        <property name="date" column="strt_dt"/>
                         <many-to-one name="country" />
                     </composite-element>
                 </list>

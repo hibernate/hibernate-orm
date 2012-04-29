@@ -60,6 +60,7 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
+import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
@@ -1228,7 +1229,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
 			callbackCoordinator.setManagedFlushChecker( new ManagedFlushCheckerImpl() );
 			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
-			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );
+			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( this, transactionType ) );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -1441,11 +1442,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	private static class AfterCompletionActionImpl implements AfterCompletionAction {
+		private final AbstractEntityManagerImpl entityManager;
+		// Keep a reference to session in case entityManager is closed when the action executes.
 		private final SessionImplementor session;
 		private final PersistenceUnitTransactionType transactionType;
 
-		private AfterCompletionActionImpl(SessionImplementor session, PersistenceUnitTransactionType transactionType) {
-			this.session = session;
+		private AfterCompletionActionImpl(AbstractEntityManagerImpl entityManager, PersistenceUnitTransactionType transactionType) {
+			this.entityManager = entityManager;
+			this.session = (SessionImplementor) entityManager.getSession();
 			this.transactionType = transactionType;
 		}
 
@@ -1461,6 +1465,35 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				( (Session) session ).clear();
 			}
 			session.getTransactionCoordinator().resetJoinStatus();
+
+			if ( !entityManager.isOpen() && !transactionCoordinator.getTransactionContext().isAutoCloseSessionEnabled() ) {
+				// The entity manager is closed, but the session is still open.
+				// Since the session will not be auto-closed, we need to manually close the session.
+				// The session needs to remain open while the afterCompletion synchronizations execute,
+				// Since this action executes before the synchronizations, the session cannot be closed
+				// here; instead, add an afterCompletion synchronization to close the session.
+				// HACK ALERT: This will only work if this synchronization will be the last to execute.
+				// TODO: it would be better if AfterCompletionAction had both a "before" action and an "after" action
+				//       as hooks before and after executing afterCompletion synchronizations; that way
+				//       the session could be closed in the "after" action instead of creating this
+				//       last synchronization.
+				( (Session) session).getTransaction().registerSynchronization(new Synchronization() {
+					public void beforeCompletion() {
+						// nothing to do
+					}
+
+					public void afterCompletion( int i ) {
+						if ( session.isOpen() ) {
+							LOG.debugf("Closing session after transaction completion because entity manager is already closed.");
+							( (Session) session ).close();
+						}
+						else {
+							LOG.entityManagerClosedBySomeoneElse(Environment.AUTO_CLOSE_SESSION);
+						}
+					}
+				});
+
+			}
 		}
 	}
 

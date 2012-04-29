@@ -131,28 +131,14 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		if ( !open ) {
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
-		if ( !discardOnClose && isTransactionInProgress() ) {
-			//delay the closing till the end of the enlisted transaction
-            getSession().getTransaction().registerSynchronization(new Synchronization() {
-                public void beforeCompletion() {
-                    // nothing to do
-                }
-
-				public void afterCompletion( int i ) {
-                    if (session != null) if (session.isOpen()) {
-                        LOG.debugf("Closing entity manager after transaction completion");
-                        session.close();
-                    } else LOG.entityManagerClosedBySomeoneElse(Environment.AUTO_CLOSE_SESSION);
-                    // TODO session == null should not happen
-                }
-            });
-		}
-		else {
+		if ( discardOnClose || !isTransactionInProgress() ) {
 			//close right now
 			if ( session != null ) {
 				session.close();
 			}
 		}
+		// otherwise, the session will be closed at the end of the enlisted transaction
+
 		open = false;
 	}
 

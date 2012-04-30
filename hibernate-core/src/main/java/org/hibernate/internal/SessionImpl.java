@@ -200,6 +200,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
 	private final transient boolean isTransactionCoordinatorShared;
+	private transient TransactionObserver transactionObserver;
 
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
@@ -270,27 +271,42 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 			// add a transaction observer so that we can handle delegating managed actions back to THIS session
 			// versus the session that created (and therefore "owns") the transaction coordinator
-			transactionCoordinator.addObserver(
-					new TransactionObserver() {
-						@Override
-						public void afterBegin(TransactionImplementor transaction) {
-						}
+			transactionObserver = new TransactionObserver() {
+				@Override
+				public void afterBegin(TransactionImplementor transaction) {
+				}
 
-						@Override
-						public void beforeCompletion(TransactionImplementor transaction) {
-							if ( SessionImpl.this.flushBeforeCompletionEnabled ) {
-								SessionImpl.this.managedFlush();
-							}
+				@Override
+				public void beforeCompletion(TransactionImplementor transaction) {
+					if ( isOpen() ) {
+						if ( flushBeforeCompletionEnabled ){
+							SessionImpl.this.managedFlush();
 						}
-
-						@Override
-						public void afterCompletion(boolean successful, TransactionImplementor transaction) {
-							if ( SessionImpl.this.autoCloseSessionEnabled ) {
-								SessionImpl.this.managedClose();
-							}
+						getActionQueue().beforeTransactionCompletion();
+					}
+					else {
+						if (actionQueue.hasAfterTransactionActions()){
+							LOG.log( Logger.Level.DEBUG, "Session had after transaction actions that were not processed");
 						}
 					}
-			);
+				}
+
+				@Override
+				public void afterCompletion(boolean successful, TransactionImplementor transaction) {
+					if ( isOpen() ) {
+						getActionQueue().afterTransactionCompletion( successful );
+						if ( autoCloseSessionEnabled ) {
+							managedClose();
+						}
+					}
+					else {
+						if (actionQueue.hasAfterTransactionActions()){
+							LOG.log( Logger.Level.DEBUG, "Session had after transaction actions that were not processed");
+						}
+					}
+				}
+			};
+			transactionCoordinator.addObserver( transactionObserver );
 		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
@@ -335,7 +351,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				return transactionCoordinator.close();
 			}
 			else {
-				return null; // ???
+				if ( !getActionQueue().hasAfterTransactionActions() ){
+					//remove the session as a transaction observer if it has no after transaction completion actions
+					transactionCoordinator.removeObserver( transactionObserver );
+				}
+				return null;
 			}
 		}
 		finally {

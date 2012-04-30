@@ -74,6 +74,13 @@ public interface TransactionCoordinator extends Serializable {
 	public void addObserver(TransactionObserver observer);
 
 	/**
+	 * Removed an observer from the coordinator.
+	 *
+	 * @param observer The observer to remove.
+	 */
+	public void removeObserver(TransactionObserver observer);
+	
+	/**
 	 * Can we join to the underlying transaction?
 	 *
 	 * @return {@literal true} if the underlying transaction can be joined or is already joined; {@literal false}

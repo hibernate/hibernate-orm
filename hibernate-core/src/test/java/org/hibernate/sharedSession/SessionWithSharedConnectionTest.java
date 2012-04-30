@@ -191,7 +191,6 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-7239" )
-	@FailureExpected(jiraKey = "HHH-7239" )
 	public void testSessionRemovedFromObserversOnClose() throws Exception {
 		Session session = sessionFactory().openSession();
 		session.getTransaction().begin();
@@ -235,7 +234,6 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7239" )
-	@FailureExpected(jiraKey = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction() throws Exception {
 		Session session = openSession();
 
@@ -276,7 +274,6 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7239" )
-	@FailureExpected(jiraKey = "HHH-7239" )
 	public void testChildSessionTwoTransactions() throws Exception {
 		Session session = openSession();
 		

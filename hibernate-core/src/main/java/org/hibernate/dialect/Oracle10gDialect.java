@@ -45,4 +45,12 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();
 	}
+
+	public String getForUpdateSkipLockedString() {
+		return " for update skip locked";
+	}
+
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getForUpdateString() + " of " + aliases + " skip locked";
+	}
 }

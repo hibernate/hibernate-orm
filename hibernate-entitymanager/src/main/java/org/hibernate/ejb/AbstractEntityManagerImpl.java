@@ -247,7 +247,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
 		}
 		if ( timeoutSet ) {
-			if ( timeout < 0 ) {
+			if ( timeout == LockOptions.SKIP_LOCKED ) {
+				options.setTimeOut( LockOptions.SKIP_LOCKED );
+			}
+			else if ( timeout < 0 ) {
 				options.setTimeOut( LockOptions.WAIT_FOREVER );
 			}
 			else if ( timeout == 0 ) {

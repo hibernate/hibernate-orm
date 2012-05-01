@@ -59,6 +59,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.SessionOwner;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
@@ -101,6 +102,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
@@ -1040,7 +1042,7 @@ public final class SessionFactoryImpl
 	}
 
 	@Override
-	public SessionBuilder withOptions() {
+	public SessionBuilderImplementor withOptions() {
 		return new SessionBuilderImpl( this );
 	}
 
@@ -1801,8 +1803,9 @@ public final class SessionFactoryImpl
 		return typeHelper;
 	}
 
-	static class SessionBuilderImpl implements SessionBuilder {
+	static class SessionBuilderImpl implements SessionBuilderImplementor {
 		private final SessionFactoryImpl sessionFactory;
+		private SessionOwner sessionOwner;
 		private Interceptor interceptor;
 		private Connection connection;
 		private ConnectionReleaseMode connectionReleaseMode;
@@ -1813,6 +1816,7 @@ public final class SessionFactoryImpl
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
+			this.sessionOwner = null;
 			final Settings settings = sessionFactory.settings;
 
 			// set up default builder values...
@@ -1831,6 +1835,7 @@ public final class SessionFactoryImpl
 			return new SessionImpl(
 					connection,
 					sessionFactory,
+					sessionOwner,
 					getTransactionCoordinator(),
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),
@@ -1840,6 +1845,12 @@ public final class SessionFactoryImpl
 					connectionReleaseMode,
 					tenantIdentifier
 			);
+		}
+
+		@Override
+		public SessionBuilder owner(SessionOwner sessionOwner) {
+			this.sessionOwner = sessionOwner;
+			return this;
 		}
 
 		@Override

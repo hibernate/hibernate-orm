@@ -52,6 +52,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -70,7 +71,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryImpl.class );
 
-	private final transient SessionFactory sessionFactory;
+	private final transient SessionFactoryImpl sessionFactory;
 	private final transient PersistenceUnitTransactionType transactionType;
 	private final transient boolean discardOnClose;
 	private final transient Class sessionInterceptorClass;
@@ -90,7 +91,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			Configuration cfg,
 			ServiceRegistry serviceRegistry,
 			String persistenceUnitName) {
-		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
+		this.sessionFactory = (SessionFactoryImpl) cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
@@ -217,7 +218,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return ! sessionFactory.isClosed();
 	}
 
-	public SessionFactory getSessionFactory() {
+	public SessionFactoryImpl getSessionFactory() {
 		return sessionFactory;
 	}
 

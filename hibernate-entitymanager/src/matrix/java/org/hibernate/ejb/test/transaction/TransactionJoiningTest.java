@@ -88,9 +88,15 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 		assertTrue( session.getTransactionCoordinator().isSynchronizationRegistered() );
 		assertTrue( hibernateTransaction.isParticipating() );
 
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
 		entityManager.close();
+		assertFalse( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		assertFalse( entityManager.isOpen() );
+		assertFalse( session.isOpen() );
 	}
 
 	@Test
@@ -105,11 +111,39 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 		assertTrue( session.getTransactionCoordinator().isSynchronizationRegistered() );
 		assertTrue( hibernateTransaction.isParticipating() );
 
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
 		entityManager.close();
+		assertFalse( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		assertFalse( entityManager.isOpen() );
+		assertFalse( session.isOpen() );
 	}
 
+	@Test
+	public void testCloseAfterCommit() throws Exception {
+		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		EntityManager entityManager = entityManagerFactory().createEntityManager();
+		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		Transaction hibernateTransaction = ( (Session) session ).getTransaction();
+		assertTrue( CMTTransaction.class.isInstance( hibernateTransaction ) );
+		assertTrue( session.getTransactionCoordinator().isSynchronizationRegistered() );
+		assertTrue( hibernateTransaction.isParticipating() );
+
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
+
+		entityManager.close();
+		assertFalse( entityManager.isOpen() );
+		assertFalse( session.isOpen() );
+	}
 
 	@Test
 	public void testImplicitJoiningWithExtraSynchronization() throws Exception {

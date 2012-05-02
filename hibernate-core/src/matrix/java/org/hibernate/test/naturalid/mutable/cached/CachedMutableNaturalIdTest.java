@@ -46,7 +46,7 @@ import static org.junit.Assert.assertNull;
 public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Another.class};
+		return new Class[] {Another.class, AllCached.class};
 	}
 
 	@Override
@@ -261,6 +261,32 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		
 		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'name9'
 		assertEquals(2, session.getSessionFactory().getStatistics().getNaturalIdCachePutCount());
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7245" )
+	public void testNaturalIdChangeAfterResolveEntityFrom2LCache() {
+			Session session = openSession();
+			session.beginTransaction();
+			AllCached it = new AllCached( "it" );
+			
+			session.save( it );
+			Serializable id = it.getId();
+			session.getTransaction().commit();
+			session.close();
+
+			session = openSession();
+			session.beginTransaction();
+			it = (AllCached) session.byId( AllCached.class ).load( id );
+
+			it.setName( "it2" );
+			it = (AllCached) session.bySimpleNaturalId( AllCached.class ).load( "it" );
+			assertNull( it );
+			it = (AllCached) session.bySimpleNaturalId( AllCached.class ).load( "it2" );
+			assertNotNull( it );
+			session.delete( it );
+			session.getTransaction().commit();
+			session.close();
 	}
 }
 

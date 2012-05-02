@@ -93,7 +93,11 @@ public interface SessionBuilder {
 	 * @param autoClose Should the session be automatically closed
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
+	 * {@link org.hibernate.engine.spi.SessionOwner}
 	 */
+	@Deprecated
 	public SessionBuilder autoClose(boolean autoClose);
 
 	/**

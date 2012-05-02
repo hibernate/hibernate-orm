@@ -21,12 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.engine.spi;
 
 /**
- * The contract for a session owner.
+ * The contract for a Session owner.  Typically this is something that wraps the Session.
  *
  * @author Gail Badner
+ *
+ * @see SessionBuilderImplementor#owner
  */
 public interface SessionOwner {
 	/**
@@ -35,5 +37,4 @@ public interface SessionOwner {
 	 * @return {@literal true}/{@literal false} appropriately.
 	 */
 	public boolean shouldAutoCloseSession();
-
 }

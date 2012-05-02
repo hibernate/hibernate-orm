@@ -66,6 +66,9 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  */
 public interface SessionFactoryImplementor extends Mapping, SessionFactory {
+	@Override
+	public SessionBuilderImplementor withOptions();
+
 	/**
 	 * Retrieve the {@link Type} resolver associated with this factory.
 	 *

@@ -24,7 +24,6 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.SessionBuilder;
-import org.hibernate.SessionOwner;
 
 /**
  * Defines the internal contract between the <tt>SessionBuilder</tt> and other parts of

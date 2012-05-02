@@ -73,7 +73,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
-import org.hibernate.SessionOwner;
+import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
@@ -531,11 +531,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( isClosed() ) {
 			return false;
 		}
-		else if ( isAutoCloseSessionEnabled() ) {
-			return true;
+		else if ( sessionOwner != null ) {
+			return sessionOwner.shouldAutoCloseSession();
 		}
 		else {
-			return sessionOwner != null && sessionOwner.shouldAutoCloseSession();
+			return isAutoCloseSessionEnabled();
 		}
 	}
 

@@ -293,19 +293,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 				@Override
 				public void afterCompletion(boolean successful, TransactionImplementor transaction) {
-					if ( isOpen() ) {
-						getActionQueue().afterTransactionCompletion( successful );
-						if ( autoCloseSessionEnabled ) {
-							managedClose();
-						}
+					afterTransactionCompletion( transaction, successful );
+					if ( isOpen() && autoCloseSessionEnabled ) {
+						managedClose();
 					}
-					else {
-						if (actionQueue.hasAfterTransactionActions()){
-							LOG.log( Logger.Level.DEBUG, "Session had after transaction actions that were not processed");
-						}
-					}
+					transactionCoordinator.removeObserver( this );
 				}
 			};
+
 			transactionCoordinator.addObserver( transactionObserver );
 		}
 
@@ -326,6 +321,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void clear() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		internalClear();
+	}
+
+	private void internalClear() {
 		persistenceContext.clear();
 		actionQueue.clear();
 	}
@@ -351,8 +350,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				return transactionCoordinator.close();
 			}
 			else {
-				if ( !getActionQueue().hasAfterTransactionActions() ){
-					//remove the session as a transaction observer if it has no after transaction completion actions
+				if ( getActionQueue().hasAfterTransactionActions() ){
+					LOG.warn( "On close, shared Session had after transaction actions that have not yet been processed" );
+				}
+				else {
 					transactionCoordinator.removeObserver( transactionObserver );
 				}
 				return null;
@@ -618,7 +619,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 		}
 		if ( autoClear ) {
-			clear();
+			internalClear();
 		}
 	}
 

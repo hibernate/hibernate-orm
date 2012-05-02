@@ -46,6 +46,7 @@ import org.junit.Test;
 
 /**
  * @author Guenther Demetz
+ * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver 
  */
 public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	
@@ -58,7 +59,9 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
         Connection conn = ((SessionFactoryImpl) s.getSessionFactory()).getConnectionProvider().getConnection();
         String databaseName = conn.getCatalog();
         conn.close();
+        s.createSQLQuery("ALTER DATABASE " + databaseName + " set single_user with rollback immediate").executeUpdate();
         s.createSQLQuery("ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS").executeUpdate();
+        s.createSQLQuery("ALTER DATABASE " + databaseName + " set multi_user").executeUpdate();
 
         Transaction tx = s.beginTransaction();
 
@@ -125,10 +128,20 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.persist(kit);
 		s.getTransaction().commit();
 		final Transaction tx = s.beginTransaction();
+		
+		
+		
+		Session s2 = openSession();
+		
+		Transaction tx2 = s2.beginTransaction();
+		//s2.createSQLQuery("SET LOCK_TIMEOUT 5000;Select @@LOCK_TIMEOUT;").uniqueResult(); strangely this is useless for this kind of locks
+		
+		Product kit2= (Product) s2.byId(Product.class).load(kit.id);
+		
 		kit.description="change!";
 		s.flush(); // creates write lock on kit until we end the transaction
 		
-		Thread t = new Thread(new Runnable(){
+		Thread thread = new Thread(new Runnable(){
 			@Override
 			public void run() {
 				try {
@@ -137,19 +150,12 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 					e.printStackTrace();
 				}
 				tx.commit();
-			}});
+		}});
 		
-		
-		Session s2 = openSession();
-		
-		Transaction tx2 = s2.beginTransaction();
-		//s2.createSQLQuery("SET LOCK_TIMEOUT 5000;Select @@LOCK_TIMEOUT;").uniqueResult(); strangely this is useless
-		
-		Product kit2= (Product) s2.byId(Product.class).load(kit.id);
 		LockOptions opt = new LockOptions(LockMode.UPGRADE_NOWAIT);
 		opt.setTimeOut(0); // seems useless
 		long start = System.currentTimeMillis();
-		t.start();
+		thread.start();
 		try {
 			s2.buildLockRequest(opt).lock(kit2);
 		}
@@ -157,7 +163,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			// OK
 		}
 		long end = System.currentTimeMillis();
-		t.join();
+		thread.join();
 		long differenceInMillisecs =  end-start;
 		assertTrue("Lock NoWait blocked for " + differenceInMillisecs + " ms, this is definitely to much for Nowait", differenceInMillisecs < 2000);
 		

@@ -73,6 +73,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
+import org.hibernate.SessionOwner;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
@@ -80,7 +81,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -90,7 +90,6 @@ import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -180,6 +179,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private transient long timestamp;
 
+	private transient SessionOwner sessionOwner;
+
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
 	private transient TransactionCoordinatorImpl transactionCoordinator;
@@ -221,6 +222,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	SessionImpl(
 			final Connection connection,
 			final SessionFactoryImpl factory,
+			final SessionOwner sessionOwner,
 			final TransactionCoordinatorImpl transactionCoordinator,
 			final boolean autoJoinTransactions,
 			final long timestamp,
@@ -231,6 +233,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			final String tenantIdentifier) {
 		super( factory, tenantIdentifier );
 		this.timestamp = timestamp;
+		this.sessionOwner = sessionOwner;
 		this.interceptor = interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
@@ -523,8 +526,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return baos.toByteArray();
 	}
 
+	@Override
 	public boolean shouldAutoClose() {
-		return isAutoCloseSessionEnabled() && !isClosed();
+		if ( isClosed() ) {
+			return false;
+		}
+		else if ( isAutoCloseSessionEnabled() ) {
+			return true;
+		}
+		else {
+			return sessionOwner != null && sessionOwner.shouldAutoCloseSession();
+		}
 	}
 
 	public void managedClose() {
@@ -2078,6 +2090,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		interceptor = ( Interceptor ) ois.readObject();
 
 		factory = SessionFactoryImpl.deserialize( ois );
+		sessionOwner = ( SessionOwner ) ois.readObject();
 
 		transactionCoordinator = TransactionCoordinatorImpl.deserialize( ois, this );
 
@@ -2120,6 +2133,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		oos.writeObject( interceptor );
 
 		factory.serialize( oos );
+		oos.writeObject( sessionOwner );
 
 		transactionCoordinator.serialize( oos );
 
@@ -2196,6 +2210,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( session.factory );
 			this.session = session;
+			super.owner( session.sessionOwner );
 			super.tenantIdentifier( session.getTenantIdentifier() );
 		}
 

@@ -38,6 +38,14 @@ import org.hibernate.AssertionFailure;
  * to the EventCache before the operation has cascaded to that
  * entity.
  * <p/>
+ * There are some restriction;
+ * <ul>
+ *     <li>the same value cannot be associated with more than one key</li>
+ *     <li>Methods that return collections (e.g., {@link #keySet()},
+ *          {@link #values()}, {@link #entrySet()}) return an
+ *          unnmodifiable view of the collection.</li>
+ * </ul>
+ * <p/>
  * The following methods can be used by event listeners (and other
  * classes) in the same package to add entities to an EventCache
  * and indicate if the operation is being performed on the entity:<p/>
@@ -85,9 +93,9 @@ class EventCache implements Map {
 	}
 
 	/**
-	 * Returns true if this EventCache maps one or more entities to the specified copy.
+	 * Returns true if this EventCache maps an entity to the specified copy.
 	 * @param copy must be non-null
-	 * @return true if this EventCache maps one or more entities to the specified copy
+	 * @return true if this EventCache maps an entity to the specified copy
 	 * @throws NullPointerException if copy is null
 	 */
 	public boolean containsValue(Object copy) {
@@ -141,10 +149,11 @@ class EventCache implements Map {
 	/**
 	 * Associates the specified entity with the specified copy in this EventCache;
 	 * @param entity must be non-null
-	 * @param copy must be non- null
+	 * @param copy must be non- null and must not be associated with any other entity in this EntityCache.
 	 * @return previous copy associated with specified entity, or null if
 	 * there was no mapping for entity.
 	 * @throws NullPointerException if entity or copy is null
+	 * @throws IllegalStateException if the specified copy is already associated with a different entity.
 	 */
 	public Object put(Object entity, Object copy) {
 		return put( entity, copy, Boolean.FALSE );
@@ -153,12 +162,13 @@ class EventCache implements Map {
 	/**
 	 * Associates the specified entity with the specified copy in this EventCache;
 	 * @param entity must be non-null
-	 * @param copy must be non- null
-	 * @param isOperatedOn indicates if the operation is performed on the entity
+	 * @param copy must be non- null and must not be associated with any other entity in this EntityCache.
+	 * @param isOperatedOn indicates if the operation is performed on the entity.
 	 *
 	 * @return previous copy associated with specified entity, or null if
 	 * there was no mapping for entity.
 	 * @throws NullPointerException if entity or copy is null
+	 * @throws IllegalStateException if the specified copy is already associated with a different entity.
 	 */
 	/* package-private */ Object put(Object entity, Object copy, boolean isOperatedOn) {
 		if ( entity == null || copy == null ) {
@@ -171,24 +181,33 @@ class EventCache implements Map {
 
 		if ( oldCopy == null ) {
 			if  ( oldEntity != null ) {
-				throw new IllegalStateException( "An entity copy is already assigned to a different entity." );
+				throw new IllegalStateException( "An entity copy was already assigned to a different entity." );
 			}
 			if ( oldOperatedOn != null ) {
 				throw new IllegalStateException( "entityToOperatedOnFlagMap contains an entity, but entityToCopyMap does not." );
 			}
 		}
 		else {
-			if ( oldEntity == null ) {
-				throw new IllegalStateException( "An entity already had a copy in entityToCopyMap, but the specified copy was not in copyToEntityMap." );
+			if ( oldCopy != copy ) {
+				// Replaced an entity copy with a new copy; need to remove the oldCopy from copyToEntityMap
+				// to synch things up.
+				Object removedEntity = copyToEntityMap.remove( oldCopy );
+				if ( removedEntity != entity ) {
+					throw new IllegalStateException( "An unexpected entity was associated with the old entity copy." );
+				}
+				if ( oldEntity != null ) {
+					throw new IllegalStateException( "A new entity copy is already associated with a different entity." );
+				}
+			}
+			else {
+				// Replaced an entity copy with the same copy in entityToCopyMap.
+				// Make sure that copy is associated with the same entity in copyToEntityMap.
+				if ( oldEntity != entity ) {
+					throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
+				}
 			}
 			if ( oldOperatedOn == null ) {
 				throw new IllegalStateException( "entityToCopyMap contained an entity, but entityToOperatedOnFlagMap did not." );
-			}
-			if ( oldEntity != entity ) {
-				throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
-			}
-			if ( oldCopy != copy ) {
-				throw new IllegalStateException( "An entity was already associated with a copy that is different from the copy provided." );
 			}
 		}
 

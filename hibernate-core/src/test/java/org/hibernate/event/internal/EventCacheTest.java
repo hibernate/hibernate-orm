@@ -319,24 +319,28 @@ public class EventCacheTest extends TestCase {
 		assertSame( copy, entry.getValue() );
 	}
 
-	public void testReplaceCopyForEntity() {
+	public void testReplaceEntityCopy() {
 
 		EventCache cache = new EventCache();
 		Simple entity = new Simple( 1 );
 		Simple copy = new Simple( 0 );
 		cache.put(entity, copy);
 
-		try {
-			cache.put( entity, new Simple( 0 ) );
-			fail( "should have thrown IllegalStateException");
-		}
-		catch( IllegalStateException ex ) {
-			// expected
-		}
+		Simple copyNew = new Simple( 0 );
+		assertSame( copy, cache.put( entity, copyNew ) );
+		assertSame( copyNew, cache.get( entity ) );
 
+		checkCacheConsistency( cache, 1 );
+
+		copy = copyNew;
+		copyNew = new Simple( 1 );
+		assertSame( copy, cache.put( entity, copyNew ) );
+		assertSame( copyNew, cache.get( entity ) );
+
+		checkCacheConsistency( cache, 1 );
 	}
 
-	public void testReplaceEntityForCopy() {
+	public void testCopyAssociatedWithNewAndExistingEntity() {
 
 		EventCache cache = new EventCache();
 		Simple entity = new Simple( 1 );
@@ -353,26 +357,7 @@ public class EventCacheTest extends TestCase {
 
 	}
 
-	public void testReplaceEntityForExistingCopy() {
-
-		EventCache cache = new EventCache();
-		Simple entity1 = new Simple( 1 );
-		Simple copy1 = new Simple( 0 );
-		cache.put(entity1, copy1);
-		Simple entity2 = new Simple( 2 );
-		Simple copy2 = new Simple( 0 );
-		cache.put( entity2, copy2 );
-
-		try {
-			cache.put( entity1, copy2 );
-			fail( "should have thrown IllegalStateException");
-		}
-		catch( IllegalStateException ex ) {
-			// expected
-		}
-	}
-
-	public void testReplaceCopyForExistingEntity() {
+	public void testCopyAssociatedWith2ExistingEntities() {
 
 		EventCache cache = new EventCache();
 		Simple entity1 = new Simple( 1 );

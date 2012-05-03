@@ -36,10 +36,10 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Yoryos Valotasios
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
-	private static final String SELECT = "select";
-	private static final String FROM = "from";
-	private static final String DISTINCT = "distinct";
-	private static final int MAX_LENGTH = 8000;
+	protected static final String SELECT = "select";
+	protected static final String FROM = "from";
+	protected static final String DISTINCT = "distinct";
+	protected static final int MAX_LENGTH = 8000;
 
 	/**
 	 * Regular expression for stripping alias

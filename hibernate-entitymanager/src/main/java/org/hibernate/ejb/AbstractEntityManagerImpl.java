@@ -1320,6 +1320,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			handlePersistenceException( converted );
 			return converted;
 		}
+		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
+			PersistenceException converted = wrapLockException( e, lockOptions );
+			handlePersistenceException( converted );
+			return converted;
+		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
 			PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
@@ -1415,6 +1420,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( e instanceof OptimisticEntityLockException ) {
 			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) e;
 			pe = new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
+		}
+		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
+			pe = new LockTimeoutException( e.getMessage(), e, null );
 		}
 		else if ( e instanceof PessimisticEntityLockException ) {
 			PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;

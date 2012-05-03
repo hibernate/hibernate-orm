@@ -22,14 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -237,10 +242,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuilder( sql.length() + 20 )
-				.append( sql )
-				.append( hasOffset ? " limit ?, ?" : " limit ?" )
-				.toString();
+		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
 	}
 
 	public char closeQuote() {
@@ -365,5 +367,30 @@ public class MySQLDialect extends Dialect {
 
 	public boolean supportsSubqueryOnMutatingTable() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		// yes, we do handle "lock timeout" conditions in the exception conversion delegate,
+		// but that's a hardcoded lock timeout period across the whole entire MySQL database.
+		// MySQL does not support specifying lock timeouts as part of the SQL statement, which is really
+		// what this meta method is asking.
+		return false;
+	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+
+				if ( "41000".equals( sqlState ) ) {
+					return new LockTimeoutException( message, sqlException, sql );
+				}
+
+				return null;
+			}
+		};
 	}
 }

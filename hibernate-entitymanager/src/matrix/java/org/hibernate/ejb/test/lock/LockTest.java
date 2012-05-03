@@ -101,20 +101,25 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em3.getTransaction().begin();
 		try {
 			em3.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
-			assertFalse("Exception should be thrown", true);
-		} catch (LockTimeoutException lte) {
-			assertTrue("Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.", true);
-		} catch (PessimisticLockException pe) {
-			assertTrue("Find with immediate timeout should have thrown LockTimeoutException.", false);
-		} catch (PersistenceException pe) {
+			fail( "Exception should be thrown" );
+		}
+		catch (LockTimeoutException lte) {
+			// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+		}
+		catch (PessimisticLockException pe) {
+			fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+		}
+		catch (PersistenceException pe) {
 			log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
 				      "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
 				      "See HHH-7251 for an example of one such situation.", pe);
-			assertTrue("EntityManager should be throwing LockTimeoutException.", false);
-		} finally {
+			fail( "EntityManager should be throwing LockTimeoutException." );
+		}
+		finally {
 			if (em3.getTransaction().getRollbackOnly()) {
 				em3.getTransaction().rollback();
-			} else {
+			}
+			else {
 				em3.getTransaction().commit();
 			}
 			em3.close();

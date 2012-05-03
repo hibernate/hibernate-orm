@@ -373,30 +373,23 @@ public class PostgreSQL81Dialect extends Dialect {
 	
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
-		if (delegate == null) {
-			delegate = new SQLExceptionConversionDelegate() {
-				@Override
-				public JDBCException convert(SQLException sqlException, String message, String sql) {
-					JDBCException exception = null;
-					
-					if (exception == null) {
-						String sqlState = JdbcExceptionHelper.extractSqlState(sqlException);
-						
-						if ("40P01".equals(sqlState)) { // DEADLOCK DETECTED
-							exception = new LockAcquisitionException(message, sqlException, sql);
-						}
-						
-						if ("55P03".equals(sqlState)) { // LOCK NOT AVAILABLE
-							exception = new PessimisticLockException(message, sqlException, sql);
-						}
-					}
-					
-					return exception;
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+
+				if ( "40P01".equals( sqlState ) ) { // DEADLOCK DETECTED
+					return new LockAcquisitionException( message, sqlException, sql );
 				}
-			};
-		}
-		return delegate;
+
+				if ( "55P03".equals( sqlState ) ) { // LOCK NOT AVAILABLE
+					return new PessimisticLockException( message, sqlException, sql );
+				}
+
+				// returning null allows other delegates to operate
+				return null;
+			}
+		};
 	}
 	
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {

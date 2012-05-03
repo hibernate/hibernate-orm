@@ -42,44 +42,50 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
 import org.junit.Test;
 
 /**
+ * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
+ *
  * @author Guenther Demetz
- * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver 
  */
+@RequiresDialect(value = { SQLServer2005Dialect.class })
 public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
-	
+
 	@TestForIssue(jiraKey = "HHH-7198")
-    @Test
-    @RequiresDialect(value = {SQLServer2005Dialect.class})
-    public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
-        
-        Session s = openSession();
-        Connection conn = ((SessionFactoryImpl) s.getSessionFactory()).getConnectionProvider().getConnection();
-        String databaseName = conn.getCatalog();
-        conn.close();
-        s.createSQLQuery("ALTER DATABASE " + databaseName + " set single_user with rollback immediate").executeUpdate();
-        s.createSQLQuery("ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS").executeUpdate();
-        s.createSQLQuery("ALTER DATABASE " + databaseName + " set multi_user").executeUpdate();
+	@Test
+	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
 
-        Transaction tx = s.beginTransaction();
+		Session s = openSession();
+		Connection conn = ( (SessionFactoryImpl) s.getSessionFactory() ).getConnectionProvider().getConnection();
+		String databaseName = conn.getCatalog();
+		conn.close();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+				.executeUpdate();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
 
-        for (int i=1; i <= 20;i++) { 
-	        Product kit = new Product();
-	        kit.id = i;
-	        kit.description = "Kit" + i;
-	        s.persist(kit);
-        }
-        s.flush();
-        s.clear();
+		Transaction tx = s.beginTransaction();
 
-        List list = s.createQuery("from Product where description like 'Kit%'").setFirstResult(2).setMaxResults(2).list(); 
-        // without patch this query produces following sql (Note that the tablename as well as the like condition have turned into lowercase)"
-        // WITH query AS (select product0_.id as id0_, product0_.description as descript2_0_, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ from product product0_ where product0_.description like 'kit%') SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?
-        
-        
-        // this leads to following exception:
+		for ( int i = 1; i <= 20; i++ ) {
+			Product2 kit = new Product2();
+			kit.id = i;
+			kit.description = "Kit" + i;
+			s.persist( kit );
+		}
+		s.flush();
+		s.clear();
+
+		List list = s.createQuery( "from Product where description like 'Kit%'" )
+				.setFirstResult( 2 )
+				.setMaxResults( 2 )
+				.list();
+		// without patch this query produces following sql (Note that the tablename as well as the like condition have turned into lowercase)"
+		// WITH query AS (select product0_.id as id0_, product0_.description as descript2_0_, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ from product product0_ where product0_.description like 'kit%') SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?
+
+
+		// this leads to following exception:
 //        org.hibernate.exception.SQLGrammarException: Invalid object name 'product'.
 //    	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:122)
 //    	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49)
@@ -108,77 +114,81 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 //    	... 44 more
 
 
-        
-        assertEquals(2,list.size());
-        tx.rollback();
-        s.close();
-    }
-	
-	
+		assertEquals( 2, list.size() );
+		tx.rollback();
+		s.close();
+	}
+
+
 	@TestForIssue(jiraKey = "HHH-3961")
 	@Test
-	@RequiresDialect(value = { SQLServer2005Dialect.class })
 	public void testLockNowaitSqlServer() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
 
-		final Product kit = new Product();
+		final Product2 kit = new Product2();
 		kit.id = 4000;
-		kit.description="m";
-		s.persist(kit);
+		kit.description = "m";
+		s.persist( kit );
 		s.getTransaction().commit();
 		final Transaction tx = s.beginTransaction();
-		
-		
-		
+
+
 		Session s2 = openSession();
-		
+
 		Transaction tx2 = s2.beginTransaction();
 		//s2.createSQLQuery("SET LOCK_TIMEOUT 5000;Select @@LOCK_TIMEOUT;").uniqueResult(); strangely this is useless for this kind of locks
-		
-		Product kit2= (Product) s2.byId(Product.class).load(kit.id);
-		
-		kit.description="change!";
+
+		Product2 kit2 = (Product2) s2.byId( Product2.class ).load( kit.id );
+
+		kit.description = "change!";
 		s.flush(); // creates write lock on kit until we end the transaction
-		
-		Thread thread = new Thread(new Runnable(){
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+
+		Thread thread = new Thread(
+				new Runnable() {
+					@Override
+					public void run() {
+						try {
+							Thread.sleep( 3000 );
+						}
+						catch ( InterruptedException e ) {
+							e.printStackTrace();
+						}
+						tx.commit();
+					}
 				}
-				tx.commit();
-		}});
-		
-		LockOptions opt = new LockOptions(LockMode.UPGRADE_NOWAIT);
-		opt.setTimeOut(0); // seems useless
+		);
+
+		LockOptions opt = new LockOptions( LockMode.UPGRADE_NOWAIT );
+		opt.setTimeOut( 0 ); // seems useless
 		long start = System.currentTimeMillis();
 		thread.start();
 		try {
-			s2.buildLockRequest(opt).lock(kit2);
+			s2.buildLockRequest( opt ).lock( kit2 );
 		}
-		catch (SQLGrammarException e) {
+		catch ( SQLGrammarException e ) {
 			// OK
 		}
 		long end = System.currentTimeMillis();
 		thread.join();
-		long differenceInMillisecs =  end-start;
-		assertTrue("Lock NoWait blocked for " + differenceInMillisecs + " ms, this is definitely to much for Nowait", differenceInMillisecs < 2000);
-		
+		long differenceInMillisecs = end - start;
+		assertTrue(
+				"Lock NoWait blocked for " + differenceInMillisecs + " ms, this is definitely to much for Nowait",
+				differenceInMillisecs < 2000
+		);
+
 		s2.getTransaction().rollback();
 		s.getTransaction().begin();
-		s.delete(kit);
+		s.delete( kit );
 		s.getTransaction().commit();
 
-	
+
 	}
 
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {
-				Product.class
+				Product2.class
 		};
 	}
 

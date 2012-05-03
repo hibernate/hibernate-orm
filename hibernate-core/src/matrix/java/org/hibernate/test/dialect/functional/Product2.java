@@ -26,6 +26,7 @@
   */
 
 package org.hibernate.test.dialect.functional;
+
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -35,16 +36,14 @@ import javax.persistence.Table;
 
 /**
  * @author Guenther Demetz
- *
  */
 @Entity
-public class Product implements Serializable
-{
+public class Product2 implements Serializable {
 	@Id
-    public Integer id;
+	public Integer id;
 
-    @Column(name="description", nullable=false)
-    public String description;
+	@Column(name = "description", nullable = false)
+	public String description;
 
-   
+
 }

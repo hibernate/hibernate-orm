@@ -198,13 +198,12 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		// Insert after the select statement the row_number() function:
 		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
 	}
-	
+
 	@Override // since SQLServer2005 the nowait hint is supported
-     	public String appendLockHint(LockMode mode, String tableName) {
-		if ( mode == LockMode.UPGRADE_NOWAIT )
-		{
+	public String appendLockHint(LockMode mode, String tableName) {
+		if ( mode == LockMode.UPGRADE_NOWAIT ) {
 			return tableName + " with (updlock, rowlock, nowait)";
 		}
-		return super.appendLockHint(mode, tableName);
+		return super.appendLockHint( mode, tableName );
 	}
 }

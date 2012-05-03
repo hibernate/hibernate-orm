@@ -93,8 +93,8 @@
         <section>
             <title>Physical Transactions - JTA</title>
             <para>
-                JTA-based transaction management leverages the JTA
-                <interfacename>javax.transaction.TransactionManager</interfacename> interface as obtained from
+                JTA-based transaction approach which leverages the
+                <interfacename>javax.transaction.UserTransaction</interfacename> interface as obtained from
                 <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
                 <classname>org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory</classname> class.
@@ -109,12 +109,20 @@
         <section>
             <title>Physical Transactions - CMT</title>
             <para>
-                CMT-based transaction management leverages the
-                <interfacename>javax.transaction.UserTransaction</interfacename> interface as obtained from
+                Another JTA-based transaction approach which leverages the JTA
+                <interfacename>javax.transaction.TransactionManager</interfacename> interface as obtained from
                 <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
-                <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> class.
+                <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> class.  In
+                an actual JEE CMT environment, access to the
+                <interfacename>javax.transaction.UserTransaction</interfacename> is restricted.
             </para>
+            <note>
+                <para>
+                    The term CMT is potentially misleading here.  The important point simply being that the physical JTA
+                    transactions are being managed by something other than the Hibernate transaction API.
+                </para>
+            </note>
             <para>
                 See <xref linkend="services-JtaPlatform"/> for information on integration with the underlying JTA
                 system.

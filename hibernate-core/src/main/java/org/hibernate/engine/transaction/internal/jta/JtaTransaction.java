@@ -68,10 +68,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 	protected void doBegin() {
 		LOG.debug( "begin" );
 
-		userTransaction = jtaPlatform().retrieveUserTransaction();
-		if ( userTransaction == null ) {
-			throw new TransactionException( "Unable to locate JTA UserTransaction" );
-		}
+		userTransaction = locateUserTransaction();
 
 		try {
 			if ( userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION ) {
@@ -83,7 +80,14 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		catch ( Exception e ) {
 			throw new TransactionException( "JTA transaction begin failed", e );
 		}
+	}
 
+	private UserTransaction locateUserTransaction() {
+		final UserTransaction userTransaction = jtaPlatform().retrieveUserTransaction();
+		if ( userTransaction == null ) {
+			throw new TransactionException( "Unable to locate JTA UserTransaction" );
+		}
+		return userTransaction;
 	}
 
 	@Override
@@ -208,6 +212,9 @@ public class JtaTransaction extends AbstractTransactionImpl {
 	public void markRollbackOnly() {
 		LOG.trace( "Marking transaction for rollback only" );
 		try {
+			if ( userTransaction == null ) {
+				userTransaction = locateUserTransaction();
+			}
 			userTransaction.setRollbackOnly();
 			LOG.debug( "set JTA UserTransaction to rollback only" );
 		}

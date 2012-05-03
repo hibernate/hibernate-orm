@@ -208,8 +208,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		if ( sqlExceptionConverter == null ) {
 			final StandardSQLExceptionConverter converter = new StandardSQLExceptionConverter();
 			sqlExceptionConverter = converter;
-			converter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
 			converter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
+			converter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
 			// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
 			converter.addDelegate( new SQLStateConversionDelegate( dialect ) );
 		}

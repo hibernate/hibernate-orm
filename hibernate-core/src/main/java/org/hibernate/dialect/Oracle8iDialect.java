@@ -29,12 +29,17 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -407,6 +412,57 @@ public class Oracle8iDialect extends Dialect {
 		}
 
 	};
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
+
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+
+
+				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( errorCode == 30006 ) {
+					// ORA-30006: resource busy; acquire with WAIT timeout expired
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				else if ( errorCode == 54 ) {
+					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				else if ( 4021 == errorCode ) {
+					// ORA-04021 timeout occurred while waiting to lock object
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+
+
+				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( 60 == errorCode ) {
+					// ORA-00060: deadlock detected while waiting for resource
+					return new LockAcquisitionException( message, sqlException, sql );
+				}
+				else if ( 4020 == errorCode ) {
+					// ORA-04020 deadlock detected while trying to lock object
+					return new LockAcquisitionException( message, sqlException, sql );
+				}
+
+
+				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( 1013 == errorCode ) {
+					// ORA-01013: user requested cancel of current operation
+					throw new QueryTimeoutException(  message, sqlException, sql );
+				}
+
+
+				return null;
+			}
+		};
+	}
 
 	public static final String ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.OracleTypes";
 	public static final String DEPRECATED_ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.driver.OracleTypes";

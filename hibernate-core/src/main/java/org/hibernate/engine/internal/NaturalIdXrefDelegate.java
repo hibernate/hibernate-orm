@@ -490,4 +490,8 @@ public class NaturalIdXrefDelegate {
 			}
 		}
 	}
+
+	public void clear() {
+		naturalIdResolutionCacheMap.clear();
+	}
 }

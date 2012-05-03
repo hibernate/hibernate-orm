@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -37,8 +38,8 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
-	private static final String FROM = "from";
-	private static final String DISTINCT = "distinct";
+	private static final String FROM = "from ";
+	private static final String DISTINCT = "distinct ";
 	private static final int MAX_LENGTH = 8000;
 
 	/**
@@ -118,9 +119,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	@Override
 	public String getLimitString(String querySqlString, boolean hasOffset) {
-		StringBuilder sb = new StringBuilder( querySqlString.trim().toLowerCase() );
+		StringBuilder sb = new StringBuilder( querySqlString.trim() );
 
-		int orderByIndex = sb.indexOf( "order by" );
+		int orderByIndex = sb.toString().toLowerCase().indexOf( "order by" );
 		CharSequence orderby = orderByIndex > 0 ? sb.subSequence( orderByIndex, sb.length() )
 				: "ORDER BY CURRENT_TIMESTAMP";
 
@@ -148,10 +149,10 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
-		int distinctIndex = sql.indexOf( DISTINCT );
-		int selectEndIndex = sql.indexOf( FROM );
+		int distinctIndex = sql.toString().toLowerCase().indexOf( DISTINCT );
+		int selectEndIndex = sql.toString().toLowerCase().indexOf( FROM );
 		if (distinctIndex > 0 && distinctIndex < selectEndIndex) {
-			sql.delete( distinctIndex, distinctIndex + DISTINCT.length() + 1 );
+			sql.delete( distinctIndex, distinctIndex + DISTINCT.length());
 			sql.append( " group by" ).append( getSelectFieldsWithoutAliases( sql ) );
 		}
 	}
@@ -165,7 +166,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @return the fields of the select statement without their alias
 	 */
 	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql) {
-		String select = sql.substring( sql.indexOf( SELECT ) + SELECT.length(), sql.indexOf( FROM ) );
+		final String lower = sql.toString().toLowerCase();
+		String select = sql.substring( lower.indexOf( SELECT ) + SELECT.length(), lower.indexOf( FROM ) );
 
 		// Strip the as clauses
 		return stripAliases( select );
@@ -195,5 +197,14 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 		// Insert after the select statement the row_number() function:
 		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
+	}
+	
+	@Override // since SQLServer2005 the nowait hint is supported
+     	public String appendLockHint(LockMode mode, String tableName) {
+		if ( mode == LockMode.UPGRADE_NOWAIT )
+		{
+			return tableName + " with (updlock, rowlock, nowait)";
+		}
+		return super.appendLockHint(mode, tableName);
 	}
 }

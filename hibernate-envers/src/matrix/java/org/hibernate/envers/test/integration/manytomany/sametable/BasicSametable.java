@@ -23,15 +23,14 @@
  */
 package org.hibernate.envers.test.integration.manytomany.sametable;
 
+import java.sql.Types;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
@@ -68,11 +67,16 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase  {
         em.getTransaction().begin();
         Session session = (Session) em.getDelegate();
         session.createSQLQuery("DROP TABLE children").executeUpdate();
-        session.createSQLQuery("CREATE TABLE children(parent_id integer, child1_id integer NULL, child2_id integer NULL)").executeUpdate();
+        session.createSQLQuery("CREATE TABLE children ( parent_id " + getDialect().getTypeName(Types.INTEGER) +
+                                                     ", child1_id " + getDialect().getTypeName(Types.INTEGER) + " NULL" +
+                                                     ", child2_id " + getDialect().getTypeName(Types.INTEGER) + " NULL )").executeUpdate();
         session.createSQLQuery("DROP TABLE children_AUD").executeUpdate();
-        session.createSQLQuery("CREATE TABLE children_AUD(REV integer NOT NULL, REVEND integer, REVTYPE " +
-                (getDialect() instanceof Oracle8iDialect ? "number(3,0)" : (getDialect() instanceof PostgreSQL82Dialect ? "smallint" : "tinyint")) +
-                ", parent_id integer, child1_id integer NULL, child2_id integer NULL)").executeUpdate();
+        session.createSQLQuery("CREATE TABLE children_AUD ( REV " + getDialect().getTypeName(Types.INTEGER) + " NOT NULL" +
+                                                         ", REVEND " + getDialect().getTypeName(Types.INTEGER) +
+                                                         ", REVTYPE " + getDialect().getTypeName(Types.TINYINT) +
+                                                         ", parent_id " + getDialect().getTypeName(Types.INTEGER) +
+                                                         ", child1_id " + getDialect().getTypeName(Types.INTEGER) + " NULL" +
+                                                         ", child2_id " + getDialect().getTypeName(Types.INTEGER) + " NULL )").executeUpdate();
         em.getTransaction().commit();
         em.clear();
 

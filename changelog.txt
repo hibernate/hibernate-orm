@@ -5,6 +5,52 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.3.Final (2012.05.02)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11959
+
+** Bug
+    * [HHH-1512] - Problem to lock a row in a DB2 database with LockMode UPGRADE
+    * [HHH-2697] - Can't use := for variable assignment within a SQL-Statement
+    * [HHH-7068] - "Cursor state not valid" error from AS400
+    * [HHH-7101] - NPE when trying to create EntityManagerFactory
+    * [HHH-7195] - Table does not handle quoted catalog
+    * [HHH-7225] - NullPointerException after persisting null entity value as natural-Id
+    * [HHH-7237] - Inline natural-id synchronization doesn't consider reattached objects
+    * [HHH-7238] - Remove the need for QueryResultsRegionImpl to have @Listener
+    * [HHH-7239] - have session remove itself from list of transaction observers on close
+    * [HHH-7245] - Inline natural-id synchronization doesn't consider objects loaded from shared cache
+    * [HHH-7246] - Envers creates revision for changing from empty string to null and from null to string
+    * [HHH-7250] - Bug in SharedCache handling of Natural-id
+    * [HHH-7251] - PostgreSQL Dialect not properly mapping SQL error codes for pessimistic lock exceptions.
+    * [HHH-7252] - EntityManager not retaining LockOptions context when mapping exceptions.
+    * [HHH-7253] - NPE thrown by NaturalIdResolutionCache
+    * [HHH-7265] - ConcurrentModificationException in SynchronizationRegistryImpl.notifySynchronizationsAfterTransactionCompletion due to SynchronizationRegistryImpl.clearSynchronizations clearing SynchronizationRegistryImpl.synchronizations
+    * [HHH-7266] - Move away from use of Enhydra developed DataSource for JTA testing
+    * [HHH-7274] - Developer Guide reverses discussion of CMTTransactionFactory and JTATransactionFactory
+    * [HHH-7276] - Regression allows entity to be looked up by previous natural id
+    * [HHH-7278] - Natural-id shared cache afterTransactionCompletionProcess does not distinguish between success and failure
+    * [HHH-7281] - Tests fail on Postgresql due to failure in typecasting
+    * [HHH-7296] - NPE in JtaTransaction#markRollbackOnly
+
+** Improvement
+    * [HHH-6848] - Performance Optimization of in memory merge algorithm (Wim Ockerman)
+    * [HHH-7235] - Support null NaturalId values in loadEntityIdByNaturalId query
+    * [HHH-7256] - Infinispan second level cache should react to minimal puts in putFromLoad impl
+    * [HHH-7272] - Have ClassLoaderServiceImpl use Class.forName rather than ClassLoader.loadClass
+    * [HHH-7279] - Prevent identical re-cachings in natural-id shared cache
+    * [HHH-7280] - Upgrade to Infinispan 5.1.4.FINAL
+    * [HHH-7282] - Move org.hibernate.cache.internal.Timestamper to hibernate-testing module
+    * [HHH-7283] - hibernate is not compilable on JDK7
+
+** New Feature
+    * [HHH-6790] - Add option to SequenceStyleGenerator to prefer a "sequence per entity"
+
+** Patch
+    * [HHH-5043] - Incorrect handling of hibernate.default_schema in SchemaUpdate
+    * [HHH-6405] - setFetchMode ignored in certain cases when using criteria queries
+
+
 Changes in version 4.1.2.Final (2012.04.04)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11951

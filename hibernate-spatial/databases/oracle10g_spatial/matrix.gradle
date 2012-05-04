@@ -21,4 +21,4 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-jdbcDependency "com.oracle.jdbc:ojdbc6:11.1.0.7.0"
+jdbcDependency "com.oracle.jdbc:ojdbc6:11.2.0.3"

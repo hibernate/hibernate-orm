@@ -38,7 +38,7 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
-	private static final String FROM = "from ";
+	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct ";
 	private static final int MAX_LENGTH = 8000;
 
@@ -157,6 +157,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		}
 	}
 
+	public static final String SELECT_WITH_SPACE = SELECT + ' ';
+	public static final String FROM_WITH_SPACE = FROM + ' ';
+
 	/**
 	 * This utility method searches the given sql query for the fields of the select statement and returns them without
 	 * the aliases.
@@ -167,7 +170,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql) {
 		final String lower = sql.toString().toLowerCase();
-		String select = sql.substring( lower.indexOf( SELECT ) + SELECT.length(), lower.indexOf( FROM ) );
+		final int selectStartPos = lower.indexOf( SELECT_WITH_SPACE );
+		final int fromStartPos = lower.indexOf( FROM_WITH_SPACE, selectStartPos );
+		String select = sql.substring( selectStartPos + SELECT.length(), fromStartPos );
 
 		// Strip the as clauses
 		return stripAliases( select );

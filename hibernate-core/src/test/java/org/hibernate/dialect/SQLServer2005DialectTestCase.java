@@ -45,7 +45,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 
 	@Test
 	public void testGetSelectFieldsWithoutAliases() {
-		StringBuilder input = new StringBuilder( "select some_field1 as f12, some_fild2 as f879, _field3 as _f24674_3 from...." );
+		StringBuilder input = new StringBuilder( "select some_field1 as f12, some_fild2 as f879, _field3 as _f24674_3 from ...." );
 		String output = SQLServer2005Dialect.getSelectFieldsWithoutAliases( input ).toString();
 
 		assertEquals( " some_field1, some_fild2, _field3", output );

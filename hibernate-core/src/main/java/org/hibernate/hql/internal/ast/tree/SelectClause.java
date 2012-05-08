@@ -47,6 +47,7 @@ public class SelectClause extends SelectExpressionList {
 	private boolean scalarSelect;
 
 	private List fromElementsForLoad = new ArrayList();
+	private List alreadyAppendedTexts = new ArrayList();
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 	private String[][] columnNames;
@@ -217,6 +218,7 @@ public class SelectClause extends SelectExpressionList {
 							//sqlResultTypeList.add( type );
 							// Generate the select expression.
 							String text = fromElement.renderIdentifierSelect( size, k );
+							alreadyAppendedTexts.add(text);
 							SelectExpressionImpl generatedExpr = ( SelectExpressionImpl ) appender.append( SqlTokenTypes.SELECT_EXPR, text, false );
 							if ( generatedExpr != null ) {
 								generatedExpr.setFromElement( fromElement );
@@ -340,6 +342,7 @@ public class SelectClause extends SelectExpressionList {
 		}
 	}
 
+	@Override
 	protected AST getFirstSelectExpression() {
 		AST n = getFirstChild();
 		// Skip 'DISTINCT' and 'ALL', so we return the first expression node.
@@ -427,7 +430,10 @@ public class SelectClause extends SelectExpressionList {
 				expr.setText( text );
 			}
 			else {
-				appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+				if (! alreadyAppendedTexts.contains(text)) {
+					appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+					alreadyAppendedTexts.add(text);
+				}
 			}
 		}
 	}

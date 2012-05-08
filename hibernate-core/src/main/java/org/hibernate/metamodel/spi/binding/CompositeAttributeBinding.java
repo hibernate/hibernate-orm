@@ -25,7 +25,6 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -343,8 +342,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			MetaAttributeContext metaAttributeContext,
-			Comparator comparator) {
+			MetaAttributeContext metaAttributeContext ) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding(
 				this,
@@ -354,8 +352,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
-				metaAttributeContext,
-				comparator
+				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;

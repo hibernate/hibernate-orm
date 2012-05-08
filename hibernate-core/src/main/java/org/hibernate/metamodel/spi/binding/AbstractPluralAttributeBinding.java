@@ -25,14 +25,11 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -59,7 +56,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private String where;
 	private String orderBy;
 	private boolean sorted;
-	private Comparator comparator;
+	private Comparator< ? > comparator;
 	private String comparatorClassName;
 
 	private String customLoaderName;
@@ -71,7 +68,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private String referencedPropertyName;
 
 	private final java.util.Map filters = new HashMap();
-	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
+//	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
 
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
@@ -289,11 +286,11 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 
 	@Override
-	public Comparator getComparator() {
+	public Comparator< ? > getComparator() {
 		return comparator;
 	}
 
-	public void setComparator(Comparator comparator) {
+	public void setComparator( Comparator< ? > comparator ) {
 		this.comparator = comparator;
 	}
 

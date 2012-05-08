@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
@@ -212,7 +211,6 @@ public interface AttributeBindingContainer {
 	 * @param includedInOptimisticLocking
 	 * @param lazy
 	 * @param metaAttributeContext
-	 * @param comparator
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -223,8 +221,7 @@ public interface AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			MetaAttributeContext metaAttributeContext,
-			Comparator comparator);
+			MetaAttributeContext metaAttributeContext );
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.

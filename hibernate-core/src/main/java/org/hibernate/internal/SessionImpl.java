@@ -285,17 +285,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 				@Override
 				public void beforeCompletion(TransactionImplementor transaction) {
-					if ( isOpen() ) {
-						if ( flushBeforeCompletionEnabled ){
-							SessionImpl.this.managedFlush();
-						}
-						getActionQueue().beforeTransactionCompletion();
+					if ( isOpen() && flushBeforeCompletionEnabled ) {
+						SessionImpl.this.managedFlush();
 					}
-					else {
-						if (actionQueue.hasAfterTransactionActions()){
-							LOG.log( Logger.Level.DEBUG, "Session had after transaction actions that were not processed");
-						}
-					}
+					beforeTransactionCompletion( transaction );
 				}
 
 				@Override

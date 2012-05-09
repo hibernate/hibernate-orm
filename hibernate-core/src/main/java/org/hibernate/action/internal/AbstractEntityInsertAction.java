@@ -72,7 +72,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		this.isExecuted = false;
 		this.areTransientReferencesNullified = false;
 
-		handleNaturalIdPreSaveNotifications();
+		if (id != null) {
+			handleNaturalIdPreSaveNotifications();
+		}
 	}
 
 	/**
@@ -193,7 +195,17 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	/**
 	 * Handle sending notifications needed for natural-id after saving
 	 */
-	protected void handleNaturalIdPostSaveNotifications() {
+	public void handleNaturalIdPostSaveNotifications(Serializable id) {
+		if (isEarlyInsert()) {
+			// with early insert, we still need to add a local (transactional) natural id cross-reference
+			getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+					getPersister(),
+					id,
+					state,
+					null,
+					CachedNaturalIdValueSource.INSERT
+			);
+		}
 		// after save, we need to manage the shared cache entries
 		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				getPersister(),

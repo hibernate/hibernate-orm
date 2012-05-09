@@ -42,4 +42,31 @@ class NonstrictReadWriteNaturalIdRegionAccessStrategy extends BaseNaturalIdRegio
 	public void remove(Object key) throws CacheException {
 		evict( key );
 	}
+	
+	/**
+	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
+	 * @see org.hibernate.cache.ehcache.internal.strategy.NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy 
+	 */
+	@Override
+	public boolean insert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+
+	/**
+	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
+	 * @see org.hibernate.cache.ehcache.internal.strategy.NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy 
+	 */
+	@Override
+	public boolean afterInsert(Object key, Object value ) throws CacheException {
+		return false;
+	}
+	
+	/**
+	 * Removes the entry since this is a non-strict read/write cache strategy.
+	 * @see org.hibernate.cache.ehcache.internal.strategy.NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy 
+	 */
+	public boolean update(Object key, Object value ) throws CacheException {
+		remove( key );
+		return false;
+	}
 }

@@ -127,7 +127,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			}
 		}
 
-		handleNaturalIdPostSaveNotifications();
+		handleNaturalIdPostSaveNotifications(id);
 
 		postInsert();
 

@@ -298,6 +298,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 								insert.getClass().getName() );
 			}
 			id = ( ( EntityIdentityInsertAction ) insert ).getGeneratedId();
+			
+			insert.handleNaturalIdPostSaveNotifications(id);
 		}
 
 		markInterceptorDirty( entity, persister, source );

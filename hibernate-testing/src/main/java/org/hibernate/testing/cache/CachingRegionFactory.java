@@ -46,7 +46,9 @@ public class CachingRegionFactory implements RegionFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, CachingRegionFactory.class.getName()
 	);
+	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
 	private Settings settings;
+	private Properties properties;
 	public CachingRegionFactory() {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
 	}
@@ -54,11 +56,13 @@ public class CachingRegionFactory implements RegionFactory {
 	public CachingRegionFactory(Properties properties) {
 		//add here to avoid run into catch
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
+		this.properties=properties; 
 	}
 
 	@Override
 	public void start(Settings settings, Properties properties) throws CacheException {
 		this.settings=settings;
+		this.properties=properties; 
 	}
 
 	@Override
@@ -72,7 +76,10 @@ public class CachingRegionFactory implements RegionFactory {
 
 	@Override
 	public AccessType getDefaultAccessType() {
-		return AccessType.NONSTRICT_READ_WRITE;
+		if (properties != null && properties.get(DEFAULT_ACCESSTYPE) != null) {
+			return AccessType.fromExternalName(properties.getProperty(DEFAULT_ACCESSTYPE));
+		}
+		return AccessType.READ_WRITE;
 	}
 
 	@Override

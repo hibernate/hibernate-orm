@@ -166,14 +166,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 		this.dynamic = dynamic;
 	}
 
-	private Type type;
-
 	public Type getType() throws MappingException {
-		// added this caching as I noticed that getType() is being called multiple times...
-		if ( type == null ) {
-			type = buildType();
-		}
-		return type;
+		return buildType();
 	}
 
 	private Type buildType() {

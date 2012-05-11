@@ -36,6 +36,8 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * An SQL dialect for DB2.
@@ -419,5 +421,10 @@ public class DB2Dialect extends Dialect {
 
 	public boolean supportsTupleDistinctCounts() {
 		return false;
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.BOOLEAN ? SmallIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

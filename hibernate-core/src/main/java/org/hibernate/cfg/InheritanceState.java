@@ -223,7 +223,7 @@ public class InheritanceState {
 
 			accessType = determineDefaultAccessType();
 
-			List<PropertyData> elements = new ArrayList<PropertyData>();
+			ArrayList<PropertyData> elements = new ArrayList<PropertyData>();
 			int deep = classesToProcessForMappedSuperclass.size();
 			int idPropertyCount = 0;
 
@@ -242,6 +242,7 @@ public class InheritanceState {
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
 				throw new AnnotationException( "No identifier specified for entity: " + clazz.getName() );
 			}
+			elements.trimToSize();
 			elementsToProcess = new ElementsToProcess( elements, idPropertyCount );
 		}
 		return elementsToProcess;

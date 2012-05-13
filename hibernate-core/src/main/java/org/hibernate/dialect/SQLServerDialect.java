@@ -127,6 +127,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			  ( mode == LockMode.WRITE ) ) {
 			return tableName + " with (updlock, rowlock)";
 		}
+		else if ( mode == LockMode.UPGRADE_SKIPLOCKED ) {
+			return tableName + " with (updlock, rowlock, readpast)";
+		}
 		else if ( mode == LockMode.PESSIMISTIC_READ ) {
 			return tableName + " with (holdlock, rowlock)";
 		}

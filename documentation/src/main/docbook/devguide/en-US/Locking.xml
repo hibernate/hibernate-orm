@@ -264,6 +264,11 @@
               Oracle.</para></entry>
             </row>
             <row>
+              <entry>LockMode.UPGRADE_SKIPLOCKED</entry>
+              <entry><para>acquired upon explicit user request using a <code>SELECT ... FOR UPDATE SKIP LOCKED</code> in
+              Oracle, or <code>SELECT ... with (rowlock,updlock,readpast) in SQL Server</code>.</para></entry>
+            </row>
+            <row>
               <entry>LockMode.READ</entry>
               <entry><para>acquired automatically when Hibernate reads data under <phrase>Repeatable Read</phrase> or
               <phrase>Serializable</phrase> isolation level. It can be re-acquired by explicit user
@@ -299,17 +304,18 @@
         </listitem>
       </itemizedlist>
       <para>
-        If you call <methodname>Session.load()</methodname> with option <option>UPGRADE</option> or
-        <option>UPGRADE_NOWAIT</option>, and the requested object is not already loaded by the session, the object is
-        loaded using <code>SELECT ... FOR UPDATE</code>. If you call <methodname>load()</methodname> for an object that
-        is already loaded with a less restrictive lock than the one you request, Hibernate calls
-        <methodname>lock()</methodname> for that object.
+        If you call <methodname>Session.load()</methodname> with option <option>UPGRADE</option>,
+        <option>UPGRADE_NOWAIT</option> or <option>UPGRADE_SKIPLOCKED</option>, and the requested object is not already
+        loaded by the session, the object is loaded using <code>SELECT ... FOR UPDATE</code>. If you call 
+        <methodname>load()</methodname> for an object that is already loaded with a less restrictive lock than the one 
+        you request, Hibernate calls <methodname>lock()</methodname> for that object.
       </para>
       <para>
         <methodname>Session.lock()</methodname> performs a version number check if the specified lock mode is
-        <literal>READ</literal>, <literal>UPGRADE</literal>, or <literal>UPGRADE_NOWAIT</literal>. In the case of
-        <literal>UPGRADE</literal> or <literal>UPGRADE_NOWAIT</literal>, <code>SELECT ... FOR UPDATE</code> syntax is
-        used.
+        <literal>READ</literal>, <literal>UPGRADE</literal>, <literal>UPGRADE_NOWAIT</literal> or 
+        <literal>UPGRADE_SKIPLOCKED</literal>. In the case of <literal>UPGRADE</literal>, 
+        <literal>UPGRADE_NOWAIT</literal> or <literal>UPGRADE_SKIPLOCKED</literal>, <code>SELECT ... FOR UPDATE</code> 
+	syntax is used.
       </para>
       <para>
         If the requested lock mode is not supported by the database, Hibernate uses an appropriate alternate mode

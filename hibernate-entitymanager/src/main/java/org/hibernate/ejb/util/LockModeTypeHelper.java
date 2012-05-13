@@ -49,7 +49,8 @@ public class LockModeTypeHelper {
 		}
 		else if ( lockMode == LockMode.PESSIMISTIC_WRITE
 				|| lockMode == LockMode.UPGRADE
-				|| lockMode == LockMode.UPGRADE_NOWAIT ) {
+				|| lockMode == LockMode.UPGRADE_NOWAIT 
+				|| lockMode == LockMode.UPGRADE_SKIPLOCKED) {
 			return LockModeType.PESSIMISTIC_WRITE;
 		}
 		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT

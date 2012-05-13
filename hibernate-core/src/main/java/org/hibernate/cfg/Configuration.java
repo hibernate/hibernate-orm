@@ -3403,7 +3403,7 @@ public class Configuration implements Serializable {
 
 		private void processHbmXml(XmlDocument metadataXml, Set<String> entityNames) {
 			try {
-				HbmBinder.bindRoot( metadataXml, createMappings(), CollectionHelper.EMPTY_MAP, entityNames );
+				HbmBinder.bindRoot( metadataXml, createMappings(), Collections.EMPTY_MAP, entityNames );
 			}
 			catch ( MappingException me ) {
 				throw new InvalidMappingException(

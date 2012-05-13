@@ -24,10 +24,10 @@
  */
 package org.hibernate.loader;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.Loadable;
 
 /**
@@ -69,7 +69,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	public DefaultEntityAliases(Loadable persister, String suffix) {
-		this( CollectionHelper.EMPTY_MAP, persister, suffix );
+		this( Collections.EMPTY_MAP, persister, suffix );
 	}
 
 	private String[] determineKeyAlias(Loadable persister, String suffix) {

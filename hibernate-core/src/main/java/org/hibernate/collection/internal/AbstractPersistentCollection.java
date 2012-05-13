@@ -26,6 +26,7 @@ package org.hibernate.collection.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -553,7 +554,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return getOrphans( removals, additions, entityName, session );
 		}
 		else {
-			return CollectionHelper.EMPTY_COLLECTION;
+			return Collections.EMPTY_LIST;
 		}
 	}
 

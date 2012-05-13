@@ -24,6 +24,7 @@
 package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -83,7 +84,7 @@ public class Table implements RelationalModel, Serializable {
 				this.referencedColumns.addAll( referencedColumns );
 			}
 			else {
-				this.referencedColumns = CollectionHelper.EMPTY_LIST;
+				this.referencedColumns = Collections.EMPTY_LIST;
 			}
 		}
 

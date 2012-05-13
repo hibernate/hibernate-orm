@@ -1129,7 +1129,7 @@ public final class SessionFactoryImpl
 			try {
 				LOG.debugf( "Checking named query: %s", queryName );
 				//TODO: BUG! this currently fails for named queries for non-POJO entities
-				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, CollectionHelper.EMPTY_MAP );
+				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, Collections.EMPTY_MAP );
 			}
 			catch ( QueryException e ) {
 				errors.put( queryName, e );
@@ -1270,13 +1270,13 @@ public final class SessionFactoryImpl
 	}
 
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP )
+		return queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
 				.getReturnMetadata()
 				.getReturnTypes();
 	}
 
 	public String[] getReturnAliases(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP )
+		return queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
 				.getReturnMetadata()
 				.getReturnAliases();
 	}

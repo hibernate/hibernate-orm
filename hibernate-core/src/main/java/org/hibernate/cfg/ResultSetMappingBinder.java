@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,7 +43,6 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -330,7 +330,7 @@ public abstract class ResultSetMappingBinder {
 				entry.setValue( list.toArray( new String[ list.size() ] ) );
 			}
 		}
-		return propertyresults.isEmpty() ? CollectionHelper.EMPTY_MAP : propertyresults;
+		return propertyresults.isEmpty() ? Collections.EMPTY_MAP : propertyresults;
 	}
 
 	private static int getIndexOfFirstMatchingProperty(List propertyNames, String follower) {

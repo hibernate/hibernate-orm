@@ -1240,7 +1240,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		HQLQueryPlan plan = getHQLQueryPlan( query, false );
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
-		List results = CollectionHelper.EMPTY_LIST;
+		List results = Collections.EMPTY_LIST;
 		boolean success = false;
 
 		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
@@ -1516,7 +1516,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, false );
-		List results = CollectionHelper.EMPTY_LIST;
+		List results = Collections.EMPTY_LIST;
 
 		boolean success = false;
 		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called

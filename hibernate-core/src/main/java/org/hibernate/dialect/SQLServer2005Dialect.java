@@ -222,7 +222,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	private static int shallowIndexOfWord(final StringBuilder sb, final String search, int fromIndex) {
 		final int index = shallowIndexOf( sb, ' ' + search + ' ', fromIndex );
-		return index != -1 ? ( index + 1 ) : -1; // In cas of match adding one because of space placed in front of search term.
+		return index != -1 ? ( index + 1 ) : -1; // In case of match adding one because of space placed in front of search term.
 	}
 
 	/**

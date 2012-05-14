@@ -37,6 +37,7 @@ import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
@@ -100,8 +101,14 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	@Override
     protected Session getRawSession() {
 		if ( session == null ) {
-			SessionBuilderImplementor sessionBuilder = getEntityManagerFactory().getSessionFactory().withOptions();
+			SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) getEntityManagerFactory().getSessionFactory();
+			SessionBuilderImplementor sessionBuilder = sessionFactory.withOptions();
 			sessionBuilder.owner( this );
+
+			if (sessionFactory.getCurrentTenantIdentifierResolver()!=null){
+				sessionBuilder.tenantIdentifier(sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier());
+			}
+			
 			if (sessionInterceptorClass != null) {
 				try {
 					Interceptor interceptor = (Interceptor) sessionInterceptorClass.newInstance();

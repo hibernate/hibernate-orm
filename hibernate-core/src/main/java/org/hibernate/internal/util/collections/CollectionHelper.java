@@ -42,9 +42,12 @@ public final class CollectionHelper {
     public static final int MINIMUM_INITIAL_CAPACITY = 16;
 	public static final float LOAD_FACTOR = 0.75f;
 
-	public static final List EMPTY_LIST = Collections.unmodifiableList( new ArrayList(0) );
-	public static final Collection EMPTY_COLLECTION = Collections.unmodifiableCollection( new ArrayList(0) );
-	public static final Map EMPTY_MAP = Collections.unmodifiableMap( new HashMap(0) );
+	@Deprecated // use java.util.Collections.EMPTY_LIST instead
+	public static final List EMPTY_LIST = Collections.EMPTY_LIST;
+	@Deprecated // use java.util.Collections.EMPTY_LIST instead
+	public static final Collection EMPTY_COLLECTION = Collections.EMPTY_LIST;
+	@Deprecated // use java.util.Collections.EMPTY_MAP instead
+	public static final Map EMPTY_MAP = Collections.EMPTY_MAP;
 
 	private CollectionHelper() {
 	}

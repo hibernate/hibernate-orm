@@ -65,7 +65,6 @@ import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -440,7 +439,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public Map getEnabledFilters() {
-		return CollectionHelper.EMPTY_MAP;
+		return Collections.EMPTY_MAP;
 	}
 
 	@Override
@@ -576,7 +575,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		queryParameters.validateParameters();
 		HQLQueryPlan plan = getHQLQueryPlan( query, false );
 		boolean success = false;
-		List results = CollectionHelper.EMPTY_LIST;
+		List results = Collections.EMPTY_LIST;
 		try {
 			results = plan.performList( queryParameters, this );
 			success = true;

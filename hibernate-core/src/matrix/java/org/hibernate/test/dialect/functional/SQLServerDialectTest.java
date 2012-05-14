@@ -77,7 +77,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List list = s.createQuery( "from Product where description like 'Kit%'" )
+		List list = s.createQuery( "from Product2 where description like 'Kit%'" )
 				.setFirstResult( 2 )
 				.setMaxResults( 2 )
 				.list();

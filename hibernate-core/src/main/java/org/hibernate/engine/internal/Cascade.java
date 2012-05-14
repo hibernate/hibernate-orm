@@ -452,7 +452,7 @@ public final class Cascade {
 		if ( pc.wasInitialized() ) {
 			CollectionEntry ce = eventSource.getPersistenceContext().getCollectionEntry(pc);
 			orphans = ce==null ?
-					CollectionHelper.EMPTY_COLLECTION :
+					java.util.Collections.EMPTY_LIST :
 					ce.getOrphans(entityName, pc);
 		}
 		else {

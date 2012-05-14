@@ -1856,4 +1856,8 @@ public abstract class AbstractCollectionPersister
 	public CollectionInitializer getInitializer() {
 		return initializer;
 	}
+
+	public int getBatchSize() {
+		return batchSize;
+	}
 }

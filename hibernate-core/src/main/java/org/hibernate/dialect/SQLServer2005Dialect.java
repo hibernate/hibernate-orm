@@ -107,10 +107,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 *
 	 * <pre>
 	 * WITH query AS (
-	 *   SELECT ROW_NUMBER() OVER (ORDER BY orderby) as __hibernate_row_nr__,
-	 *   original_query_without_orderby
+	 *   original_select_clause_without_distinct_and_order_by,
+	 *   ROW_NUMBER() OVER ([ORDER BY CURRENT_TIMESTAMP | original_order_by_clause]) as __hibernate_row_nr__
+	 *   original_from_clause
+	 *   original_where_clause
+	 *   group_by_if_originally_select_distinct
 	 * )
-	 * SELECT * FROM query WHERE __hibernate_row_nr__ BEETWIN offset AND offset + last
+	 * SELECT * FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
 	 * </pre>
 	 *
 	 * @param querySqlString The SQL statement to base the limit query off of.
@@ -190,16 +193,16 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	/**
-	 * Right after the select statement of a given query we must place the row_number function
+	 * We must place the row_number function at the end of select clause.
 	 *
 	 * @param sql the initial sql query without the order by clause
 	 * @param orderby the order by clause of the query
 	 */
 	protected void insertRowNumberFunction(StringBuilder sql, CharSequence orderby) {
-		// Find the end of the select statement
+		// Find the end of the select clause
 		int selectEndIndex = shallowIndexOfWord( sql, FROM, 0 );
 
-		// Insert after the select statement the row_number() function:
+		// Insert after the select clause the row_number() function:
 		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
 	}
 

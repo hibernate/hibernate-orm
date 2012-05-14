@@ -251,7 +251,12 @@ public class CollectionLoadContext {
 		}
 		else {
 			ce.postInitialize( lce.getCollection() );
+//			if (ce.getLoadedPersister().getBatchSize() > 1) { // not the best place for doing this, moved into ce.postInitialize
+//				getLoadContext().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce); 
+//			}
 		}
+		
+
 
 		boolean addToCache = hasNoQueuedAdds && // there were no queued additions
 				persister.hasCache() &&             // and the role has a cache

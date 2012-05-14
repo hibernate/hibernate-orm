@@ -27,15 +27,19 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.jboss.logging.Logger;
 
 /**
  * Tracks entity and collection keys that are available for batch
@@ -46,19 +50,21 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class BatchFetchQueue {
 
-	public static final Object MARKER = new MarkerObject( "MARKER" );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BatchFetchQueue.class.getName() );
 
 	/**
 	 * Defines a sequence of {@link EntityKey} elements that are currently
 	 * elegible for batch-fetching.
 	 * <p/>
-	 * Even though this is a map, we only use the keys.  A map was chosen in
-	 * order to utilize a {@link LinkedHashMap} to maintain sequencing
-	 * as well as uniqueness.
+	 * utilize a {@link LinkedHashMap} to maintain sequencing as well as uniqueness.
 	 * <p/>
-	 * TODO : this would be better as a SequencedReferenceSet, but no such beast exists!
 	 */
-	private final Map batchLoadableEntityKeys = new LinkedHashMap(8);
+	private final Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys = new HashMap <String,LinkedHashSet<EntityKey>>(8);
+	
+	/**
+	 * cannot use PersistentCollection as keym because PersistentSet.hashCode() would force initialization immediately
+	 */
+	private final Map <CollectionPersister, LinkedHashMap <CollectionEntry, PersistentCollection>> batchLoadableCollections = new HashMap <CollectionPersister, LinkedHashMap <CollectionEntry, PersistentCollection>>(8);
 
 	/**
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the
@@ -85,6 +91,7 @@ public class BatchFetchQueue {
 	 */
 	public void clear() {
 		batchLoadableEntityKeys.clear();
+		batchLoadableCollections.clear();
 		subselectsByEntityKey.clear();
 	}
 
@@ -140,9 +147,15 @@ public class BatchFetchQueue {
 	 */
 	public void addBatchLoadableEntityKey(EntityKey key) {
 		if ( key.isBatchLoadable() ) {
-			batchLoadableEntityKeys.put( key, MARKER );
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
+			if (set == null) {
+				set = new LinkedHashSet<EntityKey>(8);
+				batchLoadableEntityKeys.put( key.getEntityName(), set);
+			}
+			set.add(key);
 		}
 	}
+	
 
 	/**
 	 * After evicting or deleting or loading an entity, we don't
@@ -150,7 +163,38 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable() ) batchLoadableEntityKeys.remove(key);
+		if ( key.isBatchLoadable() ) {
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
+			if (set != null) {
+				set.remove(key);
+			}
+		}
+	}
+	
+	
+	/**
+	 * If an CollectionEntry represents a batch loadable collection, add
+	 * it to the queue.
+	 */
+	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister());
+		if (map == null) {
+			map = new LinkedHashMap<CollectionEntry, PersistentCollection>(8);
+			batchLoadableCollections.put( ce.getLoadedPersister(), map);
+		}
+		map.put(ce, collection);
+	}
+	
+	/**
+	 * After a collection was initialized or evicted, we don't
+	 * need to batch fetch it anymore, remove it from the queue
+	 * if necessary
+	 */
+	public void removeBatchLoadableCollection(CollectionEntry ce) {
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister());
+		if (map != null) {
+			map.remove(ce);
+		}
 	}
 
 	/**
@@ -171,46 +215,46 @@ public class BatchFetchQueue {
 		//int count = 0;
 		int end = -1;
 		boolean checkForEnd = false;
-		// this only works because collection entries are kept in a sequenced
-		// map by persistence context (maybe we should do like entities and
-		// keep a separate sequences set...)
-
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) context.getCollectionEntries() )) {
-
-			CollectionEntry ce = me.getValue();
-			PersistentCollection collection = me.getKey();
-			if ( !collection.wasInitialized() && ce.getLoadedPersister() == collectionPersister ) {
-
-				if ( checkForEnd && i == end ) {
-					return keys; //the first key found after the given key
-				}
-
-				//if ( end == -1 && count > batchSize*10 ) return keys; //try out ten batches, max
-
-				final boolean isEqual = collectionPersister.getKeyType().isEqual(
-						id,
-						ce.getLoadedKey(),
-						collectionPersister.getFactory()
-				);
-
-				if ( isEqual ) {
-					end = i;
-					//checkForEnd = false;
-				}
-				else if ( !isCached( ce.getLoadedKey(), collectionPersister ) ) {
-					keys[i++] = ce.getLoadedKey();
-					//count++;
-				}
-
-				if ( i == batchSize ) {
-					i = 1; //end of array, start filling again from start
-					if ( end != -1 ) {
-						checkForEnd = true;
+		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get(collectionPersister);
+		if (map != null) {
+			for (Entry<CollectionEntry, PersistentCollection> me : map.entrySet()) {
+				CollectionEntry ce = me.getKey();
+				PersistentCollection collection = me.getValue();
+				if ( !collection.wasInitialized() ) { // should always be true
+	
+					if ( checkForEnd && i == end ) {
+						return keys; //the first key found after the given key
+					}
+	
+					//if ( end == -1 && count > batchSize*10 ) return keys; //try out ten batches, max
+	
+					final boolean isEqual = collectionPersister.getKeyType().isEqual(
+							id,
+							ce.getLoadedKey(),
+							collectionPersister.getFactory()
+					);
+	
+					if ( isEqual ) {
+						end = i;
+						//checkForEnd = false;
+					}
+					else if ( !isCached( ce.getLoadedKey(), collectionPersister ) ) {
+						keys[i++] = ce.getLoadedKey();
+						//count++;
+					}
+	
+					if ( i == batchSize ) {
+						i = 1; //end of array, start filling again from start
+						if ( end != -1 ) {
+							checkForEnd = true;
+						}
 					}
 				}
+				else {
+					LOG.warn("Encountered initialized collection in BatchFetchQueue, this should not happen.");
+				}
+	
 			}
-
 		}
 		return keys; //we ran out of keys to try
 	}
@@ -236,10 +280,9 @@ public class BatchFetchQueue {
 		int end = -1;
 		boolean checkForEnd = false;
 
-		Iterator iter = batchLoadableEntityKeys.keySet().iterator();
-		while ( iter.hasNext() ) {
-			EntityKey key = (EntityKey) iter.next();
-			if ( key.getEntityName().equals( persister.getEntityName() ) ) { //TODO: this needn't exclude subclasses...
+		LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( persister.getEntityName() ); //TODO: this needn't exclude subclasses...
+		if (set != null) {
+			for (EntityKey key : set) {
 				if ( checkForEnd && i == end ) {
 					//the first id found after the given id
 					return ids;

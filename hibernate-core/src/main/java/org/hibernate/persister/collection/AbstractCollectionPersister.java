@@ -1913,6 +1913,10 @@ public abstract class AbstractCollectionPersister
 		return initializer;
 	}
 
+	public int getBatchSize() {
+		return batchSize;
+	}
+
 	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
 		private final String rootAlias;
 
@@ -1933,4 +1937,5 @@ public abstract class AbstractCollectionPersister
 	}
 	
 	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
+
 }

@@ -83,6 +83,9 @@ public class EvictVisitor extends AbstractVisitor {
 							ce.getLoadedKey(),
 							getSession() ) );
 		}
+		if (ce.getLoadedPersister() != null && ce.getLoadedPersister().getBatchSize() > 1) {
+			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
+		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(

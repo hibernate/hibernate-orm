@@ -896,6 +896,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Serializable id) {
 		CollectionEntry ce = new CollectionEntry(collection, persister, id, flushing);
 		addCollection(collection, ce, id);
+		if (persister.getBatchSize() > 1) {
+			batchFetchQueue.addBatchLoadableCollection(collection, ce);
+		}
 	}
 
 	/**

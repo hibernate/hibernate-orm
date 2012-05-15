@@ -21,16 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.internal;
 
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 /**
- * Defines mapping elements to which filters may be applied.
- *
- * @author Steve Ebersole
- */
-public interface Filterable {
-	public void addFilter(String name, String condition);
+*
+* @author Rob Worsnop
+*/
+public class QualifiedTableNameFilterConfiguration extends FilterConfiguration {
+	
+	private final String tableName;
 
-	public java.util.List getFilters();
+	public QualifiedTableNameFilterConfiguration(String name, String tableName, String condition) {
+		super(name, condition);
+		this.tableName = tableName;
+	}
+
+	@Override
+	public String getQualifiedTableName(SessionFactoryImplementor factory) {
+		return tableName;
+	}
+	
 }

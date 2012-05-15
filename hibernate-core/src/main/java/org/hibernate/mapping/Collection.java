@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.internal.QualifiedTableNameFilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -81,8 +84,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Class collectionPersisterClass;
 	private String typeName;
 	private Properties typeParameters;
-	private final java.util.Map filters = new HashMap();
-	private final java.util.Map manyToManyFilters = new HashMap();
+	private final java.util.List filters = new ArrayList();
+	private final java.util.List manyToManyFilters = new ArrayList();
 	private final java.util.Set synchronizedTables = new HashSet();
 
 	private String customSQLInsert;
@@ -520,18 +523,30 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void addFilter(String name, String condition) {
-		filters.put( name, condition );
+		filters.add(toFilterConfiguration(name, condition));
 	}
 
-	public java.util.Map getFilterMap() {
+	public java.util.List getFilters() {
 		return filters;
 	}
 
 	public void addManyToManyFilter(String name, String condition) {
-		manyToManyFilters.put( name, condition );
+		manyToManyFilters.add(toFilterConfiguration(name, condition));
+	}
+	
+	private static FilterConfiguration toFilterConfiguration(String name, String condition){
+		String tableName = null;
+		String actualCondition = condition;
+		int pos = condition.lastIndexOf('.');
+		if (pos > -1){
+			tableName = condition.substring(0, pos);
+			actualCondition = condition.substring(pos+1);
+		}
+		return new QualifiedTableNameFilterConfiguration(name, tableName, actualCondition);
 	}
 
-	public java.util.Map getManyToManyFilterMap() {
+
+	public java.util.List getManyToManyFilters() {
 		return manyToManyFilters;
 	}
 

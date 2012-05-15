@@ -76,7 +76,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 	
-	@Test
+	@Test(timeout = 5 * 60 * 1000) //5 minutes
 	@TestForIssue( jiraKey = "HHH-7252" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",

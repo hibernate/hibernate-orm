@@ -39,6 +39,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
@@ -835,7 +836,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public Declarer getSubclassPropertyDeclarer(String propertyPath) {
 		if ( "class".equals( propertyPath ) ) {
-			// special case where we need to force incloude all subclass joins
+			// special case where we need to force include all subclass joins
 			return Declarer.SUBCLASS;
 		}
 		return super.getSubclassPropertyDeclarer( propertyPath );
@@ -859,5 +860,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+	}
+
+	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias) {
+		return new FilterAliasGenerator() {
+			@Override
+			public String getAlias(String table) {
+				if (table == null){
+					return rootAlias;
+				} else{
+					JoinedSubclassEntityPersister outer = JoinedSubclassEntityPersister.this;
+					int tableNumber = JoinedSubclassEntityPersister.getTableId(table, outer.subclassTableNameClosure);
+					return outer.generateTableAlias(rootAlias, tableNumber);
+				}
+			}
+		};
 	}
 }

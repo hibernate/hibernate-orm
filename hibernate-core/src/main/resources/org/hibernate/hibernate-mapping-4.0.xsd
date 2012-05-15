@@ -818,6 +818,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1586,6 +1587,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1670,6 +1672,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">

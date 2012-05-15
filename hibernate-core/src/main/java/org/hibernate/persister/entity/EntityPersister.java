@@ -41,6 +41,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -747,4 +748,6 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public EntityTuplizer getEntityTuplizer();
 
 	public EntityInstrumentationMetadata getInstrumentationMetadata();
+	
+	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 }

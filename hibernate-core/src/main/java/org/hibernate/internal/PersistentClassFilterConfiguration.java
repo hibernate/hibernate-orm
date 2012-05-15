@@ -21,16 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.internal;
 
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.PersistentClass;
 /**
- * Defines mapping elements to which filters may be applied.
- *
- * @author Steve Ebersole
- */
-public interface Filterable {
-	public void addFilter(String name, String condition);
+*
+* @author Rob Worsnop
+*/
+public class PersistentClassFilterConfiguration extends FilterConfiguration {
+	
+	private final PersistentClass persistentClass;
 
-	public java.util.List getFilters();
+	public PersistentClassFilterConfiguration(String name, PersistentClass persistentClass, String condition) {
+		super(name, condition);
+		this.persistentClass = persistentClass;;
+	}
+
+	@Override
+	public String getQualifiedTableName(SessionFactoryImplementor factory) {
+		return persistentClass.getTable().getQualifiedName(factory.getDialect(), 
+				factory.getSettings().getDefaultCatalogName(),
+				factory.getSettings().getDefaultSchemaName());
+	}
+
 }

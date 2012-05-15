@@ -62,7 +62,9 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -573,10 +575,10 @@ public abstract class AbstractCollectionPersister
 		}
 
 		// Handle any filters applied to this collection
-		filterHelper = new FilterHelper( collection.getFilterMap(), dialect, factory.getSqlFunctionRegistry() );
+		filterHelper = new FilterHelper( collection.getFilters(), dialect, factory);
 
 		// Handle any filters applied to this collection for many-to-many
-		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilterMap(), dialect, factory.getSqlFunctionRegistry() );
+		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilters(), dialect, factory);
 		manyToManyWhereString = StringHelper.isNotEmpty( collection.getManyToManyWhere() ) ?
 				"( " + collection.getManyToManyWhere() + ")" :
 				null;
@@ -1544,7 +1546,7 @@ public abstract class AbstractCollectionPersister
 
 	public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
-		manyToManyFilterHelper.render( buffer, alias, enabledFilters );
+		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator(alias), enabledFilters );
 
 		if ( manyToManyWhereString != null ) {
 			buffer.append( " and " )
@@ -1649,7 +1651,7 @@ public abstract class AbstractCollectionPersister
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
 
 		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, alias, enabledFilters );
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
 
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
 	}
@@ -1929,4 +1931,6 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 	}
+	
+	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 }

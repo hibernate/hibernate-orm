@@ -25,22 +25,27 @@
 package org.hibernate.internal;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Table;
 import org.hibernate.sql.Template;
 
 /**
  * Implementation of FilterHelper.
  *
  * @author Steve Ebersole
+ * @author Rob Worsnop
  */
 public class FilterHelper {
 
 	private final String[] filterNames;
 	private final String[] filterConditions;
+	private final String[] filterTables;
 
 	/**
 	 * The map of defined filters.  This is expected to be in format
@@ -49,28 +54,30 @@ public class FilterHelper {
 	 *
 	 * @param filters The map of defined filters.
 	 * @param dialect The sql dialect
-	 * @param functionRegistry The SQL function registry
+	 * @param factory The session factory
 	 */
-	public FilterHelper(Map filters, Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public FilterHelper(List filters, Dialect dialect, SessionFactoryImplementor factory) {
 		int filterCount = filters.size();
 		filterNames = new String[filterCount];
 		filterConditions = new String[filterCount];
-		Iterator iter = filters.entrySet().iterator();
+		filterTables = new String[filterCount];
+		Iterator iter = filters.iterator();
 		filterCount = 0;
 		while ( iter.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) iter.next();
-			filterNames[filterCount] = (String) entry.getKey();
+			final FilterConfiguration filter = (FilterConfiguration) iter.next();
+			filterNames[filterCount] = (String) filter.getName();
 			filterConditions[filterCount] = Template.renderWhereStringTemplate(
-					(String) entry.getValue(),
+					filter.getCondition(),
 					FilterImpl.MARKER,
 					dialect,
-					functionRegistry
+					factory.getSqlFunctionRegistry()
 				);
 			filterConditions[filterCount] = StringHelper.replace(
 					filterConditions[filterCount],
 					":",
 					":" + filterNames[filterCount] + "."
 			);
+			filterTables[filterCount] = filter.getQualifiedTableName(factory);
 			filterCount++;
 		}
 	}
@@ -84,20 +91,20 @@ public class FilterHelper {
 		return false;
 	}
 
-	public String render(String alias, Map enabledFilters) {
+	public String render(FilterAliasGenerator aliasGenerator, Map enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
-		render( buffer, alias, enabledFilters );
+		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuilder buffer, String alias, Map enabledFilters) {
+	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map enabledFilters) {
 		if ( filterNames != null && filterNames.length > 0 ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 				if ( enabledFilters.containsKey( filterNames[i] ) ) {
 					final String condition = filterConditions[i];
 					if ( StringHelper.isNotEmpty( condition ) ) {
 						buffer.append( " and " )
-								.append( StringHelper.replace( condition, FilterImpl.MARKER, alias ) );
+								.append( StringHelper.replace( condition, FilterImpl.MARKER, aliasGenerator.getAlias(filterTables[i]) ) );
 					}
 				}
 			}

@@ -21,16 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.internal;
 
 
 /**
- * Defines mapping elements to which filters may be applied.
+ * 
+ * @author Rob Worsnop
  *
- * @author Steve Ebersole
  */
-public interface Filterable {
-	public void addFilter(String name, String condition);
+public class StaticFilterAliasGenerator implements FilterAliasGenerator{
+	
+	private final String alias;
 
-	public java.util.List getFilters();
+	public StaticFilterAliasGenerator(String alias) {
+		this.alias = alias;
+	}
+
+	@Override
+	public String getAlias(String table) {
+		return alias;
+	}
+
 }

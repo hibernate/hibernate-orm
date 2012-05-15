@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -73,7 +71,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -84,7 +81,11 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.StaticFilterAliasGenerator;
+import org.hibernate.internal.PersistentClassFilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -99,6 +100,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
@@ -127,6 +129,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
+import org.jboss.logging.Logger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -767,7 +770,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// Handle any filters applied to the class level
-		filterHelper = new FilterHelper( persistentClass.getFilterMap(), factory.getDialect(), factory.getSqlFunctionRegistry() );
+		filterHelper = new FilterHelper( persistentClass.getFilters(), factory.getDialect(), factory );
 
 		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
 		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
@@ -1086,11 +1089,13 @@ public abstract class AbstractEntityPersister
 
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
-		Map<String, String> filterDefaultConditionsByName = new HashMap<String, String>();
+		List<FilterConfiguration> filterDefaultConditions = new ArrayList<FilterConfiguration>();
 		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
-			filterDefaultConditionsByName.put( filterDefinition.getFilterName(), filterDefinition.getDefaultFilterCondition() );
+			filterDefaultConditions.add(new PersistentClassFilterConfiguration(filterDefinition.getFilterName(), 
+											null, 
+											filterDefinition.getDefaultFilterCondition()));
 		}
-		filterHelper = new FilterHelper( filterDefaultConditionsByName, factory.getDialect(), factory.getSqlFunctionRegistry() );
+		filterHelper = new FilterHelper( filterDefaultConditions, factory.getDialect(), factory);
 
 		temporaryIdTableName = null;
 		temporaryIdTableDDL = null;
@@ -3416,8 +3421,7 @@ public abstract class AbstractEntityPersister
 
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, generateFilterConditionAlias( alias ), enabledFilters );
-
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
 	}
 
@@ -4733,6 +4737,10 @@ public abstract class AbstractEntityPersister
 
 	public void setPropertyValue(Object object, String propertyName, Object value) {
 		getEntityTuplizer().setPropertyValue( object, propertyName, value );
+	}
+	
+	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias){
+		return new StaticFilterAliasGenerator(rootAlias);
 	}
 
 	@Override

@@ -206,8 +206,12 @@ subprojects { subProject ->
                 'Implementation-Vendor-Id': 'org.hibernate'
         )
 
-        test {
-            systemProperties['hibernate.test.validatefailureexpected'] = true
+        tasks.withType(Test) {
+            System.getProperties().each { Map.Entry entry ->
+                if ( entry.key.startsWith( 'hibernate.') ) {
+                    systemProperty entry.key, entry.value
+                }
+            }
             maxHeapSize = "1024m"
         }
 

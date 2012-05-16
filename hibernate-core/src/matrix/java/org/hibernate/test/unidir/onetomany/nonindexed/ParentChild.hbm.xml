@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.test.unidir.onetomany.nonindexed" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <class name="Child">
+        <id name="name"/>
+        <property name="age" not-null="true"/>
+    </class>
+
+    <class name="Parent">
+		<id name="name"/>
+		<set name="children" cascade="persist,merge">
+			<key column="parentName" not-null="true"/>
+			<one-to-many class="Child"/>
+		</set>
+	</class>
+
+</hibernate-mapping>

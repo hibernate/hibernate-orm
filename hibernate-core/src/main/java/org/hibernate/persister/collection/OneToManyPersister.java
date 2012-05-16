@@ -47,6 +47,13 @@ import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
 import org.hibernate.loader.entity.CollectionElementLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
@@ -87,6 +94,46 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				factory.getDialect().supportsCascadeDelete();
 		keyIsNullable = collection.getKey().isNullable();
 		keyIsUpdateable = collection.getKey().isUpdateable();
+	}
+
+	public OneToManyPersister(
+			AbstractPluralAttributeBinding collection,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			MetadataImplementor metadata,
+			SessionFactoryImplementor factory) throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, metadata, factory );
+		if ( collection.getPluralAttributeElementBinding().getPluralAttributeElementNature() !=
+				PluralAttributeElementNature.ONE_TO_MANY ) {
+			throw new AssertionError(
+					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
+							PluralAttributeElementNature.ONE_TO_MANY,
+							collection.getPluralAttributeElementBinding().getPluralAttributeElementNature()
+					)
+			);
+		}
+		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
+		cascadeDeleteEnabled = keyBinding.getForeignKey().getDeleteRule() == ForeignKey.ReferentialAction.CASCADE &&
+				factory.getDialect().supportsCascadeDelete();;
+		final SingularAttributeBinding referencedAttributeBinding =
+				keyBinding.getReferencedAttributeBinding();
+		// TODO: fix this...
+/*		keyIsNullable =
+			if ( hasFormula() ) return true;
+			boolean nullable = true;
+			Iterator iter = getColumnIterator();
+			while ( iter.hasNext() ) {
+				if ( !( (Column) iter.next() ).isNullable() ) {
+					nullable = false;
+					return nullable; //shortcut
+				}
+			}
+			return nullable;
+		}
+*/
+		keyIsNullable = referencedAttributeBinding.isNullable();
+		// TODO: fix this...
+		//keyIsUpdateable = referencedAttributeBinding.isUpdateable();
+		keyIsUpdateable = true;
 	}
 
 	/**

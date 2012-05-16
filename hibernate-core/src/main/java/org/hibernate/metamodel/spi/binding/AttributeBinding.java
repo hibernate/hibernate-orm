@@ -58,6 +58,8 @@ public interface AttributeBinding {
 
 	public boolean isAssociation();
 
+	public boolean isBackRef();
+
 	public boolean isBasicPropertyAccessor();
 
 	public String getPropertyAccessorName();

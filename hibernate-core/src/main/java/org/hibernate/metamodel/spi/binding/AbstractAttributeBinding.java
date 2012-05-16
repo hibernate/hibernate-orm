@@ -85,6 +85,11 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
+	public boolean isBackRef() {
+		return false;
+	}
+
+	@Override
 	public boolean isBasicPropertyAccessor() {
 		return propertyAccessorName == null || "property".equals( propertyAccessorName );
 	}

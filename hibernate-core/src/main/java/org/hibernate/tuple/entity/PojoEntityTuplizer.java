@@ -475,10 +475,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	private PropertyAccessor getPropertyAccessor(AttributeBinding mappedProperty) throws MappingException {
 		// TODO: Fix this then backrefs are working in new metamodel
-		return PropertyAccessorFactory.getPropertyAccessor(
-				mappedProperty.getContainer().getClassReference(),
-				mappedProperty.getPropertyAccessorName()
-		);
+		return PropertyAccessorFactory.getPropertyAccessor( mappedProperty, getEntityMode() );
 	}
 
 	/**

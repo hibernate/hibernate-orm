@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	public Iterable<Column> getTargetColumns() {
 		return targetColumns == null
 				? getTargetTable().getPrimaryKey().getColumns()
-				: targetColumns;
+				: Collections.unmodifiableList( targetColumns );
 	}
 
 	@Override

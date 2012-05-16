@@ -23,9 +23,23 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+
 /**
  * @author Steve Ebersole
  */
 public class SyntheticAttributeHelper {
 	public static final String SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME = "_identifierMapper";
+
+	private static final String BACKREF_ATTRIBUTE_NAME_PREFIX = "_";
+	private static final String BACKREF_ATTRIBUTE_NAME_SUFFIX = "BackRef";
+
+	public static String createBackRefAttributeName(String pluralAttributeRole) {
+		return new StringBuilder(
+				BACKREF_ATTRIBUTE_NAME_PREFIX.length() + pluralAttributeRole.length() + BACKREF_ATTRIBUTE_NAME_SUFFIX.length() )
+				.append( BACKREF_ATTRIBUTE_NAME_PREFIX )
+				.append( pluralAttributeRole )
+				.append( BACKREF_ATTRIBUTE_NAME_SUFFIX )
+				.toString();
+	}
 }

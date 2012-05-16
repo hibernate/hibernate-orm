@@ -153,7 +153,9 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
-		return Helper.createTableSource( sourceMappingDocument(), pluralAttributeElement, this );
+		return pluralAttributeElement.getOneToMany() == null ?
+				Helper.createTableSource( sourceMappingDocument(), pluralAttributeElement, this ) :
+				null;
 	}
 
 	@Override

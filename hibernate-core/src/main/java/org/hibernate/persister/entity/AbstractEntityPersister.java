@@ -97,10 +97,12 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.pretty.MessageHelper;
@@ -2111,12 +2113,12 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Must be called by subclasses, at the end of their constructors
 	 */
-	protected void initSubclassPropertyAliasesMap(EntityBinding model) throws MappingException {
+	protected void initSubclassPropertyAliasesMap(EntityBinding entityBinding) throws MappingException {
 
 		// ALIASES
 
 		// TODO: Fix when subclasses are working (HHH-6337)
-		//internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosureIterator() );
+		internalInitSubclassPropertyAliasesMap( null, entityBinding.getSubEntityAttributeBindingClosure() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
@@ -2194,6 +2196,47 @@ public abstract class AbstractEntityPersister
 					Selectable thing = ( Selectable ) colIter.next();
 					aliases[l] = thing.getAlias( getFactory().getDialect(), prop.getValue().getTable() );
 					cols[l] = thing.getText( getFactory().getDialect() ); // TODO: skip formulas?
+					l++;
+				}
+
+				subclassPropertyAliases.put( propname, aliases );
+				subclassPropertyColumnNames.put( propname, cols );
+			}
+		}
+
+	}
+
+	private void internalInitSubclassPropertyAliasesMap(String path, Iterable<AttributeBinding> attributeBindings) {
+		for ( AttributeBinding prop : attributeBindings ) {
+			if ( prop == prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().getAttributeBinding() ) {
+				// ID propertie aliases are dealt with elsewhere.
+				continue;
+			}
+			if ( ! prop.getAttribute().isSingular() ) {
+				// skip plural attributes
+				continue;
+			}
+			SingularAttributeBinding singularProp = (SingularAttributeBinding) prop;
+			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
+			if ( prop instanceof CompositeAttributeBinding ) {
+				CompositeAttributeBinding component = ( CompositeAttributeBinding ) prop;
+				internalInitSubclassPropertyAliasesMap( propname, component.attributeBindings() );
+			}
+			else {
+				int span = singularProp.getRelationalValueBindings().size();
+				String[] aliases = new String[span];
+				String[] cols = new String[span];
+				int l = 0;
+				for ( RelationalValueBinding relationalValueBinding : singularProp.getRelationalValueBindings() ) {
+					aliases[l] = relationalValueBinding.getValue().getAlias( getFactory().getDialect() );
+					if ( relationalValueBinding.isDerived() ) {
+						cols[l] = ( (DerivedValue) relationalValueBinding.getValue() ).getExpression(); // TODO: skip formulas?
+					}
+					else {
+						cols[l] =
+								( (org.hibernate.metamodel.spi.relational.Column) relationalValueBinding.getValue() )
+										.getColumnName().encloseInQuotesIfQuoted( getFactory().getDialect() );
+					}
 					l++;
 				}
 

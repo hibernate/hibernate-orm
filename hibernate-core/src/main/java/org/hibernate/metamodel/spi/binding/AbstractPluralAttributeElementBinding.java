@@ -55,7 +55,7 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 		return relationalValueBindings;
 	}
 
-	protected void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
+	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 	}
 }

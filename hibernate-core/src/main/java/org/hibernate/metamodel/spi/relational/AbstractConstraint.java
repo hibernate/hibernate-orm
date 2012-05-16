@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
@@ -56,7 +57,7 @@ public abstract class AbstractConstraint implements Constraint {
 	}
 
 	public List<Column> getColumns() {
-		return columns;
+		return Collections.unmodifiableList( columns );
 	}
 
 	public int getColumnSpan() {

@@ -31,6 +31,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 
 /**
  * A factory for building/retrieving PropertyAccessor instances.
@@ -96,7 +97,13 @@ public final class PropertyAccessorFactory {
      */
 	public static PropertyAccessor getPropertyAccessor(AttributeBinding property, EntityMode mode) throws MappingException {
 		//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-	    if ( null == mode || EntityMode.POJO.equals( mode ) ) {
+		if ( property.isBackRef() ) {
+			BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) property;
+			return new BackrefPropertyAccessor(
+					backRefAttributeBinding.getCollectionRole(), backRefAttributeBinding.getEntityName()
+			);
+		}
+	    else if ( null == mode || EntityMode.POJO.equals( mode ) ) {
 		    return getPojoPropertyAccessor( property.getPropertyAccessorName() );
 	    }
 	    else if ( EntityMode.MAP.equals( mode ) ) {

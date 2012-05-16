@@ -635,6 +635,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList propertyJoinNumbers = new ArrayList();
 
 		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
+			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
+				continue; // skip identifier binding
+			}
 			if ( ! attributeBinding.getAttribute().isSingular() ) {
 				continue;
 			}

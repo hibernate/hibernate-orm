@@ -547,6 +547,23 @@ public class EntityBinding implements AttributeBindingContainer {
 		return binding;
 	}
 
+	public BackRefAttributeBinding makeBackRefAttributeBinding(
+			SingularAttribute syntheticAttribute, PluralAttributeBinding pluralAttributeBinding) {
+		if ( ! syntheticAttribute.isSynthetic() ) {
+			throw new AssertionFailure(
+					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
+			);
+		}
+		final BackRefAttributeBinding  binding = new BackRefAttributeBinding(
+				this,
+				syntheticAttribute,
+				pluralAttributeBinding
+		);
+
+		registerAttributeBinding( syntheticAttribute.getName(), binding );
+		return binding;
+	}
+
 	@Override
 	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,

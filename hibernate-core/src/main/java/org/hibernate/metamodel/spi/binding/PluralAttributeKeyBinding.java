@@ -76,7 +76,7 @@ public class PluralAttributeKeyBinding {
 	}
 
 	public TableSpecification getCollectionTable() {
-		return foreignKey.getSourceTable();
+		return foreignKey == null ? null : foreignKey.getSourceTable();
 	}
 
 	/**

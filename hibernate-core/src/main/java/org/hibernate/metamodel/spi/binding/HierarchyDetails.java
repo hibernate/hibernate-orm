@@ -32,9 +32,10 @@ import org.hibernate.engine.OptimisticLockStyle;
 public class HierarchyDetails {
 	private final EntityBinding rootEntityBinding;
 	private final InheritanceType inheritanceType;
+	private final TenantDiscrimination tenantDiscrimination;
 	private final EntityMode entityMode;
-
 	private final EntityIdentifier entityIdentifier;
+
 	private EntityDiscriminator entityDiscriminator;
 
 	private OptimisticLockStyle optimisticLockStyle;
@@ -50,6 +51,7 @@ public class HierarchyDetails {
 		this.entityMode = entityMode;
 		this.entityIdentifier = new EntityIdentifier( rootEntityBinding );
 		this.entityVersion = new EntityVersion( rootEntityBinding );
+		this.tenantDiscrimination = new TenantDiscrimination();
 	}
 
 	public EntityBinding getRootEntityBinding() {
@@ -58,6 +60,10 @@ public class HierarchyDetails {
 
 	public InheritanceType getInheritanceType() {
 		return inheritanceType;
+	}
+
+	public TenantDiscrimination getTenantDiscrimination() {
+		return tenantDiscrimination;
 	}
 
 	public EntityMode getEntityMode() {

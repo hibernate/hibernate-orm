@@ -53,21 +53,25 @@ public enum MultiTenancyStrategy {
 	 * No multi-tenancy
 	 */
 	NONE;
+
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			MultiTenancyStrategy.class.getName()
 	);
-	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
-		final Object strategy = properties.get( Environment.MULTI_TENANT );
-		if ( strategy == null ) {
+
+	public static MultiTenancyStrategy fromConfigValue(Object value) {
+		if ( value == null ) {
 			return MultiTenancyStrategy.NONE;
 		}
 
-		if ( MultiTenancyStrategy.class.isInstance( strategy ) ) {
-			return (MultiTenancyStrategy) strategy;
+		if ( MultiTenancyStrategy.class.isInstance( value ) ) {
+			return (MultiTenancyStrategy) value;
 		}
 
-		final String strategyName = strategy.toString();
+		return fromExternalName( value.toString() );
+	}
+
+	private static MultiTenancyStrategy fromExternalName(String strategyName) {
 		try {
 			return MultiTenancyStrategy.valueOf( strategyName.toUpperCase() );
 		}
@@ -75,5 +79,9 @@ public enum MultiTenancyStrategy {
 			LOG.warn( "Unknown multi tenancy strategy [ " +strategyName +" ], using MultiTenancyStrategy.NONE." );
 			return MultiTenancyStrategy.NONE;
 		}
+	}
+
+	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
+		return fromConfigValue( properties.get( Environment.MULTI_TENANT ) );
 	}
 }

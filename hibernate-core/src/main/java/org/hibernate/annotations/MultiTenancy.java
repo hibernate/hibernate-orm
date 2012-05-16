@@ -29,27 +29,17 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describes the column to use as the multi-tenancy discriminator value for the entity.
+ * Annotation used to indicate that an entity represents shared (non tenant aware) data in a multi-tenant
+ * application.
  *
- * NOTE : For sure this will go away and get replaced with the JPA standard one..
- *
- * @todo better (shorter) name?  TenantDiscriminatorColumn?  TenantColumn?  Similar for formula too
+ * Valid only at the root of an inheritance hierarchy.
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target( TYPE )
-@Retention( RUNTIME )
-public @interface MultiTenancyDiscriminatorColumn {
-	/**
-	 * Names of the column to use.
-	 */
-	public String name();
-
-	/**
-	 * (Optional) The name of the table that contains the column. If absent the column is assumed to be in the 
-	 * primary table.
-	 */
-	public String table() default "";
+@java.lang.annotation.Target(TYPE)
+@Retention(RUNTIME)
+public @interface MultiTenancy {
+	public boolean shared() default true;
 
 	/**
 	 * The discriminator values can be either be handled as literals or handled through JDBC parameter binding.
@@ -61,26 +51,4 @@ public @interface MultiTenancyDiscriminatorColumn {
 	 * application.
 	 */
 	public boolean useParameterBinding() default true;
-
-	/**
-	 * Names the Hibernate mapping type to use for mapping values to/from the specified column.  Defaults to
-	 * {@code "string"} which is a {@link String}/{@link java.sql.Types#VARCHAR VARCHAR} mapping.
-	 */
-	public String type() default "string";
-
-	/**
-	 * (Optional) The column length. (Applies only if a string-valued column is used.)
-	 */
-	int length() default 255;
-
-	/**
-	 * (Optional) The precision for a decimal (exact numeric) column. (Applies only if a decimal column is used.)
-	 * Value must be set by developer if used when generating the DDL for the column.
-	 */
-	int precision() default 0;
-
-	/**
-	 * (Optional) The scale for a decimal (exact numeric) column. (Applies only if a decimal column is used.)
-	 */
-	int scale() default 0;
 }

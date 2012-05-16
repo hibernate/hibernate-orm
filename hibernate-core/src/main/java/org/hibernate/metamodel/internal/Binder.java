@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
@@ -118,6 +119,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
@@ -554,7 +556,8 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				false,
-				createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
+				createMetaAttributeContext( attributeBindingContainer, attributeSource )
+		);
 	}
 
 	private AbstractPluralAttributeBinding bindListAttribute(
@@ -572,7 +575,8 @@ public class Binder {
 				attributeSource.isIncludedInOptimisticLocking(),
 				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-				attributeSource.getIndexSource().base() );
+				attributeSource.getIndexSource().base()
+		);
 	}
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
@@ -589,7 +593,8 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				false,
-				createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
+				createMetaAttributeContext( attributeBindingContainer, attributeSource )
+		);
 	}
 
 	private void bindBasicCollectionElement(
@@ -659,7 +664,7 @@ public class Binder {
 				defaultIndexJavaTypeName );
 		Type resolvedElementType = heuristicType( indexBinding.getHibernateTypeDescriptor() );
 		bindHibernateResolvedType( indexBinding.getHibernateTypeDescriptor(), resolvedElementType );
-		bindJdbcDataType( resolvedElementType, ( AbstractValue ) indexBinding.getIndexRelationalValue() );
+		bindJdbcDataType( resolvedElementType, (AbstractValue) indexBinding.getIndexRelationalValue() );
 	}
 
 	private void bindCollectionKey(
@@ -815,6 +820,51 @@ public class Binder {
 		bindJdbcDataType( resolvedType, value );
 	}
 
+	private void bindMultiTenancy(EntityBinding rootEntityBinding, RootEntitySource rootEntitySource) {
+		final MultiTenancySource multiTenancySource = rootEntitySource.getMultiTenancySource();
+		if ( multiTenancySource == null ) {
+			return;
+		}
+
+		// if (1) the strategy is discriminator based and (2) the entity is not shared, we need to either (a) extract
+		// the user supplied tenant discriminator value mapping or (b) generate an implicit one
+		final boolean needsTenantIdentifierValueMapping =
+				MultiTenancyStrategy.DISCRIMINATOR == metadata.getOptions().getMultiTenancyStrategy()
+				&& ! multiTenancySource.isShared();
+
+		if ( needsTenantIdentifierValueMapping ) {
+			// NOTE : the table for tenant identifier/discriminator is always the primary table
+			final Value tenantDiscriminatorValue;
+			final RelationalValueSource valueSource = multiTenancySource.getRelationalValueSource();
+			if ( valueSource == null ) {
+				// user supplied no explicit information, so use implicit mapping with default name
+				tenantDiscriminatorValue = rootEntityBinding.getPrimaryTable().locateOrCreateColumn( "tenant_id" );
+			}
+			else {
+				tenantDiscriminatorValue = buildRelationValue( valueSource, rootEntityBinding.getPrimaryTable() );
+			}
+			rootEntityBinding.getHierarchyDetails().getTenantDiscrimination().setDiscriminatorValue( tenantDiscriminatorValue );
+		}
+
+		rootEntityBinding.getHierarchyDetails().getTenantDiscrimination().setShared( multiTenancySource.isShared() );
+		rootEntityBinding.getHierarchyDetails().getTenantDiscrimination().setUseParameterBinding( multiTenancySource.bindAsParameter() );
+	}
+
+	private Value buildRelationValue(RelationalValueSource valueSource, TableSpecification table) {
+		if ( valueSource instanceof ColumnSource ) {
+			return createColumn(
+					table,
+					( ColumnSource ) valueSource,
+					bindingContexts.peek().getMappingDefaults().getDiscriminatorColumnName(),
+					false,
+					false
+			);
+		}
+		else {
+			return table.locateOrCreateDerivedValue( ( ( DerivedValueSource ) valueSource ).getExpression() );
+		}
+	}
+
 	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
 		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
 		// Return existing binding if available
@@ -835,6 +885,7 @@ public class Binder {
 			bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
 			bindDiscriminator( rootEntityBinding, rootEntitySource );
 			createIdentifierGenerator( rootEntityBinding );
+			bindMultiTenancy( rootEntityBinding, rootEntitySource );
 			rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
 			rootEntityBinding.getHierarchyDetails().setExplicitPolymorphism( rootEntitySource.isExplicitPolymorphism() );
 			rootEntityBinding.getHierarchyDetails().setOptimisticLockStyle( rootEntitySource.getOptimisticLockStyle() );

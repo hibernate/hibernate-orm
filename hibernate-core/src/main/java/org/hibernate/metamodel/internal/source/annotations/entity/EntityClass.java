@@ -716,6 +716,13 @@ public class EntityClass extends ConfiguredClass {
 		return keys;
 	}
 
+	public boolean hasMutliTenancySourceInformation() {
+		return JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.MULTI_TENANT ) != null
+				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_COLUMN ) != null
+				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_FORMULA ) != null;
+	}
+
+
 	private static class PrimaryKeyJoinColumnSourceImpl implements PrimaryKeyJoinColumnSource {
 		private final String columnName;
 		private final String referencedColumnName;

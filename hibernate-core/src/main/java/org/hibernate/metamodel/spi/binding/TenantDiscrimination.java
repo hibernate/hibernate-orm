@@ -21,24 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
+package org.hibernate.metamodel.spi.binding;
 
-import java.lang.annotation.Retention;
-
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
- * Describes a formula fragment to use as the multi-tenancy discriminator value for the entity.
- *
  * @author Steve Ebersole
- * @see Formula
  */
-@java.lang.annotation.Target(TYPE)
-@Retention(RUNTIME)
-public @interface MultiTenancyDiscriminatorFormula {
-	/**
-	 * The formula fragment.
-	 */
-	public String value();
+public class TenantDiscrimination {
+	private Value discriminatorValue;
+	private boolean isShared = false;
+	private boolean useParameterBinding = true;
+
+	public Value getDiscriminatorValue() {
+		return discriminatorValue;
+	}
+
+	public void setDiscriminatorValue(Value discriminatorValue) {
+		this.discriminatorValue = discriminatorValue;
+	}
+
+	public boolean isShared() {
+		return isShared;
+	}
+
+	public void setShared(boolean shared) {
+		isShared = shared;
+	}
+
+	public boolean isUseParameterBinding() {
+		return useParameterBinding;
+	}
+
+	public void setUseParameterBinding(boolean useParameterBinding) {
+		this.useParameterBinding = useParameterBinding;
+	}
 }

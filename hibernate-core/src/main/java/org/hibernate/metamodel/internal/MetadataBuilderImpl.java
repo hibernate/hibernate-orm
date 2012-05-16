@@ -27,6 +27,7 @@ import javax.persistence.SharedCacheMode;
 
 import org.xml.sax.EntityResolver;
 
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
@@ -38,6 +39,7 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 
 /**
  * @author Steve Ebersole
@@ -104,6 +106,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
         private boolean globallyQuotedIdentifiers;
 		private String defaultSchemaName;
 		private String defaultCatalogName;
+		private MultiTenancyStrategy multiTenancyStrategy;
 
 		public OptionsImpl(ServiceRegistry serviceRegistry) {
 			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -121,47 +124,38 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 
 			useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
-					new ConfigurationService.Converter<Boolean>() {
-						@Override
-						public Boolean convert(Object value) {
-							return Boolean.parseBoolean( value.toString() );
-						}
-					},
+					StandardConverters.BOOLEAN,
 					false
 			);
 
 			defaultSchemaName = configService.getSetting(
 					AvailableSettings.DEFAULT_SCHEMA,
-					new ConfigurationService.Converter<String>() {
-						@Override
-						public String convert(Object value) {
-							return value.toString();
-						}
-					},
+					StandardConverters.STRING,
 					null
 			);
 
 			defaultCatalogName = configService.getSetting(
 					AvailableSettings.DEFAULT_CATALOG,
-					new ConfigurationService.Converter<String>() {
-						@Override
-						public String convert(Object value) {
-							return value.toString();
-						}
-					},
+					StandardConverters.STRING,
 					null
 			);
 
             globallyQuotedIdentifiers = configService.getSetting(
                     AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
-                    new ConfigurationService.Converter<Boolean>() {
-                        @Override
-                        public Boolean convert(Object value) {
-                            return Boolean.parseBoolean( value.toString() );
-                        }
-                    },
+					StandardConverters.BOOLEAN,
                     false
             );
+
+			multiTenancyStrategy = configService.getSetting(
+					AvailableSettings.MULTI_TENANT,
+					new ConfigurationService.Converter<org.hibernate.MultiTenancyStrategy>() {
+						@Override
+						public MultiTenancyStrategy convert(Object value) {
+							return MultiTenancyStrategy.fromConfigValue( value );
+						}
+					},
+					MultiTenancyStrategy.NONE
+			);
 		}
 
 
@@ -208,6 +202,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		@Override
 		public String getDefaultCatalogName() {
 			return defaultCatalogName;
+		}
+
+		@Override
+		public MultiTenancyStrategy getMultiTenancyStrategy() {
+			return multiTenancyStrategy;
 		}
 	}
 }

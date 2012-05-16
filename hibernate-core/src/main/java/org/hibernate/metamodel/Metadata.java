@@ -28,6 +28,7 @@ import javax.persistence.SharedCacheMode;
 
 import org.xml.sax.EntityResolver;
 
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
@@ -58,6 +59,7 @@ public interface Metadata {
         public boolean isGloballyQuotedIdentifiers();
 		public String getDefaultSchemaName();
 		public String getDefaultCatalogName();
+		public MultiTenancyStrategy getMultiTenancyStrategy();
 	}
 
 	/**

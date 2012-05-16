@@ -37,6 +37,7 @@ import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MutliTenancySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SimpleIdentifierSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.VersionAttributeSourceImpl;
@@ -49,6 +50,7 @@ import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -100,6 +102,13 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 			discriminatorSource = new DiscriminatorSourceImpl( getEntityClass() );
 		}
 		return discriminatorSource;
+	}
+
+	@Override
+	public MultiTenancySource getMultiTenancySource() {
+		return getEntityClass().hasMutliTenancySourceInformation()
+				? new MutliTenancySourceImpl( getEntityClass() )
+				: null;
 	}
 
 	@Override

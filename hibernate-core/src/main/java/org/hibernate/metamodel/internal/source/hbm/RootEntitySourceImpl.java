@@ -50,6 +50,7 @@ import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
@@ -251,6 +252,66 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			@Override
 			public boolean isInserted() {
 				return discriminatorElement.isInsert();
+			}
+		};
+	}
+
+	@Override
+	public MultiTenancySource getMultiTenancySource() {
+		final JaxbHibernateMapping.JaxbClass.JaxbMultiTenancy jaxbMultiTenancy = entityElement().getMultiTenancy();
+		if ( jaxbMultiTenancy == null ) {
+			return null;
+		}
+
+		return new MultiTenancySource() {
+			@Override
+			public RelationalValueSource getRelationalValueSource() {
+
+				if ( StringHelper.isNotEmpty( jaxbMultiTenancy.getColumnAttribute() ) ) {
+					return new ColumnAttributeSourceImpl(
+							sourceMappingDocument(),
+							null, // root table
+							jaxbMultiTenancy.getColumnAttribute(),
+							TruthValue.TRUE,
+							TruthValue.FALSE
+					);
+				}
+				else if ( StringHelper.isNotEmpty( jaxbMultiTenancy.getFormulaAttribute() ) ) {
+					return new FormulaImpl(
+							sourceMappingDocument(),
+							null,
+							jaxbMultiTenancy.getFormulaAttribute()
+					);
+				}
+				else if ( jaxbMultiTenancy.getColumn() != null ) {
+					return new ColumnSourceImpl(
+							sourceMappingDocument(),
+							null, // root table
+							jaxbMultiTenancy.getColumn(),
+							TruthValue.TRUE,
+							TruthValue.FALSE
+					);
+				}
+				else if ( StringHelper.isNotEmpty( jaxbMultiTenancy.getFormula() ) ) {
+					return new FormulaImpl(
+							sourceMappingDocument(),
+							null,
+							jaxbMultiTenancy.getFormula()
+					);
+				}
+				else {
+					return null;
+				}
+			}
+
+			@Override
+			public boolean isShared() {
+				return jaxbMultiTenancy.isShared();
+			}
+
+			@Override
+			public boolean bindAsParameter() {
+				return jaxbMultiTenancy.isBindAsParam();
 			}
 		};
 	}

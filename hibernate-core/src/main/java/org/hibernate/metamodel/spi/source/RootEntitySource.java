@@ -60,6 +60,13 @@ public interface RootEntitySource extends EntitySource {
 	public DiscriminatorSource getDiscriminatorSource();
 
 	/**
+	 * Obtain the source information about the multi-tenancy discriminator for this entity
+	 *
+	 * @return the source information about the multi-tenancy discriminator for this entity
+	 */
+	public MultiTenancySource getMultiTenancySource();
+
+	/**
 	 * Obtain the entity mode for this entity.
 	 *
 	 * @return The entity mode.

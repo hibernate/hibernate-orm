@@ -234,6 +234,22 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                     </xs:complexType>
                   </xs:element>
                 </xs:choice>
+                <xs:choice minOccurs="0">
+                    <xs:element name="multi-tenancy">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:choice minOccurs="0">
+                                    <xs:element name="column" type="column-element"/>
+                                    <xs:element name="formula" type="xs:string"/>
+                                </xs:choice>
+                            </xs:sequence>
+                            <xs:attribute name="column" type="xs:string"/>
+                            <xs:attribute name="formula" type="xs:string"/>
+                            <xs:attribute name="shared" type="xs:boolean" default="true"/>
+                            <xs:attribute name="bind-as-param" type="xs:boolean" default="true"/>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:choice>
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
                   <xs:element name="property" type="property-element"/>
                   <xs:element name="many-to-one" type="many-to-one-element"/>

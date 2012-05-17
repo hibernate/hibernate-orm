@@ -575,7 +575,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		cleanupData();
 	}
 
-	@Test
+	@Test(timeout = 5 * 60 * 1000)
 	public void testOrderBySelectNewMapArgAliasRef() {
 		createData();
 

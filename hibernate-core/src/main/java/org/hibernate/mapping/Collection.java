@@ -24,7 +24,6 @@
 package org.hibernate.mapping;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
@@ -34,7 +33,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.QualifiedTableNameFilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -522,29 +520,17 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteAllCheckStyle;
 	}
 
-	public void addFilter(String name, String condition) {
-		filters.add(toFilterConfiguration(name, condition));
+	public void addFilter(String name, String tableName, String condition) {
+		filters.add(new QualifiedTableNameFilterConfiguration(name, tableName, condition));
 	}
 
 	public java.util.List getFilters() {
 		return filters;
 	}
 
-	public void addManyToManyFilter(String name, String condition) {
-		manyToManyFilters.add(toFilterConfiguration(name, condition));
+	public void addManyToManyFilter(String name, String tableName, String condition) {
+		manyToManyFilters.add(new QualifiedTableNameFilterConfiguration(name, tableName, condition));
 	}
-	
-	private static FilterConfiguration toFilterConfiguration(String name, String condition){
-		String tableName = null;
-		String actualCondition = condition;
-		int pos = condition.lastIndexOf('.');
-		if (pos > -1){
-			tableName = condition.substring(0, pos);
-			actualCondition = condition.substring(pos+1);
-		}
-		return new QualifiedTableNameFilterConfiguration(name, tableName, actualCondition);
-	}
-
 
 	public java.util.List getManyToManyFilters() {
 		return manyToManyFilters;

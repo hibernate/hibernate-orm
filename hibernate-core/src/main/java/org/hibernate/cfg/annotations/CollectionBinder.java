@@ -810,27 +810,27 @@ public abstract class CollectionBinder {
 		//if ( StringHelper.isNotEmpty( where ) ) collection.setWhere( where );
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
-				collection.addManyToManyFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addManyToManyFilter( simpleFilter.name(), getTableName(simpleFilter), getCondition( simpleFilter ) );
 			}
 			else {
-				collection.addFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addFilter( simpleFilter.name(), getTableName(simpleFilter), getCondition( simpleFilter ) );
 			}
 		}
 		Filters filters = property.getAnnotation( Filters.class );
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
-					collection.addManyToManyFilter( filter.name(), getCondition( filter ) );
+					collection.addManyToManyFilter( filter.name(), getTableName(simpleFilter), getCondition( filter ) );
 				}
 				else {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter( filter.name(), getTableName(simpleFilter), getCondition( filter ) );
 				}
 			}
 		}
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter( simpleFilterJoinTable.name(), getCondition( simpleFilterJoinTable ) );
+				collection.addFilter( simpleFilterJoinTable.name(), null, getCondition( simpleFilterJoinTable ) );
 			}
 			else {
 				throw new AnnotationException(
@@ -843,7 +843,7 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter( filter.name(), null, getCondition( filter ) );
 				}
 				else {
 					throw new AnnotationException(
@@ -894,6 +894,10 @@ public abstract class CollectionBinder {
 		String name = filter.name();
 		String cond = filter.condition();
 		return getCondition( cond, name );
+	}
+	
+	private String getTableName(Filter filter){
+		return BinderHelper.isEmptyAnnotationValue(filter.table())? null : filter.table();
 	}
 
 	private String getCondition(Filter filter) {

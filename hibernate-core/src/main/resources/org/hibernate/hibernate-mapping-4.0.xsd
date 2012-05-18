@@ -677,6 +677,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
   <xs:complexType name="filter-element" mixed="true">
     <xs:simpleContent>
       <xs:extension base="xs:string">
+      	<xs:attribute name="table" type="xs:string"/>
         <xs:attribute name="condition" type="xs:string"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
       </xs:extension>

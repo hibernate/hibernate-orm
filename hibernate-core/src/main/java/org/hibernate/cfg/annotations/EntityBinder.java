@@ -384,7 +384,7 @@ public class EntityBinder {
 						);
 					}
 				}
-				persistentClass.addFilter( filterName, cond );
+				persistentClass.addFilter( filterName, null, cond );
 			}
 		}
 		else if ( filters.size() > 0 ) {

@@ -35,7 +35,6 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.PersistentClassFilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -637,7 +636,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 		return deleteCheckStyle;
 	}
 
-	public void addFilter(String name, String condition) {
+	public void addFilter(String name, String tableName, String condition) {
 		filters.add(new PersistentClassFilterConfiguration(name, this, condition));
 	}
 

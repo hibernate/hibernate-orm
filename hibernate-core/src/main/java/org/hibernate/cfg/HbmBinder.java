@@ -2614,6 +2614,7 @@ public final class HbmBinder {
 		while ( filters.hasNext() ) {
 			final Element filterElement = ( Element ) filters.next();
 			final String name = filterElement.attributeValue( "name" );
+			final String tableName = filterElement.attributeValue("table");
 			String condition = filterElement.getTextTrim();
 			if ( StringHelper.isEmpty(condition) ) condition = filterElement.attributeValue( "condition" );
 			if ( StringHelper.isEmpty(condition) ) {
@@ -2625,7 +2626,7 @@ public final class HbmBinder {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Applying many-to-many filter [%s] as [%s] to role [%s]", name, condition, collection.getRole() );
 			}
-			collection.addManyToManyFilter( name, condition );
+			collection.addManyToManyFilter( name, tableName, condition );
 		}
 	}
 
@@ -3014,6 +3015,7 @@ public final class HbmBinder {
 
 	private static void parseFilter(Element filterElement, Filterable filterable, Mappings model) {
 		final String name = filterElement.attributeValue( "name" );
+		final String tableName = filterElement.attributeValue("table");
 		String condition = filterElement.getTextTrim();
 		if ( StringHelper.isEmpty(condition) ) {
 			condition = filterElement.attributeValue( "condition" );
@@ -3031,7 +3033,7 @@ public final class HbmBinder {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
 		LOG.debugf( "Applying filter [%s] as [%s]", name, condition );
-		filterable.addFilter( name, condition );
+		filterable.addFilter( name, tableName, condition );
 	}
 
 	private static void parseFetchProfile(Element element, Mappings mappings, String containingEntityName) {

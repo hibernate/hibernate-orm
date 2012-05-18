@@ -39,6 +39,7 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
@@ -54,10 +55,13 @@ import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
+import org.hibernate.internal.xml.NamespaceAddingEventReader;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 
 /**
  * Helper class for unmarshalling xml configuration using StAX and JAXB.
@@ -69,11 +73,18 @@ public class JaxbHelper {
 	private static final Logger log = Logger.getLogger( JaxbHelper.class );
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
+	public static final String VALIDATE_XML_SETTING = "hibernate.xml.validate";
+	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
 
 	private final MetadataSources metadataSources;
+	private final boolean validateXml;
 
 	public JaxbHelper(MetadataSources metadataSources) {
 		this.metadataSources = metadataSources;
+
+		this.validateXml = metadataSources.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSetting( VALIDATE_XML_SETTING, StandardConverters.BOOLEAN, true );
 	}
 
 	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
@@ -138,11 +149,16 @@ public class JaxbHelper {
 		if ( "entity-mappings".equals( elementName ) ) {
 			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
 			final String explicitVersion = attribute == null ? null : attribute.getValue();
-			validationSchema = resolveSupportedOrmXsd( explicitVersion );
+			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion ) : null;
 			jaxbTarget = JaxbEntityMappings.class;
 		}
 		else {
-			validationSchema = hbmSchema();
+			if ( !isNamespaced( event.asStartElement() ) ) {
+				// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
+				log.debug( "HBM mapping document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
+				staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_MAPPING_URI );
+			}
+			validationSchema = validateXml ? hbmSchema() : null;
 			jaxbTarget = JaxbHibernateMapping.class;
 		}
 
@@ -155,7 +171,6 @@ public class JaxbHelper {
 			unmarshaller.setEventHandler( handler );
 			target = unmarshaller.unmarshal( staxEventReader );
 		}
-
 		catch ( JAXBException e ) {
 			StringBuilder builder = new StringBuilder();
 			builder.append( "Unable to perform unmarshalling at line number " );
@@ -170,6 +185,10 @@ public class JaxbHelper {
 		return new JaxbRoot( target, origin );
 	}
 
+	private boolean isNamespaced(StartElement startElement) {
+		return ! "".equals( startElement.getName().getNamespaceURI() );
+	}
+
 	@SuppressWarnings( { "unchecked" })
 	public JaxbRoot unmarshal(Document document, Origin origin) {
 		Element rootElement = document.getDocumentElement();
@@ -182,11 +201,11 @@ public class JaxbHelper {
 
 		if ( "entity-mappings".equals( rootElement.getNodeName() ) ) {
 			final String explicitVersion = rootElement.getAttribute( "version" );
-			validationSchema = resolveSupportedOrmXsd( explicitVersion );
+			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion ) : null;
 			jaxbTarget = JaxbEntityMappings.class;
 		}
 		else {
-			validationSchema = hbmSchema();
+			validationSchema = validateXml ? hbmSchema() : null;
 			jaxbTarget = JaxbHibernateMapping.class;
 		}
 

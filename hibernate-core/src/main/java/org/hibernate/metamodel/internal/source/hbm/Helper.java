@@ -135,7 +135,7 @@ public class Helper {
 						return null;
 					}
 					final String region = cacheElement.getRegion() != null ? cacheElement.getRegion() : defaultRegionName;
-					final AccessType accessType = Enum.valueOf( AccessType.class, cacheElement.getUsage() );
+					final AccessType accessType = AccessType.fromExternalName( cacheElement.getUsage() );
 					final boolean cacheLazyProps = !"non-lazy".equals( cacheElement.getInclude() );
 					return new Caching( region, accessType, cacheLazyProps );
 				}

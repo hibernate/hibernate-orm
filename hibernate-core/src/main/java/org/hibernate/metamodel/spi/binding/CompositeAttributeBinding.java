@@ -186,6 +186,20 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
+	public AttributeBinding locateAttributeBinding(List<org.hibernate.metamodel.spi.relational.Value> values) {
+		for(AttributeBinding attributeBinding : attributeBindingMap.values()) {
+			if(!(attributeBinding instanceof BasicAttributeBinding)) {
+				continue;
+			}
+			BasicAttributeBinding basicAttributeBinding = (BasicAttributeBinding) attributeBinding;
+			if(basicAttributeBinding.getRelationalValueBindings().equals( values )) {
+				return attributeBinding;
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public Iterable<AttributeBinding> attributeBindings() {
 		return attributeBindingMap.values();
 	}

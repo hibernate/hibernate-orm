@@ -37,6 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
@@ -89,45 +90,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 						"Encountered multiple JoinColumns mixing primary-target-columns and alternate-target-columns"
 				);
 			}
-			return new JoinColumnResolutionDelegate() {
-				private final String logicalJoinTableName = resolveLogicalJoinTableName();
-
-				@Override
-				public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
-					final List<Value> values = new ArrayList<Value>();
-					for ( Column column : associationAttribute.getColumnValues() ) {
-						values.add(
-								context.resolveColumn(
-										column.getReferencedColumnName(),
-										logicalJoinTableName,
-										null,
-										null
-								)
-						);
-					}
-					return values;
-				}
-
-				@Override
-				public String getReferencedAttributeName() {
-					return null;
-				}
-			};
+			return new AnnotationJoinColumnResolutionDelegate();
 		}
-	}
-
-	private String resolveLogicalJoinTableName() {
-		final AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
-				associationAttribute.annotations(),
-				JPADotNames.JOIN_TABLE
-		);
-
-		if ( joinTableAnnotation != null ) {
-			return JandexHelper.getValue( joinTableAnnotation, "table", String.class );
-		}
-
-		// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...
-		return null;
 	}
 
 	@Override
@@ -147,9 +111,10 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public FetchTiming getFetchTiming() {
-		if(associationAttribute.isLazy()) {
+		if ( associationAttribute.isLazy() ) {
 			return FetchTiming.DELAYED;
-		}  else {
+		}
+		else {
 			return FetchTiming.IMMEDIATE;
 		}
 	}
@@ -157,6 +122,50 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public FetchStyle getFetchStyle() {
 		return associationAttribute.getFetchStyle();
+	}
+
+	public class AnnotationJoinColumnResolutionDelegate
+			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
+		private final String logicalJoinTableName;
+
+		public AnnotationJoinColumnResolutionDelegate() {
+			logicalJoinTableName = resolveLogicalJoinTableName();
+		}
+
+		@Override
+		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			final List<Value> values = new ArrayList<Value>();
+			for ( Column column : associationAttribute.getColumnValues() ) {
+				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
+						column.getReferencedColumnName(),
+						logicalJoinTableName,
+						null,
+						null
+				);
+				values.add( resolvedColumn );
+			}
+			return values;
+		}
+
+		@Override
+		public String getReferencedAttributeName() {
+			// in annotations we are not referencing attribute but column names via @JoinColumn(s)
+			return null;
+		}
+
+		private String resolveLogicalJoinTableName() {
+			final AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+					associationAttribute.annotations(),
+					JPADotNames.JOIN_TABLE
+			);
+
+			if ( joinTableAnnotation != null ) {
+				return JandexHelper.getValue( joinTableAnnotation, "table", String.class );
+			}
+
+			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...
+			return null;
+		}
 	}
 }
 

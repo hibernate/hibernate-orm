@@ -349,53 +349,22 @@ public class Binder {
 				attributeSource.getForeignKeyTargetColumnResolutionDelegate();
 		final ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext;
 		if ( resolutionDelegate != null ) {
-			resolutionContext = new ForeignKeyContributingSource.JoinColumnResolutionContext() {
-				@Override
-				public List< Value > resolveRelationalValuesForAttribute( String attributeName ) {
-					final AttributeBinding referencedAttributeBinding =
-							referencedEntityBinding.locateAttributeBinding( attributeName );
-					if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-						throw bindingContext().makeMappingException(
-								String.format(
-										"Many-to-one attribute [%s] named plural attribute as property-ref [%s]",
-										attributeSource.getName(),
-										attributeName ) );
-					}
-					List< Value > values = new ArrayList< Value >();
-					SingularAttributeBinding referencedAttributeBindingAsSingular =
-							( SingularAttributeBinding ) referencedAttributeBinding;
-					for ( RelationalValueBinding valueBinding : referencedAttributeBindingAsSingular.getRelationalValueBindings() ) {
-						values.add( valueBinding.getValue() );
-					}
-					return values;
-				}
-
-				@Override
-				public Column resolveColumn(
-						String logicalColumnName,
-						String logicalTableName,
-						String logicalSchemaName,
-						String logicalCatalogName ) {
-					return metadata.getDatabase().getSchema( logicalSchemaName, logicalCatalogName ).locateTable(
-							Identifier.toIdentifier( logicalTableName ) ).locateColumn( logicalColumnName );
-				}
-			};
+			resolutionContext = new JoinColumnResolutionContext(referencedEntityBinding, attributeSource);
 		} else {
 			resolutionContext = null;
 		}
 
-		ForeignKey foreignKey =
-				createOrLocateForeignKey(
-						attributeSource.getExplicitForeignKeyName(),
-						table,
-						referencedEntityBinding.getPrimaryTable() );
+		ForeignKey foreignKey = createOrLocateForeignKey(
+				attributeSource.getExplicitForeignKeyName(),
+				table,
+				referencedEntityBinding.getPrimaryTable()
+		);
 
-		final AttributeBinding referencedAttributeBinding =
-				determineReferencedAttributeBinding(
-						resolutionDelegate,
-						attributeBindingContainer,
-						referencedEntityBinding,
-						foreignKey );
+		final AttributeBinding referencedAttributeBinding = determineReferencedAttributeBinding(
+				resolutionDelegate,
+				resolutionContext,
+				referencedEntityBinding
+		);
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
 			throw bindingContext().makeMappingException(
 					String.format(
@@ -1155,36 +1124,18 @@ public class Binder {
 
 	private AttributeBinding determineReferencedAttributeBinding(
 			ForeignKeyContributingSource.JoinColumnResolutionDelegate resolutionDelegate,
-			AttributeBindingContainer sourceAttributeBindingContainer,
-			EntityBinding referencedEntityBinding,
-			ForeignKey foreignKey ) {
+			ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext,
+			EntityBinding referencedEntityBinding) {
 		if ( resolutionDelegate == null ) {
 			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		}
 
-		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		final String referencedAttributeName =
-				explicitName != null ? explicitName : determineReferencedAttributeName(
-						sourceAttributeBindingContainer,
-						referencedEntityBinding,
-						foreignKey );
-
-		return referencedEntityBinding.locateAttributeBinding( referencedAttributeName );
-	}
-
-	private String determineReferencedAttributeName(
-			AttributeBindingContainer sourceAttributeBindingContainer,
-			EntityBinding referencedEntityBinding,
-			ForeignKey foreignKey ) {
-		// todo : implement this.
-		// 		this needs to attempt to resolve the target columns from ForeignKey to an attribute on
-		//		referencedEntityBinding that uses those columns.  the original annotation-binder
-		// 		logic for this resides in org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference
-		//
-		//		this is "needed" in order to pass the property name on to
-		//		org.hibernate.type.ManyToOneType.  Maybe there is just a better way to handle whatever
-		//		org.hibernate.type.ManyToOneType needs this for.
-		return null;
+		String explicitName = resolutionDelegate.getReferencedAttributeName();
+		if(explicitName != null) {
+			return referencedEntityBinding.locateAttributeBinding( explicitName );
+		} else {
+			return referencedEntityBinding.locateAttributeBinding(resolutionDelegate.getJoinColumns( resolutionContext ) );
+		}
 	}
 
 	private void bindPrimaryTable( final EntityBinding entityBinding, final EntitySource entitySource ) {
@@ -1613,7 +1564,7 @@ public class Binder {
 			String foreignKeyName,
 			TableSpecification sourceTable,
 			TableSpecification targetTable ) {
-		ForeignKey foreignKey = null;
+		ForeignKey foreignKey;
 		if ( foreignKeyName == null ) {
 			// todo: for now lets assume we have to create it, but eventually we should look through the
 			// candidate foreign keys referencing targetTable also...
@@ -1823,7 +1774,9 @@ public class Binder {
 			return metadata.getTypeResolver().getTypeFactory().map(
 					mapBinding.getAttribute().getRole(),
 					mapBinding.getReferencedPropertyName(),
-					mapBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+					mapBinding.getPluralAttributeElementBinding()
+							.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+			);
 		}
 	}
 
@@ -1834,7 +1787,9 @@ public class Binder {
 			return metadata.getTypeResolver().getTypeFactory().set(
 					setBinding.getAttribute().getRole(),
 					setBinding.getReferencedPropertyName(),
-					setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+					setBinding.getPluralAttributeElementBinding()
+							.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+			);
 		}
 	}
 
@@ -1906,4 +1861,56 @@ public class Binder {
 		String defaultName();
 	}
 
+
+	public class JoinColumnResolutionContext implements ForeignKeyContributingSource.JoinColumnResolutionContext {
+		private final EntityBinding referencedEntityBinding;
+		private final ToOneAttributeSource attributeSource;
+
+
+		public JoinColumnResolutionContext(EntityBinding referencedEntityBinding, ToOneAttributeSource attributeSource) {
+			this.referencedEntityBinding = referencedEntityBinding;
+			this.attributeSource = attributeSource;
+		}
+
+		@Override
+		public List< Value > resolveRelationalValuesForAttribute( String attributeName ) {
+			final AttributeBinding referencedAttributeBinding =
+					referencedEntityBinding.locateAttributeBinding( attributeName );
+			if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
+				throw bindingContext().makeMappingException(
+						String.format(
+								"Many-to-one attribute [%s] named plural attribute as property-ref [%s]",
+								attributeSource.getName(),
+								attributeName ) );
+			}
+			List< Value > values = new ArrayList< Value >();
+			SingularAttributeBinding referencedAttributeBindingAsSingular =
+					( SingularAttributeBinding ) referencedAttributeBinding;
+			for ( RelationalValueBinding valueBinding : referencedAttributeBindingAsSingular.getRelationalValueBindings() ) {
+				values.add( valueBinding.getValue() );
+			}
+			return values;
+		}
+
+		@Override
+		public Column resolveColumn(
+				String logicalColumnName,
+				String logicalTableName,
+				String logicalSchemaName,
+				String logicalCatalogName ) {
+			Identifier tableIdentifier = Identifier.toIdentifier(logicalTableName);
+			if(tableIdentifier == null) {
+				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
+			}
+
+			Schema schema = metadata.getDatabase().getSchema( logicalSchemaName, logicalCatalogName );
+			Table table = schema.locateTable(tableIdentifier );
+
+			if(bindingContexts.peek().isGloballyQuotedIdentifiers() && !StringHelper.isQuoted(logicalColumnName)) {
+				logicalColumnName = StringHelper.quote( logicalColumnName );
+			}
+
+			return table.locateColumn( logicalColumnName );
+		}
+	}
 }

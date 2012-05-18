@@ -29,6 +29,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -64,9 +65,18 @@ public interface AttributeBindingContainer {
 	 *
 	 * @param name The name of the attribute, local to this container.
 	 *
-	 * @return The attribute binding.
+	 * @return The attribute binding or {@code null} if none could be found.
 	 */
 	public AttributeBinding locateAttributeBinding(String name);
+
+	/**
+	 * Locate a specific attribute binding, by its values.
+	 *
+	 * @param values The list of values
+	 *
+	 * @return The attribute binding or {@code null} if none could be found.
+	 */
+	public AttributeBinding locateAttributeBinding(List<Value> values);
 
 	/**
 	 * Factory method for basic attribute bindings.

@@ -65,7 +65,7 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	private Entity entity;
 	private TableSpecification primaryTable;
-    private String primaryTableName;
+	private String primaryTableName;
 	private Map<String, SecondaryTable> secondaryTables = new HashMap<String, SecondaryTable>();
 
 	private Value<Class<?>> proxyInterfaceType;
@@ -103,7 +103,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	private Set<String> synchronizedTableNames = new HashSet<String>();
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
-    private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
+	private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
 
 	/**
 	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
@@ -140,9 +140,9 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	public boolean isPolymorphic() {
-		return  superEntityBinding != null ||
+		return superEntityBinding != null ||
 				hierarchyDetails.getEntityDiscriminator() != null ||
-				! subEntityBindings.isEmpty();
+				!subEntityBindings.isEmpty();
 	}
 
 	public boolean hasSubEntityBindings() {
@@ -180,7 +180,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				subclassIterables.add( subSubEntityBindings );
 			}
 		}
-		if ( ! subEntityBindings.isEmpty() ) {
+		if ( !subEntityBindings.isEmpty() ) {
 			subclassIterables.add( subEntityBindings );
 		}
 		return new JoinedIterable<EntityBinding>( subclassIterables );
@@ -193,7 +193,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	 * Note that the returned value specifically excludes this entity binding.
 	 *
 	 * @return sub-entity bindings ordered as a depth-first,
-	 * pre-order traversal
+	 *         pre-order traversal
 	 */
 	public Iterable<EntityBinding> getPreOrderSubEntityBindingClosure() {
 		return getPreOrderSubEntityBindingClosure( false );
@@ -205,7 +205,9 @@ public class EntityBinding implements AttributeBindingContainer {
 			iterables.add( java.util.Collections.singletonList( this ) );
 		}
 		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			Iterable<EntityBinding> subSubEntityBindingClosure =  subEntityBinding.getPreOrderSubEntityBindingClosure( true );
+			Iterable<EntityBinding> subSubEntityBindingClosure = subEntityBinding.getPreOrderSubEntityBindingClosure(
+					true
+			);
 			if ( subSubEntityBindingClosure.iterator().hasNext() ) {
 				iterables.add( subSubEntityBindingClosure );
 			}
@@ -229,10 +231,10 @@ public class EntityBinding implements AttributeBindingContainer {
 		this.primaryTable = primaryTable;
 	}
 
-    public TableSpecification locateTable(String tableName) {
-        if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
-            return primaryTable;
-        }
+	public TableSpecification locateTable(String tableName) {
+		if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
+			return primaryTable;
+		}
 		SecondaryTable secondaryTable = secondaryTables.get( tableName );
 		if ( secondaryTable == null ) {
 			throw new AssertionFailure(
@@ -244,14 +246,15 @@ public class EntityBinding implements AttributeBindingContainer {
 			);
 		}
 		return secondaryTable.getSecondaryTableReference();
-    }
-    public String getPrimaryTableName() {
-        return primaryTableName;
-    }
+	}
 
-    public void setPrimaryTableName(String primaryTableName) {
-        this.primaryTableName = primaryTableName;
-    }
+	public String getPrimaryTableName() {
+		return primaryTableName;
+	}
+
+	public void setPrimaryTableName(String primaryTableName) {
+		this.primaryTableName = primaryTableName;
+	}
 
 	public void addSecondaryTable(SecondaryTable secondaryTable) {
 		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getName(), secondaryTable );
@@ -528,7 +531,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			SingularAttribute syntheticAttribute,
 			List<SingularAttributeBinding> subAttributeBindings,
 			MetaAttributeContext metaAttributeContext) {
-		if ( ! syntheticAttribute.isSynthetic() ) {
+		if ( !syntheticAttribute.isSynthetic() ) {
 			throw new AssertionFailure(
 					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
 			);
@@ -600,7 +603,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			int base ) {
+			int base) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
 		final ListBinding binding = new ListBinding(
 				this,
@@ -611,7 +614,8 @@ public class EntityBinding implements AttributeBindingContainer {
 				includedInOptimisticLocking,
 				lazy,
 				metaAttributeContext,
-				base );
+				base
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
@@ -624,7 +628,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
 		final MapBinding binding = new MapBinding(
 				this,
@@ -634,7 +638,8 @@ public class EntityBinding implements AttributeBindingContainer {
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
-				metaAttributeContext );
+				metaAttributeContext
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
@@ -647,7 +652,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding(
 				this,
@@ -666,6 +671,26 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public AttributeBinding locateAttributeBinding(String name) {
 		return attributeBindingMap.get( name );
+	}
+
+	@Override
+	public AttributeBinding locateAttributeBinding(List<org.hibernate.metamodel.spi.relational.Value> values) {
+		for(AttributeBinding attributeBinding : attributeBindingMap.values()) {
+			if(!(attributeBinding instanceof BasicAttributeBinding)) {
+				continue;
+			}
+			BasicAttributeBinding basicAttributeBinding = (BasicAttributeBinding) attributeBinding;
+
+			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<org.hibernate.metamodel.spi.relational.Value>(  );
+			for(RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings()) {
+				attributeValues.add( relationalBinding.getValue() );
+			}
+
+			if(attributeValues.equals( values )) {
+				return attributeBinding;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -711,8 +736,8 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	/**
 	 * @return the attribute bindings for this EntityBinding and all of its
-	 * sub-EntityBinding, starting from the root of the hierarchy; includes
-	 * the identifier and attribute bindings defined as part of a join.
+	 *         sub-EntityBinding, starting from the root of the hierarchy; includes
+	 *         the identifier and attribute bindings defined as part of a join.
 	 */
 	public Iterable<AttributeBinding> getSubEntityAttributeBindingClosure() {
 		List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>();
@@ -725,11 +750,11 @@ public class EntityBinding implements AttributeBindingContainer {
 		return new JoinedIterable<AttributeBinding>( iterables );
 	}
 
-	public void setJpaCallbackClasses( List<JpaCallbackSource> jpaCallbackClasses ) {
-	    this.jpaCallbackClasses = jpaCallbackClasses;
+	public void setJpaCallbackClasses(List<JpaCallbackSource> jpaCallbackClasses) {
+		this.jpaCallbackClasses = jpaCallbackClasses;
 	}
 
-    public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
-        return jpaCallbackClasses;
-    }
+	public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
+		return jpaCallbackClasses;
+	}
 }

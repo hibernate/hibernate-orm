@@ -81,6 +81,11 @@ public class PluralAttributeKeySourceImpl
 					public List getColumnOrFormulaElements() {
 						return keyElement.getColumn();
 					}
+
+					@Override
+					public boolean isForceNotNull() {
+						return Helper.getBooleanValue( keyElement.isNotNull(), false );
+					}
 				}
 		);
 	}

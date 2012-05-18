@@ -594,14 +594,6 @@ public class Binder {
 
 				createMetaAttributeContext( attributeBindingContainer, attributeSource )
 		);
-		/* TODO: needed???
-		Type resolvedType = heuristicType( hibernateTypeDescriptor );
-		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		bindJdbcDataType( resolvedType, (AbstractValue) relationalValueBindings.get( 0 ).getValue() );
-		attributeBinding.getAttribute().resolveType(
-				bindingContexts.peek().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
-		return attributeBinding;
-		*/
 	}
 
 	private void bindBasicCollectionElement(

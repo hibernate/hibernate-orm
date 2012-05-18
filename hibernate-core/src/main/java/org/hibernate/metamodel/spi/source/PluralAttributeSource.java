@@ -37,10 +37,6 @@ public interface PluralAttributeSource
 
 	public PluralAttributeElementSource getElementSource();
 
-	/**
-	 * Return the
-	 * @return
-	 */
 	public TableSpecificationSource getCollectionTableSpecificationSource();
 
 	public String getCollectionTableComment();

@@ -31,3 +31,6 @@ bin
 # Miscellaneous
 *.log
 .clover
+
+# Mac OS X specific
+.DS_Store

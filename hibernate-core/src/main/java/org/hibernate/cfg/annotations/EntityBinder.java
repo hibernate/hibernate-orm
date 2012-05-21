@@ -371,24 +371,19 @@ public class EntityBinder {
 			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
 		}
 
-		if ( !inheritanceState.hasParents() ) {
-			for ( Map.Entry<String, String> filter : filters.entrySet() ) {
-				String filterName = filter.getKey();
-				String cond = filter.getValue();
-				if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
-					FilterDefinition definition = mappings.getFilterDefinition( filterName );
-					cond = definition == null ? null : definition.getDefaultFilterCondition();
-					if ( StringHelper.isEmpty( cond ) ) {
-						throw new AnnotationException(
-								"no filter condition found for filter " + filterName + " in " + this.name
-						);
-					}
+		for ( Map.Entry<String, String> filter : filters.entrySet() ) {
+			String filterName = filter.getKey();
+			String cond = filter.getValue();
+			if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
+				FilterDefinition definition = mappings.getFilterDefinition( filterName );
+				cond = definition == null ? null : definition.getDefaultFilterCondition();
+				if ( StringHelper.isEmpty( cond ) ) {
+					throw new AnnotationException(
+							"no filter condition found for filter " + filterName + " in " + this.name
+					);
 				}
-				persistentClass.addFilter( filterName, null, cond );
 			}
-		}
-		else if ( filters.size() > 0 ) {
-			LOG.filterAnnotationOnSubclass( persistentClass.getEntityName() );
+			persistentClass.addFilter( filterName, null, cond );
 		}
 		LOG.debugf( "Import with entity name %s", name );
 		try {

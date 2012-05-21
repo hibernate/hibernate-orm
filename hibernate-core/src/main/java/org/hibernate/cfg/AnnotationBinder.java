@@ -578,10 +578,7 @@ public final class AnnotationBinder {
 	    entityBinder.setCache( determineCacheSettings( clazzToProcess, mappings ) );
 	    entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
 
-		//Filters are not allowed on subclasses
-		if ( !inheritanceState.hasParents() ) {
-			bindFilters( clazzToProcess, entityBinder, mappings );
-		}
+		bindFilters( clazzToProcess, entityBinder, mappings );
 
 		entityBinder.bindEntity();
 

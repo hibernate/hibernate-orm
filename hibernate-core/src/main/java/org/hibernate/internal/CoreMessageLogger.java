@@ -345,10 +345,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void fetchingDatabaseMetadata();
 
 	@LogMessage(level = WARN)
-	@Message(value = "@Filter not allowed on subclasses (ignored): %s", id = 103)
-	void filterAnnotationOnSubclass(String className);
-
-	@LogMessage(level = WARN)
 	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 104)
 	void firstOrMaxResultsSpecifiedWithCollectionFetch();
 

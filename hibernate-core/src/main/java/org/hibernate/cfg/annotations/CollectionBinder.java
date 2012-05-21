@@ -823,7 +823,7 @@ public abstract class CollectionBinder {
 					collection.addManyToManyFilter( filter.name(), getTableName(simpleFilter), getCondition( filter ) );
 				}
 				else {
-					collection.addFilter( filter.name(), getTableName(simpleFilter), getCondition( filter ) );
+					collection.addFilter( filter.name(), getTableName(filter), getCondition( filter ) );
 				}
 			}
 		}

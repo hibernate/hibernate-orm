@@ -29,6 +29,9 @@ import java.sql.SQLException;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
+ * Basic support for {@link MultiTenantConnectionProvider} implementations using
+ * individual {@link ConnectionProvider} instances per tenant behind the scenes.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractMultiTenantConnectionProvider implements MultiTenantConnectionProvider {
@@ -52,7 +55,7 @@ public abstract class AbstractMultiTenantConnectionProvider implements MultiTena
 
 	@Override
 	public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
-		selectConnectionProvider( tenantIdentifier ).getConnection();
+		selectConnectionProvider( tenantIdentifier ).closeConnection( connection );
 	}
 
 	@Override

@@ -30,6 +30,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -39,6 +41,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -58,9 +61,29 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
 
 		Session s = openSession();
-		Connection conn = ( (SessionFactoryImpl) s.getSessionFactory() ).getConnectionProvider().getConnection();
-		String databaseName = conn.getCatalog();
-		conn.close();
+		s.beginTransaction();
+		String defaultCollationName = s.doReturningWork( new ReturningWork<String>() {
+			@Override
+			public String execute(Connection connection) throws SQLException {
+				String databaseName = connection.getCatalog();
+				ResultSet rs =  connection.createStatement().executeQuery( "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
+				while(rs.next()){
+					return rs.getString( "collation_name" );
+				}
+				throw new AssertionError( "can't get collation name of database "+databaseName );
+
+			}
+		} );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		String databaseName = s.doReturningWork( new ReturningWork<String>() {
+			@Override
+			public String execute(Connection connection) throws SQLException {
+				return connection.getCatalog();
+			}
+		} );
 		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
 				.executeUpdate();
 		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
@@ -81,41 +104,15 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 				.setFirstResult( 2 )
 				.setMaxResults( 2 )
 				.list();
-		// without patch this query produces following sql (Note that the tablename as well as the like condition have turned into lowercase)"
-		// WITH query AS (select product0_.id as id0_, product0_.description as descript2_0_, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ from product product0_ where product0_.description like 'kit%') SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?
-
-
-		// this leads to following exception:
-//        org.hibernate.exception.SQLGrammarException: Invalid object name 'product'.
-//    	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:122)
-//    	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49)
-//    	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:125)
-//    	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:110)
-//    	at org.hibernate.engine.jdbc.internal.proxy.AbstractStatementProxyHandler.continueInvocation(AbstractStatementProxyHandler.java:130)
-//    	at org.hibernate.engine.jdbc.internal.proxy.AbstractProxyHandler.invoke(AbstractProxyHandler.java:81)
-//    	at $Proxy18.executeQuery(Unknown Source)
-//    	at org.hibernate.loader.Loader.getResultSet(Loader.java:1953)
-//    	...
-//    Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: Invalid object name 'product'.
-//    	at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDatabaseError(SQLServerException.java:197)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerStatement.getNextResult(SQLServerStatement.java:1493)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement.doExecutePreparedStatement(SQLServerPreparedStatement.java:390)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement$PrepStmtExecCmd.doExecute(SQLServerPreparedStatement.java:340)
-//    	at com.microsoft.sqlserver.jdbc.TDSCommand.execute(IOBuffer.java:4575)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerConnection.executeCommand(SQLServerConnection.java:1400)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerStatement.executeCommand(SQLServerStatement.java:179)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerStatement.executeStatement(SQLServerStatement.java:154)
-//    	at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement.executeQuery(SQLServerPreparedStatement.java:283)
-//    	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-//    	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
-//    	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
-//    	at java.lang.reflect.Method.invoke(Unknown Source)
-//    	at org.hibernate.engine.jdbc.internal.proxy.AbstractStatementProxyHandler.continueInvocation(AbstractStatementProxyHandler.java:122)
-//    	... 44 more
-
-
 		assertEquals( 2, list.size() );
 		tx.rollback();
+		s.close();
+
+		s = openSession();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+				.executeUpdate();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
+		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
 		s.close();
 	}
 

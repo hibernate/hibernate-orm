@@ -1023,11 +1023,19 @@ public final class SessionFactoryImpl
 	}
 
 	public Session openSession() throws HibernateException {
-		return withOptions().openSession();
+		SessionBuilder builder=withOptions();
+		if (getCurrentTenantIdentifierResolver() != null){
+			builder.tenantIdentifier(getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier());
+		}			
+		return builder.openSession();
 	}
 
 	public Session openTemporarySession() throws HibernateException {
-		return withOptions()
+		SessionBuilder builder=withOptions();
+		if (getCurrentTenantIdentifierResolver()!=null){
+			builder.tenantIdentifier(getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier());
+		}
+		return builder
 				.autoClose( false )
 				.flushBeforeCompletion( false )
 				.connectionReleaseMode( ConnectionReleaseMode.AFTER_STATEMENT )

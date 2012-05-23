@@ -59,32 +59,24 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 
 	private ServiceRegistryImplementor serviceRegistry;
 
-	private SessionFactoryImplementor sessionFactory;
+	protected SessionFactoryImplementor sessionFactory;
 
 	@Before
 	public void setUp() {
-		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );
-		jbossProvider = ConnectionProviderBuilder.buildConnectionProvider( "jboss" );
-		AbstractMultiTenantConnectionProvider multiTenantConnectionProvider = new AbstractMultiTenantConnectionProvider() {
-			@Override
-			protected ConnectionProvider getAnyConnectionProvider() {
-				return acmeProvider;
-			}
+		AbstractMultiTenantConnectionProvider multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
+		Configuration cfg = buildConfiguration();
 
-			@Override
-			protected ConnectionProvider selectConnectionProvider(String tenantIdentifier) {
-				if ( "acme".equals( tenantIdentifier ) ) {
-					return acmeProvider;
-				}
-				else if ( "jboss".equals( tenantIdentifier ) ) {
-					return jbossProvider;
-				}
-				throw new HibernateException( "Unknown tenant identifier" );
-			}
-		};
+		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+				.applySettings( cfg.getProperties() )
+				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
+				.buildServiceRegistry();
 
+		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+	}
+
+	protected Configuration buildConfiguration() {
 		Configuration cfg = new Configuration();
-		cfg.getProperties().put( Environment.MULTI_TENANT, MultiTenancyStrategy.DATABASE );
+		cfg.getProperties().put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
 		cfg.setProperty( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.addAnnotatedClass( Customer.class );
@@ -143,18 +135,34 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 				cfg.generateDropSchemaScript( ConnectionProviderBuilder.getCorrespondingDialect() ),
 				cfg.generateSchemaCreationScript( ConnectionProviderBuilder.getCorrespondingDialect() )
 		).execute( 		// so stupid...
-				false, 	// do not script the export (write it to file)
-				true, 	// do run it against the database
-				false, 	// do not *just* perform the drop
-				false	// do not *just* perform the create
+						   false, 	// do not script the export (write it to file)
+						   true, 	// do run it against the database
+						   false, 	// do not *just* perform the drop
+						   false	// do not *just* perform the create
 		);
+		return cfg;
+	}
 
-		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
-				.applySettings( cfg.getProperties() )
-				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
-				.buildServiceRegistry();
+	private AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {
+		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );
+		jbossProvider = ConnectionProviderBuilder.buildConnectionProvider( "jboss" );
+		return new AbstractMultiTenantConnectionProvider() {
+			@Override
+			protected ConnectionProvider getAnyConnectionProvider() {
+				return acmeProvider;
+			}
 
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+			@Override
+			protected ConnectionProvider selectConnectionProvider(String tenantIdentifier) {
+				if ( "acme".equals( tenantIdentifier ) ) {
+					return acmeProvider;
+				}
+				else if ( "jboss".equals( tenantIdentifier ) ) {
+					return jbossProvider;
+				}
+				throw new HibernateException( "Unknown tenant identifier" );
+			}
+		};
 	}
 
 	@After
@@ -175,14 +183,14 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicExpectedBehavior() {
-		Session session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+		Session session = getNewSession("jboss");
 		session.beginTransaction();
 		Customer steve = new Customer( 1L, "steve" );
 		session.save( steve );
 		session.getTransaction().commit();
 		session.close();
 
-		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
+		session = getNewSession("acme");
 		try {
 			session.beginTransaction();
 			Customer check = (Customer) session.get( Customer.class, steve.getId() );
@@ -193,7 +201,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 			session.close();
 		}
 
-		session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+		session = getNewSession("jboss");
 		session.beginTransaction();
 		session.delete( steve );
 		session.getTransaction().commit();
@@ -203,7 +211,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 	@Test
 	public void testSameIdentifiers() {
 		// create a customer 'steve' in jboss
-		Session session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+		Session session = getNewSession("jboss");
 		session.beginTransaction();
 		Customer steve = new Customer( 1L, "steve" );
 		session.save( steve );
@@ -211,7 +219,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		session.close();
 
 		// now, create a customer 'john' in acme
-		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
+		session = getNewSession("acme");
 		session.beginTransaction();
 		Customer john = new Customer( 1L, "john" );
 		session.save( john );
@@ -223,7 +231,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		// make sure we get the correct people back, from cache
 		// first, jboss
 		{
-			session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+			session = getNewSession("jboss");
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
@@ -235,7 +243,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatisticsImplementor().clear();
 		// then, acme
 		{
-			session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
+			session = getNewSession("acme");
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
@@ -250,7 +258,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getCache().evictEntityRegions();
 		// first jboss
 		{
-			session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+			session = getNewSession("jboss");
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
@@ -262,7 +270,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatisticsImplementor().clear();
 		// then, acme
 		{
-			session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
+			session = getNewSession("acme");
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
@@ -272,17 +280,21 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 			session.close();
 		}
 
-		session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
+		session = getNewSession("jboss");
 		session.beginTransaction();
 		session.delete( steve );
 		session.getTransaction().commit();
 		session.close();
 
-		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
+		session = getNewSession("acme");
 		session.beginTransaction();
 		session.delete( john );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	protected Session getNewSession(String tenant) {
+		return sessionFactory.withOptions().tenantIdentifier( tenant ).openSession();
 	}
 
 }

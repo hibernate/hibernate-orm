@@ -49,7 +49,7 @@ public class AuctionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@SkipForDialect( value = PostgreSQL81Dialect.class, comment = "doesn't like boolean=1" )
+	@SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, comment = "doesn't like boolean=1" )
 	public void testLazy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

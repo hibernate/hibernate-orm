@@ -27,6 +27,9 @@ import javax.transaction.SystemException;
 
 import org.jboss.logging.Logger;
 import org.junit.After;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -41,6 +44,8 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
 
+	@Rule
+	public TestRule globalTimeout= new Timeout(30 * 60 * 1000); // no test should run longer than 30 minutes
 	@After
 	public void releaseTransactions() {
 		if ( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {

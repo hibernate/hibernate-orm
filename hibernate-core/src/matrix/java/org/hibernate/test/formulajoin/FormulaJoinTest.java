@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -65,7 +66,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 		
-		if ( getDialect() instanceof PostgreSQLDialect ) return;
+		if ( getDialect() instanceof PostgreSQLDialect  || getDialect() instanceof PostgreSQL81Dialect ) return;
 
 		s = openSession();
 		tx = s.beginTransaction();

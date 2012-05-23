@@ -21,42 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.inheritancediscriminator;
+package org.hibernate.test.annotations.entity;
+
+import org.hibernate.mapping.RootClass;
 
 import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- * @author Pawel Stawicki
+ * @author Steve Ebersole
  */
-@RequiresDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6580" )
-public class PersistChildEntitiesWithDiscriminatorTest extends BaseCoreFunctionalTestCase {
+public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ParentEntity.class, InheritingEntity.class };
+		return new Class[] { Forest.class, Forest2.class };
+	}
+
+	@Override
+	protected String[] getAnnotatedPackages() {
+		return new String[] { Forest.class.getPackage().getName() };
 	}
 
 	@Test
-	public void doIt() {
-		Session session = openSession();
-		session.beginTransaction();
-		// we need the 2 inserts so that the id is incremented on the second get-generated-keys-result set, since
-		// on the first insert both the pk and the discriminator values are 1
-		session.save( new InheritingEntity( "yabba" ) );
-		session.save( new InheritingEntity( "dabba" ) );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		session.createQuery( "delete ParentEntity" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+	public void testSameMappingValues() {
+		RootClass forest = (RootClass) configuration().getClassMapping( Forest.class.getName() );
+		RootClass forest2 = (RootClass) configuration().getClassMapping( Forest2.class.getName() );
+		assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );
+		assertEquals( forest.useDynamicUpdate(), forest2.useDynamicUpdate() );
+		assertEquals( forest.hasSelectBeforeUpdate(), forest2.hasSelectBeforeUpdate() );
+		assertEquals( forest.getOptimisticLockMode(), forest2.getOptimisticLockMode() );
+		assertEquals( forest.isExplicitPolymorphism(), forest2.isExplicitPolymorphism() );
 	}
-
 }

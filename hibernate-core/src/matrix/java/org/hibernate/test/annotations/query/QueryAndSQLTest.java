@@ -354,7 +354,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = { PostgreSQL81Dialect.class },
+	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache() throws Exception {
 		Session s;

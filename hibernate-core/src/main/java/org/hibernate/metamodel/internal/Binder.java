@@ -343,9 +343,9 @@ public class Binder {
 
 		org.hibernate.internal.util.Value< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
 		final String referencedEntityName =
-				attributeSource.getReferencedEntityName() != null
+				bindingContext().qualifyClassName( attributeSource.getReferencedEntityName() != null
 						? attributeSource.getReferencedEntityName()
-						: referencedJavaTypeValue.getValue().getName();
+						: referencedJavaTypeValue.getValue().getName() );
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
 
 		// Foreign key...
@@ -1529,7 +1529,7 @@ public class Binder {
 				.append( attributeBinding.getAttribute().getName() )
 				.toString();
 	}
-	
+
 	private Column createColumn(
 			final TableSpecification table,
 			final ColumnSource columnSource,

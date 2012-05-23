@@ -374,7 +374,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { HSQLDialect.class, PostgreSQL81Dialect.class } )
+	@SkipForDialect( { HSQLDialect.class, PostgreSQL81Dialect.class, PostgreSQLDialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
 		Session session = openSession();
 		session.beginTransaction();

@@ -45,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@SkipForDialect(value = { PostgreSQL81Dialect.class },
+	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testEjb3Xml() throws Exception {
 		Session s = openSession();

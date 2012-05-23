@@ -57,7 +57,7 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 
 	protected boolean supportsLockingNullableSideOfJoin(Dialect dialect) {
 		// db2 and pgsql do *NOT*
-		return ! ( DB2Dialect.class.isInstance( dialect ) || PostgreSQL81Dialect.class.isInstance( dialect ) );
+		return ! ( DB2Dialect.class.isInstance( dialect ) || PostgreSQL81Dialect.class.isInstance( dialect ) || PostgreSQLDialect.class.isInstance( dialect ));
 	}
 
 	protected static String extractFromSystem(String systemPropertyName) {

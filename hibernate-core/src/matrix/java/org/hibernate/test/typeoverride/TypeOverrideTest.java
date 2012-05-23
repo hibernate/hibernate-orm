@@ -70,7 +70,7 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
-		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) )  {
+		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) )  {
 			assertSame(
 					BlobTypeDescriptor.BLOB_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )

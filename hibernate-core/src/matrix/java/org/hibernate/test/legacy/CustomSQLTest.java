@@ -40,7 +40,7 @@ public class CustomSQLTest extends LegacyTestCase {
 
 	@Test
     @RequiresDialectFeature( NonIdentityGeneratorChecker.class )
-    @SkipForDialect( value = PostgreSQL81Dialect.class, jiraKey = "HHH-6704")
+    @SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6704")
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testInsert() throws HibernateException, SQLException {
 		Session s = openSession();

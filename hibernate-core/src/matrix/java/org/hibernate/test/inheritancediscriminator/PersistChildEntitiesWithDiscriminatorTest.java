@@ -34,7 +34,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Pawel Stawicki
  */
-@RequiresDialect( value = PostgreSQL81Dialect.class, jiraKey = "HHH-6580" )
+@RequiresDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6580" )
 public class PersistChildEntitiesWithDiscriminatorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

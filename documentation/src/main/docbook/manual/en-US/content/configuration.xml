@@ -206,7 +206,7 @@ hibernate.c3p0.min_size=5
 hibernate.c3p0.max_size=20
 hibernate.c3p0.timeout=1800
 hibernate.c3p0.max_statements=50
-hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
+hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
 
     <para>For use inside an application server, you should almost always
     configure Hibernate to obtain connections from an application server
@@ -275,7 +275,7 @@ hibernate.transaction.factory_class = \
     org.hibernate.transaction.JTATransactionFactory
 hibernate.transaction.manager_lookup_class = \
     org.hibernate.transaction.JBossTransactionManagerLookup
-hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
+hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
 
     <para>JDBC connections obtained from a JNDI datasource will automatically
     participate in the container-managed transactions of the application
@@ -975,11 +975,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             </row>
 
             <row>
-              <entry>PostgreSQL</entry>
+              <entry>PostgreSQL 8.1</entry>
 
-              <entry><literal>org.hibernate.dialect.PostgreSQLDialect</literal></entry>
+              <entry><literal>org.hibernate.dialect.PostgreSQL81Dialect</literal></entry>
             </row>
+              <row>
+                  <entry>PostgreSQL 8.2 and later</entry>
 
+                  <entry><literal>org.hibernate.dialect.PostgreSQL82Dialect</literal></entry>
+              </row>
             <row>
               <entry>MySQL5</entry>
 
@@ -1023,11 +1027,16 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             </row>
 
             <row>
-              <entry>Sybase</entry>
+              <entry>Sybase ASE 15.5</entry>
 
               <entry><literal>org.hibernate.dialect.SybaseASE15Dialect</literal></entry>
             </row>
 
+              <row>
+                  <entry>Sybase ASE 15.7</entry>
+
+                  <entry><literal>org.hibernate.dialect.SybaseASE157Dialect</literal></entry>
+              </row>
             <row>
               <entry>Sybase Anywhere</entry>
 

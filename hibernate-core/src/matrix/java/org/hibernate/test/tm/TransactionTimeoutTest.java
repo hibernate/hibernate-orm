@@ -43,7 +43,7 @@ import static org.junit.Assert.assertNotSame;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6780")
-@SkipForDialect( value = PostgreSQL81Dialect.class, comment = "PostgreSQL jdbc driver doesn't impl timeout method")
+@SkipForDialect( value ={ PostgreSQL81Dialect.class, PostgreSQLDialect.class}, comment = "PostgreSQL jdbc driver doesn't impl timeout method")
 public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

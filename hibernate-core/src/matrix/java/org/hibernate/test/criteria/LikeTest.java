@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -67,7 +68,7 @@ public class LikeTest extends BaseCoreFunctionalTestCase {
 
         assertEquals( 1, objects.size() );
         session.clear();
-        if ( !( getDialect() instanceof MySQLDialect ) && ! ( getDialect() instanceof PostgreSQLDialect )) {
+        if ( !( getDialect() instanceof MySQLDialect ) && ! ( getDialect() instanceof PostgreSQLDialect ) && ! ( getDialect() instanceof PostgreSQL81Dialect )) {
             // retrieve object - case insensitive via custom expression - works
             // ok
             objects = session.createCriteria( TestObject.class ).add(

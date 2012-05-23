@@ -53,6 +53,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -451,7 +452,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
-		if ( ! ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
+		if ( ! ( getDialect() instanceof PostgreSQLDialect|| getDialect() instanceof PostgreSQL81Dialect || getDialect() instanceof MySQLDialect ) ) {
 			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" ).setLong( "param", 1 ).list();
 		}
 		s.getTransaction().commit();
@@ -2751,7 +2752,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
-		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof HSQLDialect){
+		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect || getDialect() instanceof HSQLDialect){
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
 		}
 		else{
@@ -2759,7 +2760,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		session.createQuery(hql).list();
-		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof HSQLDialect){
+		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect || getDialect() instanceof HSQLDialect){
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		}else{
 			hql = "select bit_length(a.bodyWeight) from Animal a";

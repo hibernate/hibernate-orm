@@ -27,10 +27,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,10 +39,12 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public class SimpleOpsTest extends AbstractOperationTestCase {
+public class SimpleOpsTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	public String[] getMappings() {
@@ -124,5 +126,29 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 		assertUpdateCount( 0 );
 		assertDeleteCount( 1 );
 	}
+
+	public String getCacheConcurrencyStrategy() {
+		return null;
+	}
+
+	protected void clearCounts() {
+		sessionFactory().getStatistics().clear();
+	}
+
+	protected void assertInsertCount(int expected) {
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
+		assertEquals( "unexpected insert count", expected, inserts );
+	}
+
+	protected void assertUpdateCount(int expected) {
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
+		assertEquals( "unexpected update counts", expected, updates );
+	}
+
+	protected void assertDeleteCount(int expected) {
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
+		assertEquals( "unexpected delete counts", expected, deletes );
+	}
+
 }
 

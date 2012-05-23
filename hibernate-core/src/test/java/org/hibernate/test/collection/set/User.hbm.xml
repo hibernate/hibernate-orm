@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.test.collection.set"
+                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
+
+	<class name="User" table="`Users`">
+		<id name="userName"/>
+		<set name="sessionAttributeNames" lazy="true">
+			<key column="userName"/>
+			<element column="`attributeName`" type="string"/>
+		</set>
+	</class>
+
+</hibernate-mapping>

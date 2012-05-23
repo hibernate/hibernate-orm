@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.discriminator;
+package org.hibernate.test.inheritance;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,7 +54,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public String[] getMappings() {
-		return new String[] { "discriminator/SimpleInheritance.hbm.xml" };
+		return new String[] { "inheritance/SimpleInheritance.hbm.xml" };
 	}
 
 	@Test
@@ -85,14 +85,14 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 
 		assertEquals( s.createQuery("from java.io.Serializable").list().size(), 0 );
 
-		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person").list().size(), 3 );
-		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Person").list().size(), 1 );
-		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Customer").list().size(), 1 );
-		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where type(p) = :who").setParameter("who", Person.class).list().size(), 1 );
-		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where type(p) in :who").setParameterList("who", new Class[] {Customer.class, Person.class}).list().size(), 2 );
+		assertEquals( s.createQuery("from org.hibernate.test.inheritance.Person").list().size(), 3 );
+		assertEquals( s.createQuery("from org.hibernate.test.inheritance.Person p where p.class = org.hibernate.test.inheritance.Person").list().size(), 1 );
+		assertEquals( s.createQuery("from org.hibernate.test.inheritance.Person p where p.class = org.hibernate.test.inheritance.Customer").list().size(), 1 );
+		assertEquals( s.createQuery("from org.hibernate.test.inheritance.Person p where type(p) = :who").setParameter("who", Person.class).list().size(), 1 );
+		assertEquals( s.createQuery("from org.hibernate.test.inheritance.Person p where type(p) in :who").setParameterList("who", new Class[] {Customer.class, Person.class}).list().size(), 2 );
 		s.clear();
 
-		List customers = s.createQuery("from org.hibernate.test.discriminator.Customer").list();
+		List customers = s.createQuery("from org.hibernate.test.inheritance.Customer").list();
 		for ( Object customer : customers ) {
 			Customer c = (Customer) customer;
 			assertEquals( "Very demanding", c.getComments() );
@@ -106,7 +106,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
  		s.delete(mark);
 		s.delete(joe);
 		s.delete(yomomma);
-		assertTrue( s.createQuery("from org.hibernate.test.discriminator.Person").list().isEmpty() );
+		assertTrue( s.createQuery("from org.hibernate.test.inheritance.Person").list().isEmpty() );
 		t.commit();
 		s.close();
 	}
@@ -164,11 +164,11 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		q.setSalary( new BigDecimal(1000) );
 		s.save( q );
 
-		List result = s.createQuery("from org.hibernate.test.discriminator.Person where salary > 100").list();
+		List result = s.createQuery("from org.hibernate.test.inheritance.Person where salary > 100").list();
 		assertEquals( result.size(), 1 );
 		assertSame( result.get(0), q );
 
-		result = s.createQuery("from org.hibernate.test.discriminator.Person where salary > 100 or name like 'E%'").list();
+		result = s.createQuery("from org.hibernate.test.inheritance.Person where salary > 100 or name like 'E%'").list();
 		assertEquals( result.size(), 2 );
 
 		result = s.createCriteria(Person.class)
@@ -207,7 +207,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		Person pLoad = ( Person ) s.load( Person.class, new Long( e.getId() ) );
 		assertTrue( pLoad instanceof HibernateProxy);
 		Person pGet = ( Person ) s.get( Person.class, e.getId());
-		Person pQuery = ( Person ) s.createQuery( "from org.hibernate.test.discriminator.Person where id = :id" )
+		Person pQuery = ( Person ) s.createQuery( "from org.hibernate.test.inheritance.Person where id = :id" )
 				.setLong( "id", e.getId() )
 				.uniqueResult();
 		Person pCriteria = ( Person ) s.createCriteria( Person.class )
@@ -252,7 +252,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		// evict the proxy
 		s.evict( pLoad );
 		Employee pGet = ( Employee ) s.get( Person.class, e.getId() );
-		Employee pQuery = ( Employee ) s.createQuery( "from org.hibernate.test.discriminator.Person where id = :id" )
+		Employee pQuery = ( Employee ) s.createQuery( "from org.hibernate.test.inheritance.Person where id = :id" )
 				.setLong( "id", e.getId() )
 				.uniqueResult();
 		Employee pCriteria = ( Employee ) s.createCriteria( Person.class )

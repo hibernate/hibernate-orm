@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.test.collection.set.element;
+package org.hibernate.test.collection.set;
 
 import java.sql.SQLException;
 
@@ -33,7 +33,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 public class SimpleElementSetTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "collection/set/element/User.hbm.xml" };
+		return new String[] { "collection/set/User.hbm.xml" };
 	}
 
 	public void configure(Configuration cfg) {

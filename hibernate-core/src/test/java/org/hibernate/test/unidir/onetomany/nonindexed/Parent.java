@@ -1,22 +1,22 @@
 //$Id: Parent.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.unidir.onetomany.indexed;
-import java.util.ArrayList;
-import java.util.List;
+package org.hibernate.test.unidir.onetomany.nonindexed;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Gavin King
  */
 public class Parent {
 	private String name;
-	private List children = new ArrayList();
+	private Set<Child> children = new HashSet<Child>();
 	Parent() {}
 	public Parent(String name) {
 		this.name = name;
 	}
-	public List getChildren() {
+	public Set<Child> getChildren() {
 		return children;
 	}
-	public void setChildren(List children) {
+	public void setChildren(Set<Child> children) {
 		this.children = children;
 	}
 	public String getName() {

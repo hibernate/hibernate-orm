@@ -459,4 +459,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			return " for share";
 	}
 
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
 }

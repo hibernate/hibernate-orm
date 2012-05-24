@@ -1824,6 +1824,10 @@ public final class SessionFactoryImpl
 			this.connectionReleaseMode = settings.getConnectionReleaseMode();
 			this.autoClose = settings.isAutoCloseSessionEnabled();
 			this.flushBeforeCompletion = settings.isFlushBeforeCompletionEnabled();
+
+			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
+				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+			}
 		}
 
 		protected TransactionCoordinatorImpl getTransactionCoordinator() {

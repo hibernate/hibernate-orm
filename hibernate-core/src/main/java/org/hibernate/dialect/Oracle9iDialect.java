@@ -131,6 +131,10 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		return true;
 	}
 
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
+
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}	

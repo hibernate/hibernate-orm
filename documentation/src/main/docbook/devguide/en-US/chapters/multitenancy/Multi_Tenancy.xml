@@ -123,7 +123,7 @@
             usual Hibernate strives to keep the API simple and isolated from any underlying integration complexities.
             The API is really just defined by passing the tenant identifier as part of opening any session.
         </para>
-        <example>
+        <example id="specifying-tenant-ex">
             <title>Specifying tenant identifier from <interfacename>SessionFactory</interfacename></title>
             <programlisting role="JAVA"><xi:include href="extras/tenant-identifier-from-SessionFactory.java" parse="text"/></programlisting>
         </example>
@@ -225,21 +225,44 @@
         <section>
             <title><interfacename>CurrentTenantIdentifierResolver</interfacename></title>
             <para>
-                When applications use either the standard jta or thread based implementations of the
-                <interfacename>org.hibernate.context.spi.CurrentSessionContext</interfacename> feature, Hibernate will
-                need to open a session if it cannot find an existing one in scope.  However, when a session is opened
-                in a multi-tenant environment the tenant identifier has to be specified.  This is the role of the
-                <interfacename>org.hibernate.context.spi.CurrentTenantIdentifierResolver</interfacename> contract.  It
-                will resolve the tenant identifier to use.  The implementation to use is either passed directly to
-                <classname>Configuration</classname> via its
+                <interfacename>org.hibernate.context.spi.CurrentTenantIdentifierResolver</interfacename> is a contract
+                for Hibernate to be able to resolve what the application considers the current tenant identifier.
+                The implementation to use is either passed directly to <classname>Configuration</classname> via its
                 <methodname>setCurrentTenantIdentifierResolver</methodname> method.  It can also be specified via
                 the <property>hibernate.tenant_identifier_resolver</property> setting.
             </para>
             <para>
+                There are 2 situations where <interfacename>CurrentTenantIdentifierResolver</interfacename> is used:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The first situation is when the application is using the
+                        <interfacename>org.hibernate.context.spi.CurrentSessionContext</interfacename> feature in
+                        conjunction with multi-tenancy.  In the case of the current-session feature,  Hibernate will
+                        need to open a session if it cannot find an existing one in scope.  However, when a session
+                        is opened in a multi-tenant environment the tenant identifier has to be specified.  This is
+                        where the <interfacename>CurrentTenantIdentifierResolver</interfacename> comes into play;
+                        Hibernate will consult the implementation you provide to determine the tenant identifier to use
+                        when opening the session.  In this case, it is required that a
+                        <interfacename>CurrentTenantIdentifierResolver</interfacename> be supplied.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The other situation is when you do not want to have to explicitly specify the tenant
+                        identifier all the time as we saw in <xref linkend="specifying-tenant-ex"/>.  If a
+                        <interfacename>CurrentTenantIdentifierResolver</interfacename> has been specified, Hibernate
+                        will use it to determine the default tenant identifier to use when opening the session.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>
                 Additionally, if the <interfacename>CurrentTenantIdentifierResolver</interfacename> implementation
                 returns <literal>true</literal> for its <methodname>validateExistingCurrentSessions</methodname>
                 method, Hibernate will make sure any existing sessions that are found in scope have a matching
-                tenant identifier.
+                tenant identifier.  This capability is only pertinent when the
+                <interfacename>CurrentTenantIdentifierResolver</interfacename> is used in current-session settings.
             </para>
         </section>
 
@@ -255,6 +278,10 @@
             <title>Odds and ends</title>
             <para>
                 Currently schema export will not really work with multi-tenancy.  That may not change.
+            </para>
+            <para>
+                The JPA expert group is in the process of defining multi-tenancy support for the upcoming 2.1
+                version of the specification.
             </para>
         </section>
     </section>

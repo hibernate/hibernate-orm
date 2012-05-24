@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
@@ -101,7 +102,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Collection.class,
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
-				Identifier.toIdentifier( "`theBagOwner`" )
+				Identifier.toIdentifier( "`theBagOwner`" ),
+				FetchTiming.DELAYED
 		);
 
 		checkResult(
@@ -111,7 +113,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Set.class,
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
-				Identifier.toIdentifier( "`theSetOwner`" )
+				Identifier.toIdentifier( "`theSetOwner`" ),
+				FetchTiming.IMMEDIATE
 		);
 
 		checkResult(
@@ -121,7 +124,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Collection.class,
 				simpleEntityBinding,
 				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
-				Identifier.toIdentifier( "`ownerName`" )
+				Identifier.toIdentifier( "`ownerName`" ),
+				FetchTiming.EXTRA_DELAYED
 		);
 	}
 
@@ -132,13 +136,16 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 			Class<?> expectedCollectionJavaType,
 			EntityBinding expectedElementEntityBinding,
 			SingularAttributeBinding expectedKeyTargetAttributeBinding,
-			Identifier expectedKeySourceColumnName) {
+			Identifier expectedKeySourceColumnName,
+			FetchTiming expectedFetchTiming) {
 		assertEquals(
 				PluralAttributeElementNature.ONE_TO_MANY,
 				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
 		);
-
 		assertSame( collectionBinding, collectionOwnerBinding.locateAttributeBinding( collectionBinding.getAttribute().getName() ) );
+		assertEquals( expectedFetchTiming, collectionBinding.getFetchTiming()  );
+		assertEquals( expectedFetchTiming != FetchTiming.IMMEDIATE, collectionBinding.isLazy() );
+
 		final String role = collectionBinding.getAttribute().getRole();
 		assertEquals(
 				role,

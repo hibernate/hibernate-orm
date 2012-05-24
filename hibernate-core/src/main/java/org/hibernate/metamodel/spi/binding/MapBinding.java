@@ -40,8 +40,7 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		super(
 				container,
 				attribute,
@@ -49,7 +48,6 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				isLazy,
 				metaAttributeContext );
 		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this );
 	}

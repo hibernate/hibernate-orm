@@ -39,7 +39,6 @@ public class BagBinding extends AbstractPluralAttributeBinding {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
 			MetaAttributeContext metaAttributeContext) {
 		super(
 				container,
@@ -48,7 +47,6 @@ public class BagBinding extends AbstractPluralAttributeBinding {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				isLazy,
 				metaAttributeContext
 		);
 	}

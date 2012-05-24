@@ -51,6 +51,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityKey;
@@ -909,11 +910,8 @@ public abstract class AbstractCollectionPersister
 
 		logStaticSQL();
 
-		isLazy = collection.isLazy();
-
-		// TODO: fix this when PluralAttributeBinding.isExtraLazy() is available
-		// isExtraLazy = collection.isExtraLazy();
-		isExtraLazy = false;
+		isLazy = collection.getFetchTiming() != FetchTiming.IMMEDIATE;
+		isExtraLazy = collection.getFetchTiming() == FetchTiming.EXTRA_DELAYED;
 
 		isInverse = keyBinding.isInverse();
 		if ( isArray ) {

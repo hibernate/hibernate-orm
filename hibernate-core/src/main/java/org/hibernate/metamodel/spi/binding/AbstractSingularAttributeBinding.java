@@ -35,19 +35,27 @@ public abstract class AbstractSingularAttributeBinding
 		extends AbstractAttributeBinding
 		implements SingularAttributeBinding {
 
+	private final boolean isLazy;
+
 	protected AbstractSingularAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
+			boolean isLazy,
 			MetaAttributeContext metaAttributeContext) {
-		super( container, attribute, propertyAccessorName, includedInOptimisticLocking, lazy, metaAttributeContext );
+		super( container, attribute, propertyAccessorName, includedInOptimisticLocking, metaAttributeContext );
+		this.isLazy = isLazy;
 	}
 
 	@Override
 	public SingularAttribute getAttribute() {
 		return (SingularAttribute) super.getAttribute();
+	}
+
+	@Override
+	public boolean isLazy() {
+		return isLazy;
 	}
 
 	protected abstract void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings);

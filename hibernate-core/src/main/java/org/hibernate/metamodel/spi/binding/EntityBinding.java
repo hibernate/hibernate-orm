@@ -594,7 +594,6 @@ public class EntityBinding implements AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding(
@@ -604,7 +603,6 @@ public class EntityBinding implements AttributeBindingContainer {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );
@@ -618,7 +616,6 @@ public class EntityBinding implements AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
 			int base) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
@@ -629,7 +626,6 @@ public class EntityBinding implements AttributeBindingContainer {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext,
 				base
 		);
@@ -644,7 +640,6 @@ public class EntityBinding implements AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
 		final MapBinding binding = new MapBinding(
@@ -654,7 +649,6 @@ public class EntityBinding implements AttributeBindingContainer {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );
@@ -668,7 +662,6 @@ public class EntityBinding implements AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding(
@@ -678,7 +671,6 @@ public class EntityBinding implements AttributeBindingContainer {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );

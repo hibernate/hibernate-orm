@@ -44,7 +44,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	private final String propertyAccessorName;
 	private final boolean includedInOptimisticLocking;
-	private final boolean isLazy;
 
 	private boolean isAlternateUniqueKey;
 
@@ -55,13 +54,11 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 			Attribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
 			MetaAttributeContext metaAttributeContext) {
 		this.container = container;
 		this.attribute = attribute;
 		this.propertyAccessorName = propertyAccessorName;
 		this.includedInOptimisticLocking = includedInOptimisticLocking;
-		this.isLazy = isLazy;
 		this.metaAttributeContext = metaAttributeContext;
 	}
 
@@ -117,11 +114,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	public void setAlternateUniqueKey(boolean alternateUniqueKey) {
 		this.isAlternateUniqueKey = alternateUniqueKey;
-	}
-
-	@Override
-	public boolean isLazy() {
-		return isLazy;
 	}
 
 	public void addEntityReferencingAttributeBinding(SingularAssociationAttributeBinding referencingAttributeBinding) {

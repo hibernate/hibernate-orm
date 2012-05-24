@@ -41,9 +41,8 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
 			MetaAttributeContext metaAttributeContext,
-			int base ) {
+			int base) {
 		super(
 				container,
 				attribute,
@@ -51,7 +50,6 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				isLazy,
 				metaAttributeContext );
 		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this );
 		this.base = base;

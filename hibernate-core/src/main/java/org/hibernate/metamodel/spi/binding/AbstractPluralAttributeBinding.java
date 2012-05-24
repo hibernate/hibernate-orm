@@ -77,14 +77,12 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
 			MetaAttributeContext metaAttributeContext) {
 		super(
 				container,
 				attribute,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				isLazy,
 				metaAttributeContext
 		);
 		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this, referencedAttributeBinding );
@@ -316,6 +314,11 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		else {
 			return FetchMode.SELECT;
 		}
+	}
+
+	@Override
+	public boolean isLazy() {
+		return fetchTiming != FetchTiming.IMMEDIATE;
 	}
 
 	@Override

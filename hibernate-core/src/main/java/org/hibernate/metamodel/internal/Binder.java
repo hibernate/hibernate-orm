@@ -536,7 +536,6 @@ public class Binder {
 				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
-				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
 	}
 
@@ -553,7 +552,6 @@ public class Binder {
 				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
-				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource )
 		);
 	}
@@ -571,7 +569,6 @@ public class Binder {
 				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
-				false,
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 				attributeSource.getIndexSource().base()
 		);
@@ -590,7 +587,6 @@ public class Binder {
 				pluralAttributeKeyBinding( attributeBindingContainer, attributeSource ),
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
-				false,
 
 				createMetaAttributeContext( attributeBindingContainer, attributeSource )
 		);

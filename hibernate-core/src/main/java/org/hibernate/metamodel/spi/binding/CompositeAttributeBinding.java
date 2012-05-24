@@ -283,7 +283,6 @@ public class CompositeAttributeBinding
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding(
@@ -293,7 +292,6 @@ public class CompositeAttributeBinding
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );
@@ -307,9 +305,8 @@ public class CompositeAttributeBinding
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			int base ) {
+			int base) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
 		final ListBinding binding = new ListBinding(
 				this,
@@ -318,7 +315,6 @@ public class CompositeAttributeBinding
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext,
 				base );
 		registerAttributeBinding( attribute.getName(), binding );
@@ -332,8 +328,7 @@ public class CompositeAttributeBinding
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
 		final MapBinding binding = new MapBinding(
 				this,
@@ -342,7 +337,6 @@ public class CompositeAttributeBinding
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
@@ -355,8 +349,7 @@ public class CompositeAttributeBinding
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding(
 				this,
@@ -365,7 +358,6 @@ public class CompositeAttributeBinding
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				lazy,
 				metaAttributeContext
 		);
 		registerAttributeBinding( attribute.getName(), binding );

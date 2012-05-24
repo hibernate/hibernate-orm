@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
@@ -105,6 +106,8 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertTrue( bagHibernateTypeDescriptor.getResolvedTypeMapping() instanceof BagType );
 		assertFalse( bagHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
 		assertEquals( EntityWithBasicCollections.class.getName() + ".theBag", ( (BagType) bagHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
+		assertFalse( bagBinding.isLazy() );
+		assertEquals( FetchTiming.IMMEDIATE, bagBinding.getFetchTiming() );
 
 		ForeignKey fkBag = bagKeyBinding.getForeignKey();
 		assertNotNull( fkBag );
@@ -154,6 +157,8 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertTrue( setHibernateTypeDescriptor.getResolvedTypeMapping() instanceof SetType );
 		assertFalse( setHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
 		assertEquals( EntityWithBasicCollections.class.getName() + ".theSet", ( (SetType) setHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
+		assertTrue( setBinding.isLazy() );
+		assertEquals( FetchTiming.EXTRA_DELAYED, setBinding.getFetchTiming() );
 
 		ForeignKey fkSet = setKeyBinding.getForeignKey();
 		assertNotNull( fkSet );
@@ -216,6 +221,8 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				EntityWithBasicCollections.class.getName() + ".thePropertyRefSet",
 				( (SetType) propertyRefSetHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole()
 		);
+		assertTrue( propertyRefSetBinding.isLazy() );
+		assertEquals( FetchTiming.DELAYED, propertyRefSetBinding.getFetchTiming() );
 
 		ForeignKey fkPropertyRefSet = propertyRefSetKeyBinding.getForeignKey();
 		assertNotNull( fkPropertyRefSet );

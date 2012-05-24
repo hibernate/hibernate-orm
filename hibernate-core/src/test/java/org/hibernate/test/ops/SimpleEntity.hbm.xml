@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-<hibernate-mapping package="org.hibernate.test.ops" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
-                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<hibernate-mapping package="org.hibernate.test.ops"
+                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
 
     <class name="SimpleEntity">
 

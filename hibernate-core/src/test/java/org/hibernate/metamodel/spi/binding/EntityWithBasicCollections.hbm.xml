@@ -9,19 +9,19 @@
     		<generator class="increment"/>
     	</id>
 
-        <set name="thePropertyRefSet">
+        <set name="thePropertyRefSet" lazy="true">
             <key column="pid" property-ref="name"/>
             <element column="property_ref_set_stuff" type="integer"/>
         </set>
 
         <property name="name" unique="true"/>
 
-        <bag name="theBag">
+        <bag name="theBag" lazy="false">
             <key column="owner_id"/>
             <element column="bag_stuff" type="string"/>
         </bag>
 
-        <set name="theSet">
+        <set name="theSet" lazy="extra">
             <key column="pid"/>
             <element column="set_stuff" type="string"/>
         </set>

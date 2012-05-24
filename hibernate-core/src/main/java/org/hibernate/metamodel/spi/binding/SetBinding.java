@@ -38,8 +38,7 @@ public class SetBinding extends AbstractPluralAttributeBinding {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean isLazy,
-			MetaAttributeContext metaAttributeContext ) {
+			MetaAttributeContext metaAttributeContext) {
 		super(
 				container,
 				attribute,
@@ -47,7 +46,6 @@ public class SetBinding extends AbstractPluralAttributeBinding {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				isLazy,
 				metaAttributeContext
 		);
 	}

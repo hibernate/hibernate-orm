@@ -146,12 +146,12 @@ public interface AttributeBindingContainer {
 	/**
 	 * Factory method for bag attribute bindings.
 	 *
+	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
 	 * @param referencedAttributeBinding
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
-	 * @param lazy
 	 * @param metaAttributeContext
 	 *
 	 * @return The attribute binding instance.
@@ -162,18 +162,17 @@ public interface AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext);
 
 	/**
 	 * Factory method for list attribute bindings.
+	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
 	 * @param referencedAttributeBinding
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
-	 * @param lazy
 	 * @param metaAttributeContext
 	 * @param base
 	 *
@@ -185,19 +184,18 @@ public interface AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
 			MetaAttributeContext metaAttributeContext,
-			int base );
+			int base);
 
 	/**
 	 * Factory method for map attribute bindings.
+	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
 	 * @param referencedAttributeBinding
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
-	 * @param lazy
 	 * @param metaAttributeContext
 	 *
 	 * @return The attribute binding instance.
@@ -208,18 +206,17 @@ public interface AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
-			MetaAttributeContext metaAttributeContext );
+			MetaAttributeContext metaAttributeContext);
 
 	/**
 	 * Factory method for set attribute bindings.
+	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param nature The nature of the collection elements.
 	 * @param referencedAttributeBinding
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
-	 * @param lazy
 	 * @param metaAttributeContext
 	 *
 	 * @return The attribute binding instance.
@@ -230,8 +227,7 @@ public interface AttributeBindingContainer {
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			boolean lazy,
-			MetaAttributeContext metaAttributeContext );
+			MetaAttributeContext metaAttributeContext);
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.

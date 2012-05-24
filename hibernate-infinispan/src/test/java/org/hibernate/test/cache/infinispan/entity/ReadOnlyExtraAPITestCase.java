@@ -41,26 +41,6 @@ public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
 	}
 
 	@Override
-	public void testLockItem() {
-		try {
-			getEntityAccessStrategy().lockItem( KEY, Integer.valueOf( 1 ) );
-			fail( "Call to lockItem did not throw exception" );
-		}
-		catch (UnsupportedOperationException expected) {
-		}
-	}
-
-	@Override
-	public void testLockRegion() {
-		try {
-			getEntityAccessStrategy().lockRegion();
-			fail( "Call to lockRegion did not throw exception" );
-		}
-		catch (UnsupportedOperationException expected) {
-		}
-	}
-
-	@Override
 	public void testAfterUpdate() {
 		try {
 			getEntityAccessStrategy().afterUpdate(

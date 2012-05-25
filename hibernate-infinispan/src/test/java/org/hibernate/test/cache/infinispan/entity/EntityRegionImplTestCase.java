@@ -52,11 +52,8 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
       EntityRegion region = regionFactory.buildEntityRegion("test", properties, null);
       assertNull("Got TRANSACTIONAL", region.buildAccessStrategy(AccessType.TRANSACTIONAL)
                .lockRegion());
-      try {
-         region.buildAccessStrategy(AccessType.READ_ONLY).lockRegion();
-         fail("Did not get READ_ONLY");
-      } catch (UnsupportedOperationException good) {
-      }
+
+      assertNull("Got READ_ONLY", region.buildAccessStrategy(AccessType.READ_ONLY).lockRegion());
 
       try {
          region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);

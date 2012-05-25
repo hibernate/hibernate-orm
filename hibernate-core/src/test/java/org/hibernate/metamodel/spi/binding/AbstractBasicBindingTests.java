@@ -129,7 +129,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				SingularAttributeBinding.class.cast( 
 						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
 				),
-				"`simpleEntity`"
+				"simpleEntity"
 		);
 
 		checkManyToOneAttributeBinding(
@@ -137,7 +137,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				entityWithManyToOneBinding,
 				entityWithManyToOneBinding.locateAttributeBinding( "simpleEntityFromPropertyRef" ),
 				SingularAttributeBinding.class.cast( simpleEntityBinding.locateAttributeBinding( "name" ) ),
-				"`simplename`"
+				"simplename"
 		);
 	}
 

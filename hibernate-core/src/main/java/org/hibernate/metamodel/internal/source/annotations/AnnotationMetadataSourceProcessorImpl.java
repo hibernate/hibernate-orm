@@ -94,7 +94,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			index = parseAndUpdateIndex( mappings, index );
 		}
 
-		if ( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
+		if ( !index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
 			// todo : this needs to move to AnnotationBindingContext
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
 			metadata.setGloballyQuotedIdentifiers( true );

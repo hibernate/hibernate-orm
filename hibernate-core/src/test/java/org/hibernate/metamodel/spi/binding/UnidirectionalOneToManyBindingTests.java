@@ -90,10 +90,10 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertNotNull( entityBinding );
 
-		assertEquals( Identifier.toIdentifier( "`SimpleEntity`" ), simpleEntityBinding.getPrimaryTable().getLogicalName() );
+		assertEquals( Identifier.toIdentifier( "SimpleEntity" ), simpleEntityBinding.getPrimaryTable().getLogicalName() );
 		assertEquals( 1, simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() );
 		Column simpleEntityIdColumn = simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 );
-		assertEquals( Identifier.toIdentifier("`id`") , simpleEntityIdColumn.getColumnName() );
+		assertEquals( Identifier.toIdentifier("id") , simpleEntityIdColumn.getColumnName() );
 
 		checkResult(
 				entityBinding,
@@ -102,7 +102,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Collection.class,
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
-				Identifier.toIdentifier( "`theBagOwner`" ),
+				Identifier.toIdentifier( "theBagOwner" ),
 				FetchTiming.DELAYED
 		);
 
@@ -113,7 +113,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Set.class,
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
-				Identifier.toIdentifier( "`theSetOwner`" ),
+				Identifier.toIdentifier( "theSetOwner" ),
 				FetchTiming.IMMEDIATE
 		);
 
@@ -124,7 +124,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				Collection.class,
 				simpleEntityBinding,
 				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
-				Identifier.toIdentifier( "`ownerName`" ),
+				Identifier.toIdentifier( "ownerName" ),
 				FetchTiming.EXTRA_DELAYED
 		);
 	}

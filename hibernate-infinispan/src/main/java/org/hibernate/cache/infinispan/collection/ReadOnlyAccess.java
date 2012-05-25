@@ -18,25 +18,8 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @since 3.5
  */
 class ReadOnlyAccess extends TransactionalAccess {
-   private static final Log log = LogFactory.getLog(ReadOnlyAccess.class);
-
    ReadOnlyAccess(CollectionRegionImpl region) {
       super(region);
-   }
-   public SoftLock lockItem(Object key, Object version) throws CacheException {
-      throw new UnsupportedOperationException("Illegal attempt to edit read only item");
-   }
-
-   public SoftLock lockRegion() throws CacheException {
-      throw new UnsupportedOperationException("Illegal attempt to edit read only region");
-   }
-
-   public void unlockItem(Object key, SoftLock lock) throws CacheException {
-      log.error("Illegal attempt to edit read only item");
-   }
-
-   public void unlockRegion(SoftLock lock) throws CacheException {
-      log.error("Illegal attempt to edit read only item");
    }
 
 }

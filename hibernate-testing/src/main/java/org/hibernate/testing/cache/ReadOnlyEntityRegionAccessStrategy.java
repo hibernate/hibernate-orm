@@ -54,18 +54,9 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 		return true;
 	}
 
-	/**
-	 * This cache is asynchronous hence a no-op
-	 */
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
-	}
-
-	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+		evict( key );
 	}
 
 	/**

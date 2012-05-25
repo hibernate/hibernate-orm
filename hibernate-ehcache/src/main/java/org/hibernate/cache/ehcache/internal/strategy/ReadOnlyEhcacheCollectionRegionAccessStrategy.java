@@ -75,19 +75,13 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 		}
 	}
 
-	/**
-	 * Throws UnsupportedOperationException since this cache is read-only
-	 *
-	 * @throws UnsupportedOperationException always
-	 */
 	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+		return null;
 	}
 
 	/**
 	 * A no-op since this cache is read-only
 	 */
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		//throw new UnsupportedOperationException("Can't write to a readonly object");
 	}
 }

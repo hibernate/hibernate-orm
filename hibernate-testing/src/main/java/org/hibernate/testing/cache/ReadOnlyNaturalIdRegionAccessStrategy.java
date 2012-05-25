@@ -43,15 +43,6 @@ class ReadOnlyNaturalIdRegionAccessStrategy extends BaseNaturalIdRegionAccessStr
 
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
+		evict( key );
 	}
-
-	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
-	}
-
-
-
 }

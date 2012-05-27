@@ -288,22 +288,26 @@ public final class EntityEntry implements Serializable {
 	 */
 	public boolean requiresDirtyCheck(Object entity) {
 		return isModifiableEntity()
-				&& ( getPersister().hasMutableProperties() || ! isUnequivocallyNonDirty( entity ) );
+				&& ( ! isUnequivocallyNonDirty( entity ) );
 	}
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
-			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
-			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
-		}
-
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
 		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
 			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 		}
-
+		
+		if ( getPersister().hasMutableProperties() ) {
+			return false;
+		}
+		
+		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
+			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
+			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
+		}
+		
 		return false;
 	}
 

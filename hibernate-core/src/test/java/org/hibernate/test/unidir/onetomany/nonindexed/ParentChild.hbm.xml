@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
-<hibernate-mapping package="org.hibernate.test.unidir.onetomany.nonindexed"
-                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.unidir.onetomany.nonindexed">
 
 <class name="Child">
         <id name="name"/>

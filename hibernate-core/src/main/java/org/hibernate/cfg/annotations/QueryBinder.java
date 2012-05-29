@@ -426,7 +426,7 @@ public abstract class QueryBinder {
 
 		if ( timeout != null ) {
 			// convert milliseconds to seconds
-			timeout = new Integer ((int)Math.round(timeout.doubleValue() / 1000.0 ) );
+			timeout = (int)Math.round(timeout.doubleValue() / 1000.0 );
 		}
 		else {
 			// timeout is already in seconds

@@ -29,6 +29,8 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.internal.AbstractSessionImpl;
+import org.hibernate.internal.QueryImpl;
 import org.hibernate.testing.*;
 import org.jboss.logging.Logger;
 import org.junit.Test;
@@ -49,6 +51,17 @@ import static org.junit.Assert.*;
  */
 public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( LockTest.class );
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-7356")
+	public void testLockTimeoutASNamedQueryHint(){
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Query query = em.createNamedQuery( "getAll" );
+		query.setLockMode( LockModeType.PESSIMISTIC_READ );
+		int timeout = ((QueryImpl)(((org.hibernate.ejb.QueryImpl)query).getHibernateQuery())).getLockOptions().getTimeOut();
+		assertEquals( 3, timeout );
+	}
 
 	@Test
 	public void testFindWithTimeoutHint() {

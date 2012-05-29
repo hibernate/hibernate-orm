@@ -29,6 +29,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.internal.AbstractSessionImpl;
 import org.hibernate.internal.QueryImpl;
 import org.hibernate.testing.*;
@@ -61,6 +62,35 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		int timeout = ((QueryImpl)(((org.hibernate.ejb.QueryImpl)query).getHibernateQuery())).getLockOptions().getTimeOut();
 		assertEquals( 3, timeout );
 	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.LOCK_TIMEOUT, "2000" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6256")
+	public void testTimeoutHint(){
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		boolean b= em.getProperties().containsKey( AvailableSettings.LOCK_TIMEOUT );
+		assertTrue( b );
+		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.LOCK_TIMEOUT ).toString() );
+		assertEquals( 2000, timeout);
+		org.hibernate.ejb.QueryImpl q = (org.hibernate.ejb.QueryImpl) em.createQuery( "select u from UnversionedLock u" );
+		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
+		assertEquals( 2, timeout );
+
+		Query query = em.createQuery( "select u from UnversionedLock u" );
+		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+		query.setHint( AvailableSettings.LOCK_TIMEOUT, 3000 );
+		q = (org.hibernate.ejb.QueryImpl)query;
+		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
+		assertEquals( 3, timeout );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
 
 	@Test
 	public void testFindWithTimeoutHint() {
@@ -493,7 +523,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout is in milliseconds
-								props.put( "javax.persistence.lock.timeout", 1000 );
+								props.put( "AvailableSettings.LOCK_TIMEOUT", 1000 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 								}
@@ -587,7 +617,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout is in milliseconds
-								props.put( "javax.persistence.lock.timeout", 1000 );
+								props.put( "AvailableSettings.LOCK_TIMEOUT", 1000 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 								}
@@ -676,7 +706,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout of zero means no wait (for lock)
-								props.put( "javax.persistence.lock.timeout", 0 );
+								props.put( "AvailableSettings.LOCK_TIMEOUT", 0 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 								}
@@ -917,7 +947,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> TimeoutProps = new HashMap<String, Object>();
-		TimeoutProps.put( "javax.persistence.lock.timeout", 1000 ); // 1 second timeout
+		TimeoutProps.put( "AvailableSettings.LOCK_TIMEOUT", 1000 ); // 1 second timeout
 		final EntityManager em2 = createIsolatedEntityManager( TimeoutProps );
 		Lock lock = new Lock();
 		Thread t = null;
@@ -949,7 +979,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								Lock lock2 = em2.getReference( Lock.class, id );
 								lock2.getName();		//  force entity to be read
 								log.info( "testLockTimeoutEMProps: (BG) read write-locked entity" );
-								// em2 already has javax.persistence.lock.timeout of 1 second applied
+								// em2 already has AvailableSettings.LOCK_TIMEOUT of 1 second applied
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE );
 								}

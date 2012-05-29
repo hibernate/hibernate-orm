@@ -39,6 +39,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -151,7 +152,15 @@ public class QueryProcessor {
 		if ( timeout != null && timeout < 0 ) {
 			timeout = null;
 		}
-
+		//TODO this 'javax.persistence.lock.timeout' has been mvoed to {@code AvailableSettings} in master
+		//we should change this when we merge this branch back.
+		Integer lockTimeout =  getInteger( hints, "javax.persistence.lock.timeout" , query );
+		if ( lockTimeout != null && lockTimeout >= 0 ) {
+			lockTimeout = ( ( lockTimeout + 500 ) / 1000 ); // convert milliseconds to seconds (rounded)
+		}
+		else {
+			lockTimeout = null;
+		}
 		Integer fetchSize = getInteger( hints, QueryHints.FETCH_SIZE, name );
 		if ( fetchSize != null && fetchSize < 0 ) {
 			fetchSize = null;
@@ -166,7 +175,7 @@ public class QueryProcessor {
 				new NamedQueryDefinition(
 						name,
 						query, getBoolean( hints, QueryHints.CACHEABLE, name ), cacheRegion,
-						timeout, fetchSize, getFlushMode( hints, QueryHints.FLUSH_MODE, name ),
+						timeout,lockTimeout, fetchSize, getFlushMode( hints, QueryHints.FLUSH_MODE, name ),
 						getCacheMode( hints, QueryHints.CACHE_MODE, name ),
 						getBoolean( hints, QueryHints.READ_ONLY, name ), comment, null
 				)

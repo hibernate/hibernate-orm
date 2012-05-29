@@ -42,7 +42,6 @@ import org.hibernate.type.TypeResolver;
  * @author Steve Ebersole
  */
 public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
-	public ServiceRegistry getServiceRegistry();
 
 	public Database getDatabase();
 

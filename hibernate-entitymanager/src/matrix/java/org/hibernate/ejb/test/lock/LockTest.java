@@ -53,7 +53,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( LockTest.class );
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7356")
 	public void testLockTimeoutASNamedQueryHint(){
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

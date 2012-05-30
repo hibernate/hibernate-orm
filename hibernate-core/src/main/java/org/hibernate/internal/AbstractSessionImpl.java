@@ -142,6 +142,9 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			        getHQLQueryPlan( queryString, false ).getParameterMetadata()
 			);
 			query.setComment( "named HQL query " + queryName );
+			if ( nqd.getLockTimeout() != null ) {
+				( (QueryImpl) query ).getLockOptions().setTimeOut( nqd.getLockTimeout() );
+			}
 		}
 		else {
 			NamedSQLQueryDefinition nsqlqd = factory.getNamedSQLQuery( queryName );

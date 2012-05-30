@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
@@ -40,6 +41,7 @@ public class NamedQueryDefinition implements Serializable {
 	private final boolean cacheable;
 	private final String cacheRegion;
 	private final Integer timeout;
+	private final Integer lockTimeout;
 	private final Integer fetchSize;
 	private final FlushMode flushMode;
 	private final Map parameterTypes;
@@ -84,11 +86,30 @@ public class NamedQueryDefinition implements Serializable {
 			boolean readOnly,
 			String comment,
 			Map parameterTypes) {
+		this(name, query, cacheable, cacheRegion,
+				timeout, LockOptions.WAIT_FOREVER, fetchSize,
+				flushMode, cacheMode, readOnly, comment, parameterTypes);
+	}
+
+	public NamedQueryDefinition(
+			String name,
+			String query,
+			boolean cacheable,
+			String cacheRegion,
+			Integer timeout,
+			Integer lockTimeout,
+			Integer fetchSize,
+			FlushMode flushMode,
+			CacheMode cacheMode,
+			boolean readOnly,
+			String comment,
+			Map parameterTypes) {
 		this.name = name;
 		this.query = query;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.timeout = timeout;
+		this.lockTimeout = lockTimeout;
 		this.fetchSize = fetchSize;
 		this.flushMode = flushMode;
 		this.parameterTypes = parameterTypes;
@@ -147,5 +168,9 @@ public class NamedQueryDefinition implements Serializable {
 
 	public String getComment() {
 		return comment;
+	}
+
+	public Integer getLockTimeout() {
+		return lockTimeout;
 	}
 }

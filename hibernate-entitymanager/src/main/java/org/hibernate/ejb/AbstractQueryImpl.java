@@ -177,6 +177,8 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	protected abstract void applyTimeout(int timeout);
 
+	protected abstract void applyLockTimeout(int timeout);
+
 	protected abstract void applyComment(String comment);
 
 	protected abstract void applyFetchSize(int fetchSize);
@@ -207,6 +209,10 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applyTimeout( timeout );
+			}
+			else if ( AvailableSettings.LOCK_TIMEOUT.equals( hintName ) ) {
+				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
+				applyLockTimeout( timeout );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
 				applyComment( (String) value );

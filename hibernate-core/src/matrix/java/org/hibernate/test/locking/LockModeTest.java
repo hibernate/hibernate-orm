@@ -61,23 +61,16 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		return  new Class[] { A.class };
 	}
 
-	@Before
-	public void createData() {
+	@Override
+	public void prepareTest() throws Exception {
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		id = (Long) session.save( new A( "it" ) );
 		session.getTransaction().commit();
 		session.close();
 	}
-
-	@After
-	public void cleanupData() {
-		Session session = sessionFactory().openSession();
-		session.beginTransaction();
-		session.createQuery( "delete A" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
-	}
+	@Override
+	protected boolean isCleanupTestDataRequired(){return true;}
 
 	@Test
 	@SuppressWarnings( {"deprecation"})

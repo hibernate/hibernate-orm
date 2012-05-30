@@ -23,12 +23,18 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -258,4 +264,19 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		} while ( cur < len && depth != 0 && pos != -1 );
 		return depth == 0 ? pos : -1;
 	}
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+
+				if(  "HY008".equals( sqlState )){
+					throw new QueryTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
 }

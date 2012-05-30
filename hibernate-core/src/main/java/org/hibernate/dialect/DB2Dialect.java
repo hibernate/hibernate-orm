@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -35,6 +36,9 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -427,4 +431,21 @@ public class DB2Dialect extends Dialect {
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN ? SmallIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+
+				if( -952 == errorCode && "57014".equals( sqlState )){
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
 }

@@ -23,11 +23,20 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
 import java.util.Map;
 
+import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -48,6 +57,18 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 		registerFunction( "return_lob", new SQLFunctionTemplate( StandardBasicTypes.BINARY, "return_lob(?1, ?2)" ) );
 		registerFunction( "setdata", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "setdata(?1, ?2, ?3)" ) );
 		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2, ?3)" ) );
+	}
+
+	//HHH-7298 I don't know if this would break something or cause some side affects
+	//but it is required to use 'select for update'
+	@Override
+	public String getTableTypeString() {
+		return " lock datarows";
+	}
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		return true;
 	}
 
 	// support Lob Locator
@@ -79,5 +100,20 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
-	
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+				if("JZ0TO".equals( sqlState ) || "JZ006".equals( sqlState )){
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
+
 }

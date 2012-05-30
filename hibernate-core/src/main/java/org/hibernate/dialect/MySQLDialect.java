@@ -32,6 +32,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -292,17 +293,15 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public String getCastTypeName(int code) {
-		if ( code==Types.INTEGER ) {
-			return "signed";
-		}
-		else if ( code==Types.VARCHAR ) {
-			return "char";
-		}
-		else if ( code==Types.VARBINARY ) {
-			return "binary";
-		}
-		else {
-			return super.getCastTypeName( code );
+		switch ( code ){
+			case Types.INTEGER:
+				return "signed";
+			case Types.VARCHAR:
+				return "char";
+			case Types.VARBINARY:
+				return "binary";
+			default:
+				return super.getCastTypeName( code );
 		}
 	}
 
@@ -387,6 +386,10 @@ public class MySQLDialect extends Dialect {
 
 				if ( "41000".equals( sqlState ) ) {
 					return new LockTimeoutException( message, sqlException, sql );
+				}
+
+				if ( "40001".equals( sqlState ) ) {
+					return new LockAcquisitionException( message, sqlException, sql );
 				}
 
 				return null;

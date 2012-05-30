@@ -91,12 +91,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		final Dialect dialect = sessionImplementor.getFactory().getDialect();
 
+        // Save the audit data
+        session.save(auditedEntityName, data);
+        sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
+
         // Update the end date of the previous row if this operation is expected to have a previous row
         if (getRevisionType(auditCfg, data) != RevisionType.ADD) {
-			// Save the audit data
-			session.save(auditedEntityName, data);
-			sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
-
 			final Queryable productionEntityQueryable = getQueryable( entityName, sessionImplementor );
 			final Queryable rootProductionEntityQueryable = getQueryable( productionEntityQueryable.getRootEntityName(), sessionImplementor );
 			final Queryable auditedEntityQueryable = getQueryable( auditedEntityName, sessionImplementor );
@@ -216,12 +216,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 						"Cannot update previous revision for entity " + auditedEntityName + " and id " + id
 				);
 			}
-			return;
 		}
-
-        // Save the audit data
-        session.save(auditedEntityName, data);
-        sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
     }
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {

@@ -34,6 +34,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.sql.Update;
 import org.hibernate.type.Type;
@@ -96,40 +97,57 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			session.save(auditedEntityName, data);
 			sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
 
-			final Queryable productionEntityQueryable = (Queryable) sessionImplementor.getFactory().getEntityPersister( entityName );
-			final Queryable auditedEntityQueryable = (Queryable) sessionImplementor.getFactory().getEntityPersister( auditedEntityName );
-			final Queryable revisionInfoEntityQueryable = (Queryable) sessionImplementor.getFactory().getEntityPersister( revisionInfoEntityName );
+			final Queryable productionEntityQueryable = getQueryable( entityName, sessionImplementor );
+			final Queryable rootProductionEntityQueryable = getQueryable( productionEntityQueryable.getRootEntityName(), sessionImplementor );
+			final Queryable auditedEntityQueryable = getQueryable( auditedEntityName, sessionImplementor );
+			final Queryable rootAuditedEntityQueryable = getQueryable( auditedEntityQueryable.getRootEntityName(), sessionImplementor );
+			final Queryable revisionInfoEntityQueryable = getQueryable( revisionInfoEntityName, sessionImplementor );
+
+			final String updateTableName;
+			if ( UnionSubclassEntityPersister.class.isInstance( rootProductionEntityQueryable ) ) {
+				// this is the condition causing all the problems in terms of the generated SQL UPDATE
+				// the problem being that we currently try to update the in-line view made up of the union query
+				//
+				// this is extremely hacky means to get the root table name for the union subclass style entities.
+				// hacky because it relies on internal behavior of UnionSubclassEntityPersister
+				// !!!!!! NOTICE - using subclass persister, not root !!!!!!
+				updateTableName = auditedEntityQueryable.getSubclassTableName( 0 );
+			}
+			else {
+				updateTableName = rootAuditedEntityQueryable.getTableName();
+			}
+
 
 			// first we need to flush the session in order to have the new audit data inserted
 			// todo: expose org.hibernate.internal.SessionImpl.autoFlushIfRequired via SessionImplementor
 			// for now, we duplicate some of that logic here
-			autoFlushIfRequired( sessionImplementor, auditedEntityQueryable, revisionInfoEntityQueryable );
+			autoFlushIfRequired( sessionImplementor, rootAuditedEntityQueryable, revisionInfoEntityQueryable );
 
 			final Type revisionInfoIdType = sessionImplementor.getFactory()
 					.getEntityPersister( revisionInfoEntityName )
 					.getIdentifierType();
-			final String revEndColumnName = auditedEntityQueryable.toColumns( auditCfg.getAuditEntCfg().getRevisionEndFieldName() )[0];
+			final String revEndColumnName = rootAuditedEntityQueryable.toColumns( auditCfg.getAuditEntCfg().getRevisionEndFieldName() )[0];
 
 			final boolean isRevisionEndTimestampEnabled = auditCfg.getAuditEntCfg().isRevisionEndTimestampEnabled();
 
 			// update audit_ent set REVEND = ? [, REVEND_TSTMP = ?] where (prod_ent_id) = ? and REV <> ? and REVEND is null
-			final Update update = new Update( dialect ).setTableName( auditedEntityQueryable.getTableName() );
+			final Update update = new Update( dialect ).setTableName( updateTableName );
 			// set REVEND = ?
 			update.addColumn( revEndColumnName );
 			// set [, REVEND_TSTMP = ?]
 			if ( isRevisionEndTimestampEnabled ) {
 				update.addColumn(
-						auditedEntityQueryable.toColumns(
+						rootAuditedEntityQueryable.toColumns(
 								auditCfg.getAuditEntCfg().getRevisionEndTimestampFieldName()
 						)[0]
 				);
 			}
 
 			// where (prod_ent_id) = ?
-			update.addPrimaryKeyColumns( productionEntityQueryable.getIdentifierColumnNames() );
+			update.addPrimaryKeyColumns( rootProductionEntityQueryable.getIdentifierColumnNames() );
 			// where REV <> ?
 			update.addWhereColumn(
-					auditedEntityQueryable.toColumns(
+					rootAuditedEntityQueryable.toColumns(
 							auditCfg.getAuditEntCfg().getRevisionNumberPath()
 					)[0],
 					"<> ?"
@@ -158,7 +176,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 								if ( isRevisionEndTimestampEnabled ) {
 									final Object revEndTimestampObj = revisionTimestampGetter.get( revision );
 									final Date revisionEndTimestamp = convertRevEndTimestampToDate( revEndTimestampObj );
-									final Type revEndTsType = auditedEntityQueryable.getPropertyType(
+									final Type revEndTsType = rootAuditedEntityQueryable.getPropertyType(
 											auditCfg.getAuditEntCfg().getRevisionEndTimestampFieldName()
 									);
 									revEndTsType.nullSafeSet( preparedStatement, revisionEndTimestamp, index, sessionImplementor );
@@ -166,12 +184,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 								}
 
 								// where (prod_ent_id) = ?
-								final Type idType = productionEntityQueryable.getIdentifierType();
+								final Type idType = rootProductionEntityQueryable.getIdentifierType();
 								idType.nullSafeSet( preparedStatement, id, index, sessionImplementor );
 								index += idType.getColumnSpan( sessionImplementor.getFactory() );
 
 								// where REV <> ?
-								final Type revType = auditedEntityQueryable.getPropertyType(
+								final Type revType = rootAuditedEntityQueryable.getPropertyType(
 										auditCfg.getAuditEntCfg().getRevisionNumberPath()
 								);
 								revType.nullSafeSet( preparedStatement, revisionNumber, index, sessionImplementor );
@@ -205,6 +223,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
         session.save(auditedEntityName, data);
         sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
     }
+
+	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
+		return (Queryable) sessionImplementor.getFactory().getEntityPersister( entityName );
+	}
 
 	private void autoFlushIfRequired(
 			SessionImplementor sessionImplementor,

@@ -60,7 +60,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		Query query = em.createNamedQuery( "getAll" );
 		query.setLockMode( LockModeType.PESSIMISTIC_READ );
 		int timeout = ((QueryImpl)(((org.hibernate.ejb.QueryImpl)query).getHibernateQuery())).getLockOptions().getTimeOut();
-		assertEquals( 3, timeout );
+		assertEquals( 3000, timeout );
 	}
 
 	@Override

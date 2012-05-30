@@ -155,10 +155,7 @@ public class QueryProcessor {
 		//TODO this 'javax.persistence.lock.timeout' has been mvoed to {@code AvailableSettings} in master
 		//we should change this when we merge this branch back.
 		Integer lockTimeout =  getInteger( hints, "javax.persistence.lock.timeout" , query );
-		if ( lockTimeout != null && lockTimeout >= 0 ) {
-			lockTimeout = ( ( lockTimeout + 500 ) / 1000 ); // convert milliseconds to seconds (rounded)
-		}
-		else {
+		if ( lockTimeout != null && lockTimeout < 0 ) {
 			lockTimeout = null;
 		}
 		Integer fetchSize = getInteger( hints, QueryHints.FETCH_SIZE, name );

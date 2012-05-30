@@ -71,7 +71,7 @@ public abstract class QueryBinder {
 				getBoolean( queryName, "org.hibernate.cacheable", hints ),
 				getString( queryName, "org.hibernate.cacheRegion", hints ),
 				getTimeout( queryName, hints ),
-				getLockTimeout( queryName, hints),
+				getInteger( queryName, "javax.persistence.lock.timeout", hints ),
 				getInteger( queryName, "org.hibernate.fetchSize", hints ),
 				getFlushMode( queryName, hints ),
 				getCacheMode( queryName, hints ),
@@ -89,17 +89,6 @@ public abstract class QueryBinder {
 			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
 		}
 	}
-
-	private static Integer getLockTimeout(String queryName, QueryHint[] hints) {
-		Integer timeout = getInteger( queryName, "javax.persistence.lock.timeout", hints );
-
-		if ( timeout != null ) {
-			// convert milliseconds to seconds
-			timeout = (int)Math.round(timeout.doubleValue() / 1000.0 );
-		}
-		return timeout;
-	}
-
 
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;

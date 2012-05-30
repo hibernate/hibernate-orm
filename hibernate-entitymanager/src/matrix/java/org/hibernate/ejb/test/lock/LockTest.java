@@ -79,14 +79,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( 2000, timeout);
 		org.hibernate.ejb.QueryImpl q = (org.hibernate.ejb.QueryImpl) em.createQuery( "select u from UnversionedLock u" );
 		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
-		assertEquals( 2, timeout );
+		assertEquals( 2000, timeout );
 
 		Query query = em.createQuery( "select u from UnversionedLock u" );
 		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 		query.setHint( AvailableSettings.LOCK_TIMEOUT, 3000 );
 		q = (org.hibernate.ejb.QueryImpl)query;
 		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
-		assertEquals( 3, timeout );
+		assertEquals( 3000, timeout );
 		em.getTransaction().rollback();
 		em.close();
 	}

@@ -211,8 +211,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 				applyTimeout( timeout );
 			}
 			else if ( AvailableSettings.LOCK_TIMEOUT.equals( hintName ) ) {
-				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applyLockTimeout( timeout );
+				applyLockTimeout( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
 				applyComment( (String) value );

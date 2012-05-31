@@ -28,10 +28,8 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.QueryHints;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.internal.AbstractSessionImpl;
-import org.hibernate.internal.QueryImpl;
 import org.hibernate.testing.*;
 import org.jboss.logging.Logger;
 import org.junit.Test;
@@ -447,8 +445,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( Oracle10gDialect.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticReadLockTimeout() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
@@ -486,7 +484,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout is in milliseconds
-								props.put( "AvailableSettings.LOCK_TIMEOUT", 1000 );
+								props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 								}
@@ -540,8 +538,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( Oracle10gDialect.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -580,7 +578,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout is in milliseconds
-								props.put( "AvailableSettings.LOCK_TIMEOUT", 1000 );
+								props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 								}
@@ -629,8 +627,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = { Oracle10gDialect.class, PostgreSQL81Dialect.class })
-    @RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( { Oracle10gDialect.class, PostgreSQL81Dialect.class })
+    @RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -669,7 +667,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
 								Map<String, Object> props = new HashMap<String, Object>();
 								// timeout of zero means no wait (for lock)
-								props.put( "AvailableSettings.LOCK_TIMEOUT", 0 );
+								props.put( AvailableSettings.LOCK_TIMEOUT, 0 );
 								try {
 									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 								}
@@ -718,8 +716,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( Oracle10gDialect.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testQueryTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -760,7 +758,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 											"select L from Lock_ L where L.id < 10000 "
 									);
 									query.setLockMode( LockModeType.PESSIMISTIC_READ );
-									query.setHint( "javax.persistence.query.timeout", 500 ); // 1 sec timeout
+									query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 500 ); // 1 sec timeout
 									List<Lock> resultList = query.getResultList();
 									String name = resultList.get( 0 ).getName(); //  force entity to be read
 									log.info( "testQueryTimeout: name read =" + name );
@@ -811,12 +809,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( Oracle10gDialect.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testQueryTimeoutEMProps() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> queryTimeoutProps = new HashMap<String, Object>();
-		queryTimeoutProps.put( "javax.persistence.query.timeout", 500 ); // 1 sec timeout (should round up)
+		queryTimeoutProps.put( QueryHints.SPEC_HINT_TIMEOUT, 500 ); // 1 sec timeout (should round up)
 		final EntityManager em2 = createIsolatedEntityManager( queryTimeoutProps );
 		Lock lock = new Lock();
 		Thread t = null;
@@ -904,13 +902,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = Oracle10gDialect.class )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialect( Oracle10gDialect.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testLockTimeoutEMProps() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> TimeoutProps = new HashMap<String, Object>();
-		TimeoutProps.put( "AvailableSettings.LOCK_TIMEOUT", 1000 ); // 1 second timeout
+		TimeoutProps.put( AvailableSettings.LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final EntityManager em2 = createIsolatedEntityManager( TimeoutProps );
 		Lock lock = new Lock();
 		Thread t = null;

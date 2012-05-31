@@ -278,7 +278,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		results = s.createQuery( "select entry(f) from Human h from h.family f" ).list();
+		results = s.createQuery( "select entry(f) from Human h join h.family f" ).list();
 		assertEquals( 1, results.size() );
 		result = results.get(0);
 		assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );

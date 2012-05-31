@@ -72,31 +72,33 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	}
 
 	// support Lob Locator
+	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		return true;
 	}
-	
+	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
 	// support 'select ... for update [of columns]'
+	@Override
 	public boolean forUpdateOfColumns() {
 		return true;
 	}
-	
+	@Override
 	public String getForUpdateString() {
 		return " for update";
 	}
-	
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
-
-	public String appendLockHint(LockMode mode, String tableName) {
+	@Override
+	public String appendLockHint(LockOptions mode, String tableName) {
 		return tableName;
 	}
-
+	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}

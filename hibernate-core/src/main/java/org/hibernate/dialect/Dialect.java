@@ -1281,8 +1281,23 @@ public abstract class Dialect implements ConversionContext {
 	 * @param mode The lock mode to apply
 	 * @param tableName The name of the table to which to apply the lock hint.
 	 * @return The table with any required lock hints.
+	 * @deprecated use {@code appendLockHint(LockOptions,String)} instead
 	 */
+	@Deprecated
 	public String appendLockHint(LockMode mode, String tableName) {
+		return appendLockHint( new LockOptions( mode ), tableName );
+	}
+	/**
+	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
+	 * whereby a "lock hint" is appends to the table name in the from clause.
+	 * <p/>
+	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
+	 *
+	 * @param lockOptions The lock options to apply
+	 * @param tableName The name of the table to which to apply the lock hint.
+	 * @return The table with any required lock hints.
+	 */
+	public String appendLockHint(LockOptions lockOptions, String tableName){
 		return tableName;
 	}
 

@@ -157,13 +157,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return insertSQL + "\nselect @@identity";
 	}
 
-	public String appendLockHint(LockMode mode, String tableName) {
-		if ( mode.greaterThan( LockMode.READ ) ) {
-			return tableName + " holdlock";
-		}
-		else {
-			return tableName;
-		}
+	@Override
+	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
 	}
 
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {

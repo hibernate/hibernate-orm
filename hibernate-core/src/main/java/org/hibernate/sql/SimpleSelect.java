@@ -177,7 +177,7 @@ public class SimpleSelect {
 		}
 		
 		buf.append(" from ")
-			.append( dialect.appendLockHint(lockOptions.getLockMode(), tableName) );
+			.append( dialect.appendLockHint(lockOptions, tableName) );
 		
 		if ( whereTokens.size() > 0 ) {
 			buf.append(" where ")

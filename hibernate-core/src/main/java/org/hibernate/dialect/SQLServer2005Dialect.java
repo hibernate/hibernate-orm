@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.exception.LockTimeoutException;
@@ -213,11 +214,25 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override // since SQLServer2005 the nowait hint is supported
-	public String appendLockHint(LockMode mode, String tableName) {
-		if ( mode == LockMode.UPGRADE_NOWAIT ) {
+	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		if ( lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
 			return tableName + " with (updlock, rowlock, nowait)";
 		}
-		return super.appendLockHint( mode, tableName );
+		LockMode mode = lockOptions.getLockMode();
+		boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
+		String noWaitStr = isNoWait? ", nowait" :"";
+		switch ( mode ) {
+			case UPGRADE_NOWAIT:
+				 return tableName + " with (updlock, rowlock, nowait)";
+			case UPGRADE:
+			case PESSIMISTIC_WRITE:
+			case WRITE:
+				return tableName + " with (updlock, rowlock"+noWaitStr+" )";
+			case PESSIMISTIC_READ:
+				return tableName + " with (holdlock, rowlock"+noWaitStr+" )";
+			default:
+				return tableName;
+		}
 	}
 
 	/**
@@ -270,13 +285,18 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 				if(  "HY008".equals( sqlState )){
 					throw new QueryTimeoutException( message, sqlException, sql );
+				}
+				if (1222 == errorCode ) {
+					throw new LockTimeoutException( message, sqlException, sql );
 				}
 				return null;
 			}
 		};
 	}
+
+
 
 }

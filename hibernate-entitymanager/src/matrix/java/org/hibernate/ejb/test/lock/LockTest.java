@@ -53,43 +53,6 @@ import static org.junit.Assert.*;
 public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( LockTest.class );
 
-	@Test
-	public void testLockTimeoutASNamedQueryHint(){
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Query query = em.createNamedQuery( "getAll" );
-		query.setLockMode( LockModeType.PESSIMISTIC_READ );
-		int timeout = ((QueryImpl)(((org.hibernate.ejb.QueryImpl)query).getHibernateQuery())).getLockOptions().getTimeOut();
-		assertEquals( 3000, timeout );
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.LOCK_TIMEOUT, "2000" );
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-6256")
-	public void testTimeoutHint(){
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		boolean b= em.getProperties().containsKey( AvailableSettings.LOCK_TIMEOUT );
-		assertTrue( b );
-		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.LOCK_TIMEOUT ).toString() );
-		assertEquals( 2000, timeout);
-		org.hibernate.ejb.QueryImpl q = (org.hibernate.ejb.QueryImpl) em.createQuery( "select u from UnversionedLock u" );
-		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
-		assertEquals( 2000, timeout );
-
-		Query query = em.createQuery( "select u from UnversionedLock u" );
-		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-		query.setHint( AvailableSettings.LOCK_TIMEOUT, 3000 );
-		q = (org.hibernate.ejb.QueryImpl)query;
-		timeout = ((QueryImpl)q.getHibernateQuery()).getLockOptions().getTimeOut();
-		assertEquals( 3000, timeout );
-		em.getTransaction().rollback();
-		em.close();
-	}
 
 
 	@Test

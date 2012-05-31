@@ -346,7 +346,7 @@ public class Flight implements Serializable {
         accident.</para>
       </tip>
 
-      <para>Some entities are not mutable. They cannot be updated or deleted
+      <para>Some entities are not mutable. They cannot be updated
       by the application. This allows Hibernate to make some minor performance
       optimizations.. Use the <classname>@Immutable</classname>
       annotation.</para>

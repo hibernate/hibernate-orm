@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +36,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 
@@ -57,7 +57,7 @@ public class Table implements RelationalModel, Serializable {
 	private PrimaryKey primaryKey;
 	private Map indexes = new HashMap();
 	private Map foreignKeys = new HashMap();
-	private Map uniqueKeys = new HashMap();
+	private Map<String,UniqueKey> uniqueKeys = new HashMap<String,UniqueKey>();
 	private final int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;
@@ -248,34 +248,83 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	Map getUniqueKeys() {
-		if ( uniqueKeys.size() > 1 ) {
-			//deduplicate unique constraints sharing the same columns
-			//this is needed by Hibernate Annotations since it creates automagically
-			// unique constraints for the user
-			Iterator it = uniqueKeys.entrySet().iterator();
-			Map finalUniqueKeys = new HashMap( uniqueKeys.size() );
-			while ( it.hasNext() ) {
-				Map.Entry entry = (Map.Entry) it.next();
-				UniqueKey uk = (UniqueKey) entry.getValue();
-				List columns = uk.getColumns();
-				int size = finalUniqueKeys.size();
-				boolean skip = false;
-				Iterator tempUks = finalUniqueKeys.entrySet().iterator();
-				while ( tempUks.hasNext() ) {
-					final UniqueKey currentUk = (UniqueKey) ( (Map.Entry) tempUks.next() ).getValue();
-					if ( currentUk.getColumns().containsAll( columns ) && columns
-							.containsAll( currentUk.getColumns() ) ) {
-						skip = true;
+		cleanseUniqueKeyMapIfNeeded();
+		return uniqueKeys;
+	}
+
+	private int sizeOfUniqueKeyMapOnLastCleanse = 0;
+
+	private void cleanseUniqueKeyMapIfNeeded() {
+		if ( uniqueKeys.size() == sizeOfUniqueKeyMapOnLastCleanse ) {
+			// nothing to do
+			return;
+		}
+		cleanseUniqueKeyMap();
+		sizeOfUniqueKeyMapOnLastCleanse = uniqueKeys.size();
+	}
+
+	private void cleanseUniqueKeyMap() {
+		// We need to account for a few conditions here...
+		// 	1) If there are multiple unique keys contained in the uniqueKeys Map, we need to deduplicate
+		// 		any sharing the same columns as other defined unique keys; this is needed for the annotation
+		// 		processor since it creates unique constraints automagically for the user
+		//	2) Remove any unique keys that share the same columns as the primary key; again, this is
+		//		needed for the annotation processor to handle @Id @OneToOne cases.  In such cases the
+		//		unique key is unnecessary because a primary key is already unique by definition.  We handle
+		//		this case specifically because some databases fail if you try to apply a unique key to
+		//		the primary key columns which causes schema export to fail in these cases.
+		if ( uniqueKeys.isEmpty() ) {
+			// nothing to do
+			return;
+		}
+		else if ( uniqueKeys.size() == 1 ) {
+			// we have to worry about condition 2 above, but not condition 1
+			final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
+			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+				uniqueKeys.remove( uniqueKeyEntry.getKey() );
+			}
+		}
+		else {
+			// we have to check both conditions 1 and 2
+			final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+			while ( uniqueKeyEntries.hasNext() ) {
+				final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
+				final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
+				boolean removeIt = false;
+
+				// condition 1 : check against other unique keys
+				for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
+					// make sure its not the same unique key
+					if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
+						continue;
+					}
+					if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
+							&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
+						removeIt = true;
 						break;
 					}
 				}
-				if ( !skip ) finalUniqueKeys.put( entry.getKey(), uk );
+
+				// condition 2 : check against pk
+				if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+					removeIt = true;
+				}
+
+				if ( removeIt ) {
+					uniqueKeys.remove( uniqueKeyEntry.getKey() );
+				}
 			}
-			return finalUniqueKeys;
+
 		}
-		else {
-			return uniqueKeys;
+	}
+
+	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
+		if ( primaryKey == null || ! primaryKey.columnIterator().hasNext() ) {
+			// happens for many-to-many tables
+			return false;
 		}
+		return primaryKey.getColumns().containsAll( uniqueKey.getColumns() )
+				&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
 	}
 
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {

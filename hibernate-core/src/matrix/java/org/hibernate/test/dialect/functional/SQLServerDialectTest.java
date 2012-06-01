@@ -34,11 +34,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.ReturningWork;
@@ -134,7 +136,6 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		Session s2 = openSession();
 
 		Transaction tx2 = s2.beginTransaction();
-		//s2.createSQLQuery("SET LOCK_TIMEOUT 5000;Select @@LOCK_TIMEOUT;").uniqueResult(); strangely this is useless for this kind of locks
 
 		Product2 kit2 = (Product2) s2.byId( Product2.class ).load( kit.id );
 
@@ -163,7 +164,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		try {
 			s2.buildLockRequest( opt ).lock( kit2 );
 		}
-		catch ( SQLGrammarException e ) {
+		catch ( LockTimeoutException e ) {
 			// OK
 		}
 		long end = System.currentTimeMillis();

@@ -102,7 +102,6 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.pretty.MessageHelper;
@@ -816,7 +815,7 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
 			}
-			identifierAliases[i] = col.getAlias( factory.getDialect() );
+			identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getPrimaryTable() );
 			i++;
 		}
 
@@ -905,7 +904,10 @@ public abstract class AbstractEntityPersister
 				int k = 0;
 
 				for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
-					colAliases[k] = valueBinding.getValue().getAlias( factory.getDialect() );
+					colAliases[k] = valueBinding.getValue().getAlias(
+							factory.getDialect(),
+							valueBinding.getValue().getTable()
+					);
 					if ( valueBinding.isDerived() ) {
 						foundFormula = true;
 						formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getValue() ).getExpression(), factory );
@@ -1017,7 +1019,7 @@ public abstract class AbstractEntityPersister
 					formulaTemplates.add( template );
 					forms[l] = template;
 					formulas.add( derivedValue.getExpression() );
-					formulaAliases.add( derivedValue.getAlias( factory.getDialect() ) );
+					formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
 					formulasLazy.add( lazy );
 				}
 				else {
@@ -1027,7 +1029,12 @@ public abstract class AbstractEntityPersister
 					formnos[l] = -1;
 					columns.add( colName );
 					cols[l] = colName;
-					aliases.add( col.getAlias( factory.getDialect() ) );
+					aliases.add(
+							col.getAlias(
+									factory.getDialect(),
+									col.getTable()
+							)
+					);
 					columnsLazy.add( lazy );
 					// TODO: properties only selectable if they are non-plural???
 					columnSelectables.add( singularAttributeBinding.getAttribute().isSingular() );
@@ -2228,7 +2235,10 @@ public abstract class AbstractEntityPersister
 				String[] cols = new String[span];
 				int l = 0;
 				for ( RelationalValueBinding relationalValueBinding : singularProp.getRelationalValueBindings() ) {
-					aliases[l] = relationalValueBinding.getValue().getAlias( getFactory().getDialect() );
+					aliases[l] = relationalValueBinding.getValue().getAlias(
+							getFactory().getDialect(),
+							relationalValueBinding.getValue().getTable()
+					);
 					if ( relationalValueBinding.isDerived() ) {
 						cols[l] = ( (DerivedValue) relationalValueBinding.getValue() ).getExpression(); // TODO: skip formulas?
 					}

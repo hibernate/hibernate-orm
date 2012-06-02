@@ -558,7 +558,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 								column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
 								column.getReadFragment();
 				discriminatorColumnReaderTemplate = getTemplateFromColumn( column, factory );
-				discriminatorAlias = column.getAlias( factory.getDialect() );
+				discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getPrimaryTable() );
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}

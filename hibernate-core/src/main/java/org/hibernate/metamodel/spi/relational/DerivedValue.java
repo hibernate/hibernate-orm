@@ -49,7 +49,7 @@ public class DerivedValue extends AbstractValue {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String getAlias(Dialect dialect) {
+	public String getAlias(Dialect dialect, TableSpecification tableSpecification) {
 		return "formula" + Integer.toString( getPosition() ) + '_';
 	}
 

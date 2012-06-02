@@ -55,16 +55,19 @@ public interface Value {
 
 	/**
 	 * For any column name, generate an alias that is unique
-	 * to that column name, unique across tables, and within
-	 * alias size constraints determined by
+	 * to that column name, and (optionally) unique across tables, and
+	 * within alias size constraints determined by
 	 * {@link org.hibernate.dialect.Dialect#getMaxAliasLength()}.
 	 *
 	 * todo : not sure this contract is the best place for this method
 	 *
 	 * @param dialect the dialect.
+	 * @param tableSpecification, if non-null, the table specification to use
+	 * to make the alias unambiguous across tables; if null, there is no need to need
+	 * to use the table to make the alias unambiguous across tables.
 	 * @return the alias.
 	 */
-	public String getAlias(Dialect dialect);
+	public String getAlias(Dialect dialect, TableSpecification tableSpecification);
 
 	/**
 	 * Validate the value against the incoming JDBC type code array, both in terms of number of types

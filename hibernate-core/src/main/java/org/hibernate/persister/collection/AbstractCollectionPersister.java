@@ -716,7 +716,10 @@ public abstract class AbstractCollectionPersister
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnNames[k] = keyColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
 			// TODO: does the owner root table need to be in alias?
-			keyColumnAliases[k] = keyColumn.getAlias( dialect );
+			keyColumnAliases[k] = keyColumn.getAlias(
+					dialect,
+					collection.getContainer().seekEntityBinding().getPrimaryTable()
+			);
 			// keyColumnAliases[k] = col.getAlias( dialect, collection.getOwner().getRootTable() );
 			k++;
 		}
@@ -759,7 +762,7 @@ public abstract class AbstractCollectionPersister
 		if ( elementSpan > 0 ) {
 			for ( RelationalValueBinding relationalValueBinding : collection.getPluralAttributeElementBinding().getRelationalValueBindings() ) {
 				final Value value = relationalValueBinding.getValue();
-				elementColumnAliases[j] = value.getAlias( dialect );
+				elementColumnAliases[j] = value.getAlias( dialect, null );
 				if ( DerivedValue.class.isInstance( value ) ) {
 					DerivedValue form = (DerivedValue) value;
 					elementFormulaTemplates[j] = getTemplateFromString( form.getExpression(), factory);
@@ -811,7 +814,7 @@ public abstract class AbstractCollectionPersister
 			indexFormulaTemplates = new String[ 1 ];
 			indexFormulas = new String[ 1 ];
 			Value value = indexBinding.getIndexRelationalValue();
-			indexColumnAliases[ 0 ] = value.getAlias( dialect );
+			indexColumnAliases[ 0 ] = value.getAlias( dialect, null );
 			if ( value instanceof Column ) {
 				indexColumnIsSettable[ 0 ] = true;
 				Column column = ( Column ) value;

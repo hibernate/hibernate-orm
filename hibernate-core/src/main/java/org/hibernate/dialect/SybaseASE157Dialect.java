@@ -66,11 +66,6 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 		return " lock datarows";
 	}
 
-	@Override
-	public boolean supportsLockTimeouts() {
-		return true;
-	}
-
 	// support Lob Locator
 	@Override
 	public boolean supportsExpectedLobUsagePattern() {

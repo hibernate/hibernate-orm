@@ -24,10 +24,7 @@
 package org.hibernate.test.dirtiness;
 
 import java.util.*;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -35,7 +32,7 @@ import org.hibernate.annotations.GenericGenerator;
  * @author Steve Ebersole
  */
 @Entity
-public class Thing {
+public class Thing implements CustomDirtyCheckable {
 	@Id
 	@GeneratedValue( generator = "increment" )
 	@GenericGenerator( strategy = "increment", name = "increment" )
@@ -43,6 +40,9 @@ public class Thing {
 
 	private String name;
 	private Date mutableProperty;
+
+	@OneToMany( cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true )
+	private Set<ChildThing> children;
 
 	public Thing() {
 	}
@@ -74,9 +74,24 @@ public class Thing {
 	}
 
 	public void setMutableProperty(Date mutableProperty) {
+		// intentionally simple dirty tracking (i.e. no checking against previous state)
+		changedValues.put( "mutableProperty", this.mutableProperty );
 		this.mutableProperty = mutableProperty;
+	}
+	
+	public Set<ChildThing> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Set<ChildThing> children) {
+		this.children = children;
+	}
+
+	@Override
+	public Map<String, Object> getChangedValues() {
+		return changedValues;
 	}
 
 	@Transient
-	Map<String,Object> changedValues = new HashMap<String, Object>();
+	private Map<String,Object> changedValues = new HashMap<String, Object>();
 }

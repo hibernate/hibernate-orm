@@ -23,18 +23,22 @@
  */
 package org.hibernate.test.dirtiness;
 
+import org.hibernate.*;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.Type;
 import org.junit.Test;
 
-import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Steve Ebersole
@@ -51,7 +55,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Thing.class };
+		return new Class[] { Thing.class, ChildThing.class, DynamicallyUpdatedThing.class };
 	}
 
 	@Test
@@ -100,7 +104,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		thing.setName( SUBSEQUENT_NAME );
 		assertTrue( Strategy.INSTANCE.isDirty( thing, null, null ) );
 		// but fool the dirty map
-		thing.changedValues.clear();
+		thing.getChangedValues().clear();
 		assertFalse( Strategy.INSTANCE.isDirty( thing, null, null ) );
 		session.getTransaction().commit();
 		session.close();
@@ -114,6 +118,83 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-7366")
+	@FailureExpected(jiraKey = "HHH-7366")
+	public void testCascadeWithNullableFKReference() throws Exception {
+		Session session = openSession();
+		session.beginTransaction();
+		Thing thing = new Thing( INITIAL_NAME );
+		thing.setChildren( new HashSet<ChildThing>() );
+
+		//set up a circular reference to ChildThing instances to one another
+		ChildThing currentChild;
+		ChildThing firstChild = new ChildThing( thing, null );
+		ChildThing previousChild = firstChild;
+		for ( int index = 0; index < 5; index++ ) {
+			currentChild = new ChildThing( thing, previousChild );
+			currentChild.setNullableFKReference( previousChild );
+			thing.getChildren().add( currentChild );
+			previousChild = currentChild;
+		}
+		firstChild.setNullableFKReference( previousChild );
+		thing.getChildren().add( firstChild );
+
+		Long id = ( Long ) session.save( thing );
+
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+
+		thing = ( Thing ) session.get( Thing.class, id );
+		boolean nullReferenceFound = false;
+		for ( ChildThing childThing : thing.getChildren() ) {
+			//check to see that the reference initially nulled out is eventually saved
+			if ( childThing.getNullableFKReference() == null ) {
+				nullReferenceFound = true;
+				break;
+			}
+		}
+
+		if ( nullReferenceFound ) {
+			fail( "Nullable FK reference wasn't saved." );
+		}
+		session.delete( thing );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7366")
+	@FailureExpected(jiraKey = "HHH-7366")
+	public void testInterceptedValueIsUpdated() {
+		Session session = openSession();
+		session.beginTransaction();
+		Long id = ( Long ) session.save( new DynamicallyUpdatedThing( INITIAL_NAME ) );
+		session.getTransaction().commit();
+		session.close();
+
+		UpdateInterceptor updateInterceptor = new UpdateInterceptor();
+		session = openSession( updateInterceptor );
+		session.beginTransaction();
+		DynamicallyUpdatedThing dynamicallyUpdatedThing = ( DynamicallyUpdatedThing ) session.get( DynamicallyUpdatedThing.class, id );
+		dynamicallyUpdatedThing.setName( SUBSEQUENT_NAME );
+		session.getTransaction().commit();
+		session.close();
+		assertTrue( "Update interceptor should have been called", updateInterceptor.interceptorCalled );
+
+		session = openSession();
+		session.beginTransaction();
+		dynamicallyUpdatedThing = ( DynamicallyUpdatedThing ) session.get( DynamicallyUpdatedThing.class, id );
+		assertEquals( SUBSEQUENT_NAME, dynamicallyUpdatedThing.getName() );
+		assertNotNull( dynamicallyUpdatedThing.getMutableProperty() );
+		session.delete( dynamicallyUpdatedThing );
+		session.getTransaction().commit();
+		session.close();
+	}
+
 	public static class Strategy implements CustomEntityDirtinessStrategy {
 		public static final Strategy INSTANCE = new Strategy();
 
@@ -123,7 +204,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
 			canDirtyCheckCount++;
 			System.out.println( "canDirtyCheck called" );
-			return Thing.class.isInstance( entity );
+			return CustomDirtyCheckable.class.isInstance( entity );
 		}
 
 		int isDirtyCount = 0;
@@ -132,7 +213,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
 			isDirtyCount++;
 			System.out.println( "isDirty called" );
-			return ! Thing.class.cast( entity ).changedValues.isEmpty();
+			return ! CustomDirtyCheckable.class.cast( entity ).getChangedValues().isEmpty();
 		}
 
 		int resetDirtyCount = 0;
@@ -141,7 +222,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		public void resetDirty(Object entity, EntityPersister persister, Session session) {
 			resetDirtyCount++;
 			System.out.println( "resetDirty called" );
-			Thing.class.cast( entity ).changedValues.clear();
+			CustomDirtyCheckable.class.cast( entity ).getChangedValues().clear();
 		}
 
 		int findDirtyCount = 0;
@@ -154,7 +235,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 					new AttributeChecker() {
 						@Override
 						public boolean isDirty(AttributeInformation attributeInformation) {
-							return Thing.class.cast( entity ).changedValues.containsKey( attributeInformation.getName() );
+							return CustomDirtyCheckable.class.cast( entity ).getChangedValues().containsKey( attributeInformation.getName() );
 						}
 					}
 			);
@@ -167,5 +248,21 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 			findDirtyCount = 0;
 		}
 	}
-
+	
+	public static class UpdateInterceptor extends EmptyInterceptor {
+		boolean interceptorCalled;
+		
+		@Override
+		public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
+			for (int i = 0; i < propertyNames.length; i++ ){
+				String propertyName = propertyNames[i];
+				if ( "mutableProperty".equals( propertyName ) ){
+					interceptorCalled = true;
+					currentState[i] = new Date();
+					return true;
+				}
+			}
+			return false;
+		}
+	}
 }

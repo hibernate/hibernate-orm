@@ -1165,7 +1165,7 @@ public class Soldier {
       will produce additional UPDATE statements.</para>
 
       <example>
-        <title>Bidirectional associtaion with one to many side as
+        <title>Bidirectional association with one to many side as
         owner</title>
 
         <programlisting language="JAVA" role="JAVA">@Entity

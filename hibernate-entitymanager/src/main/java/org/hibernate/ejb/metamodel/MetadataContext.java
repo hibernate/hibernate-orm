@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.jboss.logging.Logger;
@@ -39,6 +40,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -112,6 +114,22 @@ class MetadataContext {
 
 	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
 		return Collections.unmodifiableMap( embeddables );
+	}
+
+	public Map<Class<?>,MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
+		// we need to actually build this map...
+		final Map<Class<?>,MappedSuperclassType<?>> mappedSuperClassTypeMap = CollectionHelper.mapOfSize(
+				mappedSuperclassByMappedSuperclassMapping.size()
+		);
+
+		for ( MappedSuperclassTypeImpl mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
+			mappedSuperClassTypeMap.put(
+					mappedSuperclassType.getJavaType(),
+					mappedSuperclassType
+			);
+		}
+
+		return mappedSuperClassTypeMap;
 	}
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {

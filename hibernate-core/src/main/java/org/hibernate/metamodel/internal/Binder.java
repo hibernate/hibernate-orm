@@ -640,8 +640,6 @@ public class Binder {
 	}
 
 	private void bindBasicSetElementTablePrimaryKey(final PluralAttributeBinding attributeBinding) {
-		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
-		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
 		final BasicPluralAttributeElementBinding elementBinding =
 				( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding();
 		if ( elementBinding.getPluralAttributeElementNature() != PluralAttributeElementNature.BASIC ) {
@@ -649,19 +647,32 @@ public class Binder {
 					"Expected a SetBinding with an element of nature PluralAttributeElementNature.BASIC; instead was %s",
 					elementBinding.getPluralAttributeElementNature() ), bindingContexts.peek().getOrigin() );
 		}
-		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
-			primaryKey.addColumn( foreignKeyColumn );
-		}
-		for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
-			if ( elementValueBinding.getValue() instanceof Column && !elementValueBinding.isNullable() ) {
-				primaryKey.addColumn( ( Column ) elementValueBinding.getValue() );
+		if ( hasAnyNonNullableColumns( elementBinding.getRelationalValueBindings() ) ) {
+			final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
+			final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
+			for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
+				primaryKey.addColumn( foreignKeyColumn );
+			}
+			for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
+				if ( elementValueBinding.getValue() instanceof Column && !elementValueBinding.isNullable() ) {
+					primaryKey.addColumn( ( Column ) elementValueBinding.getValue() );
+				}
 			}
 		}
-		if ( primaryKey.getColumnSpan() == foreignKey.getColumnSpan() ) {
+		else {
 			// for backward compatibility, allow a set with no not-null
 			// element columns, using all columns in the row locater SQL
 			// todo: create an implicit not null constraint on all cols?
 		}
+	}
+
+	private boolean hasAnyNonNullableColumns(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			if ( Column.class.isInstance( relationalValueBinding.getValue() ) && !relationalValueBinding.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void bindBasicPluralElementRelationalValues(

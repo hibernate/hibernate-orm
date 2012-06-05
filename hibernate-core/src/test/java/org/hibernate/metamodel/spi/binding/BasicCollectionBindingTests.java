@@ -35,14 +35,17 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.SetType;
 
 import static org.junit.Assert.assertEquals;
@@ -91,118 +94,46 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		// TODO: this will fail until HHH-7121 is fixed
 		//assertTrue( entityBinding.getPrimaryTable().locateColumn( "`name`" ).isUnique() );
 
-		PluralAttributeBinding bagBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" );
-		assertNotNull( bagBinding );
-		assertSame( bagBinding, entityBinding.locateAttributeBinding( "theBag" ) );
-		TableSpecification bagCollectionTable =  bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
-		assertNotNull( bagCollectionTable );
-		assertEquals( Identifier.toIdentifier( "EntityWithBasicCollections_theBag" ), bagCollectionTable.getLogicalName() );
-		PluralAttributeKeyBinding bagKeyBinding = bagBinding.getPluralAttributeKeyBinding();
-		assertSame( bagBinding, bagKeyBinding.getPluralAttributeBinding() );
-		HibernateTypeDescriptor bagHibernateTypeDescriptor = bagBinding.getHibernateTypeDescriptor();
-		assertNull( bagHibernateTypeDescriptor.getExplicitTypeName() );
-		assertEquals( Collection.class.getName(), bagHibernateTypeDescriptor.getJavaTypeName() );
-		assertTrue( bagHibernateTypeDescriptor.getTypeParameters().isEmpty() );
-		assertTrue( bagHibernateTypeDescriptor.getResolvedTypeMapping() instanceof BagType );
-		assertFalse( bagHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
-		assertEquals( EntityWithBasicCollections.class.getName() + ".theBag", ( (BagType) bagHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
-		assertFalse( bagBinding.isLazy() );
-		assertEquals( FetchTiming.IMMEDIATE, bagBinding.getFetchTiming() );
+		checkResult(
+				entityBinding,
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" ),
+				BagType.class,
+				Collection.class,
+				String.class,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				Identifier.toIdentifier( "EntityWithBasicCollections_theBag" ),
+				Identifier.toIdentifier( "owner_id" ),
+				FetchTiming.IMMEDIATE,
+				true
+		);
 
-		ForeignKey fkBag = bagKeyBinding.getForeignKey();
-		assertNotNull( fkBag );
-		assertSame( bagCollectionTable, fkBag.getSourceTable() );
-		assertEquals( 1, fkBag.getColumnSpan() );
-		Iterator<Column> fkBagColumnIterator = fkBag.getColumns().iterator();
-		Iterator<Column> fkBagSourceColumnIterator = fkBag.getSourceColumns().iterator();
-		assertNotNull( fkBagColumnIterator );
-		assertNotNull( fkBagSourceColumnIterator );
-		assertTrue( fkBagColumnIterator.hasNext() );
-		assertTrue( fkBagSourceColumnIterator.hasNext() );
-		assertEquals( Identifier.toIdentifier( "owner_id" ), fkBagColumnIterator.next().getColumnName() );
-		assertEquals( Identifier.toIdentifier( "owner_id" ), fkBagSourceColumnIterator.next().getColumnName() );
-		assertFalse( fkBagColumnIterator.hasNext() );
-		assertFalse( fkBagSourceColumnIterator.hasNext() );
-		assertSame( entityBinding.getPrimaryTable(), fkBag.getTargetTable() );
-		assertSameElements( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkBag.getTargetColumns() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getDeleteRule() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkBag.getUpdateRule() );
-		// FK name is null because no default FK name is generated until HHH-7092 is fixed
-		assertNull( fkBag.getName() );
-		checkEquals(
-				entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
-				bagKeyBinding.getHibernateTypeDescriptor()
+		checkResult(
+				entityBinding,
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" ),
+				SetType.class,
+				Set.class,
+				String.class,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				Identifier.toIdentifier( "EntityWithBasicCollections_theSet" ),
+				Identifier.toIdentifier( "pid" ),
+				FetchTiming.EXTRA_DELAYED,
+				true
 		);
-		assertEquals( 0, bagCollectionTable.getPrimaryKey().getColumnSpan() );
-		assertEquals(
-				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
-				bagKeyBinding.getForeignKey().getColumns().iterator().next().getJdbcDataType()
-		);
-		assertFalse( bagKeyBinding.isInverse() );
-		assertEquals( PluralAttributeElementNature.BASIC, bagBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
-		assertEquals( String.class.getName(), bagBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
 
-		PluralAttributeBinding setBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" );
-		assertNotNull( setBinding );
-		assertSame( setBinding, entityBinding.locateAttributeBinding( "theSet" ) );
-		TableSpecification setCollectionTable = setBinding.getPluralAttributeKeyBinding().getCollectionTable();
-		assertNotNull( setCollectionTable );
-		assertEquals( Identifier.toIdentifier( "EntityWithBasicCollections_theSet" ), setCollectionTable.getLogicalName() );
-		PluralAttributeKeyBinding setKeyBinding = setBinding.getPluralAttributeKeyBinding();
-		assertSame( setBinding, setKeyBinding.getPluralAttributeBinding() );
-		HibernateTypeDescriptor setHibernateTypeDescriptor = setBinding.getHibernateTypeDescriptor();
-		assertNull( setHibernateTypeDescriptor.getExplicitTypeName() );
-		assertEquals( Set.class.getName(), setHibernateTypeDescriptor.getJavaTypeName() );
-		assertTrue( setHibernateTypeDescriptor.getTypeParameters().isEmpty() );
-		assertTrue( setHibernateTypeDescriptor.getResolvedTypeMapping() instanceof SetType );
-		assertFalse( setHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
-		assertEquals( EntityWithBasicCollections.class.getName() + ".theSet", ( (SetType) setHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole() );
-		assertTrue( setBinding.isLazy() );
-		assertEquals( FetchTiming.EXTRA_DELAYED, setBinding.getFetchTiming() );
+		checkResult(
+				entityBinding,
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" ),
+				SetType.class,
+				Set.class,
+				Integer.class,
+				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
+				Identifier.toIdentifier( "EntityWithBasicCollections_thePropertyRefSet" ),
+				Identifier.toIdentifier( "pid" ),
+				FetchTiming.DELAYED,
+				false
+		);
 
-		ForeignKey fkSet = setKeyBinding.getForeignKey();
-		assertNotNull( fkSet );
-		assertSame( setCollectionTable, fkSet.getSourceTable() );
-		assertEquals( 1, fkSet.getColumnSpan() );
-		Iterator<Column> fkSetColumnIterator = fkSet.getColumns().iterator();
-		Iterator<Column> fkSetSourceColumnIterator = fkSet.getSourceColumns().iterator();
-		assertNotNull( fkSetColumnIterator );
-		assertNotNull( fkSetSourceColumnIterator );
-		assertTrue( fkSetColumnIterator.hasNext() );
-		assertTrue( fkSetSourceColumnIterator.hasNext() );
-		assertEquals( Identifier.toIdentifier( "pid" ), fkSetColumnIterator.next().getColumnName() );
-		assertEquals( Identifier.toIdentifier( "pid" ), fkSetSourceColumnIterator.next().getColumnName() );
-		assertFalse( fkSetColumnIterator.hasNext() );
-		assertFalse( fkSetSourceColumnIterator.hasNext() );
-		assertSame( entityBinding.getPrimaryTable(), fkSet.getTargetTable() );
-		assertSameElements( entityBinding.getPrimaryTable().getPrimaryKey().getColumns(), fkSet.getTargetColumns() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getDeleteRule() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fkSet.getUpdateRule() );
-		// FK is null because no default FK name is generated until HHH-7092 is fixed
-		assertNull( fkSet.getName() );
-		checkEquals(
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getHibernateTypeDescriptor(),
-				setKeyBinding.getHibernateTypeDescriptor()
-		);
-		assertFalse( setKeyBinding.isInverse() );
-		assertEquals( 2, setCollectionTable.getPrimaryKey().getColumnSpan() );
-		Iterator<Column> setPrimaryKeyIterator = setCollectionTable.getPrimaryKey().getColumns().iterator();
-		assertEquals(
-				entityBinding.getPrimaryTable().getPrimaryKey().getColumns().iterator().next().getJdbcDataType(),
-				setPrimaryKeyIterator.next().getJdbcDataType()
-		);
-		assertEquals(
-				setCollectionTable.locateColumn( "set_stuff" ).getJdbcDataType(),
-				setPrimaryKeyIterator.next().getJdbcDataType()
-		);
-		assertFalse( setPrimaryKeyIterator.hasNext() );
-		assertSame(
-				setCollectionTable.getPrimaryKey().getColumns().iterator().next(),
-				setKeyBinding.getForeignKey().getColumns().iterator().next()
-		);
-		assertEquals( PluralAttributeElementNature.BASIC, setBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
-		assertEquals( String.class.getName(), setBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
-
+		/*
 		PluralAttributeBinding propertyRefSetBinding = metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" );
 		assertNotNull( propertyRefSetBinding );
 		assertSame( propertyRefSetBinding, entityBinding.locateAttributeBinding( "thePropertyRefSet" ) );
@@ -266,6 +197,114 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		);
 		assertEquals( PluralAttributeElementNature.BASIC, propertyRefSetBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() );
 		assertEquals( Integer.class.getName(), propertyRefSetBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName() );
+		*/
+	}
+
+	private <X extends CollectionType> void checkResult(
+			EntityBinding collectionOwnerBinding,
+			PluralAttributeBinding collectionBinding,
+			Class<X> expectedCollectionTypeClass,
+			Class<?> expectedCollectionJavaClass,
+			Class<?> expectedElementJavaClass,
+			SingularAttributeBinding expectedKeyTargetAttributeBinding,
+			Identifier expectedCollectionTableName,
+			Identifier expectedKeySourceColumnName,
+			FetchTiming expectedFetchTiming,
+			boolean expectedElementNullable) {
+		assertNotNull( collectionBinding );
+		assertSame(
+				collectionBinding,
+				collectionOwnerBinding.locateAttributeBinding( collectionBinding.getAttribute().getName() )
+		);
+		assertSame( collectionOwnerBinding, collectionBinding.getContainer().seekEntityBinding() );
+
+		TableSpecification collectionTable =  collectionBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertNotNull( collectionTable );
+		assertEquals( expectedCollectionTableName, collectionTable.getLogicalName() );
+		PluralAttributeKeyBinding keyBinding = collectionBinding.getPluralAttributeKeyBinding();
+		assertSame( collectionBinding, keyBinding.getPluralAttributeBinding() );
+		HibernateTypeDescriptor collectionHibernateTypeDescriptor = collectionBinding.getHibernateTypeDescriptor();
+		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
+		assertEquals( expectedCollectionJavaClass.getName(), collectionHibernateTypeDescriptor.getJavaTypeName() );
+		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
+		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
+		assertFalse( collectionHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
+		final String role = collectionBinding.getAttribute().getRole();
+		assertEquals(
+				role,
+				collectionOwnerBinding.getEntity().getName() + "." + collectionBinding.getAttribute().getName()
+		);
+		assertEquals(
+				role,
+				expectedCollectionTypeClass.cast( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole()
+		);
+
+		assertEquals( expectedFetchTiming, collectionBinding.getFetchTiming() );
+		assertEquals( expectedFetchTiming != FetchTiming.IMMEDIATE, collectionBinding.isLazy() );
+
+		ForeignKey fk = keyBinding.getForeignKey();
+		assertNotNull( fk );
+		assertSame( collectionTable, fk.getSourceTable() );
+		assertEquals( 1, fk.getColumnSpan() );
+		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );
+		Value expectedFKTargetValue = expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+		Iterator<Column> fkColumnIterator = fk.getColumns().iterator();
+		Iterator<Column> fkSourceColumnIterator = fk.getSourceColumns().iterator();
+		Iterator<Column> fkTargetColumnIterator = fk.getTargetColumns().iterator();
+		assertNotNull( fkColumnIterator );
+		assertNotNull( fkSourceColumnIterator );
+		assertNotNull( fkTargetColumnIterator );
+		assertTrue( fkColumnIterator.hasNext() );
+		assertTrue( fkSourceColumnIterator.hasNext() );
+		assertTrue( fkTargetColumnIterator.hasNext() );
+		Column fkSourceColumn = fkSourceColumnIterator.next();
+		assertSame( fkSourceColumn, fkColumnIterator.next() );
+		assertEquals( expectedKeySourceColumnName, fkSourceColumn.getColumnName() );
+		assertSame( expectedFKTargetValue, fkTargetColumnIterator.next() );
+		assertFalse( fkColumnIterator.hasNext() );
+		assertFalse( fkSourceColumnIterator.hasNext() );
+		assertFalse( fkTargetColumnIterator.hasNext() );
+		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
+		assertEquals( expectedFKTargetValue.getJdbcDataType(), fkSourceColumn.getJdbcDataType() );
+
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getDeleteRule() );
+		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getUpdateRule() );
+		// FK name is null because no default FK name is generated until HHH-7092 is fixed
+		assertNull( fk.getName() );
+		checkEquals(
+				expectedKeyTargetAttributeBinding.getHibernateTypeDescriptor(),
+				keyBinding.getHibernateTypeDescriptor()
+		);
+		assertFalse( keyBinding.isInverse() );
+		assertEquals(
+				PluralAttributeElementNature.BASIC,
+				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
+		);
+		assertEquals(
+				expectedElementJavaClass.getName(),
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName()
+		);
+		assertEquals(
+				expectedElementJavaClass,
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping().getReturnedClass()
+
+		);
+		assertEquals( 1, collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().size() );
+		RelationalValueBinding elementRelationalValueBinding = collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().get( 0 );
+		assertEquals( expectedElementNullable, elementRelationalValueBinding.isNullable() );
+		if ( collectionBinding.getAttribute().getNature() == PluralAttributeNature.BAG ) {
+			assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
+		}
+		else if ( collectionBinding.getAttribute().getNature() == PluralAttributeNature.SET ) {
+			if ( expectedElementNullable ) {
+				assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
+			}
+			else {
+				assertEquals( 2, collectionTable.getPrimaryKey().getColumnSpan() );
+				assertSame( fkSourceColumn, collectionTable.getPrimaryKey().getColumns().get( 0 ) );
+				assertSame( elementRelationalValueBinding.getValue(),  collectionTable.getPrimaryKey().getColumns().get( 1 ) );
+			}
+		}
 	}
 
 	protected void assertSameElements(Iterable iterable, Iterable iterable2) {

@@ -77,6 +77,11 @@ public class BasicPluralAttributeElementSourceImpl
 					public List getColumnOrFormulaElements() {
 						return elementElement.getColumnOrFormula();
 					}
+
+					@Override
+					public boolean isForceNotNull() {
+						return elementElement.isNotNull();
+					}
 				}
 		);
 
@@ -125,7 +130,7 @@ public class BasicPluralAttributeElementSourceImpl
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return false;
+		return true;
 	}
 
 	@Override

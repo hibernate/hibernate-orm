@@ -11,7 +11,7 @@
 
         <set name="thePropertyRefSet" lazy="true">
             <key column="pid" property-ref="name"/>
-            <element column="property_ref_set_stuff" type="integer"/>
+            <element column="property_ref_set_stuff" type="integer" not-null="true"/>
         </set>
 
         <property name="name" unique="true"/>
@@ -23,7 +23,7 @@
 
         <set name="theSet" lazy="extra">
             <key column="pid"/>
-            <element column="set_stuff" type="string"/>
+            <element column="set_stuff" type="string" not-null="false"/>
         </set>
 
         <list name="theList">

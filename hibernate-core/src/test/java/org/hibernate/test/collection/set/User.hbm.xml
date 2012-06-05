@@ -3,11 +3,31 @@
                    xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
 
 	<class name="User" table="`Users`">
-		<id name="userName"/>
+		
+        <id name="userName"/>
+
 		<set name="sessionAttributeNames" lazy="true">
 			<key column="userName"/>
 			<element column="`attributeName`" type="string"/>
 		</set>
+
+        <bag name="someBag" lazy="true">
+            <key column="userName"/>
+            <element column="bag_stuff" type="string"/>
+        </bag>
+
+        <list name="someList" lazy="true">
+            <key column="userName"/>
+            <list-index column="listIndex"/>
+            <element column="listElement" type="string"/>
+        </list>
+
+        <map name="someMap" lazy="true">
+            <key column="userName"/>
+            <map-key column="mapKey" type="string"/>
+            <element column="mapValue" type="string"/>
+        </map>
+        
 	</class>
 
 </hibernate-mapping>

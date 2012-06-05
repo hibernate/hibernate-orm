@@ -22,30 +22,70 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.set;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * @author Gail Badner
  */
 public class User {
+
 	private String userName;
 	private Set sessionAttributeNames = new HashSet();
+	private Collection< String > someBag = new ArrayList< String >();
+	private List< String > someList = new ArrayList< String >();
+	private Map< String, String > someMap = new HashMap< String, String >();
 
-	User() {}
-	public User(String name) {
+	User() {
+	}
+
+	public User( String name ) {
 		userName = name;
 	}
+
 	public String getUserName() {
 		return userName;
 	}
-	public void setUserName(String userName) {
+
+	public void setUserName( String userName ) {
 		this.userName = userName;
 	}
+
 	public Set getSessionAttributeNames() {
 		return sessionAttributeNames;
 	}
-	public void setSessionAttributeNames(Set sessionAttributeNames) {
+
+	public void setSessionAttributeNames( Set sessionAttributeNames ) {
 		this.sessionAttributeNames = sessionAttributeNames;
+	}
+
+	public Collection getSomeBag() {
+		return someBag;
+	}
+
+	public void setSomeBag( Collection someBag ) {
+		this.someBag = someBag;
+	}
+
+	public List getSomeList() {
+		return someList;
+	}
+
+	public void setSomeList( List someList ) {
+		this.someList = someList;
+	}
+
+	public Map getSomeMap() {
+		return someMap;
+	}
+
+	public void setSomeMap( Map someMap ) {
+		this.someMap = someMap;
 	}
 }

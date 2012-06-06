@@ -129,13 +129,12 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
-		// TODO: fix when backrefs are working in new metamodel
-		//if ( mappedProperty.isBackRef() ) {
-		//	return mappedProperty.getPropertyAccessor( null );
-		//}
-		//else {
+		if ( mappedProperty.isBackRef() ) {
+			return PropertyAccessorFactory.getPropertyAccessor( null, mappedProperty.getPropertyAccessorName() );
+		}
+		else {
 			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-		//}
+		}
 	}
 
 	/**

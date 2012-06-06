@@ -99,6 +99,10 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.Fetchable;
+import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -160,7 +164,7 @@ public abstract class AbstractEntityPersister
 	private final boolean hasSubselectLoadableCollections;
 	protected final String rowIdName;
 
-	private final Set lazyProperties;
+	private final Set<String> lazyProperties;
 
 	// The optional SQL string defined in the where attribute
 	private final String sqlWhereString;
@@ -566,13 +570,13 @@ public abstract class AbstractEntityPersister
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
-		HashSet thisClassProperties = new HashSet();
+		Set<Property> thisClassProperties = new HashSet<Property>();
 
-		lazyProperties = new HashSet();
-		ArrayList lazyNames = new ArrayList();
-		ArrayList lazyNumbers = new ArrayList();
-		ArrayList lazyTypes = new ArrayList();
-		ArrayList lazyColAliases = new ArrayList();
+		lazyProperties = new HashSet<String>();
+		List<String> lazyNames = new ArrayList<String>();
+		List<Integer> lazyNumbers = new ArrayList<Integer>();
+		List<Type> lazyTypes = new ArrayList<Type>();
+		List<String[]> lazyColAliases = new ArrayList<String[]>();
 
 		iter = persistentClass.getPropertyClosureIterator();
 		i = 0;
@@ -865,13 +869,14 @@ public abstract class AbstractEntityPersister
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
-		HashSet thisClassProperties = new HashSet();
+		Set<AttributeBinding> thisClassProperties = new HashSet<AttributeBinding>();
 
-		lazyProperties = new HashSet();
-		ArrayList lazyNames = new ArrayList();
-		ArrayList lazyNumbers = new ArrayList();
-		ArrayList lazyTypes = new ArrayList();
-		ArrayList lazyColAliases = new ArrayList();
+		lazyProperties = new HashSet<String>();
+		List<String> lazyNames = new ArrayList<String>();
+		List<Integer> lazyNumbers = new ArrayList<Integer>();
+		List<Type> lazyTypes = new ArrayList<Type>();
+		List<String[]> lazyColAliases = new ArrayList<String[]>();
+
 
 		i = 0;
 		boolean foundFormula = false;
@@ -940,10 +945,7 @@ public abstract class AbstractEntityPersister
 				lazyColAliases.add( colAliases );
 			}
 
-
-			// TODO: fix this when backrefs are working
-			//propertySelectable[i] = singularAttributeBinding.isBackRef();
-			propertySelectable[i] = true;
+			propertySelectable[i] = !attributeBinding.isBackRef();
 
 			propertyUniqueness[i] = attributeBinding.isAlternateUniqueKey();
 
@@ -987,21 +989,25 @@ public abstract class AbstractEntityPersister
 				continue;
 			}
 
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				// collections handled separately
-				continue;
-			}
-
-			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			names.add( singularAttributeBinding.getAttribute().getName() );
-			classes.add( ( (EntityBinding) singularAttributeBinding.getContainer() ).getEntity().getName() );
-			boolean isDefinedBySubclass = ! thisClassProperties.contains( singularAttributeBinding );
+			names.add( attributeBinding.getAttribute().getName() );
+			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName() );
+			boolean isDefinedBySubclass = ! thisClassProperties.contains( attributeBinding );
 			definedBySubclass.add( isDefinedBySubclass );
-			propNullables.add( singularAttributeBinding.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
-			types.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+			// TODOFix this when join tables are supported...
+			//propNullables.add( attributeBinding.isOptional() || isDefinedBySubclass );
+			propNullables.add(
+					! attributeBinding.getAttribute().isSingular() ||
+							( (SingularAttributeBinding) attributeBinding).isNullable() ||
+							isDefinedBySubclass
+			);
+			types.add( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 
-			final int span = singularAttributeBinding.getRelationalValueBindings().size();
+
+			List<RelationalValueBinding> relationalValueBindings =
+					attributeBinding.getAttribute().isSingular() ?
+							( (SingularAttributeBinding) attributeBinding ).getRelationalValueBindings() :
+							null;
+			final int span = relationalValueBindings == null ? 0 : relationalValueBindings.size();
 			String[] cols = new String[ span ];
 			String[] readers = new String[ span ];
 			String[] readerTemplates = new String[ span ];
@@ -1009,45 +1015,47 @@ public abstract class AbstractEntityPersister
 			int[] colnos = new int[ span ];
 			int[] formnos = new int[ span ];
 			int l = 0;
-			Boolean lazy = singularAttributeBinding.isLazy() && lazyAvailable;
-			for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
-				if ( valueBinding.isDerived() ) {
-					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
-					String template = getTemplateFromString( derivedValue.getExpression(), factory );
-					formnos[l] = formulaTemplates.size();
-					colnos[l] = -1;
-					formulaTemplates.add( template );
-					forms[l] = template;
-					formulas.add( derivedValue.getExpression() );
-					formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
-					formulasLazy.add( lazy );
-				}
-				else {
-					org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
-					String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
-					colnos[l] = columns.size(); //before add :-)
-					formnos[l] = -1;
-					columns.add( colName );
-					cols[l] = colName;
-					aliases.add(
-							col.getAlias(
-									factory.getDialect(),
-									col.getTable()
-							)
-					);
-					columnsLazy.add( lazy );
-					// TODO: properties only selectable if they are non-plural???
-					columnSelectables.add( singularAttributeBinding.getAttribute().isSingular() );
+			Boolean lazy = attributeBinding.isLazy() && lazyAvailable;
 
-					readers[l] =
-							col.getReadFragment() == null ?
-									col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
-									col.getReadFragment();
-					String readerTemplate = getTemplateFromColumn( col, factory );
-					readerTemplates[l] = readerTemplate;
-					columnReaderTemplates.add( readerTemplate );
+			if ( relationalValueBindings != null ) {
+				for ( RelationalValueBinding valueBinding : relationalValueBindings ) {
+					if ( valueBinding.isDerived() ) {
+						DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
+						String template = getTemplateFromString( derivedValue.getExpression(), factory );
+						formnos[l] = formulaTemplates.size();
+						colnos[l] = -1;
+						formulaTemplates.add( template );
+						forms[l] = template;
+						formulas.add( derivedValue.getExpression() );
+						formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
+						formulasLazy.add( lazy );
+					}
+					else {
+						org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
+						String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+						colnos[l] = columns.size(); //before add :-)
+						formnos[l] = -1;
+						columns.add( colName );
+						cols[l] = colName;
+						aliases.add(
+								col.getAlias(
+										factory.getDialect(),
+										col.getTable()
+								)
+						);
+						columnsLazy.add( lazy );
+						columnSelectables.add( ! attributeBinding.isBackRef() );
+
+						readers[l] =
+								col.getReadFragment() == null ?
+										col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+										col.getReadFragment();
+						String readerTemplate = getTemplateFromColumn( col, factory );
+						readerTemplates[l] = readerTemplate;
+						columnReaderTemplates.add( readerTemplate );
+					}
+					l++;
 				}
-				l++;
 			}
 			propColumns.add( cols );
 			propColumnReaders.add( readers );
@@ -1056,14 +1064,26 @@ public abstract class AbstractEntityPersister
 			propColumnNumbers.add( colnos );
 			propFormulaNumbers.add( formnos );
 
-			if ( singularAttributeBinding.isAssociation() ) {
-				SingularAssociationAttributeBinding associationAttributeBinding =
-						(SingularAssociationAttributeBinding) singularAttributeBinding;
-				cascades.add( associationAttributeBinding.getCascadeStyle() );
-				joinedFetchesList.add( associationAttributeBinding.getFetchMode() );
+			CascadeStyle cascadeStyle = null;
+			if ( attributeBinding.isAssociation() ) {
+				if ( attributeBinding.getAttribute().isSingular() ) {
+					cascadeStyle = ( ( SingularAssociationAttributeBinding) attributeBinding ).getCascadeStyle();
+				}
+				else {
+					PluralAttributeElementBinding pluralAttributeElementBinding =
+							( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding();
+					cascadeStyle = ( (PluralAttributeAssociationElementBinding) pluralAttributeElementBinding).getCascadeStyle();
+				}
+			}
+			if ( cascadeStyle == null ) {
+				cascadeStyle = CascadeStyle.NONE;
+			}
+			cascades.add( cascadeStyle );
+
+			if ( attributeBinding instanceof Fetchable ) {
+				joinedFetchesList.add( ( (Fetchable) attributeBinding ).getFetchMode() );
 			}
 			else {
-				cascades.add( CascadeStyle.NONE );
 				joinedFetchesList.add( FetchMode.SELECT );
 			}
 		}
@@ -1204,7 +1224,9 @@ public abstract class AbstractEntityPersister
 			final Serializable id,
 			final EntityEntry entry) {
 
-		if ( !hasLazyProperties() ) throw new AssertionFailure( "no lazy properties" );
+		if ( !hasLazyProperties() ) {
+			throw new AssertionFailure( "no lazy properties" );
+		}
 
 		LOG.trace( "Initializing lazy properties from datastore" );
 
@@ -1673,9 +1695,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		Object nextVersion = getVersionType().next( currentVersion, session );
-        if (LOG.isTraceEnabled()) LOG.trace("Forcing version increment [" + MessageHelper.infoString(this, id, getFactory()) + "; "
-                                            + getVersionType().toLoggableString(currentVersion, getFactory()) + " -> "
-                                            + getVersionType().toLoggableString(nextVersion, getFactory()) + "]");
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+			);
+		}
 
 		// todo : cache this sql...
 		String versionIncrementString = generateVersionIncrementUpdateString();
@@ -2866,8 +2892,9 @@ public abstract class AbstractEntityPersister
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Inserting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-			if ( j == 0 && isVersioned() )
+			if ( j == 0 && isVersioned() ) {
 				LOG.tracev( "Version: {0}", Versioning.getVersion( fields, this ) );
+			}
 		}
 
 		// TODO : shouldn't inserts be Expectations.NONE?
@@ -3009,8 +3036,9 @@ public abstract class AbstractEntityPersister
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Updating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-			if ( useVersion )
+			if ( useVersion ) {
 				LOG.tracev( "Existing version: {0} -> New version:{1}", oldVersion, fields[getVersionProperty()] );
+			}
 		}
 
 		try {
@@ -3127,8 +3155,9 @@ public abstract class AbstractEntityPersister
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Deleting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-			if ( useVersion )
+			if ( useVersion ) {
 				LOG.tracev( "Version: {0}", version );
+			}
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
@@ -3434,24 +3463,50 @@ public abstract class AbstractEntityPersister
 	protected void logStaticSQL() {
         if (LOG.isDebugEnabled()) {
             LOG.debugf("Static SQL for entity: %s", getEntityName());
-            if (sqlLazySelectString != null) LOG.debugf(" Lazy select: %s", sqlLazySelectString);
-            if (sqlVersionSelectString != null) LOG.debugf(" Version select: %s", sqlVersionSelectString);
-            if (sqlSnapshotSelectString != null) LOG.debugf(" Snapshot select: %s", sqlSnapshotSelectString);
+			if ( sqlLazySelectString != null ) {
+				LOG.debugf( " Lazy select: %s", sqlLazySelectString );
+			}
+			if ( sqlVersionSelectString != null ) {
+				LOG.debugf( " Version select: %s", sqlVersionSelectString );
+			}
+			if ( sqlSnapshotSelectString != null ) {
+				LOG.debugf( " Snapshot select: %s", sqlSnapshotSelectString );
+			}
 			for ( int j = 0; j < getTableSpan(); j++ ) {
                 LOG.debugf(" Insert %s: %s", j, getSQLInsertStrings()[j]);
                 LOG.debugf(" Update %s: %s", j, getSQLUpdateStrings()[j]);
                 LOG.debugf(" Delete %s: %s", j, getSQLDeleteStrings()[j]);
 			}
-            if (sqlIdentityInsertString != null) LOG.debugf(" Identity insert: %s", sqlIdentityInsertString);
-            if (sqlUpdateByRowIdString != null) LOG.debugf(" Update by row id (all fields): %s", sqlUpdateByRowIdString);
-            if (sqlLazyUpdateByRowIdString != null) LOG.debugf(" Update by row id (non-lazy fields): %s",
-                                                               sqlLazyUpdateByRowIdString);
-            if (sqlInsertGeneratedValuesSelectString != null) LOG.debugf("Insert-generated property select: %s",
-                                                                         sqlInsertGeneratedValuesSelectString);
-            if (sqlUpdateGeneratedValuesSelectString != null) LOG.debugf("Update-generated property select: %s",
-                                                                         sqlUpdateGeneratedValuesSelectString);
-            if (sqlEntityIdByNaturalIdString != null) LOG.debugf("Id by Natural Id: %s",
-            													 sqlEntityIdByNaturalIdString);
+			if ( sqlIdentityInsertString != null ) {
+				LOG.debugf( " Identity insert: %s", sqlIdentityInsertString );
+			}
+			if ( sqlUpdateByRowIdString != null ) {
+				LOG.debugf( " Update by row id (all fields): %s", sqlUpdateByRowIdString );
+			}
+			if ( sqlLazyUpdateByRowIdString != null ) {
+				LOG.debugf(
+						" Update by row id (non-lazy fields): %s",
+						sqlLazyUpdateByRowIdString
+				);
+			}
+			if ( sqlInsertGeneratedValuesSelectString != null ) {
+				LOG.debugf(
+						"Insert-generated property select: %s",
+						sqlInsertGeneratedValuesSelectString
+				);
+			}
+			if ( sqlUpdateGeneratedValuesSelectString != null ) {
+				LOG.debugf(
+						"Update-generated property select: %s",
+						sqlUpdateGeneratedValuesSelectString
+				);
+			}
+			if ( sqlEntityIdByNaturalIdString != null ) {
+				LOG.debugf(
+						"Id by Natural Id: %s",
+						sqlEntityIdByNaturalIdString
+				);
+			}
 		}
 	}
 

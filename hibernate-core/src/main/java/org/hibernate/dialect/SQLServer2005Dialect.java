@@ -48,6 +48,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
 	private static final String ORDER_BY = "order by";
+	private static final String AS = " as ";
 	private static final int MAX_LENGTH = 8000;
 
 	/**
@@ -92,19 +93,21 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		return true;
 	}
 
-	@Override
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		// Our dialect paginated results aren't zero based. The first row should get the number 1 and so on
-		return zeroBasedFirstResult + 1;
-	}
+	// N.B.: Our dialect paginated results are again zero based (as default), otherwise the top functionality is broken
+//	@Override
+//	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+//		return zeroBasedFirstResult + 1;
+//	}
 
 	@Override
-	public String getLimitString(String query, int offset, int limit) {
-		// We transform the query to one with an offset and limit if we have an offset and limit to bind
-		if ( offset > 1 || limit > 1 ) {
-			return getLimitString( query, true );
+	public String getLimitString(String querySelect, int offset, int limit) {
+		if ( offset > 0 ) {
+			return getLimitString( querySelect, true );
 		}
-		return query;
+		return new StringBuffer( querySelect.length() + 9 )
+				.append( querySelect )
+				.insert( getAfterSelectInsertPoint( querySelect ), " top (?) ")
+				.toString();
 	}
 
 	/**
@@ -115,7 +118,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * <pre>
 	 * WITH query AS (
 	 *   original_select_clause_without_distinct_and_order_by,
-	 *   ROW_NUMBER() OVER ([ORDER BY CURRENT_TIMESTAMP | original_order_by_clause]) as __hibernate_row_nr__
+	 *   ROW_NUMBER() OVER ([ORDER BY CURRENT_TIMESTAMP | original_order_by_clause]) - 1 as __hibernate_row_nr__
 	 *   original_from_clause
 	 *   original_where_clause
 	 *   group_by_if_originally_select_distinct
@@ -130,8 +133,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	@Override
 	public String getLimitString(String querySqlString, boolean hasOffset) {
-		StringBuilder sb = new StringBuilder( querySqlString.trim() );
-
+		StringBuilder sb = new StringBuilder( querySqlString.replace(';',' ').trim());
+		
 		int orderByIndex = shallowIndexOfWord( sb, ORDER_BY, 0 );
 		CharSequence orderby = orderByIndex > 0 ? sb.subSequence( orderByIndex, sb.length() )
 				: "ORDER BY CURRENT_TIMESTAMP";
@@ -147,7 +150,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		insertRowNumberFunction( sb, orderby );
 
 		// Wrap the query within a with statement:
-		sb.insert( 0, "WITH query AS (" ).append( ") SELECT * FROM query " );
+		sb.insert( 0, "WITH query AS (" ).append( ") SELECT " + getSelectIds(new StringBuilder(querySqlString.trim())) + " FROM query " );
 		sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
 
 		return sb.toString();
@@ -186,6 +189,25 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		// Strip the as clauses
 		return stripAliases( select );
 	}
+	
+	protected static CharSequence getSelectIds(StringBuilder sql) {
+		final int selectStartPos = shallowIndexOf( sql, SELECT_WITH_SPACE, 0 );
+		final int fromStartPos = shallowIndexOfWord( sql, FROM, selectStartPos );
+		String[] columns = sql.substring( selectStartPos + SELECT.length(), fromStartPos ).split(",");
+		StringBuilder ids = new StringBuilder();
+		for (String id : columns) {
+			int startpos = id.indexOf(AS);
+			if (startpos > 0) {
+				startpos += 3;
+			}
+			else {
+				startpos = 0;
+			}
+			ids.append(id.substring(startpos) + ",");
+		}
+		ids.setLength(ids.length() - 1); // remove last semicolon
+		return ids.toString().trim();
+	}
 
 	/**
 	 * Utility method that strips the aliases.
@@ -210,7 +232,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		int selectEndIndex = shallowIndexOfWord( sql, FROM, 0 );
 
 		// Insert after the select clause the row_number() function:
-		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
+		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") - 1 as __hibernate_row_nr__" );
 	}
 
 	@Override // since SQLServer2005 the nowait hint is supported

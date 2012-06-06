@@ -34,20 +34,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import org.junit.Test;
 
 /**
@@ -115,6 +111,78 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 				.executeUpdate();
 		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
 		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
+		s.close();
+	}
+	
+	@TestForIssue(jiraKey = "HHH-7369")
+	@Test
+	public void testPaginationOnScalarQuery() throws Exception {
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+		for ( int i = 1; i <= 20; i++ ) {
+			Product2 kit = new Product2();
+			kit.id = i;
+			kit.description = "Kit" + i;
+			s.persist( kit );
+		}
+		s.flush();
+		s.clear();
+		
+		List list = s.createSQLQuery( "select id from Product2 where description like 'Kit%' order by id" ).list();
+		assertEquals(Integer.class, list.get(0).getClass()); // scalar result is an Integer
+
+		list = s.createSQLQuery( "select id from Product2 where description like 'Kit%' order by id" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+		assertEquals(Integer.class, list.get(0).getClass()); // this fails without patch, as result suddenly has become an array
+		
+		// same once again with alias 
+		list = s.createSQLQuery( "select id as myint from Product2 where description like 'Kit%' order by id asc" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+		assertEquals(Integer.class, list.get(0).getClass()); 
+		tx.rollback();
+		s.close();
+	}
+	
+	@TestForIssue(jiraKey = "HHH-7370")
+	@Test
+	public void testPaginationCorrectness() throws Exception {
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		for ( int i = 0; i < 20; i++ ) {
+			Product2 kit = new Product2();
+			kit.id = i;
+			kit.description = "Kit" + i;
+			s.persist( kit );
+		}
+		s.flush();
+		s.clear();
+
+		List list = s.createSQLQuery( "select id from Product2 where description like 'Kit%' order by id" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+		assertEquals(2, list.size());
+		assertEquals(2, list.get(0));
+		assertEquals(3, list.get(1));
+		
+		list = s.createSQLQuery( "select id from Product2 where description like 'Kit%' order by id" ).setFirstResult( 0 ).setMaxResults( 2 ).list();
+		assertEquals(2, list.size());
+		assertEquals(0, list.get(0));
+		assertEquals(1, list.get(1));
+		
+		tx.rollback();
+		s.close();
+	}
+	
+	@TestForIssue(jiraKey = "HHH-7368")
+	@Test
+	public void testPaginationWithTrailingSemicolon() throws Exception {
+		Session s = openSession();
+		List list = s.createSQLQuery( "select id from Product2 where description like 'Kit%' order by id;" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+	    // caused:      SQLServerException: Incorrect syntax near ';'.
+		//                                                         |
+		//                                                         V
+		//WITH query AS (select id, ROW_NUMBER() OVER ( order by id;) - 1 as __hibernate_row_nr__  from Product2 where description like 'Kit%' ) SELECT id FROM query 
+		//WHERE __hibernate_row_nr__ >= 2  AND __hibernate_row_nr__ < 4  
+
 		s.close();
 	}
 

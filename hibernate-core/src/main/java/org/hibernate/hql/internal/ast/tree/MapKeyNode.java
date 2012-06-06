@@ -39,7 +39,12 @@ public class MapKeyNode extends AbstractMapComponentNode {
 
 	@Override
 	protected String[] resolveColumns(QueryableCollection collectionPersister) {
-		return collectionPersister.getIndexColumnNames();
+		final FromElement fromElement = getFromElement();
+		return fromElement.toColumns(
+				fromElement.getCollectionTableAlias(),
+				"index", // the JPA KEY "qualifier" is the same concept as the HQL INDEX function/property
+				getWalker().isInSelect()
+		);
 	}
 
 	@Override

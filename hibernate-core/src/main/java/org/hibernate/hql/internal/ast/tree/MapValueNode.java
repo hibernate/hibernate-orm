@@ -39,7 +39,12 @@ public class MapValueNode extends AbstractMapComponentNode {
 
 	@Override
 	protected String[] resolveColumns(QueryableCollection collectionPersister) {
-		return collectionPersister.getElementColumnNames();
+		final FromElement fromElement = getFromElement();
+		return fromElement.toColumns(
+				fromElement.getCollectionTableAlias(),
+				"elements", // the JPA VALUE "qualifier" is the same concept as the HQL ELEMENTS function/property
+				getWalker().isInSelect()
+		);
 	}
 
 	@Override

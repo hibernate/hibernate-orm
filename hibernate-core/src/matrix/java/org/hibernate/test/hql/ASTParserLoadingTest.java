@@ -250,7 +250,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testJPAQLQualifiedIdentificationVariables() {
+	public void testJPAQLMapKeyQualifier() {
 		Session s = openSession();
 		s.beginTransaction();
 		Human me = new Human();
@@ -264,47 +264,183 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		List results = s.createQuery( "select entry(h.family) from Human h" ).list();
-		assertEquals( 1, results.size() );
-		Object result = results.get(0);
-		assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );
-		Map.Entry entry = (Map.Entry) result;
-		assertTrue( String.class.isAssignableFrom( entry.getKey().getClass() ) );
-		assertTrue( Human.class.isAssignableFrom( entry.getValue().getClass() ) );
-		s.getTransaction().commit();
-		s.close();
+		// in SELECT clause
+		{
+			// hibernate-only form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select distinct key(h.family) from Human h" ).list();
+			assertEquals( 1, results.size() );
+			Object key = results.get(0);
+			assertTrue( String.class.isAssignableFrom( key.getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		{
+			// jpa form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select distinct KEY(f) from Human h join h.family f" ).list();
+			assertEquals( 1, results.size() );
+			Object key = results.get(0);
+			assertTrue( String.class.isAssignableFrom( key.getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// in WHERE clause
+		{
+			// hibernate-only form
+			s = openSession();
+			s.beginTransaction();
+			Long count = (Long) s.createQuery( "select count(*) from Human h where KEY(h.family) = 'son'" ).uniqueResult();
+			assertEquals( (Long)1L, count );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		{
+			// jpa form
+			s = openSession();
+			s.beginTransaction();
+			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where key(f) = 'son'" ).uniqueResult();
+			assertEquals( (Long)1L, count );
+			s.getTransaction().commit();
+			s.close();
+		}
 
 		s = openSession();
 		s.beginTransaction();
-		results = s.createQuery( "select entry(f) from Human h join h.family f" ).list();
-		assertEquals( 1, results.size() );
-		result = results.get(0);
-		assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );
-		entry = (Map.Entry) result;
-		assertTrue( String.class.isAssignableFrom( entry.getKey().getClass() ) );
-		assertTrue( Human.class.isAssignableFrom( entry.getValue().getClass() ) );
+		s.delete( me );
+		s.delete( joe );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	public void testJPAQLMapEntryQualifier() {
+		Session s = openSession();
+		s.beginTransaction();
+		Human me = new Human();
+		me.setName( new Name( "Steve", null, "Ebersole" ) );
+		Human joe = new Human();
+		me.setName( new Name( "Joe", null, "Ebersole" ) );
+		me.setFamily( new HashMap() );
+		me.getFamily().put( "son", joe );
+		s.save( me );
+		s.save( joe );
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		results = s.createQuery( "select distinct key(h.family) from Human h" ).list();
-		assertEquals( 1, results.size() );
-		Object key = results.get(0);
-		assertTrue( String.class.isAssignableFrom( key.getClass() ) );
-		s.getTransaction().commit();
-		s.close();
+		// in SELECT clause
+		{
+			// hibernate-only form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select entry(h.family) from Human h" ).list();
+			assertEquals( 1, results.size() );
+			Object result = results.get(0);
+			assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );
+			Map.Entry entry = (Map.Entry) result;
+			assertTrue( String.class.isAssignableFrom( entry.getKey().getClass() ) );
+			assertTrue( Human.class.isAssignableFrom( entry.getValue().getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		{
+			// jpa form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select ENTRY(f) from Human h join h.family f" ).list();
+			assertEquals( 1, results.size() );
+			Object result = results.get(0);
+			assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );
+			Map.Entry entry = (Map.Entry) result;
+			assertTrue( String.class.isAssignableFrom( entry.getKey().getClass() ) );
+			assertTrue( Human.class.isAssignableFrom( entry.getValue().getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// not exactly sure of the syntax of ENTRY in the WHERE clause...
+
 
 		s = openSession();
 		s.beginTransaction();
-		results = s.createQuery( "select distinct key(f) from Human h join h.family f" ).list();
-		assertEquals( 1, results.size() );
-		key = results.get(0);
-		assertTrue( String.class.isAssignableFrom( key.getClass() ) );
+		s.delete( me );
+		s.delete( joe );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	public void testJPAQLMapValueQualifier() {
+		Session s = openSession();
+		s.beginTransaction();
+		Human me = new Human();
+		me.setName( new Name( "Steve", null, "Ebersole" ) );
+		Human joe = new Human();
+		me.setName( new Name( "Joe", null, "Ebersole" ) );
+		me.setFamily( new HashMap() );
+		me.getFamily().put( "son", joe );
+		s.save( me );
+		s.save( joe );
+		s.getTransaction().commit();
+		s.close();
+
+		// in SELECT clause
+		{
+			// hibernate-only form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select value(h.family) from Human h" ).list();
+			assertEquals( 1, results.size() );
+			Object result = results.get(0);
+			assertTrue( Human.class.isAssignableFrom( result.getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		{
+			// jpa form
+			s = openSession();
+			s.beginTransaction();
+			List results = s.createQuery( "select VALUE(f) from Human h join h.family f" ).list();
+			assertEquals( 1, results.size() );
+			Object result = results.get(0);
+			assertTrue( Human.class.isAssignableFrom( result.getClass() ) );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// in WHERE clause
+		{
+			// hibernate-only form
+			s = openSession();
+			s.beginTransaction();
+			Long count = (Long) s.createQuery( "select count(*) from Human h where VALUE(h.family) = :joe" ).setParameter( "joe", joe ).uniqueResult();
+			// ACTUALLY EXACTLY THE SAME AS:
+			// select count(*) from Human h where h.family = :joe
+			assertEquals( (Long)1L, count );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		{
+			// jpa form
+			s = openSession();
+			s.beginTransaction();
+			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where value(f) = :joe" ).setParameter( "joe", joe ).uniqueResult();
+			// ACTUALLY EXACTLY THE SAME AS:
+			// select count(*) from Human h join h.family f where f = :joe
+			assertEquals( (Long)1L, count );
+			s.getTransaction().commit();
+			s.close();
+		}
 
 		s = openSession();
 		s.beginTransaction();

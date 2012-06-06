@@ -645,13 +645,13 @@ identPrimary
 			( options { greedy=true; } :
 				( op:OPEN^ { #op.setType(METHOD_CALL);} e:exprList CLOSE! ) {
 				    AST path = #e.getFirstChild();
-				    if ( #i.getText().equals( "key" ) ) {
+				    if ( #i.getText().equalsIgnoreCase( "key" ) ) {
 				        #identPrimary = #( [KEY], path );
 				    }
-				    else if ( #i.getText().equals( "value" ) ) {
+				    else if ( #i.getText().equalsIgnoreCase( "value" ) ) {
 				        #identPrimary = #( [VALUE], path );
 				    }
-				    else if ( #i.getText().equals( "entry" ) ) {
+				    else if ( #i.getText().equalsIgnoreCase( "entry" ) ) {
 				        #identPrimary = #( [ENTRY], path );
 				    }
 				}

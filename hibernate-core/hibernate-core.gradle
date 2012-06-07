@@ -32,21 +32,11 @@ dependencies {
     testRuntime( libraries.javassist )
 
 }
-compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
-sourceSets {
-    matrix {
-        java {
-            srcDir 'src/matrix/java'
-        }
-        resources {
-            srcDir 'src/matrix/resources'
-        }
-    }
-}
+
 sourceSets.main {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
@@ -61,8 +51,6 @@ sourceSets.test.resources {
 idea {
 	module {
 		sourceDirs += file( '$buildDir/generated-src/antlr/main' )
-		testSourceDirs += file( 'src/matrix/java')
-		testSourceDirs += file( 'src/matrix/resources')
 	}
 }
 

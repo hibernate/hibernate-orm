@@ -124,23 +124,41 @@ public final class TwoPhaseLoad {
 			final SessionImplementor session,
 			final PreLoadEvent preLoadEvent,
 			final PostLoadEvent postLoadEvent) throws HibernateException {
-
-		//TODO: Should this be an InitializeEntityEventListener??? (watch out for performance!)
-
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		EntityEntry entityEntry = persistenceContext.getEntry(entity);
+		final EntityEntry entityEntry = persistenceContext.getEntry(entity);
+		final EntityPersister persister = entityEntry.getPersister();
+		final Serializable id = entityEntry.getId();
+
+//		persistenceContext.getNaturalIdHelper().startingLoad( persister, id );
+//		try {
+			doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, postLoadEvent );
+//		}
+//		finally {
+//			persistenceContext.getNaturalIdHelper().endingLoad( persister, id );
+//		}
+	}
+
+	private static void doInitializeEntity(
+			final Object entity,
+			final EntityEntry entityEntry,
+			final boolean readOnly,
+			final SessionImplementor session,
+			final PreLoadEvent preLoadEvent,
+			final PostLoadEvent postLoadEvent) throws HibernateException {
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
+
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		EntityPersister persister = entityEntry.getPersister();
 		Serializable id = entityEntry.getId();
 		Object[] hydratedState = entityEntry.getLoadedState();
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
-				"Resolving associations for %s",
-				MessageHelper.infoString( persister, id, session.getFactory() )
-					);
+					"Resolving associations for %s",
+					MessageHelper.infoString( persister, id, session.getFactory() )
+			);
 		}
 
 		Type[] types = persister.getPropertyTypes();
@@ -172,9 +190,9 @@ public final class TwoPhaseLoad {
 
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
-					"Adding entity to second-level cache: %s",
-					MessageHelper.infoString( persister, id, session.getFactory() )
-						);
+						"Adding entity to second-level cache: %s",
+						MessageHelper.infoString( persister, id, session.getFactory() )
+				);
 			}
 
 			Object version = Versioning.getVersion(hydratedState, persister);
@@ -217,6 +235,14 @@ public final class TwoPhaseLoad {
 			}
 		}
 
+		if ( persister.hasNaturalIdentifier() ) {
+			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+					persister,
+					id,
+					persistenceContext.getNaturalIdHelper().extractNaturalIdValues( hydratedState, persister )
+			);
+		}
+
 		boolean isReallyReadOnly = readOnly;
 		if ( !persister.isMutable() ) {
 			isReallyReadOnly = true;
@@ -252,7 +278,7 @@ public final class TwoPhaseLoad {
 				entity,
 				entityEntry.isLoadedWithLazyPropertiesUnfetched(),
 				session
-			);
+		);
 
 		if ( session.isEventSource() ) {
 			postLoadEvent.setEntity( entity ).setId( id ).setPersister( persister );
@@ -277,7 +303,6 @@ public final class TwoPhaseLoad {
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );
 		}
-
 	}
 
 	private static boolean useMinimalPuts(SessionImplementor session, EntityEntry entityEntry) {

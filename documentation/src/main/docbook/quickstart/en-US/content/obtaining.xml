@@ -1,11 +1,9 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-
-<chapter id="hibernate-gsg-obtain">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Obtaining Hibernate</title>
 
-    <section id="hibernate-gsg-setup-releaseBundle">
+    <section xml:id="hibernate-gsg-setup-releaseBundle">
         <title>Release Bundle Downloads</title>
         <para>
             The Hibernate team provides release bundles hosted on the SourceForge File Release System, in
@@ -17,7 +15,7 @@
         </para>
         <para>
             You can download releases of Hibernate, in your chosen format, from the list at
-            <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate4/"/>.
+            <link xlink:href="http://sourceforge.net/projects/hibernate/files/hibernate4/"/>.
         </para>
         <itemizedlist>
             <listitem>
@@ -31,7 +29,7 @@
                     The <filename>/lib/jpa/</filename> directory contains the
                     <systemitem>hibernate-entitymanager</systemitem> jar and its dependencies beyond those
                     in <filename>lib/required/</filename>.  This defines Hibernate support for
-                    <ulink url="http://jcp.org/en/jsr/detail?id=317">JPA</ulink>.
+                    <link xlink:href="http://jcp.org/en/jsr/detail?id=317">JPA</link>.
                 </para>
             </listitem>
             <listitem>
@@ -49,7 +47,7 @@
         </itemizedlist>
     </section>
 
-    <section id="hibernate-gsg-setup-mavenRepoArtifacts">
+    <section xml:id="hibernate-gsg-setup-mavenRepoArtifacts">
         <title>Maven Repository Artifacts</title>
         <note>
             <para>
@@ -60,18 +58,18 @@
                 <title>Maven Repository Wiki Pages</title>
                 <listitem>
                     <para>
-                        <ulink url="http://community.jboss.org/docs/DOC-14900"/> - General information about the repository.
+                        <link xlink:href="http://community.jboss.org/docs/DOC-14900"/> - General information about the repository.
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <ulink url="http://community.jboss.org/docs/DOC-15170"/> - Information about setting up the JBoss
+                        <link xlink:href="http://community.jboss.org/docs/DOC-15170"/> - Information about setting up the JBoss
                         repositories in order to do development work on JBoss projects themselves.
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <ulink url="http://community.jboss.org/docs/DOC-15169"/> - Information about setting up access to
+                        <link xlink:href="http://community.jboss.org/docs/DOC-15169"/> - Information about setting up access to
                         the repository to use JBoss projects as part of your own software.
                     </para>
                 </listitem>
@@ -99,7 +97,7 @@
                 <listitem>
                     <para>
                         Represents Hibernate's implementation of <phrase>JPA</phrase>, as specified at
-                        <ulink url="http://jcp.org/en/jsr/detail?id=317"/>.
+                        <link xlink:href="http://jcp.org/en/jsr/detail?id=317"/>.
                     </para>
                     <para>
                         This artifact depends on <systemitem>hibernate-core</systemitem>
@@ -123,7 +121,7 @@
                 <listitem>
                     <para>
                         Provides integration between Hibernate and the <application>C3P0</application> connection
-                        pool library.  See <ulink url="http://sourceforge.net/projects/c3p0/"/> for information
+                        pool library.  See <link xlink:href="http://sourceforge.net/projects/c3p0/"/> for information
                         about <application>C3P0</application>.
                     </para>
                     <para>
@@ -138,7 +136,7 @@
                 <listitem>
                     <para>
                         Provides integration between Hibernate and the <application>Proxool</application> connection
-                        pool library. See <ulink url="http://proxool.sourceforge.net/"/> for more information about
+                        pool library. See <link xlink:href="http://proxool.sourceforge.net/"/> for more information about
                         this library.
                     </para>
                     <para>
@@ -153,7 +151,7 @@
                 <listitem>
                     <para>
                         Privides integration between Hibernate and <application>EhCache</application>, as a
-                        second-level cache. See <ulink url="http://ehcache.sourceforge.net/"/> for more
+                        second-level cache. See <link xlink:href="http://ehcache.sourceforge.net/"/> for more
                         information about<application>EhCache</application>.
                     </para>
                     <para>
@@ -168,7 +166,7 @@
                 <listitem>
                     <para>
                         Provides integration between Hibernate and <application>Infinispan</application>, as a
-                        second-level cache. See <ulink url="http://jboss.org/infinispan"/> for more information
+                        second-level cache. See <link xlink:href="http://jboss.org/infinispan"/> for more information
                         about <application>Infinispan</application>.
                     </para>
                     <para>

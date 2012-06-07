@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="xml">
+<chapter xml:id="xml" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>XML Mapping</title>
 
     <para><emphasis>
@@ -37,7 +8,7 @@
         active development.
     </emphasis></para>
 
-    <section id="xml-intro" revision="1">
+    <section xml:id="xml-intro" revision="1">
         <title>Working with XML data</title>
 
         <para>
@@ -68,7 +39,7 @@
             it can be used to map just the XML.
         </para>
         
-        <section id="xml-intro-mapping">
+        <section xml:id="xml-intro-mapping">
             <title>Specifying XML and class mapping together</title>
 
             <para>
@@ -97,7 +68,7 @@
 </class>]]></programlisting>
         </section>
         
-        <section id="xml-onlyxml">
+        <section xml:id="xml-onlyxml">
             <title>Specifying only an XML mapping</title>
 
             <para>
@@ -138,7 +109,7 @@
         
      </section>
      
-    <section id="xml-mapping" revision="1">
+    <section xml:id="xml-mapping" revision="1">
         <title>XML mapping metadata</title>
 
         <para>
@@ -227,7 +198,7 @@
             would return datasets such as this:
         </para>
         
-        <programlisting role="XML"><![CDATA[<customer id="123456789">
+        <programlisting role="XML"><![CDATA[<customer xml:id="123456789">
     <account short-desc="Savings">987632567</account>
     <account short-desc="Credit Card">985612323</account>
     <name>
@@ -243,13 +214,13 @@
             mapping, the data might look more like this:
         </para>
         
-        <programlisting role="XML"><![CDATA[<customer id="123456789">
-    <account id="987632567" short-desc="Savings">
-        <customer id="123456789"/>
+        <programlisting role="XML"><![CDATA[<customer xml:id="123456789">
+    <account xml:id="987632567" short-desc="Savings">
+        <customer xml:id="123456789"/>
         <balance>100.29</balance>
     </account>
-    <account id="985612323" short-desc="Credit Card">
-        <customer id="123456789"/>
+    <account xml:id="985612323" short-desc="Credit Card">
+        <customer xml:id="123456789"/>
         <balance>-2370.34</balance>
     </account>
     <name>
@@ -263,7 +234,7 @@
     </section>
     
     
-    <section id="xml-manipulation" revision="1">
+    <section xml:id="xml-manipulation" revision="1">
         <title>Manipulating XML data</title>
         
         <para>

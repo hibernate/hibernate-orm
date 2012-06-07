@@ -62,7 +62,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		}
 
 		private String renderCountDistinct(List arguments) {
-			StringBuffer buffer = new StringBuffer();
+			StringBuilder buffer = new StringBuilder();
 			buffer.append( "count(distinct " );
 			String sep = "";
 			Iterator itr = arguments.iterator();

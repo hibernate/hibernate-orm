@@ -34,6 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This specifies that a property is part of the natural id of the entity.
  *
  * @author Nicol�s Lichtmaier
+ * @see NaturalIdCache
  */
 @Target( { METHOD, FIELD } )
 @Retention( RUNTIME )

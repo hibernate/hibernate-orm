@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="org.hibernate.envers.test.entities.components.UniquePropsNotAuditedEntity" table="UniquePropsNotAud">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <properties name="uniquePropsNotAudited" unique="true">
+            <property name="data1" type="string"/>
+            <property name="data2" type="string"/>
+        </properties>
+    </class>
+</hibernate-mapping>

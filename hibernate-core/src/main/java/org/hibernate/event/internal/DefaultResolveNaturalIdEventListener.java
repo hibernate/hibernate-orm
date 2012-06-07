@@ -28,6 +28,9 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreMessageLogger;
@@ -72,49 +75,22 @@ public class DefaultResolveNaturalIdEventListener
 	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
 		final EntityPersister persister = event.getEntityPersister();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Attempting to resolve: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled )
+			LOG.tracev( "Attempting to resolve: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
-		Serializable entityId = resolveFromSessionCache( event );
+		Serializable entityId = resolveFromCache( event );
 		if ( entityId != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace(
-						"Resolved object in session cache: " +
-								MessageHelper.infoString(
-										persister, event.getNaturalIdValues(), event.getSession().getFactory()
-								)
-				);
-			}
+			if ( traceEnabled )
+				LOG.tracev( "Resolved object in cache: {0}",
+						MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 			return entityId;
 		}
 
-		entityId = loadFromSecondLevelCache( event );
-		if ( entityId != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace(
-						"Resolved object in second-level cache: " +
-								MessageHelper.infoString(
-										persister, event.getNaturalIdValues(), event.getSession().getFactory()
-								)
-				);
-			}
-			return entityId;
-		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Object not resolved in any cache: " +
-							MessageHelper.infoString(
-									persister, event.getNaturalIdValues(), event.getSession().getFactory()
-							)
-			);
-		}
+		if ( traceEnabled )
+			LOG.tracev( "Object not resolved in any cache: {0}",
+					MessageHelper.infoString( persister, event.getNaturalIdValues(), event.getSession().getFactory() ) );
 
 		return loadFromDatasource( event );
 	}
@@ -124,66 +100,13 @@ public class DefaultResolveNaturalIdEventListener
 	 * 
 	 * @param event The load event
 	 *
-	 * @return The entity from the session-level cache, or null.
+	 * @return The entity from the cache, or null.
 	 */
-	protected Serializable resolveFromSessionCache(final ResolveNaturalIdEvent event) {
-		return event.getSession().getPersistenceContext().findCachedNaturalIdResolution(
+	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
+		return event.getSession().getPersistenceContext().getNaturalIdHelper().findCachedNaturalIdResolution(
 				event.getEntityPersister(),
 				event.getOrderedNaturalIdValues()
 		);
-	}
-
-	/**
-	 * Attempts to load the entity from the second-level cache.
-	 * 
-	 * @param event The event
-	 *
-	 * @return The entity from the second-level cache, or null.
-	 */
-	protected Serializable loadFromSecondLevelCache(final ResolveNaturalIdEvent event) {
-
-		// final SessionImplementor source = event.getSession();
-		//
-		// final boolean useCache = persister.hasCache()
-		// && source.getCacheMode().isGetEnabled();
-		//
-		// if ( useCache ) {
-		//
-		// final SessionFactoryImplementor factory = source.getFactory();
-		//
-		// final CacheKey ck = source.generateCacheKey(
-		// event.getNaturalIdValues(),
-		// persister.getIdentifierType(),
-		// persister.getRootEntityName()
-		// );
-		// Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
-		// if ( factory.getStatistics().isStatisticsEnabled() ) {
-		// if ( ce == null ) {
-		// factory.getStatisticsImplementor().secondLevelCacheMiss(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// else {
-		// factory.getStatisticsImplementor().secondLevelCacheHit(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// }
-		//
-		// if ( ce != null ) {
-		// CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-		//
-		// // Entity was found in second-level cache...
-		// return assembleCacheEntry(
-		// entry,
-		// event.getEntityId(),
-		// persister,
-		// event
-		// );
-		// }
-		// }
-
-		return null;
 	}
 
 	/**
@@ -195,16 +118,37 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
+		final SessionFactoryImplementor factory = event.getSession().getFactory();
+		final boolean stats = factory.getStatistics().isStatisticsEnabled();
+		long startTime = 0;
+		if ( stats ) {
+			startTime = System.currentTimeMillis();
+		}
+		
 		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
 		);
-		event.getSession().getPersistenceContext().cacheNaturalIdResolution(
-				event.getEntityPersister(),
-				pk,
-				event.getOrderedNaturalIdValues()
-		);
+		
+		if ( stats ) {
+			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = event.getEntityPersister().getNaturalIdCacheAccessStrategy();
+			final String regionName = naturalIdCacheAccessStrategy == null ? null : naturalIdCacheAccessStrategy.getRegion().getName();
+			
+			factory.getStatisticsImplementor().naturalIdQueryExecuted(
+					regionName,
+					System.currentTimeMillis() - startTime );
+		}
+		
+		//PK can be null if the entity doesn't exist
+		if (pk != null) {
+			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+					event.getEntityPersister(),
+					pk,
+					event.getOrderedNaturalIdValues()
+			);
+		}
+		
 		return pk;
 	}
 }

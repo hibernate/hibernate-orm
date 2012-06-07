@@ -44,6 +44,7 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		private final transient Field field;
 		private final Class clazz;
 		private final String name;
+
 		DirectGetter(Field field, Class clazz, String name) {
 			this.field = field;
 			this.clazz = clazz;

@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<appendix id="appendix-Configuration_Properties">
+
+<appendix xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink">
+
   <title>Configuration properties</title>
   <section>
     <title>General Configuration</title>
@@ -359,8 +358,8 @@
     </table>
     <note>
       <para>
-        For information on specific configuration of Proxool, refer to the Proxool documentation available from <ulink
-        url="http://proxool.sourceforge.net/" />.
+        For information on specific configuration of Proxool, refer to the Proxool documentation available from
+          <link xl:href="http://proxool.sourceforge.net/" />.
       </para>
     </note>
   </section>

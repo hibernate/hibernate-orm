@@ -23,16 +23,16 @@
  */
 package org.hibernate.ejb;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import org.jboss.logging.Logger;
 
@@ -177,6 +177,8 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	protected abstract void applyTimeout(int timeout);
 
+	protected abstract void applyLockTimeout(int timeout);
+
 	protected abstract void applyComment(String comment);
 
 	protected abstract void applyFetchSize(int fetchSize);
@@ -207,6 +209,9 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applyTimeout( timeout );
+			}
+			else if ( AvailableSettings.LOCK_TIMEOUT.equals( hintName ) ) {
+				applyLockTimeout( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
 				applyComment( (String) value );

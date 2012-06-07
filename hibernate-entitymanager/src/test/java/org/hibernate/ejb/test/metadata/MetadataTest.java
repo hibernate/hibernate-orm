@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.test.metadata;
 
+import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
@@ -36,14 +37,13 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-import java.util.Set;
+
+import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,7 +73,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		cfg.addAnnotatedClass( WithGenericCollection.class );
 		cfg.buildMappings();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
-		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi );
+		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi, true );
 	}
 
 	@Test

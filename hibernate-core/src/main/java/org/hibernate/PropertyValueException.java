@@ -69,7 +69,7 @@ public class PropertyValueException extends HibernateException {
 	 * @return parent-child path
 	 */
 	public static String buildPropertyPath(String parent, String child) {
-		return new StringBuffer(parent).append('.').append(child).toString();
+		return new StringBuilder(parent).append('.').append(child).toString();
 	}
 }
 

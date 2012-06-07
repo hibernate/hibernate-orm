@@ -1,14 +1,11 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
-  <title>Mapping associations</title>
-  <para>
-    The most basic form of mapping in Hibernate is mapping a persistent entity class to a database table. You can expand
-    on this concept by mapping associated classes together.  <xref linkend="mapping-person" /> shows a
-    <classname>Person</classname> class with a 
-  </para>
+
+<chapter xmlns="http://docbook.org/ns/docbook" >
+    <title>Mapping associations</title>
+    <para>
+        The most basic form of mapping in Hibernate is mapping a persistent entity class to a database table.
+        You can expand on this concept by mapping associated classes together.  <xref linkend="mapping-person" />
+        shows a <classname>Person</classname> class with a
+    </para>
 </chapter>
 

@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="readonly">
+<chapter xml:id="readonly" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Read-only entities</title>
 
     <important>
@@ -124,7 +95,7 @@
             </listitem>
         </itemizedlist>
 
-    <section id="readonly-api">
+    <section xml:id="readonly-api">
         <title>Making persistent entities read-only</title>
 
         <para>
@@ -170,7 +141,7 @@
             </listitem>
         </itemizedlist>
 
-        <section id="readonly-api-immutable">
+        <section xml:id="readonly-api-immutable">
             <title>Entities of immutable classes</title>
 
             <para>
@@ -192,7 +163,7 @@
 
         </section>
 
-        <section id="readonly-api-loaddefault">
+        <section xml:id="readonly-api-loaddefault">
             <title>Loading persistent entities as read-only</title>
  
             <note>
@@ -279,7 +250,7 @@
 
         </section>
 
-        <section id="readonly-api-querycriteria">
+        <section xml:id="readonly-api-querycriteria">
             <title>Loading read-only entities from an HQL query/criteria</title> 
 
             <note>
@@ -380,7 +351,7 @@ session.close();
 
         </section>
 
-        <section id="readonly-api-entity">
+        <section xml:id="readonly-api-entity">
             <title>Making a persistent entity read-only</title>
             <note>
                 <para>
@@ -434,7 +405,7 @@ s.flush();
         </section>
     </section>
 
-    <section id="readonly-proptypes">
+    <section xml:id="readonly-proptypes">
         <title>Read-only affect on property type</title>
 
         <para>
@@ -442,7 +413,7 @@ s.flush();
             affected by making an entity read-only.
         </para>
 
-        <table frame="topbot" id="readonly-proptype-summary">
+        <table frame="topbot" xml:id="readonly-proptype-summary">
             <title>Affect of read-only entity on property types</title>
             <tgroup cols="2">        
                 <colspec colwidth="1*"/>
@@ -532,7 +503,7 @@ s.flush();
               is read-only, compared to when it is not read-only.
         </para>
 
-        <section id="readonly-proptypes-simple">
+        <section xml:id="readonly-proptypes-simple">
             <title>Simple properties</title>
 
             <para>
@@ -569,10 +540,10 @@ session.close();
 
         </section>
 
-        <section id="readonly-prop-types-unidir">
+        <section xml:id="readonly-prop-types-unidir">
             <title>Unidirectional associations</title>
 
-            <section id="readonly-proptypes-singleended-unidir">
+            <section xml:id="readonly-proptypes-singleended-unidir">
                 <title>Unidirectional one-to-one and many-to-one</title>
 
                 <para>
@@ -678,7 +649,7 @@ session.close();</programlisting>
 
             </section>
 
-            <section id="readonly-proptypes-manyended-unidir">
+            <section xml:id="readonly-proptypes-manyended-unidir">
                 <title>Unidirectional one-to-many and many-to-many</title>
 
                 <para>
@@ -714,10 +685,10 @@ session.close();</programlisting>
 
         </section>
 
-        <section id="readonly-proptypes-bidir">
+        <section xml:id="readonly-proptypes-bidir">
             <title>Bidirectional associations</title>
 
-            <section id="readonly-proptypes-onetoone-bidir">
+            <section xml:id="readonly-proptypes-onetoone-bidir">
                 <title>Bidirectional one-to-one</title>
 
                 <para>
@@ -767,7 +738,7 @@ session.close();</programlisting>
 
             </section>
 
-            <section id="readonly-proptypes-onetomany-manytoone">
+            <section xml:id="readonly-proptypes-onetomany-manytoone">
                 <title>Bidirectional one-to-many/many-to-one</title>
 
                 <para>
@@ -818,7 +789,7 @@ session.close();</programlisting>
 
             </section>
 
-            <section id="readonly-proptypes-manytomany-bidir">
+            <section xml:id="readonly-proptypes-manytomany-bidir">
                 <title>Bidirectional many-to-many</title>
                 <para>
                     Hibernate treats bidirectional many-to-many 

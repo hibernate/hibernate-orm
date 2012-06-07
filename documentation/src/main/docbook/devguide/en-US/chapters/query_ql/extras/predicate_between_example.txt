@@ -1,0 +1,19 @@
+select p
+from Customer c
+    join c.paymentHistory p
+where c.id = 123
+  and index(p) between 0 and 9
+
+select c
+from Customer c
+where c.president.dateOfBirth
+        between {d '1945-01-01'}
+            and {d '1965-01-01'}
+
+select o
+from Order o
+where o.total between 500 and 5000
+
+select p
+from Person p
+where p.name between 'A' and 'E' 

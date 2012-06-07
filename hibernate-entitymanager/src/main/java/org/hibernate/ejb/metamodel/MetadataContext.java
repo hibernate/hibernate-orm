@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,16 +32,20 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.jboss.logging.Logger;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -61,6 +66,7 @@ class MetadataContext {
                                                                            MetadataContext.class.getName());
 
 	private final SessionFactoryImplementor sessionFactory;
+    private final boolean ignoreUnsupported;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private Map<Class<?>,EntityTypeImpl<?>> entityTypes
@@ -84,15 +90,20 @@ class MetadataContext {
 	private Map<MappedSuperclassTypeImpl<?>, PersistentClass> mappedSuperClassTypeToPersistentClass
 			= new HashMap<MappedSuperclassTypeImpl<?>, PersistentClass>();
 
-	public MetadataContext(SessionFactoryImplementor sessionFactory) {
+	public MetadataContext(SessionFactoryImplementor sessionFactory, boolean ignoreUnsupported) {
 		this.sessionFactory = sessionFactory;
+        this.ignoreUnsupported = ignoreUnsupported;
 	}
 
 	/*package*/ SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
-	/**
+    /*package*/ boolean isIgnoreUnsupported() {
+        return ignoreUnsupported;
+    }
+
+    /**
 	 * Retrieves the {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 *
 	 * @return The {@linkplain Class java type} to {@link EntityTypeImpl} map.
@@ -103,6 +114,22 @@ class MetadataContext {
 
 	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
 		return Collections.unmodifiableMap( embeddables );
+	}
+
+	public Map<Class<?>,MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
+		// we need to actually build this map...
+		final Map<Class<?>,MappedSuperclassType<?>> mappedSuperClassTypeMap = CollectionHelper.mapOfSize(
+				mappedSuperclassByMappedSuperclassMapping.size()
+		);
+
+		for ( MappedSuperclassTypeImpl mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
+			mappedSuperClassTypeMap.put(
+					mappedSuperclassType.getJavaType(),
+					mappedSuperclassType
+			);
+		}
+
+		return mappedSuperClassTypeMap;
 	}
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {

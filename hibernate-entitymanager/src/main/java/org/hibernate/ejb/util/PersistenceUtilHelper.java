@@ -1,4 +1,5 @@
 package org.hibernate.ejb.util;
+
 import java.io.Serializable;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -12,10 +13,11 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.LoadState;
+
 import org.hibernate.AssertionFailure;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

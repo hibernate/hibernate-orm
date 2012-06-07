@@ -165,7 +165,7 @@ public class DerbyConcatFunction implements SQLFunction {
 
 	private static String join(Iterator/*<String>*/ elements, StringTransformer elementTransformer, StringJoinTemplate template) {
 		// todo : make this available via StringHelper?
-		StringBuffer buffer = new StringBuffer( template.getBeginning() );
+		StringBuilder buffer = new StringBuilder( template.getBeginning() );
 		while ( elements.hasNext() ) {
 			final String element = ( String ) elements.next();
 			buffer.append( elementTransformer.transform( element ) );

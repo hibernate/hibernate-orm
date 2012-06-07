@@ -24,7 +24,6 @@
 package org.hibernate.ejb.metamodel;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 /**
  * @author James Gilbertson

@@ -36,7 +36,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  */
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
     private final boolean selectEntitiesOnly;

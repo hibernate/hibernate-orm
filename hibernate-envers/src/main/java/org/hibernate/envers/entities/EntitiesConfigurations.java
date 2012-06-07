@@ -152,7 +152,7 @@ public class EntitiesConfigurations {
 		for (RelationDescription relationDescription : getRelationDescriptions(toEntityName)) {
 			String relToEntityName = relationDescription.getToEntityName();
 			String mappedByPropertyName = relationDescription.getMappedByPropertyName();
-			if (entityAndParentsNames.contains(relToEntityName) && mappedByPropertyName.equals(fromPropertyName)) {
+			if (entityAndParentsNames.contains(relToEntityName) && mappedByPropertyName != null && mappedByPropertyName.equals(fromPropertyName)) {
 				toPropertyNames.add(relationDescription.getFromPropertyName());
 			}
 		}

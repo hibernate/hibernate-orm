@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
-  <title>Caching</title>
 
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <info>
+        <title>Caching</title>
+    </info>
 
   <section>
     <title>The query cache</title>
@@ -74,7 +74,7 @@
 
       <example>
         <title>Method <methodname>setCacheRegion</methodname></title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/setCacheRegion.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/setCacheRegion.java" parse="text" /></programlisting>
       </example>
 
       <para>
@@ -171,7 +171,7 @@
       </note>
       <example id="configuring-cache-providers-annotations">
         <title>Configuring cache providers using annotations</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/cache_providers_mapping.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/cache_providers_mapping.java" parse="text" /></programlisting>
         <para>
           You can cache the content of a collection or the identifiers, if the collection contains other entities. Use
           the <code>@Cache</code> annotation on the Collection property.
@@ -250,8 +250,7 @@
 
       <example>
         <title>Configuring cache providers using mapping files</title>
-        <programlisting language="XML" role="XML"><xi:include href="extras/cache_providers.xml"
-        xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="XML" role="XML"><xi:include href="extras/cache_providers.xml" parse="text" /></programlisting>
         <para>
           Just as in the <xref linkend="configuring-cache-providers-annotations" />, you can provide attributes in the
           mapping file. There are some specific differences in the syntax for the attributes in a mapping file.
@@ -507,7 +506,7 @@
       </formalpara>
       <example>
         <title>Evicting an item from the first-level cache</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/evicting_item.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/evicting_item.java" parse="text" /></programlisting>
       </example>
       <formalpara>
         <title>Determining whether an item belongs to the Session cache</title>
@@ -523,7 +522,7 @@
           You can evict the cached state of an instance, entire class, collection instance or entire collection role,
           using methods of <classname>SessionFactory</classname>.
         </para>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/evicting_from_second_level_cache.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/evicting_from_second_level_cache.java" parse="text" /></programlisting>
       </example>       
       <section>
         <title>Interactions between a Session and the second-level cache</title>
@@ -573,9 +572,8 @@
           </step>
         </procedure>
         <example>
-          <title>Browsing the second-level cache entries via the Statistics API</title> <programlisting language="Java"
-          role="JAVA"><xi:include href="extras/browsing_cache.java" xmlns:xi="http://www.w3.org/2001/XInclude"
-          parse="text" /></programlisting>
+            <title>Browsing the second-level cache entries via the Statistics API</title>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/browsing_cache.java" parse="text" /></programlisting>
         </example>
       </section>
     </section>

@@ -59,6 +59,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
@@ -66,12 +67,15 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -98,6 +102,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
@@ -172,7 +177,7 @@ import org.hibernate.type.TypeResolver;
 public final class SessionFactoryImpl
 		implements SessionFactoryImplementor {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
@@ -320,7 +325,8 @@ public final class SessionFactoryImpl
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
 		// Caches
-		settings.getRegionFactory().start( settings, properties );
+		final RegionFactory regionFactory = settings.getRegionFactory();
+		regionFactory.start( settings, properties );
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		// todo : everything above here consider implementing as standard SF service.  specifically: stats, caches, types, function-reg
@@ -385,18 +391,48 @@ public final class SessionFactoryImpl
 			if ( accessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
 				final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
 				if ( accessType != null ) {
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracev( "Building cache for entity data [{0}]", model.getEntityName() );
-					}
-					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
+					LOG.tracef( "Building shared cache region for entity data [%s]", model.getEntityName() );
+					EntityRegion entityRegion = regionFactory.buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
+			
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
+			if ( model.hasNaturalId() && model.getNaturalIdCacheRegionName() != null ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + model.getNaturalIdCacheRegionName();
+				naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
+				
+				if ( naturalIdAccessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
+					final CacheDataDescriptionImpl cacheDataDescription = CacheDataDescriptionImpl.decode( model );
+					
+					NaturalIdRegion naturalIdRegion = null;
+					try {
+						naturalIdRegion = regionFactory.buildNaturalIdRegion( naturalIdCacheRegionName, properties,
+								cacheDataDescription );
+					}
+					catch ( UnsupportedOperationException e ) {
+						LOG.warnf(
+								"Shared cache region factory [%s] does not support natural id caching; " +
+										"shared NaturalId caching will be disabled for not be enabled for %s",
+								regionFactory.getClass().getName(),
+								model.getEntityName()
+						);
+					}
+					
+					if (naturalIdRegion != null) {
+						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
+						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+						allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+					}
+				}
+			}
+			
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
 					model,
 					accessStrategy,
+					naturalIdAccessStrategy,
 					this,
 					mapping
 			);
@@ -415,10 +451,8 @@ public final class SessionFactoryImpl
 			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev("Building cache for collection data [{0}]", model.getRole() );
-				}
-				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl
+				LOG.tracev( "Building shared cache region for collection data [{0}]", model.getRole() );
+				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl
 						.decode( model ) );
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
@@ -941,7 +975,7 @@ public final class SessionFactoryImpl
 	}
 
 	@Override
-	public SessionBuilder withOptions() {
+	public SessionBuilderImplementor withOptions() {
 		return new SessionBuilderImpl( this );
 	}
 
@@ -1028,7 +1062,7 @@ public final class SessionFactoryImpl
 			try {
 				LOG.debugf( "Checking named query: %s", queryName );
 				//TODO: BUG! this currently fails for named queries for non-POJO entities
-				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, CollectionHelper.EMPTY_MAP );
+				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, Collections.EMPTY_MAP );
 			}
 			catch ( QueryException e ) {
 				errors.put( queryName, e );
@@ -1036,6 +1070,8 @@ public final class SessionFactoryImpl
 			catch ( MappingException e ) {
 				errors.put( queryName, e );
 			}
+
+
 		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Checking %s named SQL queries", namedSqlQueries.size() );
@@ -1077,6 +1113,7 @@ public final class SessionFactoryImpl
 			catch ( MappingException e ) {
 				errors.put( queryName, e );
 			}
+
 		}
 
 		return errors;
@@ -1147,15 +1184,15 @@ public final class SessionFactoryImpl
 	}
 
 	public NamedQueryDefinition getNamedQuery(String queryName) {
-		return namedQueries.get(queryName);
+		return namedQueries.get( queryName );
 	}
 
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return namedSqlQueries.get(queryName);
+		return namedSqlQueries.get( queryName );
 	}
 
 	public ResultSetMappingDefinition getResultSetMapping(String resultSetName) {
-		return sqlResultSetMappings.get(resultSetName);
+		return sqlResultSetMappings.get( resultSetName );
 	}
 
 	public Type getIdentifierType(String className) throws MappingException {
@@ -1166,11 +1203,15 @@ public final class SessionFactoryImpl
 	}
 
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP ).getReturnMetadata().getReturnTypes();
+		return queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
+				.getReturnMetadata()
+				.getReturnTypes();
 	}
 
 	public String[] getReturnAliases(String queryString) throws HibernateException {
-		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP ).getReturnMetadata().getReturnAliases();
+		return queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
+				.getReturnMetadata()
+				.getReturnAliases();
 	}
 
 	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
@@ -1241,7 +1282,7 @@ public final class SessionFactoryImpl
 				}
 			}
 		}
-		return results.toArray( new String[ results.size() ] );
+		return results.toArray( new String[results.size()] );
 	}
 
 	public String getImportedClassName(String className) {
@@ -1332,6 +1373,8 @@ public final class SessionFactoryImpl
 
 		settings.getRegionFactory().stop();
 
+		queryPlanCache.cleanup();
+
 		if ( settings.isAutoDropSchema() ) {
 			schemaExport.drop( false, true );
 		}
@@ -1403,6 +1446,26 @@ public final class SessionFactoryImpl
 			}
 		}
 
+		public void evictNaturalIdRegion(Class entityClass) {
+			evictNaturalIdRegion( entityClass.getName() );
+		}
+
+		public void evictNaturalIdRegion(String entityName) {
+			EntityPersister p = getEntityPersister( entityName );
+			if ( p.hasNaturalIdCache() ) {
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );
+				}
+				p.getNaturalIdCacheAccessStrategy().evictAll();
+			}
+		}
+
+		public void evictNaturalIdRegions() {
+			for ( String s : entityPersisters.keySet() ) {
+				evictNaturalIdRegion( s );
+			}
+		}
+
 		public boolean containsCollection(String role, Serializable ownerIdentifier) {
 			CollectionPersister p = getCollectionPersister( role );
 			return p.hasCache() &&
@@ -1458,21 +1521,27 @@ public final class SessionFactoryImpl
 		}
 
 		public void evictQueryRegion(String regionName) {
-            if (regionName == null) throw new NullPointerException(
-                                                                   "Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)");
-            if (settings.isQueryCacheEnabled()) {
-                QueryCache namedQueryCache = queryCaches.get(regionName);
-                // TODO : cleanup entries in queryCaches + allCacheRegions ?
-                if (namedQueryCache != null) namedQueryCache.clear();
+			if ( regionName == null ) {
+				throw new NullPointerException(
+						"Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)"
+				);
+			}
+			if ( settings.isQueryCacheEnabled() ) {
+				QueryCache namedQueryCache = queryCaches.get( regionName );
+				// TODO : cleanup entries in queryCaches + allCacheRegions ?
+				if ( namedQueryCache != null ) {
+					namedQueryCache.clear();
+				}
 			}
 		}
 
 		public void evictQueryRegions() {
-			if ( queryCaches != null ) {
-				for ( QueryCache queryCache : queryCaches.values() ) {
-					queryCache.clear();
-					// TODO : cleanup entries in queryCaches + allCacheRegions ?
-				}
+			if ( CollectionHelper.isEmpty( queryCaches ) ) {
+				return;
+			}
+			for ( QueryCache queryCache : queryCaches.values() ) {
+				queryCache.clear();
+				// TODO : cleanup entries in queryCaches + allCacheRegions ?
 			}
 		}
 	}
@@ -1550,6 +1619,10 @@ public final class SessionFactoryImpl
 	}
 
 	public Region getSecondLevelCacheRegion(String regionName) {
+		return allCacheRegions.get( regionName );
+	}
+
+	public Region getNaturalIdCacheRegion(String regionName) {
 		return allCacheRegions.get( regionName );
 	}
 
@@ -1663,8 +1736,9 @@ public final class SessionFactoryImpl
 		return typeHelper;
 	}
 
-	static class SessionBuilderImpl implements SessionBuilder {
+	static class SessionBuilderImpl implements SessionBuilderImplementor {
 		private final SessionFactoryImpl sessionFactory;
+		private SessionOwner sessionOwner;
 		private Interceptor interceptor;
 		private Connection connection;
 		private ConnectionReleaseMode connectionReleaseMode;
@@ -1675,6 +1749,7 @@ public final class SessionFactoryImpl
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
+			this.sessionOwner = null;
 			final Settings settings = sessionFactory.settings;
 
 			// set up default builder values...
@@ -1682,6 +1757,10 @@ public final class SessionFactoryImpl
 			this.connectionReleaseMode = settings.getConnectionReleaseMode();
 			this.autoClose = settings.isAutoCloseSessionEnabled();
 			this.flushBeforeCompletion = settings.isFlushBeforeCompletionEnabled();
+
+			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
+				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+			}
 		}
 
 		protected TransactionCoordinatorImpl getTransactionCoordinator() {
@@ -1693,6 +1772,7 @@ public final class SessionFactoryImpl
 			return new SessionImpl(
 					connection,
 					sessionFactory,
+					sessionOwner,
 					getTransactionCoordinator(),
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),
@@ -1702,6 +1782,12 @@ public final class SessionFactoryImpl
 					connectionReleaseMode,
 					tenantIdentifier
 			);
+		}
+
+		@Override
+		public SessionBuilder owner(SessionOwner sessionOwner) {
+			this.sessionOwner = sessionOwner;
+			return this;
 		}
 
 		@Override

@@ -23,10 +23,10 @@
  */
 package org.hibernate.ejb.util;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.PersistenceException;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.FlushModeType;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;

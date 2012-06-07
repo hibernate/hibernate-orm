@@ -60,6 +60,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		this.exceptionHelper = exceptionHelper;
 	}
 
+	@Override
 	public void register(Statement statement) {
 		LOG.tracev( "Registering statement [{0}]", statement );
 		if ( xref.containsKey( statement ) ) {
@@ -68,6 +69,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		xref.put( statement, null );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public void registerLastQuery(Statement statement) {
 		LOG.tracev( "Registering last query statement [{0}]", statement );
@@ -79,6 +81,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		lastQuery = statement;
 	}
 
+	@Override
 	public void cancelLastQuery() {
 		try {
 			if (lastQuery != null) {
@@ -96,6 +99,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 	}
 
+	@Override
 	public void release(Statement statement) {
 		LOG.tracev( "Releasing statement [{0}]", statement );
 		Set<ResultSet> resultSets = xref.get( statement );
@@ -109,6 +113,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		close( statement );
 	}
 
+	@Override
 	public void register(ResultSet resultSet) {
 		LOG.tracev( "Registering result set [{0}]", resultSet );
 		Statement statement;
@@ -134,6 +139,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 	}
 
+	@Override
 	public void release(ResultSet resultSet) {
 		LOG.tracev( "Releasing result set [{0}]", resultSet );
 		Statement statement;
@@ -157,15 +163,19 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 		}
 		else {
 			boolean removed = unassociatedResultSets.remove( resultSet );
-			if (!removed) LOG.unregisteredResultSetWithoutStatement();
+			if ( !removed ) {
+				LOG.unregisteredResultSetWithoutStatement();
+			}
 		}
 		close( resultSet );
 	}
 
+	@Override
 	public boolean hasRegisteredResources() {
 		return ! xref.isEmpty() || ! unassociatedResultSets.isEmpty();
 	}
 
+	@Override
 	public void releaseResources() {
 		LOG.tracev( "Releasing JDBC container resources [{0}]", this );
 		cleanup();
@@ -174,74 +184,23 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	private void cleanup() {
 		for ( Map.Entry<Statement,Set<ResultSet>> entry : xref.entrySet() ) {
 			if ( entry.getValue() != null ) {
-				for ( ResultSet resultSet : entry.getValue() ) {
-					close( resultSet );
-				}
-				entry.getValue().clear();
+				closeAll( entry.getValue() );
 			}
 			close( entry.getKey() );
 		}
 		xref.clear();
 
-		for ( ResultSet resultSet : unassociatedResultSets ) {
-			close( resultSet );
-		}
-		unassociatedResultSets.clear();
-
-		// TODO: can ConcurrentModificationException still happen???
-		// Following is from old AbstractBatcher...
-		/*
-		Iterator iter = resultSetsToClose.iterator();
-		while ( iter.hasNext() ) {
-			try {
-				logCloseResults();
-				( ( ResultSet ) iter.next() ).close();
-			}
-			catch ( SQLException e ) {
-				// no big deal
-				log.warn( "Could not close a JDBC result set", e );
-			}
-			catch ( ConcurrentModificationException e ) {
-				// this has been shown to happen occasionally in rare cases
-				// when using a transaction manager + transaction-timeout
-				// where the timeout calls back through Hibernate's
-				// registered transaction synchronization on a separate
-				// "reaping" thread.  In cases where that reaping thread
-				// executes through this block at the same time the main
-				// application thread does we can get into situations where
-				// these CMEs occur.  And though it is not "allowed" per-se,
-				// the end result without handling it specifically is infinite
-				// looping.  So here, we simply break the loop
-				log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
-				break;
-			}
-			catch ( Throwable e ) {
-				// sybase driver (jConnect) throwing NPE here in certain
-				// cases, but we'll just handle the general "unexpected" case
-				log.warn( "Could not close a JDBC result set", e );
-			}
-		}
-		resultSetsToClose.clear();
-
-		iter = statementsToClose.iterator();
-		while ( iter.hasNext() ) {
-			try {
-				closeQueryStatement( ( PreparedStatement ) iter.next() );
-			}
-			catch ( ConcurrentModificationException e ) {
-				// see explanation above...
-				log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
-				break;
-			}
-			catch ( SQLException e ) {
-				// no big deal
-				log.warn( "Could not close a JDBC statement", e );
-			}
-		}
-		statementsToClose.clear();
-        */
+		closeAll( unassociatedResultSets );
 	}
 
+	protected void closeAll(Set<ResultSet> resultSets) {
+		for ( ResultSet resultSet : resultSets ) {
+			close( resultSet );
+		}
+		resultSets.clear();
+	}
+
+	@Override
 	public void close() {
 		LOG.tracev( "Closing JDBC container [{0}]", this );
 		cleanup();
@@ -281,10 +240,12 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 				lastQuery = null;
 			}
 		}
-		catch( SQLException sqle ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Unable to release statement [%s]", sqle.getMessage() );
-			}
+		catch( SQLException e ) {
+			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+		}
+		catch ( Exception e ) {
+			// try to handle general errors more elegantly
+			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
 		}
 	}
 
@@ -296,15 +257,18 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			InvalidatableWrapper<ResultSet> wrapper = (InvalidatableWrapper<ResultSet>) resultSet;
 			close( wrapper.getWrappedObject() );
 			wrapper.invalidate();
+			return;
 		}
 
 		try {
 			resultSet.close();
 		}
 		catch( SQLException e ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Unable to release result set [%s]", e.getMessage() );
-			}
+			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
+		}
+		catch ( Exception e ) {
+			// try to handle general errors more elegantly
+			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
 		}
 	}
 }

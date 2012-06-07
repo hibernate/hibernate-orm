@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="queryhql" revision="1">
+<chapter xml:id="queryhql" revision="1" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>HQL: The Hibernate Query Language</title>
 
     <para>
@@ -38,7 +9,7 @@
         and understands notions like inheritance, polymorphism and association.
     </para>
 
-    <section id="queryhql-casesensitivity">
+    <section xml:id="queryhql-casesensitivity">
         <title>Case Sensitivity</title>
 
         <para>
@@ -59,7 +30,7 @@
 
     </section>
 
-    <section id="queryhql-from">
+    <section xml:id="queryhql-from">
         <title>The from clause</title>
 
         <para>
@@ -107,7 +78,7 @@
 
     </section>
 
-    <section id="queryhql-joins" revision="2">
+    <section xml:id="queryhql-joins" revision="2">
         <title>Associations and joins</title>
 
         <para>
@@ -219,7 +190,7 @@
 
     </section>
 
-    <section id="queryhql-joins-forms">
+    <section xml:id="queryhql-joins-forms">
         <title>Forms of join syntax</title>
 
 	    <para>
@@ -241,7 +212,7 @@
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
 	</section>
 
-    <section id="queryhql-identifier-property">
+    <section xml:id="queryhql-identifier-property">
         <title>Referring to identifier property</title>
 
         <para>
@@ -280,7 +251,7 @@
 
   </section>
 
-    <section id="queryhql-select">
+    <section xml:id="queryhql-select">
         <title>The select clause</title>
 
         <para>
@@ -357,7 +328,7 @@ from Cat cat]]></programlisting>
 
     </section>
 
-    <section id="queryhql-aggregation">
+    <section xml:id="queryhql-aggregation">
         <title>Aggregate functions</title>
 
         <para>
@@ -422,7 +393,7 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
 
     </section>
 
-    <section id="queryhql-polymorphism">
+    <section xml:id="queryhql-polymorphism">
         <title>Polymorphic queries</title>
 
         <para>
@@ -456,7 +427,7 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
 
     </section>
 
-    <section id="queryhql-where" revision="1">
+    <section xml:id="queryhql-where" revision="1">
         <title>The where clause</title>
 
         <para>
@@ -583,7 +554,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
 
     </section>
 
-    <section id="queryhql-expressions">
+    <section xml:id="queryhql-expressions">
         <title>Expressions</title>
 
         <para>
@@ -876,7 +847,7 @@ WHERE prod.name = 'widget'
 
     </section>
 
-    <section id="queryhql-ordering">
+    <section xml:id="queryhql-ordering">
         <title>The order by clause</title>
 
         <para>
@@ -892,7 +863,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         </para>
     </section>
 
-    <section id="queryhql-grouping" revision="1">
+    <section xml:id="queryhql-grouping" revision="1">
         <title>The group by clause</title>
 
         <para>
@@ -940,7 +911,7 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
     </section>
 
-    <section id="queryhql-subqueries" revision="3">
+    <section xml:id="queryhql-subqueries" revision="3">
         <title>Subqueries</title>
 
         <para>
@@ -983,7 +954,7 @@ from Cat as cat]]></programlisting>
 
     </section>
 
-    <section id="queryhql-examples">
+    <section xml:id="queryhql-examples">
         <title>HQL examples</title>
 
         <para>
@@ -1106,7 +1077,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
 
    </section>
 
-    <section id="queryhql-bulk" revision="2">
+    <section xml:id="queryhql-bulk" revision="2">
         <title>Bulk update and delete</title>
 
         <para>
@@ -1116,7 +1087,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
         </para>
     </section>
 
-    <section id="queryhql-tipstricks">
+    <section xml:id="queryhql-tipstricks">
         <title>Tips &amp; Tricks</title>
 
         <para>
@@ -1196,7 +1167,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
 
     </section>
 
-    <section id="queryhql-components">
+    <section xml:id="queryhql-components">
         <title>Components</title>
 
         <para>
@@ -1223,11 +1194,11 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <programlisting><![CDATA[from Person p order by p.name.first]]></programlisting>
 
         <para>
-            Another common use of components is in <link linkend="queryhql-tuple">row value constructors</link>.
+            Another common use of components is in <xref linkend="queryhql-tuple">row value constructors</xref>.
         </para>
     </section>
 
-    <section id="queryhql-tuple">
+    <section xml:id="queryhql-tuple">
         <title>Row value constructor syntax</title>
 
         <para>

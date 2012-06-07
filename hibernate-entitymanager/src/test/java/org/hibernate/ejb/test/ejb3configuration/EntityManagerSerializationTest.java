@@ -32,6 +32,8 @@ import java.util.Date;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
+import org.junit.Test;
+
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
@@ -40,7 +42,6 @@ import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.NotSerializableClass;
 import org.hibernate.ejb.test.Wallet;
-import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard

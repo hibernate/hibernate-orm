@@ -37,7 +37,7 @@ import org.hibernate.envers.tools.Tools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ToOneIdMapper extends AbstractToOneMapper {

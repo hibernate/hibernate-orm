@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="transactions" revision="2">
+<chapter xml:id="transactions" revision="2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Transactions and Concurrency</title>
 
     <para>
@@ -60,7 +31,7 @@
         <literal>Session</literal>, as well as database transactions and long conversations.
     </para>
 
-    <section id="transactions-basics" revision="1">
+    <section xml:id="transactions-basics" revision="1">
         <title>Session and transaction scopes</title>
 
         <para>
@@ -92,7 +63,7 @@
             database transaction boundaries? These questions are addressed in the following sections.
         </para>
 
-        <section id="transactions-basics-uow" revision="1">
+        <section xml:id="transactions-basics-uow" revision="1">
             <title>Unit of work</title>
 
             <para>
@@ -173,7 +144,7 @@
 
         </section>
 
-        <section id="transactions-basics-apptx" revision="1">
+        <section xml:id="transactions-basics-apptx" revision="1">
             <title>Long conversations</title>
 
             <para>
@@ -267,7 +238,7 @@
 
         </section>
 
-        <section id="transactions-basics-identity">
+        <section xml:id="transactions-basics-identity">
             <title>Considering object identity</title>
 
             <para>
@@ -334,7 +305,7 @@
 
         </section>
 
-        <section id="transactions-basics-issues">
+        <section xml:id="transactions-basics-issues">
             <title>Common issues</title>
 
              <para>
@@ -386,7 +357,7 @@
 
     </section>
 
-    <section id="transactions-demarcation">
+    <section xml:id="transactions-demarcation">
         <title>Database transaction demarcation</title>
 
         <para>
@@ -451,7 +422,7 @@
         </para>
 
 
-        <section id="transactions-demarcation-nonmanaged" revision="2">
+        <section xml:id="transactions-demarcation-nonmanaged" revision="2">
             <title>Non-managed environment</title>
 
             <para>
@@ -483,7 +454,7 @@ finally {
             <para>
                 You do not have to <literal>flush()</literal> the <literal>Session</literal> explicitly:
                 the call to <literal>commit()</literal> automatically triggers the synchronization depending
-	            on the <link linkend="objectstate-flushing">FlushMode</link> for the session.
+	            on the <xref linkend="objectstate-flushing">FlushMode</xref> for the session.
                 A call to <literal>close()</literal> marks the end of a session. The main implication
                 of <literal>close()</literal> is that the JDBC connection will be relinquished by the
                 session. This Java code is portable and runs in both non-managed and JTA environments.
@@ -526,7 +497,7 @@ catch (RuntimeException e) {
             
         </section>
 
-        <section id="transactions-demarcation-jta" revision="3">
+        <section xml:id="transactions-demarcation-jta" revision="3">
             <title>Using JTA</title>
 
             <para>
@@ -629,7 +600,7 @@ catch (RuntimeException e) {
 
         </section>
 
-        <section id="transactions-demarcation-exceptions">
+        <section xml:id="transactions-demarcation-exceptions">
             <title>Exception handling</title>
 
             <para>
@@ -704,7 +675,7 @@ catch (RuntimeException e) {
 
         </section>
 
-        <section id="transactions-demarcation-timeout">
+        <section xml:id="transactions-demarcation-timeout">
             <title>Transaction timeout</title>
 
             <para>
@@ -749,7 +720,7 @@ finally {
         
     </section>
 
-    <section id="transactions-optimistic">
+    <section xml:id="transactions-optimistic">
         <title>Optimistic concurrency control</title>
 
         <para>
@@ -762,7 +733,7 @@ finally {
             also has the benefit of preventing lost updates in single database transactions.
         </para>
 
-        <section id="transactions-optimistic-manual">
+        <section xml:id="transactions-optimistic-manual">
             <title>Application version checking</title>
 
             <para>
@@ -811,7 +782,7 @@ session.close();]]></programlisting>
 
         </section>
 
-        <section id="transactions-optimistic-longsession">
+        <section xml:id="transactions-optimistic-longsession">
             <title>Extended session and automatic versioning</title>
 
             <para>
@@ -889,7 +860,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
 
         </section>
 
-        <section id="transactions-optimistic-detached">
+        <section xml:id="transactions-optimistic-detached">
             <title>Detached objects and automatic versioning</title>
 
             <para>
@@ -921,7 +892,7 @@ session.close();]]></programlisting>
 
         </section>
 
-        <section id="transactions-optimistic-customizing">
+        <section xml:id="transactions-optimistic-customizing">
             <title>Customizing automatic versioning</title>
 
             <para>
@@ -966,7 +937,7 @@ session.close();]]></programlisting>
 
     </section>
 
-    <section id="transactions-locking">
+    <section xml:id="transactions-locking">
         <title>Pessimistic locking</title>
 
         <para>
@@ -1068,7 +1039,7 @@ session.close();]]></programlisting>
 
     </section>
 
-    <section id="transactions-connection-release">
+    <section xml:id="transactions-connection-release">
         <title>Connection release modes</title>
 
         <para>

@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,9 +31,9 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 
 
 /**

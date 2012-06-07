@@ -109,7 +109,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 			final Object[] snapshot = loaded == null
 					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister )
-					: extractNaturalIdValues( loaded, naturalIdentifierPropertiesIndexes );
+					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
 
 			for ( int i=0; i<naturalIdentifierPropertiesIndexes.length; i++ ) {
 				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
@@ -138,15 +138,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			}
 		}
 	}
-
-	public Object[] extractNaturalIdValues(Object[] entitySnapshot, int[] naturalIdPropertyIndexes) {
-		final Object[] naturalIdSnapshotSubSet = new Object[ naturalIdPropertyIndexes.length ];
-		for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
-			naturalIdSnapshotSubSet[i] = entitySnapshot[ naturalIdPropertyIndexes[i] ];
-		}
-		return naturalIdSnapshotSubSet;
-	}
-
 
 	/**
 	 * Flushes a single entity's state to the database, by scheduling

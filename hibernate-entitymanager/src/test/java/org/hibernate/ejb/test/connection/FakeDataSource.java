@@ -3,6 +3,8 @@ package org.hibernate.ejb.test.connection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
@@ -39,5 +41,9 @@ public class FakeDataSource implements DataSource {
 
 	public boolean isWrapperFor(Class<?> aClass) throws SQLException {
 		return false;
+	}
+
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		return null;
 	}
 }

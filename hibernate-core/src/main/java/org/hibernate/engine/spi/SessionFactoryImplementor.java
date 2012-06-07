@@ -66,6 +66,9 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  */
 public interface SessionFactoryImplementor extends Mapping, SessionFactory {
+	@Override
+	public SessionBuilderImplementor withOptions();
+
 	/**
 	 * Retrieve the {@link Type} resolver associated with this factory.
 	 *
@@ -182,6 +185,14 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The region
 	 */
 	public Region getSecondLevelCacheRegion(String regionName);
+	
+	/**
+	 * Get a named naturalId cache region
+	 *
+	 * @param regionName The name of the region to retrieve.
+	 * @return The region
+	 */
+	public Region getNaturalIdCacheRegion(String regionName);
 
 	/**
 	 * Get a map of all the second level cache regions currently maintained in

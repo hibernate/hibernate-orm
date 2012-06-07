@@ -24,13 +24,13 @@
 package org.hibernate.engine.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
@@ -46,7 +46,7 @@ public class JoinSequence {
 	private final SessionFactoryImplementor factory;
 	private final List<Join> joins = new ArrayList<Join>();
 	private boolean useThetaStyle = false;
-	private final StringBuffer conditions = new StringBuffer();
+	private final StringBuilder conditions = new StringBuilder();
 	private String rootAlias;
 	private Joinable rootJoinable;
 	private Selector selector;
@@ -148,7 +148,7 @@ public class JoinSequence {
 	}
 
 	public JoinFragment toJoinFragment() throws MappingException {
-		return toJoinFragment( CollectionHelper.EMPTY_MAP, true );
+		return toJoinFragment( Collections.EMPTY_MAP, true );
 	}
 
 	public JoinFragment toJoinFragment(Map enabledFilters, boolean includeExtraJoins) throws MappingException {

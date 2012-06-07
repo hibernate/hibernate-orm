@@ -28,10 +28,10 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.Timestamper;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
@@ -85,8 +85,14 @@ public class CachingRegionFactory implements RegionFactory {
 			throws CacheException {
 		return new EntityRegionImpl( regionName, metadata, settings );
 	}
-
+	
 	@Override
+    public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+            throws CacheException {
+        return new NaturalIdRegionImpl( regionName, metadata, settings );
+    }
+
+    @Override
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		return new CollectionRegionImpl( regionName, metadata, settings );

@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-<chapter id="hibernate-gsg-tutorial-jpa">
+<chapter xmlns="http://docbook.org/ns/docbook">
     <title>Tutorial Using the <firstterm><phrase>Java Persistence API (JPA)</phrase></firstterm></title>
 
     <para>
@@ -21,7 +20,7 @@
       </listitem>
     </itemizedlist>
 
-    <section id="hibernate-gsg-tutorial-jpa-config">
+    <section xml:id="hibernate-gsg-tutorial-jpa-config">
         <title><filename>persistence.xml</filename></title>
 
         <para>
@@ -34,7 +33,7 @@
             by classpath lookup of the <filename>META-INF/persistence.xml</filename> resource name.
         </para>
 
-        <example id="hibernate-gsg-tutorial-jpa-config-pu">
+        <example xml:id="hibernate-gsg-tutorial-jpa-config-pu">
           <title><filename>persistence.xml</filename></title>
           <programlisting role="XML"><![CDATA[<persistence xmlns="http://java.sun.com/xml/ns/persistence"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -65,20 +64,20 @@
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-jpa-entity">
+    <section xml:id="hibernate-gsg-tutorial-jpa-entity">
         <title>The annotated entity Java class</title>
         <para>
           The entity is exactly the same as in <xref linkend="hibernate-gsg-tutorial-annotations-entity"/>
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-jpa-test">
+    <section xml:id="hibernate-gsg-tutorial-jpa-test">
         <title>Example code</title>
         <para>
           The previous tutorials used the Hibernate APIs.  This tutorial uses the <systemitem>JPA</systemitem> APIs.
         </para>
 
-        <example id="hibernate-gsg-tutorial-jpa-test-setUp">
+        <example xml:id="hibernate-gsg-tutorial-jpa-test-setUp">
           <title>Obtaining the <interfacename>javax.persistence.EntityManagerFactory</interfacename></title>
           <programlisting role="JAVA">protected void setUp() throws Exception {
     entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
@@ -90,7 +89,7 @@
           <xref linkend="hibernate-gsg-tutorial-jpa-config-pu"/>
         </para>
 
-        <example id="hibernate-gsg-tutorial-jpa-test-saving">
+        <example xml:id="hibernate-gsg-tutorial-jpa-test-saving">
           <title>Saving (persisting) entities</title>
           <programlisting role="JAVA">EntityManager entityManager = entityManagerFactory.createEntityManager();
 entityManager.getTransaction().begin();
@@ -107,7 +106,7 @@ entityManager.close();</programlisting>
           operation <methodname>persist</methodname> instead of <methodname>save</methodname>.
         </para>
 
-        <example id="hibernate-gsg-tutorial-jpa-test-list">
+        <example xml:id="hibernate-gsg-tutorial-jpa-test-list">
           <title>Obtaining a list of entities</title>
           <programlisting role="JAVA"><![CDATA[entityManager = entityManagerFactory.createEntityManager();
 entityManager.getTransaction().begin();
@@ -124,7 +123,7 @@ entityManager.close();]]></programlisting>
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-further">
+    <section xml:id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
         <itemizedlist>
             <title>Practice Exercises</title>

@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.Timestamper;
 import org.hibernate.cache.spi.Region;
 
 /**

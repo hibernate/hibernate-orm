@@ -23,11 +23,9 @@
  */
 package org.hibernate.ejb.test.metagen.mappedsuperclass.embedded;
 
-import org.hibernate.ejb.Ejb3Configuration;
-
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="batch">
+<chapter xml:id="batch"  xmlns="http://docbook.org/ns/docbook" >
     <title>Batch processing</title>
     
     <para>
@@ -62,7 +33,7 @@ session.close();]]></programlisting>
     
 <programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
 
-    <para id="disablebatching" revision="1">
+    <para xml:id="disablebatching" revision="1">
         Hibernate disables insert batching at the JDBC level transparently if you
         use an <literal>identity</literal> identifier generator.
     </para>
@@ -79,7 +50,7 @@ session.close();]]></programlisting>
         <literal>CacheMode</literal> to disable interaction with the second-level cache.
     </para>
 
-    <section id="batch-inserts">
+    <section xml:id="batch-inserts">
         <title>Batch inserts</title>
 
         <para>
@@ -106,7 +77,7 @@ session.close();]]></programlisting>
 
     </section>
 
-    <section id="batch-update" >
+    <section xml:id="batch-update" >
         <title>Batch updates</title>
 
         <para>
@@ -137,7 +108,7 @@ session.close();]]></programlisting>
 
     </section>
     
-    <section id="batch-statelesssession">
+    <section xml:id="batch-statelesssession">
         <title>The StatelessSession interface</title>
         <para>
             Alternatively, Hibernate provides a command-oriented API that can be used for 
@@ -186,7 +157,7 @@ session.close();]]></programlisting>
 
     </section>
 
-    <section id="batch-direct" revision="3">
+    <section xml:id="batch-direct" revision="3">
         <title>DML-style operations</title>
 
         <para>
@@ -195,7 +166,7 @@ session.close();]]></programlisting>
             (DML) the statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>)
             will not affect in-memory state. However, Hibernate provides methods
             for bulk SQL-style DML statement execution that is performed through the
-            Hibernate Query Language (<link linkend="queryhql">HQL</link>).
+            Hibernate Query Language (<xref linkend="queryhql">HQL</xref>).
         </para>
 
 	    <para>
@@ -223,7 +194,7 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    No <link linkend="queryhql-joins-forms">joins</link>, either implicit or explicit,
+                    No <xref linkend="queryhql-joins-forms">joins</xref>, either implicit or explicit,
 	                can be specified in a bulk HQL query.  Sub-queries can be used in the where-clause, where
 	                the subqueries themselves may contain joins.
                 </para>
@@ -255,8 +226,8 @@ session.close();]]></programlisting>
 
         <para>
             In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> statements, by default, do not effect the
-            <link linkend="mapping-declaration-version">version</link>
-            or the <link linkend="mapping-declaration-timestamp">timestamp</link> property values
+            <xref linkend="mapping-declaration-version">version</xref>
+            or the <xref linkend="mapping-declaration-timestamp">timestamp</xref> property values
             for the affected entities. However,
             you can force Hibernate to reset the <literal>version</literal> or
             <literal>timestamp</literal> property values through the use of a <literal>versioned update</literal>.

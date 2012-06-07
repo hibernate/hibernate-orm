@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -59,10 +62,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
@@ -89,7 +88,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
-	private Session session;
+	protected Session session;
 
 	protected static Dialect getDialect() {
 		return DIALECT;
@@ -122,7 +121,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
-	private void buildSessionFactory() {
+	protected void buildSessionFactory() {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
@@ -411,11 +410,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		if ( isCleanupTestDataRequired() ) {
+			cleanupTestData();
+		}
 		cleanupTest();
 
 		cleanupSession();
 
 		assertAllDataRemoved();
+
 	}
 
 	protected void cleanupCache() {
@@ -424,7 +427,16 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictDefaultQueryRegion();
 			sessionFactory.getCache().evictEntityRegions();
 			sessionFactory.getCache().evictQueryRegions();
+			sessionFactory.getCache().evictNaturalIdRegions();
 		}
+	}
+	protected boolean isCleanupTestDataRequired(){return false;}
+	protected void cleanupTestData() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 

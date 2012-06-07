@@ -325,10 +325,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return persister.getIdentifierType().getHashCode( id, factory );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
+		// associations (many-to-one and one-to-one) can be null...
+		if ( x == null || y == null ) {
+			return x == y;
+		}
+
 		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.isEqual(x, y );
@@ -492,7 +495,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		
 		EntityPersister persister = factory.getEntityPersister( associatedEntityName );
-		StringBuffer result = new StringBuffer().append( associatedEntityName );
+		StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
 			final EntityMode entityMode = persister.getEntityMode();

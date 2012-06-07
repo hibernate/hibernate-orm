@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
@@ -69,7 +69,7 @@ public final class OuterJoinableAssociation {
 				null,
 				false,
 				factory,
-				CollectionHelper.EMPTY_MAP
+				Collections.EMPTY_MAP
 		);
 	}
 

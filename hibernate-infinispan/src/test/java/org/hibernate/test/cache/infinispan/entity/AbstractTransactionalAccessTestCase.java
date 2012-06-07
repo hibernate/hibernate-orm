@@ -26,12 +26,11 @@ package org.hibernate.test.cache.infinispan.entity;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.AssertionFailedError;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.access.AccessType;
-
-import junit.framework.AssertionFailedError;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

@@ -1,0 +1,4 @@
+select distinct c
+from Customer c
+    left join c.orders o
+        with o.value > 5000.00

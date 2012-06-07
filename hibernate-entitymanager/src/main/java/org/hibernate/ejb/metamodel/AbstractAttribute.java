@@ -31,6 +31,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
+
 import org.hibernate.internal.util.ReflectHelper;
 
 /**

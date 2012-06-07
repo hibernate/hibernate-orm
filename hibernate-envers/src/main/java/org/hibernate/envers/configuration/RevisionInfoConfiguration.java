@@ -45,6 +45,8 @@ import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 import org.hibernate.envers.configuration.metadata.AuditTableData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
+import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.DefaultTrackingModifiedEntitiesRevisionInfoGenerator;
@@ -75,7 +77,11 @@ public class RevisionInfoConfiguration {
 
     public RevisionInfoConfiguration(GlobalConfiguration globalCfg) {
         this.globalCfg = globalCfg;
-        revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
+        if (globalCfg.isUseRevisionEntityWithNativeId()) {
+            revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
+        } else {
+            revisionInfoEntityName = "org.hibernate.envers.enhanced.SequenceIdRevisionEntity";
+        }
         revisionInfoIdData = new PropertyData("id", "id", "field", null);
         revisionInfoTimestampData = new PropertyData("timestamp", "timestamp", "field", null);
         modifiedEntityNamesData = new PropertyData("modifiedEntityNames", "modifiedEntityNames", "field", null);
@@ -93,7 +99,7 @@ public class RevisionInfoConfiguration {
         class_mapping.addAttribute("table", "REVINFO");
 
         Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
-                revisionPropType);
+                revisionPropType, globalCfg.isUseRevisionEntityWithNativeId());
         MetadataTools.addColumn(idProperty, "REV", null, null, null, null, null, null, false);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
@@ -291,9 +297,10 @@ public class RevisionInfoConfiguration {
                 revisionInfoClass = pc.getMappedClass();
                 Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass(revisionEntity.value());
                 revisionInfoTimestampType = pc.getProperty(revisionInfoTimestampData.getName()).getType();
-                if (globalCfg.isTrackEntitiesChangedInRevisionEnabled() ||
-                        DefaultTrackingModifiedEntitiesRevisionEntity.class.isAssignableFrom(revisionInfoClass) ||
-                        modifiedEntityNamesFound.isSet()) {
+                if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()
+                        || (globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class.isAssignableFrom(revisionInfoClass))
+                        || (!globalCfg.isUseRevisionEntityWithNativeId() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class.isAssignableFrom(revisionInfoClass))
+                        || modifiedEntityNamesFound.isSet()) {
                     // If tracking modified entities parameter is enabled, custom revision info entity is a subtype
                     // of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
                     revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(revisionInfoEntityName,
@@ -314,12 +321,14 @@ public class RevisionInfoConfiguration {
 
         if (revisionInfoGenerator == null) {
             if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()) {
-                revisionInfoClass = DefaultTrackingModifiedEntitiesRevisionEntity.class;
-                revisionInfoEntityName = DefaultTrackingModifiedEntitiesRevisionEntity.class.getName();
+                revisionInfoClass = globalCfg.isUseRevisionEntityWithNativeId() ? DefaultTrackingModifiedEntitiesRevisionEntity.class
+                                                                                : SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
+                revisionInfoEntityName = revisionInfoClass.getName();
                 revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
                         revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate(), modifiedEntityNamesData);
             } else {
-                revisionInfoClass = DefaultRevisionEntity.class;
+                revisionInfoClass = globalCfg.isUseRevisionEntityWithNativeId() ? DefaultRevisionEntity.class
+                                                                                : SequenceIdRevisionEntity.class;
                 revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
                         revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate());
             }

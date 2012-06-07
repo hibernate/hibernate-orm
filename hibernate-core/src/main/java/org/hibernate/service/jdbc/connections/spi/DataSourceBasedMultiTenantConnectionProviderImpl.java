@@ -23,10 +23,10 @@
  */
 package org.hibernate.service.jdbc.connections.spi;
 
-import javax.naming.Context;
-import javax.sql.DataSource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.naming.Context;
+import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;

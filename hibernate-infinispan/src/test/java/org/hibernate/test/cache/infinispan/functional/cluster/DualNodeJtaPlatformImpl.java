@@ -23,18 +23,18 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import org.hibernate.HibernateException;
-import org.hibernate.TransactionException;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.Configurable;
-
+import java.util.Map;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import java.util.Map;
+
+import org.hibernate.HibernateException;
+import org.hibernate.TransactionException;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.service.spi.Configurable;
 
 /**
  * @author Steve Ebersole

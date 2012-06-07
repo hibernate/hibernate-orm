@@ -201,7 +201,7 @@ public final class ArrayHelper {
 	private ArrayHelper() {}
 
 	public static String toString( Object[] array ) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("[");
 		for (int i = 0; i < array.length; i++) {
 			sb.append( array[i] );

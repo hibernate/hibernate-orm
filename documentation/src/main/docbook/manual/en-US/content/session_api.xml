@@ -1,33 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="objectstate">
+
+<chapter xml:id="objectstate" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Working with objects</title>
 
   <para>Hibernate is a full object/relational mapping solution that not only
@@ -43,7 +16,7 @@
   Hibernate and is only relevant for the application developer when tuning the
   performance of the system.</para>
 
-  <section id="objectstate-overview">
+  <section xml:id="objectstate-overview">
     <title>Hibernate object states</title>
 
     <para>Hibernate defines and supports the following object states:</para>
@@ -91,7 +64,7 @@
     Hibernate methods that trigger a transition) in more detail.</para>
   </section>
 
-  <section id="objectstate-makingpersistent" revision="1">
+  <section xml:id="objectstate-makingpersistent" revision="1">
     <title>Making objects persistent</title>
 
     <para>Newly instantiated instances of a persistent class are considered
@@ -163,7 +136,7 @@ sess.save( pk, new Long(1234) );</programlisting>
     chapter.</para>
   </section>
 
-  <section id="objectstate-loading">
+  <section xml:id="objectstate-loading">
     <title>Loading an object</title>
 
     <para>The <literal>load()</literal> methods of <literal>Session</literal>
@@ -231,7 +204,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)</programlist
     linkend="performance-fetching" />.</para>
   </section>
 
-  <section id="objectstate-querying" revision="1">
+  <section xml:id="objectstate-querying" revision="1">
     <title>Querying</title>
 
     <para>If you do not know the identifiers of the objects you are looking
@@ -242,7 +215,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)</programlist
     database, with optional support from Hibernate for result set conversion
     into objects.</para>
 
-    <section id="objectstate-querying-executing" revision="1">
+    <section xml:id="objectstate-querying-executing" revision="1">
       <title>Executing queries</title>
 
       <para>HQL and native SQL queries are represented with an instance of
@@ -284,7 +257,7 @@ Set uniqueMothers = new HashSet(mothersWithKittens.list());</programlisting>
       objects, but with their collections initialized. You can filter these
       duplicates through a <literal>Set</literal>.</para>
 
-      <section id="objectstate-querying-executing-iterate">
+      <section xml:id="objectstate-querying-executing-iterate">
         <title>Iterating results</title>
 
         <para>Occasionally, you might be able to achieve better performance by
@@ -312,7 +285,7 @@ while ( iter.hasNext() ) {
 }</programlisting>
       </section>
 
-      <section id="objectstate-querying-executing-tuples">
+      <section xml:id="objectstate-querying-executing-tuples">
         <title>Queries that return tuples</title>
 
         <para>Hibernate queries sometimes return tuples of objects. Each tuple
@@ -331,7 +304,7 @@ while ( kittensAndMothers.hasNext() ) {
 }</programlisting>
       </section>
 
-      <section id="objectstate-querying-executing-scalar" revision="1">
+      <section xml:id="objectstate-querying-executing-scalar" revision="1">
         <title>Scalar results</title>
 
         <para>Queries can specify a property of a class in the
@@ -354,7 +327,7 @@ while ( results.hasNext() ) {
 }</programlisting>
       </section>
 
-      <section id="objectstate-querying-executing-parameters">
+      <section xml:id="objectstate-querying-executing-parameters">
         <title>Bind parameters</title>
 
         <para>Methods on <literal>Query</literal> are provided for binding
@@ -398,7 +371,7 @@ q.setParameterList("namesList", names);
 List cats = q.list();</programlisting>
       </section>
 
-      <section id="objectstate-querying-executing-pagination">
+      <section xml:id="objectstate-querying-executing-pagination">
         <title>Pagination</title>
 
         <para>If you need to specify bounds upon your result set, that is, the
@@ -415,7 +388,7 @@ List cats = q.list();</programlisting>
         native SQL of your DBMS.</para>
       </section>
 
-      <section id="objectstate-querying-executing-scrolling">
+      <section xml:id="objectstate-querying-executing-scrolling">
         <title>Scrollable iteration</title>
 
         <para>If your JDBC driver supports scrollable
@@ -451,7 +424,7 @@ cats.close()</programlisting>
         if you need offline pagination functionality.</para>
       </section>
 
-      <section id="objectstate-querying-executing-named" revision="1">
+      <section xml:id="objectstate-querying-executing-named" revision="1">
         <title>Externalizing named queries</title>
 
         <para>Queries can also be configured as so called named queries using
@@ -463,7 +436,7 @@ cats.close()</programlisting>
         scope. A named query is defined by its name and the actual query
         string.</para>
 
-        <example id="example-named-query-annotation">
+        <example xml:id="example-named-query-annotation">
           <title>Defining a named query using
           <classname>@NamedQuery</classname></title>
 
@@ -503,7 +476,7 @@ public class MyDao {
         <para>Parameter binding and executing is done programatically as seen
         in <xref linkend="example-parameter-binding-named-query" />.</para>
 
-        <example id="example-parameter-binding-named-query">
+        <example xml:id="example-parameter-binding-named-query">
           <title>Parameter binding of a named query</title>
 
           <programlisting role="JAVA">Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
@@ -526,7 +499,7 @@ List cats = q.list();</programlisting>
       </section>
     </section>
 
-    <section id="objectstate-filtering" revision="1">
+    <section xml:id="objectstate-filtering" revision="1">
       <title>Filtering collections</title>
 
       <para>A collection <emphasis>filter</emphasis> is a special type of
@@ -564,7 +537,7 @@ List cats = q.list();</programlisting>
     .list();</programlisting>
     </section>
 
-    <section id="objecstate-querying-criteria" revision="1">
+    <section xml:id="objecstate-querying-criteria" revision="1">
       <title>Criteria queries</title>
 
       <para>HQL is extremely powerful, but some developers prefer to build
@@ -582,7 +555,7 @@ List cats = crit.list();</programlisting>
       linkend="querycriteria" />.</para>
     </section>
 
-    <section id="objectstate-querying-nativesql" revision="2">
+    <section xml:id="objectstate-querying-nativesql" revision="2">
       <title>Queries in native SQL</title>
 
       <para>You can express a query in SQL, using
@@ -609,7 +582,7 @@ List cats = crit.list();</programlisting>
     </section>
   </section>
 
-  <section id="objectstate-modifying" revision="1">
+  <section xml:id="objectstate-modifying" revision="1">
     <title>Modifying persistent objects</title>
 
     <para><emphasis>Transactional persistent instances</emphasis> (i.e.
@@ -635,7 +608,7 @@ sess.flush();  // changes to cat are automatically detected and persisted</progr
 
   </section>
 
-  <section id="objectstate-detached" revision="2">
+  <section xml:id="objectstate-detached" revision="2">
     <title>Modifying detached objects</title>
 
     <para>Many applications need to retrieve an object in one transaction,
@@ -699,7 +672,7 @@ sess.lock(pk, LockMode.UPGRADE);</programlisting>
     linkend="transactions-optimistic" />.</para>
   </section>
 
-  <section id="objectstate-saveorupdate">
+  <section xml:id="objectstate-saveorupdate">
     <title>Automatic state detection</title>
 
     <para>Hibernate users have requested a general purpose method that either
@@ -815,7 +788,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
     </itemizedlist>
   </section>
 
-  <section id="objectstate-deleting" revision="1">
+  <section xml:id="objectstate-deleting" revision="1">
     <title>Deleting persistent objects</title>
 
     <para><literal>Session.delete()</literal> will remove an object's state
@@ -832,7 +805,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
     children.</para>
   </section>
 
-  <section id="objectstate-replicating" revision="1">
+  <section xml:id="objectstate-replicating" revision="1">
     <title>Replicating object between two different datastores</title>
 
     <para>It is sometimes useful to be able to take a graph of persistent
@@ -887,7 +860,7 @@ session2.close();</programlisting>
     transactions and more.</para>
   </section>
 
-  <section id="objectstate-flushing">
+  <section xml:id="objectstate-flushing">
     <title>Flushing the Session</title>
 
     <para>Sometimes the <literal>Session</literal> will execute the SQL
@@ -982,7 +955,7 @@ sess.close();</programlisting>
     <xref linkend="transactions" />.</para>
   </section>
 
-  <section id="objectstate-transitive" revision="1">
+  <section xml:id="objectstate-transitive" revision="1">
     <title>Transitive persistence</title>
 
     <para>It is quite cumbersome to save, delete, or reattach individual
@@ -1084,7 +1057,7 @@ sess.close();</programlisting>
     association, this associated entity can be marked for deletion if
     <literal>orphanRemoval</literal> is set to true.</para>
 
-    <example id="example-one-to-many-with-orphan-removal">
+    <example xml:id="example-one-to-many-with-orphan-removal">
       <title><literal>@OneToMany</literal> with
       <literal>orphanRemoval</literal></title>
 
@@ -1123,8 +1096,9 @@ customer.getOrders().remove(order); //order will be deleted by cascade</programl
         <para>If the child object's lifespan is bounded by the lifespan of the
         parent object, make it a <emphasis>life cycle object</emphasis> by
         specifying
-        <literal>cascade="all,delete-orphan"(<literal>@OneToMany(cascade=CascadeType.ALL,
-        orphanRemoval=true)</literal>)</literal>.</para>
+        <literal>cascade="all,delete-orphan"</literal> (<literal>@OneToMany(cascade=CascadeType.ALL,
+        orphanRemoval=true)</literal>).
+      </para>
       </listitem>
 
       <listitem>
@@ -1197,7 +1171,7 @@ customer.getOrders().remove(order); //order will be deleted by cascade</programl
     <literal>Session</literal>.</para>
   </section>
 
-  <section id="objectstate-metadata">
+  <section xml:id="objectstate-metadata">
     <title>Using metadata</title>
 
     <para>Hibernate requires a rich meta-level model of all entity and value

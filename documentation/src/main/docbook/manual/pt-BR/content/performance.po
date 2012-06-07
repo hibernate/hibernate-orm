@@ -1988,7 +1988,7 @@ msgstr ""
 #: performance.xml:895
 #, no-c-format
 msgid "Let's now have a closer look at the different usage strategies"
-msgstr ""
+msgstr "Agora vamos olhar mais de perto as diferentes estratégias de uso"
 
 #. Tag: title
 #: performance.xml:900
@@ -2107,7 +2107,7 @@ msgid ""
 "None of the cache providers support all of the cache concurrency strategies."
 msgstr ""
 "Nenhum provedor de cache suporta todas as estratégias de concorrência de "
-"cache. "
+"cache."
 
 #. Tag: para
 #: performance.xml:957
@@ -2117,7 +2117,7 @@ msgid ""
 "concurrency strategies."
 msgstr ""
 "A seguinte tabela mostra qual provedor é compatível com qual estratégia de "
-"concorrência. "
+"concorrência."
 
 #. Tag: title
 #: performance.xml:961

@@ -23,10 +23,6 @@
  */
 package org.hibernate.exception.spi;
 
-import java.sql.SQLException;
-
-import org.hibernate.JDBCException;
-
 /**
  * @author Steve Ebersole
  */

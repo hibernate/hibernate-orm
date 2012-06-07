@@ -1,49 +1,15 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Getting_Started_Guide.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<preface id="hibernate-gsg-preface">
+<preface xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" >
     <title>Preface</title>
-
-    <!--
-        NOTE : This duplicates a lot of the information in the manual preface.  This is a great example of where the
-        "content reuse" capabilities of DITA could be leveraged.
-    -->
 
     <para>
         Working with both Object-Oriented software and Relational Databases can be cumbersome and time consuming.
         Development costs are significantly higher due to a paradigm mismatch between how data is represented in objects
         versus relational databases.  Hibernate is an Object/Relational Mapping solution for Java environments.  The
         term Object/Relational Mapping refers to the technique of mapping data between an object model representation to
-        a relational data model representation.  See <ulink
-        url="http://en.wikipedia.org/wiki/Object-relational_mapping"/> for a good high-level discussion.
+        a relational data model representation.  See
+        <link xlink:href="http://en.wikipedia.org/wiki/Object-relational_mapping"/> for a good high-level discussion.
     </para>
 
     <note>
@@ -56,12 +22,12 @@
         <title>Data Modeling Resources</title>
         <listitem>
           <para>
-            <ulink url="http://www.agiledata.org/essays/dataModeling101.html"/>
+            <link xlink:href="http://www.agiledata.org/essays/dataModeling101.html"/>
           </para>
         </listitem>
         <listitem>
           <para>
-            <ulink url="http://en.wikipedia.org/wiki/Data_modeling"/>
+            <link xlink:href="http://en.wikipedia.org/wiki/Data_modeling"/>
           </para>
         </listitem>
       </itemizedlist>
@@ -91,19 +57,19 @@
             <listitem>
                 <para>
                     Use Hibernate and report any bugs or issues you find. See
-                    <ulink url="http://hibernate.org/issuetracker.html"/> for details.
+                    <link xlink:href="http://hibernate.org/issuetracker.html"/> for details.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Try your hand at fixing some bugs or implementing enhancements. Again, see
-                    <ulink url="http://hibernate.org/issuetracker.html"/>.
+                    <link xlink:href="http://hibernate.org/issuetracker.html"/>.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Engage with the community using mailing lists, forums, IRC, or other ways listed at
-                    <ulink url="http://hibernate.org/community.html"/>.
+                    <link xlink:href="http://hibernate.org/community.html"/>.
                 </para>
             </listitem>
             <listitem>
@@ -125,7 +91,7 @@
         <title>Tutorial code</title>
         <para>
             The referenced projects and code for the tutorials in this guide are available at
-            <ulink url="files/hibernate-tutorials.zip"/>.
+            <link xlink:href="files/hibernate-tutorials.zip"/>.
         </para>
     </section>
 </preface>

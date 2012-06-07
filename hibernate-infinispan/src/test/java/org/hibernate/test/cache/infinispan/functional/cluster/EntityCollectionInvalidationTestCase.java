@@ -23,10 +23,10 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import javax.transaction.TransactionManager;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javax.transaction.TransactionManager;
 
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
@@ -36,13 +36,11 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.CacheKey;
-
-import org.junit.Test;
-
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 

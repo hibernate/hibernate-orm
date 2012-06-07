@@ -29,12 +29,17 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -60,11 +65,8 @@ public class Oracle8iDialect extends Dialect {
 		registerNumericTypeMappings();
 		registerDateTimeTypeMappings();
 		registerLargeObjectTypeMappings();
-
 		registerReverseHibernateTypeMappings();
-
 		registerFunctions();
-
 		registerDefaultProperties();
 	}
 
@@ -216,6 +218,7 @@ public class Oracle8iDialect extends Dialect {
 	 *
 	 * @return The orqacle join fragment
 	 */
+	@Override
 	public JoinFragment createOuterJoinFragment() {
 		return new OracleJoinFragment();
 	}
@@ -223,6 +226,7 @@ public class Oracle8iDialect extends Dialect {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
@@ -233,10 +237,11 @@ public class Oracle8iDialect extends Dialect {
 	 *
 	 * @return The oracle CASE -> DECODE fragment
 	 */
+	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}
-
+	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
 		boolean isForUpdate = false;
@@ -245,7 +250,7 @@ public class Oracle8iDialect extends Dialect {
 			isForUpdate = true;
 		}
 
-		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 );
+		StringBuilder pagingSelect = new StringBuilder( sql.length()+100 );
 		if (hasOffset) {
 			pagingSelect.append("select * from ( select row_.*, rownum rownum_ from ( ");
 		}
@@ -277,7 +282,7 @@ public class Oracle8iDialect extends Dialect {
 	public String getBasicSelectClauseNullString(int sqlType) {
 		return super.getSelectClauseNullString( sqlType );
 	}
-
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		switch(sqlType) {
 			case Types.VARCHAR:
@@ -291,82 +296,82 @@ public class Oracle8iDialect extends Dialect {
 				return "to_number(null)";
 		}
 	}
-
+	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select sysdate from dual";
 	}
-
+	@Override
 	public String getCurrentTimestampSQLFunctionName() {
 		return "sysdate";
 	}
 
 
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public String getAddColumnString() {
 		return "add";
 	}
-
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dual";
 	}
-
+	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return sequenceName + ".nextval";
 	}
-
+	@Override
 	public String getCreateSequenceString(String sequenceName) {
 		return "create sequence " + sequenceName; //starts with 1, implicitly
 	}
-
+	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence " + sequenceName;
 	}
-
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade constraints";
 	}
-
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
-
+	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
 	}
-
+	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
-
+	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
-
+	@Override
 	public boolean supportsLimit() {
 		return true;
 	}
-
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
-
+	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString() + " of " + aliases + " nowait";
 	}
-
+	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
-
+	@Override
 	public boolean useMaxForLimit() {
 		return true;
 	}
-
+	@Override
 	public boolean forUpdateOfColumns() {
 		return true;
 	}
-
+	@Override
 	public String getQuerySequencesString() {
 		return    " select sequence_name from all_sequences"
 				+ "  union"
@@ -375,11 +380,11 @@ public class Oracle8iDialect extends Dialect {
 				+ "  where asq.sequence_name = us.table_name"
 				+ "    and asq.sequence_owner = us.table_owner";
 	}
-
+	@Override
 	public String getSelectGUIDString() {
 		return "select rawtohex(sys_guid()) from dual";
 	}
-
+	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
         return EXTRACTER;
 	}
@@ -407,6 +412,57 @@ public class Oracle8iDialect extends Dialect {
 		}
 
 	};
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
+
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+
+
+				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( errorCode == 30006 ) {
+					// ORA-30006: resource busy; acquire with WAIT timeout expired
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				else if ( errorCode == 54 ) {
+					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				else if ( 4021 == errorCode ) {
+					// ORA-04021 timeout occurred while waiting to lock object
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+
+
+				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( 60 == errorCode ) {
+					// ORA-00060: deadlock detected while waiting for resource
+					return new LockAcquisitionException( message, sqlException, sql );
+				}
+				else if ( 4020 == errorCode ) {
+					// ORA-04020 deadlock detected while trying to lock object
+					return new LockAcquisitionException( message, sqlException, sql );
+				}
+
+
+				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				if ( 1013 == errorCode ) {
+					// ORA-01013: user requested cancel of current operation
+					throw new QueryTimeoutException(  message, sqlException, sql );
+				}
+
+
+				return null;
+			}
+		};
+	}
 
 	public static final String ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.OracleTypes";
 	public static final String DEPRECATED_ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.driver.OracleTypes";
@@ -445,63 +501,63 @@ public class Oracle8iDialect extends Dialect {
 			throw new HibernateException( "Unable to access OracleTypes.CURSOR value", se );
 		}
 	}
-
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		//	register the type of the out param - an Oracle specific type
 		statement.registerOutParameter( col, getOracleCursorTypeSqlType() );
 		col++;
 		return col;
 	}
-
+	@Override
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
 		return ( ResultSet ) ps.getObject( 1 );
 	}
-
+	@Override
 	public boolean supportsUnionAll() {
 		return true;
 	}
-
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}
-
+	@Override
 	public boolean supportsTemporaryTables() {
 		return true;
 	}
-
+	@Override
 	public String generateTemporaryTableName(String baseTableName) {
 		String name = super.generateTemporaryTableName(baseTableName);
 		return name.length() > 30 ? name.substring( 1, 30 ) : name;
 	}
-
+	@Override
 	public String getCreateTemporaryTableString() {
 		return "create global temporary table";
 	}
-
+	@Override
 	public String getCreateTemporaryTablePostfix() {
 		return "on commit delete rows";
 	}
-
+	@Override
 	public boolean dropTemporaryTableAfterUse() {
 		return false;
 	}
-
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}
-
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public boolean supportsEmptyInList() {
 		return false;
 	}
-
+	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}

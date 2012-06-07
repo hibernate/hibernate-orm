@@ -26,7 +26,6 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -36,6 +35,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -60,6 +60,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	private final Set<EntityCleanup> entityCleanups = new HashSet<EntityCleanup>();
 	private final Set<CollectionCleanup> collectionCleanups = new HashSet<CollectionCleanup>();
+	private final Set<NaturalIdCleanup> naturalIdCleanups = new HashSet<NaturalIdCleanup>();
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on the
@@ -79,6 +80,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 			if ( persister.hasCache() ) {
 				entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
+			}
+			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
+				naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy() ) );
 			}
 
 			Set<String> roles = factory.getCollectionRolesByEntityParticipant( persister.getEntityName() );
@@ -122,6 +126,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				if ( persister.hasCache() ) {
 					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 				}
+				if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
+					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy() ) );
+				}
+
 				Set<String> roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
@@ -180,17 +188,21 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		return new AfterTransactionCompletionProcess() {
 			@Override
 			public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-				Iterator itr = entityCleanups.iterator();
-				while ( itr.hasNext() ) {
-					final EntityCleanup cleanup = ( EntityCleanup ) itr.next();
+				for ( EntityCleanup cleanup : entityCleanups ) {
 					cleanup.release();
 				}
+				entityCleanups.clear();
 
-				itr = collectionCleanups.iterator();
-				while ( itr.hasNext() ) {
-					final CollectionCleanup cleanup = ( CollectionCleanup ) itr.next();
+				for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
+					cleanup.release();
+
+				}
+				entityCleanups.clear();
+
+				for ( CollectionCleanup cleanup : collectionCleanups ) {
 					cleanup.release();
 				}
+				collectionCleanups.clear();
 			}
 		};
 	}
@@ -232,6 +244,21 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 		private void release() {
 			cacheAccess.unlockRegion( cacheLock );
+		}
+	}
+
+	private class NaturalIdCleanup {
+		private final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy;
+		private final SoftLock cacheLock;
+
+		public NaturalIdCleanup(NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy) {
+			this.naturalIdCacheAccessStrategy = naturalIdCacheAccessStrategy;
+			this.cacheLock = naturalIdCacheAccessStrategy.lockRegion();
+			naturalIdCacheAccessStrategy.removeAll();
+		}
+
+		private void release() {
+			naturalIdCacheAccessStrategy.unlockRegion( cacheLock );
 		}
 	}
 }

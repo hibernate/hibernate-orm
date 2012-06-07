@@ -1,34 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
 
-<chapter id="persistent-classes">
+<chapter xml:id="persistent-classes" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Persistent Classes</title>
 
     <para>
@@ -45,10 +17,10 @@
         <interfacename>java.util.Map</interfacename> instances, for example).
     </para>
 
-    <section id="persistent-classes-pojo">
+    <section xml:id="persistent-classes-pojo">
         <title>A simple POJO example</title>
 
-        <example id="persistent-classes-pojo-example-cat">
+        <example xml:id="persistent-classes-pojo-example-cat">
             <title>Simple POJO representing a cat</title>
             <programlisting role="JAVA">package eg;
 import java.util.Set;
@@ -67,7 +39,7 @@ private float weight;
     private Set kittens = new HashSet();
 
     private void setId(Long id) {
-        this.id=id;
+        this.xml:id=id;
     }
     public Long getId() {
         return id;
@@ -135,19 +107,19 @@ private float weight;
             The four main rules of persistent classes are explored in more detail in the following sections.
         </para>
 
-        <section id="persistent-classes-pojo-constructor">
+        <section xml:id="persistent-classes-pojo-constructor">
             <title>Implement a no-argument constructor</title>
 
             <para>
                 <classname>Cat</classname> has a no-argument constructor. All persistent classes must have a default
                 constructor (which can be non-public) so that Hibernate can instantiate them using
-                <literal><classname>java.lang.reflect.Constructor</classname>.newInstance()</literal>.  It is recommended
+                <literal>java.lang.reflect.Constructor.newInstance()</literal>.  It is recommended
                 that this constructor be defined with at least <emphasis>package</emphasis> visibility in order for
                 runtime proxy generation to work properly.
             </para>
         </section>
 
-        <section id="persistent-classes-pojo-identifier" revision="2">
+        <section xml:id="persistent-classes-pojo-identifier" revision="2">
           <title>Provide an identifier property</title>
 
             <note>
@@ -180,7 +152,7 @@ private float weight;
         </section>
 
 
-        <section id="persistent-classes-pojo-final">
+        <section xml:id="persistent-classes-pojo-final">
             <title>Prefer non-final classes (semi-optional)</title>
 
             <para>
@@ -194,12 +166,12 @@ private float weight;
                 <xref linkend="persistent-classes-pojo-final-example-disable-proxies-ann"/>.
             </para>
 
-            <example id="persistent-classes-pojo-final-example-disable-proxies-xml">
+            <example xml:id="persistent-classes-pojo-final-example-disable-proxies-xml">
                 <title>Disabling proxies in <literal>hbm.xml</literal></title>
                 <programlisting role="XML"><![CDATA[<class name="Cat" lazy="false"...>...</class>]]></programlisting>
             </example>
 
-            <example id="persistent-classes-pojo-final-example-disable-proxies-ann">
+            <example xml:id="persistent-classes-pojo-final-example-disable-proxies-ann">
                 <title>Disabling proxies in annotations</title>
                 <programlisting role="JAVA"><![CDATA[@Entity @Proxy(lazy=false) public class Cat { ... }]]></programlisting>
             </example>
@@ -212,12 +184,12 @@ private float weight;
 
             </para>
 
-            <example id="persistent-classes-pojo-final-example-proxy-interface-xml">
+            <example xml:id="persistent-classes-pojo-final-example-proxy-interface-xml">
                 <title>Proxying an interface in <literal>hbm.xml</literal></title>
                 <programlisting role="XML"><![CDATA[<class name="Cat" proxy="ICat"...>...</class>]]></programlisting>
             </example>
 
-            <example id="persistent-classes-pojo-final-example-proxy-interface-ann">
+            <example xml:id="persistent-classes-pojo-final-example-proxy-interface-ann">
                 <title>Proxying an interface in annotations</title>
                 <programlisting role="JAVA"><![CDATA[@Entity @Proxy(proxyClass=ICat.class) public class Cat implements ICat { ... }]]></programlisting>
             </example>
@@ -231,7 +203,7 @@ private float weight;
             </para>
         </section>
 
-        <section id="persistent-classes-pojo-accessors">
+        <section xml:id="persistent-classes-pojo-accessors">
             <title>Declare accessors and mutators for persistent fields (optional)</title>
 
             <para>
@@ -251,7 +223,7 @@ private float weight;
         </section>
     </section>
 
-  <section id="persistent-classes-inheritance">
+  <section xml:id="persistent-classes-inheritance">
     <title>Implementing inheritance</title>
 
     <para>A subclass must also observe the first and second rules. It inherits
@@ -272,7 +244,7 @@ public class DomesticCat extends Cat {
 }</programlisting>
   </section>
 
-  <section id="persistent-classes-equalshashcode" revision="1">
+  <section xml:id="persistent-classes-equalshashcode" revision="1">
     <title>Implementing <literal>equals()</literal> and
     <literal>hashCode()</literal></title>
 
@@ -350,7 +322,7 @@ public class DomesticCat extends Cat {
     key.</para>
   </section>
 
-  <section id="persistent-classes-dynamicmodels">
+  <section xml:id="persistent-classes-dynamicmodels">
     <title>Dynamic models</title>
 
     <note>
@@ -478,7 +450,7 @@ dynamicSession.close()
   </section>
 
 
-    <section id="persistent-classes-tuplizers" revision="1">
+    <section xml:id="persistent-classes-tuplizers" revision="1">
         <title>Tuplizers</title>
 
         <para>
@@ -521,7 +493,7 @@ dynamicSession.close()
             <xref linkend="example-specify-custom-tuplizer-xml"/> shows how to do the same in <literal>hbm.xml</literal>
         </para>
 
-        <example id="example-specify-custom-tuplizer-ann">
+        <example xml:id="example-specify-custom-tuplizer-ann">
             <title>Specify custom tuplizers in annotations</title>
 <programlisting role="JAVA">@Entity
 @Tuplizer(impl = DynamicEntityTuplizer.class)
@@ -539,7 +511,7 @@ public interface Cuisine {
     public void setCountry(Country country);
 }</programlisting>
         </example>
-        <example id="example-specify-custom-tuplizer-xml">
+        <example xml:id="example-specify-custom-tuplizer-xml">
             <title>Specify custom tuplizers in <literal>hbm.xml</literal></title>
 <programlisting role="XML">&lt;hibernate-mapping&gt;
     &lt;class entity-name="Customer"&gt;
@@ -561,7 +533,7 @@ public interface Cuisine {
         </example>
     </section>
 
-    <section id="persistent-classes-entity-name-resolver">
+    <section xml:id="persistent-classes-entity-name-resolver">
         <title>EntityNameResolvers</title>
 
         <para>

@@ -31,7 +31,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 public class AnsiTrimFunction extends TrimFunctionTemplate {
 	protected String render(Options options, String trimSource, SessionFactoryImplementor factory) {
-		return new StringBuffer()
+		return new StringBuilder()
 				.append( "trim(" )
 				.append( options.getTrimSpecification().getName() )
 				.append( ' ' )

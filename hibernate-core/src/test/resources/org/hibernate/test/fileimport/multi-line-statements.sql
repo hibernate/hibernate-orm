@@ -1,3 +1,4 @@
+
 -- Sample file used to test import feature of multiline SQL script (HHH-2403).
 -- Contains various SQL instructions with comments.
 
@@ -28,3 +29,4 @@ INSERT INTO test_data (id, text)
             4 -- another record
           , NULL
           );
+

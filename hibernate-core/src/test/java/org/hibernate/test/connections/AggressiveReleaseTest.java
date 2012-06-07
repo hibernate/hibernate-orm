@@ -18,6 +18,7 @@ import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -50,12 +51,12 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 	@Override
 	protected void prepare() throws Throwable {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 	}
 
 	@Override
 	protected void done() throws Throwable {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	// Some additional tests specifically for the aggressive-release functionality...
@@ -218,7 +219,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		Session s = getSessionUnderTest();
 		s.beginTransaction();
 
-		List entities = new ArrayList();
+		List<Silly> entities = new ArrayList<Silly>();
 		for ( int i = 0; i < 10; i++ ) {
 			Other other = new Other( "other-" + i );
 			Silly silly = new Silly( "silly-" + i, other );
@@ -227,9 +228,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		}
 		s.flush();
 
-		Iterator itr = entities.iterator();
-		while ( itr.hasNext() ) {
-			Silly silly = ( Silly ) itr.next();
+		for ( Silly silly : entities ) {
 			silly.setName( "new-" + silly.getName() );
 			silly.getOther().setName( "new-" + silly.getOther().getName() );
 		}

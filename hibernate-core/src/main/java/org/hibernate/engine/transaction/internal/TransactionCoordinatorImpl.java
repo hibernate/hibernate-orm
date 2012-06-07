@@ -85,8 +85,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			TransactionContext transactionContext) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( userSuppliedConnection, this );
-                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
-                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
+		this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+		this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = new ArrayList<TransactionObserver>();
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -105,8 +105,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			List<TransactionObserver> observers) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = jdbcCoordinator;
-                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
-                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
+		this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+		this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = observers;
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -285,6 +285,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	@Override
+	public void removeObserver(TransactionObserver observer) {
+		observers.remove( observer );
+	}
+
+	@Override
 	@SuppressWarnings( {"unchecked"})
 	public boolean isTransactionJoinable() {
 		return transactionFactory().isJoinableJtaTransaction( this, currentHibernateTransaction );
@@ -329,7 +334,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	public void sendAfterTransactionCompletionNotifications(TransactionImplementor hibernateTransaction, int status) {
 		final boolean successful = JtaStatusHelper.isCommitted( status );
-		for ( TransactionObserver observer : observers ) {
+		for ( TransactionObserver observer : new ArrayList<TransactionObserver>( observers ) ) {
 			observer.afterCompletion( successful, hibernateTransaction );
 		}
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );

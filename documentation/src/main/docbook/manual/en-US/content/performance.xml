@@ -1,36 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="performance">
+
+<chapter xml:id="performance" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Improving performance</title>
 
-  <section id="performance-fetching" revision="2">
+  <section xml:id="performance-fetching" revision="2">
     <title>Fetching strategies</title>
 
     <para>Hibernate uses a <emphasis>fetching strategy</emphasis> to retrieve
@@ -128,7 +101,7 @@
     for what data is always available in any detached instance of a particular
     class.</para>
 
-    <section id="performance-fetching-lazy">
+    <section xml:id="performance-fetching-lazy">
       <title>Working with lazy associations</title>
 
       <para>By default, Hibernate3 uses lazy select fetching for collections
@@ -176,7 +149,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!</program
       associations and collections.</para>
     </section>
 
-    <section id="performance-fetching-custom" revision="4">
+    <section xml:id="performance-fetching-custom" revision="4">
       <title>Tuning fetch strategies</title>
 
       <para>Select fetching (the default) is extremely vulnerable to N+1
@@ -243,7 +216,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!</program
       use the second-level cache.</para>
     </section>
 
-    <section id="performance-fetching-proxies" revision="2">
+    <section xml:id="performance-fetching-proxies" revision="2">
       <title>Single-ended association proxies</title>
 
       <para>Lazy fetching for collections is implemented using Hibernate's own
@@ -371,7 +344,7 @@ Cat fritz = (Cat) iter.next();</programlisting>
       initialization.</para>
     </section>
 
-    <section id="performance-fetching-initialization" revision="1">
+    <section xml:id="performance-fetching-initialization" revision="1">
       <title>Initializing collections and proxies</title>
 
       <para>A <literal>LazyInitializationException</literal> will be thrown by
@@ -460,7 +433,7 @@ Cat fritz = (Cat) iter.next();</programlisting>
       <programlisting role="JAVA">s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();</programlisting>
     </section>
 
-    <section id="performance-fetching-batch">
+    <section xml:id="performance-fetching-batch">
       <title>Using batch fetching</title>
 
       <para>Using batch fetching, Hibernate can load several uninitialized
@@ -512,7 +485,7 @@ Cat fritz = (Cat) iter.next();</programlisting>
       path</emphasis> might be a better option for read-mostly trees.</para>
     </section>
 
-    <section id="performance-fetching-subselect">
+    <section xml:id="performance-fetching-subselect">
       <title>Using subselect fetching</title>
 
       <para>If one lazy collection or single-valued proxy has to be fetched,
@@ -523,7 +496,7 @@ Cat fritz = (Cat) iter.next();</programlisting>
       <!-- TODO: Write more about this -->
     </section>
 
-    <section id="performance-fetching-profiles">
+    <section xml:id="performance-fetching-profiles">
       <title>Fetch profiles</title>
 
       <para>Another way to affect the fetching strategy for loading associated
@@ -640,13 +613,14 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
         <classname>@FetchProfiles</classname> can be used.</para>
       </note>
 
-      <para>Currently only join style fetch profiles are supported, but they
-      plan is to support additional styles. See <ulink
-      url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</ulink>
-      for details.</para>
+      <para>
+          Currently only join style fetch profiles are supported, but they plan is to support additional styles. See
+          <link xlink:href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</link>
+          for details.
+      </para>
     </section>
 
-    <section id="performance-fetching-lazyproperties">
+    <section xml:id="performance-fetching-lazyproperties">
       <title>Using lazy property fetching</title>
 
       <para>Hibernate3 supports the lazy fetching of individual properties.
@@ -679,7 +653,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
     &lt;taskdef name="instrument" classname="org.hibernate.tool.instrument.InstrumentTask"&gt;
         &lt;classpath path="${jar.path}"/&gt;
         &lt;classpath path="${classes.dir}"/&gt;
-        &lt;classpath refid="lib.class.path"/&gt;
+        &lt;classpath refxml:id="lib.class.path"/&gt;
     &lt;/taskdef&gt;
 
     &lt;instrument verbose="true"&gt;
@@ -699,7 +673,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
     </section>
   </section>
 
-  <section id="performance-cache" revision="1">
+  <section xml:id="performance-cache" revision="1">
     <title>The Second Level Cache</title>
 
     <para>A Hibernate <literal>Session</literal> is a transaction-level cache
@@ -720,7 +694,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
     versions prior to Hibernate 3.2 use EhCache as the default cache
     provider.</para>
 
-    <table frame="topbot" id="cacheproviders" revision="1">
+    <table frame="topbot" xml:id="cacheproviders" revision="1">
       <title>Cache Providers</title>
 
       <tgroup align="left" cols="5" colsep="1" rowsep="1">
@@ -835,7 +809,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
       </tgroup>
     </table>
 
-    <section id="performance-cache-mapping" revision="2">
+    <section xml:id="performance-cache-mapping" revision="2">
       <title>Cache mappings</title>
 
       <para>As we have done in previous chapters we are looking at the two
@@ -903,7 +877,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
         that.</para>
       </note>
 
-      <example id="example-cache-concurrency-with-cache-annotation">
+      <example xml:id="example-cache-concurrency-with-cache-annotation">
         <title>Definition of cache concurrency strategy via
         <classname>@Cache</classname></title>
 
@@ -934,17 +908,17 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       its attributes. It allows you to define the caching strategy and region
       of a given second level cache.</para>
 
-      <example id="example-cache-annotation-with-attributes">
+      <example xml:id="example-cache-annotation-with-attributes">
         <title><classname>@Cache</classname> annotation with
         attributes</title>
 
         <programlistingco>
           <areaspec>
-            <area coords="2" id="cache-hm1" />
+            <area coords="2" xml:id="cache-hm1" />
 
-            <area coords="3" id="cache-hm2" />
+            <area coords="3" xml:id="cache-hm2" />
 
-            <area coords="4" id="cache-hm3" />
+            <area coords="4" xml:id="cache-hm3" />
           </areaspec>
 
           <programlisting>@Cache(
@@ -980,17 +954,17 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       linkend="example-hibernate-cache-mapping-element" /> the parallels to
       anotations is obvious.</para>
 
-      <example id="example-hibernate-cache-mapping-element">
+      <example xml:id="example-hibernate-cache-mapping-element">
         <title>The Hibernate <literal>&lt;cache&gt;</literal> mapping
         element</title>
 
         <programlistingco>
           <areaspec>
-            <area coords="2" id="cache1" />
+            <area coords="2" xml:id="cache1" />
 
-            <area coords="3" id="cache2" />
+            <area coords="3" xml:id="cache2" />
 
-            <area coords="4" id="cache3" />
+            <area coords="4" xml:id="cache3" />
           </areaspec>
 
           <programlisting>&lt;cache
@@ -1034,7 +1008,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       strategies</para>
     </section>
 
-    <section id="performance-cache-readonly">
+    <section xml:id="performance-cache-readonly">
       <title>Strategy: read only</title>
 
       <para>If your application needs to read, but not modify, instances of a
@@ -1043,7 +1017,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       in a cluster.</para>
     </section>
 
-    <section id="performance-cache-readwrite">
+    <section xml:id="performance-cache-readwrite">
       <title>Strategy: read/write</title>
 
       <para>If the application needs to update data, a
@@ -1061,7 +1035,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       <emphasis>do not</emphasis> support locking.</para>
     </section>
 
-    <section id="performance-cache-nonstrict">
+    <section xml:id="performance-cache-nonstrict">
       <title>Strategy: nonstrict read/write</title>
 
       <para>If the application only occasionally needs to update data (i.e. if
@@ -1075,7 +1049,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       <literal>Session.disconnect()</literal> is called.</para>
     </section>
 
-    <section id="performance-cache-transactional">
+    <section xml:id="performance-cache-transactional">
       <title>Strategy: transactional</title>
 
       <para>The <literal>transactional</literal> cache strategy provides
@@ -1084,7 +1058,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       <literal>hibernate.transaction.manager_lookup_class</literal>.</para>
     </section>
 
-    <section id="performance-cache-compat-matrix">
+    <section xml:id="performance-cache-compat-matrix">
       <title>Cache-provider/concurrency-strategy compatibility</title>
 
       <important>
@@ -1212,7 +1186,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
     </section>
   </section>
 
-  <section id="performance-sessioncache" revision="2">
+  <section xml:id="performance-sessioncache" revision="2">
     <title>Managing the caches</title>
 
     <para>Whenever you pass an object to <literal>save()</literal>,
@@ -1316,13 +1290,13 @@ hibernate.cache.use_structured_entries true</programlisting>
     </example>
   </section>
 
-  <section id="performance-querycache" revision="1">
+  <section xml:id="performance-querycache" revision="1">
     <title>The Query Cache</title>
 
     <para>Query result sets can also be cached. This is only useful for
     queries that are run frequently with the same parameters.</para>
 
-    <section id="performance-querycache-enable">
+    <section xml:id="performance-querycache-enable">
       <title>Enabling query caching</title>
 
       <para>Caching of query results introduces some overhead in terms of your
@@ -1377,7 +1351,7 @@ hibernate.cache.use_structured_entries true</programlisting>
       </note>
     </section>
 
-    <section id="performance-querycache-regions">
+    <section xml:id="performance-querycache-regions">
       <title>Query cache regions</title>
 
       <para>If you require fine-grained control over query cache expiration
@@ -1403,14 +1377,14 @@ hibernate.cache.use_structured_entries true</programlisting>
     </section>
   </section>
 
-  <section id="performance-collections">
+  <section xml:id="performance-collections">
     <title>Understanding Collection performance</title>
 
     <para>In the previous sections we have covered collections and their
     applications. In this section we explore some more issues in relation to
     collections at runtime.</para>
 
-    <section id="performance-collections-taxonomy">
+    <section xml:id="performance-collections-taxonomy">
       <title>Taxonomy</title>
 
       <para>Hibernate defines three basic kinds of collections:</para>
@@ -1484,7 +1458,7 @@ hibernate.cache.use_structured_entries true</programlisting>
       individual rows of the collection.</para>
     </section>
 
-    <section id="performance-collections-mostefficientupdate">
+    <section xml:id="performance-collections-mostefficientupdate">
       <title>Lists, maps, idbags and sets are the most efficient collections
       to update</title>
 
@@ -1513,7 +1487,7 @@ hibernate.cache.use_structured_entries true</programlisting>
       of collection update performance simply do not apply.</para>
     </section>
 
-    <section id="performance-collections-mostefficentinverse">
+    <section xml:id="performance-collections-mostefficentinverse">
       <title>Bags and lists are the most efficient inverse collections</title>
 
       <para>There is a particular case, however, in which bags, and also
@@ -1534,7 +1508,7 @@ p.getChildren().add(c);  //no need to fetch the collection!
 sess.flush();</programlisting>
     </section>
 
-    <section id="performance-collections-oneshotdelete">
+    <section xml:id="performance-collections-oneshotdelete">
       <title>One shot delete</title>
 
       <para>Deleting collection elements one by one can sometimes be extremely
@@ -1580,7 +1554,7 @@ sess.flush();</programlisting>
     </section>
   </section>
 
-  <section id="performance-monitoring" revision="1">
+  <section xml:id="performance-monitoring" revision="1">
     <title>Monitoring performance</title>
 
     <para>Optimization is not much use without monitoring and access to
@@ -1588,7 +1562,7 @@ sess.flush();</programlisting>
     internal operations. Statistics in Hibernate are available per
     <literal>SessionFactory</literal>.</para>
 
-    <section id="performance-monitoring-sf" revision="2">
+    <section xml:id="performance-monitoring-sf" revision="2">
       <title>Monitoring a SessionFactory</title>
 
       <para>You can access <literal>SessionFactory</literal> metrics in two
@@ -1644,7 +1618,7 @@ server.registerMBean(stats, on); // Register the MBean on the server</programlis
       (info level) using the <literal>logSummary()</literal> method.</para>
     </section>
 
-    <section id="performance-monitoring-metrics" revision="1">
+    <section xml:id="performance-monitoring-metrics" revision="1">
       <title>Metrics</title>
 
       <para>Hibernate provides a number of metrics, from basic information to

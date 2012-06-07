@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-<chapter id="hibernate-gsg-tutorial-basic">
+<chapter xmlns="http://docbook.org/ns/docbook">
     <title>Tutorial Using Native Hibernate APIs and <phrase>hbm.xml</phrase> Mappings</title>
 
     <para>
@@ -22,7 +21,7 @@
     </itemizedlist>
 
 
-    <section id="hibernate-gsg-tutorial-basic-config">
+    <section xml:id="hibernate-gsg-tutorial-basic-config">
         <title>The Hibernate configuration file</title>
 
         <para>
@@ -74,7 +73,7 @@
     </section>
 
 
-    <section id="hibernate-gsg-tutorial-basic-entity">
+    <section xml:id="hibernate-gsg-tutorial-basic-entity">
         <title>The entity Java class</title>
         <para>
             The entity class for this tutorial is <classname>org.hibernate.tutorial.hbm.Event</classname>.
@@ -99,7 +98,7 @@
     </section>
 
 
-    <section id="hibernate-gsg-tutorial-basic-mapping">
+    <section xml:id="hibernate-gsg-tutorial-basic-mapping">
         <title>The mapping file</title>
         <para>
             The <filename>hbm.xml</filename> mapping file for this tutorial is the classpath resource
@@ -112,7 +111,7 @@
             Hibernate mapping file is one choice for providing Hibernate with this metadata.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-mapping-class">
+        <example xml:id="hibernate-gsg-tutorial-basic-mapping-class">
             <title>The <literal>class</literal> mapping element</title>
             <programlisting role="XML"><![CDATA[<class name="Event" table="EVENTS">
     ...
@@ -141,7 +140,7 @@
             <database class="table">EVENTS</database> table.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-mapping-id">
+        <example xml:id="hibernate-gsg-tutorial-basic-mapping-id">
             <title>The <literal>id</literal> mapping element</title>
             <programlisting role="XML"><![CDATA[<id name="id" column="EVENT_ID">
     ...
@@ -175,7 +174,7 @@
             incrementing count.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-mapping-property">
+        <example xml:id="hibernate-gsg-tutorial-basic-mapping-property">
             <title>The <literal>property</literal> mapping element</title>
             <programlisting role="XML"><![CDATA[<property name="date" type="timestamp" column="EVENT_DATE"/>
 <property name="title"/>]]></programlisting>
@@ -219,7 +218,7 @@
 
     </section>
 
-    <section id="hibernate-gsg-tutorial-basic-test">
+    <section xml:id="hibernate-gsg-tutorial-basic-test">
         <title>Example code</title>
         <para>
             The <classname>org.hibernate.tutorial.hbm.NativeApiIllustrationTest</classname> class illustrates using
@@ -234,7 +233,7 @@
             </para>
         </note>
 
-        <example id="hibernate-gsg-tutorial-basic-test-setUp">
+        <example xml:id="hibernate-gsg-tutorial-basic-test-setUp">
             <title>Obtaining the <interfacename>org.hibernate.SessionFactory</interfacename></title>
             <programlisting role="JAVA">protected void setUp() throws Exception {
     // A SessionFactory is set up once for an application
@@ -280,7 +279,7 @@
           </step>
         </procedure>
         
-        <example id="hibernate-gsg-tutorial-basic-test-saving">
+        <example xml:id="hibernate-gsg-tutorial-basic-test-saving">
             <title>Saving entities</title>
             <programlisting role="JAVA">Session session = sessionFactory.openSession();
 session.beginTransaction();
@@ -296,7 +295,7 @@ session.close();</programlisting>
             takes responsibility to perform an <command>INSERT</command> on the database.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-test-list">
+        <example xml:id="hibernate-gsg-tutorial-basic-test-list">
             <title>Obtaining a list of entities</title>
             <programlisting role="JAVA"><![CDATA[session = sessionFactory.openSession();
 session.beginTransaction();
@@ -316,7 +315,7 @@ session.close();]]></programlisting>
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-further">
+    <section xml:id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
         <itemizedlist>
           <title>Practice Exercises</title>

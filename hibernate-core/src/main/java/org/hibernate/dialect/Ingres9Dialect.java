@@ -237,9 +237,9 @@ public class Ingres9Dialect extends IngresDialect {
 	 * @return the modified SQL
 	 */
 	public String getLimitString(String querySelect, int offset, int limit) {
-        StringBuffer soff = new StringBuffer(" offset " + offset);
-        StringBuffer slim = new StringBuffer(" fetch first " + limit + " rows only");
-		StringBuffer sb = new StringBuffer(querySelect.length() +
+		StringBuilder soff = new StringBuilder(" offset " + offset);
+		StringBuilder slim = new StringBuilder(" fetch first " + limit + " rows only");
+		StringBuilder sb = new StringBuilder(querySelect.length() +
             soff.length() + slim.length()).append(querySelect);
 		if (offset > 0) {
 			sb.append(soff);

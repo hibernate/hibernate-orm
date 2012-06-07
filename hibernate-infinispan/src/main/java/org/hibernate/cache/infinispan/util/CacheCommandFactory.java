@@ -1,15 +1,16 @@
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.impl.BaseRegion;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ExtendedModuleCommandFactory;
 import org.infinispan.commands.remote.CacheRpcCommand;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
 
 /**
  * Command factory
@@ -26,8 +27,9 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
       allRegions.put(regionName, region);
    }
 
-   public void clearRegions() {
-      allRegions.clear();
+   public void clearRegions(List<String> regionNames) {
+      for (String regionName : regionNames)
+         allRegions.remove(regionName);
    }
 
    @Override

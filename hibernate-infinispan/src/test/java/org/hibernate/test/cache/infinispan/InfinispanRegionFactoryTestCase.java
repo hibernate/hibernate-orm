@@ -20,8 +20,17 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan;
+
 import java.util.Properties;
-import static org.junit.Assert.*;
+import javax.transaction.TransactionManager;
+
+import org.infinispan.config.Configuration;
+import org.infinispan.config.Configuration.CacheMode;
+import org.infinispan.eviction.EvictionStrategy;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.junit.Test;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -34,14 +43,13 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.config.Configuration;
-import org.infinispan.config.Configuration.CacheMode;
-import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.junit.Test;
 
-import javax.transaction.TransactionManager;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -528,7 +536,7 @@ public class InfinispanRegionFactoryTestCase  {
    private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p) {
       final InfinispanRegionFactory factory = new InfinispanRegionFactory() {
          @Override
-         protected HibernateTransactionManagerLookup createTransactionManagerLookup(Settings settings, Properties properties) {
+         protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(Settings settings, Properties properties) {
             return new HibernateTransactionManagerLookup(null, null) {
                @Override
                public TransactionManager getTransactionManager() throws Exception {

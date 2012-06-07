@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.criteria">
+	
+	<class name="Course">
+		<id name="courseCode">
+			<generator class="assigned"/>
+		</id>
+		<property name="description"/>
+        <set name="courseMeetings" inverse="true" cascade="all-delete-orphan">
+            <key column="courseCode"/>
+            <one-to-many class="CourseMeeting"/>
+        </set>
+        <set name="crossListedAs">
+            <key />
+            <element type="string" />
+        </set>
+	</class>
+
+    <class name="CourseMeeting">
+        <composite-id name="id" class="CourseMeetingId">
+            <key-property name="courseCode"/>
+            <key-property name="day"/>
+            <key-property name="period"/>
+            <key-property name="location"/>
+        </composite-id>
+        <many-to-one name="course" insert="false" update="false">
+            <column name="courseCode"/>
+        </many-to-one>
+    </class>
+
+	<class name="Student">
+		<id name="studentNumber">
+		    <column name="studentId"/>
+			<generator class="assigned"/>
+		</id>
+		<property name="name" not-null="true"/>
+        <component name="cityState">
+		    <property name="city" column="address_city"/>
+            <property name="state" column="address_state"/>
+        </component>
+		<set name="enrolments" inverse="true" cascade="delete">
+			<key column="studentId"/>
+			<one-to-many class="Enrolment"/>
+		</set>
+	        <many-to-one name="preferredCourse" column="preferredCourseCode"/>
+		<map name="addresses" table="studentAddresses">
+			<key column="studentId" />
+			<map-key type="string" column="addressType" />
+			<composite-element class="org.hibernate.test.criteria.StudentAddress" >
+				<property name="line1" />
+				<property name="line2" />
+				<property name="city" />
+				<property name="state" />
+				<property name="zip" />
+			</composite-element>
+		</map>
+                <list name="studyAbroads">
+                    <key column="studentId" />
+                    <list-index column="ind" />
+                    <composite-element class="org.hibernate.test.criteria.StudyAbroad">
+                        <property name="date" column="strt_dt"/>
+                        <many-to-one name="country" />
+                    </composite-element>
+                </list>
+	</class>
+
+        <class name="Country">
+            <id name="code" />
+            <property name="name" />
+        </class>
+        
+	<class name="Enrolment">
+		<composite-id>
+			<key-property name="studentNumber">
+				<column name="studentId"/>
+			</key-property>
+			<key-property name="courseCode"/>
+		</composite-id>
+		<many-to-one name="student" insert="false" update="false">
+			<column name="studentId"/>
+		</many-to-one>
+		<many-to-one name="course" insert="false" update="false">
+			<column name="courseCode"/>
+		</many-to-one>
+		<property name="semester" not-null="true"/>
+		<property name="year" column="`year`" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

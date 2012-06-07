@@ -30,7 +30,7 @@ buildDir = "target"
 repositories {
     mavenCentral()
     mavenLocal()
-    mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
+    mavenRepo name: "jboss", url: "http://repository.jboss.org/nexus/content/groups/public/"
 }
 targetCompatibility = "1.6"
 sourceCompatibility = "1.6"
@@ -39,20 +39,21 @@ dependencies {
     // common
     compile gradleApi()
     compile localGroovy()
-//    compile 'org.apache.ant:ant:1.8.2'
-//    compile 'org.apache.maven:maven-ant-tasks:2.1.0'
-
-    // needed?
-//    compile 'org.apache.maven.wagon:wagon-http:1.0-beta-6'
-
-    // injection plugin
-    compile 'javassist:javassist:3.12.0.GA'
-
     groovy localGroovy()
+    compile 'org.apache.ant:ant:1.8.2'
+    // injection plugin
+    compile 'org.javassist:javassist:3.15.0-GA'
+
+    
 }
 
-ideaModule {
-    downloadSources =true
-    downloadJavadoc= true
-    javaVersion = '1.6'
+idea {
+	project {
+		jdkName = "1.6"
+	}
+	module {
+		downloadSources = true
+		downloadJavadoc = true
+		javaVersion = '1.6'
+	}
 }

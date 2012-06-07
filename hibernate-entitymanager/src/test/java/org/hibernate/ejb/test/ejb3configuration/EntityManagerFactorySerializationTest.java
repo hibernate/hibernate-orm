@@ -32,6 +32,8 @@ import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.junit.Test;
+
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
@@ -39,7 +41,8 @@ import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.Wallet;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -103,6 +106,27 @@ public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunc
 
 		em.close();
 	}
+
+	@Test
+	public void testEntityManagerFactorySerialization() throws Exception {
+		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		ObjectOutput out = new ObjectOutputStream( stream );
+		out.writeObject( entityManagerFactory );
+		out.close();
+		byte[] serialized = stream.toByteArray();
+		stream.close();
+		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
+		ObjectInputStream in = new ObjectInputStream( byteIn );
+		EntityManagerFactory entityManagerFactory2 = (EntityManagerFactory) in.readObject();
+		in.close();
+		byteIn.close();
+
+		assertTrue("deserialized EntityManagerFactory should be the same original EntityManagerFactory instance",
+				entityManagerFactory2 == entityManagerFactory);
+	}
+
 
 	@Override
 	public Class[] getAnnotatedClasses() {

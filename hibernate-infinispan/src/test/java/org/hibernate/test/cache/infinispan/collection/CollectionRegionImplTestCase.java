@@ -22,18 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.collection;
+
 import java.util.Properties;
-import org.hibernate.cache.spi.CacheDataDescription;
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
-
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
 
 import static org.junit.Assert.assertNull;
@@ -50,12 +51,6 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
       CollectionRegion region = regionFactory.buildCollectionRegion("test", properties, null);
       assertNull("Got TRANSACTIONAL", region.buildAccessStrategy(AccessType.TRANSACTIONAL)
                .lockRegion());
-      try {
-         region.buildAccessStrategy(AccessType.READ_ONLY).lockRegion();
-         fail("Did not get READ_ONLY");
-      } catch (UnsupportedOperationException good) {
-      }
-
       try {
          region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);
          fail("Incorrectly got NONSTRICT_READ_WRITE");

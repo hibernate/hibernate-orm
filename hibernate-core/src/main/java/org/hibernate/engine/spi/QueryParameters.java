@@ -472,7 +472,7 @@ public final class QueryParameters {
 		}
 		else {
 			final Dialect dialect = factory.getDialect();
-			String symbols = new StringBuffer().append( ParserHelper.HQL_SEPARATORS )
+			String symbols = new StringBuilder().append( ParserHelper.HQL_SEPARATORS )
 					.append( dialect.openQuote() )
 					.append( dialect.closeQuote() )
 					.toString();

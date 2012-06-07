@@ -167,7 +167,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	}
 
 	public String getSQL() {
-		return getStringBuffer().toString();
+		return getStringBuilder().toString();
 	}
 
 	@Override
@@ -269,11 +269,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 */
 	class DefaultWriter implements SqlWriter {
 		public void clause(String clause) {
-			getStringBuffer().append( clause );
+			getStringBuilder().append( clause );
 		}
 
 		public void commaBetweenParameters(String comma) {
-			getStringBuffer().append( comma );
+			getStringBuilder().append( comma );
 		}
 	}
 

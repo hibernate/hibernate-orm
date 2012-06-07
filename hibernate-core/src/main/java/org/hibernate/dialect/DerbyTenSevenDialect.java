@@ -32,4 +32,8 @@ public class DerbyTenSevenDialect extends DerbyTenSixDialect{
     public DerbyTenSevenDialect() {
          registerColumnType( Types.BOOLEAN, "boolean" );
     }
+
+    public String toBooleanValueString(boolean bool) {
+        return String.valueOf(bool);
+    }
 }

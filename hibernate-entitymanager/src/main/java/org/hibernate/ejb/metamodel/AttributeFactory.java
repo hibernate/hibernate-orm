@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -34,6 +35,9 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Collection;
@@ -47,7 +51,6 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
-import org.jboss.logging.Logger;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -83,20 +86,36 @@ public class AttributeFactory {
 	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
 		if ( property.isSynthetic() ) {
 			// hide synthetic/virtual properties (fabricated by Hibernate) from the JPA metamodel.
-            LOG.trace("Skipping synthetic property " + ownerType.getJavaType().getName() + "(" + property.getName() + ")");
+            LOG.tracef(
+					"Skipping synthetic property %s(%s)",
+					ownerType.getJavaType().getName(),
+					property.getName()
+			);
 			return null;
 		}
         LOG.trace("Building attribute [" + ownerType.getJavaType().getName() + "." + property.getName() + "]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
 				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
-
-        if (attributeMetadata.isPlural()) return buildPluralAttribute((PluralAttributeMetadata)attributeMetadata);
+        if (attributeMetadata == null) {
+			return null;
+		}
+        if (attributeMetadata.isPlural()) {
+			return buildPluralAttribute((PluralAttributeMetadata)attributeMetadata);
+		}
         final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>)attributeMetadata;
         final Type<Y> metaModelType = getMetaModelType(singularAttributeMetadata.getValueContext());
-        return new SingularAttributeImpl<X, Y>(attributeMetadata.getName(), attributeMetadata.getJavaType(), ownerType,
-                                               attributeMetadata.getMember(), false, false, property.isOptional(), metaModelType,
-                                               attributeMetadata.getPersistentAttributeType());
+        return new SingularAttributeImpl<X, Y>(
+				attributeMetadata.getName(),
+				attributeMetadata.getJavaType(),
+				ownerType,
+				attributeMetadata.getMember(),
+				false,
+				false,
+				property.isOptional(),
+				metaModelType,
+				attributeMetadata.getPersistentAttributeType()
+		);
 	}
 
 	private <X> AttributeContext<X> wrap(final AbstractManagedType<X> ownerType, final Property property) {
@@ -428,7 +447,13 @@ public class AttributeFactory {
         LOG.trace("    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]");
 
 		if ( type.isAnyType() ) {
-			throw new UnsupportedOperationException( "any not supported yet" );
+			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
+            if ( context.isIgnoreUnsupported() ) {
+                return null;
+            }
+			else {
+                throw new UnsupportedOperationException( "ANY not supported" );
+            }
 		}
 		else if ( type.isAssociationType() ) {
 			// collection or entity

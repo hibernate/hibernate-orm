@@ -21,8 +21,10 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.util;
-import org.hibernate.cache.CacheException;
+
 import org.infinispan.context.Flag;
+
+import org.hibernate.cache.CacheException;
 
 /**
  * FlagAdapter.

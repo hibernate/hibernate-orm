@@ -33,6 +33,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -135,10 +136,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public SingleTableEntityPersister(
 			final PersistentClass persistentClass, 
 			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final SessionFactoryImplementor factory,
 			final Mapping mapping) throws HibernateException {
 
-		super( persistentClass, cacheAccessStrategy, factory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
 
 		// CLASS + TABLE
 
@@ -450,10 +452,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public SingleTableEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final SessionFactoryImplementor factory,
 			final Mapping mapping) throws HibernateException {
 
-		super( entityBinding, cacheAccessStrategy, factory );
+		super( entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
 
 		// CLASS + TABLE
 
@@ -851,7 +854,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				if ( !queryable.isAbstract() ) frag.addValue( queryable.getDiscriminatorSQLValue() );
 			}
 
-			StringBuffer buf = new StringBuffer(50)
+			StringBuilder buf = new StringBuilder(50)
 				.append(" and ")
 				.append( frag.toFragmentString() );
 

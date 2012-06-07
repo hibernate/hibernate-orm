@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.infinispan.util;
-import java.util.concurrent.Callable;
 
+import java.util.concurrent.Callable;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 

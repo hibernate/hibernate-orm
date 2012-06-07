@@ -1,29 +1,5 @@
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-        
-<chapter id="types">
+<?xml version='1.0' encoding="UTF-8"?>
+<chapter xml:id="types" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Types</title>
 
     <para>
@@ -52,7 +28,7 @@
         entity types (see <xref linkend="types-entity"/>).
     </para>
 
-    <section id="types-value">
+    <section xml:id="types-value">
         <title>Value types</title>
 
         <para>
@@ -63,7 +39,7 @@
             amd collection types (see <xref linkend="types-value-collection"/>).
         </para>
 
-        <section id="types-value-basic">
+        <section xml:id="types-value-basic">
             <title>Basic value types</title>
             <para>
                 The norm for basic value types is that they map a single database value (column) to a single, 
@@ -72,7 +48,7 @@
                 JDBC specification.  We will later cover how to override these mapping and how to provide and use
                 alternative type mappings.
             </para>
-            <section id="types-value-basic-string">
+            <section xml:id="types-value-basic-string">
                 <title>java.lang.String</title>
                 <variablelist>
                     <varlistentry>
@@ -114,7 +90,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-character">
+            <section xml:id="types-basic-value-character">
                 <title><classname>java.lang.Character</classname> (or char primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -131,7 +107,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-value-basic-boolean">
+            <section xml:id="types-value-basic-boolean">
                 <title><classname>java.lang.Boolean</classname> (or boolean primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -184,7 +160,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-byte">
+            <section xml:id="types-basic-value-byte">
                 <title><classname>java.lang.Byte</classname> (or byte primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -201,7 +177,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-short">
+            <section xml:id="types-basic-value-short">
                 <title><classname>java.lang.Short</classname> (or short primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -218,7 +194,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-int">
+            <section xml:id="types-basic-value-int">
                 <title><classname>java.lang.Integer</classname> (or int primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -235,7 +211,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-long">
+            <section xml:id="types-basic-value-long">
                 <title><classname>java.lang.Long</classname> (or long primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -252,7 +228,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-float">
+            <section xml:id="types-basic-value-float">
                 <title><classname>java.lang.Float</classname> (or float primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -269,7 +245,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-double">
+            <section xml:id="types-basic-value-double">
                 <title><classname>java.lang.Double</classname> (or double primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -286,7 +262,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-biginteger">
+            <section xml:id="types-basic-value-biginteger">
                 <title><classname>java.math.BigInteger</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -303,7 +279,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-bigdecimal">
+            <section xml:id="types-basic-value-bigdecimal">
                 <title><classname>java.math.BigDecimal</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -320,7 +296,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-timestamp">
+            <section xml:id="types-basic-value-timestamp">
                 <title><classname>java.util.Date</classname> or <classname>java.sql.Timestamp</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -337,7 +313,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-time">
+            <section xml:id="types-basic-value-time">
                 <title><classname>java.sql.Time</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -354,7 +330,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-date">
+            <section xml:id="types-basic-value-date">
                 <title><classname>java.sql.Date</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -371,7 +347,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-calendar">
+            <section xml:id="types-basic-value-calendar">
                 <title><classname>java.util.Calendar</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -401,7 +377,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-currency">
+            <section xml:id="types-basic-value-currency">
                 <title><classname>java.util.Currency</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -418,7 +394,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-locale">
+            <section xml:id="types-basic-value-locale">
                 <title><classname>java.util.Locale</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -435,7 +411,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-timezone">
+            <section xml:id="types-basic-value-timezone">
                 <title><classname>java.util.TimeZone</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -452,7 +428,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-url">
+            <section xml:id="types-basic-value-url">
                 <title><classname>java.net.URL</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -469,7 +445,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-class">
+            <section xml:id="types-basic-value-class">
                 <title><classname>java.lang.Class</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -486,7 +462,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-blob">
+            <section xml:id="types-basic-value-blob">
                 <title><classname>java.sql.Blob</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -503,7 +479,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-clob">
+            <section xml:id="types-basic-value-clob">
                 <title><classname>java.sql.Clob</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -520,7 +496,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-binary" revision="1">
+            <section xml:id="types-basic-value-binary" revision="1">
                 <title>byte[]</title>
                 <variablelist>
                     <varlistentry>
@@ -561,7 +537,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-wrapperbinary" revision="1">
+            <section xml:id="types-basic-value-wrapperbinary" revision="1">
                 <title>Byte[]</title>
                 <variablelist>
                     <varlistentry>
@@ -578,7 +554,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-chararray">
+            <section xml:id="types-basic-value-chararray">
                 <title>char[]</title>
                 <variablelist>
                     <varlistentry>
@@ -595,7 +571,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-characterarray" revision="1">
+            <section xml:id="types-basic-value-characterarray" revision="1">
                 <title>Character[]</title>
                 <variablelist>
                     <varlistentry>
@@ -612,7 +588,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-uuid">
+            <section xml:id="types-basic-value-uuid">
                 <title><classname>java.util.UUID</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -654,7 +630,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-serializable">
+            <section xml:id="types-basic-value-serializable">
                 <title><interfacename>java.io.Serializable</interfacename></title>
                 <variablelist>
                     <varlistentry>
@@ -675,7 +651,7 @@
             </section>
         </section>
 
-        <section id="types-value-composite">
+        <section xml:id="types-value-composite">
             <title>Composite types</title>
             <note>
                 <para>
@@ -695,7 +671,7 @@
             </para>
         </section>
 
-        <section id="types-value-collection">
+        <section xml:id="types-value-collection">
             <title>Collection types</title>
             <important>
                 <para>
@@ -711,7 +687,7 @@
 
     </section>
 
-    <section id="types-entity">
+    <section xml:id="types-entity">
         <title>Entity types</title>
         <para>
             The definition of entities is covered in detail in <xref linkend="persistent-classes"/>.  For the purpose of
@@ -730,7 +706,7 @@
         </para>
     </section>
 
-    <section id="types-category-significance">
+    <section xml:id="types-category-significance">
         <title>Significance of type categories</title>
         <para>
             Why do we spend so much time categorizing the various types of types?  What is the significance of the
@@ -753,7 +729,7 @@
         </para>
     </section>
 
-    <section id="types-custom">
+    <section xml:id="types-custom">
         <title>Custom types</title>
         <para>
             Hibernate makes it relatively easy for developers to create their own <emphasis>value</emphasis> types.  For
@@ -769,7 +745,7 @@
             and <classname>java.util.Currency</classname> together into a custom <classname>Money</classname> class.
         </para>
 
-        <section id="types-custom-type">
+        <section xml:id="types-custom-type">
             <title>Custom types using <interfacename>org.hibernate.type.Type</interfacename></title>
             <para>
                 The first approach is to directly implement the <interfacename>org.hibernate.type.Type</interfacename>
@@ -781,7 +757,7 @@
                 <classname>Money</classname>, which is the key we would use to register our type in the registry:
             </para>
 
-            <example id="types-custom-type-ex-definition">
+            <example xml:id="types-custom-type-ex-definition">
                 <title>Defining and registering the custom Type</title>
                 <programlisting role="JAVA"><![CDATA[public class MoneyType implements BasicType {
     public String[] getRegistrationKeys() {
@@ -843,7 +819,7 @@ cfg...;
             </important>
         </section>
 
-        <section id="types-custom-ut">
+        <section xml:id="types-custom-ut">
             <title>Custom types using <interfacename>org.hibernate.usertype.UserType</interfacename></title>
             <note>
                 <para>
@@ -859,7 +835,7 @@ cfg...;
                 interface.  Using a <interfacename>org.hibernate.usertype.UserType</interfacename>, our
                 <classname>Money</classname> custom type would look as follows:
             </para>
-            <example id="types-custom-ut-ex-definition">
+            <example xml:id="types-custom-ut-ex-definition">
                 <title>Defining the custom UserType</title>
                 <programlisting role="JAVA"><![CDATA[public class MoneyType implements UserType {
     public int[] sqlTypes() {
@@ -906,7 +882,7 @@ cfg...;
             </para>
         </section>
 
-        <section id="types-custom-cut">
+        <section xml:id="types-custom-cut">
             <title>Custom types using <interfacename>org.hibernate.usertype.CompositeUserType</interfacename></title>
             <para>
                 The third and final approach is the use the <interfacename>org.hibernate.usertype.CompositeUserType</interfacename>
@@ -918,7 +894,7 @@ cfg...;
                 <classname>Money</classname> custom type would look as follows:
             </para>
 
-            <example id="types-custom-cut-ex-definition">
+            <example xml:id="types-custom-cut-ex-definition">
                 <title>Defining the custom CompositeUserType</title>
                 <programlisting role="JAVA"><![CDATA[public class MoneyType implements CompositeUserType {
     public String[] getPropertyNames() {
@@ -1002,7 +978,7 @@ cfg...;
 
     </section>
 
-    <section id="types-registry">
+    <section xml:id="types-registry">
         <title>Type registry</title>
         <para>
             Internally Hibernate uses a registry of basic types (see <xref linkend="types-value-basic"/>) when
@@ -1016,7 +992,7 @@ cfg...;
             class when bootstrapping Hibernate.  For example, lets say you want Hibernate to use your custom
             <classname>SuperDuperStringType</classname>; during bootstrap you would call:
         </para>
-        <example id="type-registry-override-ex">
+        <example xml:id="type-registry-override-ex">
             <title>Overriding the standard <classname>StringType</classname></title>
             <programlisting role="JAVA"><![CDATA[Configuration cfg = ...;
 cfg.registerTypeOverride( new SuperDuperStringType() );]]></programlisting>

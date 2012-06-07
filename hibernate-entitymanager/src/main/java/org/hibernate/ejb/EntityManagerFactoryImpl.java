@@ -23,7 +23,6 @@ package org.hibernate.ejb;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
@@ -41,6 +40,8 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -49,6 +50,10 @@ import org.hibernate.ejb.internal.EntityManagerFactoryRegistry;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.UUIDGenerator;
+import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
@@ -61,17 +66,22 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
-	private final SessionFactory sessionFactory;
-	private final PersistenceUnitTransactionType transactionType;
-	private final boolean discardOnClose;
-	private final Class sessionInterceptorClass;
-	private final CriteriaBuilderImpl criteriaBuilder;
-	private final Metamodel metamodel;
-	private final HibernatePersistenceUnitUtil util;
-	private final Map<String,Object> properties;
+	private static final long serialVersionUID = 5423543L;
+	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
+
+	private static final Logger log = Logger.getLogger( EntityManagerFactoryImpl.class );
+
+	private final transient SessionFactoryImpl sessionFactory;
+	private final transient PersistenceUnitTransactionType transactionType;
+	private final transient boolean discardOnClose;
+	private final transient Class sessionInterceptorClass;
+	private final transient CriteriaBuilderImpl criteriaBuilder;
+	private final transient Metamodel metamodel;
+	private final transient HibernatePersistenceUnitUtil util;
+	private final transient Map<String,Object> properties;
 	private final String entityManagerFactoryName;
 
-	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
+	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	@SuppressWarnings( "unchecked" )
 	public EntityManagerFactoryImpl(
@@ -81,17 +91,21 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			Configuration cfg,
 			ServiceRegistry serviceRegistry,
 			String persistenceUnitName) {
-		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
+		this.sessionFactory = (SessionFactoryImpl) cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		//a safe guard till we are confident that metamodel is wll tested
-		if ( !"disabled".equalsIgnoreCase( cfg.getProperty( "hibernate.ejb.metamodel.generation" ) ) ) {
-			this.metamodel = MetamodelImpl.buildMetamodel( classes, ( SessionFactoryImplementor ) sessionFactory );
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
+			this.metamodel = null;
 		}
 		else {
-			this.metamodel = null;
+			this.metamodel = MetamodelImpl.buildMetamodel(
+					classes,
+					( SessionFactoryImplementor ) sessionFactory,
+					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
+			);
 		}
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
@@ -104,8 +118,48 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		if (entityManagerFactoryName == null) {
 			entityManagerFactoryName = persistenceUnitName;
 		}
+		if (entityManagerFactoryName == null) {
+			entityManagerFactoryName = (String) UUID_GENERATOR.generate(null, null);
+		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
+	}
+	
+	private enum JpaMetaModelPopulationSetting {
+		ENABLED,
+		DISABLED,
+		IGNORE_UNSUPPORTED;
+		
+		private static JpaMetaModelPopulationSetting parse(String setting) {
+			if ( "enabled".equalsIgnoreCase( setting ) ) {
+				return ENABLED;
+			}
+			else if ( "disabled".equalsIgnoreCase( setting ) ) {
+				return DISABLED;
+			}
+			else {
+				return IGNORE_UNSUPPORTED;
+			}
+		}
+	}
+	
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+		String setting = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_POPULATION,
+				cfg.getProperties(),
+				null
+		);
+		if ( setting == null ) {
+			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, cfg.getProperties(), null );
+			if ( setting != null ) {
+				log.infof( 
+						"Encountered deprecated setting [%s], use [%s] instead",
+						AvailableSettings.JPA_METAMODEL_GENERATION,
+						AvailableSettings.JPA_METAMODEL_POPULATION
+				);
+			}
+		}
+		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
 	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {
@@ -164,7 +218,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return ! sessionFactory.isClosed();
 	}
 
-	public SessionFactory getSessionFactory() {
+	public SessionFactoryImpl getSessionFactory() {
 		return sessionFactory;
 	}
 
@@ -199,29 +253,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 	}
 
-	/**
-	 * Custom serialization hook used during EntityManager serialization.
-	 *
-	 * @param oos The stream to which to write the factory
-	 * @throws IOException Indicates problems writing out the serial data stream
-	 */
-	void serialize(ObjectOutputStream oos) throws IOException {
-		if (entityManagerFactoryName == null) {
-			throw new InvalidObjectException( "could not serialize entity manager factory with null entityManagerFactoryName" );
-		}
-		oos.writeUTF( entityManagerFactoryName );
-	}
-
-	/**
-	 * Custom deserialization hook used during EntityManager deserialization.
-	 *
-	 * @param ois The stream from which to "read" the factory
-	 * @return The deserialized factory
-	 * @throws IOException indicates problems reading back serial data stream
-	 * @throws ClassNotFoundException indicates problems reading back serial data stream
-	 */
-	static EntityManagerFactory deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		final String entityManagerFactoryName = ois.readUTF();
+	private static EntityManagerFactory getNamedEntityManagerFactory(String entityManagerFactoryName) throws InvalidObjectException {
 		Object result = EntityManagerFactoryRegistry.INSTANCE.getNamedEntityManagerFactory(entityManagerFactoryName);
 
 		if ( result == null ) {
@@ -230,6 +262,25 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 		return (EntityManagerFactory)result;
 	}
+
+	private void writeObject(ObjectOutputStream oos) throws IOException {
+		if (entityManagerFactoryName == null) {
+			throw new InvalidObjectException( "could not serialize entity manager factory with null entityManagerFactoryName" );
+		}
+		oos.defaultWriteObject();
+	}
+
+	/**
+	 * After deserialization of an EntityManagerFactory, this is invoked to return the EntityManagerFactory instance
+	 * that is already in use rather than a cloned copy of the object.
+	 *
+	 * @return
+	 * @throws InvalidObjectException
+	 */
+	private Object readResolve() throws InvalidObjectException {
+		return getNamedEntityManagerFactory(entityManagerFactoryName);
+	}
+
 
 
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {

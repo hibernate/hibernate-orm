@@ -1,38 +1,9 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="inheritance">
+<chapter xml:id="inheritance" xmlns="http://docbook.org/ns/docbook">
     <title>Inheritance mapping</title>
 
-    <section id="inheritance-strategies" revision="3">
+    <section xml:id="inheritance-strategies" revision="3">
         <title>The three strategies</title>
 
         <para>
@@ -103,7 +74,7 @@
  </hibernate-mapping>]]></programlisting>
 
 
-        <section id="inheritance-tableperclass" >
+        <section xml:id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 
         <para>
@@ -140,7 +111,7 @@
         
         </section>
 
-        <section id="inheritance-tablepersubclass">
+        <section xml:id="inheritance-tablepersubclass">
         <title>Table per subclass</title>
 
         <para>
@@ -176,7 +147,7 @@
 
         </section>
 
-        <section id="inheritance-tablepersubclass-discriminator" revision="2">
+        <section xml:id="inheritance-tablepersubclass-discriminator" revision="2">
         <title>Table per subclass: using a discriminator</title>
 
         <para>
@@ -227,7 +198,7 @@
 
         </section>
 
-        <section id="inheritance-mixing-tableperclass-tablepersubclass">
+        <section xml:id="inheritance-mixing-tableperclass-tablepersubclass">
         <title>Mixing table per class hierarchy with table per subclass</title>
 
         <para>
@@ -266,7 +237,7 @@
     
         </section>
 
-        <section id="inheritance-tableperconcrete" revision="2">
+        <section xml:id="inheritance-tableperconcrete" revision="2">
         <title>Table per concrete class</title>
 
         <para>
@@ -315,7 +286,7 @@
 
         </section>
 
-        <section id="inheritance-tableperconcreate-polymorphism">
+        <section xml:id="inheritance-tableperconcreate-polymorphism">
         <title>Table per concrete class using implicit polymorphism</title>
 
         <para>
@@ -353,7 +324,7 @@
             using XML entities
             (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
             in the <literal>DOCTYPE</literal> declaration and 
-            <literal>&amp;allproperties&semi;</literal> in the mapping).
+            <literal><![CDATA[%allproperties;]]></literal> in the mapping).
         </para>
         
         <para>
@@ -376,7 +347,7 @@
            
         </section>
 
-        <section id="inheritance-mixingpolymorphism">
+        <section xml:id="inheritance-mixingpolymorphism">
         <title>Mixing implicit polymorphism with other inheritance mappings</title>
 
         <para>
@@ -429,7 +400,7 @@
 
     </section>
 
-    <section id="inheritance-limitations">
+    <section xml:id="inheritance-limitations">
         <title>Limitations</title>
 
         <para>

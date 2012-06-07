@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="associations">
+<chapter xml:id="associations"  xmlns="http://docbook.org/ns/docbook">
 
     <title>Association Mappings</title>
 
@@ -58,10 +29,10 @@
         
     </section>
 
-    <section id="assoc-unidirectional" revision="1">
+    <section xml:id="assoc-unidirectional" revision="1">
         <title>Unidirectional associations</title>
         
-        <section id="assoc-unidirectional-m21">
+        <section xml:id="assoc-unidirectional-m21">
         <title>Many-to-one</title>
         
         <para>
@@ -90,7 +61,7 @@ create table Address ( addressId bigint not null primary key )
         
         </section>
 
-        <section id="assoc-unidirectional-121">
+        <section xml:id="assoc-unidirectional-121">
         <title>One-to-one</title>
         
         <para>
@@ -145,7 +116,7 @@ create table Address ( personId bigint not null primary key )
         
         </section>
         
-        <section id="assoc-unidirectional-12m">
+        <section xml:id="assoc-unidirectional-12m">
         <title>One-to-many</title>
         
         <para>
@@ -182,10 +153,10 @@ create table Address ( addressId bigint not null primary key, personId bigint no
     
     </section>
 
-    <section id="assoc-unidirectional-join" revision="1">
+    <section xml:id="assoc-unidirectional-join" revision="1">
         <title>Unidirectional associations with join tables</title>
         
-        <section id="assoc-unidirectional-join-12m">
+        <section xml:id="assoc-unidirectional-join-12m">
         <title>One-to-many</title>
         
         <para>
@@ -219,7 +190,7 @@ create table Address ( addressId bigint not null primary key )
         
         </section>
 
-        <section id="assoc-unidirectional-join-m21">
+        <section xml:id="assoc-unidirectional-join-m21">
         <title>Many-to-one</title>
         
         <para>
@@ -253,7 +224,7 @@ create table Address ( addressId bigint not null primary key )
         
         </section>
 
-        <section id="assoc-unidirectional-join-121">
+        <section xml:id="assoc-unidirectional-join-121">
         <title>One-to-one</title>
         
         <para>
@@ -289,7 +260,7 @@ create table Address ( addressId bigint not null primary key )
         
         </section>
 
-        <section id="assoc-unidirectional-join-m2m">
+        <section xml:id="assoc-unidirectional-join-m2m">
         <title>Many-to-many</title>
         
         <para>
@@ -322,10 +293,10 @@ create table Address ( addressId bigint not null primary key )
 
     </section>
 
-    <section id="assoc-bidirectional" revision="1">
+    <section xml:id="assoc-bidirectional" revision="1">
         <title>Bidirectional associations</title>
         
-        <section id="assoc-bidirectional-m21" revision="2">
+        <section xml:id="assoc-bidirectional-m21" revision="2">
         <title>one-to-many / many-to-one</title>
         
         <para>
@@ -398,7 +369,7 @@ create table Address ( addressId bigint not null primary key )
 
         </section>
         
-        <section id="assoc-bidirectional-121">
+        <section xml:id="assoc-bidirectional-121">
         <title>One-to-one</title>
         
         <para>
@@ -458,10 +429,10 @@ create table Address ( personId bigint not null primary key )
         
     </section>
 
-    <section id="assoc-bidirectional-join" revision="1">
+    <section xml:id="assoc-bidirectional-join" revision="1">
         <title>Bidirectional associations with join tables</title>
         
-        <section id="assoc-bidirectional-join-12m">
+        <section xml:id="assoc-bidirectional-join-12m">
         <title>one-to-many / many-to-one</title>
         
         <para>
@@ -504,7 +475,7 @@ create table Address ( addressId bigint not null primary key )
         
         </section>
 
-         <section id="assoc-bidirectional-join-121">
+         <section xml:id="assoc-bidirectional-join-121">
         <title>one to one</title>
         
         <para>
@@ -550,7 +521,7 @@ create table Address ( addressId bigint not null primary key )
 
         </section>
         
-        <section id="assoc-bidirectional-join-m2m" revision="1">
+        <section xml:id="assoc-bidirectional-join-m2m" revision="1">
         <title>Many-to-many</title>
         
         <para>
@@ -589,7 +560,7 @@ create table Address ( addressId bigint not null primary key )
         
     </section>
     
-    <section id="assoc-complex">
+    <section xml:id="assoc-complex">
         <title>More complex association mappings</title>
         
         <para>

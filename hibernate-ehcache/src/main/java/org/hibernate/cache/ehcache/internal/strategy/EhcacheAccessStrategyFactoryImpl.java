@@ -28,9 +28,11 @@ import org.jboss.logging.Logger;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * Class implementing {@link EhcacheAccessStrategyFactory}
@@ -111,4 +113,37 @@ public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFa
         }
     }
 
+	@Override
+	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
+			AccessType accessType) {
+        switch ( accessType ) {
+        case READ_ONLY:
+            if ( naturalIdRegion.getCacheDataDescription().isMutable() ) {
+                LOG.readOnlyCacheConfiguredForMutableEntity( naturalIdRegion.getName() );
+            }
+            return new ReadOnlyEhcacheNaturalIdRegionAccessStrategy(
+                    naturalIdRegion,
+                    naturalIdRegion.getSettings()
+            );
+        case READ_WRITE:
+            return new ReadWriteEhcacheNaturalIdRegionAccessStrategy(
+                    naturalIdRegion,
+                    naturalIdRegion.getSettings()
+            );
+        case NONSTRICT_READ_WRITE:
+            return new NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(
+                    naturalIdRegion,
+                    naturalIdRegion.getSettings()
+            );
+        case TRANSACTIONAL:
+            return new TransactionalEhcacheNaturalIdRegionAccessStrategy(
+                    naturalIdRegion, naturalIdRegion.getEhcache(), naturalIdRegion
+                    .getSettings()
+            );
+        default:
+            throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
+    }
+	}
+
+    
 }

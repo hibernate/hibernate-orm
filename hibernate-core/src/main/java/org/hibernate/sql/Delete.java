@@ -52,7 +52,7 @@ public class Delete {
 	}
 
 	public String toStatementString() {
-		StringBuffer buf = new StringBuffer( tableName.length() + 10 );
+		StringBuilder buf = new StringBuilder( tableName.length() + 10 );
 		if ( comment!=null ) {
 			buf.append( "/* " ).append(comment).append( " */ " );
 		}

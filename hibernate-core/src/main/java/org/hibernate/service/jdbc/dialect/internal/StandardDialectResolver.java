@@ -26,7 +26,10 @@ package org.hibernate.service.jdbc.dialect.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -51,7 +54,6 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 
 /**
  * The standard Hibernate Dialect resolver.
@@ -148,6 +150,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "Informix Dynamic Server".equals( databaseName ) ) {
 			return new InformixDialect();
+		}
+		
+		if ( databaseName.equals("DB2 UDB for AS/400" ) ) {
+			return new DB2400Dialect();
 		}
 
 		if ( databaseName.startsWith( "DB2/" ) ) {

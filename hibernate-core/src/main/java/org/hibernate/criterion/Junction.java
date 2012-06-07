@@ -24,6 +24,7 @@
  */
 package org.hibernate.criterion;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,56 +40,65 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class Junction implements Criterion {
+	private final Nature nature;
+	private final List<Criterion> conditions = new ArrayList<Criterion>();
 
-	private final List criteria = new ArrayList();
-	private final String op;
-	
-	protected Junction(String op) {
-		this.op = op;
+	protected Junction(Nature nature) {
+		this.nature = nature;
 	}
 	
 	public Junction add(Criterion criterion) {
-		criteria.add(criterion);
+		conditions.add( criterion );
 		return this;
 	}
 
-	public String getOp() {
-		return op;
+	public Nature getNature() {
+		return nature;
 	}
 
-	public TypedValue[] getTypedValues(Criteria crit, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		ArrayList typedValues = new ArrayList();
-		Iterator iter = criteria.iterator();
-		while ( iter.hasNext() ) {
-			TypedValue[] subvalues = ( (Criterion) iter.next() ).getTypedValues(crit, criteriaQuery);
-			for ( int i=0; i<subvalues.length; i++ ) {
-				typedValues.add( subvalues[i] );
-			}
+	public Iterable<Criterion> conditions() {
+		return conditions;
+	}
+
+	@Override
+	public TypedValue[] getTypedValues(Criteria crit, CriteriaQuery criteriaQuery) throws HibernateException {
+		ArrayList<TypedValue> typedValues = new ArrayList<TypedValue>();
+		for ( Criterion condition : conditions ) {
+			TypedValue[] subValues = condition.getTypedValues( crit, criteriaQuery );
+			Collections.addAll( typedValues, subValues );
 		}
-		return (TypedValue[]) typedValues.toArray( new TypedValue[ typedValues.size() ] );
+		return typedValues.toArray( new TypedValue[ typedValues.size() ] );
 	}
 
-	public String toSqlString(Criteria crit, CriteriaQuery criteriaQuery)
-	throws HibernateException {
+	@Override
+	public String toSqlString(Criteria crit, CriteriaQuery criteriaQuery) throws HibernateException {
+		if ( conditions.size()==0 ) {
+			return "1=1";
+		}
 
-		if ( criteria.size()==0 ) return "1=1";
-
-		StringBuffer buffer = new StringBuffer()
-			.append('(');
-		Iterator iter = criteria.iterator();
-		while ( iter.hasNext() ) {
-			buffer.append( ( (Criterion) iter.next() ).toSqlString(crit, criteriaQuery) );
-			if ( iter.hasNext() ) buffer.append(' ').append(op).append(' ');
+		StringBuilder buffer = new StringBuilder().append( '(' );
+		Iterator itr = conditions.iterator();
+		while ( itr.hasNext() ) {
+			buffer.append( ( (Criterion) itr.next() ).toSqlString( crit, criteriaQuery ) );
+			if ( itr.hasNext() ) {
+				buffer.append(' ').append( nature.getOperator() ).append(' ');
+			}
 		}
 		return buffer.append(')').toString();
 	}
 
-	/**
-	 * @see java.lang.Object#toString()
-	 */
+	@Override
 	public String toString() {
-		return '(' + StringHelper.join( ' ' + op + ' ', criteria.iterator() ) + ')';
+		return '(' + StringHelper.join( ' ' + nature.getOperator() + ' ', conditions.iterator() ) + ')';
 	}
 
+	public static enum Nature {
+		AND,
+		OR
+		;
+
+		public String getOperator() {
+			return name().toLowerCase();
+		}
+	}
 }

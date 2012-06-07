@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.hibernate.cache.CacheException;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
@@ -36,6 +35,8 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.util.concurrent.TimeoutException;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import org.hibernate.cache.CacheException;
 
 /**
  * CacheAdapterImpl.

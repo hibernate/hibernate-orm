@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <title>Database access</title>
 
     <section>
@@ -15,11 +15,14 @@
         <itemizedlist>
             <listitem><para>Stand-alone built-in connection pool</para></listitem>
             <listitem><para><classname>javax.sql.DataSource</classname></para></listitem>
-            <listitem><para>Two different third-party opensource JDBC connection pools:</para>
+            <listitem><para>Connection pools, including support for two different third-party opensource JDBC connection pools:</para>
                 <itemizedlist>
                     <listitem><para>c3p0</para></listitem>
                     <listitem><para>proxool</para></listitem>
                 </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>Application-supplied JDBC connections.  This is not a recommended approach and exists for legacy reasons</para>
             </listitem>
         </itemizedlist>
 
@@ -27,27 +30,31 @@
             <para>The built-in connection pool is not intended for production environments.</para>
         </note>
 
+        <para>
+            Hibernate obtains JDBC connections as needed though the
+            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> interface
+            which is a service contract.  Applications may also supply their own
+            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> implementation
+            to define a custom approach for supplying connections to Hibernate (from a different connection pool
+            implementation, for example).
+        </para>
+
         <!-- todo : discuss servies -->
 
         <section>
             <title>Configuration</title>
             <para>
-                You can configure database connections using a properties file, an XML deployment descriptor, programmatically.
-      </para>
-      <example>
-        <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
-        <programlisting><xi:include href="extras/hibernate.properties" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
-      </example>
-      <example>
-        <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
-        <programlisting language="XML" role="XML"><xi:include href="extras/hibernate.cfg.xml"
-        xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
-      </example>
-      <note>
-        <para>
-          The DTD in the configuration file used in this example is required.
-        </para>
-      </note>
+                You can configure database connections using a properties file, an XML deployment descriptor or
+                programmatically.
+              </para>
+                <example>
+                    <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
+                    <programlisting><xi:include href="extras/hibernate.properties" parse="text" /></programlisting>
+                </example>
+                <example>
+                    <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
+                    <programlisting language="XML" role="XML"><xi:include href="extras/hibernate.cfg.xml" parse="text" /></programlisting>
+                </example>
 
       <section>
         <title>Programatic configuration</title>
@@ -65,8 +72,7 @@
             directly and specifying XML mapping documents. If the mapping files are in the classpath, use method
             <methodname>addResource()</methodname>.
           </para>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/specify_mapping_files_directly.java"
-          xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specify_mapping_files_directly.java" parse="text" /></programlisting>
         </example>
         <example>
           <title>Letting Hibernate find the mapping files for you</title>
@@ -76,11 +82,11 @@
             <filename>org/hibernate/auction/Item.hbm.xml</filename> and
             <filename>org/hibernate/auction/Bid.hbm.xml</filename>.
           </para>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/letting_hibernate_find_mapping_files.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/letting_hibernate_find_mapping_files.java" parse="text" /></programlisting>
         </example>
         <example>
           <title>Specifying configuration properties</title>
-          <programlisting language="Java" role="JAVA"><xi:include href="extras/specifying_configuration_properties_programmatically.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specifying_configuration_properties_programmatically.java" parse="text" /></programlisting>
         </example>
         <itemizedlist>
           <title>Other ways to configure Hibernate programmatically</title>
@@ -109,9 +115,7 @@
         </para>
         <example>
             <title>Specifying configuration properties</title>
-            <programlisting language="Java" role="JAVA">
-                <xi:include href="extras/opening_a_session.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
-            </programlisting>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/opening_a_session.java" parse="text" /></programlisting>
         </example>
         <itemizedlist id="hibernate-jdbc-properties">
             <title>Most important Hibernate JDBC properties</title>
@@ -161,8 +165,7 @@
         <filename>lib/</filename> directory. Hibernate uses its
         <classname>org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider</classname> for connection pooling if you set the
         <property>hibernate.proxool.*</property> properties. Unlike c3p0, proxool requires some additional configuration
-        parameters, as described by the Proxool documentation available at <ulink
-        url="http://proxool.sourceforge.net/configure.html" />.
+        parameters, as described by the Proxool documentation available at <link xlink:href="http://proxool.sourceforge.net/configure.html" />.
       </para>
       <table>
         <title>Important configuration properties for the Proxool connection pool</title>
@@ -340,9 +343,13 @@
             <entry>org.hibernate.dialect.PointbaseDialect</entry>
           </row>
           <row>
-            <entry>PostgreSQL</entry>
-            <entry>org.hibernate.dialect.PostgreSQLDialect</entry>
+            <entry>PostgreSQL 8.1</entry>
+            <entry>org.hibernate.dialect.PostgreSQL81Dialect</entry>
           </row>
+            <row>
+                <entry>PostgreSQL 8.2 and later</entry>
+                <entry>org.hibernate.dialect.PostgreSQL82Dialect</entry>
+            </row>
           <row>
             <entry>Progress</entry>
             <entry>org.hibernate.dialect.ProgressDialect</entry>

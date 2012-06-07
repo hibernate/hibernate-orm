@@ -1,36 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="collections">
+
+<chapter xml:id="collections" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Collection mapping</title>
 
-  <section id="collections-persistent" revision="3">
+  <section xml:id="collections-persistent" revision="3">
     <title>Persistent collections</title>
 
     <para>Naturally Hibernate also allows to persist collections. These
@@ -102,7 +75,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     </note>
   </section>
 
-  <section id="collections-mapping" revision="4">
+  <section xml:id="collections-mapping" revision="4">
     <title>How to map collections</title>
 
     <para>Using annotations you can map <classname>Collection</classname>s,
@@ -112,7 +85,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     @ElementCollection. In the simplest case a collection mapping looks like
     this:</para>
 
-    <example id="example.collection.mapping.annotations">
+    <example xml:id="example.collection.mapping.annotations">
       <title>Collection mapping using @OneToMany and @JoinColumn</title>
 
       <programlisting role="JAVA">@Entity
@@ -143,9 +116,8 @@ public class Part {
     also use a join table as seen in <xref
     linkend="example-one-to-many-with-join-table" />.</para>
 
-    <example id="example-one-to-many-with-join-table">
-      <title id="example-one-to-many-with-join-table">Collection mapping using
-      @OneToMany and @JoinTable</title>
+    <example xml:id="example-one-to-many-with-join-table">
+      <title>Collection mapping using @OneToMany and @JoinTable</title>
 
       <programlisting role="JAVA">@Entity
 public class Product {
@@ -191,7 +163,7 @@ public class Part {
     <literal>&lt;set&gt;</literal> element is used for mapping properties of
     type <literal>Set</literal>.</para>
 
-    <example floatstyle="" id="example.collections.set">
+    <example floatstyle="" xml:id="example.collections.set">
       <title>Mapping a Set using &lt;set&gt;</title>
 
       <programlisting role="JAVA">&lt;class name="Product"&gt;
@@ -230,11 +202,11 @@ public class Part {
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="onetomany1" />
+          <area coords="2" xml:id="onetomany1" />
 
-          <area coords="3" id="onetomany2" />
+          <area coords="3" xml:id="onetomany2" />
 
-          <area coords="4" id="onetomany3" />
+          <area coords="4" xml:id="onetomany3" />
         </areaspec>
 
         <programlisting>&lt;one-to-many
@@ -295,33 +267,33 @@ public class Part {
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="mappingcollection1" />
+          <area coords="2" xml:id="mappingcollection1" />
 
-          <area coords="3" id="mappingcollection2" />
+          <area coords="3" xml:id="mappingcollection2" />
 
-          <area coords="4" id="mappingcollection3" />
+          <area coords="4" xml:id="mappingcollection3" />
 
-          <area coords="5" id="mappingcollection4" />
+          <area coords="5" xml:id="mappingcollection4" />
 
-          <area coords="6" id="mappingcollection5" />
+          <area coords="6" xml:id="mappingcollection5" />
 
-          <area coords="7" id="mappingcollection6" />
+          <area coords="7" xml:id="mappingcollection6" />
 
-          <area coords="8" id="mappingcollection7" />
+          <area coords="8" xml:id="mappingcollection7" />
 
-          <area coords="9" id="mappingcollection8" />
+          <area coords="9" xml:id="mappingcollection8" />
 
-          <area coords="10" id="mappingcollection9" />
+          <area coords="10" xml:id="mappingcollection9" />
 
-          <area coords="11" id="mappingcollection10" />
+          <area coords="11" xml:id="mappingcollection10" />
 
-          <area coords="12" id="mappingcollection11" />
+          <area coords="12" xml:id="mappingcollection11" />
 
-          <area coords="13" id="mappingcollection12" />
+          <area coords="13" xml:id="mappingcollection12" />
 
-          <area coords="14" id="mappingcollection13" />
+          <area coords="14" xml:id="mappingcollection13" />
 
-          <area coords="15" id="mappingcollection14" />
+          <area coords="15" xml:id="mappingcollection14" />
         </areaspec>
 
         <programlisting>&lt;map
@@ -448,7 +420,7 @@ public class Part {
     paragraphs we will now focus details like physical mapping considerations,
     indexed collections and collections of value types.</para>
 
-    <section id="collections-foreignkeys">
+    <section xml:id="collections-foreignkeys">
       <title>Collection foreign keys</title>
 
       <para>On the database level collection instances are distinguished by
@@ -479,14 +451,14 @@ public class Part {
 
       <programlisting role="Java">@OnDelete(action=OnDeleteAction.CASCADE)</programlisting>
 
-      <para>See <xref lang="" linkend="section.key" /> for more information
+      <para>See <xref linkend="section.key" /> for more information
       about the <literal>&lt;key&gt;</literal> element.</para>
     </section>
 
-    <section id="collections-indexed">
-      <title id="section.indexed.collections">Indexed collections</title>
+    <section xml:id="collections-indexed">
+      <title xml:id="section.indexed.collections">Indexed collections</title>
 
-      <para>In the following paragraphs we have a closer at the indexed
+      <para>In the following paragraphs we have a closer look at the indexed
       collections <classname>List</classname> and <classname>Map</classname>
       how the their index can be mapped in Hibernate.</para>
 
@@ -633,9 +605,9 @@ public class Order {
 
           <programlistingco role="XML">
             <areaspec>
-              <area coords="2" id="index1" />
+              <area coords="2" xml:id="index1" />
 
-              <area coords="3" id="index2" />
+              <area coords="3" xml:id="index2" />
             </areaspec>
 
             <programlisting>&lt;list-index
@@ -825,11 +797,11 @@ public class Order {
 
           <programlistingco role="XML">
             <areaspec>
-              <area coords="2" id="mapkey1" />
+              <area coords="2" xml:id="mapkey1" />
 
-              <area coords="3" id="mapkey2" />
+              <area coords="3" xml:id="mapkey2" />
 
-              <area coords="4" id="mapkey3" />
+              <area coords="4" xml:id="mapkey3" />
             </areaspec>
 
             <programlisting>&lt;map-key
@@ -863,11 +835,11 @@ public class Order {
 
           <programlistingco role="XML">
             <areaspec>
-              <area coords="2" id="indexmanytomany1" />
+              <area coords="2" xml:id="indexmanytomany1" />
 
-              <area coords="3" id="indexmanytomany2" />
+              <area coords="3" xml:id="indexmanytomany2" />
 
-              <area coords="3" id="indexmanytomany3" />
+              <area coords="3" xml:id="indexmanytomany3" />
             </areaspec>
 
             <programlisting>&lt;map-key-many-to-many
@@ -897,7 +869,7 @@ public class Order {
       </section>
     </section>
 
-    <section id="collections-ofvalues" revision="2">
+    <section xml:id="collections-ofvalues" revision="2">
       <title>Collections of basic types and embeddable objects</title>
 
       <para>In some situations you don't need to associate two entities but
@@ -996,11 +968,11 @@ public class User {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="element1b" />
+            <area coords="2" xml:id="element1b" />
 
-            <area coords="3" id="element2b" />
+            <area coords="3" xml:id="element2b" />
 
-            <area coords="4" id="element3b" />
+            <area coords="4" xml:id="element3b" />
           </areaspec>
 
           <programlisting>&lt;element
@@ -1036,11 +1008,11 @@ public class User {
     </section>
   </section>
 
-  <section id="collections-advancedmappings">
+  <section xml:id="collections-advancedmappings">
     <title>Advanced collection mappings</title>
 
-    <section id="collections-sorted" revision="2">
-      <title id="section.sorted.collections">Sorted collections</title>
+    <section xml:id="collections-sorted" revision="2">
+      <title xml:id="section.sorted.collections">Sorted collections</title>
 
       <para>Hibernate supports collections implementing
       <literal>java.util.SortedMap</literal> and
@@ -1132,7 +1104,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       </example>
     </section>
 
-    <section id="collections-bidirectional" revision="1">
+    <section xml:id="collections-bidirectional" revision="1">
       <title>Bidirectional associations</title>
 
       <para>A <emphasis>bidirectional association</emphasis> allows navigation
@@ -1193,7 +1165,7 @@ public class Soldier {
       will produce additional UPDATE statements.</para>
 
       <example>
-        <title>Bidirectional associtaion with one to many side as
+        <title>Bidirectional association with one to many side as
         owner</title>
 
         <programlisting language="JAVA" role="JAVA">@Entity
@@ -1379,7 +1351,7 @@ public class Customer {
       category can have many items and each item can be in many
       categories:</para>
 
-      <example id="example-many-to-many-mapping-file">
+      <example xml:id="example-many-to-many-mapping-file">
         <title>Many to many association using Hibernate mapping files</title>
 
         <programlisting role="XML">&lt;class name="Category"&gt;
@@ -1425,7 +1397,7 @@ session.persist(category);               // The relationship will be saved</prog
       to the database.</para>
     </section>
 
-    <section id="collections-indexedbidirectional">
+    <section xml:id="collections-indexedbidirectional">
       <title>Bidirectional associations with indexed collections</title>
 
       <para>There are some additional considerations for bidirectional
@@ -1500,7 +1472,7 @@ session.persist(category);               // The relationship will be saved</prog
       association is responsible for updates to the foreign key.<!--TODO: Does this really result in some unnecessary update statements?--></para>
     </section>
 
-    <section id="collections-ternary">
+    <section xml:id="collections-ternary">
       <title>Ternary associations</title>
 
       <para>There are three possible approaches to mapping a ternary
@@ -1534,7 +1506,7 @@ public class Company {
       composite elements, which will be discussed later.</para>
     </section>
 
-    <section id="collections-idbag" revision="1">
+    <section xml:id="collections-idbag" revision="1">
       <title><literal>Using an &lt;idbag&gt;</literal></title>
 
       <para>The majority of the many-to-many associations and collections of
@@ -1576,7 +1548,7 @@ public class Company {
 
   <!--undocumenting this stuff -->
 
-  <!--section id="collections-heterogeneous">
+  <!--section xml:id="collections-heterogeneous">
         <title>Heterogeneous Associations</title>
 
         <para>
@@ -1588,7 +1560,7 @@ public class Company {
 
     </section-->
 
-  <section id="collections-example" revision="1">
+  <section xml:id="collections-example" revision="1">
     <title>Collection examples</title>
 
     <para>This section covers collection examples.</para>

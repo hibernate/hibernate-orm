@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -51,6 +52,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
@@ -64,6 +66,7 @@ import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
@@ -111,6 +114,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.TypeDef;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -160,6 +164,9 @@ public abstract class CollectionBinder {
 	private boolean declaringClassSet;
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
+
+	private String explicitType;
+	private Properties explicitTypeParameters = new Properties();
 
 	protected Mappings getMappings() {
 		return mappings;
@@ -245,7 +252,8 @@ public abstract class CollectionBinder {
 			String entityName,
 			XProperty property,
 			boolean isIndexed,
-			boolean isHibernateExtensionMapping) {
+			boolean isHibernateExtensionMapping,
+			Mappings mappings) {
 		CollectionBinder result;
 		if ( property.isArray() ) {
 			if ( property.getElementClass().isPrimitive() ) {
@@ -324,6 +332,24 @@ public abstract class CollectionBinder {
 			);
 		}
 		result.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
+
+		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
+		if ( typeAnnotation != null ) {
+			final String typeName = typeAnnotation.type();
+			// see if it names a type-def
+			final TypeDef typeDef = mappings.getTypeDef( typeName );
+			if ( typeDef != null ) {
+				result.explicitType = typeDef.getTypeClass();
+				result.explicitTypeParameters.putAll( typeDef.getParameters() );
+			}
+			else {
+				result.explicitType = typeName;
+				for ( Parameter param : typeAnnotation.parameters() ) {
+					result.explicitTypeParameters.setProperty( param.name(), param.value() );
+				}
+			}
+		}
+
 		return result;
 	}
 
@@ -343,6 +369,7 @@ public abstract class CollectionBinder {
 	}
 
 	public void setCollectionType(XClass collectionType) {
+		// NOTE: really really badly named.  This is actually NOT the collection-type, but rather the collection-element-type!
 		this.collectionType = collectionType;
 	}
 
@@ -386,6 +413,19 @@ public abstract class CollectionBinder {
 			);
 		}
 
+		// set explicit type information
+		if ( explicitType != null ) {
+			final TypeDef typeDef = mappings.getTypeDef( explicitType );
+			if ( typeDef == null ) {
+				collection.setTypeName( explicitType );
+				collection.setTypeParameters( explicitTypeParameters );
+			}
+			else {
+				collection.setTypeName( typeDef.getTypeClass() );
+				collection.setTypeParameters( typeDef.getParameters() );
+			}
+		}
+
 		//set laziness
 		defineFetchingStrategy();
 		collection.setBatchSize( batchSize );
@@ -396,8 +436,15 @@ public abstract class CollectionBinder {
 		}
 
 		collection.setMutable( !property.isAnnotationPresent( Immutable.class ) );
-		OptimisticLock lockAnn = property.getAnnotation( OptimisticLock.class );
-		if ( lockAnn != null ) collection.setOptimisticLocked( !lockAnn.excluded() );
+
+		//work on association
+		boolean isMappedBy = !BinderHelper.isEmptyAnnotationValue( mappedBy );
+
+		final OptimisticLock lockAnn = property.getAnnotation( OptimisticLock.class );
+		final boolean includeInOptimisticLockChecks = ( lockAnn != null )
+				? ! lockAnn.excluded()
+				: ! isMappedBy;
+		collection.setOptimisticLocked( includeInOptimisticLockChecks );
 
 		Persister persisterAnn = property.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
@@ -471,9 +518,6 @@ public abstract class CollectionBinder {
 		if ( loader != null ) {
 			collection.setLoaderName( loader.namedQuery() );
 		}
-
-		//work on association
-		boolean isMappedBy = !BinderHelper.isEmptyAnnotationValue( mappedBy );
 
 		if (isMappedBy
 				&& (property.isAnnotationPresent( JoinColumn.class )

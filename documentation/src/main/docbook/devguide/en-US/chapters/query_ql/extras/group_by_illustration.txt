@@ -1,0 +1,10 @@
+// retrieve the total for all orders
+select sum( o.total )
+from Order o
+
+// retrieve the total of all orders
+// *grouped by* customer
+select c.id, sum( o.total )
+from Order o
+    inner join o.customer c
+group by c.id

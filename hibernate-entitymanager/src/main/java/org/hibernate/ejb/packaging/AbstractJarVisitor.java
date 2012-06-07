@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +29,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
+import org.jboss.logging.Logger;
 
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * Parse a JAR of any form (zip file, exploded directory, ...)

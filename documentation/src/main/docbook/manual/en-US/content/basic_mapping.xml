@@ -1,36 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-]>
-<chapter id="mapping">
+
+<chapter xml:id="mapping"  xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
   <title>Basic O/R Mapping</title>
 
-  <section id="mapping-declaration" revision="2">
+  <section xml:id="mapping-declaration" revision="2">
     <title>Mapping declaration</title>
 
     <para>Object/relational mappings can be defined in three
@@ -210,7 +183,7 @@ public class Dog { ... }</programlisting>
     affect the database schemas exported by the schema export tool (for
     example, the <literal> not-null</literal> attribute).</para>
 
-    <section id="mapping-declaration-class" revision="4">
+    <section xml:id="mapping-declaration-class" revision="4">
       <title>Entity</title>
 
       <para>An entity is a regular Java object (aka POJO) which will be
@@ -373,7 +346,7 @@ public class Flight implements Serializable {
         accident.</para>
       </tip>
 
-      <para>Some entities are not mutable. They cannot be updated or deleted
+      <para>Some entities are not mutable. They cannot be updated
       by the application. This allows Hibernate to make some minor performance
       optimizations.. Use the <classname>@Immutable</classname>
       annotation.</para>
@@ -432,47 +405,47 @@ public class Summary {
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="class1" />
+          <area coords="2" xml:id="class1" />
 
-          <area coords="3" id="class2" />
+          <area coords="3" xml:id="class2" />
 
-          <area coords="4" id="class3" />
+          <area coords="4" xml:id="class3" />
 
-          <area coords="5" id="class4" />
+          <area coords="5" xml:id="class4" />
 
-          <area coords="6" id="class5" />
+          <area coords="6" xml:id="class5" />
 
-          <area coords="7" id="class6" />
+          <area coords="7" xml:id="class6" />
 
-          <area coords="8" id="class7" />
+          <area coords="8" xml:id="class7" />
 
-          <area coords="9" id="class8" />
+          <area coords="9" xml:id="class8" />
 
-          <area coords="10" id="class9" />
+          <area coords="10" xml:id="class9" />
 
-          <area coords="11" id="class10" />
+          <area coords="11" xml:id="class10" />
 
-          <area coords="12" id="class11" />
+          <area coords="12" xml:id="class11" />
 
-          <area coords="13" id="class12" />
+          <area coords="13" xml:id="class12" />
 
-          <area coords="14" id="class13" />
+          <area coords="14" xml:id="class13" />
 
-          <area coords="15" id="class14" />
+          <area coords="15" xml:id="class14" />
 
-          <area coords="16" id="class15" />
+          <area coords="16" xml:id="class15" />
 
-          <area coords="17" id="class16" />
+          <area coords="17" xml:id="class16" />
 
-          <area coords="18" id="class17" />
+          <area coords="18" xml:id="class17" />
 
-          <area coords="19" id="class18" />
+          <area coords="19" xml:id="class18" />
 
-          <area coords="20" id="class19" />
+          <area coords="20" xml:id="class19" />
 
-          <area coords="21" id="class20" />
+          <area coords="21" xml:id="class20" />
 
-          <area coords="22" id="class21" />
+          <area coords="22" xml:id="class21" />
         </areaspec>
 
         <programlisting>&lt;class
@@ -494,7 +467,7 @@ public class Summary {
         lazy="true|false"
         entity-name="EntityName"
         check="arbitrary sql check condition"
-        rowid="rowid"
+        rowxml:id="rowid"
         subselect="SQL expression"
         abstract="true|false"
         node="element-name"
@@ -670,7 +643,7 @@ public class Summary {
       attribute and a nested mapping element.</para>
     </section>
 
-    <section id="mapping-declaration-id" revision="4">
+    <section xml:id="mapping-declaration-id" revision="4">
       <title>Identifiers</title>
 
       <para>Mapped classes <emphasis>must</emphasis> declare the primary key
@@ -692,15 +665,15 @@ public class Person {
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="id1" />
+          <area coords="2" xml:id="id1" />
 
-          <area coords="3" id="id2" />
+          <area coords="3" xml:id="id2" />
 
-          <area coords="4" id="id3" />
+          <area coords="4" xml:id="id3" />
 
-          <area coords="5" id="id4" />
+          <area coords="5" xml:id="id4" />
 
-          <area coords="6" id="id5" />
+          <area coords="6" xml:id="id5" />
         </areaspec>
 
         <programlisting>&lt;id
@@ -1234,7 +1207,7 @@ class UserId implements Serializable {
         </section>
       </section>
 
-      <section id="mapping-declaration-id-generator" revision="2">
+      <section xml:id="mapping-declaration-id-generator" revision="2">
         <title>Identifier generator</title>
 
         <para>Hibernate can generate and populate identifier values for you
@@ -1519,7 +1492,7 @@ public String getId() {</programlisting>
                 <term><literal>hilo</literal></term>
 
                 <listitem>
-                  <para id="mapping-declaration-id-hilodescription"
+                  <para xml:id="mapping-declaration-id-hilodescription"
                   revision="1">uses a hi/lo algorithm to efficiently generate
                   identifiers of type <literal>long</literal>,
                   <literal>short</literal> or <literal>int</literal>, given a
@@ -1611,10 +1584,9 @@ public String getId() {</programlisting>
                         mac address and integrating it via the
                         <interfacename>org.hibernate.id.UUIDGenerationStrategy</interfacename>
                         contract. Two such libraries known at time of this
-                        writing include <ulink
-                        url="http://johannburkard.de/software/uuid/">http://johannburkard.de/software/uuid/</ulink>
-                        and <ulink
-                        url="http://commons.apache.org/sandbox/id/uuid.html">http://commons.apache.org/sandbox/id/uuid.html</ulink></para>
+                        writing include <link xl:href="http://johannburkard.de/software/uuid/"/>
+                        and <link xl:href="http://commons.apache.org/sandbox/id/uuid.html"/>
+                        </para>
                       </listitem>
                     </itemizedlist></para>
                 </listitem>
@@ -1690,7 +1662,7 @@ public String getId() {</programlisting>
             </variablelist></para>
         </section>
 
-        <section id="mapping-declaration-id-hilo" revision="1">
+        <section xml:id="mapping-declaration-id-hilo" revision="1">
           <title>Hi/lo algorithm</title>
 
           <para>The <literal>hilo</literal> and <literal>seqhilo</literal>
@@ -1721,7 +1693,7 @@ public String getId() {</programlisting>
           <literal>hibernate.transaction.manager_lookup_class</literal>.</para>
         </section>
 
-        <section id="mapping-declaration-id-uuid">
+        <section xml:id="mapping-declaration-id-uuid">
           <title>UUID algorithm</title>
 
           <para>The UUID contains: IP address, startup time of the JVM that is
@@ -1731,7 +1703,7 @@ public String getId() {</programlisting>
           using JNI.</para>
         </section>
 
-        <section id="mapping-declaration-id-sequences">
+        <section xml:id="mapping-declaration-id-sequences">
           <title>Identity columns and sequences</title>
 
           <para>For databases that support identity columns (DB2, MySQL,
@@ -1759,7 +1731,7 @@ public String getId() {</programlisting>
           strategies.</para>
         </section>
 
-        <section id="mapping-declaration-id-assigned">
+        <section xml:id="mapping-declaration-id-assigned">
           <title>Assigned identifiers</title>
 
           <para>If you want the application to assign identifiers, as opposed
@@ -1778,7 +1750,7 @@ public String getId() {</programlisting>
           define <literal>Interceptor.isUnsaved()</literal>.</para>
         </section>
 
-        <section id="mapping-declaration-id-select">
+        <section xml:id="mapping-declaration-id-select">
           <title>Primary keys assigned by triggers</title>
 
           <para>Hibernate does not generate DDL with triggers. It is for
@@ -1846,7 +1818,7 @@ class Person {
         </section>
       </section>
 
-      <section id="mapping-declaration-id-enhanced">
+      <section xml:id="mapping-declaration-id-enhanced">
         <title>Enhanced identifier generators</title>
 
         <para>Starting with release 3.2.3, there are 2 new generators which
@@ -1909,6 +1881,19 @@ class Person {
               <literal>next_val</literal>): only relevant for table
               structures, it is the name of the column on the table which is
               used to hold the value.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>prefer_sequence_per_entity</literal> (optional -
+              defaults to <literal>false</literal>): should we create
+              separate sequence for each entity that share current generator
+              based on its name?</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>sequence_per_entity_suffix</literal> (optional -
+              defaults to <literal>_SEQ</literal>): suffix added to the name
+              of a dedicated sequence.</para>
             </listitem>
 
             <listitem>
@@ -1982,7 +1967,7 @@ class Person {
             </listitem>
           </itemizedlist></para>
 
-        <section id="mapping-declaration-id-enhanced-optimizers">
+        <section xml:id="mapping-declaration-id-enhanced-optimizers">
           <title>Identifier generator optimization</title>
 
           <para>For identifier generators that store values in the database,
@@ -2091,7 +2076,7 @@ public class Customer implements Serializable {
       especially useful for people using assigned identifiers or composite
       keys</emphasis>.</para>
 
-      <section id="entity-mapping-entity-version">
+      <section xml:id="entity-mapping-entity-version">
         <title>Version number</title>
 
         <para>You can add optimistic locking capability to an entity using the
@@ -2128,19 +2113,19 @@ public class Flight implements Serializable {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="version1" />
+            <area coords="2" xml:id="version1" />
 
-            <area coords="3" id="version2" />
+            <area coords="3" xml:id="version2" />
 
-            <area coords="4" id="version3" />
+            <area coords="4" xml:id="version3" />
 
-            <area coords="5" id="version4" />
+            <area coords="5" xml:id="version4" />
 
-            <area coords="6" id="version5" />
+            <area coords="6" xml:id="version5" />
 
-            <area coords="7" id="version6" />
+            <area coords="7" xml:id="version6" />
 
-            <area coords="8" id="version7" />
+            <area coords="8" xml:id="version7" />
           </areaspec>
 
           <programlisting>&lt;version
@@ -2207,7 +2192,7 @@ public class Flight implements Serializable {
         </programlistingco>
       </section>
 
-      <section id="mapping-declaration-timestamp" revision="4">
+      <section xml:id="mapping-declaration-timestamp" revision="4">
         <title>Timestamp</title>
 
         <para>Alternatively, you can use a timestamp. Timestamps are a less
@@ -2245,17 +2230,17 @@ public class Flight implements Serializable {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="timestamp1" />
+            <area coords="2" xml:id="timestamp1" />
 
-            <area coords="3" id="timestamp2" />
+            <area coords="3" xml:id="timestamp2" />
 
-            <area coords="4" id="timestamp3" />
+            <area coords="4" xml:id="timestamp3" />
 
-            <area coords="5" id="timestamp4" />
+            <area coords="5" xml:id="timestamp4" />
 
-            <area coords="6" id="timestamp5" />
+            <area coords="6" xml:id="timestamp5" />
 
-            <area coords="7" id="timestamp6" />
+            <area coords="7" xml:id="timestamp6" />
           </areaspec>
 
           <programlisting>&lt;timestamp
@@ -2331,7 +2316,7 @@ public class Flight implements Serializable {
       </section>
     </section>
 
-    <section id="mapping-declaration-property" revision="4">
+    <section xml:id="mapping-declaration-property" revision="4">
       <title>Property</title>
 
       <para>You need to decide which property needs to be made persistent in a
@@ -2678,7 +2663,7 @@ public class Order {
           require acquisition of the optimistic lock.</para>
         </section>
 
-        <section id="entity-mapping-property-column">
+        <section xml:id="entity-mapping-property-column">
           <title>Declaring column attributes</title>
 
           <para>The column(s) used for a property mapping can be defined using
@@ -2728,25 +2713,25 @@ public String getName() { ... }
 
           <programlistingco>
             <areaspec>
-              <area coords="2" id="hm1" />
+              <area coords="2" xml:id="hm1" />
 
-              <area coords="3" id="hm2" />
+              <area coords="3" xml:id="hm2" />
 
-              <area coords="4" id="hm3" />
+              <area coords="4" xml:id="hm3" />
 
-              <area coords="5" id="hm4" />
+              <area coords="5" xml:id="hm4" />
 
-              <area coords="6" id="hm5" />
+              <area coords="6" xml:id="hm5" />
 
-              <area coords="7" id="hm6" />
+              <area coords="7" xml:id="hm6" />
 
-              <area coords="8" id="hm7" />
+              <area coords="8" xml:id="hm7" />
 
-              <area coords="9" id="hm8" />
+              <area coords="9" xml:id="hm8" />
 
-              <area coords="10" id="hm9" />
+              <area coords="10" xml:id="hm9" />
 
-              <area coords="11" id="hm10" />
+              <area coords="11" xml:id="hm10" />
             </areaspec>
 
             <programlisting>@Column(
@@ -2801,17 +2786,17 @@ public String getName() { ... }
               </callout>
 
               <callout arearefs="hm8">
-                <para><literal><literal>length</literal></literal> (optional):
+                <para><literal>length</literal> (optional):
                 column length (default 255)</para>
               </callout>
 
               <callout arearefs="hm8">
-                <para><literal><literal>precision</literal></literal>
+                <para><literal>precision</literal>
                 (optional): column decimal precision (default 0)</para>
               </callout>
 
               <callout arearefs="hm10">
-                <para><literal><literal>scale</literal></literal> (optional):
+                <para><literal>scale</literal> (optional):
                 column decimal scale if useful (default 0)</para>
               </callout>
             </calloutlist>
@@ -2875,31 +2860,31 @@ public long getObjectVolume()</programlisting>
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="property1" />
+            <area coords="2" xml:id="property1" />
 
-            <area coords="3" id="property2" />
+            <area coords="3" xml:id="property2" />
 
-            <area coords="4" id="property3" />
+            <area coords="4" xml:id="property3" />
 
-            <areaset coords="" id="property4-5">
-              <area coords="5" id="property4" />
+            <areaset coords="" xml:id="property4-5">
+              <area coords="5" xml:id="property4" />
 
-              <area coords="6" id="property5" />
+              <area coords="6" xml:id="property5" />
             </areaset>
 
-            <area coords="7" id="property6" />
+            <area coords="7" xml:id="property6" />
 
-            <area coords="8" id="property7" />
+            <area coords="8" xml:id="property7" />
 
-            <area coords="9" id="property8" />
+            <area coords="9" xml:id="property8" />
 
-            <area coords="10" id="property9" />
+            <area coords="10" xml:id="property9" />
 
-            <area coords="11" id="property10" />
+            <area coords="11" xml:id="property10" />
 
-            <area coords="12" id="property11" />
+            <area coords="12" xml:id="property11" />
 
-            <area coords="13" id="property12" />
+            <area coords="13" xml:id="property12" />
           </areaspec>
 
           <programlisting>&lt;property
@@ -3065,7 +3050,7 @@ public long getObjectVolume()</programlisting>
       </section>
     </section>
 
-    <section id="mapping-declaration-component">
+    <section xml:id="mapping-declaration-component">
       <title>Embedded objects (aka components)</title>
 
       <para>Embeddable objects (or components) are objects whose properties
@@ -3176,21 +3161,21 @@ public class Country implements Serializable {
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="component1" />
+          <area coords="2" xml:id="component1" />
 
-          <area coords="3" id="component2" />
+          <area coords="3" xml:id="component2" />
 
-          <area coords="4" id="component3" />
+          <area coords="4" xml:id="component3" />
 
-          <area coords="5" id="component4" />
+          <area coords="5" xml:id="component4" />
 
-          <area coords="6" id="component5" />
+          <area coords="6" xml:id="component5" />
 
-          <area coords="7" id="component6" />
+          <area coords="7" xml:id="component6" />
 
-          <area coords="8" id="component7" />
+          <area coords="8" xml:id="component7" />
 
-          <area coords="9" id="component8" />
+          <area coords="9" xml:id="component8" />
         </areaspec>
 
         <programlisting>&lt;component
@@ -3302,7 +3287,7 @@ public class Country implements Serializable {
         </listitem>
       </itemizedlist>
 
-      <section id="mapping-declaration-subclass" revision="4">
+      <section xml:id="mapping-declaration-subclass" revision="4">
         <title>Single table per class hierarchy strategy</title>
 
         <para>With this approach the properties of all the subclasses in a
@@ -3333,13 +3318,13 @@ public class A320 extends Plane { ... }          </programlisting>
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="subclass1" />
+            <area coords="2" xml:id="subclass1" />
 
-            <area coords="3" id="subclass2" />
+            <area coords="3" xml:id="subclass2" />
 
-            <area coords="4" id="subclass3" />
+            <area coords="4" xml:id="subclass3" />
 
-            <area coords="5" id="subclass4" />
+            <area coords="5" xml:id="subclass4" />
           </areaspec>
 
           <programlisting>&lt;subclass
@@ -3386,7 +3371,7 @@ public class A320 extends Plane { ... }          </programlisting>
         <para>For information about inheritance mappings see <xref
         linkend="inheritance" />.</para>
 
-        <section id="mapping-declaration-discriminator" revision="3">
+        <section xml:id="mapping-declaration-discriminator" revision="3">
           <title>Discriminator</title>
 
           <para>Discriminators are required for polymorphic persistence using
@@ -3465,15 +3450,15 @@ public class A320 extends Plane { ... }          </programlisting>
 
           <programlistingco role="XML">
             <areaspec>
-              <area coords="2" id="discriminator1" />
+              <area coords="2" xml:id="discriminator1" />
 
-              <area coords="3" id="discriminator2" />
+              <area coords="3" xml:id="discriminator2" />
 
-              <area coords="4" id="discriminator3" />
+              <area coords="4" xml:id="discriminator3" />
 
-              <area coords="5" id="discriminator4" />
+              <area coords="5" xml:id="discriminator4" />
 
-              <area coords="6" id="discriminator5" />
+              <area coords="6" xml:id="discriminator5" />
             </areaspec>
 
             <programlisting>&lt;discriminator
@@ -3535,7 +3520,7 @@ public class A320 extends Plane { ... }          </programlisting>
         </section>
       </section>
 
-      <section id="mapping-declaration-joinedsubclass" revision="3">
+      <section xml:id="mapping-declaration-joinedsubclass" revision="3">
         <title>Joined subclass strategy</title>
 
         <para>Each subclass can also be mapped to its own table. This is
@@ -3577,13 +3562,13 @@ public class DomesticCat extends Cat {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="joinedsubclass1" />
+            <area coords="2" xml:id="joinedsubclass1" />
 
-            <area coords="3" id="joinedsubclass2" />
+            <area coords="3" xml:id="joinedsubclass2" />
 
-            <area coords="4" id="joinedsubclass3" />
+            <area coords="4" xml:id="joinedsubclass3" />
 
-            <area coords="5" id="joinedsubclass4" />
+            <area coords="5" xml:id="joinedsubclass4" />
           </areaspec>
 
           <programlisting>&lt;joined-subclass
@@ -3672,7 +3657,7 @@ public class DomesticCat extends Cat {
         linkend="inheritance" />.</para>
       </section>
 
-      <section id="mapping-declaration-unionsubclass" revision="2">
+      <section xml:id="mapping-declaration-unionsubclass" revision="2">
         <title>Table per class strategy</title>
 
         <para>A third option is to map only the concrete classes of an
@@ -3692,13 +3677,13 @@ public class Flight implements Serializable { ... }            </programlisting>
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="unionsubclass1" />
+            <area coords="2" xml:id="unionsubclass1" />
 
-            <area coords="3" id="unionsubclass2" />
+            <area coords="3" xml:id="unionsubclass2" />
 
-            <area coords="4" id="unionsubclass3" />
+            <area coords="4" xml:id="unionsubclass3" />
 
-            <area coords="5" id="unionsubclass4" />
+            <area coords="5" xml:id="unionsubclass4" />
           </areaspec>
 
           <programlisting>&lt;union-subclass
@@ -3862,7 +3847,7 @@ public class Plane extends FlyingObject {
         inherit them.</para>
       </section>
 
-      <section id="mapping-declaration-join" revision="3">
+      <section xml:id="mapping-declaration-join" revision="3">
         <title>Mapping one entity to several tables</title>
 
         <para>While not recommended for a fresh schema, some legacy databases
@@ -3997,17 +3982,17 @@ public class Cat implements Serializable {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="join1" />
+            <area coords="2" xml:id="join1" />
 
-            <area coords="3" id="join2" />
+            <area coords="3" xml:id="join2" />
 
-            <area coords="4" id="join3" />
+            <area coords="4" xml:id="join3" />
 
-            <area coords="5" id="join4" />
+            <area coords="5" xml:id="join4" />
 
-            <area coords="6" id="join5" />
+            <area coords="6" xml:id="join5" />
 
-            <area coords="7" id="join6" />
+            <area coords="7" xml:id="join6" />
           </areaspec>
 
           <programlisting>&lt;join
@@ -4163,7 +4148,7 @@ public class Cat implements Serializable {
       overrides any lazy attribute (an association loaded through a
       <literal>JOIN</literal> strategy cannot be lazy).</para>
 
-      <section id="mapping-declaration-manytoone" revision="5">
+      <section xml:id="mapping-declaration-manytoone" revision="5">
         <title>Using a foreign key or an association table</title>
 
         <para>An ordinary association to another persistent class is declared
@@ -4352,39 +4337,39 @@ class Home {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="manytoone1" />
+            <area coords="2" xml:id="manytoone1" />
 
-            <area coords="3" id="manytoone2" />
+            <area coords="3" xml:id="manytoone2" />
 
-            <area coords="4" id="manytoone3" />
+            <area coords="4" xml:id="manytoone3" />
 
-            <area coords="5" id="manytoone4" />
+            <area coords="5" xml:id="manytoone4" />
 
-            <area coords="6" id="manytoone5" />
+            <area coords="6" xml:id="manytoone5" />
 
-            <areaset coords="" id="manytoone6-7">
-              <area coords="7" id="manytoone6" />
+            <areaset coords="" xml:id="manytoone6-7">
+              <area coords="7" xml:id="manytoone6" />
 
-              <area coords="8" id="manytoone7" />
+              <area coords="8" xml:id="manytoone7" />
             </areaset>
 
-            <area coords="9" id="manytoone8" />
+            <area coords="9" xml:id="manytoone8" />
 
-            <area coords="10" id="manytoone9" />
+            <area coords="10" xml:id="manytoone9" />
 
-            <area coords="11" id="manytoone10" />
+            <area coords="11" xml:id="manytoone10" />
 
-            <area coords="12" id="manytoone11" />
+            <area coords="12" xml:id="manytoone11" />
 
-            <area coords="13" id="manytoone12" />
+            <area coords="13" xml:id="manytoone12" />
 
-            <area coords="14" id="manytoone13" />
+            <area coords="14" xml:id="manytoone13" />
 
-            <area coords="15" id="manytoone14" />
+            <area coords="15" xml:id="manytoone14" />
 
-            <area coords="16" id="manytoone15" />
+            <area coords="16" xml:id="manytoone15" />
 
-            <area coords="17" id="manytoone16" />
+            <area coords="17" xml:id="manytoone16" />
           </areaspec>
 
           <programlisting>&lt;many-to-one
@@ -4562,7 +4547,7 @@ class Home {
         <programlisting role="XML">&lt;many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/&gt;</programlisting>
       </section>
 
-      <section id="mapping-declaration-onetoone" revision="3">
+      <section xml:id="mapping-declaration-onetoone" revision="3">
         <title>Sharing the primary key with the associated entity</title>
 
         <para>The second approach is to ensure an entity and its associated
@@ -4605,25 +4590,25 @@ public class Heart {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="onetoone1" />
+            <area coords="2" xml:id="onetoone1" />
 
-            <area coords="3" id="onetoone2" />
+            <area coords="3" xml:id="onetoone2" />
 
-            <area coords="4" id="onetoone3" />
+            <area coords="4" xml:id="onetoone3" />
 
-            <area coords="5" id="onetoone4" />
+            <area coords="5" xml:id="onetoone4" />
 
-            <area coords="6" id="onetoone5" />
+            <area coords="6" xml:id="onetoone5" />
 
-            <area coords="7" id="onetoone6" />
+            <area coords="7" xml:id="onetoone6" />
 
-            <area coords="8" id="onetoone7" />
+            <area coords="8" xml:id="onetoone7" />
 
-            <area coords="9" id="onetoone8" />
+            <area coords="9" xml:id="onetoone8" />
 
-            <area coords="10" id="onetoone9" />
+            <area coords="10" xml:id="onetoone9" />
 
-            <area coords="11" id="onetoone10" />
+            <area coords="11" xml:id="onetoone10" />
           </areaspec>
 
           <programlisting>&lt;one-to-one
@@ -4754,7 +4739,7 @@ public class Heart {
       </section>
     </section>
 
-    <section id="mapping-declaration-naturalid">
+    <section xml:id="mapping-declaration-naturalid">
       <title>Natural-id</title>
 
       <para>Although we recommend the use of surrogate keys as primary keys,
@@ -4814,7 +4799,7 @@ List results = s.createCriteria( Citizen.class )
       </itemizedlist>
     </section>
 
-    <section id="mapping-types-anymapping" revision="2">
+    <section xml:id="mapping-types-anymapping" revision="2">
       <title>Any</title>
 
       <para>There is one more type of property mapping. The
@@ -4889,17 +4874,17 @@ package org.hibernate.test.annotations.any;
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="any1" />
+          <area coords="2" xml:id="any1" />
 
-          <area coords="3" id="any2" />
+          <area coords="3" xml:id="any2" />
 
-          <area coords="4" id="any3" />
+          <area coords="4" xml:id="any3" />
 
-          <area coords="5" id="any4" />
+          <area coords="5" xml:id="any4" />
 
-          <area coords="6" id="any5" />
+          <area coords="6" xml:id="any5" />
 
-          <area coords="7" id="any6" />
+          <area coords="7" xml:id="any6" />
         </areaspec>
 
         <programlisting>&lt;any
@@ -4955,7 +4940,7 @@ package org.hibernate.test.annotations.any;
       </programlistingco>
     </section>
 
-    <section id="mapping-declaration-properties" revision="2">
+    <section xml:id="mapping-declaration-properties" revision="2">
       <title>Properties</title>
 
       <para>The <literal>&lt;properties&gt;</literal> element allows the
@@ -4967,15 +4952,15 @@ package org.hibernate.test.annotations.any;
 
       <programlistingco role="XML">
         <areaspec>
-          <area coords="2" id="properties1" />
+          <area coords="2" xml:id="properties1" />
 
-          <area coords="3" id="properties2" />
+          <area coords="3" xml:id="properties2" />
 
-          <area coords="4" id="properties3" />
+          <area coords="4" xml:id="properties3" />
 
-          <area coords="5" id="properties4" />
+          <area coords="5" xml:id="properties4" />
 
-          <area coords="6" id="properties5" />
+          <area coords="6" xml:id="properties5" />
         </areaspec>
 
         <programlisting>&lt;properties
@@ -5085,7 +5070,7 @@ class Home {
       <para>The hbm.xml structure has some specificities naturally not present
       when using annotations, let's describe them briefly.</para>
 
-      <section id="mapping-declaration-doctype" revision="3">
+      <section xml:id="mapping-declaration-doctype" revision="3">
         <title>Doctype</title>
 
         <para>All XML mappings should declare the doctype shown. The actual
@@ -5096,7 +5081,7 @@ class Home {
         an Internet connection, check the DTD declaration against the contents
         of your classpath.</para>
 
-        <section id="mapping-declaration-entity-resolution">
+        <section xml:id="mapping-declaration-entity-resolution">
           <title>EntityResolver</title>
 
           <para>Hibernate will first attempt to resolve DTDs in its classpath.
@@ -5139,7 +5124,7 @@ class Home {
         </section>
       </section>
 
-      <section id="mapping-declaration-mapping" revision="3">
+      <section xml:id="mapping-declaration-mapping" revision="3">
         <title>Hibernate-mapping</title>
 
         <para>This element has several optional attributes. The
@@ -5156,19 +5141,19 @@ class Home {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="hm1" />
+            <area coords="2" xml:id="hm1" />
 
-            <area coords="3" id="hm2" />
+            <area coords="3" xml:id="hm2" />
 
-            <area coords="4" id="hm3" />
+            <area coords="4" xml:id="hm3" />
 
-            <area coords="5" id="hm4" />
+            <area coords="5" xml:id="hm4" />
 
-            <area coords="6" id="hm5" />
+            <area coords="6" xml:id="hm5" />
 
-            <area coords="7" id="hm6" />
+            <area coords="7" xml:id="hm6" />
 
-            <area coords="8" id="hm7" />
+            <area coords="8" xml:id="hm7" />
           </areaspec>
 
           <programlisting>&lt;hibernate-mapping
@@ -5241,8 +5226,8 @@ class Home {
         <literal>Animal.hbm.xml</literal>.</para>
       </section>
 
-      <section id="mapping-declaration-key">
-        <title id="section.key">Key</title>
+      <section xml:id="mapping-declaration-key">
+        <title xml:id="section.key">Key</title>
 
         <para>The <literal>&lt;key&gt;</literal> element is featured a few
         times within this guide. It appears anywhere the parent mapping
@@ -5252,17 +5237,17 @@ class Home {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="key1" />
+            <area coords="2" xml:id="key1" />
 
-            <area coords="3" id="key2" />
+            <area coords="3" xml:id="key2" />
 
-            <area coords="4" id="key3" />
+            <area coords="4" xml:id="key3" />
 
-            <area coords="5" id="key4" />
+            <area coords="5" xml:id="key4" />
 
-            <area coords="6" id="key5" />
+            <area coords="6" xml:id="key5" />
 
-            <area coords="7" id="key6" />
+            <area coords="7" xml:id="key6" />
           </areaspec>
 
           <programlisting>&lt;key
@@ -5329,7 +5314,7 @@ class Home {
         not-null="true"&gt;</literal>.</para>
       </section>
 
-      <section id="mapping-declaration-import">
+      <section xml:id="mapping-declaration-import">
         <title>Import</title>
 
         <para>If your application has two persistent classes with the same
@@ -5342,9 +5327,9 @@ class Home {
 
         <programlistingco role="XML">
           <areaspec>
-            <area coords="2" id="import1" />
+            <area coords="2" xml:id="import1" />
 
-            <area coords="3" id="import2" />
+            <area coords="3" xml:id="import2" />
           </areaspec>
 
           <programlisting>&lt;import
@@ -5372,7 +5357,7 @@ class Home {
         </note>
       </section>
 
-      <section id="mapping-column" revision="5">
+      <section xml:id="mapping-column" revision="5">
         <title>Column and formula elements</title>
 
         <para>Mapping elements which accept a <literal>column</literal>
@@ -5419,10 +5404,10 @@ class Home {
     </section>
   </section>
 
-  <section id="mapping-types">
+  <section xml:id="mapping-types">
     <title>Hibernate types</title>
 
-    <section id="mapping-types-entitiesvalues" revision="1">
+    <section xml:id="mapping-types-entitiesvalues" revision="1">
       <title>Entities and values</title>
 
       <para>In relation to the persistence service, Java language-level
@@ -5481,7 +5466,7 @@ class Home {
       support null semantics.</para>
     </section>
 
-    <section id="mapping-types-basictypes" revision="4">
+    <section xml:id="mapping-types-basictypes" revision="4">
       <title>Basic value types</title>
 
       <para>The built-in <emphasis>basic mapping types</emphasis> can be
@@ -5673,7 +5658,7 @@ class Home {
       <literal>string</literal> type.</para>
     </section>
 
-    <section id="mapping-types-custom" revision="2">
+    <section xml:id="mapping-types-custom" revision="2">
       <title>Custom value types</title>
 
       <para>It is relatively easy for developers to create their own value
@@ -5753,7 +5738,7 @@ class Home {
     </section>
   </section>
 
-  <section id="mapping-entityname">
+  <section xml:id="mapping-entityname">
     <title>Mapping a class more than once</title>
 
     <para>It is possible to provide more than one mapping for a particular
@@ -5790,7 +5775,7 @@ class Home {
     </note>
   </section>
 
-  <section id="mapping-quotedidentifiers">
+  <section xml:id="mapping-quotedidentifiers">
     <title>SQL quoted identifiers</title>
 
     <para>You can force Hibernate to quote an identifier in the generated SQL
@@ -5812,7 +5797,7 @@ class LineItem {
 &lt;/class&gt;</programlisting>
   </section>
 
-  <section id="mapping-generated" revision="1">
+  <section xml:id="mapping-generated" revision="1">
     <title>Generated properties</title>
 
     <para>Generated properties are properties that have their values generated
@@ -5848,7 +5833,7 @@ class LineItem {
     <classname>@Generated</classname>.</para>
   </section>
 
-  <section id="mapping-column-read-and-write" revision="1">
+  <section xml:id="mapping-column-read-and-write" revision="1">
     <title>Column transformers: read and write expressions</title>
 
     <para>Hibernate allows you to customize the SQL it uses to read and write
@@ -5920,7 +5905,7 @@ class User {
     exactly one '?' placeholder for the value.</para>
   </section>
 
-  <section id="mapping-database-object">
+  <section xml:id="mapping-database-object">
     <title>Auxiliary database objects</title>
 
     <para>Auxiliary database objects allow for the CREATE and DROP of

@@ -31,6 +31,7 @@ import antlr.collections.AST;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -149,11 +150,34 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	private boolean resolveAsAlias() {
 		// This is not actually a constant, but a reference to FROM element.
-		FromElement element = getWalker().getCurrentFromClause().getFromElement(getText());
-		if (element != null) {
-			setFromElement(element);
-			setText(element.getIdentityColumn());
-			setType(SqlTokenTypes.ALIAS_REF);
+		FromElement element = getWalker().getCurrentFromClause().getFromElement( getText() );
+		if ( element != null ) {
+			setType( SqlTokenTypes.ALIAS_REF );
+			setFromElement( element );
+			String[] columnExpressions = element.getIdentityColumns();
+			final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
+			final boolean isCompositeValue = columnExpressions.length > 1;
+			if ( isCompositeValue ) {
+				if ( isInNonDistinctCount && ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
+					setText( columnExpressions[0] );
+				}
+				else {
+					String joinedFragment = StringHelper.join( ", ", columnExpressions );
+					// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
+					// tuple syntax across databases..
+					final boolean shouldSkipWrappingInParenthesis =
+							getWalker().isInCount()
+							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
+							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
+					if ( ! shouldSkipWrappingInParenthesis ) {
+						joinedFragment = "(" + joinedFragment + ")";
+					}
+					setText( joinedFragment );
+				}
+			}
+			else {
+				setText( columnExpressions[0] );
+			}
 			return true;
 		}
 		return false;
@@ -318,7 +342,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	@Override
     public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 
 		if (getType() == SqlTokenTypes.ALIAS_REF) {
 			buf.append("{alias=").append(getOriginalText());

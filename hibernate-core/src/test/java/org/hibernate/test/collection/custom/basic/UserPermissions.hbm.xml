@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+    This mapping is a basic example of how to write a UserCollectionType.
+-->
+
+<hibernate-mapping package="org.hibernate.test.collection.custom.basic">
+	
+	<import class="Permission"/>
+
+	<class name="User" table="UC_BSC_USER">
+		<id name="userName"/>
+		<list name="emailAddresses" fetch="join" cascade="all, delete-orphan" collection-type="org.hibernate.test.collection.custom.basic.MyListType">
+			<key column="userName"/>
+			<list-index column="displayOrder" base="1"/>
+			<one-to-many class="Email"/>
+		</list>		
+	</class>
+
+    <class name="Email">
+    	<id name="id">
+    	 <generator class="native"/>
+    	</id>
+    	<property name="address"/>
+    </class>	
+
+</hibernate-mapping>

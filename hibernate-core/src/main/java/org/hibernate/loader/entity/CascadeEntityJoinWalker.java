@@ -23,6 +23,8 @@
  *
  */
 package org.hibernate.loader.entity;
+import java.util.Collections;
+
 import org.hibernate.FetchMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -30,7 +32,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
@@ -43,9 +44,9 @@ public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 	throws MappingException {
 		super( persister, factory, LoadQueryInfluencers.NONE );
 		this.cascadeAction = action;
-		StringBuffer whereCondition = whereString( getAlias(), persister.getIdentifierColumnNames(), 1 )
+		StringBuilder whereCondition = whereString( getAlias(), persister.getIdentifierColumnNames(), 1 )
 				//include the discriminator and class-level where, but not filters
-				.append( persister.filterFragment( getAlias(), CollectionHelper.EMPTY_MAP ) );
+				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 	
 		initAll( whereCondition.toString(), "", LockOptions.READ );
 	}

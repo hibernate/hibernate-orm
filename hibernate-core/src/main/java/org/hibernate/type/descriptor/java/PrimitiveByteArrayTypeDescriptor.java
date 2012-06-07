@@ -62,7 +62,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 	}
 
 	public String toString(byte[] bytes) {
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder( bytes.length * 2 );
 		for ( byte aByte : bytes ) {
 			final String hexStr = Integer.toHexString( aByte - Byte.MIN_VALUE );
 			if ( hexStr.length() == 1 ) {

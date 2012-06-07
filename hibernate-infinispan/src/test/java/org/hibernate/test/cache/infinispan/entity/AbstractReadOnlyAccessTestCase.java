@@ -24,71 +24,64 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.junit.Test;
 
 import org.hibernate.cache.spi.access.AccessType;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 /**
  * Base class for tests of TRANSACTIONAL access.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
-    @Override
-    protected AccessType getAccessType() {
-        return AccessType.READ_ONLY;
-    }   
 
-	@Test
-    @Override
-    public void testPutFromLoad() throws Exception {
-        putFromLoadTest(false);
-    }
+   @Override
+   protected AccessType getAccessType() {
+      return AccessType.READ_ONLY;
+   }
 
-	@Test
-    @Override
-    public void testPutFromLoadMinimal() throws Exception {
-        putFromLoadTest(true);
-    }
-    
-    private void putFromLoadTest(boolean minimal) throws Exception {
-       
-        final String KEY = KEY_BASE + testCount++;
-        
-        long txTimestamp = System.currentTimeMillis();
-        BatchModeTransactionManager.getInstance().begin();
-        assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
-        if (minimal)
-            localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1), true);
-        else
-            localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
-        
-        sleep(250);
-        Object expected = isUsingInvalidation() ? null : VALUE1;
-        assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-        
-        BatchModeTransactionManager.getInstance().commit();
-        assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
-        assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-    }
+   @Test
+   @Override
+   public void testPutFromLoad() throws Exception {
+      putFromLoadTest(false);
+   }
 
-	@Test
-    @Override
-    public void testUpdate() throws Exception {
-       
-        final String KEY = KEY_BASE + testCount++;
-        
-        try {
-            localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
-            fail("Call to update did not throw exception");
-        }
-        catch (UnsupportedOperationException good) {}
-    }
+   @Test
+   @Override
+   public void testPutFromLoadMinimal() throws Exception {
+      putFromLoadTest(true);
+   }
+
+   private void putFromLoadTest(boolean minimal) throws Exception {
+
+      final String KEY = KEY_BASE + testCount++;
+
+      long txTimestamp = System.currentTimeMillis();
+      BatchModeTransactionManager.getInstance().begin();
+      assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
+      if (minimal)
+         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1, true);
+      else
+         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1);
+
+      sleep(250);
+      Object expected = isUsingInvalidation() ? null : VALUE1;
+      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+
+      BatchModeTransactionManager.getInstance().commit();
+      assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
+      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+   }
+
+   @Test(expected = UnsupportedOperationException.class)
+   @Override
+   public void testUpdate() throws Exception {
+      localAccessStrategy.update(KEY_BASE + testCount++,
+            VALUE2, 2, 1);
+   }
 
 }

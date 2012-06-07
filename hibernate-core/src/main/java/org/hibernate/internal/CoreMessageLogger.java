@@ -1135,10 +1135,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to locate MBeanServer on JMX service shutdown", id = 332)
 	void unableToLocateMBeanServer();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3", id = 333)
-	void unableToLocateNClobClass();
-
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to locate requested UUID generation strategy class : %s", id = 334)
 	void unableToLocateUuidGenerationStrategy(String strategyClassName);
@@ -1562,4 +1558,24 @@ public interface CoreMessageLogger extends BasicLogger {
 	void cannotResolveNonNullableTransientDependencies(String transientEntityString,
 													   Set<String> dependentEntityStrings,
 													   Set<String> nonNullableAssociationPaths);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache puts: %s", id = 438)
+	void naturalIdCachePuts(long naturalIdCachePutCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache hits: %s", id = 439)
+	void naturalIdCacheHits(long naturalIdCacheHitCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId cache misses: %s", id = 440)
+	void naturalIdCacheMisses(long naturalIdCacheMissCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Max NaturalId query time: %sms", id = 441)
+	void naturalIdMaxQueryTime(long naturalIdQueryExecutionMaxTime);
+	
+	@LogMessage(level = INFO)
+	@Message(value = "NaturalId queries executed to database: %s", id = 442)
+	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
 }

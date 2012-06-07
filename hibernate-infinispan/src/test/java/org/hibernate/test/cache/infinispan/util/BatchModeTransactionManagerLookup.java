@@ -22,12 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.util;
+
 import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
+import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
 import org.hibernate.HibernateException;
 import org.hibernate.transaction.TransactionManagerLookup;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 /**
  * Uses the JBoss Cache BatchModeTransactionManager. Should not be used in

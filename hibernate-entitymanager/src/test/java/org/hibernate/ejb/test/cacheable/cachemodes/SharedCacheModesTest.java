@@ -28,6 +28,8 @@ import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.junit.Test;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.AvailableSettings;
@@ -35,8 +37,6 @@ import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateQuery;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.internal.AbstractQueryImpl;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

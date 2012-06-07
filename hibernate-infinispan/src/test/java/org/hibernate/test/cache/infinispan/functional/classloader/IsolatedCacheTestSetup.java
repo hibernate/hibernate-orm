@@ -15,7 +15,9 @@
  */
 
 package org.hibernate.test.cache.infinispan.functional.classloader;
+
 import junit.framework.Test;
+
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 

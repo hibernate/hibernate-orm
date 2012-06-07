@@ -139,11 +139,6 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 				return new LockAcquisitionException( message, sqlException, sql );
 			}
 
-			if ( "61000".equals( sqlState ) ) {
-				// oracle sql-state code for deadlock
-				return new LockAcquisitionException( message, sqlException, sql );
-			}
-
 			if ( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState )) {
 				// Derby "A lock could not be obtained within the time requested."
 				return new PessimisticLockException( message, sqlException, sql );

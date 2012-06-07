@@ -38,7 +38,9 @@ public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>();
 
 	public void addDelegate(SQLExceptionConversionDelegate delegate) {
-		this.delegates.add( delegate );
+		if ( delegate != null ) {
+			this.delegates.add( delegate );
+		}
 	}
 
 	@Override

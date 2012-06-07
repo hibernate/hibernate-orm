@@ -187,7 +187,7 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuffer sqlDropString = new StringBuffer().append( "drop table " );
+		StringBuilder sqlDropString = new StringBuilder().append( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			sqlDropString.append( "if exists " );
 		}

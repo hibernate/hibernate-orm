@@ -1,35 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
+<!DOCTYPE chapter SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd">
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="example-mappings">
+<chapter xml:id="example-mappings" xmlns="http://docbook.org/ns/docbook">
     <title>Example: Various Mappings</title>
    
 
@@ -37,7 +9,7 @@
         This chapters explores some more complex association mappings.
     </para>
     
-    <section id="example-mappings-emp">
+    <section xml:id="example-mappings-emp">
         <title>Employer/Employee</title>
 
         <para>
@@ -150,7 +122,7 @@ create sequence employer_id_seq]]></programlisting>
 
     </section>
     
-    <section id="example-mappings-authorwork">
+    <section xml:id="example-mappings-authorwork">
         <title>Author/Work</title>
 
         <para>
@@ -272,7 +244,7 @@ alter table author_work
 
     </section>
 
-    <section id="example-mappings-customerorderproduct">
+    <section xml:id="example-mappings-customerorderproduct">
         <title>Customer/Order/Product</title>
 
         <para>
@@ -380,7 +352,7 @@ alter table line_items
 
     </section>
     
-    <section id="misc">
+    <section xml:id="misc">
         <title>Miscellaneous example mappings</title>
         
         <para>
@@ -391,7 +363,7 @@ alter table line_items
         
       <!--  <<para>TODO: put words around this stuff</para>-->
         
-        <section id="example-mappings-typed-onetone">
+        <section xml:id="example-mappings-typed-onetone">
             <title>"Typed" one-to-one association</title>
 <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="name"/>
@@ -421,7 +393,7 @@ alter table line_items
 </class>]]></programlisting>
         </section>
         
-        <section id="example-mappings-composite-key">
+        <section xml:id="example-mappings-composite-key">
             <title>Composite key example</title>
 <programlisting role="XML"><![CDATA[<class name="Customer">
 
@@ -538,7 +510,7 @@ alter table line_items
 </class>]]></programlisting>
         </section>
         
-        <section id="example-mappings-composite-key-manytomany">
+        <section xml:id="example-mappings-composite-key-manytomany">
             <title>Many-to-many with shared composite key attribute</title>
 <programlisting role="XML"><![CDATA[<class name="User" table="`User`">
     <composite-id>
@@ -577,7 +549,7 @@ alter table line_items
 ]]></programlisting>
         </section>
 
-        <section id="example-mappings-content-discrimination">
+        <section xml:id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
 <programlisting role="XML"><![CDATA[<class name="Person"
     discriminator-value="P">
@@ -631,7 +603,7 @@ alter table line_items
 </class>]]></programlisting>
         </section>
 
-        <section id="example-mappings-association-alternatekeys" revision="2">
+        <section xml:id="example-mappings-association-alternatekeys" revision="2">
             <title>Associations on alternate keys</title>
 <programlisting role="XML"><![CDATA[<class name="Person">
     

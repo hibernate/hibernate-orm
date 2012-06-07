@@ -1,47 +1,17 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY % BOOK_ENTITIES SYSTEM "HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
 %BOOK_ENTITIES;
 ]>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!-- old DTD and entity declaration
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY versionNumber "WORKING">
-        <!ENTITY today "TODAY">
-        <!ENTITY copyrightYear "2004">
-        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
-]>
--->
 <book>
-<!--
-    <bookinfo>
+    <info>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>&versionNumber;</releaseinfo>
-        <productnumber>&versionNumber;</productnumber>
+        <releaseinfo>&version;</releaseinfo>
+        <edition>1.0</edition>
+        <productname>JBoss Hibernate Core</productname>
+        <productnumber>&version;</productnumber>
         <pubdate>&today;</pubdate>
         <issuenum>1</issuenum>
         <mediaobject>
@@ -57,12 +27,16 @@
             <holder>&copyrightHolder;</holder>
         </copyright>
         <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-        <xi:include href="author_group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    </bookinfo>
+        <authorgroup xmlns:xl="http://www.w3.org/1999/xlink">
+            <author>
+                <orgname><link xl:href="http://hibernate.org">The Hibernate Team</link></orgname>
+            </author>
+            <othercredit>
+                <orgname><link xl:href="http://design.jboss.org/">The JBoss Visual Design Team</link></orgname>
+            </othercredit>
+        </authorgroup>
+    </info>
 
-    <toc/>
--->
-    <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

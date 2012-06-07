@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.expression;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Selection;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.SelectionImplementor;

@@ -1,0 +1,1 @@
+Session session = sf.withOptions( new AuditInterceptor() ).openSession();

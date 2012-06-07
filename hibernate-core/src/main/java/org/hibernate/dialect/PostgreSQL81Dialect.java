@@ -28,13 +28,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
+import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.PositionSubstringFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
@@ -367,6 +371,27 @@ public class PostgreSQL81Dialect extends Dialect {
 		}
 	};
 	
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+
+				if ( "40P01".equals( sqlState ) ) { // DEADLOCK DETECTED
+					return new LockAcquisitionException( message, sqlException, sql );
+				}
+
+				if ( "55P03".equals( sqlState ) ) { // LOCK NOT AVAILABLE
+					return new PessimisticLockException( message, sqlException, sql );
+				}
+
+				// returning null allows other delegates to operate
+				return null;
+			}
+		};
+	}
+	
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		// Register the type of the out param - PostgreSQL uses Types.OTHER
 		statement.registerOutParameter(col++, Types.OTHER);
@@ -434,4 +459,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			return " for share";
 	}
 
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
 }

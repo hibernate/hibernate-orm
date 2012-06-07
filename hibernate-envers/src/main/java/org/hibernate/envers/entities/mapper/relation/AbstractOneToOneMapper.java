@@ -1,15 +1,15 @@
 package org.hibernate.envers.entities.mapper.relation;
 
+import java.io.Serializable;
+import java.util.Map;
+import javax.persistence.NoResultException;
+
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
-import javax.persistence.NoResultException;
-import java.io.Serializable;
-import java.util.Map;
 
 /**
  * Template class for property mappers that manage one-to-one relation.

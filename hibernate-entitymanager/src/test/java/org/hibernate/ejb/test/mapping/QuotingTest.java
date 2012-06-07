@@ -23,10 +23,10 @@
  */
 package org.hibernate.ejb.test.mapping;
 
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

@@ -1,0 +1,19 @@
+
+<hibernate-mapping package="org.hibernate.test.onetoone.basic" default-access="field">
+
+    <class name="Parent">
+        <id name="id"/>
+        <one-to-one name="child" cascade="all" constrained="false" outer-join="false" lazy="proxy"/>
+    </class>
+
+    <class name="Child">
+        <id name=""
+    </class>
+    <class name="Address">
+        <id name="entityName"/>
+        <property name="street"/>
+        <property name="state"/>
+        <property name="zip"/>
+    </class>
+
+</hibernate-mapping>

@@ -33,8 +33,8 @@ import java.util.Set;
  */
 public class OracleJoinFragment extends JoinFragment {
 
-	private StringBuffer afterFrom = new StringBuffer();
-	private StringBuffer afterWhere = new StringBuffer();
+	private StringBuilder afterFrom = new StringBuilder();
+	private StringBuilder afterWhere = new StringBuilder();
 
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
@@ -69,8 +69,8 @@ public class OracleJoinFragment extends JoinFragment {
 
 	public JoinFragment copy() {
 		OracleJoinFragment copy = new OracleJoinFragment();
-		copy.afterFrom = new StringBuffer( afterFrom.toString() );
-		copy.afterWhere = new StringBuffer( afterWhere.toString() );
+		copy.afterFrom = new StringBuilder( afterFrom.toString() );
+		copy.afterWhere = new StringBuilder( afterWhere.toString() );
 		return copy;
 	}
 
@@ -126,7 +126,7 @@ public class OracleJoinFragment extends JoinFragment {
 	 * for a filter.
 	 */
 	private void addLeftOuterJoinCondition(String on) {
-		StringBuffer buf = new StringBuffer( on );
+		StringBuilder buf = new StringBuilder( on );
 		for ( int i = 0; i < buf.length(); i++ ) {
 			char character = buf.charAt( i );
 			boolean isInsertPoint = OPERATORS.contains( new Character( character ) ) ||

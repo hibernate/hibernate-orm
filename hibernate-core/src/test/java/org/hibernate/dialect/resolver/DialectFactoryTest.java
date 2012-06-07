@@ -23,18 +23,18 @@
  */
 package org.hibernate.dialect.resolver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -62,8 +62,10 @@ import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -148,6 +150,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "DB2/SUN", DB2Dialect.class, resolver );
 		testDetermination( "DB2/LINUX390", DB2Dialect.class, resolver );
 		testDetermination( "DB2/AIX64", DB2Dialect.class, resolver );
+		testDetermination( "DB2 UDB for AS/400", DB2400Dialect.class, resolver );
 		testDetermination( "Oracle", 8, Oracle8iDialect.class, resolver );
 		testDetermination( "Oracle", 9, Oracle9iDialect.class, resolver );
 		testDetermination( "Oracle", 10, Oracle10gDialect.class, resolver );

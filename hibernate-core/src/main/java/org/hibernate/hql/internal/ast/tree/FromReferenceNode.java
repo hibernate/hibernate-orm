@@ -76,7 +76,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 	}
 
 	public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "{" ).append( ( fromElement == null ) ? "no fromElement" : fromElement.getDisplayText() );
 		buf.append( "}" );
 		return buf.toString();

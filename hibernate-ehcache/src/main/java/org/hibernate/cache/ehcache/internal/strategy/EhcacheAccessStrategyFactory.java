@@ -25,9 +25,11 @@ package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * Factory to create {@link EntityRegionAccessStrategy}
@@ -57,5 +59,15 @@ public interface EhcacheAccessStrategyFactory {
 	 */
 	public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(EhcacheCollectionRegion collectionRegion,
 																			   AccessType accessType);
+    /**
+     * Create {@link NaturalIdRegionAccessStrategy} for the input {@link org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion} and {@link AccessType}
+     *
+     * @param naturalIdRegion
+     * @param accessType
+     *
+     * @return the created {@link NaturalIdRegionAccessStrategy}
+     */
+    public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
+                                                                               AccessType accessType);
 
 }

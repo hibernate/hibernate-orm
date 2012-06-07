@@ -42,12 +42,12 @@ public abstract class CollectionJoinWalker extends JoinWalker {
 		super( factory, loadQueryInfluencers );
 	}
 
-	protected StringBuffer whereString(String alias, String[] columnNames, String subselect, int batchSize) {
+	protected StringBuilder whereString(String alias, String[] columnNames, String subselect, int batchSize) {
 		if (subselect==null) {
 			return super.whereString(alias, columnNames, batchSize);
 		}
 		else {
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			if (columnNames.length>1) buf.append('(');
 			buf.append( StringHelper.join(", ", StringHelper.qualify(alias, columnNames) ) );
 			if (columnNames.length>1) buf.append(')');

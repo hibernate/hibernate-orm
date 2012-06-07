@@ -30,7 +30,6 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
 
@@ -435,4 +434,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
     protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
         return sqlCode == Types.BOOLEAN ? TinyIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
     }
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
 }

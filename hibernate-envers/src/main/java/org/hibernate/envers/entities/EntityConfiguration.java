@@ -31,7 +31,7 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author HernпїЅn Chanfreau
  */
 public class EntityConfiguration {
     private String versionsEntityName;

@@ -1,25 +1,32 @@
 package org.hibernate.cache.infinispan;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
+import org.infinispan.commands.module.ModuleCommandFactory;
+import org.infinispan.config.Configuration;
+import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+
 import org.hibernate.cache.infinispan.impl.BaseRegion;
+import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
@@ -29,15 +36,15 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.infinispan.AdvancedCache;
-import org.infinispan.config.Configuration;
-import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -85,6 +92,15 @@ public class InfinispanRegionFactory implements RegionFactory {
     * @see #DEF_USE_SYNCHRONIZATION
     */
    public static final String INFINISPAN_USE_SYNCHRONIZATION_PROP = "hibernate.cache.infinispan.use_synchronization";
+   
+	private static final String NATURAL_ID_KEY = "naturalid";
+
+	/**
+	 * Name of the configuration that should be used for natural id caches.
+	 *
+	 * @see #DEF_ENTITY_RESOURCE
+	 */
+	public static final String NATURAL_ID_CACHE_RESOURCE_PROP = PREFIX + NATURAL_ID_KEY + CONFIG_SUFFIX;
 
    private static final String ENTITY_KEY = "entity";
    
@@ -159,6 +175,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    private org.infinispan.transaction.lookup.TransactionManagerLookup transactionManagerlookup;
 
    private TransactionManager transactionManager;
+
+   private List<String> regionNames = new ArrayList<String>();
    
    /**
     * Create a new instance using the default configuration.
@@ -195,6 +213,25 @@ public class InfinispanRegionFactory implements RegionFactory {
       return region;
    }
 
+	@Override
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building natural id cache region [" + regionName + "]" );
+		}
+		AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties );
+		CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance( cache );
+		NaturalIdRegionImpl region = new NaturalIdRegionImpl(
+				cacheAdapter,
+				regionName,
+				metadata,
+				transactionManager,
+				this
+		);
+		startRegion( region, regionName );
+		return region;
+	}
+	
    /**
     * {@inheritDoc}
     */
@@ -283,7 +320,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       }
    }
 
-   protected HibernateTransactionManagerLookup createTransactionManagerLookup(
+   protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(
             Settings settings, Properties properties) {
       return new HibernateTransactionManagerLookup(settings, properties);
    }
@@ -292,8 +329,19 @@ public class InfinispanRegionFactory implements RegionFactory {
     * {@inheritDoc}
     */
    public void stop() {
-      log.debug("Clear region references and stop Infinispan cache manager");
-      getCacheCommandFactory(manager.getCache().getAdvancedCache()).clearRegions();
+      log.debug("Stop region factory");
+      stopCacheRegions();
+      stopCacheManager();
+   }
+
+   protected void stopCacheRegions() {
+      log.debug("Clear region references");
+      getCacheCommandFactory(manager.getCache()).clearRegions(regionNames);
+      regionNames.clear();
+   }
+
+   protected void stopCacheManager() {
+      log.debug("Stop cache manager");
       manager.stop();
    }
    
@@ -327,7 +375,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    }
 
    private void startRegion(BaseRegion region, String regionName) {
-      getCacheCommandFactory(region.getCacheAdapter().getCache().getAdvancedCache())
+      regionNames.add(regionName);
+      getCacheCommandFactory(region.getCacheAdapter().getCache())
             .addRegion(regionName, region);
    }
 
@@ -338,6 +387,9 @@ public class InfinispanRegionFactory implements RegionFactory {
       TypeOverrides collectionOverrides = new TypeOverrides();
       collectionOverrides.setCacheName(DEF_ENTITY_RESOURCE);
       typeOverrides.put(COLLECTION_KEY, collectionOverrides);
+      TypeOverrides naturalIdOverrides = new TypeOverrides();
+      naturalIdOverrides.setCacheName(DEF_ENTITY_RESOURCE);
+      typeOverrides.put(NATURAL_ID_KEY, naturalIdOverrides);
       TypeOverrides timestampOverrides = new TimestampTypeOverrides();
       timestampOverrides.setCacheName(DEF_TIMESTAMPS_RESOURCE);
       typeOverrides.put(TIMESTAMPS_KEY, timestampOverrides);
@@ -435,11 +487,19 @@ public class InfinispanRegionFactory implements RegionFactory {
       return createCacheWrapper(cache);
    }
 
-   private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
-      GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
-      // TODO: This is a hack, make it easier to retrieve in Infinispan!
-      return (CacheCommandFactory) ((Map) globalCr.getComponent("org.infinispan.modules.command.factories"))
-            .values().iterator().next();
+   private CacheCommandFactory getCacheCommandFactory(Cache cache) {
+      GlobalComponentRegistry globalCr = cache.getAdvancedCache()
+            .getComponentRegistry().getGlobalComponentRegistry();
+      Map<Byte, ModuleCommandFactory> factories =
+         (Map<Byte, ModuleCommandFactory>) globalCr.getComponent("org.infinispan.modules.command.factories");
+      for (ModuleCommandFactory factory : factories.values()) {
+         if (factory instanceof CacheCommandFactory)
+            return (CacheCommandFactory) factory;
+      }
+
+      throw new CacheException("Infinispan custom cache command factory not " +
+            "installed (possibly because the classloader where Infinispan " +
+            "lives couldn't find the Hibernate Infinispan cache provider)");
    }
 
    protected AdvancedCache createCacheWrapper(AdvancedCache cache) {

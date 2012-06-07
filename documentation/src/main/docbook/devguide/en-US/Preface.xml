@@ -1,10 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<preface id="pref-Hibernate_Development_Guide-Preface">
 
+<preface xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" >
 
     <title>Preface</title>
     <para>
@@ -13,7 +9,7 @@
         objects versus relational databases.  Hibernate is an Object/Relational Mapping solution for Java environments.
         The term Object/Relational Mapping refers to the technique of mapping data from an object model representation
         to a relational data model representation (and visa versa).  See
-        <ulink url="http://en.wikipedia.org/wiki/Object-relational_mapping"/> for a good high-level discussion.
+        <link xl:href="http://en.wikipedia.org/wiki/Object-relational_mapping"/> for a good high-level discussion.
     </para>
 
     <note>
@@ -25,12 +21,12 @@
             <itemizedlist>
                 <listitem>
                     <para>
-                        <ulink url="http://www.agiledata.org/essays/dataModeling101.html"/>
+                        <link xl:href="http://www.agiledata.org/essays/dataModeling101.html"/>
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <ulink url="http://en.wikipedia.org/wiki/Data_modeling"/>
+                        <link xl:href="http://en.wikipedia.org/wiki/Data_modeling"/>
                     </para>
                 </listitem>
             </itemizedlist>
@@ -61,19 +57,19 @@
             <listitem>
                 <para>
                     Use Hibernate and report any bugs or issues you find. See
-                    <ulink url="http://hibernate.org/issuetracker.html"/> for details.
+                    <link xl:href="http://hibernate.org/issuetracker.html"/> for details.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Try your hand at fixing some bugs or implementing enhancements. Again, see
-                    <ulink url="http://hibernate.org/issuetracker.html"/>.
+                    <link xl:href="http://hibernate.org/issuetracker.html"/>.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Engage with the community using mailing lists, forums, IRC, or other ways listed at
-                    <ulink url="http://hibernate.org/community.html"/>.
+                    <link xl:href="http://hibernate.org/community.html"/>.
                 </para>
             </listitem>
             <listitem>

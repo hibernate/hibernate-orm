@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+
 import org.hibernate.annotations.common.AssertionFailure;
 
 /**

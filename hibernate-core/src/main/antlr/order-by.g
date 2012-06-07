@@ -229,7 +229,7 @@ functionCall! { trace("functionCall"); }
  */
 functionName {
         trace("functionName");
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
     }
     : i:IDENT { buffer.append( i.getText() ); }
             ( DOT i2:IDENT { buffer.append( '.').append( i2.getText() ); } )* {
@@ -295,7 +295,7 @@ orderingSpecification! { trace("orderingSpecification"); }
  */
 simplePropertyPath {
         trace("simplePropertyPath");
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
     }
     : i:IDENT { buffer.append( i.getText() ); }
             ( DOT i2:IDENT { buffer.append( '.').append( i2.getText() ); } )+ {

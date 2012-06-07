@@ -30,6 +30,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -70,6 +71,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		this.isVersionIncrementDisabled = isVersionIncrementDisabled;
 		this.isExecuted = false;
 		this.areTransientReferencesNullified = false;
+
+		handleNaturalIdPreSaveNotifications();
 	}
 
 	/**
@@ -171,5 +174,33 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			EntityEntry entityEntry = session.getPersistenceContext().getEntry( getInstance() );
 			this.state = entityEntry.getLoadedState();
 		}
+	}
+
+	/**
+	 * Handle sending notifications needed for natural-id before saving
+	 */
+	protected void handleNaturalIdPreSaveNotifications() {
+		// before save, we need to add a local (transactional) natural id cross-reference
+		getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+				getPersister(),
+				getId(),
+				state,
+				null,
+				CachedNaturalIdValueSource.INSERT
+		);
+	}
+
+	/**
+	 * Handle sending notifications needed for natural-id after saving
+	 */
+	protected void handleNaturalIdPostSaveNotifications() {
+		// after save, we need to manage the shared cache entries
+		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+				getPersister(),
+				getId(),
+				state,
+				null,
+				CachedNaturalIdValueSource.INSERT
+		);
 	}
 }

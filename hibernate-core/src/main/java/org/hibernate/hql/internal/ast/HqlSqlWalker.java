@@ -87,8 +87,6 @@ import org.hibernate.hql.internal.ast.util.SyntheticAndFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
-import org.hibernate.id.SequenceGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -928,6 +926,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( namedParameters.size() > 0 ) {
 			throw new SemanticException( "cannot define positional parameter after any named parameters have been defined" );
 		}
+		LOG.warnf(
+				"[DEPRECATION] Encountered positional parameter near line %s, column %s.  Positional parameter " +
+						"are considered deprecated; use named parameters or JPA-style positional parameters instead.",
+				inputNode.getLine(),
+				inputNode.getColumn()
+		);
 		ParameterNode parameter = ( ParameterNode ) astFactory.create( PARAM, "?" );
 		PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
 				inputNode.getLine(),

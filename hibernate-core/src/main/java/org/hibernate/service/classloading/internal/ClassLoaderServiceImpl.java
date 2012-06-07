@@ -86,7 +86,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		classLoadingClassLoaders.add( hibernateClassLoader );
 		classLoadingClassLoaders.add( environmentClassLoader );
 
-		this.classClassLoader = new ClassLoader() {
+		this.classClassLoader = new ClassLoader(null) {
 			@Override
 			protected Class<?> findClass(String name) throws ClassNotFoundException {
 				for ( ClassLoader loader : classLoadingClassLoaders ) {
@@ -135,7 +135,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@SuppressWarnings( {"unchecked"})
 	public <T> Class<T> classForName(String className) {
 		try {
-			return (Class<T>) classClassLoader.loadClass( className );
+			return (Class<T>) Class.forName( className, true, classClassLoader );
 		}
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
@@ -197,7 +197,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		final ClassLoader serviceLoaderClassLoader = new ClassLoader() {
+		final ClassLoader serviceLoaderClassLoader = new ClassLoader(null) {
 			final ClassLoader[] classLoaderArray = new ClassLoader[] {
 					// first look on the hibernate class loader
 					getClass().getClassLoader(),

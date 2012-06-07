@@ -1,11 +1,40 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-    <!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Getting_Started_Guide.ent">
-    %BOOK_ENTITIES;
+<!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Getting_Started_Guide.ent">
+%BOOK_ENTITIES;
 ]>
 
 <book>
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Book_Info.xml" />
+    <info>
+        <title>Hibernate Getting Started Guide</title>
+        <releaseinfo>&version;</releaseinfo>
+        <edition>1.0</edition>
+        <productname>JBoss Hibernate Core</productname>
+        <productnumber>&version;</productnumber>
+        <pubdate>&today;</pubdate>
+        <issuenum>1</issuenum>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+        <authorgroup xmlns:xl="http://www.w3.org/1999/xlink">
+            <author>
+                <orgname><link xl:href="http://hibernate.org">The Hibernate Team</link></orgname>
+            </author>
+            <othercredit>
+                <orgname><link xl:href="http://design.jboss.org/">The JBoss Visual Design Team</link></orgname>
+            </othercredit>
+        </authorgroup>
+    </info>
+
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/preface.xml" />
 
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/obtaining.xml" />

@@ -29,9 +29,10 @@ import org.hibernate.cache.spi.EntityRegion;
 /**
  * Contract for managing transactional and concurrent access to cached entity
  * data.  The expected call sequences related to various operations are:<ul>
- * <li><b>INSERTS</b> : {@link #insert} -> {@link #afterInsert}</li>
- * <li><b>UPDATES</b> : {@link #lockItem} -> {@link #update} -> {@link #afterUpdate}</li>
- * <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
+ *     <li><b>INSERTS</b> : {@link #insert} -> {@link #afterInsert}</li>
+ *     <li><b>UPDATES</b> : {@link #lockItem} -> {@link #update} -> {@link #afterUpdate}</li>
+ *     <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
+ *     <li><b>LOADS</b> : {@link @putFromLoad}</li>
  * </ul>
  * <p/>
  * There is another usage pattern that is used to invalidate entries

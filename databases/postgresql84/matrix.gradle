@@ -21,4 +21,4 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-jdbcDependency "postgresql:postgresql:8.4-701.jdbc4"
+jdbcDependency "postgresql:postgresql:9.1-901.jdbc4"

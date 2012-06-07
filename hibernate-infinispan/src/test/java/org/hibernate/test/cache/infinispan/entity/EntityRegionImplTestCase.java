@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
+
 import java.util.Properties;
-import org.hibernate.cache.spi.CacheDataDescription;
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
-
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
 
 import static org.junit.Assert.assertNull;
@@ -49,14 +50,8 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
    @Override
    protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
       EntityRegion region = regionFactory.buildEntityRegion("test", properties, null);
-      assertNull("Got TRANSACTIONAL", region.buildAccessStrategy(AccessType.TRANSACTIONAL)
-               .lockRegion());
-      try {
-         region.buildAccessStrategy(AccessType.READ_ONLY).lockRegion();
-         fail("Did not get READ_ONLY");
-      } catch (UnsupportedOperationException good) {
-      }
-
+      assertNull("Got TRANSACTIONAL",
+            region.buildAccessStrategy(AccessType.TRANSACTIONAL).lockRegion());
       try {
          region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);
          fail("Incorrectly got NONSTRICT_READ_WRITE");
@@ -72,7 +67,7 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
 
    @Override
    protected void putInRegion(Region region, Object key, Object value) {
-      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).insert(key, value, new Integer(1));
+      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).insert(key, value, 1);
    }
 
    @Override

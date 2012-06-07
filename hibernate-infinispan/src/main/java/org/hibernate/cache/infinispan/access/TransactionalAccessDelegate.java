@@ -24,15 +24,17 @@
 package org.hibernate.cache.infinispan.access;
 
 import javax.transaction.Transaction;
+
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in a Infinispan instance.
@@ -46,6 +48,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class TransactionalAccessDelegate {
    private static final Log log = LogFactory.getLog(TransactionalAccessDelegate.class);
+   private static final boolean isTrace = log.isTraceEnabled();
    protected final CacheAdapter cacheAdapter;
    protected final BaseRegion region;
    protected final PutFromLoadValidator putValidator;
@@ -65,12 +68,29 @@ public class TransactionalAccessDelegate {
       return val;
    }
 
-   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-      if (!region.checkValid())
+   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) {
+      return putFromLoad(key, value, txTimestamp, version, false);
+   }
+
+   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+            throws CacheException {
+      if (!region.checkValid()) {
+         if (isTrace) log.tracef("Region %s not valid", region.getName());
+         return false;
+      }
+
+      // In theory, since putForExternalRead is already as minimal as it can
+      // get, we shouldn't be need this check. However, without the check and
+      // without https://issues.jboss.org/browse/ISPN-1986, it's impossible to
+      // know whether the put actually occurred. Knowing this is crucial so
+      // that Hibernate can expose accurate statistics.
+      if (minimalPutOverride && cacheAdapter.containsKey(key))
          return false;
 
-      if (!putValidator.acquirePutFromLoadLock(key))
+      if (!putValidator.acquirePutFromLoadLock(key)) {
+         if (isTrace) log.tracef("Put from load lock not acquired for key %s", key);
          return false;
+      }
 
       try {
          cacheAdapter.putForExternalRead(key, value);
@@ -79,14 +99,6 @@ public class TransactionalAccessDelegate {
       }
 
       return true;
-   }
-
-   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
-            throws CacheException {
-      // We ignore minimalPutOverride. Infinispan putForExternalRead is
-      // already about as minimal as we can get; it will promptly return
-      // if it discovers that the node we want to write to already exists
-      return putFromLoad(key, value, txTimestamp, version);
    }
 
    public SoftLock lockItem(Object key, Object version) throws CacheException {

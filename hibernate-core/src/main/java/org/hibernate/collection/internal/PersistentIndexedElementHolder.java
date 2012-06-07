@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +40,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -106,7 +106,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 	public Collection getOrphans(Serializable snapshot, String entityName) 
 	throws HibernateException {
 		//orphan delete not supported for EntityMode.DOM4J
-		return CollectionHelper.EMPTY_COLLECTION; 
+		return Collections.EMPTY_LIST;
 	}
 
 	public PersistentIndexedElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key) 

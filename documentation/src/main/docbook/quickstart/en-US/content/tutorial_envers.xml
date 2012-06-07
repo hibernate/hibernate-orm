@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-<chapter id="hibernate-gsg-tutorial-envers">
+<chapter xmlns="http://docbook.org/ns/docbook">
     <title>Tutorial Using Envers</title>
 
     <para>
@@ -21,7 +20,7 @@
       </listitem>
     </itemizedlist>
 
-    <section id="hibernate-gsg-tutorial-envers-config">
+    <section xml:id="hibernate-gsg-tutorial-envers-config">
       <title><filename>persistence.xml</filename></title>
       <para>
         This file was discussed in the <systemitem>JPA</systemitem> tutorial in <xref
@@ -29,7 +28,7 @@
       </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-envers-entity">
+    <section xml:id="hibernate-gsg-tutorial-envers-entity">
       <title>The annotated entity Java class</title>
       <para>
         Again, the entity is largely the same as in <xref linkend="hibernate-gsg-tutorial-jpa-entity" />.  The major
@@ -38,14 +37,14 @@
       </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-envers-test">
+    <section xml:id="hibernate-gsg-tutorial-envers-test">
       <title>Example code</title>
       <para>
         Again, this tutorial makes use of the <systemitem>JPA</systemitem> APIs.  However, the code also makes a change to one
         of the entities, then uses the Envers API to pull back the initial <firstterm>revision</firstterm> as well as the updated
         revision. A revision refers to a version of an entity.
       </para>
-      <example id="hibernate-gsg-tutorial-envers-test-api">
+      <example xml:id="hibernate-gsg-tutorial-envers-test-api">
         <title>Using the <interfacename>org.hibernate.envers.AuditReader</interfacename></title>
         <programlisting role="JAVA">public void testBasicUsage() {
     ...
@@ -75,7 +74,7 @@
       </procedure>
     </section>
 
-    <section id="hibernate-gsg-tutorial-annotations-further">
+    <section xml:id="hibernate-gsg-tutorial-annotations-further">
       <title>Take it further!</title>
       <itemizedlist>
         <title>Practice Exercises</title>

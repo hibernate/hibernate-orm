@@ -1864,7 +1864,7 @@ msgid ""
 "<literal>nonstrict-read-write</literal> or <literal>read-only</literal>"
 msgstr ""
 "<literal>usage</literal> (requis) spécifie la stratégie de cache : "
-"<literal>transactionel</literal>, <literal>lecture-écriture</literal>, "
+"<literal>transactionnel</literal>, <literal>lecture-écriture</literal>, "
 "<literal>lecture-écriture non stricte</literal> ou <literal>lecture seule</"
 "literal>"
 
@@ -2000,7 +2000,7 @@ msgstr ""
 #: performance.xml:941
 #, no-c-format
 msgid "Strategy: transactional"
-msgstr "Stratégie : transactionelle"
+msgstr "Stratégie : transactionnelle"
 
 #. Tag: para
 #: performance.xml:943

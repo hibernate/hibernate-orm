@@ -182,7 +182,7 @@ public class SqlExceptionHelper {
      */
     public static abstract class WarningHandlerLoggingSupport implements WarningHandler {
         public final void handleWarning( SQLWarning warning ) {
-            StringBuffer buf = new StringBuffer(30).append("SQL Warning Code: ").append(warning.getErrorCode()).append(", SQLState: ").append(warning.getSQLState());
+        	StringBuilder buf = new StringBuilder(30).append("SQL Warning Code: ").append(warning.getErrorCode()).append(", SQLState: ").append(warning.getSQLState());
             logWarning(buf.toString(), warning.getMessage());
         }
 

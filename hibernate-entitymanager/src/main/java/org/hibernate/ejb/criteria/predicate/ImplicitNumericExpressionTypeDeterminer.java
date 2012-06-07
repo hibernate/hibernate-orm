@@ -26,8 +26,6 @@ package org.hibernate.ejb.criteria.predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation.Operation;
-
 /**
  * @author Steve Ebersole
  */

@@ -100,7 +100,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 				);
 			}
 			catch ( SQLException ex ) {
-				StringBuffer buf = new StringBuffer()
+				StringBuilder buf = new StringBuilder()
 						.append( "Exception getting column index for column: [" )
 						.append( args[0] )
 						.append( "].\nReverting to using: [" )

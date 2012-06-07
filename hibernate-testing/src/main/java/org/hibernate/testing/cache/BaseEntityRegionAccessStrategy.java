@@ -27,7 +27,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.internal.CoreMessageLogger;

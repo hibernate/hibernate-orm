@@ -151,7 +151,7 @@ public class SAPDBDialect extends Dialect {
 			String referencedTable,
 			String[] primaryKey, boolean referencesPrimaryKey
 	) {
-		StringBuffer res = new StringBuffer(30)
+		StringBuilder res = new StringBuilder(30)
 			.append(" foreign key ")
 			.append(constraintName)
 			.append(" (")

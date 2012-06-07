@@ -157,19 +157,15 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return insertSQL + "\nselect @@identity";
 	}
 
-	public String appendLockHint(LockMode mode, String tableName) {
-		if ( mode.greaterThan( LockMode.READ ) ) {
-			return tableName + " holdlock";
-		}
-		else {
-			return tableName;
-		}
+	@Override
+	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
 	}
 
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql
 		Iterator itr = aliasedLockOptions.getAliasLockIterator();
-		StringBuffer buffer = new StringBuffer( sql );
+		StringBuilder buffer = new StringBuilder( sql );
 		int correction = 0;
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();

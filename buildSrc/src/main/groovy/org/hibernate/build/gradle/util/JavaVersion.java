@@ -49,7 +49,7 @@ public class JavaVersion {
 		this.fullVersionString = javaVersionString;
 		family = fullVersionString.startsWith( "1.6" )
 				? Family.JAVA6
-				: Family.JAVA5;
+				: ( fullVersionString.startsWith( "1.7" ) ? Family.JAVA7 : Family.JAVA5);
 	}
 
 	public String getFullVersionString() {

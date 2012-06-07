@@ -22,15 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.Hibernate;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.Tools;
-import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)

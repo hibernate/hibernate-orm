@@ -171,6 +171,35 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @param regionName The name of the cache region
 	 */
 	public void secondLevelCacheMiss(String regionName);
+	
+	/**
+	 * Callback indicating a put into natural id cache.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCachePut(String regionName);
+	
+	/**
+	 * Callback indicating a get from natural id cache resulted in a hit.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCacheHit(String regionName);
+	
+	/**
+	 * Callback indicating a get from natural id cache resulted in a miss.
+	 *
+	 * @param regionName The name of the cache region
+	 */
+	public void naturalIdCacheMiss(String regionName);
+
+	/**
+	 * Callback indicating execution of a natural id query
+	 *
+	 * @param regionName The name of the cache region
+	 * @param time execution time
+	 */
+	public void naturalIdQueryExecuted(String regionName, long time);
 
 	/**
 	 * Callback indicating a put into the query cache.

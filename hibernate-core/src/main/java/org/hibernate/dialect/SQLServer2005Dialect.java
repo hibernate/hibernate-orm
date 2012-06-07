@@ -23,11 +23,19 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -39,12 +47,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
+	private static final String ORDER_BY = "order by";
 	private static final int MAX_LENGTH = 8000;
 
 	/**
 	 * Regular expression for stripping alias
 	 */
-	private static final Pattern ALIAS_PATTERN = Pattern.compile( "\\sas[^,]+(,?)" );
+	private static final Pattern ALIAS_PATTERN = Pattern.compile( "\\sas\\s[^,]+(,?)" );
 
 	public SQLServer2005Dialect() {
 		// HHH-3965 fix
@@ -105,10 +114,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 *
 	 * <pre>
 	 * WITH query AS (
-	 *   SELECT ROW_NUMBER() OVER (ORDER BY orderby) as __hibernate_row_nr__,
-	 *   original_query_without_orderby
+	 *   original_select_clause_without_distinct_and_order_by,
+	 *   ROW_NUMBER() OVER ([ORDER BY CURRENT_TIMESTAMP | original_order_by_clause]) as __hibernate_row_nr__
+	 *   original_from_clause
+	 *   original_where_clause
+	 *   group_by_if_originally_select_distinct
 	 * )
-	 * SELECT * FROM query WHERE __hibernate_row_nr__ BEETWIN offset AND offset + last
+	 * SELECT * FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
 	 * </pre>
 	 *
 	 * @param querySqlString The SQL statement to base the limit query off of.
@@ -118,9 +130,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	@Override
 	public String getLimitString(String querySqlString, boolean hasOffset) {
-		StringBuilder sb = new StringBuilder( querySqlString.trim().toLowerCase() );
+		StringBuilder sb = new StringBuilder( querySqlString.trim() );
 
-		int orderByIndex = sb.indexOf( "order by" );
+		int orderByIndex = shallowIndexOfWord( sb, ORDER_BY, 0 );
 		CharSequence orderby = orderByIndex > 0 ? sb.subSequence( orderByIndex, sb.length() )
 				: "ORDER BY CURRENT_TIMESTAMP";
 
@@ -148,12 +160,15 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
-		int distinctIndex = sql.indexOf( DISTINCT );
-		if ( distinctIndex > 0 ) {
-			sql.delete( distinctIndex, distinctIndex + DISTINCT.length() + 1 );
+		int distinctIndex = shallowIndexOfWord( sql, DISTINCT, 0 );
+		int selectEndIndex = shallowIndexOfWord( sql, FROM, 0 );
+		if (distinctIndex > 0 && distinctIndex < selectEndIndex) {
+			sql.delete( distinctIndex, distinctIndex + DISTINCT.length() + " ".length());
 			sql.append( " group by" ).append( getSelectFieldsWithoutAliases( sql ) );
 		}
 	}
+
+	public static final String SELECT_WITH_SPACE = SELECT + ' ';
 
 	/**
 	 * This utility method searches the given sql query for the fields of the select statement and returns them without
@@ -164,7 +179,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @return the fields of the select statement without their alias
 	 */
 	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql) {
-		String select = sql.substring( sql.indexOf( SELECT ) + SELECT.length(), sql.indexOf( FROM ) );
+		final int selectStartPos = shallowIndexOf( sql, SELECT_WITH_SPACE, 0 );
+		final int fromStartPos = shallowIndexOfWord( sql, FROM, selectStartPos );
+		String select = sql.substring( selectStartPos + SELECT.length(), fromStartPos );
 
 		// Strip the as clauses
 		return stripAliases( select );
@@ -183,16 +200,103 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	/**
-	 * Right after the select statement of a given query we must place the row_number function
+	 * We must place the row_number function at the end of select clause.
 	 *
 	 * @param sql the initial sql query without the order by clause
 	 * @param orderby the order by clause of the query
 	 */
-	protected static void insertRowNumberFunction(StringBuilder sql, CharSequence orderby) {
-		// Find the end of the select statement
-		int selectEndIndex = sql.indexOf( FROM );
+	protected void insertRowNumberFunction(StringBuilder sql, CharSequence orderby) {
+		// Find the end of the select clause
+		int selectEndIndex = shallowIndexOfWord( sql, FROM, 0 );
 
-		// Insert after the select statement the row_number() function:
+		// Insert after the select clause the row_number() function:
 		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
 	}
+
+	@Override // since SQLServer2005 the nowait hint is supported
+	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		if ( lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
+			return tableName + " with (updlock, rowlock, nowait)";
+		}
+		LockMode mode = lockOptions.getLockMode();
+		boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
+		String noWaitStr = isNoWait? ", nowait" :"";
+		switch ( mode ) {
+			case UPGRADE_NOWAIT:
+				 return tableName + " with (updlock, rowlock, nowait)";
+			case UPGRADE:
+			case PESSIMISTIC_WRITE:
+			case WRITE:
+				return tableName + " with (updlock, rowlock"+noWaitStr+" )";
+			case PESSIMISTIC_READ:
+				return tableName + " with (holdlock, rowlock"+noWaitStr+" )";
+			default:
+				return tableName;
+		}
+	}
+
+	/**
+	 * Returns index of the first case-insensitive match of search term surrounded by spaces
+	 * that is not enclosed in parentheses.
+	 *
+	 * @param sb String to search.
+	 * @param search Search term.
+	 * @param fromIndex The index from which to start the search.
+	 * @return Position of the first match, or {@literal -1} if not found.
+	 */
+	private static int shallowIndexOfWord(final StringBuilder sb, final String search, int fromIndex) {
+		final int index = shallowIndexOf( sb, ' ' + search + ' ', fromIndex );
+		return index != -1 ? ( index + 1 ) : -1; // In case of match adding one because of space placed in front of search term.
+	}
+
+	/**
+	 * Returns index of the first case-insensitive match of search term that is not enclosed in parentheses.
+	 *
+	 * @param sb String to search.
+	 * @param search Search term.
+	 * @param fromIndex The index from which to start the search.
+	 * @return Position of the first match, or {@literal -1} if not found.
+	 */
+	private static int shallowIndexOf(StringBuilder sb, String search, int fromIndex) {
+		final String lowercase = sb.toString().toLowerCase(); // case-insensitive match
+		final int len = lowercase.length();
+		final int searchlen = search.length();
+		int pos = -1, depth = 0, cur = fromIndex;
+		do {
+			pos = lowercase.indexOf( search, cur );
+			if ( pos != -1 ) {
+				for ( int iter = cur; iter < pos; iter++ ) {
+					char c = sb.charAt( iter );
+					if ( c == '(' ) {
+						depth = depth + 1;
+					}
+					else if ( c == ')' ) {
+						depth = depth - 1;
+					}
+				}
+				cur = pos + searchlen;
+			}
+		} while ( cur < len && depth != 0 && pos != -1 );
+		return depth == 0 ? pos : -1;
+	}
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+				if(  "HY008".equals( sqlState )){
+					throw new QueryTimeoutException( message, sqlException, sql );
+				}
+				if (1222 == errorCode ) {
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
+
+
 }

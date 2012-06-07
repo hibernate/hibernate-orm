@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.collection.custom.parameterized" default-access="field">
+
+    <typedef name="DefaultableList" class="org.hibernate.test.collection.custom.parameterized.DefaultableListType">
+        <param name="default">Hello</param>
+    </typedef>
+
+    <class name="Entity">
+        <id name="name" type="string"/>
+        <list name="values" fetch="join" table="ENT_VAL" collection-type="DefaultableList">
+            <key column="ENT_ID"/>
+            <list-index column="POS"/>
+            <element type="string" column="VAL"/>
+        </list>
+    </class>
+
+</hibernate-mapping>

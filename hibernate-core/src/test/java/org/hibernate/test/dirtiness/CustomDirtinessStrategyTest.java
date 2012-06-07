@@ -23,15 +23,13 @@
  */
 package org.hibernate.test.dirtiness;
 
+import org.junit.Test;
+
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

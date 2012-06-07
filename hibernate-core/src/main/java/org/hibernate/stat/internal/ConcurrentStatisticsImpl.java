@@ -36,6 +36,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.Service;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
+import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -76,7 +77,14 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	private AtomicLong secondLevelCacheHitCount = new AtomicLong();
 	private AtomicLong secondLevelCacheMissCount = new AtomicLong();
 	private AtomicLong secondLevelCachePutCount = new AtomicLong();
-
+	
+	private AtomicLong naturalIdCacheHitCount = new AtomicLong();
+	private AtomicLong naturalIdCacheMissCount = new AtomicLong();
+	private AtomicLong naturalIdCachePutCount = new AtomicLong();
+	private AtomicLong naturalIdQueryExecutionCount = new AtomicLong();
+	private AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
+	private volatile String naturalIdQueryExecutionMaxTimeRegion;
+	
 	private AtomicLong queryExecutionCount = new AtomicLong();
 	private AtomicLong queryExecutionMaxTime = new AtomicLong();
 	private volatile String queryExecutionMaxTimeQueryString;
@@ -93,6 +101,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 	private AtomicLong optimisticFailureCount = new AtomicLong();
 
+	/**
+	 * natural id cache statistics per region
+	 */
+	private final ConcurrentMap naturalIdCacheStatistics = new ConcurrentHashMap();
 	/**
 	 * second level cache statistics per region
 	 */
@@ -127,6 +139,13 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		secondLevelCacheHitCount.set( 0 );
 		secondLevelCacheMissCount.set( 0 );
 		secondLevelCachePutCount.set( 0 );
+		
+		naturalIdCacheHitCount.set( 0 );
+		naturalIdCacheMissCount.set( 0 );
+		naturalIdCachePutCount.set( 0 );
+		naturalIdQueryExecutionCount.set( 0 );
+		naturalIdQueryExecutionMaxTime.set( 0 );
+		naturalIdQueryExecutionMaxTimeRegion = null;
 
 		sessionCloseCount.set( 0 );
 		sessionOpenCount.set( 0 );
@@ -282,6 +301,31 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		collectionRemoveCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementRemoveCount();
 	}
+	
+
+	@Override
+	public NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName) {
+		ConcurrentNaturalIdCacheStatisticsImpl nics =
+				(ConcurrentNaturalIdCacheStatisticsImpl) naturalIdCacheStatistics.get( regionName );
+		
+		if ( nics == null ) {
+			if ( sessionFactory == null ) {
+				return null;
+			}
+			Region region = sessionFactory.getNaturalIdCacheRegion( regionName );
+			if ( region == null ) {
+				return null;
+			}
+			nics = new ConcurrentNaturalIdCacheStatisticsImpl( region );
+			ConcurrentNaturalIdCacheStatisticsImpl previous;
+			if ( ( previous = (ConcurrentNaturalIdCacheStatisticsImpl) naturalIdCacheStatistics.putIfAbsent(
+					regionName, nics
+			) ) != null ) {
+				nics = previous;
+			}
+		}
+		return nics;
+	}
 
 	/**
 	 * Second level cache statistics per region
@@ -325,6 +369,41 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	public void secondLevelCacheMiss(String regionName) {
 		secondLevelCacheMissCount.getAndIncrement();
 		( (ConcurrentSecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics( regionName ) ).incrementMissCount();
+	}
+	
+	@Override
+	public void naturalIdCachePut(String regionName) {
+		naturalIdCachePutCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementPutCount();
+	}
+
+	@Override
+	public void naturalIdCacheHit(String regionName) {
+		naturalIdCacheHitCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementHitCount();
+	}
+
+	@Override
+	public void naturalIdCacheMiss(String regionName) {
+		naturalIdCacheMissCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementMissCount();
+	}
+	
+	@Override
+	public void naturalIdQueryExecuted(String regionName, long time) {
+		naturalIdQueryExecutionCount.getAndIncrement();
+		boolean isLongestQuery = false;
+		for ( long old = naturalIdQueryExecutionMaxTime.get();
+			  ( isLongestQuery = time > old ) && ( !naturalIdQueryExecutionMaxTime.compareAndSet( old, time ) );
+			  old = naturalIdQueryExecutionMaxTime.get() ) {
+			// nothing to do here given the odd loop structure...
+		}
+		if ( isLongestQuery && regionName != null ) {
+			naturalIdQueryExecutionMaxTimeRegion = regionName;
+		}
+		if ( regionName != null ) {
+			( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).queryExecuted( time );
+		}
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
@@ -516,6 +595,36 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		return secondLevelCachePutCount.get();
 	}
 
+	@Override
+	public long getNaturalIdQueryExecutionCount() {
+		return naturalIdQueryExecutionCount.get();
+	}
+
+	@Override
+	public long getNaturalIdQueryExecutionMaxTime() {
+		return naturalIdQueryExecutionMaxTime.get();
+	}
+	
+	@Override
+	public String getNaturalIdQueryExecutionMaxTimeRegion() {
+		return naturalIdQueryExecutionMaxTimeRegion;
+	}
+	
+	@Override
+	public long getNaturalIdCacheHitCount() {
+		return naturalIdCacheHitCount.get();
+	}
+
+	@Override
+	public long getNaturalIdCacheMissCount() {
+		return naturalIdCacheMissCount.get();
+	}
+
+	@Override
+	public long getNaturalIdCachePutCount() {
+		return naturalIdCachePutCount.get();
+	}
+
 	/**
 	 * @return session closing
 	 */
@@ -601,6 +710,11 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		LOG.collectionsRemoved( collectionRemoveCount.get() );
 		LOG.collectionsRecreated( collectionRecreateCount.get() );
 		LOG.collectionsFetched( collectionFetchCount.get() );
+		LOG.naturalIdCachePuts( naturalIdCachePutCount.get() );
+		LOG.naturalIdCacheHits( naturalIdCacheHitCount.get() );
+		LOG.naturalIdCacheMisses( naturalIdCacheMissCount.get() );
+		LOG.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
+		LOG.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.get() );
 		LOG.queriesExecuted( queryExecutionCount.get() );
 		LOG.queryCachePuts( queryCachePutCount.get() );
 		LOG.timestampCachePuts( updateTimestampsCachePutCount.get() );
@@ -743,6 +857,11 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 				.append( ",collections removed=" ).append( collectionRemoveCount )
 				.append( ",collections recreated=" ).append( collectionRecreateCount )
 				.append( ",collections fetched=" ).append( collectionFetchCount )
+				.append( ",naturalId queries executed to database=" ).append( naturalIdQueryExecutionCount )
+				.append( ",naturalId cache puts=" ).append( naturalIdCachePutCount )
+				.append( ",naturalId cache hits=" ).append( naturalIdCacheHitCount )
+				.append( ",naturalId cache misses=" ).append( naturalIdCacheMissCount )
+				.append( ",naturalId max query time=" ).append( naturalIdQueryExecutionMaxTime )
 				.append( ",queries executed to database=" ).append( queryExecutionCount )
 				.append( ",query cache puts=" ).append( queryCachePutCount )
 				.append( ",query cache hits=" ).append( queryCacheHitCount )

@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="toolsetguide" revision="2">
+<chapter xml:id="toolsetguide" revision="2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Toolset Guide</title>
 
     <para>
@@ -79,7 +50,7 @@
         be used from "inside" Hibernate.
     </para>
 
-    <section id="toolsetguide-s1" revision="2">
+    <section xml:id="toolsetguide-s1" revision="2">
         <title>Automatic schema generation</title>
 
         <para>
@@ -99,7 +70,7 @@
             First, you must customize your mapping files to improve the generated schema. The next section covers schema customization.  
         </para>
 
-        <section id="toolsetguide-s1-2" revision="3">
+        <section xml:id="toolsetguide-s1-2" revision="3">
             <title>Customizing the schema</title>
 
             <para>
@@ -199,7 +170,7 @@
 
 	<para>The following table summarizes these optional attributes.</para>
 
-            <table frame="topbot" id="schemattributes-summary" revision="2">
+            <table frame="topbot" xml:id="schemattributes-summary" revision="2">
                 <title>Summary</title>
                 <tgroup cols="3">
                     <colspec colwidth="1*"/>
@@ -310,7 +281,7 @@
 
         </section>
 
-        <section id="toolsetguide-s1-3" revision="2">
+        <section xml:id="toolsetguide-s1-3" revision="2">
             <title>Running the tool</title>
 
             <para>
@@ -390,7 +361,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-4">
+        <section xml:id="toolsetguide-s1-4">
             <title>Properties</title>
 
             <para>
@@ -451,7 +422,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-5">
+        <section xml:id="toolsetguide-s1-5">
             <title>Using Ant</title>
 
             <para>
@@ -478,7 +449,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-6" revision="2">
+        <section xml:id="toolsetguide-s1-6" revision="2">
             <title>Incremental schema updates</title>
 
             <para>
@@ -537,7 +508,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-7">
+        <section xml:id="toolsetguide-s1-7">
             <title>Using Ant for incremental schema updates</title>
 
             <para>
@@ -560,7 +531,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-8" revision="1">
+        <section xml:id="toolsetguide-s1-8" revision="1">
             <title>Schema validation</title>
 
             <para>
@@ -612,7 +583,7 @@ new SchemaValidator(cfg).validate();]]></programlisting>
 
         </section>
 
-        <section id="toolsetguide-s1-9">
+        <section xml:id="toolsetguide-s1-9">
             <title>Using Ant for schema validation</title>
 
             <para>

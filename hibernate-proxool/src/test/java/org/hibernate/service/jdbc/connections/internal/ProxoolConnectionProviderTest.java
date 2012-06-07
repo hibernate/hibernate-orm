@@ -27,12 +27,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.junit.Test;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 
 import org.hibernate.cfg.Environment;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

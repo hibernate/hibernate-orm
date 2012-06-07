@@ -1,0 +1,294 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<chapter xml:id="events"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xl="http://www.w3.org/1999/xlink">
+
+    <title>Interceptors and events</title>
+
+    <para>
+        It is useful for the application to react to certain events that occur inside Hibernate. This allows for the
+        implementation of generic functionality and the extension of Hibernate functionality.
+    </para>
+
+    <section>
+        <title>Interceptors</title>
+
+        <para>
+            The <interfacename>org.hibernate.Interceptor</interfacename> interface provides callbacks from the session
+            to the application, allowing the application to inspect and/or manipulate properties of a persistent object
+            before it is saved, updated, deleted or loaded.  One possible use for this is to track auditing information.
+            For example, the following example shows an <interfacename>Interceptor</interfacename> implementation
+            that automatically sets the <literal>createTimestamp</literal> property when an
+            <interfacename>Auditable</interfacename> entity is created and updates the
+            <literal>lastUpdateTimestamp</literal> property when an <interfacename>Auditable</interfacename> entity is
+            updated.
+        </para>
+
+        <note>
+            <para>
+                You can either implement <interfacename>Interceptor</interfacename> directly or extend
+                <classname>org.hibernate.EmptyInterceptor</classname>.
+            </para>
+        </note>
+
+        <para>
+            An Interceptor can be either Session-scoped or SessionFactory-scoped.
+        </para>
+
+        <para>
+            A Session-scoped interceptor is specified when a session is opened.
+        </para>
+
+        <programlisting role="JAVA"><xi:include href="extras/SessionScopedExample.java" parse="text"/></programlisting>
+
+        <para>
+            A SessionFactory-scoped interceptor is registered with the <classname>Configuration</classname> object
+            prior to building the SessionFactory.  Unless a session is opened explicitly specifying the interceptor to
+            use, the SessionFactory-scoped interceptor will be applied to all sessions opened from that SessionFactory.
+            SessionFactory-scoped interceptors must be thread safe.  Ensure that you do not store session-specific
+            states, since multiple sessions will use this interceptor potentially concurrently.
+        </para>
+
+        <programlisting role="JAVA"><xi:include href="extras/SessionFactoryScopedExample.java" parse="text"/></programlisting>
+
+    </section>
+
+     <section>
+        <title>Native Event system</title>
+
+        <para>
+            If you have to react to particular events in the persistence layer, you can also use the Hibernate
+            <emphasis>event</emphasis> architecture.  The event system can be used in place of or in addition to
+            interceptors.
+        </para>
+
+        <para>
+            Many methods of the <interfacename>Session</interfacename> interface correlate to an event type.  The
+            full range of defined event types is declared as enum values on
+            <classname>org.hibernate.event.spi.EventType</classname>.  When a request is made of one of these methods,
+            the Session generates an appropriate event and passes it to the configured event listener(s) for that type.
+            Applications are free to implement a customization of one of the listener interfaces
+            (i.e., the <literal>LoadEvent</literal> is processed by the registered implementation
+            of the <literal>LoadEventListener</literal> interface), in which case their
+            implementation would be responsible for processing any <literal>load()</literal> requests
+            made of the <literal>Session</literal>.
+        </para>
+
+         <note>
+             <para>
+                 See <xref linkend="registering-listeners-example"/> for information on registering custom event
+                 listeners.
+             </para>
+         </note>
+
+        <para>
+            The listeners should be considered stateless; they are shared between requests, and should not save any
+            state as instance variables.
+        </para>
+
+        <para>
+            A custom listener implements the appropriate interface for the event it wants to process and/or extend one
+            of the convenience base classes (or even the default event listeners used by Hibernate out-of-the-box as
+            these are declared non-final for this purpose). Here is an example of a custom load event listener:
+        </para>
+
+         <example>
+             <info>
+                 <title>Custom LoadListener example</title>
+             </info>
+             <programlisting role="JAVA"><xi:include href="extras/LoadListenerExample.java" parse="text"/></programlisting>
+         </example>
+
+         <section>
+             <title>Hibernate declarative security</title>
+             <para>
+                 Usually, declarative security in Hibernate applications is managed in a session facade
+                 layer. Hibernate allows certain actions to be permissioned via JACC, and authorized
+                 via JAAS. This is an optional functionality that is built on top of the event architecture.
+             </para>
+
+             <para>
+                 First, you must configure the appropriate event listeners, to enable the use of JACC authorization.
+                 Again, see <xref linkend="registering-listeners-example"/> for the details.  Below is an example of an
+                 appropriate <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> implementation for
+                 this purpose.
+             </para>
+
+             <example>
+                 <info>
+                     <title>JACC listener registration example</title>
+                 </info>
+                 <programlisting role="JAVA"><xi:include href="extras/jacc-event-reg-example.java" parse="text" xmlns:xi="http://www.w3.org/2001/XInclude" /></programlisting>
+             </example>
+
+             <para>
+                 You must also decide how to configure your JACC provider.  Consult your JACC provider documentation.
+             </para>
+         </section>
+    </section>
+
+    <section>
+        <title>JPA Callbacks</title>
+        <para>
+            JPA also defines a more limited set of callbacks through annotations.
+        </para>
+
+        <table>
+            <title>Callback annotations</title>
+            <tgroup cols="2">
+                <thead>
+                    <colspec colname="c1" colwidth="1*" />
+                    <colspec colname="c2" colwidth="3*" />
+                    <row>
+                        <entry align="center">Type</entry>
+                        <entry align="center">Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            @PrePersist
+                        </entry>
+                        <entry>
+                            Executed before the entity manager persist operation is actually executed or cascaded.
+                            This call is synchronous with the persist operation.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PreRemove
+                        </entry>
+                        <entry>
+                            Executed before the entity manager remove operation is actually executed or cascaded.
+                            This call is synchronous with the remove operation.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PostPersist
+                        </entry>
+                        <entry>
+                            Executed after the entity manager persist operation is actually executed or cascaded.
+                            This call is invoked after the database INSERT is executed.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PostRemove
+                        </entry>
+                        <entry>
+                            Executed after the entity manager remove operation is actually executed or cascaded.
+                            This call is synchronous with the remove operation.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PreUpdate
+                        </entry>
+                        <entry>
+                            Executed before the database UPDATE operation.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PostUpdate
+                        </entry>
+                        <entry>
+                            Executed after the database UPDATE operation.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            @PostLoad
+                        </entry>
+                        <entry>
+                            Executed after an entity has been loaded into the current persistence context or an entity
+                            has been refreshed.
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <para>
+            There are 2 available approaches defined for specifying callback handling:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    The first approach is to annotate methods on the entity itself to receive notification of
+                    particular entity life cycle event(s).
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    The second is to use a separate entity listener class.  An entity listener is a stateless class
+                    with a no-arg constructor.  The callback annotations are placed on a method of this class instead
+                    of the entity class.  The entity listener class is then associated with the entity using the
+                    <interfacename>javax.persistence.EntityListeners</interfacename> annotation
+                </para>
+            </listitem>
+        </itemizedlist>
+        <example>
+            <info>
+                <title>Example of specifying JPA callbacks</title>
+            </info>
+            <programlisting role="JAVA"><xi:include href="extras/JpaCallbacksExample.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            These approaches can be mixed, meaning you can use both together.
+        </para>
+        <para>
+            Regardless of whether the callback method is defined on the entity or on an entity listener, it must have
+            a void-return signature.  The name of the method is irrelevant as it is the placement of the callback
+            annotations that makes the method a callback.  In the case of callback methods defined on the
+            entity class, the method must additionally have a no-argument signature.  For callback methods defined on
+            an entity listener class, the method must have a single argument signature; the type of that argument can
+            be either <classname>java.lang.Object</classname> (to facilitate attachment to multiple entities) or the
+            specific entity type.
+        </para>
+        <para>
+            A callback method can throw a <classname>RuntimeException</classname>.  If the callback method does
+            throw a <classname>RuntimeException</classname>, then the current transaction, if any, must be rolled back.
+        </para>
+        <para>
+            A callback method must not invoke <interfacename>EntityManager</interfacename> or
+            <interfacename>Query</interfacename> methods!
+        </para>
+        <para>
+            It is possible that multiple callback methods are defined for a particular lifecycle event.  When that
+            is the case, the defined order of execution is well defined by the JPA spec (specifically section 3.5.4):
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Any default listeners associated with the entity are invoked first, in the order they were
+                    specified in the XML.  See the <interfacename>javax.persistence.ExcludeDefaultListeners</interfacename>
+                    annotation.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Next, entity listener class callbacks associated with the entity hierarchy are invoked, in the order
+                    they are defined in the <interfacename>EntityListeners</interfacename>.  If multiple classes in the
+                    entity hierarchy define entity listeners, the listeners defined for a superclass are invoked before
+                    the listeners defined for its subclasses.  See the
+                    <interfacename>javax.persistence.ExcludeSuperclassListeners</interfacename> annotation.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Lastly, callback methods defined on the entity hierarchy are invoked.  If a callback type is
+                    annotated on both an entity and one or more of its superclasses without method overriding, both
+                    would be called, the most general superclass first.  An entity class is also allowed to override
+                    a callback method defined in a superclass in which case the super callback would not get invoked;
+                    the overriding method would get invoked provided it is annotated.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
+
+</chapter>
+

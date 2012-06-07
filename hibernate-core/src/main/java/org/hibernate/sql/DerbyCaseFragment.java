@@ -39,7 +39,7 @@ public class DerbyCaseFragment extends CaseFragment {
 	 * This seems to be because there was no else at the end of the case statement (other dbs seem to not mind).
 	 */
 	public String toFragmentString() {
-		StringBuffer buf = new StringBuffer( cases.size() * 15 + 10 );
+		StringBuilder buf = new StringBuilder( cases.size() * 15 + 10 );
 		buf.append( "case" ); 								//$NON-NLS-1
 		Iterator iter = cases.entrySet().iterator();
 		while ( iter.hasNext() ) {

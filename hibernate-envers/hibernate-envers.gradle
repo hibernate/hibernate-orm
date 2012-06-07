@@ -6,9 +6,7 @@ dependencies {
     compile( project( ':hibernate-entitymanager' ) )
     compile( libraries.commons_annotations )
     provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
-    compile( libraries.dom4j ) {
-        trasitive = false
-    }
+    compile( libraries.dom4j )
     provided( libraries.ant )
     testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )
@@ -27,9 +25,37 @@ sourceSets {
             srcDir 'src/matrix/java'
         }
     }
+    main {
+        generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+        java {
+            srcDir generatedJpaMetamodelSrcDir
+        }
+    }
 }
 compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
-ideaModule {
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
+
+// Generate JPA2 static metamodel for default revision entities
+task generateJpaMetamodelClasses(type: Compile) {
+    classpath = compileJava.classpath + configurations.hibernateJpaModelGenTool
+    source = sourceSets.main.originalJavaSrcDirs
+    destinationDir = file( "${buildDir}/tmp/apt" )
+    options.define(
+            compilerArgs: [
+                    "-proc:only",
+                    "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
+                    "-s", "$sourceSets.main.generatedJpaMetamodelSrcDir.absolutePath"
+            ]
+    );
+    outputs.dir sourceSets.main.generatedJpaMetamodelSrcDir;
+    doFirst {
+        sourceSets.main.generatedJpaMetamodelSrcDir.mkdirs()
+    }
+}
+compileJava.dependsOn generateJpaMetamodelClasses
+
+idea {
+	module {
+		testSourceDirs += file( 'src/matrix/java')
+		testSourceDirs += file( 'src/matrix/resources')
+	}
 }

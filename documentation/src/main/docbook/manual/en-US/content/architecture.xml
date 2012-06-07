@@ -1,39 +1,10 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<chapter id="architecture">
+<chapter xml:id="architecture"  xmlns="http://docbook.org/ns/docbook">
 
     <title>Architecture</title>
 
-    <section id="architecture-overview">
+    <section xml:id="architecture-overview">
         <title>Overview</title>
         
         <para>
@@ -55,7 +26,7 @@
             illustrate 2 specifically since they are extremes.
         </para>
 
-        <section id="architecture-overview-minimal">
+        <section xml:id="architecture-overview-minimal">
             <title>Minimal architecture</title>
 
             <para>
@@ -73,7 +44,7 @@
             </mediaobject>
         </section>
 
-        <section id="architecture-overview-comprehensive">
+        <section xml:id="architecture-overview-comprehensive">
             <title>Comprehensive architecture</title>
 
             <para>
@@ -90,7 +61,7 @@
             </mediaobject>
         </section>
 
-        <section id="architecture-overview-terms">
+        <section xml:id="architecture-overview-terms">
             <title>Basic APIs</title>
             <para>
                 Here are quick discussions about some of the API objects depicted in the preceding diagrams (you will
@@ -196,7 +167,7 @@
         </section>
     </section>
 
-    <section id="architecture-jmx" revision="1">
+    <section xml:id="architecture-jmx" revision="1">
         <title>JMX Integration</title>
 
         <para>
@@ -211,7 +182,7 @@
         </para>
     </section>
 
-    <section id="architecture-current-session" revision="2">
+    <section xml:id="architecture-current-session" revision="2">
         <title>Contextual sessions</title>
         <para>
             Most applications using Hibernate need some form of "contextual" session, where a given

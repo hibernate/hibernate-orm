@@ -65,7 +65,7 @@ public class ErrorCounter implements ParseErrorHandler {
 	}
 
 	private String getErrorString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for ( Iterator iterator = errorList.iterator(); iterator.hasNext(); ) {
 			buf.append( ( String ) iterator.next() );
 			if ( iterator.hasNext() ) buf.append( "\n" );

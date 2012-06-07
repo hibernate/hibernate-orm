@@ -1,9 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" >
   <title>Locking</title>
   <para>
     Locking refers to actions taken to prevent data in a relational database from changing between the time it is read
@@ -21,8 +18,7 @@
           Optimistic locking ssumes that multiple transactions can complete without affecting each other, and that
           therefore transactions can proceed without locking the data resources that they affect. Before committing,
           each transaction verifies that no other transaction has modified its data. If the check reveals conflicting
-          modifications, the committing transaction rolls back<footnote><para><ulink
-          url="http://en.wikipedia.org/wiki/Optimistic_locking" /></para></footnote>.
+          modifications, the committing transaction rolls back<footnote><para><link xl:href="http://en.wikipedia.org/wiki/Optimistic_locking" /></para></footnote>.
         </para>
       </listitem>
     </varlistentry>

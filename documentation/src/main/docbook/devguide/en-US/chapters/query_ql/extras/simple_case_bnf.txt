@@ -1,0 +1,1 @@
+CASE {operand} WHEN {test_value} THEN {match_result} ELSE {miss_result} END

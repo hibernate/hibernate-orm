@@ -27,6 +27,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.TypedValue;
 
@@ -57,7 +58,7 @@ public class IlikeExpression implements Criterion {
 		if ( columns.length != 1 ) {
 			throw new HibernateException( "ilike may only be used with single-column properties" );
 		}
-		if ( dialect instanceof PostgreSQLDialect ) {
+		if ( dialect instanceof PostgreSQLDialect || dialect instanceof PostgreSQL81Dialect) {
 			return columns[0] + " ilike ?";
 		}
 		else {

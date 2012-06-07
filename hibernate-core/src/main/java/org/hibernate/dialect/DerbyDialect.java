@@ -178,7 +178,7 @@ public String getForUpdateString() {
 	 */
 	@Override
     public String getLimitString(String query, final int offset, final int limit) {
-		StringBuffer sb = new StringBuffer(query.length() + 50);
+		StringBuilder sb = new StringBuilder(query.length() + 50);
 
 		final String normalizedSelect = query.toLowerCase().trim();
 		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;

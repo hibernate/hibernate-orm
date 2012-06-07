@@ -32,6 +32,7 @@ import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -52,6 +53,7 @@ public final class EntityUpdateAction extends EntityAction {
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
+	private final Object[] previousNaturalIdValues;
 	private Object nextVersion;
 	private Object cacheEntry;
 	private SoftLock lock;
@@ -76,6 +78,31 @@ public final class EntityUpdateAction extends EntityAction {
 		this.dirtyFields = dirtyProperties;
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
+
+		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, previousState, session, id );
+		session.getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+				persister,
+				id,
+				state,
+				previousNaturalIdValues,
+				CachedNaturalIdValueSource.UPDATE
+		);
+	}
+
+	private Object[] determinePreviousNaturalIdValues(
+			EntityPersister persister,
+			Object[] previousState,
+			SessionImplementor session,
+			Serializable id) {
+		if ( ! persister.hasNaturalIdentifier() ) {
+			return null;
+		}
+
+		if ( previousState != null ) {
+			return session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
+		}
+
+		return session.getPersistenceContext().getNaturalIdSnapshot( id, persister );
 	}
 
 	@Override
@@ -173,6 +200,14 @@ public final class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
+
+		session.getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+				persister,
+				id,
+				state,
+				previousNaturalIdValues,
+				CachedNaturalIdValueSource.UPDATE
+		);
 
 		postUpdate();
 

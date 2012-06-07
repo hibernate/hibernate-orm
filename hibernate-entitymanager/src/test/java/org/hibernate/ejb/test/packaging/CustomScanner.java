@@ -1,7 +1,9 @@
 package org.hibernate.ejb.test.packaging;
+
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.Set;
+
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.Scanner;

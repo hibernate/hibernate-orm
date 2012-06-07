@@ -86,10 +86,20 @@ public class NamedQueryDefinition implements Serializable {
 			boolean readOnly,
 			String comment,
 			Map parameterTypes) {
-		this(name, query, cacheable, cacheRegion,
-				timeout, LockOptions.WAIT_FOREVER,
-				fetchSize, flushMode, cacheMode,
-				readOnly, comment, parameterTypes);
+		this(
+				name, 
+				query, 
+				cacheable, 
+				cacheRegion,
+				timeout, 
+				LockOptions.WAIT_FOREVER,
+				fetchSize, 
+				flushMode, 
+				cacheMode,
+				readOnly, 
+				comment, 
+				parameterTypes
+		);
 	}
 
 	public NamedQueryDefinition(

@@ -1,8 +1,9 @@
 apply plugin: 'java'
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( [group: 'proxool', name: 'proxool', version: '0.8.3'] )
-    testCompile( project(':hibernate-testing') )
-    testRuntime( libraries.h2 )
+    compile project( ':hibernate-core' )
+    compile "proxool:proxool:0.8.3"
+
+    testCompile project( ':hibernate-testing' )
+    testRuntime libraries.h2
 }

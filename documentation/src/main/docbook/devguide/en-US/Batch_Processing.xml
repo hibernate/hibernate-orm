@@ -1,17 +1,16 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
-%BOOK_ENTITIES;
-]>
-<chapter>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+        xml:id="batch">
+
   <title>Batch Processing</title>
   <para>
     The following example shows an antipattern for batch inserts.
   </para>
   <example>
     <title>Naive way to insert 100000 lines with Hibernate</title>
-    <programlisting language="Java" role="JAVA"><xi:include href="extras/batch_insert.java"
-    xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+    <programlisting language="Java" role="JAVA"><xi:include href="extras/batch_insert.java" parse="text" /></programlisting>
     <para>
       This fails with exception <systemitem>OutOfMemoryException</systemitem> after around 50000 rows on most
       systems. The reason is that Hibernate caches all the newly inserted Customer instances in the session-level
@@ -40,7 +39,7 @@
     </para>
     <example>
       <title>Flushing and clearing the <classname>Session</classname></title>
-      <programlisting language="Java" role="JAVA"><xi:include href="extras/flush_and_clear_session.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/flush_and_clear_session.java" parse="text" /></programlisting>
     </example>
   </section>
   
@@ -53,7 +52,7 @@
     </para>
     <example>
       <title>Using <methodname>scroll()</methodname></title>
-      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_scroll.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_scroll.java" parse="text" /></programlisting>
     </example>
   </section>
   
@@ -113,7 +112,7 @@
     </itemizedlist>
     <example>
       <title>Using a <interfacename>StatelessSession</interfacename></title>
-      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_a_StatelessSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_a_StatelessSession.java" parse="text" /></programlisting>
       <para>
         The <classname>Customer</classname> instances returned by the query are immediately detached. They are never
         associated with any persistence context.
@@ -158,7 +157,7 @@
       </para>
       <example>
         <title>Executing an HQL UPDATE, using the <methodname>Query.executeUpdate()</methodname> method</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/executeUpdate.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/executeUpdate.java" parse="text" /></programlisting>
       </example>
       <para>
         In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the
@@ -168,7 +167,7 @@
       </para>
       <example>
         <title>Updating the version of timestamp</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/updating_version.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/updating_version.java" parse="text" /></programlisting>
       </example>
       <note>
         <para>
@@ -178,7 +177,7 @@
       </note>
       <example>
         <title>A HQL <literal>DELETE</literal> statement</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql_delete.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql_delete.java" parse="text" /></programlisting>
       </example>
       <para>
         Method <methodname>Query.executeUpdate()</methodname> returns an <type>int</type> value, which indicates the
@@ -233,7 +232,7 @@
       </para>
       <example>
         <title>HQL INSERT statement</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql-insert.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql-insert.java" parse="text" /></programlisting>
       </example>
     </section>
     <section>

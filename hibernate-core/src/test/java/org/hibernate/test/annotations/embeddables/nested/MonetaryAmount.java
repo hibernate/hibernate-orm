@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.embeddables.nested;
 
+import java.math.BigDecimal;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import java.math.BigDecimal;
 
 /**
  * @author Thomas Vanstals

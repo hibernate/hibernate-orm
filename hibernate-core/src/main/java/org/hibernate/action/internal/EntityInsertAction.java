@@ -89,10 +89,10 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		
 			EntityEntry entry = session.getPersistenceContext().getEntry( instance );
 			if ( entry == null ) {
-				throw new AssertionFailure( "possible nonthreadsafe access to session" );
+				throw new AssertionFailure( "possible non-threadsafe access to session" );
 			}
 			
-			entry.postInsert();
+			entry.postInsert( getState() );
 	
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( id, instance, getState(), session );
@@ -125,8 +125,9 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 			}
-			
 		}
+
+		handleNaturalIdPostSaveNotifications();
 
 		postInsert();
 

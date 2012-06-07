@@ -127,7 +127,7 @@ public interface QueryTranslator {
 	 */
 	String getSQLString();
 
-	List collectSqlStrings();
+	List<String> collectSqlStrings();
 
 	/**
 	 * Returns the HQL string processed by the translator.

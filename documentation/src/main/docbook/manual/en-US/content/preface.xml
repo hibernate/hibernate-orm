@@ -1,35 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-
-]>
-
-<preface id="preface">
+<preface xml:id="preface" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Preface</title>
 
     <para>
@@ -37,7 +8,8 @@
         Development costs are significantly higher due to a paradigm mismatch between how data is represented in
         objects versus relational databases.  Hibernate is an Object/Relational Mapping solution for Java environments.
         The term Object/Relational Mapping refers to the technique of mapping data from an object model representation
-        to a relational data model representation (and visa versa).  See <ulink url="http://en.wikipedia.org/wiki/Object-relational_mapping"/>
+        to a relational data model representation (and visa versa).  See
+        <link xlink:href="http://en.wikipedia.org/wiki/Object-relational_mapping"/>
         for a good high-level discussion.
     </para>
 
@@ -50,12 +22,12 @@
             <itemizedlist>
                 <listitem>
                     <para>
-                        <ulink url="http://www.agiledata.org/essays/dataModeling101.html">http://www.agiledata.org/essays/dataModeling101.html</ulink>
+                        <link xlink:href="http://www.agiledata.org/essays/dataModeling101.html" />
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <ulink url="http://en.wikipedia.org/wiki/Data_modeling">http://en.wikipedia.org/wiki/Data_modeling</ulink>
+                        <link xlink:href="http://en.wikipedia.org/wiki/Data_modeling" />
                     </para>
                 </listitem>
             </itemizedlist>
@@ -117,8 +89,8 @@
                 information.  Consider reading <biblioref linkend="biblio-JPwH"/>
                 if you need more help with application design, or if you prefer
                 a step-by-step tutorial. Also visit
-                <ulink url="http://caveatemptor.hibernate.org"/> and download
-                the example application from <biblioref linkend="biblio-JPwH"/>.
+                <link xlink:href="http://caveatemptor.hibernate.org"/>
+                and download the example application from <biblioref linkend="biblio-JPwH"/>.
             </para>
         </listitem>
         <listitem>
@@ -147,21 +119,21 @@
             <listitem>
                 <para>
                     Trying stuff out and reporting bugs.  See
-                    <ulink url="http://hibernate.org/issuetracker.html">http://hibernate.org/issuetracker.html</ulink>
+                    <link xlink:href="http://hibernate.org/issuetracker.html" />
                     details.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Trying your hand at fixing some bugs or implementing enhancements.  Again, see
-                    <ulink url="http://hibernate.org/issuetracker.html">http://hibernate.org/issuetracker.html</ulink>
+                    <link xlink:href="http://hibernate.org/issuetracker.html"/>
                     details.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <ulink url="http://hibernate.org/community.html">http://hibernate.org/community.html</ulink> list
-                    a few ways to engage in the community.
+                    <link xlink:href="http://hibernate.org/community.html"/>
+                    lists a few ways to engage in the community.
                     <itemizedlist>
                         <listitem>
                             <para>
@@ -170,7 +142,8 @@
                         </listitem>
                         <listitem>
                             <para>
-                                There are also <ulink url="http://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</ulink>
+                                There are also
+                                <link xlink:href="http://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</link>
                                 channels for both user and developer discussions.
                             </para>
                         </listitem>

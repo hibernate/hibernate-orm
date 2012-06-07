@@ -1,0 +1,16 @@
+select c
+from Customer c
+    join c.orders o
+    join o.lineItems l
+    join l.product p
+where o.status = 'pending'
+  and p.status = 'backorder'
+
+// alternate syntax
+select c
+from Customer c,
+    in(c.orders) o,
+    in(o.lineItems) l
+    join l.product p
+where o.status = 'pending'
+  and p.status = 'backorder'

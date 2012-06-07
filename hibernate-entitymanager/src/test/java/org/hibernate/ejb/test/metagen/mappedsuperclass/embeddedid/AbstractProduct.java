@@ -23,9 +23,9 @@
  */
 package org.hibernate.ejb.test.metagen.mappedsuperclass.embeddedid;
 
+import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.MappedSuperclass;
-import java.io.Serializable;
 
 /**
  * @author Justin Wesley

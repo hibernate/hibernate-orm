@@ -78,7 +78,7 @@ public class InsertSelect {
 		if ( tableName == null ) throw new HibernateException( "no table name defined for insert-select" );
 		if ( select == null ) throw new HibernateException( "no select defined for insert-select" );
 
-		StringBuffer buf = new StringBuffer( (columnNames.size() * 15) + tableName.length() + 10 );
+		StringBuilder buf = new StringBuilder( (columnNames.size() * 15) + tableName.length() + 10 );
 		if ( comment!=null ) {
 			buf.append( "/* " ).append( comment ).append( " */ " );
 		}

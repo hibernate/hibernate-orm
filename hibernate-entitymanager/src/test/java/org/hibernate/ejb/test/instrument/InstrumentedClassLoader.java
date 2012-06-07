@@ -1,9 +1,11 @@
 //$Id$
 package org.hibernate.ejb.test.instrument;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.IllegalClassFormatException;
 import java.util.List;
+
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
 
 /**

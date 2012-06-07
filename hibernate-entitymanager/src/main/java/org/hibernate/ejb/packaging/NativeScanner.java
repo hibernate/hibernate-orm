@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.URL;
@@ -30,6 +31,7 @@ import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.ReflectHelper;
 

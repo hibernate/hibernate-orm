@@ -549,7 +549,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
-				new StringBuffer()
+				new StringBuilder()
 						.append( dialect.getCreateTableString() )
 						.append( ' ' )
 						.append( tableName )

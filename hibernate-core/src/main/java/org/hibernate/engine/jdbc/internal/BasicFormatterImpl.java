@@ -106,7 +106,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		int indent = 1;
 
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		StringTokenizer tokens;
 		String lastToken;
 		String token;

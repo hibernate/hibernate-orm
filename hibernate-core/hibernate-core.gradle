@@ -4,23 +4,21 @@ apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
-	compile( libraries.commons_collections )
     compile( libraries.jta )
-    compile( libraries.dom4j ) {
-        transitive = false
-    }
-    compile( libraries.commons_annotations ) {
-        transitive = false
-    }
+    compile( libraries.dom4j )
+    compile( libraries.commons_annotations )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
+
     antlr( libraries.antlr )
+
     provided( libraries.jandex )
     provided( libraries.classmate )
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
+
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
@@ -29,25 +27,16 @@ dependencies {
         // for test runtime
         transitive = true
     }
+
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
 
 }
-compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
-sourceSets {
-    matrix {
-        java {
-            srcDir 'src/matrix/java'
-        }
-        resources {
-            srcDir 'src/matrix/resources'
-        }
-    }
-}
+
 sourceSets.main {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
@@ -59,10 +48,10 @@ sourceSets.test.resources {
     setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
-ideaModule {
-    sourceDirs += file( '$buildDir/generated-src/antlr/main' )
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
+idea {
+	module {
+		sourceDirs += file( '$buildDir/generated-src/antlr/main' )
+	}
 }
 
 task jaxb {

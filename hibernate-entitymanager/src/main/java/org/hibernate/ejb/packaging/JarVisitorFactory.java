@@ -28,9 +28,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

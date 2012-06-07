@@ -25,10 +25,8 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.sql.Clob;
-import java.sql.SQLException;
 import java.util.Comparator;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.type.descriptor.CharacterStream;
@@ -70,12 +68,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 	}
 
 	public String toString(Clob value) {
-		try {
-			return DataHelper.extractString( value.getCharacterStream() );
-		}
-		catch ( SQLException e ) {
-			throw new HibernateException( "Unable to access clob stream", e );
-		}
+		return DataHelper.extractString( value );
 	}
 
 	public Clob fromString(String string) {
@@ -109,12 +102,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		}
 
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			try {
-				return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
-			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access lob stream", e );
-			}
+			return (X) new CharacterStreamImpl( DataHelper.extractString( value ) );
 		}
 
 		final Clob clob =  WrappedClob.class.isInstance( value )

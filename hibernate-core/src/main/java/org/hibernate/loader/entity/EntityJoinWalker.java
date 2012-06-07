@@ -67,7 +67,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 
 		this.lockOptions.setLockMode(lockMode);
 		
-		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
+		StringBuilder whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
@@ -86,7 +86,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		super( persister, factory, loadQueryInfluencers );
 		LockOptions.copy(lockOptions, this.lockOptions);
 
-		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
+		StringBuilder whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 

@@ -43,6 +43,19 @@ public interface SimpleNaturalIdLoadAccess {
 	public SimpleNaturalIdLoadAccess with(LockOptions lockOptions);
 
 	/**
+	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing 
+	 * lookups?  The default is to perform "synchronization" (for correctness).
+	 * <p/>
+	 * See {@link NaturalIdLoadAccess#setSynchronizationEnabled} for detailed discussion.
+	 *
+	 * @param enabled Should synchronization be performed?  {@code true} indicates synchronization will be performed;
+	 * {@code false} indicates it will be circumvented.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SimpleNaturalIdLoadAccess setSynchronizationEnabled(boolean enabled);
+
+	/**
 	 * Return the persistent instance with the given natural id value, assuming that the instance exists. This method
 	 * might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
 	 *

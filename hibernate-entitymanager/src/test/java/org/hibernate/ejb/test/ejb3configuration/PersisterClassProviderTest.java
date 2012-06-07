@@ -20,11 +20,11 @@
  */
 package org.hibernate.ejb.test.ejb3configuration;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,6 +36,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -108,6 +109,7 @@ public class PersisterClassProviderTest {
 		public GoofyProvider(
 				org.hibernate.mapping.PersistentClass persistentClass,
 				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 				SessionFactoryImplementor sf,
 				Mapping mapping) {
 			throw new GoofyException();
@@ -257,8 +259,8 @@ public class PersisterClassProviderTest {
 		public boolean hasNaturalIdentifier() {
 			return false;
 		}
-
-		@Override
+		
+        @Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
 		}
@@ -273,8 +275,18 @@ public class PersisterClassProviderTest {
 				SessionImplementor session) {
 			return null;
 		}
-
+		
 		@Override
+        public boolean hasNaturalIdCache() {
+            return false;
+        }
+
+        @Override
+        public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+            return null;
+        }
+
+        @Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;
 		}

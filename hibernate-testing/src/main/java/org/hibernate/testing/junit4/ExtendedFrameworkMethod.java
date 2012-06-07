@@ -95,11 +95,6 @@ public class ExtendedFrameworkMethod extends FrameworkMethod {
 	}
 
 	@Override
-	public boolean producesType(Class<?> type) {
-		return delegatee.producesType( type );
-	}
-
-	@Override
 	public Annotation[] getAnnotations() {
 		return delegatee.getAnnotations();
 	}

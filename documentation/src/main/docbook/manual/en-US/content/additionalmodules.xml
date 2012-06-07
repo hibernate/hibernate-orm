@@ -1,30 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="additionalmodules">
+
+<chapter xml:id="additionalmodules" xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
   <title>Additional modules</title>
 
   <para>Hibernate Core also offers integration with some external
@@ -250,9 +226,10 @@
       <para>These constraints can be declared directly on the entity
       properties or indirectly by using constraint composition.</para>
 
-      <para>For more information check the Hibernate Validator <ulink
-      url="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/">reference
-      documentation</ulink>.</para>
+      <para>
+          For more information check the Hibernate Validator reference documentation at
+          <link xl:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/"/>
+      </para>
     </section>
   </section>
 
@@ -262,16 +239,16 @@
     <section>
       <title>Description</title>
 
-      <para>Full text search engines like <productname>Apache
-      Lucene</productname> are a very powerful technology to bring free
-      text/efficient queries to applications. If suffers several mismatches
-      when dealing with a object domain model (keeping the index up to date,
-      mismatch between the index structure and the domain model, querying
-      mismatch...) Hibernate Search indexes your domain model thanks to a few
-      annotations, takes care of the database / index synchronization and
-      brings you back regular managed objects from free text queries.
-      Hibernate Search is using <ulink url="http://lucene.apache.org">Apache
-      Lucene</ulink> under the cover.</para>
+      <para>
+          Full text search engines like <productname>Apache Lucene</productname> are a very powerful technology to
+          bring free text/efficient queries to applications. If suffers several mismatches when dealing with a
+          object domain model (keeping the index up to date, mismatch between the index structure and the domain
+          model, querying mismatch...) Hibernate Search indexes your domain model thanks to a few annotations,
+          takes care of the database / index synchronization and brings you back regular managed objects from
+          free text queries. Hibernate Search is using
+          <link xl:href="http://lucene.apache.org" >Apache Lucene</link>
+          under the covers.
+      </para>
     </section>
 
     <section>
@@ -284,9 +261,11 @@
       <literal>hibernate.search.autoregister_listeners</literal> to false.
       Such a need is very uncommon and not recommended.</para>
 
-      <para>Check the Hibernate Search <ulink
-      url="http://docs.jboss.org/hibernate/stable/search/reference/en-US/html/">reference
-      documentation</ulink> for more information.</para>
+      <para>
+          Check the Hibernate Search reference documentation (
+          <link xl:href="http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/" />
+          ) for more information.
+      </para>
     </section>
   </section>
 </chapter>

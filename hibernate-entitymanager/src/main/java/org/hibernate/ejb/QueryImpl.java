@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,6 +39,9 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -49,13 +50,17 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.AbstractQueryImpl;
-import org.jboss.logging.Logger;
+
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -627,7 +632,15 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setLockMode(
 				LockModeTypeHelper.getLockMode( lockModeType )
 		);
+		if ( getHints()!=null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
+			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT )) );
+		}
 		return this;
+	}
+
+	@Override
+	protected void applyLockTimeout(int timeout) {
+		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setTimeOut( timeout );
 	}
 
 	@Override

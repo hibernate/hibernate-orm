@@ -25,7 +25,7 @@ options {
 {
 
    /** the buffer resulting SQL statement is written to */
-	private StringBuffer buf = new StringBuffer();
+	private StringBuilder buf = new StringBuilder();
 
 	protected void out(String s) {
 		buf.append(s);
@@ -71,7 +71,7 @@ options {
 		// moved this impl into the subclass...
 	}
 
-	protected StringBuffer getStringBuffer() {
+	protected StringBuilder getStringBuilder() {
 		return buf;
 	}
 
@@ -436,6 +436,7 @@ addrExpr
 	| i:ALIAS_REF { out(i); }
 	| j:INDEX_OP { out(j); }
 	| v:RESULT_VARIABLE_REF { out(v); }
+	| mcr:mapComponentReference { out(mcr); }
 	;
 
 sqlToken

@@ -47,7 +47,7 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 
 	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	public String toString(Byte[] bytes) {
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		for ( Byte aByte : bytes ) {
 			final String hexStr = Integer.toHexString( aByte.byteValue() - Byte.MIN_VALUE );
 			if ( hexStr.length() == 1 ) {

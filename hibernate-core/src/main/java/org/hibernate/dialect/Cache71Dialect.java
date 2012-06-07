@@ -46,8 +46,8 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.exception.internal.CacheSQLStateConverter;
-import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
@@ -418,7 +418,7 @@ public class Cache71Dialect extends Dialect {
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
 		// The syntax used to add a foreign key constraint to a table.
-		return new StringBuffer( 300 )
+		return new StringBuilder( 300 )
 				.append( " ADD CONSTRAINT " )
 				.append( constraintName )
 				.append( " FOREIGN KEY " )
@@ -622,7 +622,7 @@ public class Cache71Dialect extends Dialect {
 		// but this extension is not supported through Hibernate anyway.
 		int insertionPoint = sql.startsWith( "select distinct" ) ? 15 : 6;
 
-		return new StringBuffer( sql.length() + 8 )
+		return new StringBuilder( sql.length() + 8 )
 				.append( sql )
 				.insert( insertionPoint, " TOP ? " )
 				.toString();
@@ -662,8 +662,12 @@ public class Cache71Dialect extends Dialect {
 		return " default values";
 	}
 
-	public SQLExceptionConverter buildSQLExceptionConverter() {
-		return new CacheSQLStateConverter( EXTRACTER );
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new CacheSQLExceptionConversionDelegate( this );
+	}
+
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
 	}
 
 	public static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {

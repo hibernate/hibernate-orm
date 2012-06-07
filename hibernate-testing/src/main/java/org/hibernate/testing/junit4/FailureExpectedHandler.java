@@ -24,7 +24,6 @@
 package org.hibernate.testing.junit4;
 
 import org.jboss.logging.Logger;
-
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 

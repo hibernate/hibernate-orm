@@ -104,6 +104,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.OriginImpl;
@@ -1125,22 +1126,23 @@ public class Configuration implements Serializable {
 		Iterator iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
 				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
 						table.getName(),
-						( table.getSchema() == null ) ? defaultSchema : table.getSchema(),
-						( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog(),
-								table.isQuoted()
-
-					);
+						tableSchema,
+						tableCatalog,
+						table.isQuoted()
+				);
 				if ( tableInfo == null ) {
 					script.add(
 							table.sqlCreateString(
 									dialect,
 									mapping,
-									defaultCatalog,
-									defaultSchema
+									tableCatalog,
+									tableSchema
 								)
 						);
 				}
@@ -1149,8 +1151,8 @@ public class Configuration implements Serializable {
 							dialect,
 							mapping,
 							tableInfo,
-							defaultCatalog,
-							defaultSchema
+							tableCatalog,
+							tableSchema
 						);
 					while ( subiter.hasNext() ) {
 						script.add( subiter.next() );
@@ -1168,12 +1170,14 @@ public class Configuration implements Serializable {
 		iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
 				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
 						table.getName(),
-						table.getSchema(),
-						table.getCatalog(),
+						tableSchema,
+						tableCatalog,
 						table.isQuoted()
 					);
 
@@ -1194,8 +1198,8 @@ public class Configuration implements Serializable {
 										fk.sqlCreateString(
 												dialect,
 												mapping,
-												defaultCatalog,
-												defaultSchema
+												tableCatalog,
+												tableSchema
 											)
 									);
 							}
@@ -1217,8 +1221,8 @@ public class Configuration implements Serializable {
 							index.sqlCreateString(
 									dialect,
 									mapping,
-									defaultCatalog,
-									defaultSchema
+									tableCatalog,
+									tableSchema
 							)
 					);
 				}
@@ -1814,7 +1818,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @param propertyName The name of the property
 	 *
-	 * @return The value curently associated with that property name; may be null.
+	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
 		return properties.getProperty( propertyName );
@@ -2001,11 +2005,11 @@ public class Configuration implements Serializable {
 	 */
 	protected Configuration doConfigure(InputStream stream, String resourceName) throws HibernateException {
 		try {
-			List errors = new ArrayList();
-			Document document = xmlHelper.createSAXReader( resourceName, errors, entityResolver )
+			ErrorLogger errorLogger = new ErrorLogger( resourceName );
+			Document document = xmlHelper.createSAXReader( errorLogger,  entityResolver )
 					.read( new InputSource( stream ) );
-			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid configuration", (Throwable) errors.get( 0 ) );
+			if ( errorLogger.hasErrors() ) {
+				throw new MappingException( "invalid configuration", errorLogger.getErrors().get( 0 ) );
 			}
 			doConfigure( document );
 		}
@@ -2803,7 +2807,7 @@ public class Configuration implements Serializable {
 		}
 
 		public String getLogicalTableName(Table table) throws MappingException {
-			return getLogicalTableName( table.getQuotedSchema(), table.getCatalog(), table.getQuotedName() );
+			return getLogicalTableName( table.getQuotedSchema(), table.getQuotedCatalog(), table.getQuotedName() );
 		}
 
 		private String getLogicalTableName(String schema, String catalog, String physicalName) throws MappingException {
@@ -2918,7 +2922,7 @@ public class Configuration implements Serializable {
 					finalName = ( String ) binding.logicalToPhysical.get( logicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
+						currentTable.getQuotedSchema(), currentTable.getQuotedCatalog(), currentTable.getQuotedName()
 				);
 				TableDescription description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {
@@ -2947,7 +2951,7 @@ public class Configuration implements Serializable {
 					logical = ( String ) binding.physicalToLogical.get( physicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
+						currentTable.getQuotedSchema(), currentTable.getQuotedCatalog(), currentTable.getQuotedName()
 				);
 				description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {
@@ -3399,7 +3403,7 @@ public class Configuration implements Serializable {
 
 		private void processHbmXml(XmlDocument metadataXml, Set<String> entityNames) {
 			try {
-				HbmBinder.bindRoot( metadataXml, createMappings(), CollectionHelper.EMPTY_MAP, entityNames );
+				HbmBinder.bindRoot( metadataXml, createMappings(), Collections.EMPTY_MAP, entityNames );
 			}
 			catch ( MappingException me ) {
 				throw new InvalidMappingException(

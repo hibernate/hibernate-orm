@@ -1,36 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
-%BOOK_ENTITIES;
-<!ENTITY mdash "-">
-]>
-        
-
-<chapter id="tutorial">
+<chapter xml:id="tutorial" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Tutorial</title>
 
     <para>
@@ -58,7 +28,7 @@
         </para>
     </note>
 
-    <section id="tutorial-firstapp">
+    <section xml:id="tutorial-firstapp">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
@@ -69,20 +39,22 @@
         <note>
             <para>
                 Although you can use whatever database you feel comfortable using, we
-                will use <ulink url="http://hsqldb.org/">HSQLDB</ulink> (an in-memory,
-                Java database) to avoid describing installation/setup of any particular
+                will use <link xlink:href="http://hsqldb.org/" xmlns:xlink="http://www.w3.org/1999/xlink">HSQLDB</link>
+                (an in-memory, Java database) to avoid describing installation/setup of any particular
                 database servers.
             </para>
         </note>
 
-        <section id="tutorial-firstapp-setup">
+        <section xml:id="tutorial-firstapp-setup">
             <title>Setup</title>
 
             <para>
                 The first thing we need to do is to set up the development environment.  We
                 will be using the "standard layout" advocated by alot of build tools such
-                as <ulink url="http://maven.org">Maven</ulink>.  Maven, in particular, has a
-                good resource describing this <ulink url="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html">layout</ulink>.
+                as <link xlink:href="http://maven.org" xmlns:xlink="http://www.w3.org/1999/xlink">Maven</link>.
+                Maven, in particular, has a
+                good resource describing this
+                <link xlink:href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html" xmlns:xlink="http://www.w3.org/1999/xlink">layout</link>.
                 As this tutorial is to be a web application, we will be creating and making
                 use of <filename>src/main/java</filename>, <filename>src/main/resources</filename>
                 and <filename>src/main/webapp</filename> directories.
@@ -142,7 +114,8 @@
                     It is not a requirement to use Maven.  If you wish to use something else to
                     build this tutorial (such as Ant), the layout will remain the same.  The only
                     change is that you will need to manually account for all the needed
-                    dependencies.  If you use something like <ulink url="http://ant.apache.org/ivy/">Ivy</ulink>
+                    dependencies.  If you use something like
+                    <link xlink:href="http://ant.apache.org/ivy/" xmlns:xlink="http://www.w3.org/1999/xlink">Ivy</link>
                     providing transitive dependency management you would still use the dependencies
                     mentioned below.  Otherwise, you'd need to grab <emphasis>all</emphasis>
                     dependencies, both explicit and transitive, and add them to the project's
@@ -161,7 +134,7 @@
         </section>
 
 
-        <section id="tutorial-firstapp-firstclass">
+        <section xml:id="tutorial-firstapp-firstclass">
             <title>The first class</title>
             
             <para>
@@ -243,7 +216,7 @@ public class Event {
             </para>
         </section>
 
-        <section id="tutorial-firstapp-mapping">
+        <section xml:id="tutorial-firstapp-mapping">
             <title>The mapping file</title>
 
             <para>
@@ -419,7 +392,7 @@ public class Event {
 
         </section>
 
-        <section id="tutorial-firstapp-configuration" revision="2">
+        <section xml:id="tutorial-firstapp-configuration" revision="2">
             <title>Hibernate configuration</title>
 
             <para>
@@ -430,7 +403,7 @@ public class Event {
 
             <note>
                 <para>
-                    We do this do that the data remains between runs.
+                    We do this so that the data remains between runs.
                 </para>
             </note>
 
@@ -450,9 +423,10 @@ public class Event {
                 how to obtain connections.  For this tutorial we will be using a standalone connection
                 pool (as opposed to a <interfacename>javax.sql.DataSource</interfacename>).  Hibernate comes with
                 support for two third-party open source JDBC connection pools:
-                <ulink url="https://sourceforge.net/projects/c3p0">c3p0</ulink> and
-                <ulink url="http://proxool.sourceforge.net/">proxool</ulink>.  However, we will be using the
-                Hibernate built-in connection pool for this tutorial.
+                <link xlink:href="https://sourceforge.net/projects/c3p0">c3p0</link>
+                and
+                <link xlink:href="http://proxool.sourceforge.net/">proxool</link>.
+                However, we will be using the Hibernate built-in connection pool for this tutorial.
             </para>
 
             <caution>
@@ -547,13 +521,13 @@ public class Event {
 
         </section>
 
-        <section id="tutorial-firstapp-mvn" revision="1">
+        <section xml:id="tutorial-firstapp-mvn" revision="1">
             <title>Building with Maven</title>
 
             <para>
                 We will now build the tutorial with Maven.  You will need to
                 have Maven installed; it is available from the
-                <ulink url="http://maven.apache.org/download.html">Maven download page</ulink>.
+                <link xlink:href="http://maven.apache.org/download.html">Maven download page</link>.
                 Maven will read the <filename>/pom.xml</filename> file we created
                 earlier and know how to perform some basic project tasks.  First,
                 lets run the <literal>compile</literal> goal to make sure we can compile
@@ -580,7 +554,7 @@ public class Event {
 
         </section>
 
-        <section id="tutorial-firstapp-helpers" revision="3">
+        <section xml:id="tutorial-firstapp-helpers" revision="3">
             <title>Startup and helpers</title>
 
             <para>
@@ -670,7 +644,7 @@ public class HibernateUtil {
 
         </section>
 
-        <section id="tutorial-firstapp-workingpersistence" revision="5">
+        <section xml:id="tutorial-firstapp-workingpersistence" revision="5">
             <title>Loading and storing objects</title>
 
             <para>
@@ -722,11 +696,11 @@ public class EventManager {
             </para>
 
             <para>
-                A <interface>org.hibernate.Session</interface> is designed to
+                A <interfacename>org.hibernate.Session</interfacename> is designed to
                 represent a single unit of work (a single atomic piece of work
                 to be performed).  For now we will keep things simple and assume
                 a one-to-one granularity between a Hibernate
-                <interface>org.hibernate.Session</interface> and a database
+                <interfacename>org.hibernate.Session</interfacename> and a database
                 transaction.  To shield our code from the actual underlying
                 transaction system we use the Hibernate
                 <interfacename>org.hibernate.Transaction</interfacename> API.
@@ -758,28 +732,28 @@ public class EventManager {
             </important>
 
             <para>
-                A <interface>org.hibernate.Session</interface> begins when the
+                A <interfacename>org.hibernate.Session</interfacename> begins when the
                 first call to <literal>getCurrentSession()</literal> is made for
                 the current thread.  It is then bound by Hibernate to the current
                 thread.  When the transaction ends, either through commit or
                 rollback, Hibernate automatically unbinds the
-                <interface>org.hibernate.Session</interface> from the thread
+                <interfacename>org.hibernate.Session</interfacename> from the thread
                 and closes it for you. If you call
                 <literal>getCurrentSession()</literal> again, you get a new
-                <interface>org.hibernate.Session</interface> and can start a
+                <interfacename>org.hibernate.Session</interfacename> and can start a
                 new unit of work.
             </para>
 
             <para>
                 Related to the unit of work scope, should the Hibernate
-                <interface>org.hibernate.Session</interface> be used to execute
+                <interfacename>org.hibernate.Session</interfacename> be used to execute
                 one or several database operations?  The above example uses one
-                <interface>org.hibernate.Session</interface> for one operation.
+                <interfacename>org.hibernate.Session</interfacename> for one operation.
                 However this is pure coincidence; the example is just not complex
                 enough to show any other approach. The scope of a Hibernate
-                <interface>org.hibernate.Session</interface> is flexible but you
+                <interfacename>org.hibernate.Session</interfacename> is flexible but you
                 should never design your application to use a new Hibernate
-                <interface>org.hibernate.Session</interface> for
+                <interfacename>org.hibernate.Session</interfacename> for
                 <emphasis>every</emphasis> database operation. Even though it is
                 used in the following examples, consider
                 <emphasis>session-per-operation</emphasis> an anti-pattern.
@@ -862,7 +836,7 @@ public class EventManager {
 
     </section>
 
-    <section id="tutorial-associations">
+    <section xml:id="tutorial-associations">
         <title>Part 2 - Mapping associations</title>
 
         <para>
@@ -872,7 +846,7 @@ public class EventManager {
             which they participate.
         </para>
 
-        <section id="tutorial-associations-mappinguser" revision="1">
+        <section xml:id="tutorial-associations-mappinguser" revision="1">
             <title>Mapping the Person class</title>
 
             <para>
@@ -933,7 +907,7 @@ public class Person {
 
         </section>
 
-        <section id="tutorial-associations-unidirset" revision="3">
+        <section xml:id="tutorial-associations-unidirset" revision="3">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -1024,7 +998,7 @@ public class Person {
 
         </section>
 
-        <section id="tutorial-associations-working" revision="2">
+        <section xml:id="tutorial-associations-working" revision="2">
             <title>Working the association</title>
 
             <para>
@@ -1145,7 +1119,7 @@ public class Person {
 
         </section>
 
-        <section id="tutorial-associations-valuecollections">
+        <section xml:id="tutorial-associations-valuecollections">
             <title>Collection of values</title>
 
             <para>
@@ -1237,7 +1211,7 @@ public class Person {
 
         </section>
 
-        <section id="tutorial-associations-bidirectional" revision="1">
+        <section xml:id="tutorial-associations-bidirectional" revision="1">
             <title>Bi-directional associations</title>
 
             <para>
@@ -1296,7 +1270,7 @@ public class Person {
 
         </section>
 
-        <section id="tutorial-associations-usingbidir">
+        <section xml:id="tutorial-associations-usingbidir">
             <title>Working bi-directional links</title>
 
             <para>
@@ -1354,7 +1328,7 @@ public class Person {
 
     </section>
 
-    <section id="tutorial-webapp">
+    <section xml:id="tutorial-webapp">
         <title>Part 3 - The EventManager web application</title>
 
         <para>
@@ -1364,7 +1338,7 @@ public class Person {
             database, and it provides an HTML form to enter new events.
         </para>
 
-        <section id="tutorial-webapp-servlet" revision="2">
+        <section xml:id="tutorial-webapp-servlet" revision="2">
             <title>Writing the basic servlet</title>
 
             <para>
@@ -1446,7 +1420,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </section>
 
-        <section id="tutorial-webapp-processing" revision="1">
+        <section xml:id="tutorial-webapp-processing" revision="1">
             <title>Processing and rendering</title>
 
             <para>
@@ -1483,7 +1457,7 @@ public class EventManagerServlet extends HttpServlet {
 
             <para>
                 This coding style, with a mix of Java and HTML, would not scale
-                in a more complex application&mdash;keep in mind that we are only illustrating
+                in a more complex application;keep in mind that we are only illustrating
                 basic Hibernate concepts in this tutorial. The code prints an HTML
                 header and a footer. Inside this page, an HTML form for event entry and
                 a list of all events in the database are printed. The first method is
@@ -1556,7 +1530,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </section>
 
-        <section id="tutorial-webapp-deploy">
+        <section xml:id="tutorial-webapp-deploy">
             <title>Deploying and testing</title>
 
             <para>
@@ -1591,7 +1565,8 @@ public class EventManagerServlet extends HttpServlet {
             <note>
                 <para>
                     If you do not have Tomcat installed, download it from
-                    <ulink url="http://tomcat.apache.org/"/> and follow the
+                    <link xlink:href="http://tomcat.apache.org/" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+                    and follow the
                     installation instructions.  Our application requires
                     no changes to the standard Tomcat configuration.
                 </para>
@@ -1609,13 +1584,13 @@ public class EventManagerServlet extends HttpServlet {
 
     </section>
 
-    <section id="tutorial-summary" revision="1">
+    <section xml:id="tutorial-summary" revision="1">
         <title>Summary</title>
 
         <para>
             This tutorial covered the basics of writing a simple standalone Hibernate application
             and a small web application.  More tutorials are available from the Hibernate
-            <ulink url="http://hibernate.org">website</ulink>.
+            <link xlink:href="http://hibernate.org" xmlns:xlink="http://www.w3.org/1999/xlink">website</link>.
         </para>
 
     </section>

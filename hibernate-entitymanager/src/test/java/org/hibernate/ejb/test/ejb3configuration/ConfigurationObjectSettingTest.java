@@ -23,18 +23,16 @@
  */
 package org.hibernate.ejb.test.ejb3configuration;
 
+import java.util.Collections;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
-import java.util.Collections;
+
+import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.packaging.PersistenceMetadata;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

@@ -59,8 +59,10 @@ public class SessionFactoryObserverChain implements SessionFactoryObserver {
 			return;
 		}
 
-		for ( SessionFactoryObserver observer : observers ) {
-			observer.sessionFactoryClosed( factory );
+		//notify in reverse order of create notification
+		int size = observers.size();
+		for (int index = size - 1 ; index >= 0 ; index--) {
+			observers.get( index ).sessionFactoryClosed( factory );
 		}
 	}
 }

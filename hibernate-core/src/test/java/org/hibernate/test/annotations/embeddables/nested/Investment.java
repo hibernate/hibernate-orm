@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.annotations.embeddables.nested;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import java.util.Date;
 
 /**
  * @author Thomas Vanstals

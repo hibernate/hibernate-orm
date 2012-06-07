@@ -23,33 +23,17 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
-import java.util.Map;
-
-import org.hibernate.stat.SecondLevelCacheStatistics;
-import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
 /**
+ * Functional entity read-only tests.
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class BasicReadOnlyTestCase extends SingleNodeTestCase {
-	@Override
+public class BasicReadOnlyTestCase extends AbstractFunctionalTestCase {
+
+   @Override
 	public String getCacheConcurrencyStrategy() {
 		return "read-only";
-	}
-
-	@Test
-	public void testEmptySecondLevelCacheEntry() throws Exception {
-		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
-		Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
-		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
-		Map cacheEntries = statistics.getEntries();
-		assertEquals( 0, cacheEntries.size() );
 	}
 
 }

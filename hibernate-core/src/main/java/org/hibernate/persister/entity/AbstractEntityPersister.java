@@ -54,14 +54,17 @@ import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -70,6 +73,8 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -147,6 +152,7 @@ public abstract class AbstractEntityPersister
 	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final SessionFactoryImplementor factory;
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
+	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
 	private final CacheEntryStructure cacheEntryStructure;
 	private final EntityMetamodel entityMetamodel;
@@ -227,8 +233,6 @@ public abstract class AbstractEntityPersister
 	private final Map loaders = new HashMap();
 
 	// SQL strings
-	private String sqlEntityIdByNaturalIdString;
-	
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
 	private String sqlLazySelectString;
@@ -492,11 +496,13 @@ public abstract class AbstractEntityPersister
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final SessionFactoryImplementor factory) throws HibernateException {
 
 		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
+		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
 		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled() ?
 				(CacheEntryStructure) new StructuredCacheEntry(this) :
@@ -777,9 +783,11 @@ public abstract class AbstractEntityPersister
 	public AbstractEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final SessionFactoryImplementor factory) throws HibernateException {
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
+		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		this.isLazyPropertiesCacheable = entityBinding.getHierarchyDetails().getCaching() != null
 				&& entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
 		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled()
@@ -1582,7 +1590,7 @@ public abstract class AbstractEntityPersister
 		String fromClause = fromTableFragment( getRootAlias() ) +
 				fromJoinFragment( getRootAlias(), true, false );
 
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ", aliasedIdColumns ) )
 			.append( "=?" )
 			.append( whereJoinFragment( getRootAlias(), true, false ) )
@@ -1663,7 +1671,7 @@ public abstract class AbstractEntityPersister
 		String fromClause = fromTableFragment( getRootAlias() ) +
 				fromJoinFragment( getRootAlias(), true, false );
 
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ",
 					aliasedIdColumns ) )
 			.append( "=?" )
@@ -1929,7 +1937,7 @@ public abstract class AbstractEntityPersister
 		if ( tableNumber == 0 ) {
 			return rootAlias;
 		}
-		StringBuffer buf = new StringBuffer().append( rootAlias );
+		StringBuilder buf = new StringBuilder().append( rootAlias );
 		if ( !rootAlias.endsWith( "_" ) ) {
 			buf.append( '_' );
 		}
@@ -3473,9 +3481,9 @@ public abstract class AbstractEntityPersister
 				LOG.debugf( " Snapshot select: %s", sqlSnapshotSelectString );
 			}
 			for ( int j = 0; j < getTableSpan(); j++ ) {
-                LOG.debugf(" Insert %s: %s", j, getSQLInsertStrings()[j]);
-                LOG.debugf(" Update %s: %s", j, getSQLUpdateStrings()[j]);
-                LOG.debugf(" Delete %s: %s", j, getSQLDeleteStrings()[j]);
+                LOG.debugf( " Insert %s: %s", j, getSQLInsertStrings()[j] );
+                LOG.debugf( " Update %s: %s", j, getSQLUpdateStrings()[j] );
+                LOG.debugf( " Delete %s: %s", j, getSQLDeleteStrings()[j] );
 			}
 			if ( sqlIdentityInsertString != null ) {
 				LOG.debugf( " Identity insert: %s", sqlIdentityInsertString );
@@ -3499,12 +3507,6 @@ public abstract class AbstractEntityPersister
 				LOG.debugf(
 						"Update-generated property select: %s",
 						sqlUpdateGeneratedValuesSelectString
-				);
-			}
-			if ( sqlEntityIdByNaturalIdString != null ) {
-				LOG.debugf(
-						"Id by Natural Id: %s",
-						sqlEntityIdByNaturalIdString
 				);
 			}
 		}
@@ -3708,17 +3710,12 @@ public abstract class AbstractEntityPersister
 		else {
 			sqlIdentityInsertString = null;
 		}
-		
-		if (hasNaturalIdentifier()) {
-		    sqlEntityIdByNaturalIdString = generateEntityIdByNaturalIdSql();
-		}
 
 		logStaticSQL();
 
 	}
 
 	public void postInstantiate() throws MappingException {
-
 		createLoaders();
 		createUniqueKeyLoaders();
 		createQueryLoader();
@@ -4012,6 +4009,14 @@ public abstract class AbstractEntityPersister
 	public CacheEntryStructure getCacheEntryStructure() {
 		return cacheEntryStructure;
 	}
+	
+	public boolean hasNaturalIdCache() {
+		return naturalIdRegionAccessStrategy != null;
+	}
+	
+	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+		return naturalIdRegionAccessStrategy;
+	}
 
 	public Comparator getVersionComparator() {
 		return isVersioned() ? getVersionType().getComparator() : null;
@@ -4079,7 +4084,6 @@ public abstract class AbstractEntityPersister
 //	}
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
-		//if ( hasLazyProperties() ) {
 		if ( getEntityMetamodel().getInstrumentationMetadata().isInstrumented() ) {
 			FieldInterceptor interceptor = getEntityMetamodel().getInstrumentationMetadata().extractInterceptor( entity );
 			if ( interceptor != null ) {
@@ -4095,6 +4099,43 @@ public abstract class AbstractEntityPersister
 				fieldInterceptor.dirty();
 			}
 		}
+
+		handleNaturalIdReattachment( entity, session );
+	}
+
+	private void handleNaturalIdReattachment(Object entity, SessionImplementor session) {
+		if ( ! hasNaturalIdentifier() ) {
+			return;
+		}
+
+		if ( getEntityMetamodel().hasImmutableNaturalId() ) {
+			// we assume there were no changes to natural id during detachment for now, that is validated later
+			// during flush.
+			return;
+		}
+
+		final NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
+		final Serializable id = getIdentifier( entity, session );
+
+		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
+		// database, because we have no other way to know if the state changed while detached.
+		final Object[] naturalIdSnapshot;
+		final Object[] entitySnapshot = session.getPersistenceContext().getDatabaseSnapshot( id, this );
+		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
+			naturalIdSnapshot = null;
+		}
+		else {
+			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
+		}
+
+		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot );
+		naturalIdHelper.manageLocalNaturalIdCrossReference(
+				this,
+				id,
+				naturalIdHelper.extractNaturalIdValues( entity, this ),
+				naturalIdSnapshot,
+				CachedNaturalIdValueSource.UPDATE
+		);
 	}
 
 	public Boolean isTransient(Object entity, SessionImplementor session) throws HibernateException {
@@ -4563,7 +4604,7 @@ public abstract class AbstractEntityPersister
 		select.setFromClause( fromTableFragment( getRootAlias() ) + fromJoinFragment( getRootAlias(), true, false ) );
 
 		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-		String whereClause = new StringBuffer()
+		String whereClause = new StringBuilder()
 			.append( StringHelper.join( "=? and ",
 					aliasedIdColumns ) )
 			.append( "=?" )
@@ -4615,7 +4656,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 	}
-    
+
 	@Override
 	public Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
@@ -4629,6 +4670,9 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
+		final boolean[] valueNullness = determineValueNullness( naturalIdValues );
+		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery( valueNullness );
+
 		try {
 			PreparedStatement ps = session.getTransactionCoordinator()
 					.getJdbcCoordinator()
@@ -4638,9 +4682,12 @@ public abstract class AbstractEntityPersister
 				int positions = 1;
 				int loop = 0;
 				for ( int idPosition : getNaturalIdentifierProperties() ) {
-					final Type type = getPropertyTypes()[idPosition];
-					type.nullSafeSet( ps, naturalIdValues[loop++], positions, session );
-					positions += type.getColumnSpan( session.getFactory() );
+					final Object naturalIdValue = naturalIdValues[loop++];
+					if ( naturalIdValue != null ) {
+						final Type type = getPropertyTypes()[idPosition];
+						type.nullSafeSet( ps, naturalIdValue, positions, session );
+						positions += type.getColumnSpan( session.getFactory() );
+					}
 				}
 				ResultSet rs = ps.executeQuery();
 				try {
@@ -4649,7 +4696,6 @@ public abstract class AbstractEntityPersister
 						return null;
 					}
 
-					// entity ID has to be serializable right?
 					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
@@ -4673,7 +4719,65 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private String generateEntityIdByNaturalIdSql() {
+	private boolean[] determineValueNullness(Object[] naturalIdValues) {
+		boolean[] nullness = new boolean[ naturalIdValues.length ];
+		for ( int i = 0; i < naturalIdValues.length; i++ ) {
+			nullness[i] = naturalIdValues[i] == null;
+		}
+		return nullness;
+	}
+
+	private Boolean naturalIdIsNonNullable;
+	private String cachedPkByNonNullableNaturalIdQuery;
+
+	private String determinePkByNaturalIdQuery(boolean[] valueNullness) {
+		if ( ! hasNaturalIdentifier() ) {
+			throw new HibernateException( "Attempt to build natural-id -> PK resolution query for entity that does not define natural id" );
+		}
+
+		// performance shortcut for cases where the natural-id is defined as completely non-nullable
+		if ( isNaturalIdNonNullable() ) {
+			if ( valueNullness != null && ! ArrayHelper.isAllFalse( valueNullness ) ) {
+				throw new HibernateException( "Null value(s) passed to lookup by non-nullable natural-id" );
+			}
+			if ( cachedPkByNonNullableNaturalIdQuery == null ) {
+				cachedPkByNonNullableNaturalIdQuery = generateEntityIdByNaturalIdSql( null );
+			}
+			return cachedPkByNonNullableNaturalIdQuery;
+		}
+
+		// Otherwise, regenerate it each time
+		return generateEntityIdByNaturalIdSql( valueNullness );
+	}
+
+	@SuppressWarnings("UnnecessaryUnboxing")
+	protected boolean isNaturalIdNonNullable() {
+		if ( naturalIdIsNonNullable == null ) {
+			naturalIdIsNonNullable = determineNaturalIdNullability();
+		}
+		return naturalIdIsNonNullable.booleanValue();
+	}
+
+	private boolean determineNaturalIdNullability() {
+		boolean[] nullability = getPropertyNullability();
+		for ( int position : getNaturalIdentifierProperties() ) {
+			// if any individual property is nullable, return false
+			if ( nullability[position] ) {
+				return false;
+			}
+		}
+		// return true if we found no individually nullable properties
+		return true;
+	}
+
+	private String generateEntityIdByNaturalIdSql(boolean[] valueNullness) {
+		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
+		if ( rootPersister != this ) {
+			if ( rootPersister instanceof AbstractEntityPersister ) {
+				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql( valueNullness );
+			}
+		}
+
 		Select select = new Select( getFactory().getDialect() );
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
 			select.setComment( "get current natural-id->entity-id state " + getEntityName() );
@@ -4687,7 +4791,9 @@ public abstract class AbstractEntityPersister
 		final StringBuilder whereClause = new StringBuilder();
 		final int[] propertyTableNumbers = getPropertyTableNumbers();
 		final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
+		int valuesIndex = -1;
 		for ( int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++ ) {
+			valuesIndex++;
 			if ( propIdx > 0 ) {
 				whereClause.append( " and " );
 			}
@@ -4697,7 +4803,12 @@ public abstract class AbstractEntityPersister
 			final String[] propertyColumnNames = getPropertyColumnNames( naturalIdIdx );
 			final String[] aliasedPropertyColumns = StringHelper.qualify( tableAlias, propertyColumnNames );
 
-			whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+			if ( valueNullness != null && valueNullness[valuesIndex] ) {
+				whereClause.append( StringHelper.join( " is null and ", aliasedPropertyColumns ) ).append( " is null" );
+			}
+			else {
+				whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+			}
 		}
 
 		whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );

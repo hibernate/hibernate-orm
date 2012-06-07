@@ -1,0 +1,36 @@
+select p
+from Payment p
+where type(p) in (CreditCardPayment, WireTransferPayment)
+
+select c
+from Customer c
+where c.hqAddress.state in ('TX', 'OK', 'LA', 'NM')
+
+select c
+from Customer c
+where c.hqAddress.state in ?
+
+select c
+from Customer c
+where c.hqAddress.state in (
+    select dm.state
+    from DeliveryMetadata dm
+    where dm.salesTax is not null
+)
+
+// Not JPQL compliant!
+select c
+from Customer c
+where c.name in (
+    ('John','Doe'),
+    ('Jane','Doe')
+)
+
+// Not JPQL compliant!
+select c
+from Customer c
+where c.chiefExecutive in (
+    select p
+    from Person p
+    where ...
+)

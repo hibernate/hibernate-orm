@@ -205,7 +205,7 @@ public class IndexNode extends FromReferenceNode {
 		}
 
 		private String collectDisplayInfo() {
-			StringBuffer buffer = new StringBuffer();
+			StringBuilder buffer = new StringBuilder();
 			Iterator itr = paramSpecs.iterator();
 			while ( itr.hasNext() ) {
 				buffer.append( ( ( ParameterSpecification ) itr.next() ).renderDisplayInfo() );

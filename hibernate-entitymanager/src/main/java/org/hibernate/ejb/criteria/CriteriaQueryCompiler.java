@@ -39,12 +39,13 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Compiles a JPA criteria query into an executable {@link TypedQuery}.  Its single contract is the {@link #compile}

@@ -36,23 +36,24 @@ import org.hibernate.sql.CaseFragment;
  * @author Steve Ebersole
  */
 public class Oracle9iDialect extends Oracle8iDialect {
+	@Override
 	protected void registerCharacterTypeMappings() {
 		registerColumnType( Types.CHAR, "char(1 char)" );
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
 		registerColumnType( Types.VARCHAR, "long" );
 	}
-
+	@Override
 	protected void registerDateTimeTypeMappings() {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 	}
-
+	@Override
 	public CaseFragment createCaseFragment() {
 		// Oracle did add support for ANSI CASE statements in 9i
 		return new ANSICaseFragment();
 	}
-
+	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
 		String forUpdateClause = null;
@@ -87,25 +88,26 @@ public class Oracle9iDialect extends Oracle8iDialect {
 
 		return pagingSelect.toString();
 	}
-
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		return getBasicSelectClauseNullString( sqlType );
 	}
-
+	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select systimestamp from dual";
 	}
-
+	@Override
 	public String getCurrentTimestampSQLFunctionName() {
 		// the standard SQL function name is current_timestamp...
 		return "current_timestamp";
 	}
 
 	// locking support
+	@Override
 	public String getForUpdateString() {
 		return " for update";
 	}
-
+	@Override
 	public String getWriteLockString(int timeout) {
 		if ( timeout == LockOptions.NO_WAIT ) {
 			return " for update nowait";
@@ -119,7 +121,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		else
 			return " for update";
 	}
-
+	@Override
 	public String getReadLockString(int timeout) {
 		return getWriteLockString( timeout );
 	}
@@ -127,10 +129,11 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	 * HHH-4907, I don't know if oracle 8 supports this syntax, so I'd think it is better add this 
 	 * method here. Reopen this issue if you found/know 8 supports it.
 	 */
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}
-
+	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}	

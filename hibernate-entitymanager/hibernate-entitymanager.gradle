@@ -53,8 +53,6 @@ compileTestJava.options.define(compilerArgs: ["-proc:none"])
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Process 'bundle resources' for the packaging tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-processTestResources.dependsOn copyBundleResources
-
 bundlesTargetDir = file( "${buildDir}/bundles" )
 task copyBundleResources (type: Copy) {
     from file('src/test/bundles') 
@@ -71,4 +69,5 @@ task copyBundleResources (type: Copy) {
         bundlesTargetDir.mkdirs()
     }
 }
+processTestResources.dependsOn copyBundleResources
 

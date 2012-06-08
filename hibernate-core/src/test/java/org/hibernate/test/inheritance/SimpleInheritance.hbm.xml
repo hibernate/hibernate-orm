@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.test.inheritance" default-access="field"
+                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
+    <!--
+
+  This mapping demonstrates a simple table-per-hierarchy mapping strategy;
+  each subclass has simple properties
+
+-->
+
+    <class name="Person"
+           discriminator-value="P">
+
+        <id name="id"
+            column="person_id"
+            unsaved-value="0">
+            <generator class="assigned"/>
+        </id>
+
+        <discriminator column="TYPE" type="character"/>
+
+        <property name="name"
+                  not-null="true"
+                  length="80"/>
+
+        <property name="sex"
+                  not-null="true"
+                  update="false"/>
+
+        <subclass name="Employee"
+                  discriminator-value="E">
+            <property name="title" length="20"/>
+            <property name="salary" />
+            <!-- commented out until HHH-6551 is fixed
+			<subclass name="PartTimeEmployee" discriminator-value="M">
+				<property name="percent"/>
+			</subclass>
+			-->
+        </subclass>
+
+        <subclass name="Customer"
+                  discriminator-value="C">
+            <property name="comments"/>
+        </subclass>
+
+    </class>
+
+
+</hibernate-mapping>

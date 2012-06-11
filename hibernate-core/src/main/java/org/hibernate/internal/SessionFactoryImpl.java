@@ -552,54 +552,15 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver(
-				cfg.getCurrentTenantIdentifierResolver(),
-				properties
-		);
+		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy();
+		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( cfg.getCurrentTenantIdentifierResolver() );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
 
-	@SuppressWarnings( {"unchecked"})
-	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy(Properties properties) {
-		final Object value = properties.get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY );
-		if ( value != null ) {
-			if ( CustomEntityDirtinessStrategy.class.isInstance( value ) ) {
-				return CustomEntityDirtinessStrategy.class.cast( value );
-			}
-			Class<CustomEntityDirtinessStrategy> customEntityDirtinessStrategyClass;
-			if ( Class.class.isInstance( value ) ) {
-				customEntityDirtinessStrategyClass = Class.class.cast( value );
-			}
-			else {
-				try {
-					customEntityDirtinessStrategyClass = serviceRegistry.getService( ClassLoaderService.class )
-							.classForName( value.toString() );
-				}
-				catch (Exception e) {
-					LOG.debugf(
-							"Unable to locate CustomEntityDirtinessStrategy implementation class %s",
-							value.toString()
-					);
-					customEntityDirtinessStrategyClass = null;
-				}
-			}
-			if ( customEntityDirtinessStrategyClass != null ) {
-				try {
-					return customEntityDirtinessStrategyClass.newInstance();
-				}
-				catch (Exception e) {
-					LOG.debugf(
-							"Unable to instantiate CustomEntityDirtinessStrategy class %s",
-							customEntityDirtinessStrategyClass.getName()
-					);
-				}
-			}
-		}
-
-		// last resort
-		return new CustomEntityDirtinessStrategy() {
+	@SuppressWarnings({ "unchecked" })
+	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy() {
+		CustomEntityDirtinessStrategy defaultValue = new CustomEntityDirtinessStrategy() {
 			@Override
 			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
 				return false;
@@ -623,53 +584,26 @@ public final class SessionFactoryImpl
 				// todo : implement proper method body
 			}
 		};
+		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY,
+				CustomEntityDirtinessStrategy.class,
+				defaultValue
+		);
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
-			CurrentTenantIdentifierResolver explicitResolver,
-			Properties properties) {
+			CurrentTenantIdentifierResolver explicitResolver) {
 		if ( explicitResolver != null ) {
 			return explicitResolver;
 		}
-
-		final Object value = properties.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER );
-		if ( value == null ) {
-			return null;
-		}
-
-		if ( CurrentTenantIdentifierResolver.class.isInstance( value ) ) {
-			return CurrentTenantIdentifierResolver.class.cast( value );
-		}
-
-		Class<CurrentTenantIdentifierResolver> implClass;
-		if ( Class.class.isInstance( value ) ) {
-			implClass = Class.class.cast( value );
-		}
-		else {
-			try {
-				implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( value.toString() );
-			}
-			catch (Exception e) {
-				LOG.debugf(
-						"Unable to locate CurrentTenantIdentifierResolver implementation class %s",
-						value.toString()
+		return serviceRegistry.getService( ConfigurationService.class )
+				.getSetting(
+						AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
+						CurrentTenantIdentifierResolver.class,
+						null
 				);
-				return null;
-			}
-		}
-		if ( implClass != null ) {
-			try {
-				return implClass.newInstance();
-			}
-			catch ( Exception e ) {
-				LOG.debugf(
-						"Unable to instantiate CurrentTenantIdentifierResolver class %s",
-						implClass.getName()
-				);
-			}
-		}
-		return null;
+
 	}
 
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
@@ -975,8 +909,8 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( null, properties );
+		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy();
+		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( null );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}

@@ -589,7 +589,7 @@ public final class SessionFactoryImpl
 			}
 			Class<CustomEntityDirtinessStrategy> customEntityDirtinessStrategyClass;
 			if ( Class.class.isInstance( value ) ) {
-				customEntityDirtinessStrategyClass = Class.class.cast( customEntityDirtinessStrategy );
+				customEntityDirtinessStrategyClass = Class.class.cast( value );
 			}
 			else {
 				try {
@@ -663,7 +663,7 @@ public final class SessionFactoryImpl
 
 		Class<CurrentTenantIdentifierResolver> implClass;
 		if ( Class.class.isInstance( value ) ) {
-			implClass = Class.class.cast( customEntityDirtinessStrategy );
+			implClass = Class.class.cast( value );
 		}
 		else {
 			try {
@@ -677,17 +677,17 @@ public final class SessionFactoryImpl
 				return null;
 			}
 		}
-
-		try {
-			return implClass.newInstance();
+		if ( implClass != null ) {
+			try {
+				return implClass.newInstance();
+			}
+			catch ( Exception e ) {
+				LOG.debugf(
+						"Unable to instantiate CurrentTenantIdentifierResolver class %s",
+						implClass.getName()
+				);
+			}
 		}
-		catch (Exception e) {
-			LOG.debugf(
-					"Unable to instantiate CurrentTenantIdentifierResolver class %s",
-					implClass.getName()
-			);
-		}
-
 		return null;
 	}
 

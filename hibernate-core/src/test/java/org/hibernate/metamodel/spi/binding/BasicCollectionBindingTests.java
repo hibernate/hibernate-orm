@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.After;
@@ -36,7 +35,6 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -182,24 +180,13 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertEquals( 1, fk.getColumnSpan() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );
 		Value expectedFKTargetValue = expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
-		Iterator<Column> fkColumnIterator = fk.getColumns().iterator();
-		Iterator<Column> fkSourceColumnIterator = fk.getSourceColumns().iterator();
-		Iterator<Column> fkTargetColumnIterator = fk.getTargetColumns().iterator();
-		assertNotNull( fkColumnIterator );
-		assertNotNull( fkSourceColumnIterator );
-		assertNotNull( fkTargetColumnIterator );
-		assertTrue( fkColumnIterator.hasNext() );
-		assertTrue( fkSourceColumnIterator.hasNext() );
-		assertTrue( fkTargetColumnIterator.hasNext() );
-		Column fkSourceColumn = fkSourceColumnIterator.next();
-		assertSame( fkSourceColumn, fkColumnIterator.next() );
-		assertEquals( expectedKeySourceColumnName, fkSourceColumn.getColumnName() );
-		assertSame( expectedFKTargetValue, fkTargetColumnIterator.next() );
-		assertFalse( fkColumnIterator.hasNext() );
-		assertFalse( fkSourceColumnIterator.hasNext() );
-		assertFalse( fkTargetColumnIterator.hasNext() );
+		assertEquals( fk.getColumns(), fk.getSourceColumns() );
+		assertEquals( 1, fk.getSourceColumns().size() );
+		assertEquals( 1, fk.getTargetColumns().size() );
+		assertEquals( expectedKeySourceColumnName, fk.getSourceColumns().get( 0 ).getColumnName() );
+		assertSame( expectedFKTargetValue, fk.getTargetColumns().get( 0 ) );
 		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
-		assertEquals( expectedFKTargetValue.getJdbcDataType(), fkSourceColumn.getJdbcDataType() );
+		assertEquals( expectedFKTargetValue.getJdbcDataType(),  fk.getSourceColumns().get( 0 ).getJdbcDataType() );
 
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getDeleteRule() );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getUpdateRule() );
@@ -235,16 +222,9 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 			}
 			else {
 				assertEquals( 2, collectionTable.getPrimaryKey().getColumnSpan() );
-				assertSame( fkSourceColumn, collectionTable.getPrimaryKey().getColumns().get( 0 ) );
+				assertSame( fk.getSourceColumns().get( 0 ), collectionTable.getPrimaryKey().getColumns().get( 0 ) );
 				assertSame( elementRelationalValueBinding.getValue(),  collectionTable.getPrimaryKey().getColumns().get( 1 ) );
 			}
-		}
-	}
-
-	protected void assertSameElements(Iterable iterable, Iterable iterable2) {
-		Iterator itr2 = iterable2.iterator();
-		for ( Object it : iterable ) {
-			assertSame( it, itr2.next() );
 		}
 	}
 

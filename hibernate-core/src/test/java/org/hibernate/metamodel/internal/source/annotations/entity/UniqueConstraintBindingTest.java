@@ -59,11 +59,8 @@ public class UniqueConstraintBindingTest extends BaseAnnotationBindingTestCase {
 			assertEquals( "u1", key.getName() );
 			assertTrue( table == key.getTable() );
 			assertNotNull( key.getColumns() );
-			int j = 0;
-			for ( Column column : key.getColumns() ) {
-				j++;
-			}
-			assertEquals( "There should be two columns in the unique constraint", 2, j );
+			assertEquals( "There should be two columns in the unique constraint", 2, key.getColumns().size() );
+			assertEquals( "There should be two columns in the unique constraint", 2, key.getColumnSpan() );
 		}
 		assertEquals( "There should only be one unique constraint", 1, i );
 	}

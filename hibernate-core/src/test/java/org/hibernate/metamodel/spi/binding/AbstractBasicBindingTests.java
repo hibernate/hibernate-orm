@@ -153,10 +153,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertEquals( 1, SingularAttributeBinding.class.cast( referencedAttributeBinding ).getRelationalValueBindings().size() );
 		final Value referencedValue =
 				SingularAttributeBinding.class.cast( referencedAttributeBinding )
-						.getRelationalValueBindings()
-						.iterator()
-						.next()
-						.getValue();
+						.getRelationalValueBindings().get( 0 ).getValue();
 		assertTrue( Column.class.isInstance( referencedValue ) );
 		final JdbcDataType referencedJdbcDataType = Column.class.cast( referencedValue ).getJdbcDataType();
 				
@@ -200,7 +197,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		// relational
 		List<RelationalValueBinding> relationalValueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
 		Assert.assertEquals( 1, relationalValueBindings.size() );
-		RelationalValueBinding relationalValueBinding = relationalValueBindings.iterator().next();
+		RelationalValueBinding relationalValueBinding = relationalValueBindings.get( 0 );
 		assertFalse( relationalValueBinding.isDerived() );
 		assertTrue( relationalValueBinding.isIncludeInInsert() );
 		assertTrue( relationalValueBinding.isIncludeInUpdate() );
@@ -221,13 +218,11 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				if ( sourceColumn == column ) {
 					assertFalse( "source column not found in more than one foreign key", sourceColumnFound );
 					sourceColumnFound = true;
-					Iterator<Column> targetColumnIterator = fk.getTargetColumns().iterator();
-					assertTrue( targetColumnIterator.hasNext() );
-					assertSame( 
-							referencedAttributeBinding.getRelationalValueBindings().iterator().next().getValue(),
-							targetColumnIterator.next()							
+					assertEquals( 1, fk.getTargetColumns().size() );
+					assertSame(
+							referencedAttributeBinding.getRelationalValueBindings().get( 0 ).getValue(),
+							fk.getTargetColumns().get( 0 )
 					);
-					assertFalse( targetColumnIterator.hasNext() );					
 				}
 			}
 		}

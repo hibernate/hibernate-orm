@@ -72,11 +72,11 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 		return targetTable;
 	}
 
-	public Iterable<Column> getSourceColumns() {
+	public List<Column> getSourceColumns() {
 		return getColumns();
 	}
 
-	public Iterable<Column> getTargetColumns() {
+	public List<Column> getTargetColumns() {
 		return targetColumns == null
 				? getTargetTable().getPrimaryKey().getColumns()
 				: Collections.unmodifiableList( targetColumns );

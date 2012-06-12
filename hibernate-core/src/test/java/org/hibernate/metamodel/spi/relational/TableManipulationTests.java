@@ -131,6 +131,14 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 		assertEquals( page, pageBookFk.getSourceTable() );
 		assertEquals( book, pageBookFk.getTargetTable() );
+
+		assertEquals( 1, pageBookFk.getColumnSpan() );
+		assertEquals( 1, pageBookFk.getColumns().size() );
+		assertEquals( 1, pageBookFk.getSourceColumns().size() );
+		assertEquals( 1, pageBookFk.getTargetColumns().size() );
+		assertSame( pageBookId, pageBookFk.getColumns().get( 0 ) );
+		assertSame( pageBookId, pageBookFk.getSourceColumns().get( 0 ) );
+		assertSame( bookId, pageBookFk.getTargetColumns().get( 0 ) );
 	}
 
 	@Test

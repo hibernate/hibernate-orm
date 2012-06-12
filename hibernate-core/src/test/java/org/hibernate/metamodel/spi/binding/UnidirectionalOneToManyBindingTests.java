@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.After;
@@ -187,26 +186,21 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 		assertSame( expectedElementEntityBinding.getPrimaryTable(), fk.getSourceTable() );
 		assertEquals( 1, fk.getColumnSpan() );
-		Iterator<Column> fkColumnIterator = fk.getColumns().iterator();
-		Iterator<Column> fkSourceColumnIterator = fk.getSourceColumns().iterator();
-		assertNotNull( fkColumnIterator );
-		assertNotNull( fkSourceColumnIterator );
-		assertTrue( fkColumnIterator.hasNext() );
-		assertTrue( fkSourceColumnIterator.hasNext() );
-		assertSame( keySourceColumn, fkColumnIterator.next() );
-		assertSame( keySourceColumn, fkSourceColumnIterator.next() );
-		assertFalse( fkColumnIterator.hasNext() );
-		assertFalse( fkSourceColumnIterator.hasNext() );
+		assertEquals( fk.getColumns(), fk.getSourceColumns() );
+		assertEquals( 1, fk.getSourceColumns().size() );
+		assertEquals( 1, fk.getTargetColumns().size() );
+		assertSame( keySourceColumn, fk.getColumns().get( 0 ) );
+		assertSame( keySourceColumn, fk.getSourceColumns().get( 0 ) );
 
 		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );
 		assertSame(
 				expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue(),
-				fk.getTargetColumns().iterator().next()
+				fk.getTargetColumns().get( 0 )
 		);
 		assertEquals(
 				expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue().getJdbcDataType(),
-				fk.getColumns().iterator().next().getJdbcDataType()
+				fk.getColumns().get( 0 ).getJdbcDataType()
 		);
 
 		checkEquals(

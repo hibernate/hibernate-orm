@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import java.util.List;
+
 /**
  * Basic contract for the types of constraints we fully support as metadata constructs:<ul>
  * <li>primary key</li>
@@ -48,9 +50,9 @@ public interface Constraint extends Exportable {
 	public String getName();
 
 	/**
-	 * Obtain the columns that are part of this constraint.
+	 * Obtain a read-only view of the columns that are part of this constraint.
 	 *
-	 * @return The constrained columns.
+	 * @return A read-only view of the constrained columns.
 	 */
-	public Iterable<Column> getColumns();
+	public List<Column> getColumns();
 }

@@ -9,7 +9,7 @@
             <generator class="increment"/>
         </id>
         <property name="name"/>
-        <many-to-one name="simpleEntity"/>
+        <many-to-one name="simpleEntity" not-null="true" />
         <many-to-one name="simpleEntityFromPropertyRef" column="simplename" property-ref="name"/>
     </class>
 

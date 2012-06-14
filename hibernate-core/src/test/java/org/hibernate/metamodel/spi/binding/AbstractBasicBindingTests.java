@@ -129,7 +129,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				SingularAttributeBinding.class.cast( 
 						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
 				),
-				"simpleEntity"
+				"simpleEntity",
+				false
 		);
 
 		checkManyToOneAttributeBinding(
@@ -137,7 +138,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				entityWithManyToOneBinding,
 				entityWithManyToOneBinding.locateAttributeBinding( "simpleEntityFromPropertyRef" ),
 				SingularAttributeBinding.class.cast( simpleEntityBinding.locateAttributeBinding( "name" ) ),
-				"simplename"
+				"simplename",
+				true
 		);
 	}
 
@@ -146,7 +148,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 			EntityBinding entityWithManyToOneBinding,
 			AttributeBinding attributeBinding, 
 			SingularAttributeBinding referencedAttributeBinding,
-			String manyToOneColumnName) {
+			String manyToOneColumnName,
+			boolean expectedNullable) {
 		final EntityBinding referencedEntityBinding = referencedAttributeBinding.getContainer().seekEntityBinding();
 		final String referencedEntityName = referencedEntityBinding.getEntity().getName();
 		assertTrue( SingularAttributeBinding.class.isInstance( referencedAttributeBinding ) );
@@ -171,6 +174,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		Assert.assertEquals( "property", manyToOneAttributeBinding.getPropertyAccessorName() );
 		assertTrue( manyToOneAttributeBinding.isIncludedInOptimisticLocking() );
 		assertFalse( manyToOneAttributeBinding.isAlternateUniqueKey() );
+		assertEquals( expectedNullable, manyToOneAttributeBinding.isNullable() );
 		HibernateTypeDescriptor hibernateTypeDescriptor = manyToOneAttributeBinding.getHibernateTypeDescriptor();
 		Assert.assertNull( hibernateTypeDescriptor.getExplicitTypeName() );
 		Assert.assertEquals( referencedEntityName, hibernateTypeDescriptor.getJavaTypeName() );
@@ -201,7 +205,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertFalse( relationalValueBinding.isDerived() );
 		assertTrue( relationalValueBinding.isIncludeInInsert() );
 		assertTrue( relationalValueBinding.isIncludeInUpdate() );
-		assertTrue( relationalValueBinding.isNullable() );
+		assertEquals( expectedNullable, relationalValueBinding.isNullable() );
 		assertTrue( relationalValueBinding.getValue() instanceof Column );
 		Column column = ( Column ) relationalValueBinding.getValue();
 		Assert.assertEquals( Identifier.toIdentifier( manyToOneColumnName ), column.getColumnName() );

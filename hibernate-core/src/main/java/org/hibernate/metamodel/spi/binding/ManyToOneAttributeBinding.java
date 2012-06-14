@@ -94,8 +94,7 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public boolean isNullable() {
-		// todo : not sure this is even relevant for many-to-one
-		return false;
+		return hasNullableRelationalValueBinding( relationalValueBindings );
 	}
 
 	@Override

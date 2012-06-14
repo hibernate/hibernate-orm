@@ -48,6 +48,15 @@ public abstract class AbstractSingularAttributeBinding
 		this.isLazy = isLazy;
 	}
 
+	protected static boolean hasNullableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			if ( relationalValueBinding.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public SingularAttribute getAttribute() {
 		return (SingularAttribute) super.getAttribute();

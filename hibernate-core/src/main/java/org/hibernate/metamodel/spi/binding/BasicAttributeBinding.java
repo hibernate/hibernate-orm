@@ -49,7 +49,6 @@ public class BasicAttributeBinding
 
 	private final List<RelationalValueBinding> relationalValueBindings;
 	private boolean hasDerivedValue;
-	private boolean isNullable = true;
 	private final PropertyGeneration generation;
 
 	BasicAttributeBinding(
@@ -72,7 +71,6 @@ public class BasicAttributeBinding
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
-			this.isNullable = this.isNullable && relationalValueBinding.isNullable();
 		}
 		this.generation = generation;
 	}
@@ -93,7 +91,7 @@ public class BasicAttributeBinding
 
 	@Override
 	public boolean isNullable() {
-		return isNullable;
+		return hasNullableRelationalValueBinding( relationalValueBindings );
 	}
 
 	public PropertyGeneration getGeneration() {

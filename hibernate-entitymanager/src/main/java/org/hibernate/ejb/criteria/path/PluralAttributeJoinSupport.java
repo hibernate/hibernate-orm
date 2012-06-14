@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,14 +23,17 @@
  */
 package org.hibernate.ejb.criteria.path;
 
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.PluralJoin;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.JoinImplementor;
 import org.hibernate.ejb.criteria.PathSource;
 
 /**
@@ -81,5 +84,15 @@ public abstract class PluralAttributeJoinSupport<O,C,E>
 	@Override
 	protected boolean canBeJoinSource() {
 		return !isBasicCollection();
+	}
+
+	@Override
+	public JoinImplementor<O, E> on(Predicate... restrictions) {
+		return super.on( restrictions );
+	}
+
+	@Override
+	public JoinImplementor<O, E> on(Expression<Boolean> restriction) {
+		return super.on( restriction );
 	}
 }

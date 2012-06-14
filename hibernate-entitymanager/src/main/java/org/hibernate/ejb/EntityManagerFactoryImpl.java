@@ -34,7 +34,9 @@ import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
@@ -44,7 +46,9 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.internal.EntityManagerFactoryRegistry;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
@@ -214,6 +218,39 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return util;
 	}
 
+	@Override
+	public void addNamedQuery(String name, Query query) {
+		if ( ! isOpen() ) {
+			throw new IllegalStateException( "EntityManagerFactory is closed" );
+		}
+
+		if ( ! HibernateQuery.class.isInstance( query ) ) {
+			throw new PersistenceException( "Cannot use query non-Hibernate EntityManager query as basis for named query" );
+		}
+
+		// the spec requires that we keep information such as max results, hints etc.  Currently the information
+		// stored about a named query does not contain all that information (see org.hibernate.engine.spi.NamedQueryDefinition)
+		//
+		// the most simple solution is to just add these needed values to org.hibernate.engine.spi.NamedQueryDefinition
+
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T unwrap(Class<T> cls) {
+		if ( SessionFactory.class.isAssignableFrom( cls ) ) {
+			return ( T ) sessionFactory;
+		}
+		if ( SessionFactoryImplementor.class.isAssignableFrom( cls ) ) {
+			return ( T ) sessionFactory;
+		}
+		if ( EntityManager.class.isAssignableFrom( cls ) ) {
+			return ( T ) this;
+		}
+		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as " + cls.getName() );
+	}
+
 	public boolean isOpen() {
 		return ! sessionFactory.isClosed();
 	}
@@ -227,9 +264,9 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	private static class JPACache implements Cache {
-		private SessionFactory sessionFactory;
+		private SessionFactoryImplementor sessionFactory;
 
-		private JPACache(SessionFactory sessionFactory) {
+		private JPACache(SessionFactoryImplementor sessionFactory) {
 			this.sessionFactory = sessionFactory;
 		}
 
@@ -250,6 +287,16 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 // TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
 //			sessionFactory.getCache().evictCollectionRegions();
 //			sessionFactory.getCache().evictQueryRegions();
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> T unwrap(Class<T> cls) {
+			if ( RegionFactory.class.isAssignableFrom( cls ) ) {
+				return (T) sessionFactory.getSettings().getRegionFactory();
+			}
+
+			throw new PersistenceException( "Hibernate cannot unwrap Cache as " + cls.getName() );
 		}
 	}
 

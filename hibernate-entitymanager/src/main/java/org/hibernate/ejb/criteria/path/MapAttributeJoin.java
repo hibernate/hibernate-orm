@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -39,7 +40,7 @@ import org.hibernate.ejb.criteria.PathSource;
 import org.hibernate.ejb.criteria.expression.MapEntryExpression;
 
 /**
- * TODO : javadoc
+ * Models a join based on a map-style plural association attribute.
  *
  * @author Steve Ebersole
  */
@@ -83,24 +84,18 @@ public class MapAttributeJoin<O,K,V>
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Path<V> value() {
 		return this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Expression<Map.Entry<K, V>> entry() {
 		return new MapEntryExpression( criteriaBuilder(), Map.Entry.class, this, getAttribute() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Path<K> key() {
 		final MapKeyHelpers.MapKeySource<K,V> mapKeySource = new MapKeyHelpers.MapKeySource<K,V>(
@@ -113,4 +108,13 @@ public class MapAttributeJoin<O,K,V>
 		return new MapKeyHelpers.MapKeyPath( criteriaBuilder(), mapKeySource, mapKeyAttribute );
 	}
 
+	@Override
+	public MapJoinImplementor<O, K, V> on(Predicate... restrictions) {
+		return (MapJoinImplementor<O, K, V>) super.on( restrictions );
+	}
+
+	@Override
+	public MapJoinImplementor<O, K, V> on(Expression<Boolean> restriction) {
+		return (MapJoinImplementor<O, K, V>) super.on( restriction );
+	}
 }

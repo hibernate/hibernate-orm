@@ -443,7 +443,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public <T> TypedQuery<T> createQuery(
+	public <T> QueryImpl<T> createQuery(
 			String jpaqlString,
 			Class<T> resultClass,
 			Selection selection,
@@ -1140,6 +1140,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return (SessionFactoryImplementor) getRawSession().getSessionFactory();
 	}
 
+	@Override
+	public <T> T unwrap(Class<T> clazz) {
+		if ( Session.class.isAssignableFrom( clazz ) ) {
+			return ( T ) getSession();
+		}
+		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
+			return ( T ) getSession();
+		}
+		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
+			return ( T ) this;
+		}
+		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
+	}
+
 	protected void markAsRollback() {
         LOG.debugf("Mark transaction for rollback");
 		if ( tx.isActive() ) {
@@ -1166,24 +1180,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
+	public boolean isJoinedToTransaction() {
+		final SessionImplementor session = (SessionImplementor) getSession();
+		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
+		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
+
+		return isOpen() && transaction.getJoinStatus() == JoinStatus.JOINED;
+	}
+
+	@Override
 	public void joinTransaction() {
 		if( !isOpen() ){
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
 		joinTransaction( true );
-	}
-
-	public <T> T unwrap(Class<T> clazz) {
-		if ( Session.class.isAssignableFrom( clazz ) ) {
-			return ( T ) getSession();
-		}
-		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
-			return ( T ) getSession();
-		}
-		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
-			return ( T ) this;
-		}
-		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
 	}
 
 	private void joinTransaction(boolean explicitRequest) {

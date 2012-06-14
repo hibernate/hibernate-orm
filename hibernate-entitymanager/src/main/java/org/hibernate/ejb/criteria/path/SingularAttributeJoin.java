@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.PathSource;
 
 /**
- * TODO : javadoc
+ * Models a join based on a singular attribute
  *
  * @author Steve Ebersole
  */

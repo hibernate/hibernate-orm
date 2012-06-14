@@ -71,7 +71,7 @@ libraries = [
         javassist:      'org.javassist:javassist:3.15.0-GA',
 
         // javax
-        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
+        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-6',
         jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
         validation:     'javax.validation:validation-api:1.0.0.GA',
         jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',

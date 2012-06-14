@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,10 +23,12 @@
  */
 package org.hibernate.ejb.criteria.path;
 
-import java.io.Serializable;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.Attribute;
+import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -36,7 +38,7 @@ import org.hibernate.ejb.criteria.JoinImplementor;
 import org.hibernate.ejb.criteria.PathSource;
 
 /**
- * TODO : javadoc
+ * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
  *
  * @author Steve Ebersole
  */
@@ -46,6 +48,8 @@ public abstract class AbstractJoinImpl<Z, X>
 
 	private final Attribute<? super Z, ?> joinAttribute;
 	private final JoinType joinType;
+
+	private Predicate suppliedJoinCondition;
 
 	public AbstractJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -66,37 +70,55 @@ public abstract class AbstractJoinImpl<Z, X>
 		this.joinType = joinType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Attribute<? super Z, ?> getAttribute() {
 		return joinAttribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public JoinType getJoinType() {
 		return joinType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public From<?, Z> getParent() {
 		// this cast should be ok by virtue of our constructors...
 		return (From<?, Z>) getPathSource();
 	}
 
+	@Override
 	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		( (FromImplementor) getParent() ).prepareAlias( renderingContext );
 		return getParent().getAlias() + '.' + getAttribute().getName() + " as " + getAlias();
 	}
 
-
+	@Override
 	public JoinImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
 		return (JoinImplementor<Z, X>) super.correlateTo( subquery );
+	}
+
+	@Override
+	public JoinImplementor<Z, X> on(Predicate... restrictions) {
+		// no matter what, a call to this method replaces any previously set values...
+		this.suppliedJoinCondition = null;
+
+		if ( restrictions != null && restrictions.length > 0 ) {
+			this.suppliedJoinCondition = criteriaBuilder().and( restrictions );
+		}
+
+		return this;
+	}
+
+	@Override
+	public JoinImplementor<Z, X> on(Expression<Boolean> restriction) {
+		this.suppliedJoinCondition = criteriaBuilder().wrap( restriction );
+		return this;
+	}
+
+	@Override
+	public Predicate getOn() {
+		return suppliedJoinCondition;
 	}
 }

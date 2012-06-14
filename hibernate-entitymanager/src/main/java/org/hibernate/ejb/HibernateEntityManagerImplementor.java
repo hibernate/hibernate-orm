@@ -150,5 +150,5 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @return The typed query
 	 */
-	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, Options options);
+	public <T> QueryImpl<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, Options options);
 }

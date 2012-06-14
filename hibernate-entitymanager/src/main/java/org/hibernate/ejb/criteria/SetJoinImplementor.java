@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,6 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.SetJoin;
 
 /**
@@ -30,10 +33,12 @@ import javax.persistence.criteria.SetJoin;
  * @author Steve Ebersole
  */
 public interface SetJoinImplementor<Z,X> extends JoinImplementor<Z,X>, SetJoin<Z,X> {
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * Refined return type
-	 */
+	@Override
 	public SetJoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
+
+	@Override
+	public SetJoinImplementor<Z,X> on(Expression<Boolean> restriction);
+
+	@Override
+	public SetJoinImplementor<Z, X> on(Predicate... restrictions);
 }

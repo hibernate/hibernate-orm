@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -58,7 +58,7 @@ import org.hibernate.ejb.criteria.PathSource;
 import org.hibernate.ejb.criteria.SetJoinImplementor;
 
 /**
- * Convenience base class for various {@link javax.persistence.criteria.From} implementors.
+ * Convenience base class for various {@link javax.persistence.criteria.From} implementations.
  *
  * @author Steve Ebersole
  */

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2012 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,7 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Predicate;
 
 /**
  * Specialization of {@link JoinImplementor} for {@link java.util.Map} typed attribute joins
@@ -30,10 +33,12 @@ import javax.persistence.criteria.MapJoin;
  * @author Steve Ebersole
  */
 public interface MapJoinImplementor<Z,K,V> extends JoinImplementor<Z,V>, MapJoin<Z,K,V> {
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * Refined return type
-	 */
+	@Override
 	public MapJoinImplementor<Z,K,V> correlateTo(CriteriaSubqueryImpl subquery);
+
+	@Override
+	public MapJoinImplementor<Z, K, V> on(Expression<Boolean> restriction);
+
+	@Override
+	public MapJoinImplementor<Z, K, V> on(Predicate... restrictions);
 }

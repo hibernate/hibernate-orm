@@ -26,6 +26,10 @@ package org.hibernate.ejb;
 import java.util.Map;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.StoredProcedureQuery;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.jboss.logging.Logger;
@@ -33,6 +37,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
@@ -124,6 +129,36 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			}
 		}
 		return session;
+	}
+
+	@Override
+	public Query createQuery(CriteriaUpdate updateQuery) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public Query createQuery(CriteriaDelete deleteQuery) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+		throw new NotYetImplementedException();
 	}
 
 	public void close() {

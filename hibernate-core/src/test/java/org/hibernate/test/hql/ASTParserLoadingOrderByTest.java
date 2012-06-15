@@ -193,6 +193,16 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testOrderByOnJoinedSubclassPropertyWhoseColumnIsNotInDrivingTable() {
+		// this is simply a syntax check
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.createQuery( "from Human h order by h.bodyWeight" ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testOrderByNoSelectAliasRef() {
 		createData();
 

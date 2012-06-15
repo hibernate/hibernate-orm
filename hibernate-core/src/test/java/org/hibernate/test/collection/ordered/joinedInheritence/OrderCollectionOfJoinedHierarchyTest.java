@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.sql.ordering.antlr;
+package org.hibernate.test.collection.ordered.joinedInheritence;
+
+import org.hibernate.Session;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
- * {@link SortSpecification}.
- *
  * @author Steve Ebersole
  */
-public class CollationSpecification extends NodeSupport {
+public class OrderCollectionOfJoinedHierarchyTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Animal.class, Lion.class, Tiger.class, Zoo.class };
+	}
+
+	@Test
+	public void testQuerySyntaxCheck() {
+		Session session = openSession();
+		session.beginTransaction();
+		session.get( Zoo.class, 1L );
+		session.getTransaction().commit();
+		session.close();
+	}
 }

@@ -34,6 +34,9 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import org.hibernate.sql.ordering.antlr.ColumnReference;
+import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
@@ -76,10 +79,22 @@ public class TemplateTest extends BaseUnitTestCase {
 	};
 
 	private static final ColumnMapper MAPPER = new ColumnMapper() {
-		public String[] map(String reference) {
-			return PROPERTY_MAPPING.toColumns( reference );
+		public SqlValueReference[] map(String reference) {
+			final String[] columnNames = PROPERTY_MAPPING.toColumns( reference );
+			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];
+			int i = 0;
+			for ( final String columnName : columnNames ) {
+				result[i] = new ColumnReference() {
+					@Override
+					public String getColumnName() {
+						return columnName;
+					}
+				};
+				i++;
+			}
+			return result;
 		}
-	};
+ 	};
 
 	private static final Dialect DIALECT = new HSQLDialect();
 

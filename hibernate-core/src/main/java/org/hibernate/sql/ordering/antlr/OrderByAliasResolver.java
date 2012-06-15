@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,10 +24,12 @@
 package org.hibernate.sql.ordering.antlr;
 
 /**
- * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
- * {@link SortSpecification}.
- *
- * @author Steve Ebersole
+ * Given a column reference, resolve the table alias to apply to the column to qualify it.
  */
-public class CollationSpecification extends NodeSupport {
+public interface OrderByAliasResolver {
+	/**
+	 * Given a column reference, resolve the table alias to apply to the column to qualify it.
+	 *
+	 */
+	public String resolveTableAlias(String columnReference);
 }

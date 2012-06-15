@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.sql.ordering.antlr;
+package org.hibernate.test.collection.ordered.joinedInheritence;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
- * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
- * {@link SortSpecification}.
- *
  * @author Steve Ebersole
  */
-public class CollationSpecification extends NodeSupport {
+@Entity
+@Inheritance( strategy = InheritanceType.JOINED )
+public class Animal {
+	private Long id;
+	private long weight;
+
+	@Id
+	@GeneratedValue( generator = "increment" )
+	@GenericGenerator( strategy = "increment", name = "increment" )
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public long getWeight() {
+		return weight;
+	}
+
+	public void setWeight(long weight) {
+		this.weight = weight;
+	}
 }

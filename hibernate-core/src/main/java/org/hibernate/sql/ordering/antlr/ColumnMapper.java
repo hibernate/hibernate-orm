@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.sql.ordering.antlr;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -36,10 +36,11 @@ public interface ColumnMapper {
 	 *
 	 * @param reference The property reference name.
 	 *
-	 * @return The underlying columns, or null if the property reference is unknown.
+	 * @return References to the columns/formulas that define the value mapping for the given property, or null
+	 * if the property reference is unknown.
 	 *
-	 * @throws HibernateException Generally indicates that the property reference is unkown; interpretation is the
-	 * same as a null return.
+	 * @throws HibernateException Generally indicates that the property reference is unknown; interpretation
+	 * should be the same as a null return.
 	 */
-	public String[] map(String reference) throws HibernateException;
+	public SqlValueReference[] map(String reference) throws HibernateException;
 }

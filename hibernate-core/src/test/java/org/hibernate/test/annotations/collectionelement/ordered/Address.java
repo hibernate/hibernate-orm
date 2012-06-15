@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.sql.ordering.antlr;
+package org.hibernate.test.annotations.collectionelement.ordered;
+
+import javax.persistence.Embeddable;
 
 /**
- * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
- * {@link SortSpecification}.
- *
  * @author Steve Ebersole
  */
-public class CollationSpecification extends NodeSupport {
+@Embeddable
+public class Address {
+	private String street;
+	private String city;
+	private String country;
+
+	public String getStreet() {
+		return street;
+	}
+
+	public void setStreet(String street) {
+		this.street = street;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
 }

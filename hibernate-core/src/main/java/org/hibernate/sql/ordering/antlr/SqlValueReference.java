@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008 Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,10 +24,13 @@
 package org.hibernate.sql.ordering.antlr;
 
 /**
- * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
- * {@link SortSpecification}.
+ * Unifying interface between column and formula references mainly to give more strictly typed result
+ * to {@link ColumnMapper#map(String)}
+ *
+ * @see ColumnReference
+ * @see FormulaReference
  *
  * @author Steve Ebersole
  */
-public class CollationSpecification extends NodeSupport {
+public interface SqlValueReference {
 }

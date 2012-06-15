@@ -1969,7 +1969,8 @@ public abstract class AbstractEntityPersister
 		return propertyDefinedOnSubclass[i];
 	}
 
-	protected String[][] getSubclassPropertyFormulaTemplateClosure() {
+	@Override
+	public String[][] getSubclassPropertyFormulaTemplateClosure() {
 		return subclassPropertyFormulaTemplateClosure;
 	}
 
@@ -4747,5 +4748,14 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityInstrumentationMetadata getInstrumentationMetadata() {
 		return entityMetamodel.getInstrumentationMetadata();
+	}
+
+	@Override
+	public String getTableAliasForColumn(String columnName, String rootAlias) {
+		return generateTableAlias( rootAlias, determineTableNumberForColumn( columnName ) );
+	}
+
+	public int determineTableNumberForColumn(String columnName) {
+		return 0;
 	}
 }

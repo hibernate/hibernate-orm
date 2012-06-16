@@ -42,8 +42,22 @@ dependencies {
 //    testCompile([group: 'com.oracle.jdbc', name:'ojdbc6', version:'11.1.0.7.0'])
 //    testCompile([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
 //    testRuntime("mysql:mysql-connector-java:5.1.15")
+    testCompile( libraries.validation )
+    testCompile( libraries.jandex )
+    testCompile( libraries.classmate )
+    testCompile( libraries.validator ) {
+        // for test runtime
+        transitive = true
+    }
+    testRuntime( 'jaxen:jaxen:1.1' )
+    testRuntime( libraries.javassist )
 
     matrixRuntime( 'jaxen:jaxen:1.1' )
+}
+
+ideaModule {
+    testSourceDirs += file( 'src/matrix/java')
+    testSourceDirs += file( 'src/matrix/resources')
 }
 
 sourceSets {

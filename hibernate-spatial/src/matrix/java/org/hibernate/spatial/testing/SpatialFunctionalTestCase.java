@@ -33,6 +33,7 @@ import org.hibernate.spatial.integration.GeomEntity;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,9 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	public void prepareTest() {
 		try {
 			dataSourceUtils.insertTestData(testData);
-		} catch (SQLException e) {
+		} catch(BatchUpdateException e) {
+            throw new RuntimeException(e.getNextException());
+        } catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -70,7 +73,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			String hql = "delete from GeomEntity";
+			String hql = "delete from org.hibernate.spatial.integration.GeomEntity";
 			Query q = session.createQuery(hql);
 			q.executeUpdate();
 			tx.commit();

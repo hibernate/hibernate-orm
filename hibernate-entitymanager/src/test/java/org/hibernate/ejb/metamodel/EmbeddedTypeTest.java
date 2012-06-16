@@ -25,6 +25,7 @@ package org.hibernate.ejb.metamodel;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.junit.Test;
@@ -45,6 +46,14 @@ public class EmbeddedTypeTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[] {
 				Product.class, ShelfLife.class, VersionedEntity.class
 		};
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6896" )
+	public void ensureComponentsReturnedAsManagedType() {
+		ManagedType<ShelfLife> managedType = entityManagerFactory().getMetamodel().managedType( ShelfLife.class );
+		// the issue was in regards to throwing an exception, but also check for nullness
+		assertNotNull( managedType );
 	}
 
 	@Test

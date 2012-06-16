@@ -240,13 +240,22 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
         // this class has no proxies (so do a shortcut)
-        if (!persister.hasProxy()) return load(event, persister, keyToLoad, options);
+        if (!persister.hasProxy()) {
+			return load(event, persister, keyToLoad, options);
+		}
+
         final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
 
 		// look for a proxy
         Object proxy = persistenceContext.getProxy(keyToLoad);
-        if (proxy != null) return returnNarrowedProxy(event, persister, keyToLoad, options, persistenceContext, proxy);
-        if (options.isAllowProxyCreation()) return createProxyIfNecessary(event, persister, keyToLoad, options, persistenceContext);
+        if (proxy != null) {
+			return returnNarrowedProxy(event, persister, keyToLoad, options, persistenceContext, proxy);
+		}
+
+        if (options.isAllowProxyCreation()) {
+			return createProxyIfNecessary(event, persister, keyToLoad, options, persistenceContext);
+		}
+
         // return a newly loaded object
         return load(event, persister, keyToLoad, options);
 	}

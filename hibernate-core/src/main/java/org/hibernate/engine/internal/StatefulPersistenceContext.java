@@ -256,6 +256,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( loadContexts != null ) {
 			loadContexts.cleanup();
 		}
+		naturalIdXrefDelegate.clear();
 	}
 
 	@Override

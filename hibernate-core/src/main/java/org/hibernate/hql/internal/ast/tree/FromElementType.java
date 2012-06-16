@@ -210,7 +210,7 @@ class FromElementType {
 					getTableAlias(),
 					getSuffix( size, k ),
 					allProperties
-				);
+			);
 			return trimLeadingCommaAndSpaces( fragment );
 		}
 	}
@@ -327,15 +327,17 @@ class FromElementType {
 	String[] toColumns(String tableAlias, String path, boolean inSelect, boolean forceAlias) {
 		checkInitialized();
 		PropertyMapping propertyMapping = getPropertyMapping( path );
-		// If this from element is a collection and the path is a collection property (maxIndex, etc.) then
-		// generate a sub-query.
-		//
-		// NOTE : in the case of this being a collection property in the select, not generating the subquery
-		// will not generally work.  The specific cases I am thinking about are the minIndex, maxIndex
-		// (most likely minElement, maxElement as well) cases.
-		//	todo : if ^^ is the case we should thrown an exception here rather than waiting for the sql error
-		//		if the dialect supports select-clause subqueries we could go ahead and generate the subquery also
+
 		if ( !inSelect && queryableCollection != null && CollectionProperties.isCollectionProperty( path ) ) {
+			// If this from element is a collection and the path is a collection property (maxIndex, etc.)
+			// requiring a sub-query then generate a sub-query.
+			//h
+			// Unless we are in the select clause, because some dialects do not support
+			// Note however, that some dialects do not  However, in the case of this being a collection property reference being in the select, not generating the subquery
+			// will not generally work.  The specific cases I am thinking about are the minIndex, maxIndex
+			// (most likely minElement, maxElement as well) cases.
+			//	todo : if ^^ is the case we should thrown an exception here rather than waiting for the sql error
+			//		if the dialect supports select-clause subqueries we could go ahead and generate the subquery also
 			Map enabledFilters = fromElement.getWalker().getEnabledFilters();
 			String subquery = CollectionSubqueryFactory.createCollectionSubquery(
 					joinSequence.copy().setUseThetaStyle( true ),

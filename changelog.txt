@@ -5,6 +5,45 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.4.Final (2012.05.30)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11960
+
+** Bug
+    * [HHH-2214] - SQLStateConverter chooses wrong JDBCException: Locks and MySQL
+    * [HHH-5396] - JPQL KEY(), ENTRY() and VALUE() does not recognize alias refs
+    * [HHH-6256] - persistence.xml-specified javax.persistence.lock.timeout is ignored
+    * [HHH-6310] - SQLServer2005Dialect produced select statement with a distinct keyword within an aggregate function does not work
+    * [HHH-6329] - Apparently inaccurate 'java.lang.UnsupportedOperationException: Illegal attempt to edit read only item' when using SQLQuery.executeUpdate
+    * [HHH-6728] - SQLServer2005Dialect - Paging doesn't work with UPPERCASE colums in a case sensitive database
+    * [HHH-6950] - Bogus string replacement in SQLServer2005Dialect.insertRowNumberFunction()
+    * [HHH-6960] - NullPointerException in PreCollectionRemove Listener
+    * [HHH-7019] - SQLServer2005Dialect, SQLServer2008Dialect issues with subqueries
+    * [HHH-7074] - the replacement annotations of @Entity are not working
+    * [HHH-7107] - org.hibernate.test.locking.LockModeTest hangs on Sybase 15.5 and DB2-97
+    * [HHH-7112] - session.clear does not clear StatefulPersistenceContext.naturalIdResolutionCacheMap
+    * [HHH-7198] - SQLServer2005Dialect.getLimitString turns tablenames to lowercase ->  SQLGrammarException: when mapping tables with capital letters
+    * [HHH-7285] - Using distinct in Criteria, using first- and maxResults, fails with SQLGrammarException when a colum in the distinct clause starts with 'from'
+    * [HHH-7294] - Envers manytomany Test BasicSametable fails on DB2 as DB2 does not support tinyint
+    * [HHH-7295] - ParentAuditing Test in Envers Testsuite fails across different databases with different error messages because Hibernate does not set LockMode correctly
+    * [HHH-7316] - Collection removal actions added by DefaultAutoFlushEventListener.onAutoFlush() are not removed when flush is not needed
+    * [HHH-7317] - Boolean values bound to parameters in SQL predicate cause failures using DB2 with deferPrepares = true
+    * [HHH-7323] - SQLServerDialectTest.testMaxResultsSqlServerWithCaseSensitiveCollation fails on mssql2008R1 and mssql2008R2 due to Lock request TimeOut period exceeded
+    * [HHH-7346] - Tests fail on Postgresql due to failure in typecasts
+    * [HHH-7347] - fail test if it runs longer than 30 minutes to prevent hangs
+    * [HHH-7348] - AbstractMultiTenantConnectionProvider not closing connections
+    * [HHH-7350] - read-only entities can not be deleted from 2LC
+
+** Improvement
+    * [HHH-3961] - SQLServerDialect, support nowait in LockMode.UPGRADE_NOWAIT
+    * [HHH-5881] - Add getter for "namedParameters" to QueryKey
+    * [HHH-6846] - Support for Query.setHint(javax.persistence.lock.timeout)
+    * [HHH-7356] - javax.persistence.lock.timeout hint is ignored by @NamedQuery
+
+** New Feature
+    * [HHH-7306] - Allow use of CurrentTenantIdentifierResolver in normal session opening
+
+
 Changes in version 4.1.3.Final (2012.05.02)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11959

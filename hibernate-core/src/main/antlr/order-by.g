@@ -164,7 +164,7 @@ orderByFragment { trace("orderByFragment"); }
     ;
 
 /**
- * Reconition rule for what ANSI SQL terms the <tt>sort specification</tt>, which is essentially each thing upon which
+ * Recognition rule for what ANSI SQL terms the <tt>sort specification</tt>, which is essentially each thing upon which
  * the results should be sorted.
  */
 sortSpecification { trace("sortSpecification"); }
@@ -175,7 +175,7 @@ sortSpecification { trace("sortSpecification"); }
     ;
 
 /**
- * Reconition rule for what ANSI SQL terms the <tt>sort key</tt> which is the expression (column, function, etc) upon
+ * Recognition rule for what ANSI SQL terms the <tt>sort key</tt> which is the expression (column, function, etc) upon
  * which to base the sorting.
  */
 sortKey! { trace("sortKey"); }
@@ -185,7 +185,7 @@ sortKey! { trace("sortKey"); }
     ;
 
 /**
- * Reconition rule what this grammar recognizes as valid <tt>sort key</tt>.
+ * Recognition rule what this grammar recognizes as valid <tt>sort key</tt>.
  */
 expression! { trace("expression"); }
     : HARD_QUOTE qi:IDENT HARD_QUOTE {
@@ -261,7 +261,7 @@ functionParameter { trace("functionParameter"); }
     ;
 
 /**
- * Reconition rule for what ANSI SQL terms the <tt>collation specification</tt> used to allow specifying that sorting for
+ * Recognition rule for what ANSI SQL terms the <tt>collation specification</tt> used to allow specifying that sorting for
  * the given {@link #sortSpecification} be treated within a specific character-set.
  */
 collationSpecification! { trace("collationSpecification"); }
@@ -278,7 +278,7 @@ collationName { trace("collationSpecification"); }
     ;
 
 /**
- * Reconition rule for what ANSI SQL terms the <tt>ordering specification</tt>; <tt>ASCENDING</tt> or
+ * Recognition rule for what ANSI SQL terms the <tt>ordering specification</tt>; <tt>ASCENDING</tt> or
  * <tt>DESCENDING</tt>.
  */
 orderingSpecification! { trace("orderingSpecification"); }

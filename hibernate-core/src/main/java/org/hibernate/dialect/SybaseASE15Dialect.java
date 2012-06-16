@@ -434,4 +434,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
     protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
         return sqlCode == Types.BOOLEAN ? TinyIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
     }
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
 }

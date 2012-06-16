@@ -128,7 +128,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 								projection
 				)
 				.setFromClause(
-						getDialect().appendLockHint( lockOptions.getLockMode(), persister.fromTableFragment( alias ) ) +
+						getDialect().appendLockHint( lockOptions, persister.fromTableFragment( alias ) ) +
 								persister.fromJoinFragment( alias, true, true )
 				)
 				.setWhereClause( condition )

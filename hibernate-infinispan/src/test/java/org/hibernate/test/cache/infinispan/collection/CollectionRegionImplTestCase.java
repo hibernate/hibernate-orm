@@ -52,12 +52,6 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
       assertNull("Got TRANSACTIONAL", region.buildAccessStrategy(AccessType.TRANSACTIONAL)
                .lockRegion());
       try {
-         region.buildAccessStrategy(AccessType.READ_ONLY).lockRegion();
-         fail("Did not get READ_ONLY");
-      } catch (UnsupportedOperationException good) {
-      }
-
-      try {
          region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);
          fail("Incorrectly got NONSTRICT_READ_WRITE");
       } catch (CacheException good) {

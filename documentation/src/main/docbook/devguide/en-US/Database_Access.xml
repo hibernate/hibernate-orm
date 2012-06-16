@@ -343,9 +343,13 @@
             <entry>org.hibernate.dialect.PointbaseDialect</entry>
           </row>
           <row>
-            <entry>PostgreSQL</entry>
-            <entry>org.hibernate.dialect.PostgreSQLDialect</entry>
+            <entry>PostgreSQL 8.1</entry>
+            <entry>org.hibernate.dialect.PostgreSQL81Dialect</entry>
           </row>
+            <row>
+                <entry>PostgreSQL 8.2 and later</entry>
+                <entry>org.hibernate.dialect.PostgreSQL82Dialect</entry>
+            </row>
           <row>
             <entry>Progress</entry>
             <entry>org.hibernate.dialect.ProgressDialect</entry>

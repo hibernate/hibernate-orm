@@ -158,11 +158,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 		this.lockOptions = new LockOptions();
 		this.properties = new HashMap<String, Object>();
-		if ( properties != null ) {
-			for ( String key : entityManagerSpecificProperties ) {
-				if ( properties.containsKey( key ) ) {
-					this.properties.put( key, properties.get( key ) );
-				}
+		for ( String key : entityManagerSpecificProperties ) {
+			if ( entityManagerFactory.getProperties().containsKey( key ) ) {
+				this.properties.put( key, entityManagerFactory.getProperties().get( key ) );
+			}
+			if ( properties != null && properties.containsKey( key ) ) {
+				this.properties.put( key, properties.get( key ) );
 			}
 		}
 	}
@@ -199,6 +200,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		Object queryTimeout;
 		if ( (queryTimeout = getProperties().get(QueryHints.SPEC_HINT_TIMEOUT)) != null ) {
 			query.setHint ( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
+		}
+		Object lockTimeout;
+		if( (lockTimeout = getProperties().get( AvailableSettings.LOCK_TIMEOUT ))!=null){
+			query.setHint( AvailableSettings.LOCK_TIMEOUT, lockTimeout );
 		}
 		return query;
 	}

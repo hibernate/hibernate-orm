@@ -16,15 +16,6 @@ dependencies {
 }
 
 sourceSets {
-    matrix {
-        java {
-            srcDir 'src/matrix/java'
-        }
-        resources {
-            srcDir 'src/matrix/resources'
-            srcDir 'src/matrix/java'
-        }
-    }
     main {
         generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
         java {
@@ -32,7 +23,6 @@ sourceSets {
         }
     }
 }
-compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
 // Generate JPA2 static metamodel for default revision entities
 task generateJpaMetamodelClasses(type: Compile) {
@@ -53,9 +43,3 @@ task generateJpaMetamodelClasses(type: Compile) {
 }
 compileJava.dependsOn generateJpaMetamodelClasses
 
-idea {
-	module {
-		testSourceDirs += file( 'src/matrix/java')
-		testSourceDirs += file( 'src/matrix/resources')
-	}
-}

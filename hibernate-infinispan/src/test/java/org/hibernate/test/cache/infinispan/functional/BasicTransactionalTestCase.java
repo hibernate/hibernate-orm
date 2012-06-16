@@ -33,8 +33,6 @@ import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.criterion.Restrictions;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Test;
 
@@ -51,13 +49,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 /**
+ * Functional entity transactional tests.
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class BasicTransactionalTestCase extends SingleNodeTestCase {
-	private static final Log log = LogFactory.getLog( BasicTransactionalTestCase.class );
+public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
@@ -89,42 +87,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
          }
       });
    }
-
-   @Test
-	public void testEntityCache() throws Exception {
-		final Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
-
-		final Item item = new Item( "chris", "Chris's Item" );
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            s.getTransaction().begin();
-            s.persist( item );
-            s.getTransaction().commit();
-            s.close();
-            return null;
-         }
-      });
-
-		log.info("Entry persisted, let's load and delete it.");
-
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Item found = (Item) s.load(Item.class, item.getId());
-            log.info(stats.toString());
-            assertEquals(item.getDescription(), found.getDescription());
-            assertEquals(0, stats.getSecondLevelCacheMissCount());
-            assertEquals(1, stats.getSecondLevelCacheHitCount());
-            s.delete(found);
-            s.close();
-            return null;
-         }
-      });
-	}
 
 	@Test
 	public void testCollectionCache() throws Exception {
@@ -450,16 +412,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		finally {
 			commitOrRollbackTx();
 		}
-	}
-
-	@Test
-	public void testEmptySecondLevelCacheEntry() throws Exception {
-      sessionFactory().getCache().evictCollectionRegion( Item.class.getName() + ".items" );
-		Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
-		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
-		Map cacheEntries = statistics.getEntries();
-		assertEquals( 0, cacheEntries.size() );
 	}
 
    @Test

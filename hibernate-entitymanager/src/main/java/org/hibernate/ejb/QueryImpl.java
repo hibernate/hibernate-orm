@@ -50,6 +50,7 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
@@ -631,7 +632,15 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setLockMode(
 				LockModeTypeHelper.getLockMode( lockModeType )
 		);
+		if ( getHints()!=null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
+			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT )) );
+		}
 		return this;
+	}
+
+	@Override
+	protected void applyLockTimeout(int timeout) {
+		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setTimeOut( timeout );
 	}
 
 	@Override

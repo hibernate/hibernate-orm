@@ -9,6 +9,7 @@
 */target
 /build
 */build
+testdb
 
 # IntelliJ specific files/directories
 out

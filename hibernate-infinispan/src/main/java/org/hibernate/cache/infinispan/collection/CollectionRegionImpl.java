@@ -25,11 +25,10 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
    }
 
    public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-      if (AccessType.READ_ONLY.equals(accessType)) {
-         return new ReadOnlyAccess(this);
-      } else if (AccessType.TRANSACTIONAL.equals(accessType)) {
+      if (AccessType.READ_ONLY.equals(accessType)
+            || AccessType.TRANSACTIONAL.equals(accessType))
          return new TransactionalAccess(this);
-      }
+
       throw new CacheException("Unsupported access type [" + accessType.getExternalName() + "]");
    }
 

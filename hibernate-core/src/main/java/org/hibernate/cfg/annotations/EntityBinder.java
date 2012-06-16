@@ -44,12 +44,16 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.Persister;
+import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.RowId;
@@ -57,6 +61,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
@@ -153,23 +158,47 @@ public class EntityBinder {
 		bindHibernateAnnotation( hibAnn );
 	}
 
+	@SuppressWarnings("SimplifiableConditionalExpression")
 	private void bindHibernateAnnotation(org.hibernate.annotations.Entity hibAnn) {
+		{
+			final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotation( DynamicInsert.class );
+			this.dynamicInsert = dynamicInsertAnn == null
+					? ( hibAnn == null ? false : hibAnn.dynamicInsert() )
+					: dynamicInsertAnn.value();
+		}
+
+		{
+			final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotation( DynamicUpdate.class );
+			this.dynamicUpdate = dynamicUpdateAnn == null
+					? ( hibAnn == null ? false : hibAnn.dynamicUpdate() )
+					: dynamicUpdateAnn.value();
+		}
+
+		{
+			final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotation( SelectBeforeUpdate.class );
+			this.selectBeforeUpdate = selectBeforeUpdateAnn == null
+					? ( hibAnn == null ? false : hibAnn.selectBeforeUpdate() )
+					: selectBeforeUpdateAnn.value();
+		}
+
+		{
+			final OptimisticLocking optimisticLockingAnn = annotatedClass.getAnnotation( OptimisticLocking.class );
+			this.optimisticLockType = optimisticLockingAnn == null
+					? ( hibAnn == null ? OptimisticLockType.VERSION : hibAnn.optimisticLock() )
+					: optimisticLockingAnn.type();
+		}
+
+		{
+			final Polymorphism polymorphismAnn = annotatedClass.getAnnotation( Polymorphism.class );
+			this.polymorphismType = polymorphismAnn == null
+					? ( hibAnn == null ? PolymorphismType.IMPLICIT : hibAnn.polymorphism() )
+					: polymorphismAnn.type();
+		}
+
 		if ( hibAnn != null ) {
-			dynamicInsert = hibAnn.dynamicInsert();
-			dynamicUpdate = hibAnn.dynamicUpdate();
-			optimisticLockType = hibAnn.optimisticLock();
-			selectBeforeUpdate = hibAnn.selectBeforeUpdate();
-			polymorphismType = hibAnn.polymorphism();
+			// used later in bind for logging
 			explicitHibernateEntityAnnotation = true;
 			//persister handled in bind
-		}
-		else {
-			//default values when the annotation is not there
-			dynamicInsert = false;
-			dynamicUpdate = false;
-			optimisticLockType = OptimisticLockType.VERSION;
-			polymorphismType = PolymorphismType.IMPLICIT;
-			selectBeforeUpdate = false;
 		}
 	}
 

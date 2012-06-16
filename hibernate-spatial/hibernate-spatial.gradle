@@ -52,28 +52,10 @@ dependencies {
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
 
-    matrixRuntime( 'jaxen:jaxen:1.1' )
+//    matrixRuntime( 'jaxen:jaxen:1.1' )
 }
 
-ideaModule {
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
-}
-
-sourceSets {
-    test {
-        // resources inherently exclude sources
-        resources {
+sourceSets.test.resources {
             setSrcDirs( ['src/test/java','src/test/resources'] )
-        }
-    }
-    matrix {
-        java {
-            srcDir 'src/matrix/java'
-        }
-        resources {
-            srcDir 'src/matrix/resources'
-        }
-    }
 }
 

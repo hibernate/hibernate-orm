@@ -50,6 +50,8 @@ public class Column extends AbstractValue {
 
 	private Size size = new Size();
 
+	private boolean isIdentity = false;
+
 	protected Column(TableSpecification table, int position, String name) {
 		this( table, position, Identifier.toIdentifier( name ) );
 	}
@@ -153,6 +155,22 @@ public class Column extends AbstractValue {
 
 	public void setSize(Size size) {
 		this.size = size;
+	}
+
+	/**
+	 * Returns true if this column is an identity column.
+	 * @return true, if this column is an identity column; false, otherwise.
+	 */
+	public boolean isIdentity() {
+		return isIdentity;
+	}
+
+	/**
+	 * Indicate if this column is an identity column.
+	 * @param isIdentity - true, if this column is an identity column; false, otherwise.
+	 */
+	public void setIdentity(boolean isIdentity) {
+		this.isIdentity = isIdentity;
 	}
 
 	@Override

@@ -168,12 +168,12 @@ public class Table extends AbstractTableSpecification implements Exportable {
 				.append( " (" );
 
 
-		// TODO: fix this when identity columns are supported by new metadata (HHH-6436)
-		// for now, assume false
-		//boolean identityColumn = idValue != null && idValue.isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
-		boolean isPrimaryKeyIdentity = false;
+		boolean isPrimaryKeyIdentity =
+				hasPrimaryKey &&
+				getPrimaryKey().getColumnSpan() == 1 &&
+				getPrimaryKey().getColumns().get( 0 ).isIdentity();
 
-		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
+		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
 		if ( hasPrimaryKey && isPrimaryKeyIdentity ) {
 			Column pkColumn = getPrimaryKey().getColumns().iterator().next();
@@ -280,7 +280,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	private static String getTypeString(Column col, Dialect dialect) {
-		String typeString = null;
+		String typeString;
 		if ( col.getSqlType() != null ) {
 			typeString = col.getSqlType();
 		}

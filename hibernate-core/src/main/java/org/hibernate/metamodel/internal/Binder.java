@@ -46,6 +46,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
@@ -64,6 +65,7 @@ import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.EntityVersion;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -996,7 +998,7 @@ public class Binder {
 			bindIdentifier( rootEntityBinding, rootEntitySource.getIdentifierSource() );
 			bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
 			bindDiscriminator( rootEntityBinding, rootEntitySource );
-			createIdentifierGenerator( rootEntityBinding );
+			bindIdentifierGenerator( rootEntityBinding );
 			bindMultiTenancy( rootEntityBinding, rootEntitySource );
 			rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
 			rootEntityBinding.getHierarchyDetails().setExplicitPolymorphism( rootEntitySource.isExplicitPolymorphism() );
@@ -1658,7 +1660,7 @@ public class Binder {
 		return Identifier.toIdentifier( name );
 	}
 
-	private void createIdentifierGenerator( final EntityBinding rootEntityBinding ) {
+	private void bindIdentifierGenerator(final EntityBinding rootEntityBinding) {
 		final Properties properties = new Properties();
 		properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
 		if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
@@ -1667,9 +1669,21 @@ public class Binder {
 		if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
 			properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, nameNormalizer );
 		}
-		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().createIdentifierGenerator(
-				identifierGeneratorFactory,
-				properties );
+		final EntityIdentifier entityIdentifier = rootEntityBinding.getHierarchyDetails().getEntityIdentifier();
+		entityIdentifier.createIdentifierGenerator( identifierGeneratorFactory, properties );
+		if ( IdentityGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
+			if ( rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() != 1 ) {
+				throw new MappingException(
+						String.format(
+								"ID for %s is mapped as an identity with %d columns. IDs mapped as an identity can only have 1 column.",
+								rootEntityBinding.getEntity().getName(),
+								rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan()
+						),
+						bindingContexts.peek().getOrigin()
+				);
+			}
+			rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 ).setIdentity( true );
+		}
 	}
 
 	private MetaAttributeContext createMetaAttributeContext(

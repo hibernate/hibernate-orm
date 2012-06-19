@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.metamodel.spi.relational" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <class name="AbstractGeneratedIdColumnTests$EntityWithAssignedId">
+        <id name="id"/>
+    </class>
+
+    <class name="AbstractGeneratedIdColumnTests$EntityWithSequenceId">
+        <id name="id">
+            <generator class="sequence"/>
+        </id>
+    </class>
+
+    <class name="AbstractGeneratedIdColumnTests$EntityWithIdentityId">
+        <id name="id">
+            <generator class="identity"/>
+        </id>
+    </class>
+
+    <class name="AbstractGeneratedIdColumnTests$EntityWithNativeId">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+    </class>
+</hibernate-mapping>

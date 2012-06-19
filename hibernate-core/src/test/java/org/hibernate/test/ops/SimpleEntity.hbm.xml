@@ -6,7 +6,7 @@
     <class name="SimpleEntity">
 
         <id name="id">
-            <generator class="assigned"/>
+            <generator class="identity"/>
         </id>
         <property name="name"/>
     </class>

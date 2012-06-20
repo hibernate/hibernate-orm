@@ -46,6 +46,8 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
         String entityName = event.getPersister().getEntityName();
 
         if ( getAuditConfiguration().getEntCfg().isVersioned(entityName) ) {
+            checkIfTransactionInProgress(event.getSession());
+
             AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
 
 			final Object[] newDbState = postUpdateDBState( event );

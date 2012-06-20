@@ -238,6 +238,12 @@ public class LockOptions implements Serializable {
 		return this;
 	}
 
+	public LockOptions makeCopy() {
+		final LockOptions copy = new LockOptions();
+		copy( this, copy );
+		return copy;
+	}
+
 	/**
 	 * Shallow copy From to Dest
 	 *

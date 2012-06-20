@@ -141,10 +141,23 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		callable = false;
 	}
 
-	private NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
+	@Override
+	public List<NativeSQLQueryReturn>  getQueryReturns() {
+		prepareQueryReturnsIfNecessary();
+		return queryReturns;
 	}
 
+	@Override
+	public Collection<String> getSynchronizedQuerySpaces() {
+		return querySpaces;
+	}
+
+	@Override
+	public boolean isCallable() {
+		return callable;
+	}
+
+	@Override
 	public List list() throws HibernateException {
 		verifyParameters();
 		before();
@@ -163,7 +176,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	private NativeSQLQuerySpecification generateQuerySpecification(Map namedParams) {
 		return new NativeSQLQuerySpecification(
 		        expandParameterLists(namedParams),
-		        getQueryReturns(),
+				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
 		        querySpaces
 		);
 	}
@@ -206,7 +219,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
     protected void verifyParameters() {
 		// verifyParameters is called at the start of all execution type methods, so we use that here to perform
 		// some preparation work.
-		prepare();
+		prepareQueryReturnsIfNecessary();
 		verifyParameters( callable );
 		boolean noReturns = queryReturns==null || queryReturns.isEmpty();
 		if ( noReturns ) {
@@ -225,7 +238,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
-	private void prepare() {
+	private void prepareQueryReturnsIfNecessary() {
 		if ( queryReturnBuilders != null ) {
 			if ( ! queryReturnBuilders.isEmpty() ) {
 				if ( queryReturns != null ) {

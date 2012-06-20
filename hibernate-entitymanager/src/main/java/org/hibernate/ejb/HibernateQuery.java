@@ -22,8 +22,21 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb;
+
 import javax.persistence.Query;
 
+/**
+ * Marker interface for Hibernate generated JPA queries so that we can access the underlying Hibernate query objects.
+ *
+ * @author Gavin King
+ * @author Emmanuel Bernard
+ * @author Steve Ebersole
+ */
 public interface HibernateQuery extends Query {
+	/**
+	 * Gives access to the underlying Hibernate query object..
+	 *
+	 * @return THe Hibernate query object.
+	 */
 	public org.hibernate.Query getHibernateQuery();
 }

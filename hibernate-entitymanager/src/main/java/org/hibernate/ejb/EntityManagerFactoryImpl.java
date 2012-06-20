@@ -53,6 +53,10 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.internal.EntityManagerFactoryRegistry;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
@@ -228,12 +232,47 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			throw new PersistenceException( "Cannot use query non-Hibernate EntityManager query as basis for named query" );
 		}
 
-		// the spec requires that we keep information such as max results, hints etc.  Currently the information
-		// stored about a named query does not contain all that information (see org.hibernate.engine.spi.NamedQueryDefinition)
-		//
-		// the most simple solution is to just add these needed values to org.hibernate.engine.spi.NamedQueryDefinition
+		// create and register the proper NamedQueryDefinition...
+		final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
+		if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
+			final NamedSQLQueryDefinition namedQueryDefinition = extractSqlQueryDefinition( ( org.hibernate.SQLQuery ) hibernateQuery, name );
+			sessionFactory.registerNamedSQLQueryDefinition( name, namedQueryDefinition );
+		}
+		else {
+			final NamedQueryDefinition namedQueryDefinition = extractHqlQueryDefinition( hibernateQuery, name );
+			sessionFactory.registerNamedQueryDefinition( name, namedQueryDefinition );
+		}
+	}
 
-		throw new NotYetImplementedException();
+	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.SQLQuery nativeSqlQuery, String name) {
+		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( name );
+		fillInNamedQueryBuilder( builder, nativeSqlQuery );
+		builder.setCallable( nativeSqlQuery.isCallable() )
+				.setQuerySpaces( nativeSqlQuery.getSynchronizedQuerySpaces() )
+				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
+		return builder.createNamedQueryDefinition();
+	}
+
+	private NamedQueryDefinition extractHqlQueryDefinition(org.hibernate.Query hqlQuery, String name) {
+		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder( name );
+		fillInNamedQueryBuilder( builder, hqlQuery );
+		// LockOptions only valid for HQL/JPQL queries...
+		builder.setLockOptions( hqlQuery.getLockOptions().makeCopy() );
+		return builder.createNamedQueryDefinition();
+	}
+
+	private void fillInNamedQueryBuilder(NamedQueryDefinitionBuilder builder, org.hibernate.Query query) {
+		builder.setQuery( query.getQueryString() )
+				.setComment( query.getComment() )
+				.setCacheable( query.isCacheable() )
+				.setCacheRegion( query.getCacheRegion() )
+				.setCacheMode( query.getCacheMode() )
+				.setTimeout( query.getTimeout() )
+				.setFetchSize( query.getFetchSize() )
+				.setFirstResult( query.getFirstResult() )
+				.setMaxResults( query.getMaxResults() )
+				.setReadOnly( query.isReadOnly() )
+				.setFlushMode( query.getFlushMode() );
 	}
 
 	@Override

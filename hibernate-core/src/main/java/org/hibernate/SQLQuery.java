@@ -22,6 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate;
+import java.util.Collection;
+import java.util.List;
+
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.type.Type;
 
 /**
@@ -45,6 +49,14 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface SQLQuery extends Query {
+	/**
+	 * Obtain the list of query spaces (table names) the query is synchronized on.  These spaces affect the process
+	 * of auto-flushing by determining which entities will be processed by auto-flush based on the table to
+	 * which those entities are mapped and which are determined to have pending state changes.
+	 *
+	 * @return The list of query spaces upon which the query is synchronized.
+	 */
+	public Collection<String> getSynchronizedQuerySpaces();
 
 	/**
 	 * Adds a query space (table name) for (a) auto-flush checking and (b) query result cache invalidation checking
@@ -52,6 +64,8 @@ public interface SQLQuery extends Query {
 	 * @param querySpace The query space to be auto-flushed for this query.
 	 *
 	 * @return this, for method chaining
+	 *
+	 * @see #getSynchronizedQuerySpaces()
 	 */
 	public SQLQuery addSynchronizedQuerySpace(String querySpace);
 
@@ -64,6 +78,8 @@ public interface SQLQuery extends Query {
 	 * @return this, for method chaining
 	 *
 	 * @throws MappingException Indicates the given name could not be resolved as an entity
+	 *
+	 * @see #getSynchronizedQuerySpaces()
 	 */
 	public SQLQuery addSynchronizedEntityName(String entityName) throws MappingException;
 
@@ -76,6 +92,8 @@ public interface SQLQuery extends Query {
 	 * @return this, for method chaining
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
+	 *
+	 * @see #getSynchronizedQuerySpaces()
 	 */
 	public SQLQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
@@ -88,6 +106,15 @@ public interface SQLQuery extends Query {
 	 * @return this, for method chaining
 	 */
 	public SQLQuery setResultSetMapping(String name);
+
+	/**
+	 * Is this native-SQL query known to be callable?
+	 *
+	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
+	 */
+	public boolean isCallable();
+
+	public List<NativeSQLQueryReturn> getQueryReturns();
 
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically detect the underlying type.

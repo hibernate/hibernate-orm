@@ -27,6 +27,7 @@ import javax.persistence.LockModeType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
+import org.hibernate.internal.util.LockModeConverter;
 
 /**
  * Helper to deal with {@link LockModeType} <-> {@link LockMode} conversions.
@@ -35,57 +36,11 @@ import org.hibernate.LockMode;
  */
 public class LockModeTypeHelper {
 	public static LockModeType getLockModeType(LockMode lockMode) {
-		if ( lockMode == LockMode.NONE ) {
-			return LockModeType.NONE;
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC || lockMode == LockMode.READ ) {
-			return LockModeType.OPTIMISTIC;
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT || lockMode == LockMode.WRITE ) {
-			return LockModeType.OPTIMISTIC_FORCE_INCREMENT;
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_READ ) {
-			return LockModeType.PESSIMISTIC_READ;
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE
-				|| lockMode == LockMode.UPGRADE
-				|| lockMode == LockMode.UPGRADE_NOWAIT ) {
-			return LockModeType.PESSIMISTIC_WRITE;
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
-				|| lockMode == LockMode.FORCE ) {
-			return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
-		}
-		throw new AssertionFailure( "unhandled lock mode " + lockMode );
+		return LockModeConverter.convertToLockModeType( lockMode );
 	}
 
-
-	public static LockMode getLockMode(LockModeType lockMode) {
-		switch ( lockMode ) {
-			case READ:
-			case OPTIMISTIC: {
-				return LockMode.OPTIMISTIC;
-			}
-			case OPTIMISTIC_FORCE_INCREMENT:
-			case WRITE: {
-				return LockMode.OPTIMISTIC_FORCE_INCREMENT;
-			}
-			case PESSIMISTIC_READ: {
-				return LockMode.PESSIMISTIC_READ;
-			}
-			case PESSIMISTIC_WRITE: {
-				return LockMode.PESSIMISTIC_WRITE;
-			}
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
-			}
-			case NONE: {
-				return LockMode.NONE;
-			}
-			default: {
-				throw new AssertionFailure( "Unknown LockModeType: " + lockMode );
-			}
-		}
+	public static LockMode getLockMode(LockModeType lockModeType) {
+		return LockModeConverter.convertToLockMode( lockModeType );
 	}
 
 	public static LockMode interpretLockMode(Object value) {

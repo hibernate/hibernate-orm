@@ -334,7 +334,9 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			if ( RegionFactory.class.isAssignableFrom( cls ) ) {
 				return (T) sessionFactory.getSettings().getRegionFactory();
 			}
-
+			if ( org.hibernate.Cache.class.isAssignableFrom( cls ) ) {
+				return (T) sessionFactory.getCache();
+			}
 			throw new PersistenceException( "Hibernate cannot unwrap Cache as " + cls.getName() );
 		}
 	}

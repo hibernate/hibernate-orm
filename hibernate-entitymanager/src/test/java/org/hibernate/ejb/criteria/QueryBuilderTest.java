@@ -40,6 +40,7 @@ import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
 import org.hibernate.ejb.metamodel.CreditCard;
 import org.hibernate.ejb.metamodel.Customer;
+import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Info;
 import org.hibernate.ejb.metamodel.LineItem;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
@@ -234,6 +235,31 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		tsQuery.select( cb.currentTimestamp() );
 		em.createQuery( tsQuery ).getResultList();
 
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testFunctionDialectFunctions() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
+		criteria.select( cb.count( cb.literal( 1 ) ) );
+		Root<Customer> root = criteria.from( Customer.class );
+		criteria.where(
+				cb.equal(
+						cb.function(
+								"substring",
+								String.class,
+								cb.literal( 1 ),
+								root.get( Customer_.name ),
+								cb.literal( 1 )
+						),
+						cb.literal( "a" )
+				)
+		);
+		em.createQuery( criteria ).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}

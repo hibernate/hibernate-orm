@@ -195,6 +195,9 @@ tokens
 
 	public void processMemberOf(Token n,AST p,ASTPair currentAST) { }
 
+    protected String unquote(String text) {
+        return text.substring( 1, text.length() - 1 );
+    }
 }
 
 statement
@@ -599,10 +602,13 @@ quantifiedExpression
 	;
 
 // level 0 - expression atom
-// ident qualifier ('.' ident ), array index ( [ expr ] ),
-// method call ( '.' ident '(' exprList ') )
+//      * ident qualifier ('.' ident )
+//      * array index ( [ expr ] )
+//      * method call ( '.' ident '(' exprList ') )
+//      * function : differentiated from method call via explicit keyword
 atom
-	 : primaryExpression
+    : { LT(1).getText().equalsIgnoreCase("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
+    | primaryExpression
 		(
 			DOT^ identifier
 				( options { greedy=true; } :
@@ -610,6 +616,14 @@ atom
 		|	lb:OPEN_BRACKET^ {#lb.setType(INDEX_OP);} expression CLOSE_BRACKET!
 		)*
 	;
+
+jpaFunctionSyntax!
+    : i:IDENT OPEN n:QUOTED_STRING COMMA a:exprList CLOSE {
+        #i.setType( METHOD_CALL );
+        #i.setText( #i.getText() + " (" + #n.getText() + ")" );
+        #jpaFunctionSyntax = #( #i, [IDENT, unquote( #n.getText() )], #a );
+    }
+    ;
 
 // level 0 - the basic element of an expression
 primaryExpression

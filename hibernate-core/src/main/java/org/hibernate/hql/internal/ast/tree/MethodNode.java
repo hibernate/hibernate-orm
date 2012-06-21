@@ -35,7 +35,6 @@ import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
@@ -46,8 +45,7 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public class MethodNode extends AbstractSelectExpression implements FunctionNode {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MethodNode.class.getName());
+    private static final Logger LOG = Logger.getLogger( MethodNode.class.getName() );
 
 	private String methodName;
 	private FromElement fromElement;
@@ -55,25 +53,60 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 	private SQLFunction function;
 	private boolean inSelect;
 
+	@Override
+	public boolean isScalar() throws SemanticException {
+		// Method expressions in a SELECT should always be considered scalar.
+		return true;
+	}
+
+	@Override
+	public SQLFunction getSQLFunction() {
+		return function;
+	}
+
+	@Override
+	public Type getFirstArgumentType() {
+		AST argument = getFirstChild();
+		while ( argument != null ) {
+			if ( argument instanceof SqlNode ) {
+				final Type type = ( (SqlNode) argument ).getDataType();
+				if ( type != null ) {
+					return type;
+				}
+				argument = argument.getNextSibling();
+			}
+		}
+		return null;
+	}
+
 	public void resolve(boolean inSelect) throws SemanticException {
 		// Get the function name node.
-		AST name = getFirstChild();
-		initializeMethodNode( name, inSelect );
-		AST exprList = name.getNextSibling();
+		AST nameNode = getFirstChild();
+		AST exprListNode = nameNode.getNextSibling();
+
+		initializeMethodNode( nameNode, inSelect );
+
 		// If the expression list has exactly one expression, and the type of the expression is a collection
 		// then this might be a collection function, such as index(c) or size(c).
-		if ( ASTUtil.hasExactlyOneChild( exprList ) ) {
+		if ( ASTUtil.hasExactlyOneChild( exprListNode ) ) {
 			if ( "type".equals( methodName ) ) {
-				typeDiscriminator( exprList.getFirstChild() );
+				typeDiscriminator( exprListNode.getFirstChild() );
 				return;
 			}
 			if ( isCollectionPropertyMethod() ) {
-				collectionProperty( exprList.getFirstChild(), name );
+				collectionProperty( exprListNode.getFirstChild(), nameNode );
 				return;
 			}
 		}
 
-		dialectFunction( exprList );
+		dialectFunction( exprListNode );
+	}
+
+	public void initializeMethodNode(AST name, boolean inSelect) {
+		name.setType( SqlTokenTypes.METHOD_NAME );
+		String text = name.getText();
+		methodName = text.toLowerCase();	// Use the lower case function name.
+		this.inSelect = inSelect;			// Remember whether we're in a SELECT clause or not.
 	}
 
 	private void typeDiscriminator(AST path) throws SemanticException {
@@ -88,24 +121,6 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		setDataType( typeDiscriminatorMetadata.getResolutionType() );
 		setText( typeDiscriminatorMetadata.getSqlFragment() );
 		setType( SqlTokenTypes.SQL_TOKEN );
-	}
-
-	public SQLFunction getSQLFunction() {
-		return function;
-	}
-
-	public Type getFirstArgumentType() {
-		AST argument = getFirstChild();
-		while ( argument != null ) {
-			if ( argument instanceof SqlNode ) {
-				final Type type = ( (SqlNode) argument ).getDataType();
-				if ( type != null ) {
-					return type;
-				}
-				argument = argument.getNextSibling();
-			}
-		}
-		return null;
 	}
 
 	private void dialectFunction(AST exprList) {
@@ -126,17 +141,6 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		return CollectionProperties.isAnyCollectionProperty( methodName );
 	}
 
-	public void initializeMethodNode(AST name, boolean inSelect) {
-		name.setType( SqlTokenTypes.METHOD_NAME );
-		String text = name.getText();
-		methodName = text.toLowerCase();	// Use the lower case function name.
-		this.inSelect = inSelect;			// Remember whether we're in a SELECT clause or not.
-	}
-
-	private String getMethodName() {
-		return methodName;
-	}
-
 	private void collectionProperty(AST path, AST name) throws SemanticException {
 		if ( path == null ) {
 			throw new SemanticException( "Collection function " + name.getText() + " has no path!" );
@@ -149,14 +153,8 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		resolveCollectionProperty( expr );
 	}
 
-	@Override
-    public boolean isScalar() throws SemanticException {
-		// Method expressions in a SELECT should always be considered scalar.
-		return true;
-	}
-
-	public void resolveCollectionProperty(AST expr) throws SemanticException {
-		String propertyName = CollectionProperties.getNormalizedPropertyName( getMethodName() );
+	protected void resolveCollectionProperty(AST expr) throws SemanticException {
+		String propertyName = CollectionProperties.getNormalizedPropertyName( methodName );
 		if ( expr instanceof FromReferenceNode ) {
 			FromReferenceNode collectionNode = ( FromReferenceNode ) expr;
 			// If this is 'elements' then create a new FROM element.
@@ -236,7 +234,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 
 	public String getDisplayText() {
 		return "{" +
-				"method=" + getMethodName() +
+				"method=" + methodName +
 				",selectColumns=" + ( selectColumns == null ?
 						null : Arrays.asList( selectColumns ) ) +
 				",fromElement=" + fromElement.getTableAlias() +

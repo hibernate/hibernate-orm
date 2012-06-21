@@ -336,6 +336,11 @@ fromJoin
 
 withClause
 	: WITH^ logicalExpression
+	// JPA 2.1 support for an ON clause that isn't really an ON clause...
+	| ON! le:logicalExpression {
+	    // it's really just a WITH clause, so treat it as such...
+	    #withClause = #( [WITH, "with"], #le );
+	}
 	;
 
 fromRange

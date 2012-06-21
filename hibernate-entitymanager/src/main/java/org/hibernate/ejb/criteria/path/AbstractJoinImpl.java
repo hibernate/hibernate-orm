@@ -36,6 +36,7 @@ import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.JoinImplementor;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.predicate.AbstractPredicateImpl;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
@@ -91,7 +92,17 @@ public abstract class AbstractJoinImpl<Z, X>
 	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		( (FromImplementor) getParent() ).prepareAlias( renderingContext );
-		return getParent().getAlias() + '.' + getAttribute().getName() + " as " + getAlias();
+		StringBuilder tableExpression = new StringBuilder();
+		tableExpression.append( getParent().getAlias() )
+				.append( '.' )
+				.append( getAttribute().getName() )
+				.append( " as " )
+				.append( getAlias() );
+		if ( suppliedJoinCondition != null ) {
+			tableExpression.append( " with " )
+					.append( ( (AbstractPredicateImpl) suppliedJoinCondition ).render( renderingContext ) );
+		}
+		return tableExpression.toString();
 	}
 
 	@Override

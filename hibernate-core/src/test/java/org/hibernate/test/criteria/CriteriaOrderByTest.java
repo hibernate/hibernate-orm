@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.sql.JoinType;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
 import org.junit.Assert;
@@ -26,6 +27,7 @@ public class CriteriaOrderByTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    @TestForIssue(jiraKey = "HHH-7116")
     public void testCriteriaOrderBy() {
         Session s = openSession();
         Transaction tx = s.beginTransaction();

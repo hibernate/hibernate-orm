@@ -93,6 +93,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public EntityPersister getEntityPersister(String entityName) throws MappingException;
 
 	/**
+	 * Get all entity persisters as a Map, which entity name its the key and the persister is the value.
+	 *
+	 * @return The Map contains all entity persisters.
+	 */
+	public Map<String,EntityPersister> getEntityPersisters();
+
+	/**
 	 * Get the persister object for a collection role.
 	 *
 	 * @param role The role (name) of the collection for which to retrieve the
@@ -101,6 +108,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @throws MappingException Indicates persister could not be found with that role.
 	 */
 	public CollectionPersister getCollectionPersister(String role) throws MappingException;
+
+	/**
+	 * Get all collection persisters as a Map, which collection role as the key and the persister is the value.
+	 *
+	 * @return The Map contains all collection persisters.
+	 */
+	public Map<String, CollectionPersister> getCollectionPersisters();
 
 	/**
 	 * Get the JdbcServices.

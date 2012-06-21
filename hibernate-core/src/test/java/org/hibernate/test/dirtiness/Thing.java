@@ -23,8 +23,7 @@
  */
 package org.hibernate.test.dirtiness;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -43,6 +42,7 @@ public class Thing {
 	private Long id;
 
 	private String name;
+	private Date mutableProperty;
 
 	public Thing() {
 	}
@@ -62,11 +62,19 @@ public class Thing {
 	public String getName() {
 		return name;
 	}
-
+	
 	public void setName(String name) {
 		// intentionally simple dirty tracking (i.e. no checking against previous state)
 		changedValues.put( "name", this.name );
 		this.name = name;
+	}
+
+	public Date getMutableProperty() {
+		return mutableProperty;
+	}
+
+	public void setMutableProperty(Date mutableProperty) {
+		this.mutableProperty = mutableProperty;
 	}
 
 	@Transient

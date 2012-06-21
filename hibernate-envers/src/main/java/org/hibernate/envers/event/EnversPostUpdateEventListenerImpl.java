@@ -29,6 +29,7 @@ import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.ModWorkUnit;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,7 +46,11 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
         String entityName = event.getPersister().getEntityName();
 
         if ( getAuditConfiguration().getEntCfg().isVersioned(entityName) ) {
+            checkIfTransactionInProgress(event.getSession());
+
             AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
+
+			final Object[] newDbState = postUpdateDBState( event );
 
             AuditWorkUnit workUnit = new ModWorkUnit(
 					event.getSession(),
@@ -53,7 +58,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 					getAuditConfiguration(),
                     event.getId(),
 					event.getPersister(),
-					event.getState(),
+					newDbState,
 					event.getOldState()
 			);
             auditProcess.addWorkUnit( workUnit );
@@ -63,11 +68,24 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 						auditProcess,
 						event.getPersister(),
 						entityName,
-						event.getState(),
+						newDbState,
                         event.getOldState(),
 						event.getSession()
 				);
             }
         }
+	}
+
+	private Object[] postUpdateDBState(PostUpdateEvent event) {
+		Object[] newDbState = event.getState().clone();
+		EntityPersister entityPersister = event.getPersister();
+		for ( int i = 0; i < entityPersister.getPropertyNames().length; ++i ) {
+			if ( !entityPersister.getPropertyUpdateability()[i] ) {
+				// Assuming that PostUpdateEvent#getOldState() returns database state of the record before modification.
+				// Otherwise, we would have to execute SQL query to be sure of @Column(updatable = false) column value.
+				newDbState[i] = event.getOldState()[i];
+			}
+		}
+		return newDbState;
 	}
 }

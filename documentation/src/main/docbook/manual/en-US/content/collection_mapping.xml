@@ -458,7 +458,7 @@ public class Part {
     <section xml:id="collections-indexed">
       <title xml:id="section.indexed.collections">Indexed collections</title>
 
-      <para>In the following paragraphs we have a closer at the indexed
+      <para>In the following paragraphs we have a closer look at the indexed
       collections <classname>List</classname> and <classname>Map</classname>
       how the their index can be mapped in Hibernate.</para>
 
@@ -1165,7 +1165,7 @@ public class Soldier {
       will produce additional UPDATE statements.</para>
 
       <example>
-        <title>Bidirectional associtaion with one to many side as
+        <title>Bidirectional association with one to many side as
         owner</title>
 
         <programlisting language="JAVA" role="JAVA">@Entity

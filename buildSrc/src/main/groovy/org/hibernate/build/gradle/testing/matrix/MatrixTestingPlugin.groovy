@@ -31,7 +31,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.hibernate.build.gradle.testing.database.DatabaseProfile
 import org.hibernate.build.gradle.testing.database.DatabaseProfilePlugin
@@ -43,7 +42,7 @@ import static org.gradle.api.plugins.JavaPlugin.TEST_RUNTIME_CONFIGURATION_NAME
 
 /**
  * TODO : 1) add a base configuration of common attribute across all matrix node tasks (convention)
- * TODO: 2) somehow allow applying just a single database to a project (non matrix testing).
+ * TODO : 2) somehow allow applying just a single database to a project (non matrix testing).
  *
  * @author Steve Ebersole
  * @author Strong Liu
@@ -54,14 +53,13 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     public static final String MATRIX_COMPILE_CONFIG_NAME = "matrixCompile";
     public static final String MATRIX_RUNTIME_CONFIG_NAME = "matrixRuntime";
     public static final String MATRIX_TASK_NAME = "matrix";
-    public static final String MATRIX_SOURCE_SET_NAME = "matrix";
-    public static final String SKIP_UNIT_TEST = "hibernate-matrix-skip-unittest";
 
     private Project project;
+    private SourceSet testSourceSet;
+
     private Configuration matrixCompileConfig;
     private Configuration matrixRuntimeConfig;
     private Task matrixTask;
-    private SourceSet matrixSourceSet;
 
     // currently, only the build jdk is supported
     private Jdk theJdk = new Jdk();
@@ -78,22 +76,15 @@ public class MatrixTestingPlugin implements Plugin<Project> {
 
         matrixCompileConfig = prepareCompileConfiguration();
         matrixRuntimeConfig = prepareRuntimeConfiguration();
-        matrixSourceSet = prepareSourceSet();
+        testSourceSet = project.convention.getPlugin( JavaPluginConvention ).sourceSets
+                .getByName( SourceSet.TEST_SOURCE_SET_NAME );
 
 		matrixTask = prepareGroupingTask();
         for ( MatrixNode matrixNode: matrixNodes ) {
             Task matrixNodeTask = prepareNodeTask( matrixNode );
             matrixTask.dependsOn( matrixNodeTask );
         }
-
-		if ( ! shouldSkipMatrixTestsAgainstDefaultDb() ) {
-			createTestTaskForMatrixSourceSet();
-		}
     }
-
-	private boolean shouldSkipMatrixTestsAgainstDefaultDb() {
-		return "true".equals( project.properties[SKIP_UNIT_TEST] ) || "true".equals( System.properties[SKIP_UNIT_TEST] );
-	}
 
 	private List<MatrixNode> locateMatrixNodes() {
         List<MatrixNode> matrixNodes = new ArrayList<MatrixNode>();
@@ -127,24 +118,6 @@ public class MatrixTestingPlugin implements Plugin<Project> {
 				.extendsFrom( project.configurations.getByName( TEST_RUNTIME_CONFIGURATION_NAME ) );
     }
 
-
-    private SourceSet prepareSourceSet() {
-        final SourceSetContainer sourceSets = project.convention.getPlugin( JavaPluginConvention ).sourceSets;
-        SourceSet sourceSet = sourceSets.findByName( MATRIX_SOURCE_SET_NAME );
-        if ( sourceSet == null ) {
-            sourceSet = sourceSets.add( MATRIX_SOURCE_SET_NAME );
-        }
-        final SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);    //sourceSets.main
-        final SourceSet unitTestSourceSet = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME); //sourceSets.test
-        sourceSet.compileClasspath = mainSourceSet.output + unitTestSourceSet.output + matrixCompileConfig
-        sourceSet.runtimeClasspath = sourceSet.output + mainSourceSet.output + unitTestSourceSet.output + matrixRuntimeConfig
-        sourceSet.output.classesDir = new File(unitTestSourceSet.output.classesDir.parentFile, "matrix")
-        sourceSet.resources {
-            setSrcDirs(['src/matrix/java', 'src/matrix/resources'])
-        }
-        return sourceSet;
-    }
-
 	private Task prepareGroupingTask() {
 		Task matrixTask = project.tasks.add( MATRIX_TASK_NAME );
         matrixTask.group = "Verification"
@@ -169,60 +142,18 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         log.debug( "Adding Matrix Testing task $taskName" );
         final Test nodeTask = project.tasks.add( taskName, Test );
         nodeTask.description = "Runs the matrix against ${node.name}"
-        nodeTask.classpath = node.databaseProfile.testingRuntimeConfiguration + matrixSourceSet.runtimeClasspath
-        nodeTask.testClassesDir = matrixSourceSet.output.classesDir
+        nodeTask.classpath = node.databaseProfile.testingRuntimeConfiguration + testSourceSet.runtimeClasspath
+        nodeTask.testClassesDir = testSourceSet.output.classesDir
         nodeTask.ignoreFailures = true
         nodeTask.workingDir = node.baseOutputDirectory
         nodeTask.testReportDir = new File(node.baseOutputDirectory, "reports")
         nodeTask.testResultsDir = new File(node.baseOutputDirectory, "results")
 
-        nodeTask.dependsOn( project.tasks.getByName( matrixSourceSet.classesTaskName ) );
+        nodeTask.dependsOn( project.tasks.getByName( testSourceSet.classesTaskName ) );
         nodeTask.systemProperties = node.databaseAllocation.properties
         nodeTask.systemProperties['hibernate.test.validatefailureexpected'] = true
         nodeTask.jvmArgs = ['-Xms1024M', '-Xmx1024M']//, '-XX:MaxPermSize=512M', '-Xss4096k', '-Xverify:none', '-XX:+UseFastAccessorMethods', '-XX:+DisableExplicitGC']
         nodeTask.maxHeapSize = "1024M"
         return nodeTask;
-    }
-
-    /**
-     * we need create a Test task which runs tests in matrix and also use resources in test.resources
-     */
-    private void createTestTaskForMatrixSourceSet() {
-        final Test test = project.tasks.test
-        final Test matrixUnitTask = project.tasks.add("matrixUnitTest", Test)
-        matrixUnitTask.description = "Run matrix sources as unit test"
-        matrixUnitTask.classpath = matrixSourceSet.runtimeClasspath
-        matrixUnitTask.testClassesDir = matrixSourceSet.output.classesDir
-
-        matrixUnitTask.workingDir = test.workingDir
-        matrixUnitTask.testReportDir = test.testReportDir
-        matrixUnitTask.testResultsDir = test.testResultsDir
-        matrixUnitTask.systemProperties = test.systemProperties
-        test.dependsOn matrixUnitTask
-        def sourceSets = project.convention.getPlugin(JavaPluginConvention).sourceSets
-        project.tasks.getByName("processMatrixResources").doLast({
-            project.copy {
-                from(sourceSets.test.java.srcDirs) {
-                    include '**/*.properties'
-                    include '**/*.xml'
-                }
-                into matrixSourceSet.output.classesDir
-            }
-            project.copy {
-                from(sourceSets.test.resources.srcDirs) {
-                    include '**/*.properties'
-                    include '**/*.xml'
-                }
-                into matrixSourceSet.output.classesDir
-            }
-            project.copy {
-                from(matrixSourceSet.java.srcDirs) {
-                    include '**/*.properties'
-                    include '**/*.xml'
-                }
-                into matrixSourceSet.output.classesDir
-            }
-        })
-
     }
 }

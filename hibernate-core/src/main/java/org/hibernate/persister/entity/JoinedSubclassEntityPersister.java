@@ -858,4 +858,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		};
 	}
 	
+	public int determineTableNumberForColumn(String columnName) {
+		final String[] subclassColumnNameClosure = getSubclassColumnClosure();
+		for ( int i = 0, max = subclassColumnNameClosure.length; i < max; i++ ) {
+			final boolean quoted = subclassColumnNameClosure[i].startsWith( "\"" )
+					&& subclassColumnNameClosure[i].endsWith( "\"" );
+			if ( quoted ) {
+				if ( subclassColumnNameClosure[i].equals( columnName ) ) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
+			}
+			else {
+				if ( subclassColumnNameClosure[i].equalsIgnoreCase( columnName ) ) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
+			}
+		}
+		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+	}
 }

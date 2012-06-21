@@ -25,6 +25,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -120,18 +121,18 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-    public String appendLockHint(LockMode mode, String tableName) {
-		if ( ( mode == LockMode.UPGRADE ) ||
-			  ( mode == LockMode.UPGRADE_NOWAIT ) ||
-			  ( mode == LockMode.PESSIMISTIC_WRITE ) ||
-			  ( mode == LockMode.WRITE ) ) {
-			return tableName + " with (updlock, rowlock)";
-		}
-		else if ( mode == LockMode.PESSIMISTIC_READ ) {
-			return tableName + " with (holdlock, rowlock)";
-		}
-		else {
-			return tableName;
+    public String appendLockHint(LockOptions lockOptions, String tableName) {
+		LockMode mode = lockOptions.getLockMode();
+		switch ( mode ) {
+			case UPGRADE:
+			case UPGRADE_NOWAIT:
+			case PESSIMISTIC_WRITE:
+			case WRITE:
+				return tableName + " with (updlock, rowlock)";
+			case PESSIMISTIC_READ:
+				return tableName + " with (holdlock, rowlock)";
+			default:
+				return tableName;
 		}
 	}
 

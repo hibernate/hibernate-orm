@@ -29,9 +29,11 @@ import java.util.Set;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 
@@ -44,6 +46,7 @@ import org.hibernate.mapping.PersistentClass;
 public class MetamodelImpl implements Metamodel, Serializable {
 	private final Map<Class<?>,EntityTypeImpl<?>> entities;
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
+	private final Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap;
 
     /**
    	 * Build the metamodel using the information from the collection of Hibernate
@@ -83,7 +86,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 			}
 		}
 		context.wrapUp();
-		return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap() );
+		return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap(), context.getMappedSuperclassTypeMap() );
 	}
 
 	private static EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {
@@ -162,68 +165,72 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	 *
 	 * @param entities The entity mappings.
 	 * @param embeddables The embeddable (component) mappings.
+	 * @param mappedSuperclassTypeMap The {@link javax.persistence.MappedSuperclass} mappings
 	 */
 	private MetamodelImpl(
 			Map<Class<?>, EntityTypeImpl<?>> entities,
-			Map<Class<?>, EmbeddableTypeImpl<?>> embeddables) {
+			Map<Class<?>, EmbeddableTypeImpl<?>> embeddables,
+			Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap) {
 		this.entities = entities;
 		this.embeddables = embeddables;
+		this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> EntityType<X> entity(Class<X> cls) {
 		final EntityType<?> entityType = entities.get( cls );
-		if ( entityType == null ) throw new IllegalArgumentException( "Not an entity: " + cls );
-		//unsafe casting is our map inserts guarantee them
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Not an entity: " + cls );
+		}
 		return (EntityType<X>) entityType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> ManagedType<X> managedType(Class<X> cls) {
 		ManagedType<?> type = entities.get( cls );
-		if ( type == null ) throw new IllegalArgumentException( "Not an managed type: " + cls );
-		//unsafe casting is our map inserts guarantee them
+		if ( type == null ) {
+			type = mappedSuperclassTypeMap.get( cls );
+		}
+		if ( type == null ) {
+			type = embeddables.get( cls );
+		}
+		if ( type == null ) {
+			throw new IllegalArgumentException( "Not an managed type: " + cls );
+		}
 		return (ManagedType<X>) type;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
 		final EmbeddableType<?> embeddableType = embeddables.get( cls );
-		if ( embeddableType == null ) throw new IllegalArgumentException( "Not an entity: " + cls );
-		//unsafe casting is our map inserts guarantee them
+		if ( embeddableType == null ) {
+			throw new IllegalArgumentException( "Not an embeddable: " + cls );
+		}
 		return (EmbeddableType<X>) embeddableType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
-		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( entities.size() + embeddables.size() );
+		final int setSize = CollectionHelper.determineProperSizing(
+				entities.size() + mappedSuperclassTypeMap.size() + embeddables.size()
+		);
+		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
 		managedTypes.addAll( entities.values() );
+		managedTypes.addAll( mappedSuperclassTypeMap.values() );
 		managedTypes.addAll( embeddables.values() );
 		return managedTypes;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<EntityType<?>> getEntities() {
-		return new HashSet<EntityType<?>>(entities.values());
+		return new HashSet<EntityType<?>>( entities.values() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<EmbeddableType<?>>(embeddables.values());
+		return new HashSet<EmbeddableType<?>>( embeddables.values() );
 	}
 }

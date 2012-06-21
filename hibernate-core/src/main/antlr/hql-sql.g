@@ -652,6 +652,9 @@ addrExpr! [ boolean root ]
 		#addrExpr = #(#i, #lhs2, #rhs2);
 		processIndex(#addrExpr);
 	}
+	| mcr:mapComponentReference {
+	    #addrExpr = #mcr;
+	}
 	| p:identifier {
 //		#addrExpr = #p;
 //		resolve(#addrExpr);

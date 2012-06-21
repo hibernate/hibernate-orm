@@ -633,12 +633,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				LockModeTypeHelper.getLockMode( lockModeType )
 		);
 		if ( getHints()!=null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
-			// convert milliseconds to seconds
-			int timeout = (int) Math.round(
-					ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT ) )
-							.doubleValue() / 1000.0
-			);
-			applyTimeout( timeout );
+			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT )) );
 		}
 		return this;
 	}

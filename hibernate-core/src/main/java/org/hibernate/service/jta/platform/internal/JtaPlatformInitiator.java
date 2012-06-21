@@ -27,12 +27,12 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 import org.hibernate.service.spi.BasicServiceInitiator;
@@ -61,33 +61,9 @@ public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> 
 		if ( platform == null ) {
 			return new NoJtaPlatform();
 		}
+		return registry.getService( ConfigurationService.class )
+				.cast( JtaPlatform.class, platform );
 
-		if ( JtaPlatform.class.isInstance( platform ) ) {
-			return (JtaPlatform) platform;
-		}
-
-		final Class<JtaPlatform> jtaPlatformImplClass;
-
-		if ( Class.class.isInstance( platform ) ) {
-			jtaPlatformImplClass = (Class<JtaPlatform>) platform;
-		}
-		else {
-			final String platformImplName = platform.toString();
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
-			try {
-				jtaPlatformImplClass = classLoaderService.classForName( platformImplName );
-			}
-			catch ( Exception e ) {
-				throw new HibernateException( "Unable to locate specified JtaPlatform class [" + platformImplName + "]", e );
-			}
-		}
-
-		try {
-			return jtaPlatformImplClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new HibernateException( "Unable to create specified JtaPlatform class [" + jtaPlatformImplClass.getName() + "]", e );
-		}
 	}
 
 	private Object getConfiguredPlatform(Map configVales, ServiceRegistryImplementor registry) {

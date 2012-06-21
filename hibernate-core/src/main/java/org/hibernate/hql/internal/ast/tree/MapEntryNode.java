@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.internal.ast.tree;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +44,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * TODO : javadoc
+ * Tree node representing reference to the entry ({@link Map.Entry}) of a Map association.
  *
  * @author Steve Ebersole
  */
@@ -61,6 +64,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 
 	private int scalarColumnIndex = -1;
 
+	@Override
 	protected String expressionDescription() {
 		return "entry(*)";
 	}
@@ -70,6 +74,8 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return Map.Entry.class;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	protected Type resolveType(QueryableCollection collectionPersister) {
 		Type keyType = collectionPersister.getIndexType();
 		Type valueType = collectionPersister.getElementType();
@@ -81,6 +87,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return null;
 	}
 
+	@Override
 	protected String[] resolveColumns(QueryableCollection collectionPersister) {
 		List selections = new ArrayList();
 		determineKeySelectExpressions( collectionPersister, selections );
@@ -118,8 +125,9 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		}
 	}
 
+	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 	private void appendSelectExpressions(String[] columnNames, List selections, AliasGenerator aliasGenerator) {
-		for ( int i = 0; i < columnNames.length; i++ ) {
+		 for ( int i = 0; i < columnNames.length; i++ ) {
 			selections.add(
 					new BasicSelectExpression(
 							collectionTableAlias() + '.' + columnNames[i],
@@ -129,6 +137,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		}
 	}
 
+	@SuppressWarnings({"unchecked", "WhileLoopReplaceableByForEach"})
 	private void appendSelectExpressions(SelectFragment fragment, List selections, AliasGenerator aliasGenerator) {
 		Iterator itr = fragment.getColumns().iterator();
 		while ( itr.hasNext() ) {
@@ -176,10 +185,12 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			this.alias = alias;
 		}
 
+		@Override
 		public String getExpression() {
 			return expression;
 		}
 
+		@Override
 		public String getAlias() {
 			return alias;
 		}
@@ -189,6 +200,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return getSessionFactoryHelper().getFactory();
 	}
 
+	@Override
 	public void setText(String s) {
 		if ( isResolved() ) {
 			return;
@@ -196,17 +208,21 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		super.setText( s );
 	}
 
+	@Override
 	public void setScalarColumn(int i) throws SemanticException {
 		this.scalarColumnIndex = i;
 	}
 
+	@Override
 	public int getScalarColumnIndex() {
 		return scalarColumnIndex;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 	}
 
+	@Override
 	public boolean isScalar() {
 		// Constructors are always considered scalar results.
 		return true;
@@ -214,23 +230,27 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 
 	private List types = new ArrayList(4); // size=4 to prevent resizing
 
+	@Override
 	public List getAggregatedSelectionTypeList() {
 		return types;
 	}
 
 	private static final String[] ALIASES = { null, null };
 
+	@Override
 	public String[] getAggregatedAliases() {
 		return ALIASES;
 	}
 
 	private MapEntryBuilder mapEntryBuilder;
 
+	@Override
 	public ResultTransformer getResultTransformer() {
 		return mapEntryBuilder;
 	}
 
 	private static class MapEntryBuilder extends BasicTransformerAdapter {
+		@Override
 		public Object transformTuple(Object[] tuple, String[] aliases) {
 			if ( tuple.length != 2 ) {
 				throw new HibernateException( "Expecting exactly 2 tuples to transform into Map.Entry" );
@@ -248,20 +268,24 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			this.value = value;
 		}
 
+		@Override
 		public Object getValue() {
 			return value;
 		}
 
+		@Override
 		public Object getKey() {
 			return key;
 		}
 
+		@Override
 		public Object setValue(Object value) {
 			Object old = this.value;
 			this.value = value;
 			return old;
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			// IMPL NOTE : nulls are considered equal for keys and values according to Map.Entry contract
 			if ( this == o ) {
@@ -278,6 +302,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 
 		}
 
+		@Override
 		public int hashCode() {
 			int keyHash = key == null ? 0 : key.hashCode();
 			int valueHash = value == null ? 0 : value.hashCode();

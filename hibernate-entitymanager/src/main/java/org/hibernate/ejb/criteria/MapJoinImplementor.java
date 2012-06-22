@@ -41,4 +41,7 @@ public interface MapJoinImplementor<Z,K,V> extends JoinImplementor<Z,V>, MapJoin
 
 	@Override
 	public MapJoinImplementor<Z, K, V> on(Predicate... restrictions);
+
+	@Override
+	public <T extends V> MapJoinImplementor<Z, K, T> treatAs(Class<T> treatAsType);
 }

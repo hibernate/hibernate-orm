@@ -41,4 +41,7 @@ public interface ListJoinImplementor<Z,X> extends JoinImplementor<Z,X>, ListJoin
 
 	@Override
 	public ListJoinImplementor<Z, X> on(Predicate... restrictions);
+
+	@Override
+	public <T extends X> ListJoinImplementor<Z, T> treatAs(Class<T> treatAsType);
 }

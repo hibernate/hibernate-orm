@@ -52,4 +52,7 @@ public interface JoinImplementor<Z,X> extends Join<Z,X>, Fetch<Z,X>, FromImpleme
 	 */
 	@Override
 	public JoinImplementor<Z, X> on(Predicate... restrictions);
+
+	@Override
+	public <T extends X> JoinImplementor<Z, T> treatAs(Class<T> treatAsType);
 }

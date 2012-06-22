@@ -49,9 +49,7 @@ public abstract class AbstractTupleElement<X>
 		this.javaType = javaType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<X> getJavaType() {
 		return javaType;
 	}
@@ -69,16 +67,12 @@ public abstract class AbstractTupleElement<X>
 		this.valueHandler = valueHandler;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ValueHandlerFactory.ValueHandler<X> getValueHandler() {
 		return valueHandler;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getAlias() {
 		return alias;
 	}

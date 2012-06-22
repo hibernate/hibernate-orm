@@ -29,6 +29,7 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.PathSource;
@@ -36,17 +37,20 @@ import org.hibernate.ejb.criteria.PathSource;
 /**
  * Models a join based on a singular attribute
  *
+ * @param <O> Represents the parameterized type of the attribute owner
+ * @param <X> Represents the parameterized type of the attribute
+ *
  * @author Steve Ebersole
  */
-public class SingularAttributeJoin<Z,X> extends AbstractJoinImpl<Z,X> {
+public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 	private final Bindable<X> model;
 
 	@SuppressWarnings({ "unchecked" })
 	public SingularAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
-			PathSource<Z> pathSource, 
-			SingularAttribute<? super Z, ?> joinAttribute,
+			PathSource<O> pathSource,
+			SingularAttribute<? super O, ?> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
 		this.model = (Bindable<X>) (
@@ -57,18 +61,18 @@ public class SingularAttributeJoin<Z,X> extends AbstractJoinImpl<Z,X> {
 	}
 
 	@Override
-	public SingularAttribute<? super Z, ?> getAttribute() {
-		return (SingularAttribute<? super Z, ?>) super.getAttribute();
+	public SingularAttribute<? super O, ?> getAttribute() {
+		return (SingularAttribute<? super O, ?>) super.getAttribute();
 	}
 
 	@Override
-	public SingularAttributeJoin<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
-		return (SingularAttributeJoin<Z, X>) super.correlateTo( subquery );
+	public SingularAttributeJoin<O, X> correlateTo(CriteriaSubqueryImpl subquery) {
+		return (SingularAttributeJoin<O, X>) super.correlateTo( subquery );
 	}
 
 	@Override
-	protected FromImplementor<Z, X> createCorrelationDelegate() {
-		return new SingularAttributeJoin<Z,X>(
+	protected FromImplementor<O, X> createCorrelationDelegate() {
+		return new SingularAttributeJoin<O,X>(
 				criteriaBuilder(),
 				getJavaType(),
 				getPathSource(),
@@ -84,5 +88,42 @@ public class SingularAttributeJoin<Z,X> extends AbstractJoinImpl<Z,X> {
 
 	public Bindable<X> getModel() {
 		return model;
+	}
+
+	@Override
+	public <T extends X> SingularAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
+		return new TreatedSingularAttributeJoin<O,T>( this, treatAsType );
+	}
+
+	public static class TreatedSingularAttributeJoin<O,T> extends SingularAttributeJoin<O, T> {
+		private final SingularAttributeJoin<O, ? super T> original;
+		private final Class<T> treatAsType;
+
+		public TreatedSingularAttributeJoin(SingularAttributeJoin<O, ? super T> original, Class<T> treatAsType) {
+			super(
+					original.criteriaBuilder(),
+					treatAsType,
+					original.getPathSource(),
+					original.getAttribute(),
+					original.getJoinType()
+			);
+			this.original = original;
+			this.treatAsType = treatAsType;
+		}
+
+		@Override
+		public String getAlias() {
+			return original.getAlias();
+		}
+
+		@Override
+		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			// do nothing...
+		}
+
+		@Override
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+		}
 	}
 }

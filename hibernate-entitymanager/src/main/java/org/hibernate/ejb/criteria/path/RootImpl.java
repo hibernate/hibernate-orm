@@ -33,7 +33,7 @@ import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 
 /**
- * TODO : javadoc
+ * Hibernate implementation of the JPA {@link Root} contract
  *
  * @author Steve Ebersole
  */
@@ -90,4 +90,39 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
+
+	@Override
+	public <T extends X> RootImpl<T> treatAs(Class<T> treatAsType) {
+		return new TreatedRoot<T>( this, treatAsType );
+	}
+
+	public static class TreatedRoot<T> extends RootImpl<T> {
+		private final RootImpl<? super T> original;
+		private final Class<T> treatAsType;
+
+		public TreatedRoot(RootImpl<? super T> original, Class<T> treatAsType) {
+			super(
+					original.criteriaBuilder(),
+					original.criteriaBuilder().getEntityManagerFactory().getMetamodel().entity( treatAsType )
+			);
+			this.original = original;
+			this.treatAsType = treatAsType;
+		}
+
+		@Override
+		public String getAlias() {
+			return original.getAlias();
+		}
+
+		@Override
+		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			// do nothing...
+		}
+
+		@Override
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return "treat(" + original.getAlias() + " as " + treatAsType.getName() + ")";
+		}
+	}
+
 }

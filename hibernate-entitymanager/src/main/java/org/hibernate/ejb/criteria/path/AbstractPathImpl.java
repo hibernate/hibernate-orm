@@ -43,7 +43,7 @@ import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.expression.PathTypeExpression;
 
 /**
- * Convenience base class for various {@link Path} implementors.
+ * Convenience base class for various {@link Path} implementations.
  *
  * @author Steve Ebersole
  */
@@ -76,24 +76,18 @@ public abstract class AbstractPathImpl<X>
 		return pathSource;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
     public PathSource<?> getParentPath() {
         return getPathSource();
     }
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Expression<Class<? extends X>> type() {
 		return typeExpression;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getPathIdentifier() {
 		return getPathSource().getPathIdentifier() + "." + getAttribute().getName();
 	}
@@ -131,9 +125,7 @@ public abstract class AbstractPathImpl<X>
 		attributePathRegistry.put( attributeName, path );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
 		if ( ! canBeDereferenced() ) {
@@ -148,9 +140,7 @@ public abstract class AbstractPathImpl<X>
 		return path;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> attribute) {
 		if ( ! canBeDereferenced() ) {
@@ -165,9 +155,7 @@ public abstract class AbstractPathImpl<X>
 		return path;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> attribute) {
 		if ( ! canBeDereferenced() ) {
@@ -182,9 +170,7 @@ public abstract class AbstractPathImpl<X>
 		return path;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> Path<Y> get(String attributeName) {
 		if ( ! canBeDereferenced() ) {
@@ -238,13 +224,12 @@ public abstract class AbstractPathImpl<X>
 	 */
 	protected abstract Attribute locateAttributeInternal(String attributeName);
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// none to register
 	}
 
+	@Override
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		// Make sure we delegate up to our source (eventually up to the path root) to
 		// prepare the path properly.
@@ -254,22 +239,19 @@ public abstract class AbstractPathImpl<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		PathSource<?> source = getPathSource();
 		if ( source != null ) {
 			source.prepareAlias( renderingContext );
 			return source.getPathIdentifier() + "." + getAttribute().getName();
-		} else {
+		}
+		else {
 			return getAttribute().getName();
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
 	}

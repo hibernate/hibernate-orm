@@ -32,6 +32,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.PathSource;
 
 /**
@@ -64,29 +65,19 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 		}
 		else {
 			return (IdentifiableType<X>) attribute.getType();
-//			return criteriaBuilder.getEntityManagerFactory()
-//					.getMetamodel()
-//					.managedType( javaType );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public SingularAttribute<?, X> getAttribute() {
 		return attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Bindable<X> getModel() {
 		return getAttribute();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected boolean canBeDereferenced() {
 		return managedType != null;
@@ -101,5 +92,42 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 			throw new IllegalArgumentException( "Could not resolve attribute named " + attributeName );
 		}
 		return attribute;
+	}
+
+	@Override
+	public <T extends X> SingularAttributePath<T> treatAs(Class<T> treatAsType) {
+		return new TreatedSingularAttributePath<T>( this, treatAsType );
+	}
+
+	public static class TreatedSingularAttributePath<T> extends SingularAttributePath<T> {
+		private final SingularAttributePath<? super T> original;
+		private final Class<T> treatAsType;
+
+		@SuppressWarnings("unchecked")
+		public TreatedSingularAttributePath(SingularAttributePath<? super T> original, Class<T> treatAsType) {
+			super(
+					original.criteriaBuilder(),
+					treatAsType,
+					original.getPathSource(),
+					(SingularAttribute<?,T>) original.getAttribute()
+			);
+			this.original = original;
+			this.treatAsType = treatAsType;
+		}
+
+		@Override
+		public String getAlias() {
+			return original.getAlias();
+		}
+
+		@Override
+		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			// do nothing...
+		}
+
+		@Override
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+		}
 	}
 }

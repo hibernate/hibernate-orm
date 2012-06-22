@@ -41,4 +41,7 @@ public interface CollectionJoinImplementor<Z,X> extends JoinImplementor<Z,X>, Co
 
 	@Override
 	public CollectionJoinImplementor<Z, X> on(Predicate... restrictions);
+
+	@Override
+	public <T extends X> CollectionJoinImplementor<Z, T> treatAs(Class<T> treatAsType);
 }

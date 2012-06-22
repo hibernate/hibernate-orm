@@ -41,4 +41,7 @@ public interface SetJoinImplementor<Z,X> extends JoinImplementor<Z,X>, SetJoin<Z
 
 	@Override
 	public SetJoinImplementor<Z, X> on(Predicate... restrictions);
+
+	@Override
+	public <T extends X> SetJoinImplementor<Z, T> treatAs(Class<T> treatAsType);
 }

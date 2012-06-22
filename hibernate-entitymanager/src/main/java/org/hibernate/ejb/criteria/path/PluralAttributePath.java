@@ -91,4 +91,12 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 		// TODO : throw exception instead?
 		return null;
 	}
+
+	@Override
+	public <T extends X> PluralAttributePath<T> treatAs(Class<T> treatAsType) {
+		throw new UnsupportedOperationException(
+				"Plural attribute path [" + getPathSource().getPathIdentifier() + '.'
+						+ attribute.getName() + "] cannot be dereferenced"
+		);
+	}
 }

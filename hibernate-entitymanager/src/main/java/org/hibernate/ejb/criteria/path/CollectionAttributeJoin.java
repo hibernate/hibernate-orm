@@ -32,6 +32,7 @@ import javax.persistence.metamodel.CollectionAttribute;
 
 import org.hibernate.ejb.criteria.CollectionJoinImplementor;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.PathImplementor;
@@ -87,5 +88,43 @@ public class CollectionAttributeJoin<O,E>
 	@Override
 	public CollectionAttributeJoin<O, E> on(Expression<Boolean> restriction) {
 		return (CollectionAttributeJoin<O,E>) super.on( restriction );
+	}
+
+	@Override
+	public <T extends E> CollectionAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
+		return new TreatedCollectionAttributeJoin<O,T>( this, treatAsType );
+	}
+
+	public static class TreatedCollectionAttributeJoin<O,T> extends CollectionAttributeJoin<O, T> {
+		private final CollectionAttributeJoin<O, ? super T> original;
+		private final Class<T> treatAsType;
+
+		@SuppressWarnings("unchecked")
+		public TreatedCollectionAttributeJoin(CollectionAttributeJoin<O, ? super T> original, Class<T> treatAsType) {
+			super(
+					original.criteriaBuilder(),
+					treatAsType,
+					original.getPathSource(),
+					(CollectionAttribute<? super O,T>) original.getAttribute(),
+					original.getJoinType()
+			);
+			this.original = original;
+			this.treatAsType = treatAsType;
+		}
+
+		@Override
+		public String getAlias() {
+			return original.getAlias();
+		}
+
+		@Override
+		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			// do nothing...
+		}
+
+		@Override
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+		}
 	}
 }

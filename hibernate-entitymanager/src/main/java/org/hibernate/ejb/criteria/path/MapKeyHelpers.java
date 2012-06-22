@@ -102,6 +102,13 @@ public class MapKeyHelpers {
 		public Bindable<K> getModel() {
 			return mapKeyAttribute;
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T extends K> MapKeyPath<T> treatAs(Class<T> treatAsType) {
+			// todo : if key is an entity, this is probably not enough
+			return (MapKeyPath<T>) this;
+		}
 	}
 
 	/**
@@ -153,6 +160,10 @@ public class MapKeyHelpers {
 			throw new IllegalArgumentException( "Map [" + mapJoin.getPathIdentifier() + "] cannot be dereferenced" );
 		}
 
+		@Override
+		public <T extends Map<K, V>> PathImplementor<T> treatAs(Class<T> treatAsType) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	/**
@@ -186,8 +197,7 @@ public class MapKeyHelpers {
 					: BindableType.SINGULAR_ATTRIBUTE;
 
 			String guessedRoleName = determineRole( attribute );
-			SessionFactoryImplementor sfi = (SessionFactoryImplementor)
-					criteriaBuilder.getEntityManagerFactory().getSessionFactory();
+			SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory().getSessionFactory();
 			mapPersister = sfi.getCollectionPersister( guessedRoleName );
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
@@ -209,78 +219,70 @@ public class MapKeyHelpers {
 					'.' + attribute.getName();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getName() {
 			// TODO : ???
 			return "map-key";
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public PersistentAttributeType getPersistentAttributeType() {
 			return persistentAttributeType;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public ManagedType<Map<K, ?>> getDeclaringType() {
 			// TODO : ???
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class<K> getJavaType() {
 			return attribute.getKeyJavaType();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getJavaMember() {
 			// TODO : ???
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isAssociation() {
 			return mapKeyType.isEntityType();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isCollection() {
 			return false;
 		}
 
+		@Override
 		public boolean isId() {
 			return false;
 		}
 
+		@Override
 		public boolean isVersion() {
 			return false;
 		}
 
+		@Override
 		public boolean isOptional() {
 			return false;
 		}
 
+		@Override
 		public Type<K> getType() {
 			return jpaType;
 		}
 
+		@Override
 		public BindableType getBindableType() {
 			return jpaBindableType;
 		}
 
+		@Override
 		public Class<K> getBindableJavaType() {
 			return jpaBinableJavaType;
 		}

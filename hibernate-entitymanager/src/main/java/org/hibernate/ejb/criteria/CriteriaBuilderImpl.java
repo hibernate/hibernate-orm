@@ -81,6 +81,7 @@ import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
 import org.hibernate.ejb.criteria.expression.function.TrimFunction;
 import org.hibernate.ejb.criteria.expression.function.UpperFunction;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
+import org.hibernate.ejb.criteria.path.RootImpl;
 import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
@@ -1108,38 +1109,45 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X, T, V extends T> Join<X, V> treat(Join<X, T> join, Class<V> type) {
-		throw new NotYetImplementedException();
+		return ( (JoinImplementor) join ).treatAs( type );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> CollectionJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type) {
-		throw new NotYetImplementedException();
+		return ( (CollectionJoinImplementor) join ).treatAs( type );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> SetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type) {
-		throw new NotYetImplementedException();
+		return ( (SetJoinImplementor) join ).treatAs( type );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> ListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type) {
-		throw new NotYetImplementedException();
+		return ( (ListJoinImplementor) join ).treatAs( type );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <X, K, T, V extends T> MapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
-		throw new NotYetImplementedException();
+		return ( (MapJoinImplementor) join ).treatAs( type );
 	}
 
 	@Override
-	public <X, T extends X> Path<X> treat(Path<T> path, Class<X> type) {
-		throw new NotYetImplementedException();
+	@SuppressWarnings("unchecked")
+	public <X, T extends X> Path<T> treat(Path<X> path, Class<T> type) {
+		return ( (PathImplementor) path ).treatAs( type );
 	}
 
 	@Override
-	public <X, T extends X> Root<X> treat(Root<T> root, Class<X> type) {
-		throw new NotYetImplementedException();
+	@SuppressWarnings("unchecked")
+	public <X, T extends X> Root<T> treat(Root<X> root, Class<T> type) {
+		return ( (RootImpl) root ).treatAs( type );
 	}
 
 

@@ -32,10 +32,10 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -158,7 +158,7 @@ public class InPredicate<T>
 		}
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder();
 
 		buffer.append( ( (Renderable) getExpression() ).render( renderingContext ) );
@@ -188,7 +188,7 @@ public class InPredicate<T>
 		return buffer.toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

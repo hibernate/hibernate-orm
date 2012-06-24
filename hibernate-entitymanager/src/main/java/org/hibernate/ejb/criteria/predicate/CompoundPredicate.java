@@ -31,9 +31,9 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to convert
@@ -114,7 +114,7 @@ public class CompoundPredicate
 		}
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		if ( getExpressions().size() == 0 ) {
 			boolean implicitTrue = getOperator() == BooleanOperator.AND;
 			if ( isNegated() ) {
@@ -145,7 +145,7 @@ public class CompoundPredicate
 				: " or ";
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 

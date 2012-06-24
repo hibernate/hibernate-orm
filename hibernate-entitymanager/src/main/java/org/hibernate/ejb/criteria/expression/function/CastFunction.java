@@ -26,8 +26,8 @@ package org.hibernate.ejb.criteria.expression.function;
 import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
@@ -63,7 +63,7 @@ public class CastFunction<T,Y>
 	}
 
 	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return CAST_NAME + '(' +
 				castSource.render( renderingContext ) +
 				" as " +

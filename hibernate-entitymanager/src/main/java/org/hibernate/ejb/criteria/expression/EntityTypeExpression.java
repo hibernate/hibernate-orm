@@ -26,8 +26,8 @@ package org.hibernate.ejb.criteria.expression;
 import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * TODO : javadoc
@@ -43,12 +43,12 @@ public class EntityTypeExpression<T> extends ExpressionImpl<T> implements Serial
 		// nothign to do
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		// todo : is it valid for this to get rendered into the query itself?
 		throw new IllegalArgumentException( "Unexpected call on EntityTypeExpression#render" );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

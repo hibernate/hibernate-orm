@@ -27,7 +27,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -39,7 +41,16 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.ejb.QueryImpl;
+import org.hibernate.ejb.criteria.compile.CompilableCriteria;
+import org.hibernate.ejb.criteria.compile.CriteriaInterpretation;
+import org.hibernate.ejb.criteria.compile.CriteriaQueryTypeQueryAdapter;
+import org.hibernate.ejb.criteria.compile.ImplicitParameterBinding;
+import org.hibernate.ejb.criteria.compile.InterpretedParameterMetadata;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.type.Type;
 
 /**
@@ -48,7 +59,9 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, Serializable {
+public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, CompilableCriteria, Serializable {
+	private static final Logger log = Logger.getLogger( CriteriaQueryImpl.class );
+
 	private final Class<T> returnType;
 
 	private final QueryStructure<T> queryStructure;
@@ -334,60 +347,89 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return true;
 	}
 
-	public CriteriaQueryCompiler.RenderedCriteriaQuery render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		final StringBuilder jpaqlQuery = new StringBuilder();
+	@Override
+	public CriteriaInterpretation interpret(RenderingContext renderingContext) {
+		final StringBuilder jpaqlBuffer = new StringBuilder();
 
-		queryStructure.render( jpaqlQuery, renderingContext );
+		queryStructure.render( jpaqlBuffer, renderingContext );
 
 		if ( ! getOrderList().isEmpty() ) {
-			jpaqlQuery.append( " order by " );
+			jpaqlBuffer.append( " order by " );
 			String sep = "";
 			for ( Order orderSpec : getOrderList() ) {
-				jpaqlQuery.append( sep )
+				jpaqlBuffer.append( sep )
 						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
 						.append( orderSpec.isAscending() ? " asc" : " desc" );
 				sep = ", ";
 			}
 		}
 
-		return new CriteriaQueryCompiler.RenderedCriteriaQuery() {
-			public String getQueryString() {
-				return jpaqlQuery.toString();
-			}
+		final String jpaqlString = jpaqlBuffer.toString();
 
-			@SuppressWarnings({ "unchecked" })
-			public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
-				SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-				return selection == null
-						? null
-						: selection.getValueHandlers();
-			}
+		log.debugf( "Rendered criteria query -> %s", jpaqlString );
 
-			public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator() {
-				return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
-					public void validate(Type[] returnTypes) {
-						SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-						if ( selection != null ) {
-							if ( selection.isCompoundSelection() ) {
-								if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
-									throw new IllegalStateException(
-											"Number of return values [" + returnTypes.length +
-													"] did not match expected [" +
-													selection.getCompoundSelectionItems().size() + "]"
-									);
-								}
+		return new CriteriaInterpretation() {
+			@Override
+			@SuppressWarnings("unchecked")
+			public Query buildCompiledQuery(HibernateEntityManagerImplementor entityManager, final InterpretedParameterMetadata parameterMetadata) {
+
+				QueryImpl jpaqlQuery = entityManager.createQuery(
+						jpaqlString,
+						getResultType(),
+						getSelection(),
+						new HibernateEntityManagerImplementor.Options() {
+							@Override
+							public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
+								SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+								return selection == null
+										? null
+										: selection.getValueHandlers();
 							}
-							else {
-								if ( returnTypes.length > 1 ) {
-									throw new IllegalStateException(
-											"Number of return values [" + returnTypes.length +
-													"] did not match expected [1]"
-									);
-								}
+
+							@Override
+							public Map<String, Class> getNamedParameterExplicitTypes() {
+								return parameterMetadata.implicitParameterTypes();
 							}
+
+							@Override
+							public ResultMetadataValidator getResultMetadataValidator() {
+								return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
+									@Override
+									public void validate(Type[] returnTypes) {
+										SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+										if ( selection != null ) {
+											if ( selection.isCompoundSelection() ) {
+												if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
+													throw new IllegalStateException(
+															"Number of return values [" + returnTypes.length +
+																	"] did not match expected [" +
+																	selection.getCompoundSelectionItems().size() + "]"
+													);
+												}
+											}
+											else {
+												if ( returnTypes.length > 1 ) {
+													throw new IllegalStateException(
+															"Number of return values [" + returnTypes.length +
+																	"] did not match expected [1]"
+													);
+												}
+											}
+										}
+									}
+								};							}
 						}
-					}
-				};
+				);
+
+				for ( ImplicitParameterBinding implicitParameterBinding : parameterMetadata.implicitParameterBindings() ) {
+					implicitParameterBinding.bind( jpaqlQuery );
+				}
+
+				return new CriteriaQueryTypeQueryAdapter(
+						jpaqlQuery,
+						parameterMetadata.explicitParameterMapping(),
+						parameterMetadata.explicitParameterNameMapping()
+				);
 			}
 		};
 	}

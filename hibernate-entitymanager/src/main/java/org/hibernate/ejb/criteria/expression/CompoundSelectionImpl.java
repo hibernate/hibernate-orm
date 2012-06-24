@@ -31,11 +31,11 @@ import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.TupleElementImplementor;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -89,7 +89,7 @@ public class CompoundSelectionImpl<X>
 		}
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder buff = new StringBuilder();
 		if ( isConstructor ) {
 			buff.append( "new " ).append( getJavaType().getName() ).append( '(' );
@@ -106,7 +106,7 @@ public class CompoundSelectionImpl<X>
 		return buff.toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

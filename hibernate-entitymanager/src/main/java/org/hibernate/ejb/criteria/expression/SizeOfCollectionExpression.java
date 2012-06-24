@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
 /**
@@ -57,11 +57,11 @@ public class SizeOfCollectionExpression<C extends Collection>
 		// nothing to do
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return "size(" + getCollectionPath().render( renderingContext ) + ")";
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

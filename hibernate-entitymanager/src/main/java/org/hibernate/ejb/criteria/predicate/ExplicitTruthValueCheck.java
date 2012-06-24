@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * ANSI-SQL defines <tt>TRUE</tt>, <tt>FALSE</tt> and <tt>UNKNOWN</tt> as <i>truth values</i>.  These
@@ -66,13 +66,13 @@ public class ExplicitTruthValueCheck
 		Helper.possibleParameter( getBooleanExpression(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return ( (Renderable) getBooleanExpression() ).render( renderingContext )
 				+ " = "
 				+ ( getTruthValue() == TruthValue.TRUE ? "true" : "false" );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

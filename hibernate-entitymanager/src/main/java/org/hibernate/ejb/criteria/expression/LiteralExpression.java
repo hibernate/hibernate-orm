@@ -26,9 +26,9 @@ package org.hibernate.ejb.criteria.expression;
 import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Represents a literal expression.
@@ -62,7 +62,7 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		if ( ValueHandlerFactory.isNumeric( literal ) ) {
 			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
 		}
@@ -73,7 +73,7 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		// some drivers/servers do not like parameters in the select clause
 		final ValueHandlerFactory.ValueHandler handler =
 				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );

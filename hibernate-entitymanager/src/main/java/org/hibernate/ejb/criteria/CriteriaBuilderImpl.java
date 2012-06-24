@@ -137,12 +137,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 
 	@Override
 	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-		throw new NotYetImplementedException();
+		return new CriteriaUpdateImpl<T>( this );
 	}
 
 	@Override
 	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-		throw new NotYetImplementedException();
+		return new CriteriaDeleteImpl<T>( this );
 	}
 
 

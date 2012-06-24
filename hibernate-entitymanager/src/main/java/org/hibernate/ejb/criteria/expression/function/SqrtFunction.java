@@ -41,4 +41,9 @@ public class SqrtFunction
 	public SqrtFunction(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {
 		super( criteriaBuilder, Double.class, NAME, expression );
 	}
+
+	@Override
+	protected boolean isStandardJpaFunction() {
+		return true;
+	}
 }

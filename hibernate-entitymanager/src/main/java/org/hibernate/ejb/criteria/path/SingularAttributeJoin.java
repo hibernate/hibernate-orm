@@ -29,10 +29,10 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Models a join based on a singular attribute
@@ -117,12 +117,12 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		}
 
 		@Override
-		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public void prepareAlias(RenderingContext renderingContext) {
 			// do nothing...
 		}
 
 		@Override
-		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 	}

@@ -41,4 +41,9 @@ public class UpperFunction
 	public UpperFunction(CriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
 		super( criteriaBuilder, String.class, NAME, string );
 	}
+
+	@Override
+	protected boolean isStandardJpaFunction() {
+		return true;
+	}
 }

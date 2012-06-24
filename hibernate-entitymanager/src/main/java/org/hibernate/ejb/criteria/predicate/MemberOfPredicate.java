@@ -28,9 +28,9 @@ import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
@@ -79,13 +79,13 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 		Helper.possibleParameter( getElementExpression(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return ( (Renderable) elementExpression ).render( renderingContext )
 				+ ( isNegated() ? " not" : "" ) + " member of "
 				+ getCollectionPath().render( renderingContext );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

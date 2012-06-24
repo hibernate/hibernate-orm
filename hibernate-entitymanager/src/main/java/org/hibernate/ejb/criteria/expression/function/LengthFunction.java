@@ -38,6 +38,11 @@ public class LengthFunction
 		implements Serializable {
 	public static final String NAME = "length";
 
+	@Override
+	protected boolean isStandardJpaFunction() {
+		return true;
+	}
+
 	public LengthFunction(CriteriaBuilderImpl criteriaBuilder, Expression<String> value) {
 		super( criteriaBuilder, Integer.class, NAME, value );
 	}

@@ -48,7 +48,6 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.ejb.criteria.BasicPathUsageException;
 import org.hibernate.ejb.criteria.CollectionJoinImplementor;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.JoinImplementor;
@@ -56,6 +55,7 @@ import org.hibernate.ejb.criteria.ListJoinImplementor;
 import org.hibernate.ejb.criteria.MapJoinImplementor;
 import org.hibernate.ejb.criteria.PathSource;
 import org.hibernate.ejb.criteria.SetJoinImplementor;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.From} implementations.
@@ -96,7 +96,7 @@ public abstract class AbstractFromImpl<Z,X>
 	}
 
 	@Override
-	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public void prepareAlias(RenderingContext renderingContext) {
 		if ( getAlias() == null ) {
 			if ( isCorrelated() ) {
 				setAlias( getCorrelationParent().getAlias() );
@@ -108,13 +108,13 @@ public abstract class AbstractFromImpl<Z,X>
 	}
 
 	@Override
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		return getAlias();
 	}
 
 	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return renderProjection( renderingContext );
 	}
 
@@ -227,7 +227,7 @@ public abstract class AbstractFromImpl<Z,X>
 
 	protected abstract boolean canBeJoinSource();
 
-	private RuntimeException illegalJoin() {
+	protected RuntimeException illegalJoin() {
 		return new IllegalArgumentException(
 				"Collection of values [" + getPathIdentifier() + "] cannot be source of a join"
 		);
@@ -521,7 +521,7 @@ public abstract class AbstractFromImpl<Z,X>
 		return canBeJoinSource();
 	}
 
-	private RuntimeException illegalFetch() {
+	protected RuntimeException illegalFetch() {
 		return new IllegalArgumentException(
 				"Collection of values [" + getPathIdentifier() + "] cannot be source of a fetch"
 		);

@@ -32,8 +32,8 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Models a path for a {@link SingularAttribute} generally obtained from a
@@ -109,7 +109,7 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 					original.criteriaBuilder(),
 					treatAsType,
 					original.getPathSource(),
-					(SingularAttribute<?,T>) original.getAttribute()
+					(SingularAttribute<?, T>) original.getAttribute()
 			);
 			this.original = original;
 			this.treatAsType = treatAsType;
@@ -121,12 +121,12 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 		}
 
 		@Override
-		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public void prepareAlias(RenderingContext renderingContext) {
 			// do nothing...
 		}
 
 		@Override
-		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 	}

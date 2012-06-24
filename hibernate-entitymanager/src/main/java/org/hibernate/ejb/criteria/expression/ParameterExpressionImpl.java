@@ -27,8 +27,8 @@ import java.io.Serializable;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is
@@ -84,12 +84,12 @@ public class ParameterExpressionImpl<T>
 		registry.registerParameter( this );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		final String jpaqlParamName = renderingContext.registerExplicitParameter( this );
 		return ':' + jpaqlParamName;
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

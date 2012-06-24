@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.criteria.compile;
 
-
-import org.hibernate.ejb.criteria.compile.RenderingContext;
+import javax.persistence.criteria.ParameterExpression;
+import java.util.List;
+import java.util.Map;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public interface Renderable {
-	public String render(RenderingContext renderingContext);
-	public String renderProjection(RenderingContext renderingContext);
+public interface InterpretedParameterMetadata {
+	public Map<ParameterExpression<?>,String> explicitParameterMapping();
+	public Map<String,ParameterExpression<?>> explicitParameterNameMapping();
+	public List<ImplicitParameterBinding> implicitParameterBindings();
+	public Map<String,Class> implicitParameterTypes();
 }

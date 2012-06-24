@@ -24,14 +24,16 @@
 package org.hibernate.ejb.criteria;
 import javax.persistence.criteria.From;
 
+import org.hibernate.ejb.criteria.compile.RenderingContext;
+
 /**
  * Implementation contract for the JPA {@link From} interface.
  *
  * @author Steve Ebersole
  */
 public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
-	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext);
-	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext);
+	public void prepareAlias(RenderingContext renderingContext);
+	public String renderTableExpression(RenderingContext renderingContext);
 
 
 	public FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);

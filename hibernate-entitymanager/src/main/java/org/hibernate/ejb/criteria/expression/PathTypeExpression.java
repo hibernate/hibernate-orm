@@ -26,8 +26,8 @@ package org.hibernate.ejb.criteria.expression;
 import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.path.AbstractPathImpl;
 
 /**
@@ -47,11 +47,11 @@ public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializ
 		// nothing to do
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return "type(" + pathImpl.getPathIdentifier() + ")";
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

@@ -30,9 +30,9 @@ import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
@@ -83,7 +83,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		}
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder( "coalesce(" );
 		String sep = "";
 		for ( Expression expression : getExpressions() ) {
@@ -94,7 +94,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return buffer.append( ")" ).toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -108,7 +108,7 @@ public class SubstringFunction
 		Helper.possibleParameter( getValue(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append( "substring(" )
 				.append( ( (Renderable) getValue() ).render( renderingContext ) )

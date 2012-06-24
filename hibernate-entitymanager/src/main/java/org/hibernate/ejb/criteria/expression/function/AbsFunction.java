@@ -41,4 +41,9 @@ public class AbsFunction<N extends Number>
 	public AbsFunction(CriteriaBuilderImpl criteriaBuilder, Expression expression) {
 		super( criteriaBuilder, expression.getJavaType(), NAME, expression );
 	}
+
+	@Override
+	protected boolean isStandardJpaFunction() {
+		return true;
+	}
 }

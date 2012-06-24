@@ -28,9 +28,9 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Hibernate implementation of the JPA {@link Root} contract
@@ -39,12 +39,16 @@ import org.hibernate.ejb.criteria.FromImplementor;
  */
 public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Serializable {
 	private final EntityType<X> entityType;
+	private final boolean allowJoins;
 
-	public RootImpl(
-			CriteriaBuilderImpl criteriaBuilder,
-			EntityType<X> entityType) {
+	public RootImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType) {
+		this( criteriaBuilder, entityType, true );
+	}
+
+	public RootImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType, boolean allowJoins) {
 		super( criteriaBuilder, entityType.getJavaType() );
 		this.entityType = entityType;
+		this.allowJoins = allowJoins;
 	}
 
 	public EntityType<X> getEntityType() {
@@ -67,10 +71,22 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 	@Override
 	protected boolean canBeJoinSource() {
-		return true;
+		return allowJoins;
 	}
 
-	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	@Override
+	@SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+	protected RuntimeException illegalJoin() {
+		return allowJoins ? super.illegalJoin() : new IllegalArgumentException( "UPDATE/DELETE criteria queries cannot define joins" );
+	}
+
+	@Override
+	@SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+	protected RuntimeException illegalFetch() {
+		return allowJoins ? super.illegalFetch() : new IllegalArgumentException( "UPDATE/DELETE criteria queries cannot define fetches" );
+	}
+
+	public String renderTableExpression(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		return getModel().getName() + " as " + getAlias();
 	}
@@ -81,13 +97,13 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 	}
 
 	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		return getAlias();
 	}
 
 	@Override
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 
@@ -115,12 +131,12 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		}
 
 		@Override
-		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public void prepareAlias(RenderingContext renderingContext) {
 			// do nothing...
 		}
 
 		@Override
-		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.getAlias() + " as " + treatAsType.getName() + ")";
 		}
 	}

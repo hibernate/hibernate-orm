@@ -29,10 +29,10 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -44,7 +44,29 @@ public class ParameterizedFunctionExpression<X>
 		extends BasicFunctionExpression<X>
 		implements FunctionExpression<X> {
 
+	public static List<String> STANDARD_JPA_FUNCTION_NAMES = Arrays.asList(
+			// 4.6.17.2.1
+			"CONCAT",
+			"SUBSTRING",
+			"TRIM",
+			"UPPER",
+			"LOWER",
+			"LOCATE",
+			"LENGTH",
+			//4.6.17.2.2
+			"ABS",
+			"SQRT",
+			"MOD",
+			"SIZE",
+			"INDEX",
+			// 4.6.17.2.3
+			"CURRENT_DATE",
+			"CURRENT_TIME",
+			"CURRENT_TIMESTAMP"
+	);
+
 	private final List<Expression<?>> argumentExpressions;
+	private final boolean isStandardJpaFunction;
 
 	public ParameterizedFunctionExpression(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -53,6 +75,7 @@ public class ParameterizedFunctionExpression<X>
 			List<Expression<?>> argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = argumentExpressions;
+		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase() );
 	}
 
 	public ParameterizedFunctionExpression(
@@ -62,14 +85,11 @@ public class ParameterizedFunctionExpression<X>
 			Expression<?>... argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = Arrays.asList( argumentExpressions );
+		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase() );
 	}
 
-	protected  static List<Expression<?>> wrapAsLiterals(CriteriaBuilderImpl criteriaBuilder, Object... literalArguments) {
-		List<Expression<?>> arguments = new ArrayList<Expression<?>>( properSize( literalArguments.length) );
-		for ( Object o : literalArguments ) {
-			arguments.add( new LiteralExpression( criteriaBuilder, o ) );
-		}
-		return arguments;
+	protected boolean isStandardJpaFunction() {
+		return isStandardJpaFunction;
 	}
 
 	protected  static int properSize(int number) {
@@ -90,21 +110,28 @@ public class ParameterizedFunctionExpression<X>
 	}
 
 	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder()
-				.append( "function('" )
-				.append( getFunctionName() )
-				.append( "', " );
+	public String render(RenderingContext renderingContext) {
+		StringBuilder buffer = new StringBuilder();
+		if ( isStandardJpaFunction() ) {
+			buffer.append( getFunctionName() )
+					.append( "(" );
+		}
+		else {
+			buffer.append( "function('" )
+					.append( getFunctionName() )
+					.append( "', " );
+		}
 		renderArguments( buffer, renderingContext );
 		buffer.append( ')' );
 		return buffer.toString();
 	}
 
-	protected void renderArguments(StringBuilder buffer, CriteriaQueryCompiler.RenderingContext renderingContext) {
+	protected void renderArguments(StringBuilder buffer, RenderingContext renderingContext) {
 		String sep = "";
 		for ( Expression argument : argumentExpressions ) {
 			buffer.append( sep ).append( ( (Renderable) argument ).render( renderingContext ) );
 			sep = ", ";
 		}
 	}
+
 }

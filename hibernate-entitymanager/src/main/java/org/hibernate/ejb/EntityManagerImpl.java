@@ -28,8 +28,6 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.jboss.logging.Logger;
@@ -129,16 +127,6 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			}
 		}
 		return session;
-	}
-
-	@Override
-	public Query createQuery(CriteriaUpdate updateQuery) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public Query createQuery(CriteriaDelete deleteQuery) {
-		throw new NotYetImplementedException();
 	}
 
 	@Override

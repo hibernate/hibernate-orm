@@ -31,12 +31,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.ListAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.ListJoinImplementor;
 import org.hibernate.ejb.criteria.PathImplementor;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.ListIndexExpression;
 
 /**
@@ -113,7 +113,7 @@ public class ListAttributeJoin<O,E>
 					original.criteriaBuilder(),
 					treatAsType,
 					original.getPathSource(),
-					(ListAttribute<? super O,T>) original.getAttribute(),
+					(ListAttribute<? super O, T>) original.getAttribute(),
 					original.getJoinType()
 			);
 			this.original = original;
@@ -126,12 +126,12 @@ public class ListAttributeJoin<O,E>
 		}
 
 		@Override
-		public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public void prepareAlias(RenderingContext renderingContext) {
 			// do nothing...
 		}
 
 		@Override
-		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 	}

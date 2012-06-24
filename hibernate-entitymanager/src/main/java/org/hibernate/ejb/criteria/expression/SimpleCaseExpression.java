@@ -30,9 +30,9 @@ import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
@@ -138,7 +138,7 @@ public class SimpleCaseExpression<C,R>
 		Helper.possibleParameter( getOtherwiseResult(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder caseExpr = new StringBuilder();
 		caseExpr.append( "case " )
 				.append(  ( (Renderable) getExpression() ).render( renderingContext ) )
@@ -154,7 +154,7 @@ public class SimpleCaseExpression<C,R>
 		return caseExpr.toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

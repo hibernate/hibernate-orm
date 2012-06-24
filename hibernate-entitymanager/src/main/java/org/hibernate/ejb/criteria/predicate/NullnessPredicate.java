@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
 /**
@@ -67,7 +67,7 @@ public class NullnessPredicate
 		Helper.possibleParameter( getOperand(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return ( (Renderable) operand ).render( renderingContext ) + check();
 	}
 
@@ -77,7 +77,7 @@ public class NullnessPredicate
 				: " is null";
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

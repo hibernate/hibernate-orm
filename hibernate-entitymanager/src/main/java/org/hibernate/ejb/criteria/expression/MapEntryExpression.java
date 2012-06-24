@@ -29,10 +29,10 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.PathImplementor;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * TODO : javadoc
@@ -64,16 +64,16 @@ public class MapEntryExpression<K,V>
 		// none to register
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		// don't think this is valid outside of select clause...
 		throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return "entry(" + path( renderingContext ) + ")";
 	}
 
-	private String path(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	private String path(RenderingContext renderingContext) {
 		return origin.getPathIdentifier()
 				+ '.'
 				+ ( (Renderable) getAttribute() ).renderProjection( renderingContext );

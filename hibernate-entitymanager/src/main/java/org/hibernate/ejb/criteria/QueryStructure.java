@@ -44,6 +44,7 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.path.RootImpl;
 
 /**
@@ -240,7 +241,7 @@ public class QueryStructure<T> implements Serializable {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public void render(StringBuilder jpaqlQuery, CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public void render(StringBuilder jpaqlQuery, RenderingContext renderingContext) {
 		jpaqlQuery.append( "select " );
 		if ( isDistinct() ) {
 			jpaqlQuery.append( "distinct " );
@@ -300,7 +301,7 @@ public class QueryStructure<T> implements Serializable {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private void renderFromClause(StringBuilder jpaqlQuery, CriteriaQueryCompiler.RenderingContext renderingContext) {
+	private void renderFromClause(StringBuilder jpaqlQuery, RenderingContext renderingContext) {
 		jpaqlQuery.append( " from " );
 		String sep = "";
 		for ( Root root : getRoots() ) {
@@ -342,7 +343,7 @@ public class QueryStructure<T> implements Serializable {
 	@SuppressWarnings({ "unchecked" })
 	private void renderJoins(
 			StringBuilder jpaqlQuery,
-			CriteriaQueryCompiler.RenderingContext renderingContext,
+			RenderingContext renderingContext,
 			Collection<Join<?,?>> joins) {
 		if ( joins == null ) {
 			return;
@@ -375,7 +376,7 @@ public class QueryStructure<T> implements Serializable {
 	@SuppressWarnings({ "unchecked" })
 	private void renderFetches(
 			StringBuilder jpaqlQuery,
-			CriteriaQueryCompiler.RenderingContext renderingContext,
+			RenderingContext renderingContext,
 			Collection<Fetch> fetches) {
 		if ( fetches == null ) {
 			return;

@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
  * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
@@ -85,7 +85,7 @@ public class BetweenPredicate<Y>
 		Helper.possibleParameter( getUpperBound(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		final String operator = isNegated() ? " not between " : " between ";
 		return ( (Renderable) getExpression() ).render( renderingContext )
 				+ operator
@@ -94,7 +94,7 @@ public class BetweenPredicate<Y>
 				+ ( (Renderable) getUpperBound() ).render( renderingContext );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

@@ -31,11 +31,11 @@ import javax.persistence.metamodel.Attribute;
 import java.io.Serializable;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
 import org.hibernate.ejb.criteria.FromImplementor;
 import org.hibernate.ejb.criteria.JoinImplementor;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.predicate.AbstractPredicateImpl;
 
 /**
@@ -89,7 +89,7 @@ public abstract class AbstractJoinImpl<Z, X>
 	}
 
 	@Override
-	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderTableExpression(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		( (FromImplementor) getParent() ).prepareAlias( renderingContext );
 		StringBuilder tableExpression = new StringBuilder();

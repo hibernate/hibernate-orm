@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.metamodel.ListAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.PathImplementor;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 
 /**
@@ -58,13 +58,13 @@ public class ListIndexExpression extends ExpressionImpl<Integer> implements Seri
 		// nothing to do
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		return "index("
 				+ origin.getPathIdentifier() + '.' + getListAttribute().getName()
 				+ ")";
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

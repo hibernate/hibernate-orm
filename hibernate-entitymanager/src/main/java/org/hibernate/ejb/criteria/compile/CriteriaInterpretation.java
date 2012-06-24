@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.criteria.compile;
 
+import javax.persistence.Query;
 
-import org.hibernate.ejb.criteria.compile.RenderingContext;
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
 
 /**
- * TODO : javadoc
+ * The interpretation of a JPA criteria object.
  *
  * @author Steve Ebersole
  */
-public interface Renderable {
-	public String render(RenderingContext renderingContext);
-	public String renderProjection(RenderingContext renderingContext);
+public interface CriteriaInterpretation {
+	/**
+	 * Generate a {@link javax.persistence.Query} instance given the interpreted criteria compiled against the
+	 * passed EntityManager.
+	 *
+	 *
+	 * @param entityManager The EntityManager against which to create the Query instance.
+	 * @param interpretedParameterMetadata parameter metadata
+	 *
+	 * @return The created Query instance.
+	 */
+	public Query buildCompiledQuery(HibernateEntityManagerImplementor entityManager, InterpretedParameterMetadata interpretedParameterMetadata);
 }

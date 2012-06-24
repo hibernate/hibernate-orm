@@ -27,9 +27,9 @@ import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -124,7 +124,7 @@ public class LikePredicate extends AbstractSimplePredicate implements Serializab
 		Helper.possibleParameter( getPattern(), registry );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		final String operator = isNegated() ? " not like " : " like ";
 		StringBuilder buffer = new StringBuilder();
 		buffer.append( ( (Renderable) getMatchExpression() ).render( renderingContext ) )
@@ -137,7 +137,7 @@ public class LikePredicate extends AbstractSimplePredicate implements Serializab
 		return buffer.toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

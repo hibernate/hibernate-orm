@@ -23,15 +23,6 @@
  */
 package org.hibernate.ejb;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityExistsException;
@@ -55,13 +46,24 @@ import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -86,8 +88,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
+import org.hibernate.ejb.criteria.compile.CompilableCriteria;
+import org.hibernate.ejb.criteria.compile.CriteriaCompiler;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
@@ -452,7 +455,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
 
 			if ( options.getValueHandlers() == null ) {
-				options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
+				if ( options.getResultMetadataValidator() != null ) {
+					options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
+				}
 			}
 
 			// determine if we need a result transformer
@@ -578,13 +583,27 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	private CriteriaQueryCompiler criteriaQueryCompiler;
+	private CriteriaCompiler criteriaCompiler;
+
+	protected CriteriaCompiler criteriaCompiler() {
+		if ( criteriaCompiler == null ) {
+			criteriaCompiler = new CriteriaCompiler( this );
+		}
+		return criteriaCompiler;
+	}
 
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		if ( criteriaQueryCompiler == null ) {
-			criteriaQueryCompiler = new CriteriaQueryCompiler( this );
-		}
-		return criteriaQueryCompiler.compile( criteriaQuery );
+		return (TypedQuery<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
+	}
+
+	@Override
+	public Query createQuery(CriteriaUpdate criteriaUpdate) {
+		return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
+	}
+
+	@Override
+	public Query createQuery(CriteriaDelete criteriaDelete) {
+		return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
 	}
 
 	public Query createNamedQuery(String name) {

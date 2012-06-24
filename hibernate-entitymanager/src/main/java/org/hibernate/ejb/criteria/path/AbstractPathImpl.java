@@ -35,10 +35,10 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.PathImplementor;
 import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.expression.PathTypeExpression;
 
@@ -230,7 +230,7 @@ public abstract class AbstractPathImpl<X>
 	}
 
 	@Override
-	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public void prepareAlias(RenderingContext renderingContext) {
 		// Make sure we delegate up to our source (eventually up to the path root) to
 		// prepare the path properly.
 		PathSource<?> source = getPathSource();
@@ -240,7 +240,7 @@ public abstract class AbstractPathImpl<X>
 	}
 
 	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		PathSource<?> source = getPathSource();
 		if ( source != null ) {
 			source.prepareAlias( renderingContext );
@@ -252,7 +252,7 @@ public abstract class AbstractPathImpl<X>
 	}
 
 	@Override
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

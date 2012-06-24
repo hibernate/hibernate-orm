@@ -39,6 +39,7 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.path.RootImpl;
 
@@ -277,14 +278,14 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		return queryStructure.subquery( subqueryType );
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		StringBuilder subqueryBuffer = new StringBuilder( "(" );
 		queryStructure.render( subqueryBuffer, renderingContext );
 		subqueryBuffer.append( ')' );
 		return subqueryBuffer.toString();
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		throw new IllegalStateException( "Subquery cannot occur in select clause" );
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.criteria.compile;
 
-
-import org.hibernate.ejb.criteria.compile.RenderingContext;
+import javax.persistence.TypedQuery;
 
 /**
- * TODO : javadoc
+ * Used to describe implicit (not defined in criteria query) parameters.
  *
  * @author Steve Ebersole
  */
-public interface Renderable {
-	public String render(RenderingContext renderingContext);
-	public String renderProjection(RenderingContext renderingContext);
+public interface ImplicitParameterBinding {
+	/**
+	 * Retrieve the generated name of the implicit parameter.
+	 *
+	 * @return The parameter name.
+	 */
+	public String getParameterName();
+
+	/**
+	 * Get the java type of the "thing" that led to the implicit parameter.  Used from
+	 * {@link org.hibernate.ejb.HibernateEntityManagerImplementor.Options#getNamedParameterExplicitTypes()}
+	 * in determining "guessed type" overriding.
+	 *
+	 * @return The java type
+	 */
+	public Class getJavaType();
+
+	/**
+	 * Bind the implicit parameter's value to the JPA query.
+	 *
+	 * @param typedQuery The JPA query.
+	 */
+	public void bind(TypedQuery typedQuery);
 }

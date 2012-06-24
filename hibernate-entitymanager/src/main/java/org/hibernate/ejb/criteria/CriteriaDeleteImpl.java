@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,61 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.predicate;
+package org.hibernate.ejb.criteria;
 
-import java.io.Serializable;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 
-import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.compile.RenderingContext;
 
 /**
- * Predicate used to assert a static boolean condition.
+ * Hibernate implementation of the JPA 2.1 {@link CriteriaDelete} contract.
  *
  * @author Steve Ebersole
  */
-public class BooleanStaticAssertionPredicate
-		extends AbstractSimplePredicate
-		implements Serializable {
-	private final Boolean assertedValue;
-
-	public BooleanStaticAssertionPredicate(
-			CriteriaBuilderImpl criteriaBuilder,
-			Boolean assertedValue) {
+public class CriteriaDeleteImpl<T> extends AbstractManipulationCriteriaQuery<T> implements CriteriaDelete<T> {
+	protected CriteriaDeleteImpl(CriteriaBuilderImpl criteriaBuilder) {
 		super( criteriaBuilder );
-		this.assertedValue = assertedValue;
 	}
 
-	public Boolean getAssertedValue() {
-		return assertedValue;
+	@Override
+	public CriteriaDelete<T> where(Expression<Boolean> restriction) {
+		setRestriction( restriction );
+		return this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void registerParameters(ParameterRegistry registry) {
-		// nada
+	@Override
+	public CriteriaDelete<T> where(Predicate... restrictions) {
+		setRestriction( restrictions );
+		return this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String render(RenderingContext renderingContext) {
-		boolean isTrue = getAssertedValue();
-		if ( isNegated() ) {
-			isTrue = !isTrue;
-		}
+	@Override
+	protected String renderQuery(RenderingContext renderingContext) {
+		final StringBuilder jpaql = new StringBuilder( "delete " );
+		renderRoot( jpaql, renderingContext );
+		renderRestrictions( jpaql, renderingContext );
 
-		return isTrue
-				? "1=1"
-				: "0=1";
+		return jpaql.toString();
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
-
 }

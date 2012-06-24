@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
@@ -58,12 +58,12 @@ public class IsEmptyPredicate<C extends Collection>
 		// nothing to do
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String render(RenderingContext renderingContext) {
 		final String operator = isNegated() ? " is not empty" : " is empty";
 		return getOperand().render( renderingContext ) + operator;
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
 }

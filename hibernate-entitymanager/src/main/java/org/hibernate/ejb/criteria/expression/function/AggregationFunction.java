@@ -29,7 +29,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.compile.RenderingContext;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -79,6 +79,11 @@ public class AggregationFunction<T>
 		return true;
 	}
 
+	@Override
+	protected boolean isStandardJpaFunction() {
+		return true;
+	}
+
 	/**
 	 * Implementation of a <tt>COUNT</tt> function providing convenience in construction.
 	 * <p/>
@@ -96,9 +101,10 @@ public class AggregationFunction<T>
 		}
 
 		@Override
-		protected void renderArguments( StringBuilder buffer,
-		                                CriteriaQueryCompiler.RenderingContext renderingContext ) {
-			if (isDistinct()) buffer.append("distinct ");
+		protected void renderArguments(StringBuilder buffer, RenderingContext renderingContext) {
+			if ( isDistinct() ) {
+				buffer.append("distinct ");
+			}
 			else {
 	            // If function specifies a single non-distinct entity with ID, its alias would normally be rendered, which ends up
 	            // converting to the column(s) associated with the entity's ID in the rendered SQL.  However, some DBs don't support

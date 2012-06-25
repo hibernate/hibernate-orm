@@ -416,6 +416,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
       <xs:element name="subselect" minOccurs="0" type="xs:string"/>
       <xs:element name="cache" minOccurs="0" type="cache-element"/>
+        <xs:element name="natural-id-cache" minOccurs="0" type="natural-id-cache-element"/>
       <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
       <!-- The comment element allows definition of a database table or column comment. -->
       <xs:element name="comment" minOccurs="0" type="xs:string"/>
@@ -528,6 +529,9 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     </xs:attribute>
   </xs:complexType>
 
+  <xs:complexType name="natural-id-cache-element">
+      <xs:attribute name="region" type="xs:string"/>
+  </xs:complexType>
   <!-- The column element is an alternative to column attributes and required for 
   mapping associations to classes with composite ids. -->
   <xs:complexType name="column-element">

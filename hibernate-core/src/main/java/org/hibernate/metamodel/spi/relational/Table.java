@@ -24,8 +24,10 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 
@@ -42,8 +44,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private ObjectName objectName;
 	private String exportIdentifier;
 
-	private final LinkedHashMap<String,Index> indexes = new LinkedHashMap<String,Index>();
-	private final LinkedHashMap<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private final Set<Index> indexes = new LinkedHashSet<Index>();
+	private final Set<UniqueKey> uniqueKeys = new LinkedHashSet<UniqueKey>();
 	private final List<CheckConstraint> checkConstraints = new ArrayList<CheckConstraint>();
 	private final List<String> comments = new ArrayList<String>();
 
@@ -102,34 +104,39 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public Iterable<Index> getIndexes() {
-		return indexes.values();
+		return Collections.unmodifiableSet( indexes );
 	}
 
 	@Override
 	public Index getOrCreateIndex(String name) {
-		if( indexes.containsKey( name ) ){
-			return indexes.get( name );
+		Index result = null;
+		if ( name != null ) {
+			result = locateConstraint( indexes, name );
 		}
-		Index index = new Index( this, name );
-		indexes.put(name, index );
-		return index;
+		if ( result == null ) {
+			result = new Index( this, name );
+			indexes.add( result );
+		}
+		return result;
 	}
 
 	@Override
-	public Iterable<UniqueKey> getUniqueKeys() {
-		return uniqueKeys.values();
+	public Set<UniqueKey> getUniqueKeys() {
+		return Collections.unmodifiableSet( uniqueKeys );
 	}
 
 	@Override
 	public UniqueKey getOrCreateUniqueKey(String name) {
-		if( uniqueKeys.containsKey( name ) ){
-			return uniqueKeys.get( name );
+		UniqueKey result = null;
+		if ( name != null ) {
+			result = locateConstraint( uniqueKeys, name );
 		}
-		UniqueKey uniqueKey = new UniqueKey( this, name );
-		uniqueKeys.put(name, uniqueKey );
-		return uniqueKey;
+		if ( result == null ) {
+			result = new UniqueKey( this, name );
+			uniqueKeys.add( result );
+		}
+		return result;
 	}
-
 
 	@Override
 	public Iterable<CheckConstraint> getCheckConstraints() {
@@ -250,7 +257,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		}
 
 		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			for ( UniqueKey uk : uniqueKeys.values() ) {
+			for ( UniqueKey uk : uniqueKeys ) {
 				String constraint = uk.sqlConstraintStringInCreateTable( dialect );
 				if ( constraint != null ) {
 					buf.append( ", " ).append( constraint );

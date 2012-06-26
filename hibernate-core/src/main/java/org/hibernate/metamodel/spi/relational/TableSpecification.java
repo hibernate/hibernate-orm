@@ -89,6 +89,14 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public DerivedValue locateOrCreateDerivedValue(String fragment);
 
 	/**
+	 * Generates a unique ID for the specified columns in this table.
+	 *
+	 * @param columns - the columns used to generate the ID
+	 * @return the ID unique to the specified columns in this table.
+	 */
+	public int generateColumnListId(Iterable<Column> columns);
+
+	/**
 	 * Retrieve all foreign keys currently defined for this table.
 	 *
 	 * @return All foreign keys defined on this table.

@@ -24,9 +24,11 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -108,9 +110,16 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public ForeignKey locateForeignKey(String name) {
-		for ( ForeignKey fk : foreignKeys ) {
-			if ( fk.getName().equals( name ) ) {
-				return fk;
+		return locateConstraint( foreignKeys, name );
+	}
+
+	protected <T extends Constraint> T locateConstraint(Iterable<T> constraints, String name) {
+		if ( name == null ) {
+			throw new IllegalArgumentException( "name must be non-null." );
+		}
+		for ( T constraint : constraints ) {
+			if ( name.equals( constraint.getName() ) ) {
+				return constraint;
 			}
 		}
 		return null;
@@ -134,5 +143,16 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	@Override
 	public PrimaryKey getPrimaryKey() {
 		return primaryKey;
+	}
+
+	public int generateColumnListId(Iterable<Column> columns) {
+		int result = getLogicalName().hashCode();
+		for ( Column column : columns ) {
+			if ( !this.equals( column.getTable() ) ) {
+				throw new IllegalArgumentException( "All columns must be from this table." );
+			}
+			result = 31 * result + column.getColumnName().hashCode();
+		}
+		return result;
 	}
 }

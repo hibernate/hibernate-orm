@@ -35,25 +35,24 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class PrimaryKey extends AbstractConstraint implements Constraint, Exportable {
-	// IMPL NOTE : I override the name behavior here because:
-	//		(1) primary keys are not required to be named.
-	//		(2) because a primary key is required for each table, it is easier to allow setting the constraint name
-	// 			later in terms of building the metamodel
-	//
-	// todo : default name?  {TABLE_NAME}_PK maybe?
-	private String name;
+
+	private static final String GENERATED_NAME_PREFIX = "PK";
 
 	protected PrimaryKey(TableSpecification table) {
 		super( table, null );
 	}
 
 	@Override
-	public String getName() {
-		return name;
+	protected String generateName() {
+		return new StringBuilder()
+				.append( GENERATED_NAME_PREFIX )
+				.append( getTable().getLogicalName().getName().toUpperCase() )
+				.toString();
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	@Override
+	protected String getGeneratedNamePrefix() {
+		return GENERATED_NAME_PREFIX;
 	}
 
 	@Override
@@ -78,7 +77,7 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		StringBuilder buf = new StringBuilder(
-			dialect.getAddPrimaryKeyConstraintString( getName() )
+			dialect.getAddPrimaryKeyConstraintString( getOrGenerateName() )
 		).append('(');
 		boolean first = true;
 		for ( Column column : getColumns() ) {

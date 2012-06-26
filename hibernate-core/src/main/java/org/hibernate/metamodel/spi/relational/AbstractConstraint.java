@@ -40,7 +40,7 @@ import org.hibernate.dialect.Dialect;
  */
 public abstract class AbstractConstraint implements Constraint {
 	private final TableSpecification table;
-	private final String name;
+	private String name;
 	private List<Column> columns = new ArrayList<Column>();
 
 	protected AbstractConstraint(TableSpecification table, String name) {
@@ -48,12 +48,62 @@ public abstract class AbstractConstraint implements Constraint {
 		this.name = name;
 	}
 
+	@Override
 	public TableSpecification getTable() {
 		return table;
 	}
 
+	/**
+	 * Returns the constraint name, or null if the name has not been set.
+	 *
+	 * @return the constraint name, or null if the name has not been set
+	 */
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * Sets a constraint name that is unique across
+	 * all database objects.
+	 *
+	 * @param name - the unique constraint name; must be non-null.
+	 *
+	 * @throws IllegalArgumentException if name is null.
+	 * @throws IllegalStateException if this constraint already has a non-null name.
+	 */
+	public void setName(String name) {
+		if ( name == null ) {
+			throw new IllegalArgumentException( "name must be non-null." );
+		}
+		if ( this.name != null ) {
+			throw new IllegalStateException(
+					String.format(
+							"This constraint already has a name (%s) and cannot be renamed to (%s).",
+							this.name,
+							name
+					)
+			);
+		}
+		this.name = name;
+	}
+
+	protected abstract String getGeneratedNamePrefix();
+
+	protected String getOrGenerateName() {
+		// TODO: if name is null, should it be set to the generated name when the relational model is "complete"?
+		return name != null ? name : generateName();
+	}
+
+	protected String generateName() {
+		return new StringBuilder()
+				.append( getGeneratedNamePrefix() )
+				.append( Integer.toHexString( table.getLogicalName().hashCode() ).toUpperCase() )
+				.append( Integer.toHexString( generateConstraintColumnListId() ).toUpperCase() )
+				.toString();
+	}
+
+	protected int generateConstraintColumnListId() {
+		return table.generateColumnListId( columns );
 	}
 
 	public List<Column> getColumns() {
@@ -101,7 +151,7 @@ public abstract class AbstractConstraint implements Constraint {
 						.append( "alter table " )
 						.append( getTable().getQualifiedName( dialect ) )
 						.append( " drop constraint " )
-						.append( dialect.quote( getName() ) )
+						.append( dialect.quote( getOrGenerateName() ) )
 						.toString()
 			};
 		}

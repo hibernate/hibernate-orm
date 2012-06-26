@@ -49,6 +49,8 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	private static final String ON_DELETE = " on delete ";
 	private static final String ON_UPDATE = " on update ";
 
+	private static final String GENERATED_NAME_PREFIX = "FK";
+
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
 
@@ -83,6 +85,15 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	}
 
 	@Override
+	protected String getGeneratedNamePrefix() {
+		return GENERATED_NAME_PREFIX;
+	}
+
+	protected int generateConstraintColumnListId() {
+		return 31 * super.generateConstraintColumnListId() + targetTable.generateColumnListId( getTargetColumns() );
+	}
+
+	@Override
 	public void addColumn(Column column) {
 		addColumnMapping( column, null );
 	}
@@ -93,7 +104,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 				LOG.debugf(
 						"Attempt to map column [%s] to no target column after explicit target column(s) named for FK [name=%s]",
 						sourceColumn.toLoggableString(),
-						getName()
+						getOrGenerateName()
 				);
 			}
 		}
@@ -104,7 +115,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 					LOG.debugf(
 							"Value mapping mismatch as part of FK [table=%s, name=%s] while adding source column [%s]",
 							getTable().toLoggableString(),
-							getName(),
+							getOrGenerateName(),
 							sourceColumn.toLoggableString()
 					);
 				}
@@ -129,7 +140,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 
 	@Override
 	public String getExportIdentifier() {
-		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
+		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getOrGenerateName();
 	}
 
 	public ReferentialAction getDeleteRule() {
@@ -154,7 +165,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 				"alter table " +
 						getTable().getQualifiedName( dialect ) +
 						dialect.getDropForeignKeyString() +
-						getName()
+						getOrGenerateName()
 		};
 	}
 
@@ -177,11 +188,12 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 		StringBuilder sb =
 				new StringBuilder(
 						dialect.getAddForeignKeyConstraintString(
-								getName(),
+								getOrGenerateName(),
 								columnNames,
 								targetTable.getQualifiedName( dialect ),
 								targetColumnNames,
-								this.targetColumns == null
+								this.targetColumns == null ||
+										this.targetColumns.equals( targetTable.getPrimaryKey().getColumns() )
 						)
 				);
 		// TODO: If a dialect does not support cascade-delete, can it support other actions? (HHH-6428)

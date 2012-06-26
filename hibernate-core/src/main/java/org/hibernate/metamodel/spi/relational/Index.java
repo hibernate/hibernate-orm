@@ -51,7 +51,7 @@ public class Index extends AbstractConstraint implements Constraint {
 	public String[] sqlCreateStrings(Dialect dialect) {
 		return new String[] {
 				buildSqlCreateIndexString(
-						dialect, getName(), getTable(), getColumns(), false
+						dialect, getOrGenerateName(), getTable(), getColumns(), false
 				)
 		};
 	}
@@ -89,6 +89,11 @@ public class Index extends AbstractConstraint implements Constraint {
 		return buf.toString();
 	}
 
+	@Override
+	protected String getGeneratedNamePrefix() {
+		return "IDX";
+	}
+
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		StringBuilder buf = new StringBuilder( " index (" );
 		boolean first = true;
@@ -110,7 +115,7 @@ public class Index extends AbstractConstraint implements Constraint {
 				.append(
 						StringHelper.qualify(
 								getTable().getQualifiedName( dialect ),
-								getName()
+								getOrGenerateName()
 						)
 				).toString()
 		};

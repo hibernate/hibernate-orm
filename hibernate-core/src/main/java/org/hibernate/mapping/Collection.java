@@ -33,7 +33,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.QualifiedTableNameFilterConfiguration;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -520,16 +520,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteAllCheckStyle;
 	}
 
-	public void addFilter(String name, String tableName, String condition) {
-		filters.add(new QualifiedTableNameFilterConfiguration(name, tableName, condition));
+	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap) {
+		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, null));
 	}
-
 	public java.util.List getFilters() {
 		return filters;
 	}
 
-	public void addManyToManyFilter(String name, String tableName, String condition) {
-		manyToManyFilters.add(new QualifiedTableNameFilterConfiguration(name, tableName, condition));
+	public void addManyToManyFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap) {
+		manyToManyFilters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, null));
 	}
 
 	public java.util.List getManyToManyFilters() {

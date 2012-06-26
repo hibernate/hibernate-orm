@@ -2614,7 +2614,6 @@ public final class HbmBinder {
 		while ( filters.hasNext() ) {
 			final Element filterElement = ( Element ) filters.next();
 			final String name = filterElement.attributeValue( "name" );
-			final String tableName = filterElement.attributeValue("table");
 			String condition = filterElement.getTextTrim();
 			if ( StringHelper.isEmpty(condition) ) condition = filterElement.attributeValue( "condition" );
 			if ( StringHelper.isEmpty(condition) ) {
@@ -2623,10 +2622,18 @@ public final class HbmBinder {
 			if ( condition==null) {
 				throw new MappingException("no filter condition found for filter: " + name);
 			}
+			Iterator aliasesIterator = filterElement.elementIterator("aliases");
+			java.util.Map<String, String> aliasTables = new HashMap<String, String>();
+			while (aliasesIterator.hasNext()){
+				Element alias = (Element) aliasesIterator.next();
+				aliasTables.put(alias.attributeValue("alias"), alias.attributeValue("table"));
+			}
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Applying many-to-many filter [%s] as [%s] to role [%s]", name, condition, collection.getRole() );
 			}
-			collection.addManyToManyFilter( name, tableName, condition );
+			String autoAliasInjectionText = filterElement.attributeValue("autoAliasInjection");
+			boolean autoAliasInjection = StringHelper.isEmpty(autoAliasInjectionText) ? true : Boolean.parseBoolean(autoAliasInjectionText);
+			collection.addManyToManyFilter(name, condition, autoAliasInjection, aliasTables);
 		}
 	}
 
@@ -3015,7 +3022,6 @@ public final class HbmBinder {
 
 	private static void parseFilter(Element filterElement, Filterable filterable, Mappings model) {
 		final String name = filterElement.attributeValue( "name" );
-		final String tableName = filterElement.attributeValue("table");
 		String condition = filterElement.getTextTrim();
 		if ( StringHelper.isEmpty(condition) ) {
 			condition = filterElement.attributeValue( "condition" );
@@ -3032,8 +3038,16 @@ public final class HbmBinder {
 		if ( condition==null) {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
+		Iterator aliasesIterator = filterElement.elementIterator("aliases");
+		java.util.Map<String, String> aliasTables = new HashMap<String, String>();
+		while (aliasesIterator.hasNext()){
+			Element alias = (Element) aliasesIterator.next();
+			aliasTables.put(alias.attributeValue("alias"), alias.attributeValue("table"));
+		}
 		LOG.debugf( "Applying filter [%s] as [%s]", name, condition );
-		filterable.addFilter( name, tableName, condition );
+		String autoAliasInjectionText = filterElement.attributeValue("autoAliasInjection");
+		boolean autoAliasInjection = StringHelper.isEmpty(autoAliasInjectionText) ? true : Boolean.parseBoolean(autoAliasInjectionText);
+		filterable.addFilter(name, condition, autoAliasInjection, aliasTables);
 	}
 
 	private static void parseFetchProfile(Element element, Mappings mappings, String containingEntityName) {

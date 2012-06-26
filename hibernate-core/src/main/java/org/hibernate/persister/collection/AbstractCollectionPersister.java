@@ -575,10 +575,10 @@ public abstract class AbstractCollectionPersister
 		}
 
 		// Handle any filters applied to this collection
-		filterHelper = new FilterHelper( collection.getFilters(), dialect, factory);
+		filterHelper = new FilterHelper( collection.getFilters(), factory);
 
 		// Handle any filters applied to this collection for many-to-many
-		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilters(), dialect, factory);
+		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilters(), factory);
 		manyToManyWhereString = StringHelper.isNotEmpty( collection.getManyToManyWhere() ) ?
 				"( " + collection.getManyToManyWhere() + ")" :
 				null;

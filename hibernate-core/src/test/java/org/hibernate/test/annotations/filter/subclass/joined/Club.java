@@ -14,6 +14,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SqlFragmentAlias;
 
 @Entity
 @FilterDefs({
@@ -29,8 +30,8 @@ public class Club {
 	
 	@OneToMany(mappedBy="club")
 	@Filters({
-		@Filter(name="iqMin", table="ZOOLOGY_HUMAN", condition="HUMAN_IQ >= :min"),
-		@Filter(name="pregnantMembers", table="ZOOLOGY_MAMMAL", condition="IS_PREGNANT=1")
+		@Filter(name="iqMin", condition="{h}.HUMAN_IQ >= :min", aliases={@SqlFragmentAlias(alias="h", table="ZOOLOGY_HUMAN")}),
+		@Filter(name="pregnantMembers", condition="{m}.IS_PREGNANT=1", aliases={@SqlFragmentAlias(alias="m", table="ZOOLOGY_MAMMAL")})
 	})
 	private Set<Human> members = new HashSet<Human>();
 

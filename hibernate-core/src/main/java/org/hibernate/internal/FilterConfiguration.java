@@ -23,26 +23,55 @@
  */
 package org.hibernate.internal;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  *
  * @author Rob Worsnop
  */
-public abstract class FilterConfiguration {
+public class FilterConfiguration {
 	private final String name;
 	private final String condition;
+	private final boolean autoAliasInjection;
+	private final Map<String, String> aliasTableMap;
+	private final PersistentClass persistentClass;
 	
-	protected FilterConfiguration(String name, String condition) {
+	public FilterConfiguration(String name, String condition, boolean autoAliasInjection, Map<String, String> aliasTableMap, PersistentClass persistentClass) {
 		this.name = name;
 		this.condition = condition;
+		this.autoAliasInjection = autoAliasInjection;
+		this.aliasTableMap = aliasTableMap;
+		this.persistentClass = persistentClass;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public String getCondition() {
 		return condition;
 	}
-	public abstract String getQualifiedTableName(SessionFactoryImplementor factory);
-	
+
+	public boolean useAutoAliasInjection() {
+		return autoAliasInjection;
+	}
+
+	public Map<String, String> getAliasTableMap(SessionFactoryImplementor factory) {
+		if (!CollectionHelper.isEmpty(aliasTableMap)){
+			return aliasTableMap;
+		} else if (persistentClass != null){
+			String table = persistentClass.getTable().getQualifiedName(factory.getDialect(), 
+					factory.getSettings().getDefaultCatalogName(),
+					factory.getSettings().getDefaultSchemaName());
+			return Collections.singletonMap(null, table);
+		} else{
+			return Collections.emptyMap();
+		}
+		
+	}
 }

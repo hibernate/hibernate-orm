@@ -42,6 +42,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Filter {
 	String name();
-	String table() default "";
 	String condition() default "";
+	boolean deduceAliasInjectionPoints() default true;
+	SqlFragmentAlias[] aliases() default {};
 }

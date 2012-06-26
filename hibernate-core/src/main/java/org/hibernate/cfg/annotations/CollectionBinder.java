@@ -71,6 +71,7 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
@@ -810,28 +811,33 @@ public abstract class CollectionBinder {
 		//if ( StringHelper.isNotEmpty( where ) ) collection.setWhere( where );
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
-				collection.addManyToManyFilter( simpleFilter.name(), getTableName(simpleFilter), getCondition( simpleFilter ) );
+				collection.addManyToManyFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+						toTableAliasMap(simpleFilter.aliases()));
 			}
 			else {
-				collection.addFilter( simpleFilter.name(), getTableName(simpleFilter), getCondition( simpleFilter ) );
+				collection.addFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+						toTableAliasMap(simpleFilter.aliases()));
 			}
 		}
 		Filters filters = property.getAnnotation( Filters.class );
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
-					collection.addManyToManyFilter( filter.name(), getTableName(simpleFilter), getCondition( filter ) );
+					collection.addManyToManyFilter( filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+							toTableAliasMap(filter.aliases()));
 				}
 				else {
-					collection.addFilter( filter.name(), getTableName(filter), getCondition( filter ) );
+					collection.addFilter(filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+							toTableAliasMap(filter.aliases()));
 				}
 			}
 		}
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter( simpleFilterJoinTable.name(), null, getCondition( simpleFilterJoinTable ) );
-			}
+				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(), 
+						simpleFilterJoinTable.deduceAliasInjectionPoints(), toTableAliasMap(simpleFilterJoinTable.aliases()));
+					}
 			else {
 				throw new AnnotationException(
 						"Illegal use of @FilterJoinTable on an association without join table:"
@@ -843,7 +849,8 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter( filter.name(), null, getCondition( filter ) );
+					collection.addFilter(filter.name(), filter.condition(), 
+							filter.deduceAliasInjectionPoints(), toTableAliasMap(filter.aliases()));
 				}
 				else {
 					throw new AnnotationException(
@@ -888,7 +895,14 @@ public abstract class CollectionBinder {
 //				);
 //		}
 	}
-
+	private static Map<String,String> toTableAliasMap(SqlFragmentAlias[] aliases){
+		Map<String,String> ret = new HashMap<String,String>();
+		for (int i = 0; i < aliases.length; i++){
+			ret.put(aliases[i].alias(), aliases[i].table());
+		}
+		return ret;
+	}
+	
 	private String getCondition(FilterJoinTable filter) {
 		//set filtering
 		String name = filter.name();
@@ -896,10 +910,6 @@ public abstract class CollectionBinder {
 		return getCondition( cond, name );
 	}
 	
-	private String getTableName(Filter filter){
-		return BinderHelper.isEmptyAnnotationValue(filter.table())? null : filter.table();
-	}
-
 	private String getCondition(Filter filter) {
 		//set filtering
 		String name = filter.name();

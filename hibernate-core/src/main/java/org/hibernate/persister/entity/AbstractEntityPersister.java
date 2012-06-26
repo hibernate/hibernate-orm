@@ -85,7 +85,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.StaticFilterAliasGenerator;
-import org.hibernate.internal.PersistentClassFilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -100,7 +99,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
@@ -770,7 +768,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// Handle any filters applied to the class level
-		filterHelper = new FilterHelper( persistentClass.getFilters(), factory.getDialect(), factory );
+		filterHelper = new FilterHelper( persistentClass.getFilters(), factory );
 
 		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
 		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
@@ -1091,11 +1089,10 @@ public abstract class AbstractEntityPersister
 
 		List<FilterConfiguration> filterDefaultConditions = new ArrayList<FilterConfiguration>();
 		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
-			filterDefaultConditions.add(new PersistentClassFilterConfiguration(filterDefinition.getFilterName(), 
-											null, 
-											filterDefinition.getDefaultFilterCondition()));
+			filterDefaultConditions.add(new FilterConfiguration(filterDefinition.getFilterName(), 
+						filterDefinition.getDefaultFilterCondition(), true, null, null));
 		}
-		filterHelper = new FilterHelper( filterDefaultConditions, factory.getDialect(), factory);
+		filterHelper = new FilterHelper( filterDefaultConditions, factory);
 
 		temporaryIdTableName = null;
 		temporaryIdTableDDL = null;

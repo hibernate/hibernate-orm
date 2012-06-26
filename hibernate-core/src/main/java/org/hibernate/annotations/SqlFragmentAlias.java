@@ -21,25 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal;
+package org.hibernate.annotations;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 /**
-*
-* @author Rob Worsnop
-*/
-public class QualifiedTableNameFilterConfiguration extends FilterConfiguration {
-	
-	private final String tableName;
-
-	public QualifiedTableNameFilterConfiguration(String name, String tableName, String condition) {
-		super(name, condition);
-		this.tableName = tableName;
-	}
-
-	@Override
-	public String getQualifiedTableName(SessionFactoryImplementor factory) {
-		return tableName;
-	}
-	
+ * Describe aliases for filters
+ *
+ * @author Rob Worsnop
+ */
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
+public @interface SqlFragmentAlias {
+	String alias();
+	String table();	
 }

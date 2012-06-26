@@ -86,6 +86,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 				"property",
 				true,
 				false,
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
 				null,
 				PropertyGeneration.NEVER
 		);

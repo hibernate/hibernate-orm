@@ -40,6 +40,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
@@ -66,6 +67,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  * @author Gail Badner
  */
 public class Helper {
+	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
 		@Override
 		public String getName() {
@@ -126,20 +128,39 @@ public class Helper {
 				: qualifyIfNeeded( entityElement.getName(), unqualifiedClassPackage );
 	}
 
-	public static Value<Caching> createCachingHolder(final JaxbCacheElement cacheElement, final String defaultRegionName) {
+	public static Caching createCaching(final JaxbCacheElement cacheElement, final String defaultRegionName) {
+		if ( cacheElement == null ) {
+			return null;
+		}
+		final String region = cacheElement.getRegion() != null ? cacheElement.getRegion() : defaultRegionName;
+		final AccessType accessType = AccessType.fromExternalName( cacheElement.getUsage() );
+		final boolean cacheLazyProps = !"non-lazy".equals( cacheElement.getInclude() );
+		return new Caching( region, accessType, cacheLazyProps );
+	}
+
+	public static Value<Caching> createNaturalIdCachingHolder(final JaxbNaturalIdCacheElement cacheElement, final String entityName, final Caching entityCache) {
 		return new Value<Caching>(
-			new Value.DeferredInitializer<Caching>() {
-				@Override
-				public Caching initialize() {
-					if ( cacheElement == null ) {
-						return null;
+				new Value.DeferredInitializer<Caching>() {
+					@Override
+					public Caching initialize() {
+						if ( cacheElement == null ) {
+							return null;
+						}
+						final String region;
+						if ( StringHelper.isEmpty( cacheElement.getRegion() ) ) {
+							if ( entityCache != null ) {
+								region = entityCache.getRegion() + NATURAL_ID_CACHE_SUFFIX;
+							}
+							else {
+								region = entityName + NATURAL_ID_CACHE_SUFFIX;
+							}
+						}
+						else {
+							region = cacheElement.getRegion();
+						}
+						return new Caching( region, null, false );
 					}
-					final String region = cacheElement.getRegion() != null ? cacheElement.getRegion() : defaultRegionName;
-					final AccessType accessType = AccessType.fromExternalName( cacheElement.getUsage() );
-					final boolean cacheLazyProps = !"non-lazy".equals( cacheElement.getInclude() );
-					return new Caching( region, accessType, cacheLazyProps );
 				}
-			}
 		);
 	}
 	

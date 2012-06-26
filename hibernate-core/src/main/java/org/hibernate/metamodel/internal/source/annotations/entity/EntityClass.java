@@ -57,6 +57,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
@@ -80,6 +81,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  * @author Hardy Ferentschik
  */
 public class EntityClass extends ConfiguredClass {
+	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 	private final IdType idType;
 	private final InheritanceType inheritanceType;
 
@@ -98,6 +100,7 @@ public class EntityClass extends ConfiguredClass {
 	private String whereClause;
 	private String rowId;
 	private Caching caching;
+	private Caching naturalIdCaching;
 	private boolean isDynamicInsert;
 	private boolean isDynamicUpdate;
 	private boolean isSelectBeforeUpdate;
@@ -202,6 +205,10 @@ public class EntityClass extends ConfiguredClass {
 
 	public Caching getCaching() {
 		return caching;
+	}
+
+	public Caching getNaturalIdCaching(){
+		return naturalIdCaching;
 	}
 
 	public TableSpecificationSource getPrimaryTableSource() {
@@ -484,6 +491,8 @@ public class EntityClass extends ConfiguredClass {
 
 		caching = determineCachingSettings();
 
+		naturalIdCaching = determineNaturalIdCachingSettings(caching);
+
 		// see HHH-6397
 		isDynamicInsert =
 				hibernateEntityAnnotation != null
@@ -523,6 +532,28 @@ public class EntityClass extends ConfiguredClass {
 			entityPersisterClass = persisterAnnotation.value( "impl" ).asString();
 		}
 		this.customPersister = entityPersisterClass;
+	}
+
+	private Caching determineNaturalIdCachingSettings(final Caching entityCache) {
+		final AnnotationInstance naturalIdCacheAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.NATURAL_ID_CACHE
+		);
+		if ( naturalIdCacheAnnotation == null ) {
+			return null;
+		}
+		final String region;
+		if ( naturalIdCacheAnnotation.value( "region" ) == null || StringHelper.isEmpty(
+				naturalIdCacheAnnotation.value(
+						"region"
+				).asString()
+		) ) {
+			region = entityCache == null ? getEntityName() + NATURAL_ID_CACHE_SUFFIX : entityCache.getRegion() + NATURAL_ID_CACHE_SUFFIX;
+		}
+		else {
+			region = naturalIdCacheAnnotation.value( "region" ).asString();
+		}
+		return new Caching( region, null, false );
 	}
 
 	private Caching determineCachingSettings() {

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
@@ -43,5 +44,10 @@ public class VersionAttributeSourceImpl
 	@Override
 	public String getUnsavedValue() {
 		return null;
+	}
+
+	@Override
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 	}
 }

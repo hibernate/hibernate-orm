@@ -58,6 +58,7 @@ public class ManyToOneAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
@@ -67,6 +68,7 @@ public class ManyToOneAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext
 		);
 

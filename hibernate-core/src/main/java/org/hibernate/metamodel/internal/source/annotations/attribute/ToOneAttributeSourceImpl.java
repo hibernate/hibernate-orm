@@ -36,6 +36,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
@@ -57,11 +58,6 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public SingularAttributeNature getNature() {
 		return SingularAttributeNature.MANY_TO_ONE;
-	}
-
-	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
-		return null;  // todo : implement proper method body
 	}
 
 	@Override
@@ -111,12 +107,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public FetchTiming getFetchTiming() {
-		if ( associationAttribute.isLazy() ) {
-			return FetchTiming.DELAYED;
-		}
-		else {
-			return FetchTiming.IMMEDIATE;
-		}
+		return associationAttribute.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 	}
 
 	@Override

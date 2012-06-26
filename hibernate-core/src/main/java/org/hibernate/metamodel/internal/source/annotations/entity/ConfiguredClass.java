@@ -59,6 +59,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.ReflectionHelper;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
@@ -365,7 +366,7 @@ public class ConfiguredClass {
 		// when the access type of the class is FIELD
 		// overriding access annotations must be placed on properties AND have the access type PROPERTY
 		if ( AccessType.FIELD.equals( classAccessType ) ) {
-			if ( !( annotationTarget instanceof MethodInfo ) ) {
+			if ( !MethodInfo.class.isInstance( annotationTarget ) ) {
 				LOG.tracef(
 						"The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
 								"@Access has to be placed on the property (getter)", classInfo.name().toString()
@@ -387,7 +388,7 @@ public class ConfiguredClass {
 		// when the access type of the class is PROPERTY
 		// overriding access annotations must be placed on fields and have the access type FIELD
 		if ( AccessType.PROPERTY.equals( classAccessType ) ) {
-			if ( !( annotationTarget instanceof FieldInfo ) ) {
+			if ( !FieldInfo.class.isInstance( annotationTarget ) ) {
 				LOG.tracef(
 						"The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
 								"@Access has to be placed on the field ", classInfo.name().toString()
@@ -410,13 +411,7 @@ public class ConfiguredClass {
 
 	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
 		final String attributeName = ReflectionHelper.getPropertyName( member );
-		ResolvedMember[] resolvedMembers;
-		if ( member instanceof Field ) {
-			resolvedMembers = resolvedType.getMemberFields();
-		}
-		else {
-			resolvedMembers = resolvedType.getMemberMethods();
-		}
+		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType.getMemberMethods();
 		Class<?> attributeType = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
@@ -449,13 +444,13 @@ public class ConfiguredClass {
 				throw new NotYetImplementedException( "Element collections must still be implemented." );
 			}
 			case EMBEDDED_ID: {
-				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
+				final BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName, attributeType, attributeNature, annotations, accessTypeString, getLocalBindingContext()
 				);
 				idAttributeMap.put( attributeName, attribute );
 			}
 			case EMBEDDED: {
-				AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
+				final AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
 						getClassInfo(),
 						HibernateDotNames.TARGET
 				);
@@ -464,13 +459,13 @@ public class ConfiguredClass {
 							JandexHelper.getValue( targetAnnotation, "value", String.class )
 					);
 				}
-				resolveEmbeddable( attributeName, attributeType );
+				resolveEmbeddable( attributeName, attributeType, annotations );
 				break;
 			}
 			// OneToOne, OneToMany, ManyToOne, ManyToMany
 			case ONE_TO_ONE:
 			case MANY_TO_ONE: {
-				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
+				final AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
 						attributeName,
 						attributeType,
 						attributeNature,
@@ -498,10 +493,10 @@ public class ConfiguredClass {
 		}
 	}
 
-	private void resolveEmbeddable(String attributeName, Class<?> type) {
-		ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
+	private void resolveEmbeddable(String attributeName, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
+		final ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
 		if ( embeddableClassInfo == null ) {
-			String msg = String.format(
+			final String msg = String.format(
 					"Attribute '%s#%s' is annotated with @Embedded, but '%s' does not seem to be annotated " +
 							"with @Embeddable. Are all annotated classes added to the configuration?",
 					getConfiguredClass().getSimpleName(),
@@ -512,10 +507,26 @@ public class ConfiguredClass {
 		}
 
 		localBindingContext.resolveAllTypes( type.getName() );
-		EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
+		AnnotationInstance naturalIdAnnotationInstance = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.NATURAL_ID
+		);
+		SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+		if ( naturalIdAnnotationInstance != null ) {
+			naturalIdMutability = JandexHelper.getValue(
+					naturalIdAnnotationInstance,
+					"mutable",
+					Boolean.class
+			) ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
+		}
+		else {
+			naturalIdMutability = SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+		}
+		final EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
 				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
 				attributeName,
 				classAccessType,
+				naturalIdMutability,
 				localBindingContext
 		);
 		embeddedClasses.put( attributeName, hierarchy.getLeaf() );
@@ -570,14 +581,14 @@ public class ConfiguredClass {
 			discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION, elementCollection );
 		}
 
-		if ( discoveredAttributeTypes.size() == 0 ) {
-			return AttributeNature.BASIC;
-		}
-		else if ( discoveredAttributeTypes.size() == 1 ) {
-			return discoveredAttributeTypes.keySet().iterator().next();
-		}
-		else {
-			throw new AnnotationException( "More than one association type configured for property  " + getName() + " of class " + getName() );
+		int size = discoveredAttributeTypes.size();
+		switch ( size ){
+			case 0:
+				return AttributeNature.BASIC;
+			case 1:
+				return discoveredAttributeTypes.keySet().iterator().next();
+			default:
+				throw new AnnotationException( "More than one association type configured for property  " + getName() + " of class " + getName() );
 		}
 	}
 

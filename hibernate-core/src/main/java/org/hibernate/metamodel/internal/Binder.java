@@ -279,6 +279,7 @@ public class Binder {
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
+						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						attributeSource.getGeneration() );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
@@ -326,6 +327,7 @@ public class Binder {
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
+						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
 		bindAttributes( attributeBinding, attributeSource );
 		return attributeBinding;
@@ -387,6 +389,7 @@ public class Binder {
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
+						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						( SingularAttributeBinding ) referencedAttributeBinding,
 						relationalValueBindings );
@@ -1001,6 +1004,7 @@ public class Binder {
 			bindIdentifierGenerator( rootEntityBinding );
 			bindMultiTenancy( rootEntityBinding, rootEntitySource );
 			rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
+			rootEntityBinding.getHierarchyDetails().setNaturalIdCaching( rootEntitySource.getNaturalIdCaching() );
 			rootEntityBinding.getHierarchyDetails().setExplicitPolymorphism( rootEntitySource.isExplicitPolymorphism() );
 			rootEntityBinding.getHierarchyDetails().setOptimisticLockStyle( rootEntitySource.getOptimisticLockStyle() );
 			rootEntityBinding.setMutable( rootEntitySource.isMutable() );

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
  * Source-agnostic description of information needed to bind a singular attribute.
@@ -65,11 +66,6 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 *
 	 * @return The mutability, see enum for meanings
 	 */
-	public NaturalIdMutability getNaturalIdMutability();
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability();
 
-	public static enum NaturalIdMutability {
-		MUTABLE,
-		IMMUTABLE,
-		NOT_NATURAL_ID
-	}
 }

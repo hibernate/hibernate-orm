@@ -31,6 +31,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -44,7 +45,7 @@ class ComponentAttributeSourceImpl extends AbstractComponentAttributeSourceImpl 
 			JaxbComponentElement componentElement,
 			AttributeSourceContainer parentContainer,
 			String logicalTableName,
-			NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument, componentElement, parentContainer, logicalTableName, naturalIdMutability );
 	}
 

@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.ExplicitHibernateTypeSourceImpl;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -72,8 +73,8 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
-		return null;  // todo : implement proper method body
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return attribute.getNaturalIdMutability();
 	}
 
 	@Override

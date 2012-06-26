@@ -146,6 +146,11 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		return getEntityClass().getCaching();
 	}
 
+	@Override
+	public Caching getNaturalIdCaching() {
+		return getEntityClass().getNaturalIdCaching();
+	}
+
 	private class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIdentifierSource {
 		private final ComponentAttributeSourceImpl componentAttributeSource;
 

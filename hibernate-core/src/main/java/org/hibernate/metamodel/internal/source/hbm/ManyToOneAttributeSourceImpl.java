@@ -31,6 +31,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
@@ -46,14 +47,14 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
  */
 class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOneAttributeSource {
 	private final JaxbManyToOneElement manyToOneElement;
-	private final NaturalIdMutability naturalIdMutability;
+	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 	private final List<RelationalValueSource> valueSources;
 
 	ManyToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbManyToOneElement manyToOneElement,
 			final String logicalTableName,
-			NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument );
 		this.manyToOneElement = manyToOneElement;
 		this.naturalIdMutability = naturalIdMutability;
@@ -119,7 +120,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 

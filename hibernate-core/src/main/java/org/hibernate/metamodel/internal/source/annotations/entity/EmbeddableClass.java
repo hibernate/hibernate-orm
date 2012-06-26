@@ -31,6 +31,7 @@ import org.jboss.jandex.ClassInfo;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
  * Represents the information about an entity annotated with {@code @Embeddable}.
@@ -40,15 +41,18 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 public class EmbeddableClass extends ConfiguredClass {
 	private final String embeddedAttributeName;
 	private final String parentReferencingAttributeName;
+	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	public EmbeddableClass(
 			ClassInfo classInfo,
 			String embeddedAttributeName,
 			ConfiguredClass parent,
 			AccessType defaultAccessType,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
 		this.embeddedAttributeName = embeddedAttributeName;
+		this.naturalIdMutability = naturalIdMutability;
 		this.parentReferencingAttributeName = checkParentAnnotation();
 	}
 
@@ -57,12 +61,7 @@ public class EmbeddableClass extends ConfiguredClass {
 				getClassInfo(),
 				HibernateDotNames.PARENT
 		);
-		if ( parentAnnotation == null ) {
-			return null;
-		}
-		else {
-			return JandexHelper.getPropertyName( parentAnnotation.target() );
-		}
+		return parentAnnotation == null? null : JandexHelper.getPropertyName( parentAnnotation.target() );
 	}
 
 	public String getEmbeddedAttributeName() {
@@ -71,6 +70,10 @@ public class EmbeddableClass extends ConfiguredClass {
 
 	public String getParentReferencingAttributeName() {
 		return parentReferencingAttributeName;
+	}
+
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		 return naturalIdMutability;
 	}
 }
 

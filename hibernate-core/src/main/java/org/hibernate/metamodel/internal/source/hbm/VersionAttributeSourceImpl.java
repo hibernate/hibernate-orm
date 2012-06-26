@@ -29,6 +29,7 @@ import java.util.Map;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -147,8 +148,8 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
-		return NaturalIdMutability.NOT_NATURAL_ID;
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 	}
 
 	@Override

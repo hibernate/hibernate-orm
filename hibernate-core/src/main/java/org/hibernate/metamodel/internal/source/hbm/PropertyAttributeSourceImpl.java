@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -43,13 +44,13 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	private final JaxbPropertyElement propertyElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
-	private final NaturalIdMutability naturalIdMutability;
+	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	PropertyAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbPropertyElement propertyElement,
 			final String logicalTableName,
-			NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument );
 		this.propertyElement = propertyElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {
@@ -135,7 +136,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 

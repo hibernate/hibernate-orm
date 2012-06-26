@@ -35,6 +35,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
@@ -51,7 +52,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	private final ComponentSourceElement componentSourceElement;
 	private final AttributeSourceContainer parentContainer;
 	private final List<AttributeSource> subAttributeSources;
-	private final NaturalIdMutability naturalIdMutability;
+	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 	private final Value<Class<?>> componentClassReference;
 	private final String logicalTableName;
 	private final String path;
@@ -61,7 +62,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 			ComponentSourceElement componentSourceElement,
 			AttributeSourceContainer parentContainer,
 			String logicalTableName,
-			NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument );
 		this.componentSourceElement = componentSourceElement;
 		this.parentContainer = parentContainer;
@@ -212,7 +213,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 

@@ -32,6 +32,7 @@ import java.util.Map;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -44,7 +45,6 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * Annotation backed implementation of {@code ComponentAttributeSource}.
@@ -63,12 +63,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new Value<Class<?>>( embeddableClass.getConfiguredClass() );
 		this.attributeOverrides = attributeOverrides;
-		if ( StringHelper.isEmpty( parentPath ) ) {
-			path = embeddableClass.getEmbeddedAttributeName();
-		}
-		else {
-			path = parentPath + "." + embeddableClass.getEmbeddedAttributeName();
-		}
+		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
 	}
 
 	@Override
@@ -190,8 +185,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public NaturalIdMutability getNaturalIdMutability() {
-		return null;  // todo : implement proper method body
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return  embeddableClass.getNaturalIdMutability();
 	}
 
 	@Override

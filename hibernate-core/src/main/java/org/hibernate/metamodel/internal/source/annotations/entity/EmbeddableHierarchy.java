@@ -26,15 +26,19 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.AccessType;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.
@@ -55,7 +59,9 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static EmbeddableHierarchy createEmbeddableHierarchy(Class<?> embeddableClass, String propertyName, AccessType accessType, AnnotationBindingContext context) {
+	public static EmbeddableHierarchy createEmbeddableHierarchy(Class<?> embeddableClass, String propertyName,
+																AccessType accessType,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability, AnnotationBindingContext context) {
 
 		ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
 		if ( embeddableClassInfo == null ) {
@@ -76,11 +82,12 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 			);
 		}
 
+
+
 		List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
-		ClassInfo tmpClassInfo;
 		Class<?> clazz = embeddableClass;
 		while ( clazz != null && !clazz.equals( Object.class ) ) {
-			tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
+			ClassInfo tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
 			clazz = clazz.getSuperclass();
 			if ( tmpClassInfo == null ) {
 				continue;
@@ -92,6 +99,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		return new EmbeddableHierarchy(
 				classInfoList,
 				propertyName,
+				naturalIdMutability,
 				context,
 				accessType
 		);
@@ -101,6 +109,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	private EmbeddableHierarchy(
 			List<ClassInfo> classInfoList,
 			String propertyName,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			AnnotationBindingContext context,
 			AccessType defaultAccessType) {
 		this.defaultAccessType = defaultAccessType;
@@ -108,12 +117,11 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		// the resolved type for the top level class in the hierarchy
 		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
-		embeddables = new ArrayList<EmbeddableClass>();
+		this.embeddables = new ArrayList<EmbeddableClass>();
 		ConfiguredClass parent = null;
-		EmbeddableClass embeddable;
 		for ( ClassInfo info : classInfoList ) {
-			embeddable = new EmbeddableClass(
-					info, propertyName, parent, defaultAccessType, context
+			EmbeddableClass embeddable = new EmbeddableClass(
+					info, propertyName, parent, defaultAccessType,naturalIdMutability, context
 			);
 			embeddables.add( embeddable );
 			parent = embeddable;

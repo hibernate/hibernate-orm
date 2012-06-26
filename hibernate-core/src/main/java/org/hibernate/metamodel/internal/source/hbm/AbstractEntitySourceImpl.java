@@ -48,6 +48,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
@@ -55,7 +56,6 @@ import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
@@ -109,7 +109,7 @@ public abstract class AbstractEntitySourceImpl
 				attributeSources,
 				entityElement.getPropertyOrManyToOneOrOneToOne(),
 				null,
-				SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
 		);
 		return attributeSources;
 	}
@@ -118,7 +118,7 @@ public abstract class AbstractEntitySourceImpl
 			List<AttributeSource> results,
 			List attributeElements,
 			String logicalTableName,
-			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		for ( Object attributeElement : attributeElements ) {
 			results.add( buildAttributeSource( attributeElement, logicalTableName, naturalIdMutability ) );
 		}
@@ -127,7 +127,7 @@ public abstract class AbstractEntitySourceImpl
 	protected AttributeSource buildAttributeSource(
 			Object attributeElement,
 			String logicalTableName,
-			SingularAttributeSource.NaturalIdMutability naturalIdMutability) {
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
 			return new PropertyAttributeSourceImpl(
 					sourceMappingDocument(),
@@ -215,7 +215,7 @@ public abstract class AbstractEntitySourceImpl
 					attributeSources,
 					joinElement.getPropertyOrManyToOneOrComponent(),
 					logicalTableName,
-					SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+					SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
 			);
 		}
 		return secondaryTableSources;

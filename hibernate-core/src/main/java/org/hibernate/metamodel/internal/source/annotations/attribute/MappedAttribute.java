@@ -37,6 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
  * Base class for the different types of mapped attributes
@@ -82,6 +83,11 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final boolean isId;
 
 	/**
+	 * Is this property a natural id property and what's the mutability it is.
+ 	 */
+	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+
+	/**
 	 * Whether a change of the property's value triggers a version increment of the entity (in case of optimistic
 	 * locking).
 	 */
@@ -98,7 +104,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final EntityBindingContext context;
 
-	MappedAttribute(String name, Class<?> attributeType, AttributeNature attributeNature, String accessType, Map<DotName, List<AnnotationInstance>> annotations, EntityBindingContext context) {
+	MappedAttribute(String name, Class<?> attributeType, AttributeNature attributeNature,
+					String accessType, Map<DotName, List<AnnotationInstance>> annotations,
+					EntityBindingContext context) {
 		this.context = context;
 		this.annotations = annotations;
 		this.name = name;
@@ -116,6 +124,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
 		this.checkCondition = checkCheckAnnotation();
+		this.naturalIdMutability = checkNaturalId();
 		checkColumnAnnotations( annotations );
 	}
 
@@ -149,6 +158,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public boolean isOptimisticLockable() {
 		return isOptimisticLockable;
+	}
+
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
 	}
 
 	public AttributeNature getAttributeNature() {
@@ -196,6 +209,18 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			triggersVersionIncrement = !exclude;
 		}
 		return triggersVersionIncrement;
+	}
+
+	private SingularAttributeBinding.NaturalIdMutability checkNaturalId() {
+		final AnnotationInstance naturalIdAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.NATURAL_ID
+		);
+		if ( naturalIdAnnotation == null ) {
+			return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+		}
+		final boolean mutable = naturalIdAnnotation.value("mutable") == null ? false : naturalIdAnnotation.value( "mutable" ).asBoolean();
+		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
 	}
 
 	private void checkColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {

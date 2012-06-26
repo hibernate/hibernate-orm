@@ -746,6 +746,43 @@ public final class SessionFactoryImpl
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
+
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
+			if ( settings.isSecondLevelCacheEnabled() &&
+					rootEntityBinding.getHierarchyDetails().getNaturalIdCaching() != null &&
+					model.getHierarchyDetails().getNaturalIdCaching() != null ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails()
+						.getNaturalIdCaching()
+						.getRegion();
+				naturalIdAccessStrategy = (NaturalIdRegionAccessStrategy) entityAccessStrategies.get(
+						naturalIdCacheRegionName
+				);
+				if ( naturalIdAccessStrategy == null ) {
+					final CacheDataDescriptionImpl naturaIdCacheDataDescription = CacheDataDescriptionImpl.decode( model );
+					NaturalIdRegion naturalIdRegion = null;
+					try {
+						naturalIdRegion = settings.getRegionFactory()
+								.buildNaturalIdRegion(
+										naturalIdCacheRegionName,
+										properties,
+										naturaIdCacheDataDescription
+								);
+					}
+					catch ( UnsupportedOperationException e ) {
+						LOG.warnf(
+								"Shared cache region factory [%s] does not support natural id caching; " +
+										"shared NaturalId caching will be disabled for not be enabled for %s",
+								settings.getRegionFactory().getClass().getName(),
+								model.getEntity().getName()
+						);
+					}
+					if ( naturalIdRegion != null ) {
+						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
+						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+						allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+					}
+				}
+			}
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
 					model, accessStrategy, this, metadata
 			);

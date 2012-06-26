@@ -53,4 +53,18 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	 * @return {@code true} indicates that all values allow {@code null}; {@code false} indicates one or more do not
 	 */
 	public boolean isNullable();
+
+	/**
+	 * Convenience method to determine if this attribute is an natural id and if it is, then returns its mutability.
+	 *
+	 * @return The {@link NaturalIdMutability} linked with this attribute,
+	 * {@code NaturalIdMutability#NOT_NATURAL_ID} indicates this is <b>NOT</b> a natural id attribute.
+	 */
+	public NaturalIdMutability getNaturalIdMutability();
+
+	public enum NaturalIdMutability {
+		MUTABLE,
+		IMMUTABLE,
+		NOT_NATURAL_ID
+	}
 }

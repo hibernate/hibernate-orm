@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableHierarchy;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -65,7 +66,7 @@ public class EmbeddableHierarchyTest extends BaseAnnotationIndexTestCase {
 		}
 
 		EmbeddableHierarchy hierarchy = createEmbeddableHierarchy(
-				AccessType.FIELD,
+				AccessType.FIELD, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
 				C.class,
 				A.class,
 				B.class
@@ -86,7 +87,8 @@ public class EmbeddableHierarchyTest extends BaseAnnotationIndexTestCase {
 		class NonAnnotatedEmbeddable {
 		}
 
-		createEmbeddableHierarchy( AccessType.FIELD, NonAnnotatedEmbeddable.class );
+		createEmbeddableHierarchy( AccessType.FIELD,
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID, NonAnnotatedEmbeddable.class );
 	}
 
 	@Entity

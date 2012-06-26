@@ -72,6 +72,7 @@ import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQueries;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLock;
@@ -156,6 +157,7 @@ public interface HibernateDotNames {
 	DotName NAMED_QUERIES = DotName.createSimple( NamedQueries.class.getName() );
 	DotName NAMED_QUERY = DotName.createSimple( NamedQuery.class.getName() );
 	DotName NATURAL_ID = DotName.createSimple( NaturalId.class.getName() );
+	DotName NATURAL_ID_CACHE = DotName.createSimple( NaturalIdCache.class.getName() );
 	DotName NOT_FOUND = DotName.createSimple( NotFound.class.getName() );
 	DotName ON_DELETE = DotName.createSimple( OnDelete.class.getName() );
 	DotName OPTIMISTIC_LOCK = DotName.createSimple( OptimisticLock.class.getName() );

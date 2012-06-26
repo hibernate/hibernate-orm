@@ -42,6 +42,7 @@ public class HierarchyDetails {
 	private EntityVersion entityVersion;
 
 	private Caching caching;
+	private Caching naturalIdCaching;
 
 	private boolean explicitPolymorphism;
 
@@ -104,6 +105,14 @@ public class HierarchyDetails {
 
 	public void setCaching(Caching caching) {
 		this.caching = caching;
+	}
+
+	public Caching getNaturalIdCaching() {
+		return naturalIdCaching;
+	}
+
+	public void setNaturalIdCaching(Caching naturalIdCaching) {
+		this.naturalIdCaching = naturalIdCaching;
 	}
 
 	public boolean isExplicitPolymorphism() {

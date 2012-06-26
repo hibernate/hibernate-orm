@@ -447,15 +447,15 @@ public class EntityMetamodel implements Serializable {
 			else {
 				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, instrumentationMetadata.isInstrumented() );
 			}
-
-			// TODO: fix when natural IDs are added (HHH-6354)
-			//if ( attributeBinding.isNaturalIdentifier() ) {
-			//	naturalIdNumbers.add( i );
-			//	if ( attributeBinding.isUpdateable() ) {
-			//		foundUpdateableNaturalIdProperty = true;
-			//	}
-			//}
-
+			if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ){
+				SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast( attributeBinding );
+				if(singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.MUTABLE){
+					naturalIdNumbers.add( i );
+					foundUpdateableNaturalIdProperty = true;
+				} else if(singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE){
+					naturalIdNumbers.add( i );
+				}
+			}
 			if ( "id".equals( attributeBinding.getAttribute().getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
 			}
@@ -508,7 +508,7 @@ public class EntityMetamodel implements Serializable {
 			i++;
 		}
 
-		if (naturalIdNumbers.size()==0) {
+		if (naturalIdNumbers.isEmpty()) {
 			naturalIdPropertyNumbers = null;
 			hasImmutableNaturalId = false;
 			hasCacheableNaturalId = false;
@@ -516,7 +516,7 @@ public class EntityMetamodel implements Serializable {
 		else {
 			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = false; //See previous TODO and HHH-6354
+			hasCacheableNaturalId = entityBinding.getHierarchyDetails().getNaturalIdCaching() != null;
 		}
 
 		hasInsertGeneratedValues = foundInsertGeneratedValue;

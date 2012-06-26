@@ -58,6 +58,7 @@ public class BasicAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			PropertyGeneration generation) {
 		super(
@@ -66,6 +67,7 @@ public class BasicAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext
 		);
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );

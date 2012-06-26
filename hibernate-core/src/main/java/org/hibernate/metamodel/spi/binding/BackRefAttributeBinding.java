@@ -33,9 +33,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 /**
  * @author Gail Badner
  */
-public class BackRefAttributeBinding
-		extends BasicAttributeBinding
-		implements SingularNonAssociationAttributeBinding {
+public class BackRefAttributeBinding extends BasicAttributeBinding {
 
 	PluralAttributeBinding pluralAttributeBinding;
 
@@ -50,6 +48,7 @@ public class BackRefAttributeBinding
 				null,
 				false,
 				false,
+				NaturalIdMutability.NOT_NATURAL_ID,
 				null,
 				PropertyGeneration.NEVER
 		);

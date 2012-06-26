@@ -56,6 +56,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttribute parentReference) {
 		this(
@@ -64,6 +65,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				parentReference,
 				null
@@ -74,6 +76,7 @@ public class CompositeAttributeBinding
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			List<SingularAttributeBinding> subAttributeBindings) {
 		this(
@@ -82,6 +85,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				false,
 				false,
+				naturalIdMutability,
 				metaAttributeContext,
 				null,
 				subAttributeBindings
@@ -94,6 +98,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttribute parentReference,
 			List<SingularAttributeBinding> subAttributeBindings) {
@@ -103,6 +108,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext
 		);
 
@@ -211,6 +217,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			PropertyGeneration generation) {
 		final BasicAttributeBinding binding = new BasicAttributeBinding(
@@ -220,6 +227,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				generation
 		);
@@ -239,6 +247,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext) {
 		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
 				this,
@@ -246,6 +255,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				parentReferenceAttribute
 		);
@@ -259,6 +269,7 @@ public class CompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
@@ -268,6 +279,7 @@ public class CompositeAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				referencedAttributeBinding,
 				valueBindings

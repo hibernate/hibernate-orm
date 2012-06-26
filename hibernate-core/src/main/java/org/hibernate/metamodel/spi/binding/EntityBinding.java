@@ -490,6 +490,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			PropertyGeneration generation) {
 		final BasicAttributeBinding binding = new BasicAttributeBinding(
@@ -499,6 +500,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				generation
 		);
@@ -513,6 +515,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext) {
 		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
 				this,
@@ -520,6 +523,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				parentReferenceAttribute
 		);
@@ -540,6 +544,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				this,
 				syntheticAttribute,
 				PropertyAccessorFactory.EMBEDDED_ACCESSOR_NAME,
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
 				metaAttributeContext,
 				subAttributeBindings
 		);
@@ -570,6 +575,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
@@ -579,6 +585,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				naturalIdMutability,
 				metaAttributeContext,
 				referencedAttributeBinding,
 				valueBindings

@@ -124,12 +124,7 @@ public class BasicAttribute extends MappedAttribute {
 					annotations,
 					HibernateDotNames.SOURCE
 			);
-			if ( sourceAnnotation != null ) {
-				versionSourceType = JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class );
-			}
-			else {
-				versionSourceType = null;
-			}
+			this.versionSourceType = sourceAnnotation !=null ? JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class ) : null;
 		}
 		else {
 			versionSourceType = null;

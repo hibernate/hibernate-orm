@@ -43,6 +43,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
@@ -64,14 +65,20 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
  */
 public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements RootEntitySource {
 	private final TableSpecificationSource primaryTable;
-	private final Value<Caching> cachingHolder;
+	private final Caching caching;
+	private final Value<Caching> naturalIdCachingHolder;
 
 	protected RootEntitySourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbHibernateMapping.JaxbClass entityElement) {
 		super( sourceMappingDocument, entityElement );
 		this.primaryTable = Helper.createTableSource( sourceMappingDocument(), entityElement, this );
-		this.cachingHolder = Helper.createCachingHolder( entityElement().getCache(), getEntityName() );
+		this.caching = Helper.createCaching( entityElement().getCache(), getEntityName() );
+		this.naturalIdCachingHolder = Helper.createNaturalIdCachingHolder(
+				entityElement.getNaturalIdCache(),
+				getEntityName(),
+				caching
+		);
 		afterInstantiation();
 	}
 
@@ -131,8 +138,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					naturalId.getPropertyOrManyToOneOrComponent(),
 					null,
 					naturalId.isMutable()
-							? SingularAttributeSource.NaturalIdMutability.MUTABLE
-							: SingularAttributeSource.NaturalIdMutability.IMMUTABLE
+							? SingularAttributeBinding.NaturalIdMutability.MUTABLE
+							: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE
 			);
 		}
 		return super.buildAttributeSources( attributeSources );
@@ -179,7 +186,12 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public Caching getCaching() {
-		return cachingHolder.getValue();
+		return caching;
+	}
+
+	@Override
+	public Caching getNaturalIdCaching() {
+		return naturalIdCachingHolder.getValue();
 	}
 
 	@Override
@@ -417,7 +429,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 					entityElement().getCompositeId(),
 					RootEntitySourceImpl.this,
 					null,
-					SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+					SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
 			);
 		}
 
@@ -523,7 +535,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 				final AttributeSource attributeSource = buildAttributeSource(
 						attributeElement,
 						null,
-						SingularAttributeSource.NaturalIdMutability.NOT_NATURAL_ID
+						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
 				);
 				if ( ! attributeSource.isSingular() ) {
 					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );

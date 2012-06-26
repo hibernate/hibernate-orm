@@ -32,7 +32,6 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -57,7 +56,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
-	private final Value<Caching> cachingHolder;
+	private final Caching caching;
 
 	protected AbstractPluralAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -74,7 +73,10 @@ public abstract class AbstractPluralAttributeSourceImpl
 		);
 		this.elementSource = interpretElementType();
 
-		this.cachingHolder = Helper.createCachingHolder( pluralAttributeElement.getCache(), StringHelper.qualify( container().getPath(), getName() ) );
+		this.caching = Helper.createCaching(
+				pluralAttributeElement.getCache(),
+				StringHelper.qualify( container().getPath(), getName() )
+		);
 
 		this.typeInformation = new ExplicitHibernateTypeSource() {
 			@Override
@@ -170,7 +172,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public Caching getCaching() {
-		return cachingHolder.getValue();
+		return caching;
 	}
 
 	@Override

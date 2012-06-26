@@ -36,6 +36,7 @@ public abstract class AbstractSingularAttributeBinding
 		implements SingularAttributeBinding {
 
 	private final boolean isLazy;
+	private final NaturalIdMutability naturalIdMutability;
 
 	protected AbstractSingularAttributeBinding(
 			AttributeBindingContainer container,
@@ -43,9 +44,11 @@ public abstract class AbstractSingularAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean isLazy,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext) {
 		super( container, attribute, propertyAccessorName, includedInOptimisticLocking, metaAttributeContext );
 		this.isLazy = isLazy;
+		this.naturalIdMutability = naturalIdMutability;
 	}
 
 	protected static boolean hasNullableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
@@ -65,6 +68,11 @@ public abstract class AbstractSingularAttributeBinding
 	@Override
 	public boolean isLazy() {
 		return isLazy;
+	}
+
+	@Override
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
 	}
 
 	protected abstract void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings);

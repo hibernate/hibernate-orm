@@ -38,23 +38,25 @@ import org.hibernate.metamodel.spi.relational.Value;
  */
 public class RelationalValueBinding {
 	private final Value value;
-	private boolean includeInInsert;
-	private boolean includeInUpdate;
+	private final boolean includeInInsert;
+	private final boolean includeInUpdate;
+	private final boolean isDerived;
+	private final boolean isNullable;
 
-	public RelationalValueBinding(Value value) {
-		this( value, true, true );
+	public RelationalValueBinding(DerivedValue value) {
+		this.value = value;
+		this.includeInInsert = false;
+		this.includeInUpdate = false;
+		this.isDerived = true;
+		this.isNullable = true;
 	}
 
-	public RelationalValueBinding(Value value, boolean includeInInsert, boolean includeInUpdate) {
+	public RelationalValueBinding(Column value, boolean includeInInsert, boolean includeInUpdate) {
 		this.value = value;
-		if ( DerivedValue.class.isInstance( value ) ) {
-			this.includeInInsert = false;
-			this.includeInUpdate = false;
-		}
-		else {
-			this.includeInInsert = includeInInsert;
-			this.includeInUpdate = includeInUpdate;
-		}
+		this.includeInInsert = includeInInsert;
+		this.includeInUpdate = includeInUpdate;
+		this.isDerived = false;
+		this.isNullable = value.isNullable();
 	}
 
 	/**
@@ -72,7 +74,7 @@ public class RelationalValueBinding {
 	 * @return {@code true} indicates the bound value is derived.
 	 */
 	public boolean isDerived() {
-		return DerivedValue.class.isInstance( value );
+		return isDerived;
 	}
 
 	/**
@@ -81,7 +83,7 @@ public class RelationalValueBinding {
 	 * @return {@code true} indicates the bound value is derived or a column not marked as non-null.
 	 */
 	public boolean isNullable() {
-		return isDerived() || Column.class.cast( value ).isNullable();
+		return isNullable;
 	}
 
 	/**

@@ -224,19 +224,16 @@ public class Binder {
 
 	private AttributeBinding bindAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final AttributeSource attributeSource ) {
+			final AttributeSource attributeSource) {
 		// Return existing binding if available
 		final String attributeName = attributeSource.getName();
 		final AttributeBinding attributeBinding = attributeBindingContainer.locateAttributeBinding( attributeName );
 		if ( attributeBinding != null ) {
 			return attributeBinding;
 		}
-
-		if ( attributeSource.isSingular() ) {
-			return bindSingularAttribute( attributeBindingContainer, ( SingularAttributeSource ) attributeSource );
-		} else {
-			return bindPluralAttribute( attributeBindingContainer, ( PluralAttributeSource ) attributeSource );
-		}
+		return attributeSource.isSingular() ?
+				bindSingularAttribute(attributeBindingContainer,SingularAttributeSource.class.cast( attributeSource ))
+				: bindPluralAttribute( attributeBindingContainer,PluralAttributeSource.class.cast( attributeSource ) );
 	}
 
 	// Singular attributes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,16 +244,24 @@ public class Binder {
 		final SingularAttributeNature nature = attributeSource.getNature();
 		final SingularAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
-		if ( nature == SingularAttributeNature.BASIC ) {
-			return bindBasicAttribute( attributeBindingContainer, attributeSource, attribute );
+		switch ( nature ) {
+			case BASIC:
+				return bindBasicAttribute( attributeBindingContainer, attributeSource, attribute );
+			case MANY_TO_ONE:
+				return bindManyToOneAttribute(
+						attributeBindingContainer,
+						(ToOneAttributeSource) attributeSource,
+						attribute
+				);
+			case COMPONENT:
+				return bindComponentAttribute(
+						attributeBindingContainer,
+						(ComponentAttributeSource) attributeSource,
+						attribute
+				);
+			default:
+				throw new NotYetImplementedException( nature.toString() );
 		}
-		if ( nature == SingularAttributeNature.MANY_TO_ONE ) {
-			return bindManyToOneAttribute( attributeBindingContainer, ( ToOneAttributeSource ) attributeSource, attribute );
-		}
-		if ( nature == SingularAttributeNature.COMPONENT ) {
-			return bindComponentAttribute( attributeBindingContainer, ( ComponentAttributeSource ) attributeSource, attribute );
-		}
-		throw new NotYetImplementedException( nature.toString() );
 	}
 
 	private BasicAttributeBinding bindBasicAttribute(
@@ -438,20 +443,33 @@ public class Binder {
 				attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding attributeBinding;
 		final Type resolvedType;
-		if ( nature == PluralAttributeNature.BAG ) {
-			attributeBinding = bindBagAttribute( attributeBindingContainer, attributeSource, attribute );
-			resolvedType = resolveBagType( ( BagBinding ) attributeBinding );
-		} else if ( nature == PluralAttributeNature.SET ) {
-			attributeBinding = bindSetAttribute( attributeBindingContainer, attributeSource, attribute );
-			resolvedType = resolveSetType( ( SetBinding ) attributeBinding );
-		} else if ( nature == PluralAttributeNature.LIST ) {
-			attributeBinding = bindListAttribute( attributeBindingContainer, ( ListAttributeSource ) attributeSource, attribute );
-			resolvedType = resolveListType( ( ListBinding ) attributeBinding );
-		} else if ( nature == PluralAttributeNature.MAP ) {
-			attributeBinding = bindMapAttribute( attributeBindingContainer, ( MapAttributeSource ) attributeSource, attribute );
-			resolvedType = resolveMapType( ( MapBinding ) attributeBinding );
-		} else {
-			throw new NotYetImplementedException( nature.toString() );
+		switch ( nature ) {
+			case BAG:
+				attributeBinding = bindBagAttribute( attributeBindingContainer, attributeSource, attribute );
+				resolvedType = resolveBagType( (BagBinding) attributeBinding );
+				break;
+			case SET:
+				attributeBinding = bindSetAttribute( attributeBindingContainer, attributeSource, attribute );
+				resolvedType = resolveSetType( (SetBinding) attributeBinding );
+				break;
+			case LIST:
+				attributeBinding = bindListAttribute(
+						attributeBindingContainer,
+						(ListAttributeSource) attributeSource,
+						attribute
+				);
+				resolvedType = resolveListType( (ListBinding) attributeBinding );
+				break;
+			case MAP:
+				attributeBinding = bindMapAttribute(
+						attributeBindingContainer,
+						(MapAttributeSource) attributeSource,
+						attribute
+				);
+				resolvedType = resolveMapType( (MapBinding) attributeBinding );
+				break;
+			default:
+				throw new NotYetImplementedException( nature.toString() );
 		}
 
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
@@ -910,12 +928,14 @@ public class Binder {
 		final RelationalValueSource valueSource = discriminatorSource.getDiscriminatorRelationalValueSource();
 		final TableSpecification table = rootEntityBinding.locateTable( valueSource.getContainingTableName() );
 		AbstractValue value;
-		if ( valueSource instanceof ColumnSource ) {
+		if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 			value =
 					createColumn(
 							table,
 							( ColumnSource ) valueSource,
 							bindingContexts.peek().getMappingDefaults().getDiscriminatorColumnName(),
+							false,
+							false,
 							false,
 							false );
 		} else {
@@ -968,11 +988,13 @@ public class Binder {
 	}
 
 	private Value buildRelationValue(RelationalValueSource valueSource, TableSpecification table) {
-		if ( valueSource instanceof ColumnSource ) {
+		if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 			return createColumn(
 					table,
 					( ColumnSource ) valueSource,
 					bindingContexts.peek().getMappingDefaults().getDiscriminatorColumnName(),
+					false,
+					false,
 					false,
 					false
 			);
@@ -1299,12 +1321,8 @@ public class Binder {
 			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		}
 
-		String explicitName = resolutionDelegate.getReferencedAttributeName();
-		if(explicitName != null) {
-			return referencedEntityBinding.locateAttributeBinding( explicitName );
-		} else {
-			return referencedEntityBinding.locateAttributeBinding(resolutionDelegate.getJoinColumns( resolutionContext ) );
-		}
+		final String explicitName = resolutionDelegate.getReferencedAttributeName();
+		return explicitName != null ? referencedEntityBinding.locateAttributeBinding( explicitName ) :referencedEntityBinding.locateAttributeBinding(resolutionDelegate.getJoinColumns( resolutionContext ) );
 	}
 
 	private void bindPrimaryTable( final EntityBinding entityBinding, final EntitySource entitySource ) {
@@ -1461,12 +1479,19 @@ public class Binder {
 			final Attribute attribute,
 			final TableSpecification defaultTable ) {
 		final List< RelationalValueBinding > valueBindings = new ArrayList< RelationalValueBinding >();
+		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = SingularAttributeSource.class.isInstance(
+				valueSourceContainer
+		) ? SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability()
+				: SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+		final boolean isNaturalId = naturalIdMutability != SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+		final boolean isImmutable = isNaturalId && (naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE);
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			final String columnName =
 					quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
 			final Column column = defaultTable.locateOrCreateColumn( columnName );
-			column.setNullable( valueSourceContainer.areValuesNullableByDefault() );
-			valueBindings.add( new RelationalValueBinding( column ) );
+			column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
+			column.setUnique( isNaturalId );
+			valueBindings.add( new RelationalValueBinding( column, true, !isImmutable ) );
 		} else {
 			final String name = attribute.getName();
 			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
@@ -1474,7 +1499,7 @@ public class Binder {
 						valueSource.getContainingTableName() == null
 								? defaultTable
 								: attributeBindingContainer.seekEntityBinding().locateTable( valueSource.getContainingTableName() );
-				if ( valueSource instanceof ColumnSource ) {
+				if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 					final ColumnSource columnSource = ( ColumnSource ) valueSource;
 					final boolean isIncludedInInsert =
 							toBoolean(
@@ -1489,8 +1514,10 @@ public class Binder {
 							table,
 							columnSource,
 							name,
+							isNaturalId,
+							isNaturalId,
 							valueSourceContainer.areValuesNullableByDefault(),
-							true ), isIncludedInInsert, isIncludedInUpdate ) );
+							true ), isIncludedInInsert, !isImmutable && isIncludedInUpdate ) );
 				} else {
 					final DerivedValue derivedValue =
 							table.locateOrCreateDerivedValue( ( ( DerivedValueSource ) valueSource ).getExpression() );
@@ -1547,6 +1574,8 @@ public class Binder {
 			final TableSpecification table,
 			final ColumnSource columnSource,
 			final String defaultName,
+			final boolean forceNotNull,
+			final boolean forceUnique,
 			final boolean isNullableByDefault,
 			final boolean isDefaultAttributeName ) {
 		if ( columnSource.getName() == null && defaultName == null ) {
@@ -1554,7 +1583,7 @@ public class Binder {
 					"Cannot resolve name for column because no name was specified and default name is null.",
 					bindingContexts.peek().getOrigin() );
 		}
-		String name;
+		final String name;
 		if ( columnSource.getName() != null ) {
 			name = bindingContexts.peek().getNamingStrategy().columnName( columnSource.getName() );
 		} else if ( isDefaultAttributeName ) {
@@ -1564,14 +1593,22 @@ public class Binder {
 		}
 		final String resolvedColumnName = quotedIdentifier( name );
 		final Column column = table.locateOrCreateColumn( resolvedColumnName );
-		column.setNullable( toBoolean( columnSource.isNullable(), isNullableByDefault ) );
+		if ( forceNotNull ) {
+			column.setNullable( false );
+			if(columnSource.isNullable() == TruthValue.TRUE){
+				log.warn( String.format( "Natural Id column[%s] has explicit set to allow nullable, we have to make it force not null ", columnSource.getName() ) );
+			}
+		}
+		else {
+			column.setNullable( toBoolean( columnSource.isNullable(), isNullableByDefault ) );
+		}
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 		column.setSize( columnSource.getSize() );
 		column.setJdbcDataType( columnSource.getDatatype() );
 		column.setReadFragment( columnSource.getReadFragment() );
 		column.setWriteFragment( columnSource.getWriteFragment() );
-		column.setUnique( columnSource.isUnique() );
+		column.setUnique( forceUnique || columnSource.isUnique() );
 		column.setCheckCondition( columnSource.getCheckCondition() );
 		column.setComment( columnSource.getComment() );
 		return column;
@@ -1837,7 +1874,7 @@ public class Binder {
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
 			// Get super entity binding (creating it if necessary using recursive call to this method)
 			final EntityBinding superEntityBinding =
-					entitySource instanceof SubclassEntitySource
+					SubclassEntitySource.class.isInstance( entitySource )
 							? entityBinding( ( ( SubclassEntitySource ) entitySource ).superclassEntitySource().getEntityName() )
 							: null;
 			// Create entity binding

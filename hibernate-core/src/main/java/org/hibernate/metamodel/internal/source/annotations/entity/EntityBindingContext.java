@@ -67,8 +67,7 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	public EntityBindingContext(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
 		this.contextDelegate = contextDelegate;
 		this.origin = new Origin( SourceType.ANNOTATION, source.getName() );
-
-		localIdentifierGeneratorDefinitionMap = processLocalIdentifierGeneratorDefinitions( source.getClassInfo() );
+		this.localIdentifierGeneratorDefinitionMap = processLocalIdentifierGeneratorDefinitions( source.getClassInfo() );
 	}
 
 	private Map<String,IdGenerator> processLocalIdentifierGeneratorDefinitions(final ClassInfo classInfo) {
@@ -217,7 +216,7 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	public IdGenerator findIdGenerator(String name) {
 		IdGenerator definition = localIdentifierGeneratorDefinitionMap.get( name );
 		if ( definition == null ) {
-			contextDelegate.findIdGenerator( name );
+			definition= contextDelegate.findIdGenerator( name );
 		}
 		return definition;
 	}

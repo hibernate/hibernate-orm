@@ -85,7 +85,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	/**
 	 * Is this property a natural id property and what's the mutability it is.
  	 */
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	/**
 	 * Whether a change of the property's value triggers a version increment of the entity (in case of optimistic
@@ -162,6 +162,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
+	}
+
+	public void setNaturalIdMutability(SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		this.naturalIdMutability = naturalIdMutability;
 	}
 
 	public AttributeNature getAttributeNature() {
@@ -281,6 +285,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 		return checkCondition;
 	}
+
+
 }
 
 

@@ -44,7 +44,7 @@ public class Building {
 	private Integer id;
 	
 	private String name;
-	
+
 	@NaturalId
 	private String address;
 	@NaturalId
@@ -138,5 +138,5 @@ public class Building {
 		return "Building [id=" + id + ", name=" + name + ", address=" + address + ", city=" + city + ", state=" + state
 				+ "]";
 	}
-	
+
 }

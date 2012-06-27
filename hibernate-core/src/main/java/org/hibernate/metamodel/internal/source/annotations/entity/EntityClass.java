@@ -131,17 +131,13 @@ public class EntityClass extends ConfiguredClass {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.inheritanceType = inheritanceType;
 		this.idType = determineIdType();
-		boolean hasOwnTable = definesItsOwnTable();
+
+		final boolean hasOwnTable = definesItsOwnTable();
+
 		this.explicitEntityName = determineExplicitEntityName();
 
 		this.constraintSources = new HashSet<ConstraintSource>();
-
-		if ( hasOwnTable ) {
-			this.primaryTableSource = createPrimaryTableSource();
-		}
-		else {
-			this.primaryTableSource = null;
-		}
+		this.primaryTableSource = hasOwnTable ? createPrimaryTableSource() : null;
 		this.secondaryTableSources = createSecondaryTableSources();
 
 		this.customLoaderQueryName = determineCustomLoader();
@@ -213,12 +209,7 @@ public class EntityClass extends ConfiguredClass {
 
 	public TableSpecificationSource getPrimaryTableSource() {
 		// todo : this is different from hbm which returns null if "!definesItsOwnTable()"
-		if ( definesItsOwnTable() ) {
-			return primaryTableSource;
-		}
-		else {
-			return ( (EntityClass) getParent() ).getPrimaryTableSource();
-		}
+		return definesItsOwnTable() ? primaryTableSource : ( (EntityClass) getParent() ).getPrimaryTableSource();
 	}
 
 	public Set<SecondaryTableSource> getSecondaryTableSources() {
@@ -669,16 +660,16 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	private void createUniqueConstraints(AnnotationInstance tableAnnotation, String tableName) {
-		AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
+		final AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
 		if ( value == null ) {
 			return;
 		}
 
-		AnnotationInstance[] uniqueConstraints = value.asNestedArray();
-		for ( AnnotationInstance unique : uniqueConstraints ) {
-			String name = unique.value( "name" ) == null ? null : unique.value( "name" ).asString();
-			String[] columnNames = unique.value( "columnNames" ).asStringArray();
-			UniqueConstraintSourceImpl uniqueConstraintSource =
+		final AnnotationInstance[] uniqueConstraints = value.asNestedArray();
+		for ( final AnnotationInstance unique : uniqueConstraints ) {
+			final String name = unique.value( "name" ) == null ? null : unique.value( "name" ).asString();
+			final String[] columnNames = unique.value( "columnNames" ).asStringArray();
+			final UniqueConstraintSourceImpl uniqueConstraintSource =
 					new UniqueConstraintSourceImpl(
 							name, tableName, Arrays.asList( columnNames )
 					);
@@ -827,12 +818,7 @@ public class EntityClass extends ConfiguredClass {
 					|| hibernateProxyAnnotation.value( "lazy" ).asBoolean();
 			if ( isLazy ) {
 				final AnnotationValue proxyClassValue = hibernateProxyAnnotation.value( "proxyClass" );
-				if ( proxyClassValue == null ) {
-					proxy = getName();
-				}
-				else {
-					proxy = proxyClassValue.asString();
-				}
+				proxy = proxyClassValue == null? getName() : proxyClassValue.asString();
 			}
 			else {
 				proxy = null;

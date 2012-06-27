@@ -171,21 +171,22 @@ public class Binder {
 	private final MetadataImplementor metadata;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 	private final ObjectNameNormalizer nameNormalizer;
-	private final HashMap< String, EntitySource > entitySourcesByName = new HashMap< String, EntitySource >();
-	private final HashMap< RootEntitySource, EntityHierarchy > entityHierarchiesByRootEntitySource =
-			new HashMap< RootEntitySource, EntityHierarchy >();
-	private final HashMap< String, AttributeSource > attributeSourcesByName = new HashMap< String, AttributeSource >();
-	private final LinkedList< LocalBindingContext > bindingContexts = new LinkedList< LocalBindingContext >();
-	private final LinkedList< InheritanceType > inheritanceTypes = new LinkedList< InheritanceType >();
+	private final HashMap<String, EntitySource> entitySourcesByName = new HashMap<String, EntitySource>();
+	private final HashMap<RootEntitySource, EntityHierarchy> entityHierarchiesByRootEntitySource =
+			new HashMap<RootEntitySource, EntityHierarchy>();
+	private final HashMap<String, AttributeSource> attributeSourcesByName = new HashMap<String, AttributeSource>();
+	private final LinkedList<LocalBindingContext> bindingContexts = new LinkedList<LocalBindingContext>();
+	private final LinkedList<InheritanceType> inheritanceTypes = new LinkedList<InheritanceType>();
 
-	private final LinkedList< EntityMode > entityModes = new LinkedList< EntityMode >();
+	private final LinkedList<EntityMode> entityModes = new LinkedList<EntityMode>();
 
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
 
 	public Binder( final MetadataImplementor metadata, final IdentifierGeneratorFactory identifierGeneratorFactory ) {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
-		nameNormalizer = new ObjectNameNormalizer() {
+		this.typeHelper = new HibernateTypeHelper( this, metadata );
+		this.nameNormalizer = new ObjectNameNormalizer() {
 
 			@Override
 			protected NamingStrategy getNamingStrategy() {
@@ -197,13 +198,12 @@ public class Binder {
 				return metadata.isGloballyQuotedIdentifiers();
 			}
 		};
-		typeHelper = new HibernateTypeHelper( this, metadata );
 	}
 
 	private AttributeBinding attributeBinding( final String entityName, final String attributeName ) {
 		// Check if binding has already been created
-		EntityBinding entityBinding = entityBinding( entityName );
-		AttributeSource attributeSource = attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
+		final EntityBinding entityBinding = entityBinding( entityName );
+		final AttributeSource attributeSource = attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
 		bindAttribute( entityBinding, attributeSource );
 		return entityBinding.locateAttributeBinding( attributeName );
 	}
@@ -250,13 +250,13 @@ public class Binder {
 			case MANY_TO_ONE:
 				return bindManyToOneAttribute(
 						attributeBindingContainer,
-						(ToOneAttributeSource) attributeSource,
+						ToOneAttributeSource.class.cast( attributeSource ),
 						attribute
 				);
 			case COMPONENT:
 				return bindComponentAttribute(
 						attributeBindingContainer,
-						(ComponentAttributeSource) attributeSource,
+						ComponentAttributeSource.class.cast( attributeSource ),
 						attribute
 				);
 			default:
@@ -303,16 +303,14 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final ComponentAttributeSource attributeSource,
 			SingularAttribute attribute ) {
-		Composite composite;
+		final Composite composite;
 		if ( attribute == null ) {
-			composite =
-					new Composite(
+			composite = new Composite(
 							attributeSource.getPath(),
 							attributeSource.getClassName(),
 							attributeSource.getClassReference(),
 							null );
-			attribute =
-					attributeBindingContainer.getAttributeContainer().createCompositeAttribute(
+			attribute = attributeBindingContainer.getAttributeContainer().createCompositeAttribute(
 							attributeSource.getName(),
 							composite );
 		} else {
@@ -325,6 +323,7 @@ public class Binder {
 		} else {
 			referencingAttribute = composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		}
+		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = attributeSource.getNaturalIdMutability();
 		final CompositeAttributeBinding attributeBinding =
 				attributeBindingContainer.makeComponentAttributeBinding(
 						attribute,
@@ -332,7 +331,7 @@ public class Binder {
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
-						attributeSource.getNaturalIdMutability(),
+						naturalIdMutability,
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
 		bindAttributes( attributeBinding, attributeSource );
 		return attributeBinding;
@@ -346,7 +345,7 @@ public class Binder {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
 		// TODO: figure out which table is used (could be secondary table...)
-		TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
+		final TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
 		final List< RelationalValueBinding > relationalValueBindings =
 				bindValues( attributeBindingContainer, attributeSource, attribute, table );
 
@@ -936,7 +935,6 @@ public class Binder {
 							bindingContexts.peek().getMappingDefaults().getDiscriminatorColumnName(),
 							false,
 							false,
-							false,
 							false );
 		} else {
 			value = table.locateOrCreateDerivedValue( ( ( DerivedValueSource ) valueSource ).getExpression() );
@@ -993,7 +991,6 @@ public class Binder {
 					table,
 					( ColumnSource ) valueSource,
 					bindingContexts.peek().getMappingDefaults().getDiscriminatorColumnName(),
-					false,
 					false,
 					false,
 					false
@@ -1459,7 +1456,7 @@ public class Binder {
 
 	private void bindUniqueConstraints( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
-			if ( constraintSource instanceof UniqueConstraintSource ) {
+			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
 				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
 				final String constraintName = constraintSource.name();
 				if ( constraintName == null ) {
@@ -1484,14 +1481,17 @@ public class Binder {
 		) ? SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability()
 				: SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 		final boolean isNaturalId = naturalIdMutability != SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
-		final boolean isImmutable = isNaturalId && (naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE);
+		final boolean isImmutableNaturalId = isNaturalId && (naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE);
+
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			final String columnName =
 					quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
 			final Column column = defaultTable.locateOrCreateColumn( columnName );
 			column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
-			column.setUnique( isNaturalId );
-			valueBindings.add( new RelationalValueBinding( column, true, !isImmutable ) );
+			if(isNaturalId){
+				addUniqueConstraintForNaturalIdColumn( defaultTable, column );
+			}
+			valueBindings.add( new RelationalValueBinding( column, true, !isImmutableNaturalId ) );
 		} else {
 			final String name = attribute.getName();
 			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
@@ -1509,15 +1509,11 @@ public class Binder {
 							toBoolean(
 									columnSource.isIncludedInUpdate(),
 									valueSourceContainer.areValuesIncludedInUpdateByDefault() );
-
-					valueBindings.add( new RelationalValueBinding( createColumn(
-							table,
-							columnSource,
-							name,
-							isNaturalId,
-							isNaturalId,
-							valueSourceContainer.areValuesNullableByDefault(),
-							true ), isIncludedInInsert, !isImmutable && isIncludedInUpdate ) );
+					Column column = createColumn( table, columnSource, name, isNaturalId, valueSourceContainer.areValuesNullableByDefault(), true );
+					if(isNaturalId){
+						addUniqueConstraintForNaturalIdColumn( table, column );
+					}
+					valueBindings.add( new RelationalValueBinding( column, isIncludedInInsert, !isImmutableNaturalId && isIncludedInUpdate ) );
 				} else {
 					final DerivedValue derivedValue =
 							table.locateOrCreateDerivedValue( ( ( DerivedValueSource ) valueSource ).getExpression() );
@@ -1526,6 +1522,11 @@ public class Binder {
 			}
 		}
 		return valueBindings;
+	}
+
+	private void addUniqueConstraintForNaturalIdColumn(final TableSpecification table, final Column column) {
+		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( "natural_id_unique_key_" );
+		uniqueKey.addColumn( column );
 	}
 
 	private void bindVersion( final EntityBinding rootEntityBinding, final VersionAttributeSource versionAttributeSource ) {
@@ -1575,7 +1576,6 @@ public class Binder {
 			final ColumnSource columnSource,
 			final String defaultName,
 			final boolean forceNotNull,
-			final boolean forceUnique,
 			final boolean isNullableByDefault,
 			final boolean isDefaultAttributeName ) {
 		if ( columnSource.getName() == null && defaultName == null ) {
@@ -1608,7 +1608,7 @@ public class Binder {
 		column.setJdbcDataType( columnSource.getDatatype() );
 		column.setReadFragment( columnSource.getReadFragment() );
 		column.setWriteFragment( columnSource.getWriteFragment() );
-		column.setUnique( forceUnique || columnSource.isUnique() );
+		column.setUnique( columnSource.isUnique() );
 		column.setCheckCondition( columnSource.getCheckCondition() );
 		column.setComment( columnSource.getComment() );
 		return column;

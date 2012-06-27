@@ -122,9 +122,11 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 						if ( attributeOverrides.containsKey( tmp ) ) {
 							attributeOverride = attributeOverrides.get( tmp );
 						}
+						attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 						attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
 					}
 					for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
+						embeddable.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 						attributeList.add(
 								new ComponentAttributeSourceImpl(
 										embeddable,
@@ -134,6 +136,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 						);
 					}
 					for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
+						associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 						attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 					}
 					return Collections.unmodifiableList( attributeList );

@@ -43,7 +43,7 @@ public class RelationalValueBinding {
 	private final boolean isDerived;
 	private final boolean isNullable;
 
-	public RelationalValueBinding(DerivedValue value) {
+	public RelationalValueBinding(final DerivedValue value) {
 		this.value = value;
 		this.includeInInsert = false;
 		this.includeInUpdate = false;
@@ -51,7 +51,7 @@ public class RelationalValueBinding {
 		this.isNullable = true;
 	}
 
-	public RelationalValueBinding(Column value, boolean includeInInsert, boolean includeInUpdate) {
+	public RelationalValueBinding(final Column value, final boolean includeInInsert, final boolean includeInUpdate) {
 		this.value = value;
 		this.includeInInsert = includeInInsert;
 		this.includeInUpdate = includeInUpdate;

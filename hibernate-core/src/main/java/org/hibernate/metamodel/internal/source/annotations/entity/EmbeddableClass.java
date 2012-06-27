@@ -41,7 +41,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 public class EmbeddableClass extends ConfiguredClass {
 	private final String embeddedAttributeName;
 	private final String parentReferencingAttributeName;
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	public EmbeddableClass(
 			ClassInfo classInfo,
@@ -74,6 +74,10 @@ public class EmbeddableClass extends ConfiguredClass {
 
 	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		 return naturalIdMutability;
+	}
+
+	public void setNaturalIdMutability(SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		this.naturalIdMutability = naturalIdMutability;
 	}
 }
 

@@ -279,22 +279,12 @@ public class QueryProcessor {
 		if ( val == null ) {
 			return null;
 		}
-		if ( val.equalsIgnoreCase( CacheMode.GET.toString() ) ) {
-			return CacheMode.GET;
+		try {
+			return CacheMode.valueOf( val.toUpperCase() );
 		}
-		if ( val.equalsIgnoreCase( CacheMode.IGNORE.toString() ) ) {
-			return CacheMode.IGNORE;
+		catch ( IllegalArgumentException e ) {
+			throw new AnnotationException( "Unknown CacheMode in hint: " + query + ":" + element );
 		}
-		if ( val.equalsIgnoreCase( CacheMode.NORMAL.toString() ) ) {
-			return CacheMode.NORMAL;
-		}
-		if ( val.equalsIgnoreCase( CacheMode.PUT.toString() ) ) {
-			return CacheMode.PUT;
-		}
-		if ( val.equalsIgnoreCase( CacheMode.REFRESH.toString() ) ) {
-			return CacheMode.REFRESH;
-		}
-		throw new AnnotationException( "Unknown CacheMode in hint: " + query + ":" + element );
 	}
 
 	private static FlushMode getFlushMode(AnnotationInstance[] hints, String element, String query) {
@@ -302,22 +292,10 @@ public class QueryProcessor {
 		if ( val == null ) {
 			return null;
 		}
-		if ( val.equalsIgnoreCase( FlushMode.ALWAYS.toString() ) ) {
-			return FlushMode.ALWAYS;
+		try {
+			return FlushMode.valueOf( val.toUpperCase() );
 		}
-		else if ( val.equalsIgnoreCase( FlushMode.AUTO.toString() ) ) {
-			return FlushMode.AUTO;
-		}
-		else if ( val.equalsIgnoreCase( FlushMode.COMMIT.toString() ) ) {
-			return FlushMode.COMMIT;
-		}
-		else if ( val.equalsIgnoreCase( FlushMode.NEVER.toString() ) ) {
-			return FlushMode.MANUAL;
-		}
-		else if ( val.equalsIgnoreCase( FlushMode.MANUAL.toString() ) ) {
-			return FlushMode.MANUAL;
-		}
-		else {
+		catch ( IllegalArgumentException e ) {
 			throw new AnnotationException( "Unknown FlushMode in hint: " + query + ":" + element );
 		}
 	}

@@ -52,6 +52,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.Type;
 
 /**
@@ -62,7 +63,7 @@ import org.hibernate.type.Type;
  */
 public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
-	private List<NativeSQLQueryReturn> queryReturns;
+	private NativeSQLQueryReturn[] queryReturns;
 	private List<ReturnBuilder> queryReturnBuilders;
 	private boolean autoDiscoverTypes;
 
@@ -88,13 +89,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 						queryDef.getResultSetRef()
 					);
 			}
-			this.queryReturns = Arrays.asList( definition.getQueryReturns() );
+			this.queryReturns = definition.getQueryReturns();
 		}
 		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			this.queryReturns = Arrays.asList( queryDef.getQueryReturns() );
+			this.queryReturns = queryDef.getQueryReturns();
 		}
 		else {
-			this.queryReturns = new ArrayList<NativeSQLQueryReturn>();
+			this.queryReturns = new NativeSQLQueryReturn[]{};
 		}
 
 		this.querySpaces = queryDef.getQuerySpaces();
@@ -112,14 +113,14 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	        ParameterMetadata parameterMetadata) {
 		// TODO : this constructor form is *only* used from constructor directly below us; can it go away?
 		super( sql, flushMode, session, parameterMetadata );
-		queryReturns = new ArrayList<NativeSQLQueryReturn>( returnAliases.length );
+		this.queryReturns = new NativeSQLQueryReturn[returnAliases.length];
 		for ( int i=0; i<returnAliases.length; i++ ) {
 			NativeSQLQueryRootReturn ret = new NativeSQLQueryRootReturn(
 					returnAliases[i],
 					returnClasses[i].getName(),
 					lockModes==null ? LockMode.NONE : lockModes[i]
 			);
-			queryReturns.add(ret);
+			queryReturns[i] = ret;
 		}
 		this.querySpaces = querySpaces;
 		this.callable = false;
@@ -136,13 +137,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 	SQLQueryImpl(String sql, SessionImplementor session, ParameterMetadata parameterMetadata) {
 		super( sql, null, session, parameterMetadata );
-		queryReturns = new ArrayList<NativeSQLQueryReturn>();
+		queryReturns = new NativeSQLQueryReturn[0];
 		querySpaces = null;
 		callable = false;
 	}
 
 	private NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
+		return queryReturns;
 	}
 
 	public List list() throws HibernateException {
@@ -208,13 +209,12 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		// some preparation work.
 		prepare();
 		verifyParameters( callable );
-		boolean noReturns = queryReturns==null || queryReturns.isEmpty();
-		if ( noReturns ) {
-			this.autoDiscoverTypes = noReturns;
+		if ( CollectionHelper.isEmpty( queryReturns ) ) {
+			this.autoDiscoverTypes = true;
 		}
 		else {
-			for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
-				if ( queryReturn instanceof NativeSQLQueryScalarReturn ) {
+			for ( final NativeSQLQueryReturn queryReturn : queryReturns ) {
+				if ( NativeSQLQueryScalarReturn.class.isInstance( queryReturn ) ) {
 					NativeSQLQueryScalarReturn scalar = (NativeSQLQueryScalarReturn) queryReturn;
 					if ( scalar.getType() == null ) {
 						autoDiscoverTypes = true;
@@ -229,12 +229,12 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		if ( queryReturnBuilders != null ) {
 			if ( ! queryReturnBuilders.isEmpty() ) {
 				if ( queryReturns != null ) {
-					queryReturns.clear();
 					queryReturns = null;
 				}
-				queryReturns = new ArrayList<NativeSQLQueryReturn>();
-				for ( ReturnBuilder builder : queryReturnBuilders ) {
-					queryReturns.add( builder.buildReturn() );
+				int size = queryReturnBuilders.size();
+				queryReturns = new NativeSQLQueryReturn[size];
+				for(int i=0;i<size;i++){
+					queryReturns[i] = queryReturnBuilders.get( i ).buildReturn();
 				}
 				queryReturnBuilders.clear();
 			}
@@ -251,11 +251,11 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
     public Type[] getReturnTypes() throws HibernateException {
 		throw new UnsupportedOperationException("not yet implemented for SQL queries");
 	}
-
+	@Override
 	public Query setLockMode(String alias, LockMode lockMode) {
 		throw new UnsupportedOperationException("cannot set the lock mode for a native SQL query");
 	}
-
+	@Override
 	public Query setLockOptions(LockOptions lockOptions) {
 		throw new UnsupportedOperationException("cannot set lock options for a native SQL query");
 	}
@@ -265,7 +265,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		//we never need to apply locks to the SQL
 		return null;
 	}
-
+	@Override
 	public SQLQuery addScalar(final String columnAlias, final Type type) {
 		if ( queryReturnBuilders == null ) {
 			queryReturnBuilders = new ArrayList<ReturnBuilder>();
@@ -351,22 +351,22 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		final String joinedPropertyName = path.substring( loc+1 );
 		return addFetch( tableAlias, ownerTableAlias, joinedPropertyName );
 	}
-
+	@Override
 	public SQLQuery addJoin(String alias, String path, LockMode lockMode) {
 		createFetchJoin( alias, path ).setLockMode( lockMode );
 		return this;
 	}
-
+	@Override
 	public SQLQuery setResultSetMapping(String name) {
 		ResultSetMappingDefinition mapping = session.getFactory().getResultSetMapping( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
-		NativeSQLQueryReturn[] returns = mapping.getQueryReturns();
-		queryReturns.addAll( Arrays.asList( returns ) );
+		queryReturns = mapping.getQueryReturns();
 		return this;
 	}
 
+	@Override
 	public SQLQuery addSynchronizedQuerySpace(String querySpace) {
 		if ( querySpaces == null ) {
 			querySpaces = new ArrayList<String>();
@@ -374,11 +374,11 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		querySpaces.add( querySpace );
 		return this;
 	}
-
+	       @Override
 	public SQLQuery addSynchronizedEntityName(String entityName) {
 		return addQuerySpaces( getSession().getFactory().getEntityPersister( entityName ).getQuerySpaces() );
 	}
-
+	 @Override
 	public SQLQuery addSynchronizedEntityClass(Class entityClass) {
 		return addQuerySpaces( getSession().getFactory().getEntityPersister( entityClass.getName() ).getQuerySpaces() );
 	}
@@ -392,7 +392,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 		return this;
 	}
-
+	@Override
 	public int executeUpdate() throws HibernateException {
 		Map namedParams = getNamedParams();
 		before();

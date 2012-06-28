@@ -160,18 +160,17 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public FetchMode getFetchMode() {
-		if ( fetchStyle == FetchStyle.JOIN ) {
-			return FetchMode.JOIN;
+		switch ( fetchStyle ){
+			case JOIN:
+				return FetchMode.JOIN;
+			case SELECT:
+				return FetchMode.SELECT;
+			case BATCH:
+				// we need the subsequent select...
+				return FetchMode.SELECT;
+			default:
+				throw new AssertionFailure( "Unexpected fetch style : " + fetchStyle.name() );
 		}
-		else if ( fetchStyle == FetchStyle.SELECT ) {
-			return FetchMode.SELECT;
-		}
-		else if ( fetchStyle == FetchStyle.BATCH ) {
-			// we need the subsequent select...
-			return FetchMode.SELECT;
-		}
-
-		throw new AssertionFailure( "Unexpected fetch style : " + fetchStyle.name() );
 	}
 
 	@Override

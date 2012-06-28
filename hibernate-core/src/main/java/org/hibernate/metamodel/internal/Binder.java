@@ -186,18 +186,7 @@ public class Binder {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.typeHelper = new HibernateTypeHelper( this, metadata );
-		this.nameNormalizer = new ObjectNameNormalizer() {
-
-			@Override
-			protected NamingStrategy getNamingStrategy() {
-				return metadata.getNamingStrategy();
-			}
-
-			@Override
-			protected boolean isUseQuotedIdentifiersGlobally() {
-				return metadata.isGloballyQuotedIdentifiers();
-			}
-		};
+		this.nameNormalizer = metadata.getObjectNameNormalizer();
 	}
 
 	private AttributeBinding attributeBinding( final String entityName, final String attributeName ) {

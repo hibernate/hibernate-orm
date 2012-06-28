@@ -107,7 +107,7 @@ public interface Metadata {
 
 	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
 
-	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions();
+	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
 
 	public Iterable<Map.Entry<String, String>> getImports();
 

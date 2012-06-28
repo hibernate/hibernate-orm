@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -47,6 +48,8 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	public TypeResolver getTypeResolver();
 
+	public ObjectNameNormalizer getObjectNameNormalizer();
+
 	public void addImport(String entityName, String entityName1);
 
 	public void addEntity(EntityBinding entityBinding);
@@ -69,7 +72,6 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
-	// todo : this needs to move to AnnotationBindingContext
 	public void setGloballyQuotedIdentifiers(boolean b);
 
 	public MetaAttributeContext getGlobalMetaAttributeContext();

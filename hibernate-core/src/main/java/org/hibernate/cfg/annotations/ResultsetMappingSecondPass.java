@@ -107,12 +107,12 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					int dotIndex = name.lastIndexOf( '.' );
 					String reducedName = name.substring( 0, dotIndex );
 					Iterator parentPropIter = getSubPropertyIterator( pc, reducedName );
-					List followers = getFollowers( parentPropIter, reducedName, name );
+					List<String> followers = getFollowers( parentPropIter, reducedName, name );
 
 					int index = propertyNames.size();
 					int followersSize = followers.size();
 					for (int loop = 0; loop < followersSize; loop++) {
-						String follower = (String) followers.get( loop );
+						String follower = followers.get( loop );
 						int currentIndex = getIndexOfFirstMatchingProperty( propertyNames, follower );
 						index = currentIndex != -1 && currentIndex < index ? currentIndex : index;
 					}
@@ -123,8 +123,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 			Set<String> uniqueReturnProperty = new HashSet<String>();
 			Map<String, ArrayList<String>> propertyResultsTmp = new HashMap<String, ArrayList<String>>();
-			for ( Object property : properties ) {
-				final FieldResult propertyresult = ( FieldResult ) property;
+			for ( FieldResult property : properties ) {
+				final FieldResult propertyresult = property;
 				final String name = propertyresult.name();
 				if ( "class".equals( name ) ) {
 					throw new MappingException(
@@ -132,13 +132,12 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					);
 				}
 
-				if ( uniqueReturnProperty.contains( name ) ) {
+				if ( !uniqueReturnProperty.add( name ) ) {
 					throw new MappingException(
 							"duplicate @FieldResult for property " + name +
 									" on @Entity " + entity.entityClass().getName() + " in " + ann.name()
 					);
 				}
-				uniqueReturnProperty.add( name );
 
 				final String quotingNormalizedColumnName = mappings.getObjectNameNormalizer()
 						.normalizeIdentifierQuoting( propertyresult.column() );
@@ -165,10 +164,6 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 						entity.discriminatorColumn()
 				);
 				propertyResults.put( "class", new String[] { quotingNormalizedName } );
-			}
-
-			if ( propertyResults.isEmpty() ) {
-				propertyResults = java.util.Collections.emptyMap();
 			}
 
 			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
@@ -202,7 +197,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 	@SuppressWarnings({ "unchecked" })
 	private List getFollowers(Iterator parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
-		List followers = new ArrayList();
+		List<String> followers = new ArrayList<String>();
 		while ( parentPropIter.hasNext() ) {
 			String currentPropertyName = ( (Property) parentPropIter.next() ).getName();
 			String currentName = reducedName + '.' + currentPropertyName;

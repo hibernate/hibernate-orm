@@ -146,4 +146,10 @@ public final class CollectionHelper {
     public static boolean isNotEmpty(Map map) {
         return !isEmpty( map );
     }
+	public static boolean isEmpty(Object[] objs){
+		return objs == null || objs.length ==0;
+	}
+	public static boolean isNotEmpty(Object[] objs){
+		return !isEmpty( objs );
+	}
 }

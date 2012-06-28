@@ -41,6 +41,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
+import org.hibernate.metamodel.internal.source.annotations.global.SqlResultSetProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -178,6 +179,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		TableProcessor.bind( bindingContext );
 		FetchProfileProcessor.bind( bindingContext );
 		QueryProcessor.bind( bindingContext );
+		SqlResultSetProcessor.bind( bindingContext );
 	}
 
 	private Index parseAndUpdateIndex(List<JaxbRoot<JaxbEntityMappings>> mappings, Index annotationIndex) {

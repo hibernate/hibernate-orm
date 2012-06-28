@@ -121,7 +121,10 @@ public class TableProcessor {
 	private static Column findColumn(Table table, String columnName) {
 		Column column = null;
 		for ( Value value : table.values() ) {
-			if ( value instanceof Column && ( (Column) value ).getColumnName().getName().equals( columnName ) ) {
+			if ( Column.class.isInstance( value ) && Column.class.cast( value )
+					.getColumnName()
+					.getName()
+					.equals( columnName ) ) {
 				column = (Column) value;
 				break;
 			}

@@ -36,6 +36,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -100,6 +101,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Database database;
 
 	private final MappingDefaults mappingDefaults;
+	private final ObjectNameNormalizer nameNormalizer;
 
 	private Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
 	private Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
@@ -122,6 +124,18 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.database = new Database( options );
 
 		this.mappingDefaults = new MappingDefaultsImpl();
+		this.nameNormalizer = new ObjectNameNormalizer() {
+
+			@Override
+			protected NamingStrategy getNamingStrategy() {
+				return MetadataImpl.this.getNamingStrategy();
+			}
+
+			@Override
+			protected boolean isUseQuotedIdentifiersGlobally() {
+				return MetadataImpl.this.isGloballyQuotedIdentifiers();
+			}
+		};
 
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
@@ -184,6 +198,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				);
 			}
 		}
+	}
+
+	@Override
+	public ObjectNameNormalizer getObjectNameNormalizer() {
+		return nameNormalizer;
 	}
 
 	@Override
@@ -345,12 +364,19 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( resultSetMappingDefinition == null || resultSetMappingDefinition.getName() == null ) {
 			throw new IllegalArgumentException( "Result-set mapping object or name is null: " + resultSetMappingDefinition );
 		}
-		resultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
+		ResultSetMappingDefinition old = resultSetMappings.put(
+				resultSetMappingDefinition.getName(),
+				resultSetMappingDefinition
+		);
+		if ( old != null ) {
+			LOG.warn( "Duplicated @SqlResultSetMappings with same name["+ resultSetMappingDefinition.getName() +"] found" );
+			//todo mapping exception??
+		}
 	}
 
 	@Override
-	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions() {
-		return resultSetMappings.values();
+	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
+		return resultSetMappings;
 	}
 
 	private ClassLoaderService classLoaderService() {
@@ -425,11 +451,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		throw new AssertionFailure( "Entity binding has no root: " + entityName );
 	}
-
+	@Override
 	public Iterable<EntityBinding> getEntityBindings() {
 		return entityBindingMap.values();
 	}
-
+	@Override
 	public void addEntity(EntityBinding entityBinding) {
 		final String entityName = entityBinding.getEntity().getName();
 		if ( entityBindingMap.containsKey( entityName ) ) {

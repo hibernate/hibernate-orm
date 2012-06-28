@@ -863,9 +863,7 @@ public final class SessionFactoryImpl
 			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
 		}
 		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		for( ResultSetMappingDefinition resultSetMappingDefinition : metadata.getResultSetMappingDefinitions() ) {
-			sqlResultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
-		}
+		sqlResultSetMappings.putAll( metadata.getResultSetMappingDefinitions() );
 		imports = new HashMap<String,String>();
 		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
 			imports.put( importEntry.getKey(), importEntry.getValue() );

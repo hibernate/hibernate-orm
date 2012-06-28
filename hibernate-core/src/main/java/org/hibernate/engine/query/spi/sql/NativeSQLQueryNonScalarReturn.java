@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Represents the base information for a non-scalar return defined as part of
@@ -40,7 +41,7 @@ import org.hibernate.LockMode;
 public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryReturn, Serializable {
 	private final String alias;
 	private final LockMode lockMode;
-	private final Map<String,String[]> propertyResults = new HashMap<String,String[]>();
+	private final Map<String,String[]> propertyResults;
 	private final int hashCode;
 
 	/**
@@ -50,15 +51,14 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	 * @param propertyResults Any user-supplied column->property mappings
 	 * @param lockMode The lock mode to apply to the return.
 	 */
-	protected NativeSQLQueryNonScalarReturn(String alias, Map<String,String[]> propertyResults, LockMode lockMode) {
+	protected NativeSQLQueryNonScalarReturn(String alias, Map<String, String[]> propertyResults, LockMode lockMode) {
 		this.alias = alias;
 		if ( alias == null ) {
-			throw new HibernateException("alias must be specified");
+			throw new HibernateException( "alias must be specified" );
 		}
 		this.lockMode = lockMode;
-		if ( propertyResults != null ) {
-			this.propertyResults.putAll( propertyResults );
-		}
+		this.propertyResults = CollectionHelper.isEmpty( propertyResults ) ? Collections.<String, String[]>emptyMap()
+				: Collections.unmodifiableMap(new HashMap<String, String[]>( propertyResults ));
 		this.hashCode = determineHashCode();
 	}
 
@@ -86,7 +86,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	 * @return The property mappings.
 	 */
 	public Map<String,String[]> getPropertyResultsMap() {
-		return Collections.unmodifiableMap( propertyResults );
+		return propertyResults;
 	}
 
 	public int hashCode() {

@@ -636,8 +636,8 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 		return deleteCheckStyle;
 	}
 
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap) {
-		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, this));
+	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
+		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap,  this));
 	}
 
 	public java.util.List getFilters() {

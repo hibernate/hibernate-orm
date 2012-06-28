@@ -38,5 +38,6 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface SqlFragmentAlias {
 	String alias();
-	String table();	
+	String table() default "";
+	Class entity() default void.class;
 }

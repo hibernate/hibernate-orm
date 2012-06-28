@@ -23,6 +23,15 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.ElementCollection;
@@ -35,13 +44,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
@@ -71,7 +73,6 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
-import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
@@ -111,6 +112,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
+import org.jboss.logging.Logger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -812,11 +814,11 @@ public abstract class CollectionBinder {
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
 				collection.addManyToManyFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
-						toTableAliasMap(simpleFilter.aliases()));
+						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 			else {
 				collection.addFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
-						toTableAliasMap(simpleFilter.aliases()));
+						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 		}
 		Filters filters = property.getAnnotation( Filters.class );
@@ -824,11 +826,11 @@ public abstract class CollectionBinder {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
 					collection.addManyToManyFilter( filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
-							toTableAliasMap(filter.aliases()));
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
 					collection.addFilter(filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
-							toTableAliasMap(filter.aliases()));
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 			}
 		}
@@ -836,7 +838,8 @@ public abstract class CollectionBinder {
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
 				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(), 
-						simpleFilterJoinTable.deduceAliasInjectionPoints(), toTableAliasMap(simpleFilterJoinTable.aliases()));
+						simpleFilterJoinTable.deduceAliasInjectionPoints(), 
+						toAliasTableMap(simpleFilterJoinTable.aliases()), toAliasEntityMap(simpleFilterJoinTable.aliases()));
 					}
 			else {
 				throw new AnnotationException(
@@ -850,7 +853,8 @@ public abstract class CollectionBinder {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
 					collection.addFilter(filter.name(), filter.condition(), 
-							filter.deduceAliasInjectionPoints(), toTableAliasMap(filter.aliases()));
+							filter.deduceAliasInjectionPoints(), 
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
 					throw new AnnotationException(
@@ -894,13 +898,6 @@ public abstract class CollectionBinder {
 //			        "not valid within collection using join fetching [" + collection.getRole() + "]"
 //				);
 //		}
-	}
-	private static Map<String,String> toTableAliasMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
-		for (int i = 0; i < aliases.length; i++){
-			ret.put(aliases[i].alias(), aliases[i].table());
-		}
-		return ret;
 	}
 	
 	private String getCondition(FilterJoinTable filter) {

@@ -84,7 +84,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -1892,7 +1891,7 @@ public abstract class AbstractEntityPersister
 		};
 	}
 
-	protected String generateTableAlias(String rootAlias, int tableNumber) {
+	public static String generateTableAlias(String rootAlias, int tableNumber) {
 		if ( tableNumber == 0 ) {
 			return rootAlias;
 		}
@@ -4736,10 +4735,15 @@ public abstract class AbstractEntityPersister
 		getEntityTuplizer().setPropertyValue( object, propertyName, value );
 	}
 	
-	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias){
-		return new StaticFilterAliasGenerator(rootAlias);
+	public static int getTableId(String tableName, String[] tables) {
+		for ( int j = 0; j < tables.length; j++ ) {
+			if ( tableName.equalsIgnoreCase( tables[j] ) ) {
+				return j;
+			}
+		}
+		throw new AssertionFailure( "Table " + tableName + " not found" );
 	}
-
+	
 	@Override
 	public EntityMode getEntityMode() {
 		return entityMetamodel.getEntityMode();
@@ -4763,4 +4767,5 @@ public abstract class AbstractEntityPersister
 	public int determineTableNumberForColumn(String columnName) {
 		return 0;
 	}
+	
 }

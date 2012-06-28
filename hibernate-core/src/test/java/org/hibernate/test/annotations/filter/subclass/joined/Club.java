@@ -30,7 +30,7 @@ public class Club {
 	
 	@OneToMany(mappedBy="club")
 	@Filters({
-		@Filter(name="iqMin", condition="{h}.HUMAN_IQ >= :min", aliases={@SqlFragmentAlias(alias="h", table="ZOOLOGY_HUMAN")}),
+		@Filter(name="iqMin", condition="{h}.HUMAN_IQ >= :min", aliases={@SqlFragmentAlias(alias="h", entity=Human.class)}),
 		@Filter(name="pregnantMembers", condition="{m}.IS_PREGNANT=1", aliases={@SqlFragmentAlias(alias="m", table="ZOOLOGY_MAMMAL")})
 	})
 	private Set<Human> members = new HashSet<Human>();

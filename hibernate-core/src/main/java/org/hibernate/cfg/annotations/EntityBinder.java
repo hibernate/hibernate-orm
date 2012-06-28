@@ -23,11 +23,14 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -35,8 +38,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -64,7 +65,6 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
@@ -98,6 +98,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -387,7 +388,8 @@ public class EntityBinder {
 					);
 				}
 			}
-			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), toTableAliasMap(filter.aliases()));
+			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), 
+					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
 		LOG.debugf( "Import with entity name %s", name );
 		try {
@@ -402,14 +404,6 @@ public class EntityBinder {
 		}
 	}
 	
-	private static Map<String,String> toTableAliasMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<String,String>();
-		for (int i = 0; i < aliases.length; i++){
-			ret.put(aliases[i].alias(), aliases[i].table());
-		}
-		return ret;
-	}
-
 	public void bindDiscriminatorValue() {
 		if ( StringHelper.isEmpty( discriminatorValue ) ) {
 			Value discriminator = persistentClass.getDiscriminator();

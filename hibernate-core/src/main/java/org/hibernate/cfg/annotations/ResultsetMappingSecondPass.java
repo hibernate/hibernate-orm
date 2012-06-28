@@ -128,7 +128,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				final String name = propertyresult.name();
 				if ( "class".equals( name ) ) {
 					throw new MappingException(
-							"class is not a valid property name to use in a @FieldResult, use @Entity(discriminatorColumn) instead"
+							"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
 					);
 				}
 

@@ -23,7 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -150,13 +153,13 @@ public class SqlResultSetProcessor {
 			propertyResults.put( "class", new String[] { quotingNormalizedName } );
 		}
 
-
+		Set<String> uniqueReturnProperty = new HashSet<String>();
 		for ( final AnnotationInstance fieldResult : JandexHelper.getValue(
 				entityResult,
 				"fields",
 				AnnotationInstance[].class
 		) ) {
-			bindFieldResult( bindingContext, targetEntityBinding, fieldResult, definition );
+			bindFieldResult( bindingContext, targetEntityBinding, fieldResult, uniqueReturnProperty,propertyResults, definition );
 		}
 
 		final NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
@@ -171,8 +174,21 @@ public class SqlResultSetProcessor {
 	private static void bindFieldResult(final AnnotationBindingContext bindingContext,
 										final EntityBinding entityBinding,
 										final AnnotationInstance fieldResult,
+										final Set<String> uniqueReturnProperty,
+										final Map<String, String[]> propertyResults,
 										final ResultSetMappingDefinition definition) {
 		final String name = JandexHelper.getValue( fieldResult, "name", String.class );
+		if ( "class".equals( name ) ) {
+			throw new MappingException(
+					"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
+			);
+		}
+		if ( !uniqueReturnProperty.add( name ) ) {
+			throw new MappingException(
+					"duplicate @FieldResult for property " + name +
+							" on @Entity " + entityBinding.getEntity().getName() + " in " +definition.getName());
+		}
+
 		final String column = JandexHelper.getValue( fieldResult, "column", String.class );
 		final String quotingNormalizedColumnName = bindingContext.getMetadataImplementor().getObjectNameNormalizer()
 				.normalizeIdentifierQuoting( column );
@@ -203,7 +219,19 @@ public class SqlResultSetProcessor {
 			}
 		}
 
+		insert( StringHelper.root( name ), quotingNormalizedColumnName, propertyResults );
+	}
 
+	private static void insert(String key, String value, Map<String, String[]> map) {
+		if ( map.containsKey( key ) ) {
+			String[] oldValues = map.get( key );
+			String[] values = Arrays.copyOf( oldValues, oldValues.length + 1 );
+			values[oldValues.length] = value;
+			map.put( key, values );
+		}
+		else {
+			map.put( key, new String[] { value } );
+		}
 	}
 
 	private static void bindColumnResult(final AnnotationBindingContext bindingContext,

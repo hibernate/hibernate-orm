@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor;
+package org.hibernate;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.List;
 
 /**
- * Contract for extracting value via JDBC (from {@link ResultSet} or as output param from {@link CallableStatement}).
+ * Models a stored procedure result that is a result set.
  *
  * @author Steve Ebersole
  */
-public interface ValueExtractor<X> {
+public interface StoredProcedureResultSetReturn extends StoredProcedureReturn {
 	/**
-	 * Extract value from result set
+	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
 	 *
-	 * @param rs The result set from which to extract the value
-	 * @param name The name by which to extract the value from the result set
-	 * @param options The options
-	 *
-	 * @return The extracted value
-	 *
-	 * @throws SQLException Indicates a JDBC error occurred.
+	 * @return The consumed ResultSet values.
 	 */
-	public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
+	public List getResultList();
 
-	public X extract(CallableStatement rs, int index, WrapperOptions options) throws SQLException;
+	/**
+	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
+	 * root returns.
+	 *
+	 * @return The single result.
+	 */
+	public Object getSingleResult();
 }

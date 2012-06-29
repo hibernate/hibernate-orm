@@ -36,6 +36,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.StoredProcedureCall;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -233,6 +234,33 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		);
 		query.setComment( "dynamic native SQL query" );
 		return query;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultClasses );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultSetMappings );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
 	}
 
 	protected HQLQueryPlan getHQLQueryPlan(String query, boolean shallow) throws HibernateException {

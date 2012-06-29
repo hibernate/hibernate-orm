@@ -41,6 +41,7 @@ import javax.persistence.PessimisticLockException;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
+import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
@@ -81,10 +82,12 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.StoredProcedureCall;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
@@ -774,6 +777,38 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
+	}
+
+	@Override
+	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+		try {
+			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName );
+			return new StoredProcedureQueryImpl( call, this );
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+		try {
+			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName, resultClasses );
+			return new StoredProcedureQueryImpl( call, this );
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+		throw new NotYetImplementedException();
 	}
 
 	@SuppressWarnings("unchecked")

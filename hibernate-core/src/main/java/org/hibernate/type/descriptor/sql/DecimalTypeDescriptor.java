@@ -24,6 +24,7 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.math.BigDecimal;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -65,6 +66,11 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getBigDecimal( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBigDecimal( index ), options );
 			}
 		};
 	}

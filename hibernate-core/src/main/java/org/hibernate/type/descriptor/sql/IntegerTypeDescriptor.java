@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -64,6 +65,11 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getInt( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getInt( index ), options );
 			}
 		};
 	}

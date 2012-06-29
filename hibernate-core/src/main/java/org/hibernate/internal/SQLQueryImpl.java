@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -101,44 +100,15 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		this.callable = queryDef.isCallable();
 	}
 
-	SQLQueryImpl(
-			final String sql,
-	        final String returnAliases[],
-	        final Class returnClasses[],
-	        final LockMode[] lockModes,
-	        final SessionImplementor session,
-	        final Collection<String> querySpaces,
-	        final FlushMode flushMode,
-	        ParameterMetadata parameterMetadata) {
-		// TODO : this constructor form is *only* used from constructor directly below us; can it go away?
-		super( sql, flushMode, session, parameterMetadata );
-		queryReturns = new ArrayList<NativeSQLQueryReturn>( returnAliases.length );
-		for ( int i=0; i<returnAliases.length; i++ ) {
-			NativeSQLQueryRootReturn ret = new NativeSQLQueryRootReturn(
-					returnAliases[i],
-					returnClasses[i].getName(),
-					lockModes==null ? LockMode.NONE : lockModes[i]
-			);
-			queryReturns.add(ret);
-		}
-		this.querySpaces = querySpaces;
-		this.callable = false;
-	}
-
-	SQLQueryImpl(
-			final String sql,
-	        final String returnAliases[],
-	        final Class returnClasses[],
-	        final SessionImplementor session,
-	        ParameterMetadata parameterMetadata) {
-		this( sql, returnAliases, returnClasses, null, session, null, null, parameterMetadata );
-	}
-
 	SQLQueryImpl(String sql, SessionImplementor session, ParameterMetadata parameterMetadata) {
+		this( sql, false, session, parameterMetadata );
+	}
+
+	SQLQueryImpl(String sql, boolean callable, SessionImplementor session, ParameterMetadata parameterMetadata) {
 		super( sql, null, session, parameterMetadata );
-		queryReturns = new ArrayList<NativeSQLQueryReturn>();
-		querySpaces = null;
-		callable = false;
+		this.queryReturns = new ArrayList<NativeSQLQueryReturn>();
+		this.querySpaces = null;
+		this.callable = callable;
 	}
 
 	@Override

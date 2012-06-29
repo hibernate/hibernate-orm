@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2009, 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,24 +23,21 @@
  */
 package org.hibernate.ejb;
 
-import java.util.Map;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.StoredProcedureQuery;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SessionOwner;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -127,26 +124,6 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			}
 		}
 		return session;
-	}
-
-	@Override
-	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
-		throw new NotYetImplementedException();
 	}
 
 	public void close() {

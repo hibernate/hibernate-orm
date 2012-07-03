@@ -14,11 +14,11 @@
             <one-to-many class="SimpleEntity"/>
         </bag>
         <set name="theSet" lazy="false">
-            <key column="theSetOwner"/>
+            <key column="theSetOwner" not-null="true"/>
             <one-to-many class="SimpleEntity"/>
         </set>
         <bag name="thePropertyRefBag" lazy="extra">
-            <key column="ownerName" property-ref="name"/>
+            <key column="ownerName" property-ref="name" not-null="true"/>
             <one-to-many class="SimpleEntity"/>
         </bag>
     </class>

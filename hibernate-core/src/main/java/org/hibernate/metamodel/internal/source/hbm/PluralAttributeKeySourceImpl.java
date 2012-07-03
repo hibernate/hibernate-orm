@@ -141,6 +141,6 @@ public class PluralAttributeKeySourceImpl
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return false;
+		return true;
 	}
 }

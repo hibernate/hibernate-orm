@@ -97,9 +97,9 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public int generateColumnListId(Iterable<Column> columns);
 
 	/**
-	 * Retrieve all foreign keys currently defined for this table.
+	 * Retrieve a read-only version of foreign keys currently defined for this table.
 	 *
-	 * @return All foreign keys defined on this table.
+	 * @return  a reforeign keys defined on this table.
 	 */
 	public Iterable<ForeignKey> getForeignKeys();
 

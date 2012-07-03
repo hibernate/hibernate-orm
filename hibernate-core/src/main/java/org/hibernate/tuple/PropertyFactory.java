@@ -338,7 +338,7 @@ public class PropertyFactory {
 					true, //pluralAttributeBinding.isUpdatable(),
 					false,
 					false,
-					false, // nullable - not sure what that means for a collection
+					true, // plural attributes are nullable
 					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
 					//alwaysDirtyCheck || pluralAttributeBinding.isUpdatable(),
 					true,

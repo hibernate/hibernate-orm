@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
@@ -98,25 +99,29 @@ public class PluralAttributeKeyBinding {
 		return hibernateTypeDescriptor;
 	}
 
-	public void prepareForeignKey(
-			String foreignKeyName,
-			TableSpecification collectionTable,
-			TableSpecification ownerTable) {
-		if ( foreignKey != null ) {
+	public void setForeignKey(ForeignKey foreignKey) {
+		if ( foreignKey == null ) {
+			throw new AssertionFailure( "foreignKey argument must be non-null." );
+		}
+		if ( this.foreignKey != null ) {
 			throw new AssertionFailure( "Foreign key already initialized" );
 		}
-		if ( collectionTable == null ) {
-			throw new AssertionFailure( "Collection table cannot be null" );
-		}
-
-		if ( foreignKeyName != null ) {
-			foreignKey = collectionTable.locateForeignKey( foreignKeyName );
-			if ( foreignKey != null ) {
-				return;
-			}
-		}
-
-		foreignKey = collectionTable.createForeignKey( ownerTable, foreignKeyName );
+		this.foreignKey = foreignKey;
 	}
 
+	public boolean isNullable() {
+		if ( foreignKey == null || foreignKey.getSourceColumns().isEmpty() ) {
+			throw new IllegalStateException( "Foreign key has no columns." );
+		}
+		// cannot be nullable if the foreign key source columns are included in the primary key .
+		if ( foreignKey.getTable().getPrimaryKey().getColumns().containsAll( foreignKey.getSourceColumns() ) ) {
+			return false;
+		}
+		for ( Column column : foreignKey.getSourceColumns() ) {
+			if ( column.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

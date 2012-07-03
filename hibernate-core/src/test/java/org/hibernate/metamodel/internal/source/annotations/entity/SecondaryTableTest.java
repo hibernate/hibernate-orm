@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import java.util.Iterator;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -34,6 +35,7 @@ import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Table;
 
 import org.junit.Test;
@@ -66,9 +68,21 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 		Table table = (Table) binding.locateTable( "SECOND_TABLE" );
 		assertEquals( "The secondary table should exist", "SECOND_TABLE", table.getTableName().getName() );
 
-		assertEquals( 1, table.values().size() );
+		assertEquals( 2, table.values().size() );
 		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 0 );
+		// TODO: the first column should be the secondary table's primary key???
+		//assertSame( "First column is not the primary key", table.getPrimaryKey().getColumns().get( 0 ), column );
+		// the second column should be the column for the attribute
+		column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 1 );
 		assertEquals( "Wrong column name", "name", column.getColumnName().getName() );
+
+		Iterator<ForeignKey> fkIterator = table.getForeignKeys().iterator();
+		assertTrue( fkIterator.hasNext() );
+		ForeignKey foreignKey = fkIterator.next();
+		assertEquals( "Wrong number of foreign key columns", 1, foreignKey.getTargetColumns().size() );
+		assertSame( "Wrong column is the foreign key column", table.values().get( 0 ), foreignKey.getSourceColumns().get( 0 ) );
+		assertEquals( "Wrong foreign key target column", binding.getPrimaryTable().getPrimaryKey().getColumns(), foreignKey.getTargetColumns() );
+		assertFalse( fkIterator.hasNext() );
 
 		BasicAttributeBinding nameAttrBinding = (BasicAttributeBinding) binding.locateAttributeBinding( "name" );
 		assertEquals( 1, nameAttrBinding.getRelationalValueBindings().size() );

@@ -102,7 +102,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
 				Identifier.toIdentifier( "theBagOwner" ),
-				FetchTiming.DELAYED
+				FetchTiming.DELAYED,
+				true
 		);
 
 		checkResult(
@@ -113,7 +114,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				simpleEntityBinding,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
 				Identifier.toIdentifier( "theSetOwner" ),
-				FetchTiming.IMMEDIATE
+				FetchTiming.IMMEDIATE,
+				false
 		);
 
 		checkResult(
@@ -124,7 +126,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				simpleEntityBinding,
 				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
 				Identifier.toIdentifier( "ownerName" ),
-				FetchTiming.EXTRA_DELAYED
+				FetchTiming.EXTRA_DELAYED,
+				false
 		);
 	}
 
@@ -136,7 +139,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 			EntityBinding expectedElementEntityBinding,
 			SingularAttributeBinding expectedKeyTargetAttributeBinding,
 			Identifier expectedKeySourceColumnName,
-			FetchTiming expectedFetchTiming) {
+			FetchTiming expectedFetchTiming,
+			boolean expectedNullableCollectionKey) {
 		assertEquals(
 				PluralAttributeElementNature.ONE_TO_MANY,
 				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
@@ -167,16 +171,6 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				expectedCollectionTypeClass.cast( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole()
 		);
 
-		SingularAttributeBinding keySourceAttributeBinding =
-				( SingularAttributeBinding) expectedElementEntityBinding.locateAttributeBinding(
-						"_" + role + "BackRef"
-				);
-		assertEquals( 1, keySourceAttributeBinding.getRelationalValueBindings().size() );
-		Value keySourceValue = keySourceAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
-		assertTrue( keySourceValue instanceof Column );
-		Column keySourceColumn = (Column) keySourceValue;
-		assertEquals( expectedKeySourceColumnName, keySourceColumn.getColumnName() );
-
 		ForeignKey fk = keyBinding.getForeignKey();
 		assertNotNull( fk );
 		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getDeleteRule() );
@@ -189,8 +183,24 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 		assertEquals( fk.getColumns(), fk.getSourceColumns() );
 		assertEquals( 1, fk.getSourceColumns().size() );
 		assertEquals( 1, fk.getTargetColumns().size() );
-		assertSame( keySourceColumn, fk.getColumns().get( 0 ) );
-		assertSame( keySourceColumn, fk.getSourceColumns().get( 0 ) );
+
+		SingularAttributeBinding keySourceAttributeBinding =
+				( SingularAttributeBinding) expectedElementEntityBinding.locateAttributeBinding(
+						"_" + role + "BackRef"
+				);
+		assertEquals( expectedNullableCollectionKey, keyBinding.isNullable() );
+		if ( keyBinding.isNullable() ) {
+			assertNull( keySourceAttributeBinding );
+		}
+		else {
+			assertEquals( 1, keySourceAttributeBinding.getRelationalValueBindings().size() );
+			Value keySourceValue = keySourceAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+			assertTrue( keySourceValue instanceof Column );
+			Column keySourceColumn = (Column) keySourceValue;
+			assertEquals( expectedKeySourceColumnName, keySourceColumn.getColumnName() );
+			assertSame( keySourceColumn, fk.getColumns().get( 0 ) );
+			assertSame( keySourceColumn, fk.getSourceColumns().get( 0 ) );
+		}
 
 		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );

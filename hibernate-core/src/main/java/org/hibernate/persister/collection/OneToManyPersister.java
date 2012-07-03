@@ -116,21 +116,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				factory.getDialect().supportsCascadeDelete();;
 		final SingularAttributeBinding referencedAttributeBinding =
 				keyBinding.getReferencedAttributeBinding();
-		// TODO: fix this...
-/*		keyIsNullable =
-			if ( hasFormula() ) return true;
-			boolean nullable = true;
-			Iterator iter = getColumnIterator();
-			while ( iter.hasNext() ) {
-				if ( !( (Column) iter.next() ).isNullable() ) {
-					nullable = false;
-					return nullable; //shortcut
-				}
-			}
-			return nullable;
-		}
-*/
-		keyIsNullable = referencedAttributeBinding.isNullable();
+		keyIsNullable = keyBinding.isNullable();
 		// TODO: fix this...
 		//keyIsUpdateable = referencedAttributeBinding.isUpdateable();
 		keyIsUpdateable = true;

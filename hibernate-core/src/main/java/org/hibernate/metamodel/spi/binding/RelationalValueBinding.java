@@ -41,14 +41,12 @@ public class RelationalValueBinding {
 	private final boolean includeInInsert;
 	private final boolean includeInUpdate;
 	private final boolean isDerived;
-	private final boolean isNullable;
 
 	public RelationalValueBinding(final DerivedValue value) {
 		this.value = value;
 		this.includeInInsert = false;
 		this.includeInUpdate = false;
 		this.isDerived = true;
-		this.isNullable = true;
 	}
 
 	public RelationalValueBinding(final Column value, final boolean includeInInsert, final boolean includeInUpdate) {
@@ -56,7 +54,6 @@ public class RelationalValueBinding {
 		this.includeInInsert = includeInInsert;
 		this.includeInUpdate = includeInUpdate;
 		this.isDerived = false;
-		this.isNullable = value.isNullable();
 	}
 
 	/**
@@ -83,7 +80,7 @@ public class RelationalValueBinding {
 	 * @return {@code true} indicates the bound value is derived or a column not marked as non-null.
 	 */
 	public boolean isNullable() {
-		return isNullable;
+		return isDerived() || ( (Column) value ).isNullable();
 	}
 
 	/**

@@ -107,6 +107,11 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 		assertNotNull( entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() );
 		assertNotNull( entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding().getAttribute() );
+
+		final BasicAttributeBinding versionAttributeBinding =
+				entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding();
+		assertEquals( "does not have 1 relational binding", 1, versionAttributeBinding.getRelationalValueBindings().size() );
+		assertEquals( "version is nullable", false, versionAttributeBinding.getRelationalValueBindings().get( 0 ).isNullable() );
 	}
 
 	@Test

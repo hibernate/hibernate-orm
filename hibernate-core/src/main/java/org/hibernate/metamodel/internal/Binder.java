@@ -1616,6 +1616,12 @@ public class Binder {
 		}
 		final EntityVersion version = rootEntityBinding.getHierarchyDetails().getEntityVersion();
 		version.setVersioningAttributeBinding( ( BasicAttributeBinding ) bindAttribute( rootEntityBinding, versionAttributeSource ) );
+		// ensure version is non-nullable
+		for ( RelationalValueBinding valueBinding : version.getVersioningAttributeBinding().getRelationalValueBindings() ) {
+			if ( valueBinding.getValue() instanceof Column ) {
+				( (Column) valueBinding.getValue() ).setNullable( false );
+			}
+		}
 		version.setUnsavedValue(
 				versionAttributeSource.getUnsavedValue() == null
 						? "undefined"

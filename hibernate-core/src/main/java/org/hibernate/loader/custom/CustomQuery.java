@@ -73,5 +73,5 @@ public interface CustomQuery {
 	 *
 	 * @return List of return descriptors.
 	 */
-	public List getCustomQueryReturns();
+	public List<Return> getCustomQueryReturns();
 }

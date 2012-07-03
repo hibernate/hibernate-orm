@@ -31,4 +31,8 @@ package org.hibernate.loader.custom;
  * @author Steve Ebersole
  */
 public interface Return {
+	public static enum Nature{
+		SCALAR, ROOT, COLLECTION, ENTITY_FETCH, COLLECTION_FETCH;
+	}
+	public Nature getNature();
 }

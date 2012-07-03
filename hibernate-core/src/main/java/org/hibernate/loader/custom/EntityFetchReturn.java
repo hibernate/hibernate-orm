@@ -47,4 +47,9 @@ public class EntityFetchReturn extends FetchReturn {
 	public EntityAliases getEntityAliases() {
 		return entityAliases;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.ENTITY_FETCH;
+	}
 }

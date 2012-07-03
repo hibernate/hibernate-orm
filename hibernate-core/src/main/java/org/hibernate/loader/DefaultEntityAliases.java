@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.Loadable;
 
 /**
@@ -45,7 +46,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	private final String suffixedDiscriminatorColumn;
 	private final String suffix;
 	private final String rowIdAlias;
-	private final Map userProvidedAliases;
+	private final Map<String, String[]> userProvidedAliases;
 
 	/**
 	 * Calculate and cache select-clause aliases
@@ -55,17 +56,17 @@ public class DefaultEntityAliases implements EntityAliases {
 	 * @param suffix The calculated suffix.
 	 */
 	public DefaultEntityAliases(
-			Map userProvidedAliases,
+			Map<String, String[]> userProvidedAliases,
 			Loadable persister,
 			String suffix) {
 		this.suffix = suffix;
 		this.userProvidedAliases = userProvidedAliases;
 
-		suffixedKeyColumns = determineKeyAlias( persister, suffix );
-		suffixedPropertyColumns = determinePropertyAliases( persister );
-		suffixedDiscriminatorColumn = determineDiscriminatorAlias( persister, suffix );
-		suffixedVersionColumn = determineVersionAlias( persister );
-		rowIdAlias = Loadable.ROWID_ALIAS + suffix; // TODO: not visible to the user!
+		this.suffixedKeyColumns = determineKeyAlias( persister, suffix );
+		this.suffixedPropertyColumns = determinePropertyAliases( persister );
+		this.suffixedDiscriminatorColumn = determineDiscriminatorAlias( persister, suffix );
+		this.suffixedVersionColumn = determineVersionAlias( persister );
+		this.rowIdAlias = Loadable.ROWID_ALIAS + suffix; // TODO: not visible to the user!
 	}
 
 	public DefaultEntityAliases(Loadable persister, String suffix) {
@@ -117,23 +118,13 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {
-		String[] result = (String[]) userProvidedAliases.get(propertyPath);
-		if (result==null) {
-			return defaultAliases;
-		}
-		else {
-			return result;
-		}
+		String[] result = userProvidedAliases.get(propertyPath);
+		return CollectionHelper.isEmpty( result ) ? defaultAliases : result;
 	}
 
 	private String getUserProvidedAlias(String propertyPath, String defaultAlias) {
-		String[] columns = (String[]) userProvidedAliases.get(propertyPath);
-		if (columns==null) {
-			return defaultAlias;
-		}
-		else {
-			return columns[0];
-		}
+		String[] columns = userProvidedAliases.get(propertyPath);
+		return CollectionHelper.isEmpty( columns ) ? defaultAlias : columns[0];
 	}
 
 	/**
@@ -189,7 +180,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	private static void intern(String[] strings) {
-		for (int i=0; i<strings.length; i++ ) {
+		for ( int i = 0; i < strings.length; i++ ) {
 			strings[i] = strings[i].intern();
 		}
 	}

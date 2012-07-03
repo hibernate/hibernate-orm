@@ -65,12 +65,12 @@ public final class HolderInstantiator {
 		}
 	}
 	
-	static public HolderInstantiator createClassicHolderInstantiator(Constructor constructor, 
+	public static HolderInstantiator createClassicHolderInstantiator(Constructor constructor,
 			ResultTransformer transformer) {
 		return new HolderInstantiator( resolveClassicResultTransformer( constructor, transformer ), null );
 	}
 
-	static public ResultTransformer resolveClassicResultTransformer(
+	public static ResultTransformer resolveClassicResultTransformer(
 			Constructor constructor,
 			ResultTransformer transformer) {
 		return constructor != null ? new AliasToBeanConstructorResultTransformer( constructor ) : transformer;
@@ -89,11 +89,7 @@ public final class HolderInstantiator {
 	}
 	
 	public Object instantiate(Object[] row) {
-		if(transformer==null) {
-			return row;
-		} else {
-			return transformer.transformTuple(row, queryReturnAliases);
-		}
+		return transformer == null ? row : transformer.transformTuple(row, queryReturnAliases);
 	}	
 	
 	public String[] getQueryReturnAliases() {

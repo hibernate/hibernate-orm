@@ -46,4 +46,9 @@ public class ScalarReturn implements Return {
 	public String getColumnAlias() {
 		return columnAlias;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.SCALAR;
+	}
 }

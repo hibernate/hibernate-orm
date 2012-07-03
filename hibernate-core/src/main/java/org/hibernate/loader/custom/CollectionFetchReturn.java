@@ -55,4 +55,9 @@ public class CollectionFetchReturn extends FetchReturn {
 	public EntityAliases getElementEntityAliases() {
 		return elementEntityAliases;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLLECTION_FETCH;
+	}
 }

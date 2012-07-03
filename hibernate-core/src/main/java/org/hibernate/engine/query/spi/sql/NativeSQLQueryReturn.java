@@ -33,4 +33,9 @@ package org.hibernate.engine.query.spi.sql;
  * @author Steve Ebersole
  */
 public interface NativeSQLQueryReturn {
+	public static enum Nature{
+		SCALAR, ROOT, COLLECTION, JOIN;
+	}
+	public Nature getNature();
+
 }

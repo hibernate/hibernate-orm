@@ -37,7 +37,7 @@ import org.hibernate.persister.entity.Loadable;
 public class ColumnEntityAliases extends DefaultEntityAliases {
 
 	public ColumnEntityAliases(
-			Map returnProperties,
+			Map<String, String[]> returnProperties,
 			Loadable persister, 
 			String suffix) {
 		super( returnProperties, persister, suffix );

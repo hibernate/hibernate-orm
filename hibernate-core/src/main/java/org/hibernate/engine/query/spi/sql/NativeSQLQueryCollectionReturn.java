@@ -115,4 +115,9 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 		result = 31 * result + ( ownerProperty != null ? ownerProperty.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLLECTION;
+	}
 }

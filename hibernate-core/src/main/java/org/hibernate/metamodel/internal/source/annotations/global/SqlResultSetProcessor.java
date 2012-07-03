@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,6 +94,7 @@ public class SqlResultSetProcessor {
 	private static void bindSqlResultSetMapping(final AnnotationBindingContext bindingContext, final AnnotationInstance annotation) {
 		entityAliasIndex = 0;
 		final String name = JandexHelper.getValue( annotation, "name", String.class );
+		LOG.debugf( "Binding @SqlResultSetMapping(name=%s)", name );
 		final ResultSetMappingDefinition definition = new ResultSetMappingDefinition( name );
 		for ( final AnnotationInstance entityResult : JandexHelper.getValue(
 				annotation,
@@ -153,13 +153,20 @@ public class SqlResultSetProcessor {
 			propertyResults.put( "class", new String[] { quotingNormalizedName } );
 		}
 
-		Set<String> uniqueReturnProperty = new HashSet<String>();
+		final Set<String> uniqueReturnProperty = new HashSet<String>();
 		for ( final AnnotationInstance fieldResult : JandexHelper.getValue(
 				entityResult,
 				"fields",
 				AnnotationInstance[].class
 		) ) {
-			bindFieldResult( bindingContext, targetEntityBinding, fieldResult, uniqueReturnProperty,propertyResults, definition );
+			bindFieldResult(
+					bindingContext,
+					targetEntityBinding,
+					fieldResult,
+					uniqueReturnProperty,
+					propertyResults,
+					definition
+			);
 		}
 
 		final NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
@@ -178,24 +185,13 @@ public class SqlResultSetProcessor {
 										final Map<String, String[]> propertyResults,
 										final ResultSetMappingDefinition definition) {
 		final String name = JandexHelper.getValue( fieldResult, "name", String.class );
-		if ( "class".equals( name ) ) {
-			throw new MappingException(
-					"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
-			);
-		}
-		if ( !uniqueReturnProperty.add( name ) ) {
-			throw new MappingException(
-					"duplicate @FieldResult for property " + name +
-							" on @Entity " + entityBinding.getEntity().getName() + " in " +definition.getName());
-		}
+
+		checkFieldNameisNotClass( name );
+		checkFieldNameUnique( entityBinding, uniqueReturnProperty, definition, name );
 
 		final String column = JandexHelper.getValue( fieldResult, "column", String.class );
-		final String quotingNormalizedColumnName = bindingContext.getMetadataImplementor().getObjectNameNormalizer()
-				.normalizeIdentifierQuoting( column );
-		if ( name.indexOf( '.' ) == -1 ) {
-
-		}
-		else {
+		final String quotingNormalizedColumnName = normalize( bindingContext, column );
+		if ( name.contains( "." ) ) {
 			int dotIndex = name.lastIndexOf( '.' );
 			String reducedName = name.substring( 0, dotIndex );
 			AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( reducedName );
@@ -203,7 +199,11 @@ public class SqlResultSetProcessor {
 				CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
 						attributeBinding
 				);
-				compositeAttributeBinding.attributeBindings();
+				boolean hasFollowers = false;
+				Iterable<AttributeBinding> attributeBindings = compositeAttributeBinding.attributeBindings();
+				for ( final AttributeBinding ab : attributeBindings ) {
+					ab.getAttribute().getName();
+				}
 			}
 			else if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding ) ) {
 				ManyToOneAttributeBinding manyToOneAttributeBinding = ManyToOneAttributeBinding.class.cast(
@@ -222,6 +222,23 @@ public class SqlResultSetProcessor {
 		insert( StringHelper.root( name ), quotingNormalizedColumnName, propertyResults );
 	}
 
+	private static void checkFieldNameUnique(EntityBinding entityBinding, Set<String> uniqueReturnProperty, ResultSetMappingDefinition definition, String name) {
+		if ( !uniqueReturnProperty.add( name ) ) {
+			throw new MappingException(
+					"duplicate @FieldResult for property " + name +
+							" on @Entity " + entityBinding.getEntity().getName() + " in " + definition.getName()
+			);
+		}
+	}
+
+	private static void checkFieldNameisNotClass(String name) {
+		if ( "class".equals( name ) ) {
+			throw new MappingException(
+					"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
+			);
+		}
+	}
+
 	private static void insert(String key, String value, Map<String, String[]> map) {
 		if ( map.containsKey( key ) ) {
 			String[] oldValues = map.get( key );
@@ -238,9 +255,13 @@ public class SqlResultSetProcessor {
 										 final AnnotationInstance columnResult,
 										 final ResultSetMappingDefinition definition) {
 		final String name = JandexHelper.getValue( columnResult, "name", String.class );
-		final String normalizedName = bindingContext.getMetadataImplementor()
+		final String normalizedName = normalize( bindingContext, name );
+		definition.addQueryReturn( new NativeSQLQueryScalarReturn( normalizedName, null ) );
+	}
+
+	private static String normalize(final AnnotationBindingContext bindingContext, String name) {
+		return bindingContext.getMetadataImplementor()
 				.getObjectNameNormalizer()
 				.normalizeIdentifierQuoting( name );
-		definition.addQueryReturn( new NativeSQLQueryScalarReturn( normalizedName, null ) );
 	}
 }

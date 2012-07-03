@@ -79,4 +79,9 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 		result = 31 * result + ( columnAlias != null ? columnAlias.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.SCALAR;
+	}
 }

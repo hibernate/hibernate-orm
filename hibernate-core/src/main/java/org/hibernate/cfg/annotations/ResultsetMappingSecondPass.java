@@ -110,9 +110,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					List<String> followers = getFollowers( parentPropIter, reducedName, name );
 
 					int index = propertyNames.size();
-					int followersSize = followers.size();
-					for (int loop = 0; loop < followersSize; loop++) {
-						String follower = followers.get( loop );
+					for (final String follower :followers) {
 						int currentIndex = getIndexOfFirstMatchingProperty( propertyNames, follower );
 						index = currentIndex != -1 && currentIndex < index ? currentIndex : index;
 					}
@@ -254,10 +252,10 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		return parentPropIter;
 	}
 
-	private static int getIndexOfFirstMatchingProperty(List propertyNames, String follower) {
+	private static int getIndexOfFirstMatchingProperty(List<String> propertyNames, String follower) {
 		int propertySize = propertyNames.size();
 		for (int propIndex = 0; propIndex < propertySize; propIndex++) {
-			if ( ( (String) propertyNames.get( propIndex ) ).startsWith( follower ) ) {
+			if ( ( propertyNames.get( propIndex ) ).startsWith( follower ) ) {
 				return propIndex;
 			}
 		}

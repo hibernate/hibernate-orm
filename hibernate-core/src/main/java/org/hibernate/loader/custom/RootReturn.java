@@ -55,4 +55,9 @@ public class RootReturn extends NonScalarReturn {
 	public EntityAliases getEntityAliases() {
 		return entityAliases;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.ROOT;
+	}
 }

@@ -60,7 +60,7 @@ public class SQLQueryParser {
 		boolean isCollectionAlias(String aliasName);
 		SQLLoadableCollection getCollectionPersisterByAlias(String alias);
 		String getCollectionSuffixByAlias(String alias);
-		Map getPropertyResultsMapByAlias(String alias);
+		Map<String, String[]> getPropertyResultsMapByAlias(String alias);
 	}
 
 	public SQLQueryParser(String queryString, ParserContext context, SessionFactoryImplementor factory) {
@@ -99,7 +99,7 @@ public class SQLQueryParser {
 				break;
 			}
 
-			// apend everything up until the next encountered open brace
+			// append everything up until the next encountered open brace
 			result.append( sqlQuery.substring( curr, left ) );
 
 			if ( ( right = sqlQuery.indexOf( '}', left + 1 ) ) < 0 ) {
@@ -112,32 +112,16 @@ public class SQLQueryParser {
 			if ( isPlaceholder ) {
 				// Domain replacement
 				if ( DOMAIN_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
-					if ( catalogName != null ) {
-						result.append( catalogName );
-						result.append( "." );
-					}
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
-					if ( schemaName != null ) {
-						result.append( schemaName );
-						result.append( "." );
-					}
+					appendCatalog( result );
+					appendSchema( result );
 				}
 				// Schema replacement
 				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
-					if ( schemaName != null ) {
-						result.append(schemaName);
-						result.append(".");
-					}
+					appendSchema(result);
 				} 
 				// Catalog replacement
 				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
-					if ( catalogName != null ) {
-						result.append( catalogName );
-						result.append( "." );
-					}
+					appendCatalog( result );
 				}
 				else {
 					throw new QueryException( "Unknown placeholder ", aliasPath );
@@ -181,13 +165,29 @@ public class SQLQueryParser {
 		// Possibly handle :something parameters for the query ?
 
 		return result.toString();
-	}	
+	}
+
+	private void appendSchema(StringBuilder result) {
+		final String schemaName = factory.getSettings().getDefaultSchemaName();
+		if ( schemaName != null ) {
+			result.append( schemaName );
+			result.append( "." );
+		}
+	}
+
+	private void appendCatalog(StringBuilder result) {
+		final String catalogName = factory.getSettings().getDefaultCatalogName();
+		if ( catalogName != null ) {
+			result.append( catalogName );
+			result.append( "." );
+		}
+	}
 
 	private String resolveCollectionProperties(
 			String aliasName,
 			String propertyName) {
 
-		Map fieldResults = context.getPropertyResultsMapByAlias( aliasName );
+		Map<String, String[]> fieldResults = context.getPropertyResultsMapByAlias( aliasName );
 		SQLLoadableCollection collectionPersister = context.getCollectionPersisterByAlias( aliasName );
 		String collectionSuffix = context.getCollectionSuffixByAlias( aliasName );
 
@@ -206,10 +206,8 @@ public class SQLQueryParser {
 			return resolveProperties( aliasName, "*" );
 		}
 		else {
-			String[] columnAliases;
-
 			// Let return-propertys override whatever the persister has for aliases.
-			columnAliases = ( String[] ) fieldResults.get(propertyName);
+			String[] columnAliases = fieldResults.get(propertyName);
 			if ( columnAliases==null ) {
 				columnAliases = collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
 			}
@@ -236,7 +234,7 @@ public class SQLQueryParser {
 	private String resolveProperties(
 			String aliasName,
 	        String propertyName) {
-		Map fieldResults = context.getPropertyResultsMapByAlias( aliasName );
+		Map<String, String[]> fieldResults = context.getPropertyResultsMapByAlias( aliasName );
 		SQLLoadable persister = context.getEntityPersisterByAlias( aliasName );
 		String suffix = context.getEntitySuffixByAlias( aliasName );
 
@@ -248,11 +246,8 @@ public class SQLQueryParser {
 			return persister.selectFragment( aliasName, suffix ) ;
 		}
 		else {
-
-			String[] columnAliases;
-
 			// Let return-propertys override whatever the persister has for aliases.
-			columnAliases = (String[]) fieldResults.get( propertyName );
+			String[] columnAliases = fieldResults.get( propertyName );
 			if ( columnAliases == null ) {
 				columnAliases = persister.getSubclassPropertyColumnAliases( propertyName, suffix );
 			}
@@ -266,7 +261,8 @@ public class SQLQueryParser {
 			if ( columnAliases.length != 1 ) {
 				// TODO: better error message since we actually support composites if names are explicitly listed.
 				throw new QueryException(
-						"SQL queries only support properties mapped to a single column - property [" + propertyName + "] is mapped to " + columnAliases.length + " columns.",
+						"SQL queries only support properties mapped to a single column - property [" + propertyName
+								+ "] is mapped to " + columnAliases.length + " columns.",
 						originalQueryString
 				);
 			}			
@@ -321,7 +317,7 @@ public class SQLQueryParser {
 		}
 
 		private void addNamedParameter(String name) {
-			Integer loc = parameterCount++;
+			int loc = parameterCount++;
 			Object o = namedParameterBindPoints.get( name );
 			if ( o == null ) {
 				namedParameterBindPoints.put( name, loc );

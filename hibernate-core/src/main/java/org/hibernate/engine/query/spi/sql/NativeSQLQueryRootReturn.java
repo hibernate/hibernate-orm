@@ -101,4 +101,9 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 		result = 31 * result + ( returnEntityName != null ? returnEntityName.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.ROOT;
+	}
 }

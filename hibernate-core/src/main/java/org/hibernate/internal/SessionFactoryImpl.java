@@ -498,7 +498,7 @@ public final class SessionFactoryImpl
 		//Named Queries:
 		namedQueries = new HashMap<String, NamedQueryDefinition>( cfg.getNamedQueries() );
 		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>( cfg.getNamedSQLQueries() );
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>( cfg.getSqlResultSetMappings() );
+		sqlResultSetMappings = Collections.unmodifiableMap( new HashMap<String, ResultSetMappingDefinition>( cfg.getSqlResultSetMappings() ) );
 		imports = new HashMap<String,String>( cfg.getImports() );
 
 		// after *all* persisters and named queries are registered
@@ -862,8 +862,7 @@ public final class SessionFactoryImpl
 		for ( NamedSQLQueryDefinition namedNativeQueryDefinition: metadata.getNamedNativeQueryDefinitions() ) {
 			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
 		}
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		sqlResultSetMappings.putAll( metadata.getResultSetMappingDefinitions() );
+		sqlResultSetMappings = Collections.unmodifiableMap( new HashMap<String, ResultSetMappingDefinition>( metadata.getResultSetMappingDefinitions() ) );
 		imports = new HashMap<String,String>();
 		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
 			imports.put( importEntry.getKey(), importEntry.getValue() );

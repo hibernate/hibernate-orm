@@ -110,4 +110,9 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 		result = 31 * result + ( ownerProperty != null ? ownerProperty.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.JOIN;
+	}
 }

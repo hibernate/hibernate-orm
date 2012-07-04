@@ -38,6 +38,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -221,6 +222,16 @@ public class QueryProcessor {
 		boolean callable = getBoolean( hints, QueryHints.CALLABLE, name );
 		NamedSQLQueryDefinition def;
 		if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
+			boolean resultSetMappingExists = metadata.getResultSetMappingDefinitions().containsKey( resultSetMapping );
+			if ( !resultSetMappingExists ) {
+				throw new MappingException(
+						String.format(
+								"Named SQL Query [%s] is referencing an non-existed result set mapping [%s] ",
+								name,
+								resultSetMapping
+						)
+				);
+			}
 			def = new NamedSQLQueryDefinition(
 					name,
 					query, resultSetMapping, null, cacheable,

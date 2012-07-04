@@ -178,8 +178,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public void processMappingDependentMetadata() {
 		TableProcessor.bind( bindingContext );
 		FetchProfileProcessor.bind( bindingContext );
-		QueryProcessor.bind( bindingContext );
 		SqlResultSetProcessor.bind( bindingContext );
+		QueryProcessor.bind( bindingContext );
+
 	}
 
 	private Index parseAndUpdateIndex(List<JaxbRoot<JaxbEntityMappings>> mappings, Index annotationIndex) {

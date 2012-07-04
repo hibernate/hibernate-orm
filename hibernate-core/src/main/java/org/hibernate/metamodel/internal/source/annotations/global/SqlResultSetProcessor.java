@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,8 +40,10 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -49,6 +52,7 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 
 /**
  * Binds <ul>
@@ -152,21 +156,15 @@ public class SqlResultSetProcessor {
 					);
 			propertyResults.put( "class", new String[] { quotingNormalizedName } );
 		}
-
-		final Set<String> uniqueReturnProperty = new HashSet<String>();
-		for ( final AnnotationInstance fieldResult : JandexHelper.getValue(
+		List<FieldResult> fieldResultList = reorderFieldResult(
+				bindingContext,
 				entityResult,
-				"fields",
-				AnnotationInstance[].class
-		) ) {
-			bindFieldResult(
-					bindingContext,
-					targetEntityBinding,
-					fieldResult,
-					uniqueReturnProperty,
-					propertyResults,
-					definition
-			);
+				targetEntityBinding,
+				definition.getName()
+		);
+
+		for ( final FieldResult fieldResult : fieldResultList ) {
+			insert( StringHelper.root( fieldResult.name ), fieldResult.column, propertyResults );
 		}
 
 		final NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
@@ -178,66 +176,144 @@ public class SqlResultSetProcessor {
 		definition.addQueryReturn( result );
 	}
 
-	private static void bindFieldResult(final AnnotationBindingContext bindingContext,
-										final EntityBinding entityBinding,
-										final AnnotationInstance fieldResult,
-										final Set<String> uniqueReturnProperty,
-										final Map<String, String[]> propertyResults,
-										final ResultSetMappingDefinition definition) {
-		final String name = JandexHelper.getValue( fieldResult, "name", String.class );
-
-		checkFieldNameisNotClass( name );
-		checkFieldNameUnique( entityBinding, uniqueReturnProperty, definition, name );
-
-		final String column = JandexHelper.getValue( fieldResult, "column", String.class );
-		final String quotingNormalizedColumnName = normalize( bindingContext, column );
-		if ( name.contains( "." ) ) {
-			int dotIndex = name.lastIndexOf( '.' );
-			String reducedName = name.substring( 0, dotIndex );
-			AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( reducedName );
-			if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
-				CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
-						attributeBinding
+	//todo see org.hibernate.cfg.annotations.ResultsetMappingSecondPass#getSubPropertyIterator
+	private static List<FieldResult> reorderFieldResult(AnnotationBindingContext bindingContext,
+														AnnotationInstance entityResult,
+														EntityBinding entityBinding,
+														String resultSetMappingDefinitionName) {
+		final AnnotationInstance[] fieldResultAnnotationInstances = JandexHelper.getValue(
+				entityResult,
+				"fields",
+				AnnotationInstance[].class
+		);
+		List<FieldResult> results = new ArrayList<FieldResult>( fieldResultAnnotationInstances.length );
+		List<String> propertyNames = new ArrayList<String>();
+		final Set<String> uniqueReturnProperty = new HashSet<String>();
+		for ( final AnnotationInstance fieldResult : fieldResultAnnotationInstances ) {
+			final String name = JandexHelper.getValue( fieldResult, "name", String.class );
+			if ( !uniqueReturnProperty.add( name ) ) {
+				throw new MappingException(
+						"duplicate @FieldResult for property " + name +
+								" on @Entity " + entityBinding.getEntity()
+								.getName() + " in " + resultSetMappingDefinitionName
 				);
-				boolean hasFollowers = false;
-				Iterable<AttributeBinding> attributeBindings = compositeAttributeBinding.attributeBindings();
-				for ( final AttributeBinding ab : attributeBindings ) {
-					ab.getAttribute().getName();
-				}
 			}
-			else if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding ) ) {
-				ManyToOneAttributeBinding manyToOneAttributeBinding = ManyToOneAttributeBinding.class.cast(
-						attributeBinding
+			if ( "class".equals( name ) ) {
+				throw new MappingException(
+						"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
 				);
-				EntityBinding referencedEntityBinding = manyToOneAttributeBinding.getReferencedEntityBinding();
-				Set<SingularAssociationAttributeBinding> referencingAttributeBindings = manyToOneAttributeBinding.getEntityReferencingAttributeBindings();
-				//todo see org.hibernate.cfg.annotations.ResultsetMappingSecondPass#getSubPropertyIterator
+			}
+			final String column = JandexHelper.getValue( fieldResult, "column", String.class );
+			final String quotingNormalizedColumnName = normalize( bindingContext, column );
+			if ( name.contains( "." ) ) {
+				int dotIndex = name.lastIndexOf( '.' );
+				String reducedName = name.substring( 0, dotIndex );
+				AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( reducedName );
+				Iterable<? extends AttributeBinding> attributeBindings = null;
+				if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
+					CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+							attributeBinding
+					);
+					attributeBindings = compositeAttributeBinding.attributeBindings();
 
+				}
+				else if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding ) ) {
+					ManyToOneAttributeBinding manyToOneAttributeBinding = ManyToOneAttributeBinding.class.cast(
+							attributeBinding
+					);
+					EntityBinding referencedEntityBinding = manyToOneAttributeBinding.getReferencedEntityBinding();
+					Set<SingularAssociationAttributeBinding> referencingAttributeBindings = manyToOneAttributeBinding.getEntityReferencingAttributeBindings();
+
+					if ( CollectionHelper.isNotEmpty( referencingAttributeBindings ) ) {
+						attributeBindings = referencingAttributeBindings;
+					}
+					else {
+//						EntityIdentifierNature entityIdentifierNature= referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getNature();
+//						switch ( entityIdentifierNature ) {
+//							case SIMPLE:
+//								throw new MappingException(
+//										"dotted notation reference neither a component nor a many/one to one"
+//								);
+//							case AGGREGATED_COMPOSITE:
+//							case COMPOSITE:
+//								referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().isSingleAttribute();//.isIdentifierMapper();
+//						}
+						//todo check if this logic is correct
+						SingularNonAssociationAttributeBinding identifierAttributeBinding = referencedEntityBinding.getHierarchyDetails()
+								.getEntityIdentifier()
+								.getAttributeBinding();
+						if ( CompositeAttributeBinding.class.isInstance( identifierAttributeBinding ) ) {
+							attributeBindings = CompositeAttributeBinding.class.cast( identifierAttributeBinding )
+									.attributeBindings();
+						}
+						else {
+							throw new MappingException(
+									"dotted notation reference neither a component nor a many/one to one"
+							);
+						}
+					}
+
+
+				}
+				else {
+					throw new MappingException( "dotted notation reference neither a component nor a many/one to one" );
+				}
+				List<String> followers = getFollowers( attributeBindings, reducedName, name );
+				int index = results.size();
+				int followersSize = followers.size();
+				for ( int loop = 0; loop < followersSize; loop++ ) {
+					String follower = followers.get( loop );
+					int currentIndex = getIndexOfFirstMatchingProperty( propertyNames, follower );
+					index = currentIndex != -1 && currentIndex < index ? currentIndex : index;
+				}
+				propertyNames.add( index, name );
+				results.add( index, new FieldResult( name, quotingNormalizedColumnName ) );
 			}
 			else {
-				throw new MappingException( "dotted notation reference neither a component nor a many/one to one" );
+				propertyNames.add( name );
+				results.add( new FieldResult( name, quotingNormalizedColumnName ) );
+			}
+
+		}
+		return results;
+	}
+
+	private static int getIndexOfFirstMatchingProperty(List<String> propertyNames, String follower) {
+		int propertySize = propertyNames.size();
+		for ( int propIndex = 0; propIndex < propertySize; propIndex++ ) {
+			if ( ( propertyNames.get( propIndex ) ).startsWith( follower ) ) {
+				return propIndex;
 			}
 		}
-
-		insert( StringHelper.root( name ), quotingNormalizedColumnName, propertyResults );
+		return -1;
 	}
 
-	private static void checkFieldNameUnique(EntityBinding entityBinding, Set<String> uniqueReturnProperty, ResultSetMappingDefinition definition, String name) {
-		if ( !uniqueReturnProperty.add( name ) ) {
-			throw new MappingException(
-					"duplicate @FieldResult for property " + name +
-							" on @Entity " + entityBinding.getEntity().getName() + " in " + definition.getName()
-			);
+	private static class FieldResult {
+		String name;
+		String column;
+
+		private FieldResult(String column, String name) {
+			this.column = column;
+			this.name = name;
 		}
 	}
 
-	private static void checkFieldNameisNotClass(String name) {
-		if ( "class".equals( name ) ) {
-			throw new MappingException(
-					"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
-			);
+	private static List<String> getFollowers(Iterable<? extends AttributeBinding> attributeBindings, String reducedName, String name) {
+		boolean hasFollowers = false;
+		List<String> followers = new ArrayList<String>();
+		for ( final AttributeBinding attributeBinding : attributeBindings ) {
+			String currentPropertyName = attributeBinding.getAttribute().getName();
+			String currentName = reducedName + '.' + currentPropertyName;
+			if ( hasFollowers ) {
+				followers.add( currentName );
+			}
+			if ( name.equals( currentName ) ) {
+				hasFollowers = true;
+			}
 		}
+		return followers;
 	}
+
 
 	private static void insert(String key, String value, Map<String, String[]> map) {
 		if ( map.containsKey( key ) ) {

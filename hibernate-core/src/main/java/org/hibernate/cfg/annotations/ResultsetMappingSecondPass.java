@@ -253,8 +253,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 	}
 
 	private static int getIndexOfFirstMatchingProperty(List<String> propertyNames, String follower) {
-		int propertySize = propertyNames.size();
-		for (int propIndex = 0; propIndex < propertySize; propIndex++) {
+		for (int propIndex = 0, propertySize = propertyNames.size(); propIndex < propertySize; propIndex++) {
 			if ( ( propertyNames.get( propIndex ) ).startsWith( follower ) ) {
 				return propIndex;
 			}

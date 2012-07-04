@@ -45,34 +45,9 @@ public class NamedQueryDefinition implements Serializable {
 	private final Integer fetchSize;
 	private final FlushMode flushMode;
 	private final Map parameterTypes;
-	private CacheMode cacheMode;
-	private boolean readOnly;
-	private String comment;
-
-	// kept for backward compatibility until after the 3.1beta5 release of HA
-	// TODO: is this still needed?
-	public NamedQueryDefinition(
-			String query,
-			boolean cacheable,
-			String cacheRegion,
-			Integer timeout,
-			Integer fetchSize,
-			FlushMode flushMode,
-			Map parameterTypes) {
-		this(
-				null,
-				query,
-				cacheable,
-				cacheRegion,
-				timeout,
-				fetchSize,
-				flushMode,
-				null,
-				false,
-				null,
-				parameterTypes
-		);
-	}
+	private final CacheMode cacheMode;
+	private final boolean readOnly;
+	private final String comment;
 
 	public NamedQueryDefinition(
 			String name,

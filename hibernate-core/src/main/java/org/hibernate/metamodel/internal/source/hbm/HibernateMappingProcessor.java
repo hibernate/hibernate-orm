@@ -23,19 +23,23 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping.JaxbImport;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbResultsetElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
@@ -217,11 +221,28 @@ public class HibernateMappingProcessor {
 	}
 
 	private void processResultSetMappings() {
-		if ( mappingRoot().getResultset() == null ) {
+		List<JaxbResultsetElement> resultsetElements = new ArrayList<JaxbResultsetElement>();
+		if ( CollectionHelper.isNotEmpty( mappingRoot().getResultset() ) ) {
+			resultsetElements.addAll( mappingRoot().getResultset() );
+		}
+		for ( Object obj : mappingRoot().getClazzOrSubclassOrJoinedSubclass() ) {
+			EntityElement element = EntityElement.class.cast( obj );
+			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
+				resultsetElements.addAll( element.getResultset() );
+			}
+		}
+		if ( resultsetElements.isEmpty() ) {
 			return;
 		}
+		for(final JaxbResultsetElement element : resultsetElements){
+			bindResultSetMappingDefinitions( element );
+		}
 
-//			bindResultSetMappingDefinitions( element, null, mappings );
+	}
+
+	private void bindResultSetMappingDefinitions(JaxbResultsetElement element) {
+		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( element.getName() );
+		metadata.addResultSetMapping( definition );
 	}
 
 	private void processNamedQueries() {

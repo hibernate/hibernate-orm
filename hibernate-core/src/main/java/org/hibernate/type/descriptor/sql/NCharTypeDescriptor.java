@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -26,19 +26,19 @@ package org.hibernate.type.descriptor.sql;
 import java.sql.Types;
 
 /**
- * Descriptor for {@link Types#FLOAT FLOAT} handling.
+ * Descriptor for {@link Types#NCHAR NCHAR} handling.
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends RealTypeDescriptor {
-	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
+public class NCharTypeDescriptor extends NVarcharTypeDescriptor {
+	public static final NCharTypeDescriptor INSTANCE = new NCharTypeDescriptor();
 
-	public FloatTypeDescriptor() {
+	public NCharTypeDescriptor() {
 		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override
 	public int getSqlType() {
-		return Types.FLOAT;
+		return Types.NCHAR;
 	}
 }

@@ -43,6 +43,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 	public static final DecimalTypeDescriptor INSTANCE = new DecimalTypeDescriptor();
 
+	public DecimalTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.DECIMAL;
 	}
@@ -52,6 +57,7 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
@@ -61,6 +67,7 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
+	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

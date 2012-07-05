@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.sql;
+
 import java.sql.Types;
 
 /**
@@ -31,6 +32,10 @@ import java.sql.Types;
  */
 public class LongVarbinaryTypeDescriptor extends VarbinaryTypeDescriptor {
 	public static final LongVarbinaryTypeDescriptor INSTANCE = new LongVarbinaryTypeDescriptor();
+
+	public LongVarbinaryTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
 
 	@Override
 	public int getSqlType() {

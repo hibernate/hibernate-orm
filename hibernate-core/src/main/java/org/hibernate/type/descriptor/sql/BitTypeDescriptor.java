@@ -45,6 +45,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class BitTypeDescriptor implements SqlTypeDescriptor {
 	public static final BitTypeDescriptor INSTANCE = new BitTypeDescriptor();
 
+	public BitTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
+
 	public int getSqlType() {
 		return Types.BIT;
 	}
@@ -54,6 +58,7 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
@@ -63,6 +68,7 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
+	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

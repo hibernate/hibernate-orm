@@ -45,6 +45,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class TinyIntTypeDescriptor implements SqlTypeDescriptor {
 	public static final TinyIntTypeDescriptor INSTANCE = new TinyIntTypeDescriptor();
 
+	public TinyIntTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.TINYINT;
 	}
@@ -54,6 +59,7 @@ public class TinyIntTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
@@ -63,6 +69,7 @@ public class TinyIntTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
+	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.Serializable;
 
 /**
@@ -30,29 +31,23 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
-	
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Serializable disassemble(T value) {
 		return (Serializable) deepCopy( value );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public T assemble(Serializable cached) {
 		return (T) deepCopy( (T) cached );
 	}
 
+	@Override
 	public final T deepCopy(T value) {
 		return value == null ? null : deepCopyNotNull( value );
 	}

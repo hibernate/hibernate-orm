@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,7 +24,7 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.sql.CallableStatement;
-import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,15 +37,15 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Descriptor for {@link Types#CLOB CLOB} handling.
+ * Descriptor for {@link Types#NCLOB NCLOB} handling.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
+public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public int getSqlType() {
-		return Types.CLOB;
+		return Types.NCLOB;
 	}
 
 	@Override
@@ -58,12 +58,12 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getClob( name ), options );
+				return javaTypeDescriptor.wrap( rs.getNClob( name ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getClob( index ), options );
+				return javaTypeDescriptor.wrap( statement.getNClob( index ), options );
 			}
 		};
 	}
@@ -103,7 +103,7 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 								throws SQLException {
-							st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
+							st.setNClob( index, javaTypeDescriptor.unwrap( value, NClob.class, options ) );
 						}
 					};
 				}
@@ -122,5 +122,4 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 					};
 				}
 			};
-
 }

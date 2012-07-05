@@ -44,13 +44,12 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		super( sqlTypeDescriptor, javaTypeDescriptor );
 	}
 
+	@Override
 	public final int sqlType() {
 		return getSqlTypeDescriptor().getSqlType();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
 			throws HibernateException, SQLException {
 		if ( settable[0] ) {

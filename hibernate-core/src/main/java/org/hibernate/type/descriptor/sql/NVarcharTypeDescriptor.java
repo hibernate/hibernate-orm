@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -35,20 +35,20 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Descriptor for {@link Types#DOUBLE DOUBLE} handling.
+ * Descriptor for {@link Types#NVARCHAR NVARCHAR} handling.
  *
  * @author Steve Ebersole
  */
-public class DoubleTypeDescriptor implements SqlTypeDescriptor {
-	public static final DoubleTypeDescriptor INSTANCE = new DoubleTypeDescriptor();
+public class NVarcharTypeDescriptor implements SqlTypeDescriptor {
+	public static final NVarcharTypeDescriptor INSTANCE = new NVarcharTypeDescriptor();
 
-	public DoubleTypeDescriptor() {
+	public NVarcharTypeDescriptor() {
 		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override
 	public int getSqlType() {
-		return Types.DOUBLE;
+		return Types.NVARCHAR;
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setDouble( index, javaTypeDescriptor.unwrap( value, Double.class, options ) );
+				st.setNString( index, javaTypeDescriptor.unwrap( value, String.class, options ) );
 			}
 		};
 	}
@@ -71,12 +71,12 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getDouble( name ), options );
+				return javaTypeDescriptor.wrap( rs.getNString( name ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getDouble( index ), options );
+				return javaTypeDescriptor.wrap( statement.getNString( index ), options );
 			}
 		};
 	}

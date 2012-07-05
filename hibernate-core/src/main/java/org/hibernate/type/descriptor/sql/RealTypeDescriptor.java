@@ -42,6 +42,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class RealTypeDescriptor implements SqlTypeDescriptor {
 	public static final RealTypeDescriptor INSTANCE = new RealTypeDescriptor();
 
+	public RealTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.REAL;
 	}
@@ -51,6 +56,7 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
@@ -60,6 +66,7 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
+	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

@@ -34,7 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@link Time} handling.
  *
  * @author Steve Ebersole
  */

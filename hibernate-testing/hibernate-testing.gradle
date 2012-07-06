@@ -6,6 +6,8 @@ dependencies {
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
+    compile( libraries.jandex )
+    compile( libraries.classmate )
     compile "com.experlog:xapool:1.5.0"
     compile ( "org.jboss.jbossts:jbossjta:4.15.1.Final" ) {
         transitive=false;

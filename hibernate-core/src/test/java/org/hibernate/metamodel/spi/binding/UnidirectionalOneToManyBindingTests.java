@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
@@ -43,6 +45,8 @@ import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ListType;
+import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 
 import static org.junit.Assert.assertEquals;
@@ -115,6 +119,30 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
 				Identifier.toIdentifier( "theSetOwner" ),
 				FetchTiming.IMMEDIATE,
+				false
+		);
+
+		checkResult(
+				entityBinding,
+				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theList" ),
+				ListType.class,
+				List.class,
+				simpleEntityBinding,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				Identifier.toIdentifier( "theListOwner" ),
+				FetchTiming.IMMEDIATE,
+				false
+		);
+
+		checkResult(
+				entityBinding,
+				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theMap" ),
+				MapType.class,
+				Map.class,
+				simpleEntityBinding,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				Identifier.toIdentifier( "theMapOwner" ),
+				FetchTiming.DELAYED,
 				false
 		);
 

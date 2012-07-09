@@ -17,6 +17,16 @@
             <key column="theSetOwner" not-null="true"/>
             <one-to-many class="SimpleEntity"/>
         </set>
+        <list name="theList" lazy="false">
+            <key column="theListOwner" not-null="true"/>
+            <list-index column="list_index"/>
+            <one-to-many class="SimpleEntity"/>
+        </list>
+        <map name="theMap">
+            <key column="theMapOwner" not-null="true"/>
+            <map-key column="map_key" type="string"/>
+            <one-to-many class="SimpleEntity"/>
+        </map>
         <bag name="thePropertyRefBag" lazy="extra">
             <key column="ownerName" property-ref="name" not-null="true"/>
             <one-to-many class="SimpleEntity"/>

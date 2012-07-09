@@ -25,9 +25,11 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -41,6 +43,8 @@ public class EntityWithUnidirectionalOneToManys {
 	private String name;
 	private Collection<SimpleEntity> theBag = new ArrayList<SimpleEntity>();
 	private Set<SimpleEntity> theSet = new HashSet<SimpleEntity>();
+	private List<SimpleEntity> theList = new ArrayList<SimpleEntity>();
+	private Map<String, SimpleEntity> theMap = new HashMap<String, SimpleEntity>();
 	private Collection<SimpleEntity> thePropertyRefBag = new ArrayList<SimpleEntity>();
 
 	public EntityWithUnidirectionalOneToManys() {
@@ -83,6 +87,24 @@ public class EntityWithUnidirectionalOneToManys {
 
 	public void setTheSet(Set<SimpleEntity> theSet) {
 		this.theSet = theSet;
+	}
+
+	@OneToMany
+	public List<SimpleEntity> getTheList() {
+		return theList;
+	}
+
+	public void setTheList(List<SimpleEntity> theList) {
+		this.theList = theList;
+	}
+
+	@OneToMany
+	public Map<String, SimpleEntity> getTheMap() {
+		return theMap;
+	}
+
+	public void setTheMap(Map<String, SimpleEntity> theMap) {
+		this.theMap = theMap;
 	}
 
 	@OneToMany

@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -52,33 +53,15 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testStripAliases() {
-		String input = "some_field1 as f1, some_fild2 as f2, _field3 as f3 ";
-
-		assertEquals( "some_field1, some_fild2, _field3", SQLServer2005Dialect.stripAliases(input) );
-	}
-
-	@Test
-	public void testGetSelectFieldsWithoutAliases() {
-		StringBuilder input = new StringBuilder( "select some_field1 as f12, some_fild2 as f879, _field3 as _f24674_3 from ...." );
-		String output = SQLServer2005Dialect.getSelectFieldsWithoutAliases( input ).toString();
-
-		assertEquals( " some_field1, some_fild2, _field3", output );
-	}
-
-	@Test
-	public void testReplaceDistinctWithGroupBy() {
-		StringBuilder input = new StringBuilder( "select distinct f1, f2 as ff, f3 from table where f1 = 5" );
-		SQLServer2005Dialect.replaceDistinctWithGroupBy( input );
-
-		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", input.toString() );
-	}
-
-	@Test
 	public void testGetLimitString() {
 		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc";
 
-		assertEquals( "with query as (select f1 as f53245, row_number() over (order by f234, f67 desc) as __hibernate_row_nr__ from table849752  group by f1) select * from query where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?", dialect.getLimitString(input, 10, 15).toLowerCase() );
+		assertEquals(
+				"with query as (select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " +
+						"select distinct top(?) f1 as f53245 from table849752 order by f234, f67 desc ) inner_query )" +
+						" select f53245 from query where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?",
+				dialect.buildLimitHandler( input, toRowSelection( 10, 15 ) ).getProcessedSql().toLowerCase()
+		);
 	}
 
 	@Test
@@ -91,14 +74,10 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"where persistent0_.customerid=?";
 
 		assertEquals(
-				"WITH query AS (select persistent0_.rid as rid1688_, " +
-						"persistent0_.deviationfromtarget as deviati16_1688_, " +
-						"persistent0_.sortindex as sortindex1688_, " +
-						"ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ " +
-						"from m_evalstate persistent0_ " +
-						"where persistent0_.customerid=?) " +
-						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.getLimitString( fromColumnNameSQL, 1, 10 )
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						fromColumnNameSQL + " ) inner_query ) " +
+						"SELECT rid1688_, deviati16_1688_, sortindex1688_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.buildLimitHandler( fromColumnNameSQL, toRowSelection( 1, 10 ) ).getProcessedSql()
 		);
 	}
 
@@ -113,35 +92,29 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"where persistent0_.type='v'";
 
 		assertEquals(
-				"WITH query AS (select persistent0_.id as col_0_0_, " +
-						"(select max(persistent1_.acceptancedate) " +
-						"from av_advisoryvariant persistent1_ " +
-						"where persistent1_.clientid=persistent0_.id) as col_1_0_, " +
-						"ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ " +
-						"from c_customer persistent0_ " +
-						"where persistent0_.type='v') " +
-						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.getLimitString( subselectInSelectClauseSQL, 2, 5 )
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						subselectInSelectClauseSQL + " ) inner_query ) " +
+						"SELECT col_0_0_, col_1_0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.buildLimitHandler( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) ).getProcessedSql()
 		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6728")
 	public void testGetLimitStringCaseSensitive() {
-		final String caseSensitiveSQL = "select persistent0_.id as col_0_0_, " +
-				"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) as col_1_0_ " +
+		final String caseSensitiveSQL = "select persistent0_.id, persistent0_.uid AS tmp1, " +
+				"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) " +
 				"from C_Customer persistent0_ " +
 				"where persistent0_.type='Va' " +
 				"order by persistent0_.Order";
 
 		assertEquals(
-				"WITH query AS (select persistent0_.id as col_0_0_, " +
-						"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) as col_1_0_, " +
-						"ROW_NUMBER() OVER (order by persistent0_.Order) as __hibernate_row_nr__ " +
-						"from C_Customer persistent0_ " +
-						"where persistent0_.type='Va' ) " +
-						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.getLimitString( caseSensitiveSQL, 1, 2 )
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) persistent0_.id as page0_, persistent0_.uid AS tmp1, " +
+						"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) as page1_ " +
+						"from C_Customer persistent0_ where persistent0_.type='Va' order by persistent0_.Order ) " +
+						"inner_query ) SELECT page0_, tmp1, page1_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.buildLimitHandler( caseSensitiveSQL, toRowSelection( 1, 2 ) ).getProcessedSql()
 		);
 	}
 
@@ -151,10 +124,39 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) as f1 from table849752 p order by f1";
 
 		assertEquals(
-				"WITH query AS (select aggregate_function(distinct p.n) as f1, " +
-						"ROW_NUMBER() OVER (order by f1) as __hibernate_row_nr__ from table849752 p ) " +
-						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.getLimitString( distinctInAggregateSQL, 2, 5 )
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) aggregate_function(distinct p.n) as f1 from table849752 p order by f1 ) inner_query ) " +
+						"SELECT f1 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.buildLimitHandler( distinctInAggregateSQL, toRowSelection( 2, 5 ) ).getProcessedSql()
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7370")
+	public void testGetLimitStringWithMaxOnly() {
+		final String query = "select product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
+				"from Product2 product2x0_ order by product2x0_.id";
+
+		assertEquals(
+				"select TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
+						"from Product2 product2x0_ order by product2x0_.id",
+				dialect.buildLimitHandler( query, toRowSelection( 0, 1 ) ).getProcessedSql()
+		);
+
+		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
+				"from Product2 product2x0_ order by product2x0_.id";
+
+		assertEquals(
+				"select distinct TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
+						"from Product2 product2x0_ order by product2x0_.id",
+				dialect.buildLimitHandler( distinctQuery, toRowSelection( 0, 5 ) ).getProcessedSql()
+		);
+	}
+
+	private RowSelection toRowSelection(int firstRow, int maxRows) {
+		RowSelection selection = new RowSelection();
+		selection.setFirstRow( firstRow );
+		selection.setMaxRows( maxRows );
+		return selection;
 	}
 }

@@ -53,6 +53,9 @@ import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.spi.EntityKey;
@@ -818,15 +821,15 @@ public abstract class Loader {
 			final ResultTransformer forcedResultTransformer) throws SQLException, HibernateException {
 
 		final RowSelection selection = queryParameters.getRowSelection();
-		final int maxRows = hasMaxRows( selection ) ?
+		final int maxRows = LimitHelper.hasMaxRows( selection ) ?
 				selection.getMaxRows() :
 				Integer.MAX_VALUE;
 
 		final int entitySpan = getEntityPersisters().length;
 
 		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
-		final PreparedStatement st = prepareQueryStatement( queryParameters, false, session );
-		final ResultSet rs = getResultSet( st, queryParameters.hasAutoDiscoverScalarTypes(), queryParameters.isCallable(), selection, session );
+		final ResultSet rs = executeQueryStatement( queryParameters, false, session );
+		final PreparedStatement st = (PreparedStatement) rs.getStatement();
 
 // would be great to move all this below here into another method that could also be used
 // from the new scrolling stuff.
@@ -1633,7 +1636,7 @@ public abstract class Loader {
 	private void advance(final ResultSet rs, final RowSelection selection)
 			throws SQLException {
 
-		final int firstRow = getFirstRow( selection );
+		final int firstRow = LimitHelper.getFirstRow( selection );
 		if ( firstRow != 0 ) {
 			if ( getFactory().getSettings().isScrollableResultSetsEnabled() ) {
 				// we can go straight to the first required row
@@ -1646,24 +1649,17 @@ public abstract class Loader {
 		}
 	}
 
-	private static boolean hasMaxRows(RowSelection selection) {
-		return selection != null && selection.getMaxRows() != null && selection.getMaxRows() > 0;
-	}
-
-	private static int getFirstRow(RowSelection selection) {
-		return ( selection == null || selection.getFirstRow() == null ) ? 0 : selection.getFirstRow();
-	}
-
-	private int interpretFirstRow(int zeroBasedFirstResult) {
-		return getFactory().getDialect().convertToFirstRowValue( zeroBasedFirstResult );
-	}
-
 	/**
-	 * Should we pre-process the SQL string, adding a dialect-specific
-	 * LIMIT clause.
+	 * Build LIMIT clause handler applicable for given selection criteria. Returns {@link NoopLimitHandler} delegate
+	 * if dialect does not support LIMIT expression or processed query does not use pagination.
+	 *
+	 * @param sql Query string.
+	 * @param selection Selection criteria.
+	 * @return LIMIT clause delegate.
 	 */
-	private static boolean useLimit(final RowSelection selection, final Dialect dialect) {
-		return dialect.supportsLimit() && hasMaxRows( selection );
+	protected LimitHandler getLimitHandler(String sql, RowSelection selection) {
+		final LimitHandler limitHandler = getFactory().getDialect().buildLimitHandler( sql, selection );
+		return LimitHelper.useLimit( limitHandler, selection ) ? limitHandler : new NoopLimitHandler( sql, selection );
 	}
 
 	private ScrollMode getScrollMode(boolean scroll, boolean hasFirstRow, boolean useLimitOffSet, QueryParameters queryParameters) {
@@ -1678,35 +1674,47 @@ public abstract class Loader {
 		}
 		return null;
 	}
+
+	/**
+	 * Process query string by applying filters, LIMIT clause, locks and comments if necessary.
+	 * Finally execute SQL statement and advance to the first row.
+	 */
+	protected ResultSet executeQueryStatement(
+			final QueryParameters queryParameters,
+			final boolean scroll,
+			final SessionImplementor session) throws SQLException {
+		// Processing query filters.
+		queryParameters.processFilters( getSQLString(), session );
+
+		// Applying LIMIT clause.
+		final LimitHandler limitHandler = getLimitHandler( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
+		String sql = limitHandler.getProcessedSql();
+
+		// Adding locks and comments.
+		sql = preprocessSQL( sql, queryParameters, getFactory().getDialect() );
+
+		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
+		return getResultSet( st, queryParameters.getRowSelection(), limitHandler, queryParameters.hasAutoDiscoverScalarTypes(), session );
+	}
+
 	/**
 	 * Obtain a <tt>PreparedStatement</tt> with all parameters pre-bound.
 	 * Bind JDBC-style <tt>?</tt> parameters, named parameters, and
 	 * limit parameters.
 	 */
 	protected final PreparedStatement prepareQueryStatement(
+	        final String sql,
 	        final QueryParameters queryParameters,
+	        final LimitHandler limitHandler,
 	        final boolean scroll,
 	        final SessionImplementor session) throws SQLException, HibernateException {
-
-		queryParameters.processFilters( getSQLString(), session );
-		String sql = queryParameters.getFilteredSQL();
 		final Dialect dialect = getFactory().getDialect();
 		final RowSelection selection = queryParameters.getRowSelection();
-		boolean useLimit = useLimit( selection, dialect );
-		boolean hasFirstRow = getFirstRow( selection ) > 0;
-		boolean useLimitOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
+		boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
+		boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
+		boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
 		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-
-		if ( useLimit ) {
-			sql = dialect.getLimitString(
-					sql.trim(), //use of trim() here is ugly?
-					useLimitOffset ? getFirstRow(selection) : 0,
-					getMaxOrLimit(selection, dialect)
-				);
-		}
-
-		sql = preprocessSQL( sql, queryParameters, dialect );
 
 		PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 				sql,
@@ -1718,22 +1726,17 @@ public abstract class Loader {
 
 			int col = 1;
 			//TODO: can we limit stored procedures ?!
-			if ( useLimit && dialect.bindLimitParametersFirst() ) {
-				col += bindLimitParameters( st, col, selection );
-			}
+			col += limitHandler.bindLimitParametersAtStartOfQuery( st, col );
+
 			if (callable) {
 				col = dialect.registerResultSetOutParameter( (CallableStatement)st, col );
 			}
 
 			col += bindParameterValues( st, queryParameters, col, session );
 
-			if ( useLimit && !dialect.bindLimitParametersFirst() ) {
-				col += bindLimitParameters( st, col, selection );
-			}
+			col += limitHandler.bindLimitParametersAtEndOfQuery( st, col );
 
-			if ( !useLimit ) {
-				setMaxRows( st, selection );
-			}
+			limitHandler.setMaxRows( st );
 
 			if ( selection != null ) {
 				if ( selection.getTimeout() != null ) {
@@ -1774,63 +1777,6 @@ public abstract class Loader {
 		}
 
 		return st;
-	}
-
-	/**
-	 * Some dialect-specific LIMIT clauses require the maximum last row number
-	 * (aka, first_row_number + total_row_count), while others require the maximum
-	 * returned row count (the total maximum number of rows to return).
-	 *
-	 * @param selection The selection criteria
-	 * @param dialect The dialect
-	 * @return The appropriate value to bind into the limit clause.
-	 */
-	private static int getMaxOrLimit(final RowSelection selection, final Dialect dialect) {
-		final int firstRow = dialect.convertToFirstRowValue( getFirstRow( selection ) );
-		final int lastRow = selection.getMaxRows();
-		return dialect.useMaxForLimit() ? lastRow + firstRow : lastRow;
-	}
-
-	/**
-	 * Bind parameter values needed by the dialect-specific LIMIT clause.
-	 *
-	 * @param statement The statement to which to bind limit param values.
-	 * @param index The bind position from which to start binding
-	 * @param selection The selection object containing the limit information.
-	 * @return The number of parameter values bound.
-	 * @throws java.sql.SQLException Indicates problems binding parameter values.
-	 */
-	private int bindLimitParameters(
-			final PreparedStatement statement,
-			final int index,
-			final RowSelection selection) throws SQLException {
-		Dialect dialect = getFactory().getDialect();
-		if ( !dialect.supportsVariableLimit() ) {
-			return 0;
-		}
-		if ( !hasMaxRows( selection ) ) {
-			throw new AssertionFailure( "no max results set" );
-		}
-		int firstRow = interpretFirstRow( getFirstRow( selection ) );
-		int lastRow = getMaxOrLimit( selection, dialect );
-		boolean hasFirstRow = dialect.supportsLimitOffset() && ( firstRow > 0 || dialect.forceLimitUsage() );
-		boolean reverse = dialect.bindLimitParametersInReverseOrder();
-		if ( hasFirstRow ) {
-			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );
-		}
-		statement.setInt( index + ( reverse || !hasFirstRow ? 0 : 1 ), lastRow );
-		return hasFirstRow ? 2 : 1;
-	}
-
-	/**
-	 * Use JDBC API to limit the number of rows returned by the SQL query if necessary
-	 */
-	private void setMaxRows(
-			final PreparedStatement st,
-			final RowSelection selection) throws SQLException {
-		if ( hasMaxRows( selection ) ) {
-			st.setMaxRows( selection.getMaxRows() + interpretFirstRow( getFirstRow( selection ) ) );
-		}
 	}
 
 	/**
@@ -1936,24 +1882,21 @@ public abstract class Loader {
 	}
 
 	/**
-	 * Fetch a <tt>PreparedStatement</tt>, call <tt>setMaxRows</tt> and then execute it,
-	 * advance to the first result and return an SQL <tt>ResultSet</tt>
+	 * Execute given <tt>PreparedStatement</tt>, advance to the first result and return SQL <tt>ResultSet</tt>.
 	 */
 	protected final ResultSet getResultSet(
 	        final PreparedStatement st,
-	        final boolean autodiscovertypes,
-	        final boolean callable,
 	        final RowSelection selection,
+	        final LimitHandler limitHandler,
+	        final boolean autodiscovertypes,
 	        final SessionImplementor session)
 	throws SQLException, HibernateException {
 
-		ResultSet rs = null;
 		try {
-			Dialect dialect = getFactory().getDialect();
-			rs = st.executeQuery();
+			ResultSet rs = st.executeQuery();
 			rs = wrapResultSetIfEnabled( rs , session );
 
-			if ( !dialect.supportsLimitOffset() || !useLimit( selection, dialect ) ) {
+			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
 				advance( rs, selection );
 			}
 
@@ -2505,9 +2448,8 @@ public abstract class Loader {
 		if ( stats ) startTime = System.currentTimeMillis();
 
 		try {
-
-			PreparedStatement st = prepareQueryStatement( queryParameters, true, session );
-			ResultSet rs = getResultSet(st, queryParameters.hasAutoDiscoverScalarTypes(), queryParameters.isCallable(), queryParameters.getRowSelection(), session);
+			final ResultSet rs = executeQueryStatement( queryParameters, true, session );
+			final PreparedStatement st = (PreparedStatement) rs.getStatement();
 
 			if ( stats ) {
 				getFactory().getStatisticsImplementor().queryExecuted(

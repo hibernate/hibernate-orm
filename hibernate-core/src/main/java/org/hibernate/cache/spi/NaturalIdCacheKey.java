@@ -28,6 +28,7 @@ import java.util.Arrays;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -43,6 +44,7 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
+	private final Value<String> toString;
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
@@ -80,6 +82,25 @@ public class NaturalIdCacheKey implements Serializable {
 		}
 		
 		this.hashCode = result;
+		this.toString = new Value<String>(
+				new Value.DeferredInitializer<String>() {
+					@Override
+					public String initialize() {
+						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
+						//the only same way to differentiate the keys is to included the disassembled values in the string.
+						final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
+						for ( int i = 0; i < naturalIdValues.length; i++ ) {
+							toStringBuilder.append( naturalIdValues[i] );
+							if ( i + 1 < naturalIdValues.length ) {
+								toStringBuilder.append( ", " );
+							}
+						}
+						toStringBuilder.append( "]" );
+
+						return toStringBuilder.toString();
+					}
+				}
+		);
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -99,18 +120,7 @@ public class NaturalIdCacheKey implements Serializable {
 
 	@Override
 	public String toString() {
-		//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
-		//the only sane way to differentiate the keys is to included the disassembled values in the string.
-		final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			toStringBuilder.append( naturalIdValues[i] );
-			if (i + 1 < naturalIdValues.length) {
-				toStringBuilder.append( ", " );
-			}
-		}
-		toStringBuilder.append( "]" );
-		
-		return toStringBuilder.toString();
+		return toString.getValue();
 	}
 	
 	@Override
@@ -124,7 +134,7 @@ public class NaturalIdCacheKey implements Serializable {
 			return true;
 		}
 		
-		if ( !(o instanceof NaturalIdCacheKey) || hashCode != o.hashCode() ) {
+		if ( hashCode != o.hashCode() || !(o instanceof NaturalIdCacheKey) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}

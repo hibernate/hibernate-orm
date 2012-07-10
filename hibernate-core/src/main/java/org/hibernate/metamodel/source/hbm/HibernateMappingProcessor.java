@@ -37,7 +37,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
@@ -59,8 +59,8 @@ public class HibernateMappingProcessor {
 	private final MetadataImplementor metadata;
 	private final MappingDocument mappingDocument;
 
-	private Value<ClassLoaderService> classLoaderService = new Value<ClassLoaderService>(
-			new Value.DeferredInitializer<ClassLoaderService>() {
+	private ValueHolder<ClassLoaderService> classLoaderService = new ValueHolder<ClassLoaderService>(
+			new ValueHolder.DeferredInitializer<ClassLoaderService>() {
 				@Override
 				public ClassLoaderService initialize() {
 					return metadata.getServiceRegistry().getService( ClassLoaderService.class );

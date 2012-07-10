@@ -28,7 +28,7 @@ import java.sql.Types;
 import org.junit.Test;
 
 import org.hibernate.EntityMode;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
@@ -74,9 +74,9 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		//attributeBinding.setValue( idColumn );
 	}
 
-	Value<Class<?>> makeJavaType(final String name) {
-		return new Value<Class<?>>(
-				new Value.DeferredInitializer<Class<?>>() {
+	ValueHolder<Class<?>> makeJavaType(final String name) {
+		return new ValueHolder<Class<?>>(
+				new ValueHolder.DeferredInitializer<Class<?>>() {
 					@Override
 					public Class<?> initialize() {
 						try {

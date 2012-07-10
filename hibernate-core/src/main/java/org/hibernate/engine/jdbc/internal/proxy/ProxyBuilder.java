@@ -36,7 +36,7 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Centralized builder for proxy instances
@@ -52,8 +52,8 @@ public class ProxyBuilder {
 			JdbcWrapper.class
 	};
 
-	private static final Value<Constructor<Connection>> connectionProxyConstructorValue = new Value<Constructor<Connection>>(
-			new Value.DeferredInitializer<Constructor<Connection>>() {
+	private static final ValueHolder<Constructor<Connection>> connectionProxyConstructorValue = new ValueHolder<Constructor<Connection>>(
+			new ValueHolder.DeferredInitializer<Constructor<Connection>>() {
 				@Override
 				public Constructor<Connection> initialize() {
 					try {
@@ -93,8 +93,8 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
-	private static final Value<Constructor<Statement>> statementProxyConstructorValue = new Value<Constructor<Statement>>(
-			new Value.DeferredInitializer<Constructor<Statement>>() {
+	private static final ValueHolder<Constructor<Statement>> statementProxyConstructorValue = new ValueHolder<Constructor<Statement>>(
+			new ValueHolder.DeferredInitializer<Constructor<Statement>>() {
 				@Override
 				public Constructor<Statement> initialize() {
 					try {
@@ -157,8 +157,8 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
-	private static final Value<Constructor<PreparedStatement>> preparedStatementProxyConstructorValue = new Value<Constructor<PreparedStatement>>(
-			new Value.DeferredInitializer<Constructor<PreparedStatement>>() {
+	private static final ValueHolder<Constructor<PreparedStatement>> preparedStatementProxyConstructorValue = new ValueHolder<Constructor<PreparedStatement>>(
+			new ValueHolder.DeferredInitializer<Constructor<PreparedStatement>>() {
 				@Override
 				public Constructor<PreparedStatement> initialize() {
 					try {
@@ -207,8 +207,8 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
-	private static final Value<Constructor<CallableStatement>> callableStatementProxyConstructorValue = new Value<Constructor<CallableStatement>>(
-			new Value.DeferredInitializer<Constructor<CallableStatement>>() {
+	private static final ValueHolder<Constructor<CallableStatement>> callableStatementProxyConstructorValue = new ValueHolder<Constructor<CallableStatement>>(
+			new ValueHolder.DeferredInitializer<Constructor<CallableStatement>>() {
 				@Override
 				public Constructor<CallableStatement> initialize() {
 					try {
@@ -257,8 +257,8 @@ public class ProxyBuilder {
 			InvalidatableWrapper.class
 	};
 
-	private static final Value<Constructor<ResultSet>> resultSetProxyConstructorValue = new Value<Constructor<ResultSet>>(
-			new Value.DeferredInitializer<Constructor<ResultSet>>() {
+	private static final ValueHolder<Constructor<ResultSet>> resultSetProxyConstructorValue = new ValueHolder<Constructor<ResultSet>>(
+			new ValueHolder.DeferredInitializer<Constructor<ResultSet>>() {
 				@Override
 				public Constructor<ResultSet> initialize() {
 					try {
@@ -336,8 +336,8 @@ public class ProxyBuilder {
 			JdbcWrapper.class
 	};
 
-	private static final Value<Constructor<DatabaseMetaData>> metadataProxyConstructorValue = new Value<Constructor<DatabaseMetaData>>(
-			new Value.DeferredInitializer<Constructor<DatabaseMetaData>>() {
+	private static final ValueHolder<Constructor<DatabaseMetaData>> metadataProxyConstructorValue = new ValueHolder<Constructor<DatabaseMetaData>>(
+			new ValueHolder.DeferredInitializer<Constructor<DatabaseMetaData>>() {
 				@Override
 				public Constructor<DatabaseMetaData> initialize() {
 					try {

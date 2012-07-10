@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.source.binder;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ import org.hibernate.internal.util.Value;
 public interface CompositePluralAttributeElementSource extends PluralAttributeElementSource, AttributeSourceContainer {
 	public String getClassName();
 
-	public Value<Class<?>> getClassReference();
+	public ValueHolder<Class<?>> getClassReference();
 
 	public String getParentReferenceAttributeName();
 

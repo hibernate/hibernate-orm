@@ -35,7 +35,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -47,15 +47,15 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  */
 public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	private final MetadataImplementor metadata;
-	private final Value<ClassLoaderService> classLoaderService;
+	private final ValueHolder<ClassLoaderService> classLoaderService;
 	private final Index index;
 	private final TypeResolver typeResolver = new TypeResolver();
 	private final Map<Class<?>, ResolvedType> resolvedTypeCache = new HashMap<Class<?>, ResolvedType>();
 
 	public AnnotationBindingContextImpl(MetadataImplementor metadata, Index index) {
 		this.metadata = metadata;
-		this.classLoaderService = new Value<ClassLoaderService>(
-				new Value.DeferredInitializer<ClassLoaderService>() {
+		this.classLoaderService = new ValueHolder<ClassLoaderService>(
+				new ValueHolder.DeferredInitializer<ClassLoaderService>() {
 					@Override
 					public ClassLoaderService initialize() {
 						return AnnotationBindingContextImpl.this.metadata
@@ -144,8 +144,8 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	}
 
 	@Override
-	public Value<Class<?>> makeClassReference(String className) {
-		return new Value<Class<?>>( locateClassByName( className ) );
+	public ValueHolder<Class<?>> makeClassReference(String className) {
+		return new ValueHolder<Class<?>>( locateClassByName( className ) );
 	}
 
 	@Override

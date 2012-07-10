@@ -33,7 +33,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Entity;
@@ -66,7 +66,7 @@ public class EntityBinding implements AttributeBindingContainer {
     private String primaryTableName;
 	private Map<String, TableSpecification> secondaryTables = new HashMap<String, TableSpecification>();
 
-	private Value<Class<?>> proxyInterfaceType;
+	private ValueHolder<Class<?>> proxyInterfaceType;
 
 	private String jpaEntityName;
 
@@ -340,11 +340,11 @@ public class EntityBinding implements AttributeBindingContainer {
 		this.lazy = lazy;
 	}
 
-	public Value<Class<?>> getProxyInterfaceType() {
+	public ValueHolder<Class<?>> getProxyInterfaceType() {
 		return proxyInterfaceType;
 	}
 
-	public void setProxyInterfaceType(Value<Class<?>> proxyInterfaceType) {
+	public void setProxyInterfaceType(ValueHolder<Class<?>> proxyInterfaceType) {
 		this.proxyInterfaceType = proxyInterfaceType;
 	}
 

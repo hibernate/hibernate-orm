@@ -40,7 +40,7 @@ import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -170,8 +170,8 @@ public class ServiceRegistryBuilder {
 		return this;
 	}
 
-	private Value<JaxbProcessor> jaxbProcessorHolder = new Value<JaxbProcessor>(
-			new Value.DeferredInitializer<JaxbProcessor>() {
+	private ValueHolder<JaxbProcessor> jaxbProcessorHolder = new ValueHolder<JaxbProcessor>(
+			new ValueHolder.DeferredInitializer<JaxbProcessor>() {
 				@Override
 				public JaxbProcessor initialize() {
 					return new JaxbProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );

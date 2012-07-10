@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MappingException;
@@ -126,8 +126,8 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 		return true;
 	}
 
-	private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
-			new Value.DeferredInitializer<PropertyGeneration>() {
+	private ValueHolder<PropertyGeneration> propertyGenerationValue = new ValueHolder<PropertyGeneration>(
+			new ValueHolder.DeferredInitializer<PropertyGeneration>() {
 				@Override
 				public PropertyGeneration initialize() {
 					final PropertyGeneration propertyGeneration = timestampElement.getGenerated() == null

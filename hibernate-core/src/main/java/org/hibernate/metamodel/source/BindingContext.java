@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.source;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
@@ -46,7 +46,7 @@ public interface BindingContext {
 
 	public boolean isGloballyQuotedIdentifiers();
 
-	public Value<Class<?>> makeClassReference(String className);
+	public ValueHolder<Class<?>> makeClassReference(String className);
 
 	public String qualifyClassName(String name);
 }

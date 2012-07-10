@@ -30,7 +30,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.CompositePluralAttributeElementSource;
@@ -61,7 +61,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public Value<Class<?>> getClassReference() {
+	public ValueHolder<Class<?>> getClassReference() {
 		return bindingContext.makeClassReference( getClassName() );
 	}
 

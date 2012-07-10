@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.domain;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -34,12 +34,12 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  */
 public class JavaType {
 	private final String name;
-	private final Value<Class<?>> classReference;
+	private final ValueHolder<Class<?>> classReference;
 
 	public JavaType(final String name, final ClassLoaderService classLoaderService) {
 		this.name = name;
-		this.classReference = new Value<Class<?>>(
-				new Value.DeferredInitializer<Class<?>>() {
+		this.classReference = new ValueHolder<Class<?>>(
+				new ValueHolder.DeferredInitializer<Class<?>>() {
 					@Override
 					public Class<?> initialize() {
 						return classLoaderService.classForName( name );
@@ -50,7 +50,7 @@ public class JavaType {
 
 	public JavaType(Class<?> theClass) {
 		this.name = theClass.getName();
-		this.classReference = new Value<Class<?>>( theClass );
+		this.classReference = new ValueHolder<Class<?>>( theClass );
 	}
 
 	public String getName() {

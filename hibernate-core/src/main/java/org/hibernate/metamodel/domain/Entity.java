@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.domain;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Models the notion of an entity
@@ -40,7 +40,7 @@ public class Entity extends AbstractAttributeContainer {
 	 * @param classReference The reference to this entity's {@link Class}
 	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Entity(String entityName, String className, Value<Class<?>> classReference, Hierarchical superType) {
+	public Entity(String entityName, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
 		super( entityName, className, classReference, superType );
 	}
 

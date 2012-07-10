@@ -36,7 +36,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.AttributeSource;
@@ -54,7 +54,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private final JaxbComponentElement componentElement;
 	private final AttributeSourceContainer parentContainer;
 
-	private final Value<Class<?>> componentClassReference;
+	private final ValueHolder<Class<?>> componentClassReference;
 	private final String path;
 
 	public ComponentAttributeSourceImpl(
@@ -76,7 +76,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public Value<Class<?>> getClassReference() {
+	public ValueHolder<Class<?>> getClassReference() {
 		return componentClassReference;
 	}
 

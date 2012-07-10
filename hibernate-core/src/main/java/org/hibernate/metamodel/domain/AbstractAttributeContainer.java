@@ -30,7 +30,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Convenient base class for {@link AttributeContainer}.  Because in our model all
@@ -42,12 +42,12 @@ import org.hibernate.internal.util.Value;
 public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
 	private final String className;
-	private final Value<Class<?>> classReference;
+	private final ValueHolder<Class<?>> classReference;
 	private final Hierarchical superType;
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
-	public AbstractAttributeContainer(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
+	public AbstractAttributeContainer(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
 		this.name = name;
 		this.className = className;
 		this.classReference = classReference;
@@ -70,7 +70,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public Value<Class<?>> getClassReferenceUnresolved() {
+	public ValueHolder<Class<?>> getClassReferenceUnresolved() {
 		return classReference;
 	}
 

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.domain;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Models a basic type.
@@ -32,9 +32,9 @@ import org.hibernate.internal.util.Value;
  */
 public class BasicType implements Type {
 	private final String name;
-	private final Value<Class<?>> classReference;
+	private final ValueHolder<Class<?>> classReference;
 
-	public BasicType(String name, Value<Class<?>> classReference) {
+	public BasicType(String name, ValueHolder<Class<?>> classReference) {
 		this.name = name;
 		this.classReference = classReference;
 	}
@@ -55,7 +55,7 @@ public class BasicType implements Type {
 	}
 
 	@Override
-	public Value<Class<?>> getClassReferenceUnresolved() {
+	public ValueHolder<Class<?>> getClassReferenceUnresolved() {
 		return classReference;
 	}
 

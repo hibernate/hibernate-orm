@@ -24,12 +24,12 @@
 package org.hibernate.internal.util;
 
 /**
- * Represents a "final" value that is initialized either {@link #Value(Object) up front} or once at some point
- * {@link #Value(org.hibernate.internal.util.Value.DeferredInitializer) after} declaration.
+ * Represents a "final" value that is initialized either {@link #ValueHolder(Object) up front} or once at some point
+ * {@link #ValueHolder(ValueHolder.DeferredInitializer) after} declaration.
  *
  * @author Steve Ebersole
  */
-public class Value<T> {
+public class ValueHolder<T> {
 
 	/**
 	 * The snippet that generates the initialization value.
@@ -51,16 +51,16 @@ public class Value<T> {
 	private T value;
 
 	/**
-	 * Instantiates a {@link Value} with the specified initializer.
+	 * Instantiates a {@link ValueHolder} with the specified initializer.
 	 *
 	 * @param valueInitializer The initializer to use in {@link #getValue} when value not yet known.
 	 */
-	public Value(DeferredInitializer<T> valueInitializer) {
+	public ValueHolder(DeferredInitializer<T> valueInitializer) {
 		this.valueInitializer = valueInitializer;
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	public Value(T value) {
+	public ValueHolder(T value) {
 		this( NO_DEFERRED_INITIALIZER );
 		this.value = value;
 	}

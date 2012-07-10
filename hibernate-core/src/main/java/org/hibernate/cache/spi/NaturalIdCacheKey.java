@@ -28,7 +28,7 @@ import java.util.Arrays;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -44,7 +44,7 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
-	private final Value<String> toString;
+	private final ValueHolder<String> toString;
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
@@ -82,8 +82,8 @@ public class NaturalIdCacheKey implements Serializable {
 		}
 		
 		this.hashCode = result;
-		this.toString = new Value<String>(
-				new Value.DeferredInitializer<String>() {
+		this.toString = new ValueHolder<String>(
+				new ValueHolder.DeferredInitializer<String>() {
 					@Override
 					public String initialize() {
 						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys

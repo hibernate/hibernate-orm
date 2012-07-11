@@ -1278,6 +1278,8 @@ public abstract class CollectionBinder {
 				}
 				elementBinder.setColumns( elementColumns );
 				elementBinder.setType( property, elementClass );
+				elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
+				elementBinder.setAccessType( accessType );
 				collValue.setElement( elementBinder.make() );
 				String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 				if ( orderBy != null ) {

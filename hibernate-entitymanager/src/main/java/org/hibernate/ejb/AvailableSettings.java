@@ -31,7 +31,7 @@ package org.hibernate.ejb;
  *
  * @author Steve Ebersole
  */
-public class AvailableSettings {
+public interface AvailableSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA defined settings

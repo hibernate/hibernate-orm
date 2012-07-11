@@ -34,6 +34,7 @@ import javax.persistence.TypedQuery;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -532,8 +533,8 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<Parameter<?>> getParameters() {
-		return (Set<Parameter<?>>) parameterBindingMap().keySet();
+	public Set getParameters() {
+		return parameterBindingMap().keySet();
 	}
 
 	@Override

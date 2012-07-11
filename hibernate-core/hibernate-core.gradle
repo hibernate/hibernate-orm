@@ -10,19 +10,17 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
+    compile( libraries.jandex )
+    compile( libraries.classmate )
 
     antlr( libraries.antlr )
 
-    provided( libraries.jandex )
-    provided( libraries.classmate )
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
-    testCompile( libraries.jandex )
-    testCompile( libraries.classmate )
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true

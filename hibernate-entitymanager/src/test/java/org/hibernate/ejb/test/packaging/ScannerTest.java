@@ -28,6 +28,7 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
@@ -63,6 +64,7 @@ public class ScannerTest extends PackagingTestCase {
 		annotationsToLookFor.add( Entity.class );
 		annotationsToLookFor.add( MappedSuperclass.class );
 		annotationsToLookFor.add( Embeddable.class );
+		annotationsToLookFor.add( Converter.class );
 		final Set<Class<?>> classes = scanner.getClassesInJar( defaultPar.toURL(), annotationsToLookFor );
 
 		assertEquals( 3, classes.size() );

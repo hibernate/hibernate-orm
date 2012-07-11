@@ -36,6 +36,7 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -60,24 +61,53 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor> imple
 	@SuppressWarnings( {"unchecked"})
 	public TransactionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object strategy = configurationValues.get( Environment.TRANSACTION_STRATEGY );
-		if ( TransactionFactory.class.isInstance( strategy ) ) {
-			return (TransactionFactory) strategy;
-		}
-
 		if ( strategy == null ) {
 			LOG.usingDefaultTransactionStrategy();
 			return new JdbcTransactionFactory();
 		}
 
-		final String strategyClassName = mapLegacyNames( strategy.toString() );
-		LOG.transactionStrategy( strategyClassName );
+		if ( TransactionFactory.class.isInstance( strategy ) ) {
+			return (TransactionFactory) strategy;
+		}
 
-		ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+		Class<? extends TransactionFactory> transactionFactoryClass;
+		if ( Class.class.isInstance( strategy ) ) {
+			final Class theClass = (Class) strategy;
+			LOG.transactionStrategy( theClass.getName() );
+			try {
+				transactionFactoryClass = (Class<? extends TransactionFactory>) theClass;
+			}
+			catch (ClassCastException e) {
+				throw new ClassLoadingException(
+						String.format(
+								"TransactionFactory implementation class [%s] did not implement TransactionFactory interface",
+								theClass.getName()
+						)
+				);
+			}
+		}
+		else {
+			final String strategyClassName = mapLegacyNames( strategy.toString() );
+			LOG.transactionStrategy( strategyClassName );
+
+			try {
+				transactionFactoryClass = registry.getService( ClassLoaderService.class ).classForName( strategyClassName );
+			}
+			catch (ClassCastException e) {
+				throw new ClassLoadingException(
+						String.format(
+								"TransactionFactory implementation class [%s] did not implement TransactionFactory interface",
+								strategyClassName
+						)
+				);
+			}
+		}
+
 		try {
-			return (TransactionFactory) classLoaderService.classForName( strategyClassName ).newInstance();
+			return transactionFactoryClass.newInstance();
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Unable to instantiate specified TransactionFactory class [" + strategyClassName + "]", e );
+			throw new HibernateException( "Unable to instantiate specified TransactionFactory class [" + transactionFactoryClass.getName() + "]", e );
 		}
 	}
 

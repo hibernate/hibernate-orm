@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
@@ -143,10 +144,11 @@ public class NativeScanner implements Scanner {
 	}
 
 	private boolean isValidForClasses(Set<Class<? extends Annotation>> annotationsToLookFor) {
-		return annotationsToLookFor.size() != 3
+		return annotationsToLookFor.size() != 4
 				|| !annotationsToLookFor.contains( Entity.class )
 				|| !annotationsToLookFor.contains( MappedSuperclass.class )
-				|| !annotationsToLookFor.contains( Embeddable.class );
+				|| !annotationsToLookFor.contains( Embeddable.class )
+				|| !annotationsToLookFor.contains( Converter.class );
 	}
 
 	/**

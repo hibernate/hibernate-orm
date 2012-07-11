@@ -23,15 +23,6 @@
  */
 package org.hibernate.ejb;
 
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
 import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -43,6 +34,14 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -50,6 +49,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.ejb.boot.internal.SettingsImpl;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.internal.EntityManagerFactoryRegistry;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
@@ -100,10 +100,26 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			Configuration cfg,
 			ServiceRegistry serviceRegistry,
 			String persistenceUnitName) {
-		this.sessionFactory = (SessionFactoryImpl) cfg.buildSessionFactory( serviceRegistry );
-		this.transactionType = transactionType;
-		this.discardOnClose = discardOnClose;
-		this.sessionInterceptorClass = sessionInterceptorClass;
+		this(
+				persistenceUnitName,
+				(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry ),
+				new SettingsImpl().setReleaseResourcesOnCloseEnabled( discardOnClose ).setSessionInterceptorClass( sessionInterceptorClass ).setTransactionType( transactionType ),
+				cfg.getProperties(),
+				cfg
+		);
+	}
+
+	public EntityManagerFactoryImpl(
+			String persistenceUnitName,
+			SessionFactoryImplementor sessionFactory,
+			SettingsImpl settings,
+			Map<?, ?> configurationValues,
+			Configuration cfg) {
+		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
+		this.transactionType = settings.getTransactionType();
+		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
+		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
+
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
 		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
 		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
@@ -112,7 +128,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		else {
 			this.metamodel = MetamodelImpl.buildMetamodel(
 					classes,
-					( SessionFactoryImplementor ) sessionFactory,
+					sessionFactory,
 					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
 			);
 		}
@@ -120,8 +136,9 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.util = new HibernatePersistenceUnitUtil( this );
 
 		HashMap<String,Object> props = new HashMap<String, Object>();
-		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
+		addAll( props, sessionFactory.getProperties() );
 		addAll( props, cfg.getProperties() );
+		addAll( props, configurationValues );
 		this.properties = Collections.unmodifiableMap( props );
 		String entityManagerFactoryName = (String)this.properties.get(AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);
 		if (entityManagerFactoryName == null) {
@@ -133,7 +150,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.entityManagerFactoryName = entityManagerFactoryName;
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
 	}
-	
+
 	private enum JpaMetaModelPopulationSetting {
 		ENABLED,
 		DISABLED,
@@ -171,10 +188,10 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
-	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {
-		for ( Map.Entry entry : properties.entrySet() ) {
+	private static void addAll(HashMap<String, Object> destination, Map<?,?> source) {
+		for ( Map.Entry entry : source.entrySet() ) {
 			if ( String.class.isInstance( entry.getKey() ) ) {
-				propertyMap.put( (String)entry.getKey(), entry.getValue() );
+				destination.put( (String) entry.getKey(), entry.getValue() );
 			}
 		}
 	}

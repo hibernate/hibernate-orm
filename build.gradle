@@ -168,7 +168,7 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
 
-        aptDumpDir = file( "${buildDir}/tmp/apt" )
+        aptDumpDir = subProject.file( "${buildDir}/tmp/apt" )
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -200,7 +200,7 @@ subprojects { subProject ->
             );
             outputs.dir sourceSets.main.generatedLoggingSrcDir;
             doFirst {
-                source = sourceSets.main.originalJavaSrcDirs
+//                source = sourceSets.main.originalJavaSrcDirs
                 sourceSets.main.generatedLoggingSrcDir.mkdirs()
             }
         }

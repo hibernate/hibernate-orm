@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util;
+import java.io.Serializable;
 
 /**
  * Represents a "final" value that is initialized either {@link #ValueHolder(Object) up front} or once at some point
@@ -29,14 +30,14 @@ package org.hibernate.internal.util;
  *
  * @author Steve Ebersole
  */
-public class ValueHolder<T> {
+public class ValueHolder<T> implements Serializable {
 
 	/**
 	 * The snippet that generates the initialization value.
 	 *
 	 * @param <T>
 	 */
-	public static interface DeferredInitializer<T> {
+	public static interface DeferredInitializer<T> extends Serializable {
 		/**
 		 * Build the initialization value.
 		 * <p/>

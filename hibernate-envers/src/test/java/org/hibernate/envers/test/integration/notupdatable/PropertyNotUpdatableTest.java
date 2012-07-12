@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.notupdatable;
 
 import junit.framework.Assert;
-import org.hibernate.ejb.Ejb3Configuration;
+
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.TestForIssue;

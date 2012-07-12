@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneComponent;
@@ -45,9 +44,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class HasChangedManyToOneInComponent extends AbstractModifiedFlagsEntityTest {
     private Integer mtocte_id1;
 
-	public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ManyToOneComponentTestEntity.class);
-		cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ManyToOneComponentTestEntity.class, StrTestEntity.class };
     }
 
     @Test

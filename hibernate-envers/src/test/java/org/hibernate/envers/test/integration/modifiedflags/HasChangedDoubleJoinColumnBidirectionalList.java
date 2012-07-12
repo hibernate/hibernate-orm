@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
@@ -53,10 +52,13 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
     private Integer ing1_id;
     private Integer ing2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(DoubleListJoinColumnBidirectionalRefIngEntity.class);
-        cfg.addAnnotatedClass(DoubleListJoinColumnBidirectionalRefEdEntity1.class);
-        cfg.addAnnotatedClass(DoubleListJoinColumnBidirectionalRefEdEntity2.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				DoubleListJoinColumnBidirectionalRefIngEntity.class,
+				DoubleListJoinColumnBidirectionalRefEdEntity1.class,
+				DoubleListJoinColumnBidirectionalRefEdEntity2.class
+		};
     }
 
     @Test

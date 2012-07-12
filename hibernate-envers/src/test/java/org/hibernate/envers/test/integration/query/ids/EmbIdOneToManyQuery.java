@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -50,9 +49,9 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
     private EmbId id3;
     private EmbId id4;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(SetRefEdEmbIdEntity.class);
-        cfg.addAnnotatedClass(SetRefIngEmbIdEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class };
     }
 
     @Test

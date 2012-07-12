@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.DateIdTestEntity;
@@ -40,8 +39,9 @@ import org.hibernate.envers.test.entities.ids.DateIdTestEntity;
 public class DateId extends BaseEnversJPAFunctionalTestCase {
     private Date id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(DateIdTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { DateIdTestEntity.class };
     }
 
     @Test

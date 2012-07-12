@@ -23,9 +23,14 @@
  */
 package org.hibernate.ejb.test.metagen.mappedsuperclass.attribute;
 
+import javax.persistence.EntityManagerFactory;
+import java.util.Arrays;
+
+import org.hibernate.ejb.test.TestingEntityManagerFactoryGenerator;
+import org.hibernate.jpa.AvailableSettings;
+
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -38,11 +43,16 @@ import static org.junit.Assert.assertNotNull;
 public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	@Test
 	public void testStaticMetamodel() {
-		new Ejb3Configuration().addAnnotatedClass( Product.class ).buildEntityManagerFactory();
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList( Product.class )
+		);
 
 		assertNotNull( "'Product_.id' should not be null)", Product_.id );
 		assertNotNull( "'Product_.name' should not be null)", Product_.name );
 
 		assertNotNull( "'AbstractNameable_.name' should not be null)", AbstractNameable_.name );
+
+		emf.close();
 	}
 }

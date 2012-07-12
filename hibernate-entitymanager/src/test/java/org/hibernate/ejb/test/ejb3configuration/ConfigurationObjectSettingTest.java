@@ -30,9 +30,11 @@ import javax.persistence.ValidationMode;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.packaging.PersistenceMetadata;
+import org.hibernate.ejb.test.PersistenceUnitInfoAdapter;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -50,21 +52,19 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
 		{
 			// as object
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(),configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
 		}
 		{
 			// as string
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE.name() )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
 		}
 
 		// next, via the PUI
@@ -75,19 +75,20 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 			}
 		};
 		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure( adapter, null );
-			assertEquals( SharedCacheMode.ENABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+					adapter,
+					null
+			);
+			assertEquals( SharedCacheMode.ENABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
 		}
 
 		// via both, integration vars should take precedence
 		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.SHARED_CACHE_MODE ) );
 		}
 	}
 
@@ -97,21 +98,19 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
 		{
 			// as object
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK )
 			);
-			assertEquals( ValidationMode.CALLBACK.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
 		}
 		{
 			// as string
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK.name() )
 			);
-			assertEquals( ValidationMode.CALLBACK.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.CALLBACK.name(), builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
 		}
 
 		// next, via the PUI
@@ -122,19 +121,20 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 			}
 		};
 		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure( adapter, null );
-			assertEquals( ValidationMode.CALLBACK.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+					adapter,
+					null
+			);
+			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
 		}
 
 		// via both, integration vars should take precedence
 		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.NONE )
 			);
-			assertEquals( ValidationMode.NONE.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
+			assertEquals( ValidationMode.NONE, builder.getConfigurationValues().get( AvailableSettings.VALIDATION_MODE ) );
 		}
 	}
 
@@ -142,112 +142,9 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 	public void testContainerBootstrapValidationFactory() {
 		final Object token = new Object();
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
-		Ejb3Configuration cfg = new Ejb3Configuration();
 		try {
-			cfg.configure(
+			Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
-					Collections.singletonMap( AvailableSettings.VALIDATION_FACTORY, token )
-			);
-			fail( "Was expecting error as token did not implement ValidatorFactory" );
-		}
-		catch ( HibernateException e ) {
-			// probably the condition we want but unfortunately the exception is not specific
-			// and the pertinent info is in a cause
-		}
-	}
-
-	@Test
-	public void testStandaloneBootstrapSharedCacheMode() {
-		// first, via the integration vars
-		PersistenceMetadata metadata = new PersistenceMetadata();
-		{
-			// as object
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
-			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
-		}
-		{
-			// as string
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE.name() )
-			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
-		}
-
-		// next, via the PM
-		metadata.setSharedCacheMode( SharedCacheMode.ENABLE_SELECTIVE.name() );
-		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure( metadata, null );
-			assertEquals( SharedCacheMode.ENABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
-		}
-
-		// via both, integration vars should take precedence
-		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
-			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
-		}
-	}
-
-	@Test
-	public void testStandaloneBootstrapValidationMode() {
-		// first, via the integration vars
-		PersistenceMetadata metadata = new PersistenceMetadata();
-		{
-			// as object
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK )
-			);
-			assertEquals( ValidationMode.CALLBACK.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
-		}
-		{
-			// as string
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.CALLBACK.name() )
-			);
-			assertEquals( ValidationMode.CALLBACK.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
-		}
-
-		// next, via the PUI
-		metadata.setValidationMode( ValidationMode.AUTO.name() );
-		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure( metadata, null );
-			assertEquals( ValidationMode.AUTO.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
-		}
-
-		// via both, integration vars should take precedence
-		{
-			Ejb3Configuration cfg = new Ejb3Configuration();
-			Ejb3Configuration configured = cfg.configure(
-					metadata,
-					Collections.singletonMap( AvailableSettings.VALIDATION_MODE, ValidationMode.NONE )
-			);
-			assertEquals( ValidationMode.NONE.name(), configured.getProperties().get( AvailableSettings.VALIDATION_MODE ) );
-		}
-	}
-
-	@Test
-	public void testStandaloneBootstrapValidationFactory() {
-		final Object token = new Object();
-		PersistenceMetadata metadata = new PersistenceMetadata();
-		Ejb3Configuration cfg = new Ejb3Configuration();
-		try {
-			cfg.configure(
-					metadata,
 					Collections.singletonMap( AvailableSettings.VALIDATION_FACTORY, token )
 			);
 			fail( "Was expecting error as token did not implement ValidatorFactory" );

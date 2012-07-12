@@ -23,29 +23,37 @@
  */
 package org.hibernate.ejb.test.cacheable.annotation;
 
-import java.util.Properties;
 import javax.persistence.SharedCacheMode;
-
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.test.PersistenceUnitInfoAdapter;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.mapping.PersistentClass;
+
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
+ * this is hacky transient step until EMF building is integrated with metamodel
+ *
  * @author Steve Ebersole
  */
 public class ConfigurationTest extends BaseUnitTestCase {
 	@Test
 	public void testSharedCacheModeNone() {
-		Ejb3Configuration config = buildConfiguration( SharedCacheMode.NONE );
+		Configuration config = buildConfiguration( SharedCacheMode.NONE );
 
 		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
@@ -59,7 +67,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSharedCacheModeUnspecified() {
-		Ejb3Configuration config = buildConfiguration( SharedCacheMode.UNSPECIFIED );
+		Configuration config = buildConfiguration( SharedCacheMode.UNSPECIFIED );
 
 		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
@@ -73,7 +81,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSharedCacheModeAll() {
-		Ejb3Configuration config = buildConfiguration( SharedCacheMode.ALL );
+		Configuration config = buildConfiguration( SharedCacheMode.ALL );
 
 		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
@@ -87,7 +95,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSharedCacheModeEnable() {
-		Ejb3Configuration config = buildConfiguration( SharedCacheMode.ENABLE_SELECTIVE );
+		Configuration config = buildConfiguration( SharedCacheMode.ENABLE_SELECTIVE );
 
 		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
@@ -101,7 +109,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSharedCacheModeDisable() {
-		Ejb3Configuration config = buildConfiguration( SharedCacheMode.DISABLE_SELECTIVE );
+		Configuration config = buildConfiguration( SharedCacheMode.DISABLE_SELECTIVE );
 
 		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
@@ -113,17 +121,30 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 	}
 
-	private Ejb3Configuration buildConfiguration(SharedCacheMode mode) {
-		Properties properties = new Properties();
-		properties.put( AvailableSettings.SHARED_CACHE_MODE, mode );
-		properties.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
-		Ejb3Configuration config = new Ejb3Configuration();
-		config.setProperties( properties );
-		config.addAnnotatedClass( ExplicitlyCacheableEntity.class );
-		config.addAnnotatedClass( ExplicitlyNonCacheableEntity.class );
-		config.addAnnotatedClass( NoCacheableAnnotationEntity.class );
-		config.buildMappings();
-		return config;
+	@SuppressWarnings("unchecked")
+	private Configuration buildConfiguration(SharedCacheMode mode) {
+		Map settings = new HashMap();
+		settings.put( AvailableSettings.SHARED_CACHE_MODE, mode );
+		settings.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
+		settings.put(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList(
+						ExplicitlyCacheableEntity.class,
+						ExplicitlyNonCacheableEntity.class,
+						NoCacheableAnnotationEntity.class
+				)
+		);
+
+		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
+
+		EntityManagerFactoryBuilderImpl emfb = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+				adapter,
+				settings
+		);
+
+		Configuration hibernateConfiguration = emfb.buildHibernateConfiguration( emfb.buildServiceRegistry() );
+		hibernateConfiguration.buildMappings();
+		return hibernateConfiguration;
 	}
 
 	public static class CustomRegionFactory extends NoCachingRegionFactory {

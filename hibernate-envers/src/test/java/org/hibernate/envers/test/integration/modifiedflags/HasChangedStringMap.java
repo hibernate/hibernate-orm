@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringMapEntity;
 
@@ -44,8 +43,9 @@ public class HasChangedStringMap extends AbstractModifiedFlagsEntityTest {
     private Integer sme1_id;
     private Integer sme2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StringMapEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StringMapEntity.class };
     }
 
     @Test

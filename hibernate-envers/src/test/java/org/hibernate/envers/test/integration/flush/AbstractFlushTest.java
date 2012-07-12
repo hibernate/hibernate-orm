@@ -30,7 +30,6 @@ import org.junit.Before;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
@@ -40,9 +39,10 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 public abstract class AbstractFlushTest extends BaseEnversJPAFunctionalTestCase {
     public abstract FlushMode getFlushMode();
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class };
+	}
 
     private static Session getSession(EntityManager em) {
         Object delegate = em.getDelegate();

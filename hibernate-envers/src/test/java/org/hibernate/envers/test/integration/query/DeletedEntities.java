@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -42,8 +41,9 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 public class DeletedEntities extends BaseEnversJPAFunctionalTestCase {
     private Integer id2;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrIntTestEntity.class };
     }
 
     @Test

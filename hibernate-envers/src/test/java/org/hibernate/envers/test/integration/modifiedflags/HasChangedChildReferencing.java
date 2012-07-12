@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ChildIngEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ParentNotIngEntity;
@@ -47,10 +46,9 @@ public class HasChangedChildReferencing extends AbstractModifiedFlagsEntityTest 
     private Integer re_id1;
     private Integer re_id2;
 
-	public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ChildIngEntity.class);
-        cfg.addAnnotatedClass(ParentNotIngEntity.class);
-        cfg.addAnnotatedClass(ReferencedEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ChildIngEntity.class, ParentNotIngEntity.class, ReferencedEntity.class };
     }
 
     @Test

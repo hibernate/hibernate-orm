@@ -27,7 +27,7 @@ import javax.persistence.spi.LoadState;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 import static org.junit.Assert.assertEquals;
 /**

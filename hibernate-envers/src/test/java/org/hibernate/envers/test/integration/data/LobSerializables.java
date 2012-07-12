@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -42,8 +41,9 @@ import org.hibernate.testing.RequiresDialectFeature;
 public class LobSerializables extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(LobSerializableTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { LobSerializableTestEntity.class };
     }
 
     @Override

@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.mapkey.IdMapKeyEntity;
@@ -44,9 +43,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class HasChangedIdMapKey extends AbstractModifiedFlagsEntityTest {
     private Integer imke_id;
 
-	public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(IdMapKeyEntity.class);
-        cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { IdMapKeyEntity.class, StrTestEntity.class };
     }
 
     @Test

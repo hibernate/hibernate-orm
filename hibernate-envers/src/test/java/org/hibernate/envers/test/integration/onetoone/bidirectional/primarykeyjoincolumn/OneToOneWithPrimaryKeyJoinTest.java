@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -25,12 +24,15 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
     private Long noProxyPersonId = null;
     private Long accountNotAuditedOwnersId = null;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Person.class);
-        cfg.addAnnotatedClass(Account.class);
-        cfg.addAnnotatedClass(AccountNotAuditedOwners.class);
-        cfg.addAnnotatedClass(NotAuditedNoProxyPerson.class);
-        cfg.addAnnotatedClass(NotAuditedProxyPerson.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				Person.class,
+				Account.class,
+				AccountNotAuditedOwners.class,
+				NotAuditedNoProxyPerson.class,
+				NotAuditedProxyPerson.class
+		};
     }
 
     @Test

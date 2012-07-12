@@ -25,13 +25,13 @@ package org.hibernate.ejb;
 
 import javax.persistence.spi.PersistenceProvider;
 
-import org.hibernate.ejb.boot.internal.HibernatePersistenceProvider;
-import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 /**
  * Hibernate EJB3 persistence provider implementation
  *
- * @deprecated Use {@link org.hibernate.ejb.boot.internal.HibernatePersistenceProvider} instead
+ * @deprecated Use {@link HibernatePersistenceProvider} instead
  *
  * @author Gavin King
  */

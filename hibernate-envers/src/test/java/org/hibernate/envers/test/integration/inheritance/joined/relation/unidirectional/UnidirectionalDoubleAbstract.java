@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -41,11 +40,14 @@ public class UnidirectionalDoubleAbstract extends BaseEnversJPAFunctionalTestCas
 	private Long cce1_id;
 	private Integer cse1_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(AbstractContainedEntity.class);
-        cfg.addAnnotatedClass(AbstractSetEntity.class);
-        cfg.addAnnotatedClass(ContainedEntity.class);
-		cfg.addAnnotatedClass(SetEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				AbstractContainedEntity.class,
+				AbstractSetEntity.class,
+				ContainedEntity.class,
+				SetEntity.class
+		};
     }
 
     @Test

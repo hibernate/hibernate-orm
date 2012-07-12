@@ -31,7 +31,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Ignore;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.performance.complex.ChildEntity1;
 import org.hibernate.envers.test.performance.complex.ChildEntity2;
 import org.hibernate.envers.test.performance.complex.RootEntity;
@@ -41,10 +40,10 @@ import org.hibernate.envers.test.performance.complex.RootEntity;
  */
 @Ignore
 public class ComplexInsertPerformance extends AbstractPerformanceTest {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(RootEntity.class);
-        cfg.addAnnotatedClass(ChildEntity1.class);
-        cfg.addAnnotatedClass(ChildEntity2.class);
+
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] { RootEntity.class, ChildEntity1.class, ChildEntity2.class };
     }
 
     private final static int NUMBER_INSERTS = 1000;

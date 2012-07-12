@@ -4,9 +4,9 @@ import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.Set;
 
-import org.hibernate.ejb.packaging.NamedInputStream;
-import org.hibernate.ejb.packaging.NativeScanner;
-import org.hibernate.ejb.packaging.Scanner;
+import org.hibernate.jpa.packaging.internal.NativeScanner;
+import org.hibernate.jpa.packaging.spi.NamedInputStream;
+import org.hibernate.jpa.packaging.spi.Scanner;
 
 /**
  * @author Emmanuel Bernard

@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

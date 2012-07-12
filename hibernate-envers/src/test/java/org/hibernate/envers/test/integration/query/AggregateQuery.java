@@ -27,7 +27,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -37,11 +36,13 @@ import org.hibernate.envers.test.entities.IntTestEntity;
  */
 @SuppressWarnings({"unchecked"})
 public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(IntTestEntity.class);
-    }
 
-    @Test
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { IntTestEntity.class };
+	}
+
+	@Test
     @Priority(10)
     public void initData() {
         // Revision 1

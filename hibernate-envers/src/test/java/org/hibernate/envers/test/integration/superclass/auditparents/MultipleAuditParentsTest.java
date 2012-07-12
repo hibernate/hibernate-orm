@@ -7,7 +7,6 @@ import javax.persistence.MappedSuperclass;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -25,12 +24,14 @@ public class MultipleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
     private long childMultipleId = 1L;
     private Integer siteMultipleId = null;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(MappedGrandparentEntity.class);
-        cfg.addAnnotatedClass(MappedParentEntity.class);
-        cfg.addAnnotatedClass(ChildMultipleParentsEntity.class);
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				MappedGrandparentEntity.class,
+				MappedParentEntity.class,
+				ChildMultipleParentsEntity.class,
+				StrIntTestEntity.class
+		};
     }
 
     @Test

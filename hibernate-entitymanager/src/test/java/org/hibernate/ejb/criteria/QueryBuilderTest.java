@@ -34,7 +34,7 @@ import javax.persistence.metamodel.EntityType;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
+import org.hibernate.jpa.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
@@ -43,7 +43,8 @@ import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Info;
 import org.hibernate.ejb.metamodel.LineItem;
-import org.hibernate.ejb.metamodel.MetamodelImpl;
+import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;

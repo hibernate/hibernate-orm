@@ -30,7 +30,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.PersistentClass;
 
@@ -38,8 +37,9 @@ import org.hibernate.mapping.PersistentClass;
  * @author Adam Warski (adam at warski dot org)
  */
 public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BasicTestEntity3.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BasicTestEntity3.class };
     }
 
     @Test

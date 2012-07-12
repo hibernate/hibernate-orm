@@ -4,7 +4,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -26,13 +25,15 @@ import org.hibernate.envers.test.tools.TestTools;
 public class CustomTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
     private Integer steId = null;
     private Integer siteId = null;
-    
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ModifiedEntityTypeEntity.class);
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
-        cfg.addAnnotatedClass(CustomTrackingRevisionEntity.class);
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				ModifiedEntityTypeEntity.class,
+				StrTestEntity.class,
+				StrIntTestEntity.class,
+				CustomTrackingRevisionEntity.class
+		};
     }
 
     @Test

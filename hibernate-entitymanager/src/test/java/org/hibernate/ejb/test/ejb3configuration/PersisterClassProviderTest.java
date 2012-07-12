@@ -21,6 +21,7 @@
 package org.hibernate.ejb.test.ejb3configuration;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
@@ -38,7 +39,8 @@ import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.test.SettingsGenerator;
+import org.hibernate.ejb.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,6 +48,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -65,13 +69,18 @@ import org.hibernate.type.VersionType;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class PersisterClassProviderTest {
-    @Test
+	@Test
+	@SuppressWarnings("unchecked")
 	public void testPersisterClassProvider() {
-		Ejb3Configuration conf = new Ejb3Configuration();
-		conf.getProperties().put( PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class );
-		conf.addAnnotatedClass( Bell.class );
+		Map settings = SettingsGenerator.generateSettings(
+				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,
+				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
+		);
 		try {
-			final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();
+			EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
+					new PersistenceUnitDescriptorAdapter(),
+					settings
+			).buildEntityManagerFactory();
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {

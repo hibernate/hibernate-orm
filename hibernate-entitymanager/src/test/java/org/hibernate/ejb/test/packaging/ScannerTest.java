@@ -37,11 +37,12 @@ import javax.persistence.Persistence;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.packaging.NamedInputStream;
-import org.hibernate.ejb.packaging.NativeScanner;
-import org.hibernate.ejb.packaging.Scanner;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.packaging.internal.NativeScanner;
+
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
+import org.hibernate.jpa.packaging.spi.NamedInputStream;
+import org.hibernate.jpa.packaging.spi.Scanner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

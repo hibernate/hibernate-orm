@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.ClassTransformer;
@@ -40,7 +41,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.InvalidMappingException;
-import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 
 /**
  * "smoke" tests for JEE bootstrapping of HEM via a {@link PersistenceUnitInfo}
@@ -52,7 +53,7 @@ public class OrmVersionTest {
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/valid-orm-1.xml" );
-		HibernatePersistence hp = new HibernatePersistence();
+		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( org.hibernate.ejb.test.pack.defaultpar_1_0.Lighter1.class ); // exception if not entity
 	}
@@ -60,7 +61,7 @@ public class OrmVersionTest {
 	public void testOrm2() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/valid-orm-2.xml" );
-		HibernatePersistence hp = new HibernatePersistence();
+		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( org.hibernate.ejb.test.pack.defaultpar.Lighter.class ); // exception if not entity
 	}
@@ -68,12 +69,15 @@ public class OrmVersionTest {
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/invalid-orm-1.xml" );
-		HibernatePersistence hp = new HibernatePersistence();
+		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		try {
 			hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
             Assert.fail( "expecting 'invalid content' error" );
 		}
 		catch ( InvalidMappingException expected ) {
+			// expected condition
+		}
+		catch ( PersistenceException expected ) {
 			// expected condition
 		}
 	}

@@ -36,17 +36,17 @@ import javax.persistence.MappedSuperclass;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.packaging.ClassFilter;
-import org.hibernate.ejb.packaging.Entry;
-import org.hibernate.ejb.packaging.ExplodedJarVisitor;
-import org.hibernate.ejb.packaging.FileFilter;
-import org.hibernate.ejb.packaging.FileZippedJarVisitor;
-import org.hibernate.ejb.packaging.Filter;
-import org.hibernate.ejb.packaging.InputStreamZippedJarVisitor;
-import org.hibernate.ejb.packaging.JarProtocolVisitor;
-import org.hibernate.ejb.packaging.JarVisitor;
-import org.hibernate.ejb.packaging.JarVisitorFactory;
-import org.hibernate.ejb.packaging.PackageFilter;
+import org.hibernate.jpa.packaging.internal.ClassFilter;
+import org.hibernate.jpa.packaging.internal.Entry;
+import org.hibernate.jpa.packaging.internal.ExplodedJarVisitor;
+import org.hibernate.jpa.packaging.internal.FileFilter;
+import org.hibernate.jpa.packaging.internal.FileZippedJarVisitor;
+import org.hibernate.jpa.packaging.internal.Filter;
+import org.hibernate.jpa.packaging.internal.InputStreamZippedJarVisitor;
+import org.hibernate.jpa.packaging.internal.JarProtocolVisitor;
+import org.hibernate.jpa.packaging.internal.JarVisitor;
+import org.hibernate.jpa.packaging.internal.JarVisitorFactory;
+import org.hibernate.jpa.packaging.internal.PackageFilter;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
 import org.hibernate.testing.TestForIssue;

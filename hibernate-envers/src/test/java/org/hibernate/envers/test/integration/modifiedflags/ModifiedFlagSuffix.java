@@ -25,12 +25,10 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
@@ -48,8 +46,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class ModifiedFlagSuffix extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BasicTestEntity1.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BasicTestEntity1.class };
     }
 
 	@Override

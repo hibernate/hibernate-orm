@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.lang.instrument.IllegalClassFormatException;
 import java.util.List;
 
-import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
 
 /**
  * @author Emmanuel Bernard

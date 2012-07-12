@@ -27,7 +27,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 

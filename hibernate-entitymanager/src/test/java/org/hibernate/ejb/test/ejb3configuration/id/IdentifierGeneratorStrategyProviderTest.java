@@ -23,24 +23,36 @@ package org.hibernate.ejb.test.ejb3configuration.id;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.ejb.test.PersistenceUnitInfoAdapter;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class IdentifierGeneratorStrategyProviderTest {
-    @Test
+	@Test
+	@SuppressWarnings("unchecked")
 	public void testIdentifierGeneratorStrategyProvider() {
-        Ejb3Configuration conf = new Ejb3Configuration();
-        conf.setProperty(
+		Map settings = new HashMap();
+		settings.put(
 				AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
-				FunkyIdentifierGeneratorProvider.class.getName() );
-        conf.addAnnotatedClass( Cable.class );
-		final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();
+				FunkyIdentifierGeneratorProvider.class.getName()
+		);
+		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Cable.class ) );
+
+		final EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
+				new PersistenceUnitInfoAdapter(),
+				settings
+		).buildEntityManagerFactory();
+
 		final EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
 			entityManager.persist( new Cable() );

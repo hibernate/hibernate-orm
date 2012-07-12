@@ -23,16 +23,9 @@
  */
 package org.hibernate.ejb;
 
-import java.io.Serializable;
-import javax.persistence.EntityManagerFactory;
-
-import org.hibernate.SessionFactory;
-
 /**
- * Contract giving access to the underlying {@link SessionFactory} from an {@link EntityManagerFactory}
- *
- * @author Gavin King
+ * @deprecated Use {@link org.hibernate.jpa.HibernateEntityManagerFactory} instead
  */
-public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
-	public SessionFactory getSessionFactory();
+@Deprecated
+public interface HibernateEntityManagerFactory extends org.hibernate.jpa.HibernateEntityManagerFactory {
 }

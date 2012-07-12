@@ -25,12 +25,10 @@ package org.hibernate.envers.test.integration.properties;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -40,11 +38,10 @@ import org.hibernate.envers.test.Priority;
 public class VersionsProperties extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(PropertiesTestEntity.class);
-
-
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { PropertiesTestEntity.class };
+	}
 
 	@Override
 	protected void addConfigOptions(Map options) {

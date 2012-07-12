@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
@@ -26,11 +25,13 @@ public class MixedInheritanceStrategiesEntityTest extends BaseEnversJPAFunctiona
 	private ActivityId id3;
 
 	@Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(AbstractActivity.class);
-        cfg.addAnnotatedClass(AbstractCheckActivity.class);
-        cfg.addAnnotatedClass(CheckInActivity.class);
-        cfg.addAnnotatedClass(NormalActivity.class);
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				AbstractActivity.class,
+				AbstractCheckActivity.class,
+				CheckInActivity.class,
+				NormalActivity.class
+		};
     }
 
     @Test

@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
@@ -45,9 +44,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class HasChangedChildAuditing extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ChildEntity.class);
-        cfg.addAnnotatedClass(ParentEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ChildEntity.class, ParentEntity.class };
     }
 
     @Test

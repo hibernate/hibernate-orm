@@ -22,13 +22,17 @@ package org.hibernate.ejb.test.ejb3configuration;
 
 import javax.persistence.EntityManagerFactory;
 
+import java.util.Collections;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.test.PersistenceUnitInfoAdapter;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
@@ -36,13 +40,19 @@ import org.hibernate.ejb.Ejb3Configuration;
 public class SessionFactoryObserverTest {
     @Test
 	public void testSessionFactoryObserverProperty() {
-		Ejb3Configuration conf = new Ejb3Configuration();
-		conf.setProperty( AvailableSettings.SESSION_FACTORY_OBSERVER, GoofySessionFactoryObserver.class.getName() );
-		conf.addAnnotatedClass( Bell.class );
+
+		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(
+				new PersistenceUnitInfoAdapter(),
+				Collections.singletonMap(
+						AvailableSettings.SESSION_FACTORY_OBSERVER,
+						GoofySessionFactoryObserver.class.getName()
+				)
+		);
+
 		try {
-			final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();
+			final EntityManagerFactory entityManagerFactory = builder.buildEntityManagerFactory();
 			entityManagerFactory.close();
-            Assert.fail( "GoofyException should have been thrown" );
+			Assert.fail( "GoofyException should have been thrown" );
 		}
 		catch ( GoofyException e ) {
 			//success
@@ -50,7 +60,6 @@ public class SessionFactoryObserverTest {
 	}
 
 	public static class GoofySessionFactoryObserver implements SessionFactoryObserver {
-
 		public void sessionFactoryCreated(SessionFactory factory) {
 		}
 
@@ -60,6 +69,5 @@ public class SessionFactoryObserverTest {
 	}
 
 	public static class GoofyException extends RuntimeException {
-
 	}
 }

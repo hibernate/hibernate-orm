@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.QueryImpl;
+import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.internal.SessionImpl;
 

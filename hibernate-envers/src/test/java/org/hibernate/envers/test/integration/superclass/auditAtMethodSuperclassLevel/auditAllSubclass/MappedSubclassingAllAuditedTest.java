@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -45,10 +44,9 @@ public class MappedSubclassingAllAuditedTest extends BaseEnversJPAFunctionalTest
 	private Integer id2_1;
 	private Integer id1_1;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(AuditedMethodMappedSuperclass.class);
-		cfg.addAnnotatedClass(AuditedAllSubclassEntity.class);
-		cfg.addAnnotatedClass(NotAuditedSubclassEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { AuditedMethodMappedSuperclass.class, AuditedAllSubclassEntity.class, NotAuditedSubclassEntity.class };
 	}
 
 	@Test

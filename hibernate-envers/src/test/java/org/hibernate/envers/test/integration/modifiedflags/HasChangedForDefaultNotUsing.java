@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.QueryException;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -54,10 +53,9 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		return false;
 	}
 
-	public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(PartialModifiedFlagsEntity.class);
-        cfg.addAnnotatedClass(WithModifiedFlagReferencingEntity.class);
-        cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { PartialModifiedFlagsEntity.class, WithModifiedFlagReferencingEntity.class, StrTestEntity.class };
     }
 
     @Test

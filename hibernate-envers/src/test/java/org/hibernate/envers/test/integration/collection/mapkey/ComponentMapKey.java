@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -45,9 +44,9 @@ public class ComponentMapKey extends BaseEnversJPAFunctionalTestCase {
     private Integer cte1_id;
     private Integer cte2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ComponentMapKeyEntity.class);
-        cfg.addAnnotatedClass(ComponentTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ComponentMapKeyEntity.class, ComponentTestEntity.class };
     }
 
     @Test

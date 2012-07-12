@@ -159,7 +159,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public boolean isTransactionInProgress() {
-		return getTransaction().isActive() && getTransaction().getJoinStatus() == JoinStatus.JOINED;
+		return open && getTransaction().isActive() && getTransaction().getJoinStatus() == JoinStatus.JOINED;
 	}
 
 	@Override

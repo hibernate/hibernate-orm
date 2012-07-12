@@ -4,7 +4,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
@@ -19,10 +18,10 @@ import static org.junit.Assert.assertNull;
  */
 public class UnidirectionalMulIdWithNulls extends BaseEnversJPAFunctionalTestCase {
     private EmbId ei;
-    
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(EmbIdTestEntity.class);
-        cfg.addAnnotatedClass(UniRefIngMulIdEntity.class);
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { EmbIdTestEntity.class, UniRefIngMulIdEntity.class };
     }
 
     @Test

@@ -23,9 +23,14 @@
  */
 package org.hibernate.ejb.test.metagen.mappedsuperclass.idclass;
 
+import javax.persistence.EntityManagerFactory;
+import java.util.Arrays;
+
+import org.hibernate.ejb.test.TestingEntityManagerFactoryGenerator;
+import org.hibernate.jpa.AvailableSettings;
+
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -39,7 +44,10 @@ public class MappedSuperclassWithEntityWithIdClassTest extends BaseUnitTestCase 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5024" )
 	public void testStaticMetamodel() {
-		new Ejb3Configuration().addAnnotatedClass( ProductAttribute.class ).buildEntityManagerFactory();
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList( ProductAttribute.class )
+		);
 
 		assertNotNull( "'ProductAttribute_.value' should not be null)", ProductAttribute_.value );
 		assertNotNull( "'ProductAttribute_.owner' should not be null)", ProductAttribute_.owner );

@@ -31,7 +31,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
@@ -48,9 +47,9 @@ public class BasicSetWithEmbId extends BaseEnversJPAFunctionalTestCase {
     private EmbId ing1_id;
     private EmbId ing2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(SetRefEdEmbIdEntity.class);
-        cfg.addAnnotatedClass(SetRefIngEmbIdEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class };
     }
 
     @Test

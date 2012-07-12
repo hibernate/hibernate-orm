@@ -32,7 +32,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -51,9 +50,9 @@ public class CustomComparatorEntityTest extends BaseEnversJPAFunctionalTestCase 
     private Integer id3;
     private Integer id4;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(SortedSetEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class, SortedSetEntity.class };
     }
 
     @Test

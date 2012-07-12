@@ -27,8 +27,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.ejb.boot.internal.HibernatePersistenceProvider;
 import org.hibernate.ejb.test.jee.OrmVersionTest;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.junit.Test;
 

@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.auditReader.AuditedTestEntity;
@@ -44,9 +43,9 @@ import static junit.framework.Assert.assertTrue;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class HasChangedAPITest extends AbstractModifiedFlagsEntityTest {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(AuditedTestEntity.class);
-        cfg.addAnnotatedClass(NotAuditedTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { AuditedTestEntity.class, NotAuditedTestEntity.class };
     }
 
     @Test

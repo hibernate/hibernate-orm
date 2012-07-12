@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -20,10 +19,9 @@ public class ParentReferencingChildTest extends BaseEnversJPAFunctionalTestCase 
     Person expLukaszRev1 = null;
     Role expAdminRev1 = null;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Person.class);
-        cfg.addAnnotatedClass(Role.class);
-        cfg.addAnnotatedClass(RightsSubject.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Person.class, Role.class, RightsSubject.class };
     }
 
     @Test

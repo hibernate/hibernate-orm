@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
@@ -115,7 +115,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
+		int updates = ( int ) ( (EntityManagerFactoryImpl) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityUpdateCount();
 		Assert.assertEquals( count, updates );

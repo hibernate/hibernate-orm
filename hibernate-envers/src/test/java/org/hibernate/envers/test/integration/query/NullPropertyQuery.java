@@ -4,7 +4,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -25,12 +24,15 @@ public class NullPropertyQuery extends BaseEnversJPAFunctionalTestCase {
     private Integer idReferenceToParentNotNull = 1;
     private Integer idParent = 1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
-        cfg.addAnnotatedClass(SetRefEdEmbIdEntity.class);
-        cfg.addAnnotatedClass(SetRefIngEmbIdEntity.class);
-        cfg.addAnnotatedClass(CollectionRefEdEntity.class);
-        cfg.addAnnotatedClass(CollectionRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				StrIntTestEntity.class,
+				SetRefEdEmbIdEntity.class,
+				SetRefIngEmbIdEntity.class,
+				CollectionRefEdEntity.class,
+				CollectionRefIngEntity.class
+		};
     }
 
     @Test

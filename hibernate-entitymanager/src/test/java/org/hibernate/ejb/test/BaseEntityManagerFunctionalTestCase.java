@@ -23,27 +23,34 @@
  */
 package org.hibernate.ejb.test;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.SharedCacheMode;
+import javax.persistence.ValidationMode;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import java.util.Properties;
 
 import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
@@ -60,7 +67,6 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	private static final Dialect dialect = Dialect.getDialect();
 
-	private Ejb3Configuration ejb3Configuration;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private EntityManagerFactoryImpl entityManagerFactory;
 
@@ -82,48 +88,129 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@Before
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public void buildEntityManagerFactory() throws Exception {
-		log.trace( "Building session factory" );
-		ejb3Configuration = buildConfiguration();
-		ejb3Configuration.configure( getConfig() );
-		afterConfigurationBuilt( ejb3Configuration );
+		log.trace( "Building EntityManagerFactory" );
 
-		entityManagerFactory = (EntityManagerFactoryImpl) ejb3Configuration.buildEntityManagerFactory( bootstrapRegistryBuilder() );
-		serviceRegistry = (StandardServiceRegistryImpl) ( (SessionFactoryImpl) entityManagerFactory.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
+		entityManagerFactory = (EntityManagerFactoryImpl) Bootstrap.getEntityManagerFactoryBuilder(
+				buildPersistenceUnitDescriptor(),
+				buildSettings()
+		).buildEntityManagerFactory();
+
+		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
+				.getServiceRegistry()
+				.getParentServiceRegistry();
 
 		afterEntityManagerFactoryBuilt();
 	}
 
-	private BootstrapServiceRegistryBuilder bootstrapRegistryBuilder() {
-		return new BootstrapServiceRegistryBuilder();
+	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
+		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 
-	protected Ejb3Configuration buildConfiguration() {
-		Ejb3Configuration ejb3Cfg = constructConfiguration();
-		addMappings( ejb3Cfg.getHibernateConfiguration() );
-		return ejb3Cfg;
-	}
+	public static class TestingPersistenceUnitDescriptorImpl implements PersistenceUnitDescriptor {
+		private final String name;
 
-	protected Ejb3Configuration constructConfiguration() {
-		Ejb3Configuration ejb3Configuration = new Ejb3Configuration();
-		if ( createSchema() ) {
-			ejb3Configuration.getHibernateConfiguration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		public TestingPersistenceUnitDescriptorImpl(String name) {
+			this.name = name;
 		}
-		ejb3Configuration
-				.getHibernateConfiguration()
-				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true");
 
-		ejb3Configuration
-				.getHibernateConfiguration()
-				.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
-		return ejb3Configuration;
+		@Override
+		public URL getPersistenceUnitRootUrl() {
+			return null;
+		}
+
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public String getProviderClassName() {
+			return HibernatePersistenceProvider.class.getName();
+		}
+
+		@Override
+		public boolean isUseQuotedIdentifiers() {
+			return false;
+		}
+
+		@Override
+		public boolean isExcludeUnlistedClasses() {
+			return false;
+		}
+
+		@Override
+		public PersistenceUnitTransactionType getTransactionType() {
+			return null;
+		}
+
+		@Override
+		public ValidationMode getValidationMode() {
+			return null;
+		}
+
+		@Override
+		public SharedCacheMode getSharedCacheMode() {
+			return null;
+		}
+
+		@Override
+		public List<String> getManagedClassNames() {
+			return null;
+		}
+
+		@Override
+		public List<String> getMappingFileNames() {
+			return null;
+		}
+
+		@Override
+		public List<URL> getJarFileUrls() {
+			return null;
+		}
+
+		@Override
+		public Object getNonJtaDataSource() {
+			return null;
+		}
+
+		@Override
+		public Object getJtaDataSource() {
+			return null;
+		}
+
+		@Override
+		public Properties getProperties() {
+			return null;
+		}
+
+		@Override
+		public ClassLoader getClassLoader() {
+			return null;
+		}
+
+		@Override
+		public void pushClassTransformer(List<String> entityClassNames) {
+		}
 	}
 
-	protected void addMappings(Configuration configuration) {
+	@SuppressWarnings("unchecked")
+	protected Map buildSettings() {
+		Map settings = getConfig();
+		addMappings( settings );
+
+		if ( createSchema() ) {
+			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		}
+		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
+		return settings;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource( mapping, getClass().getClassLoader() );
-			}
+			settings.put( AvailableSettings.HBXML_FILES, StringHelper.join( ",", mappings ) );
 		}
 	}
 
@@ -134,7 +221,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected Map getConfig() {
-		Map<Object, Object> config = new HashMap<Object, Object>(  );
+		Map<Object, Object> config = Environment.getProperties();
 		ArrayList<Class> classes = new ArrayList<Class>();
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
@@ -174,14 +261,6 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	public String[] getEjb3DD() {
 		return new String[] { };
-	}
-
-	@SuppressWarnings( {"UnusedParameters"})
-	protected void afterConfigurationBuilt(Ejb3Configuration ejb3Configuration) {
-	}
-
-	@SuppressWarnings( {"UnusedParameters"})
-	protected void applyServices(ServiceRegistryBuilder registryBuilder) {
 	}
 
 	protected void afterEntityManagerFactoryBuilt() {

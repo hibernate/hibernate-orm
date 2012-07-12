@@ -300,53 +300,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			// do the translation
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
 
-			// make sure the query is a select -> HHH-7192
-			final SessionImplementor session = unwrap( SessionImplementor.class );
-			final HQLQueryPlan queryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(
-					jpaqlString,
-					false,
-					session.getLoadQueryInfluencers().getEnabledFilters()
-			);
-			if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
-				throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
-			}
-
-			// do some return type validation checking
-			if ( Object[].class.equals( resultClass ) ) {
-				// no validation needed
-			}
-			else if ( Tuple.class.equals( resultClass ) ) {
-				TupleBuilderTransformer tupleTransformer = new TupleBuilderTransformer( hqlQuery );
-				hqlQuery.setResultTransformer( tupleTransformer  );
-			}
-			else {
-				final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
-				if ( dynamicInstantiationClass != null ) {
-					if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {
-						throw new IllegalArgumentException(
-								"Mismatch in requested result type [" + resultClass.getName() +
-										"] and actual result type [" + dynamicInstantiationClass.getName() + "]"
-						);
-					}
-				}
-				else if ( hqlQuery.getReturnTypes().length == 1 ) {
-					// if we have only a single return expression, its java type should match with the requested type
-					if ( !resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
-						throw new IllegalArgumentException(
-								"Type specified for TypedQuery [" +
-										resultClass.getName() +
-										"] is incompatible with query return type [" +
-										hqlQuery.getReturnTypes()[0].getReturnedClass() + "]"
-						);
-					}
-				}
-				else {
-					throw new IllegalArgumentException(
-							"Cannot create TypedQuery for query with more than one return using requested result type [" +
-									resultClass.getName() + "]"
-					);
-				}
-			}
+			resultClassChecking( resultClass, hqlQuery );
 
 			// finally, build/return the query instance
 			return new QueryImpl<T>( hqlQuery, this );
@@ -658,7 +612,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			 */
 			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
 			//TODO clean this up to avoid downcasting
-			final SessionFactoryImplementor factoryImplementor = ( SessionFactoryImplementor ) entityManagerFactory.getSessionFactory();
+			final SessionFactoryImplementor factoryImplementor = entityManagerFactory.getSessionFactory();
 			final NamedSQLQueryDefinition queryDefinition = factoryImplementor.getNamedSQLQuery( name );
 			try {
 				if ( queryDefinition != null ) {
@@ -698,12 +652,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					}
 				}
 				else {
-					if ( namedQuery.getReturnTypes().length != 1 ) {
-						throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
-					}
-					if ( !resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
-						throw buildIncompatibleException( resultClass, namedQuery.getReturnTypes()[0].getReturnedClass() );
-					}
+					resultClassChecking( resultClass, namedQuery );
+
 				}
 				return new QueryImpl<T>( namedQuery, this );
 			}
@@ -713,6 +663,56 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( "Named query not found: " + name );
+		}
+	}
+
+	private <T> void resultClassChecking(Class<T> resultClass, org.hibernate.Query query) {
+		// make sure the query is a select -> HHH-7192
+		final SessionImplementor session = unwrap( SessionImplementor.class );
+		final HQLQueryPlan queryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(
+				query.getQueryString(),
+				false,
+				session.getLoadQueryInfluencers().getEnabledFilters()
+		);
+		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
+			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
+		}
+
+		// do some return type validation checking
+		if ( Object[].class.equals( resultClass ) ) {
+			// no validation needed
+		}
+		else if ( Tuple.class.equals( resultClass ) ) {
+			TupleBuilderTransformer tupleTransformer = new TupleBuilderTransformer( query );
+			query.setResultTransformer( tupleTransformer );
+		}
+		else {
+			final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
+			if ( dynamicInstantiationClass != null ) {
+				if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {
+					throw new IllegalArgumentException(
+							"Mismatch in requested result type [" + resultClass.getName() +
+									"] and actual result type [" + dynamicInstantiationClass.getName() + "]"
+					);
+				}
+			}
+			else if ( query.getReturnTypes().length == 1 ) {
+				// if we have only a single return expression, its java type should match with the requested type
+				if ( !resultClass.isAssignableFrom( query.getReturnTypes()[0].getReturnedClass() ) ) {
+					throw new IllegalArgumentException(
+							"Type specified for TypedQuery [" +
+									resultClass.getName() +
+									"] is incompatible with query return type [" +
+									query.getReturnTypes()[0].getReturnedClass() + "]"
+					);
+				}
+			}
+			else {
+				throw new IllegalArgumentException(
+						"Cannot create TypedQuery for query with more than one return using requested result type [" +
+								resultClass.getName() + "]"
+				);
+			}
 		}
 	}
 

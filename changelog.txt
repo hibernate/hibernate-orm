@@ -5,6 +5,34 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.5.Final (2012.07.12)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/12150
+
+** Bug
+    * [HHH-5411] - Missing value in not updatable column in Envers audit table
+    * [HHH-5565] - Memory leak is possible if changes for audited entities are outside of transaction
+    * [HHH-5929] - PooledLoOptimizer in conjunction with SequenceStyleGenerator is not thread-safe
+    * [HHH-6304] - Error "Cannot create TypedQuery for query with more than one return" with named queries
+    * [HHH-6707] - One-to-One mapping with foreign key in target table and foreign key being the primary key fails with Oracle
+    * [HHH-6896] - Metamodel.managedType(...) implemented incorrectly
+    * [HHH-7310] - Resolution of types registered in type registry does not work properly for Properties of @Embeddable types
+    * [HHH-7311] - NullPointerException if TenantConnectionProvider class does not exist
+    * [HHH-7368] - SQLServer2005Dialect: pagination query fails if terminating with a semicolon
+    * [HHH-7369] - SQLServer2005Dialect: scalar query fails with pagination
+    * [HHH-7374] - Support KEY, ENTRY and VALUE qualifiers in WHERE clause
+    * [HHH-7380] - bug when initialize MULTI_TENANT_IDENTIFIER_RESOLVER and CUSTOM_ENTITY_DIRTINESS_STRATEGY
+    * [HHH-7426] - Setting cacheable="true" in orm.xml does not enable caching of entity in 2lc
+** Improvement
+    * [HHH-4394] - @OrderBy usage on a joined classes (when using join table) produces incorred SQL syntax.
+    * [HHH-7370] - SQLServer2005Dialect: sql-transformation to common_table_expression not needed when offset = 0
+    * [HHH-7381] - Refact: split CacheImpl from SessionFactoryImpl into a session factory scope service
+    * [HHH-7382] - refact: unify the configuration implementation loading strategy
+    * [HHH-7431] - Reduce NaturalIdCacheKey Memory Footprint
+** Task
+    * [HHH-7440] - Redesign dialect-specific LIMIT clause appliance
+    * [HHH-7442] - rename org.hibernate.internal.util.Value
+
 Changes in version 4.1.4.Final (2012.05.30)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11960

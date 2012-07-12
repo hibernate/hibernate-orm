@@ -5,6 +5,14 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.5.SP1 (2012.07.12)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-7447] - ValueHolder used in NaturalIdCacheKey is not Serializable
+** Improvement
+    * [HHH-2394] - Support filter tag in subclass
+
 Changes in version 4.1.5.Final (2012.07.12)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/12150

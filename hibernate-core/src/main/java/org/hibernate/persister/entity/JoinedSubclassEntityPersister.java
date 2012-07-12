@@ -854,19 +854,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
 	}
 
-	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias) {
-		return new FilterAliasGenerator() {
-			@Override
-			public String getAlias(String table) {
-				if (table == null){
-					return rootAlias;
-				} else{
-					JoinedSubclassEntityPersister outer = JoinedSubclassEntityPersister.this;
-					int tableNumber = JoinedSubclassEntityPersister.getTableId(table, outer.subclassTableNameClosure);
-					return outer.generateTableAlias(rootAlias, tableNumber);
-				}
-			}
-		};
+
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);

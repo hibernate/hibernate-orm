@@ -23,6 +23,15 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.ElementCollection;
@@ -35,13 +44,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
@@ -110,6 +112,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
+import org.jboss.logging.Logger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -810,28 +813,34 @@ public abstract class CollectionBinder {
 		//if ( StringHelper.isNotEmpty( where ) ) collection.setWhere( where );
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
-				collection.addManyToManyFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addManyToManyFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 			else {
-				collection.addFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 		}
 		Filters filters = property.getAnnotation( Filters.class );
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
-					collection.addManyToManyFilter( filter.name(), getCondition( filter ) );
+					collection.addManyToManyFilter( filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter(filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 			}
 		}
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter( simpleFilterJoinTable.name(), getCondition( simpleFilterJoinTable ) );
-			}
+				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(), 
+						simpleFilterJoinTable.deduceAliasInjectionPoints(), 
+						toAliasTableMap(simpleFilterJoinTable.aliases()), toAliasEntityMap(simpleFilterJoinTable.aliases()));
+					}
 			else {
 				throw new AnnotationException(
 						"Illegal use of @FilterJoinTable on an association without join table:"
@@ -843,7 +852,9 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter(filter.name(), filter.condition(), 
+							filter.deduceAliasInjectionPoints(), 
+							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
 					throw new AnnotationException(
@@ -888,14 +899,14 @@ public abstract class CollectionBinder {
 //				);
 //		}
 	}
-
+	
 	private String getCondition(FilterJoinTable filter) {
 		//set filtering
 		String name = filter.name();
 		String cond = filter.condition();
 		return getCondition( cond, name );
 	}
-
+	
 	private String getCondition(Filter filter) {
 		//set filtering
 		String name = filter.name();
@@ -1297,7 +1308,7 @@ public abstract class CollectionBinder {
 
 	private static void checkFilterConditions(Collection collValue) {
 		//for now it can't happen, but sometime soon...
-		if ( ( collValue.getFilterMap().size() != 0 || StringHelper.isNotEmpty( collValue.getWhere() ) ) &&
+		if ( ( collValue.getFilters().size() != 0 || StringHelper.isNotEmpty( collValue.getWhere() ) ) &&
 				collValue.getFetchMode() == FetchMode.JOIN &&
 				!( collValue.getElement() instanceof SimpleValue ) && //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
 				collValue.getElement().getFetchMode() != FetchMode.JOIN ) {

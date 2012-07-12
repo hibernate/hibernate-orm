@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2622,10 +2623,18 @@ public final class HbmBinder {
 			if ( condition==null) {
 				throw new MappingException("no filter condition found for filter: " + name);
 			}
+			Iterator aliasesIterator = filterElement.elementIterator("aliases");
+			java.util.Map<String, String> aliasTables = new HashMap<String, String>();
+			while (aliasesIterator.hasNext()){
+				Element alias = (Element) aliasesIterator.next();
+				aliasTables.put(alias.attributeValue("alias"), alias.attributeValue("table"));
+			}
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Applying many-to-many filter [%s] as [%s] to role [%s]", name, condition, collection.getRole() );
 			}
-			collection.addManyToManyFilter( name, condition );
+			String autoAliasInjectionText = filterElement.attributeValue("autoAliasInjection");
+			boolean autoAliasInjection = StringHelper.isEmpty(autoAliasInjectionText) ? true : Boolean.parseBoolean(autoAliasInjectionText);
+			collection.addManyToManyFilter(name, condition, autoAliasInjection, aliasTables, null);
 		}
 	}
 
@@ -3030,8 +3039,16 @@ public final class HbmBinder {
 		if ( condition==null) {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
+		Iterator aliasesIterator = filterElement.elementIterator("aliases");
+		java.util.Map<String, String> aliasTables = new HashMap<String, String>();
+		while (aliasesIterator.hasNext()){
+			Element alias = (Element) aliasesIterator.next();
+			aliasTables.put(alias.attributeValue("alias"), alias.attributeValue("table"));
+		}
 		LOG.debugf( "Applying filter [%s] as [%s]", name, condition );
-		filterable.addFilter( name, condition );
+		String autoAliasInjectionText = filterElement.attributeValue("autoAliasInjection");
+		boolean autoAliasInjection = StringHelper.isEmpty(autoAliasInjectionText) ? true : Boolean.parseBoolean(autoAliasInjectionText);
+		filterable.addFilter(name, condition, autoAliasInjection, aliasTables, null);
 	}
 
 	private static void parseFetchProfile(Element element, Mappings mappings, String containingEntityName) {

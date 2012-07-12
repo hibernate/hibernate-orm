@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -254,8 +255,10 @@ public class Subclass extends PersistentClass {
 		return mv.accept(this);
 	}
 
-	public Map getFilterMap() {
-		return getSuperclass().getFilterMap();
+	public java.util.List getFilters() {
+		java.util.List filters = new ArrayList(super.getFilters());
+		filters.addAll(getSuperclass().getFilters());
+		return filters;
 	}
 
 	public boolean hasSubselectLoadableCollections() {

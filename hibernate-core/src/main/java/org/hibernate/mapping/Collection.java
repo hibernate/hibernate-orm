@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
@@ -33,6 +33,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -81,8 +82,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Class collectionPersisterClass;
 	private String typeName;
 	private Properties typeParameters;
-	private final java.util.Map filters = new HashMap();
-	private final java.util.Map manyToManyFilters = new HashMap();
+	private final java.util.List filters = new ArrayList();
+	private final java.util.List manyToManyFilters = new ArrayList();
 	private final java.util.Set synchronizedTables = new HashSet();
 
 	private String customSQLInsert;
@@ -519,19 +520,18 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteAllCheckStyle;
 	}
 
-	public void addFilter(String name, String condition) {
-		filters.put( name, condition );
+	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
+		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
 	}
-
-	public java.util.Map getFilterMap() {
+	public java.util.List getFilters() {
 		return filters;
 	}
 
-	public void addManyToManyFilter(String name, String condition) {
-		manyToManyFilters.put( name, condition );
+	public void addManyToManyFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
+		manyToManyFilters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
 	}
 
-	public java.util.Map getManyToManyFilterMap() {
+	public java.util.List getManyToManyFilters() {
 		return manyToManyFilters;
 	}
 

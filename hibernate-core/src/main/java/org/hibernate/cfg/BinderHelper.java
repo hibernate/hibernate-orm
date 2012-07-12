@@ -41,6 +41,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.MetaValue;
+import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XPackage;
@@ -692,5 +693,25 @@ public class BinderHelper {
 		}
         String propertyPath = isId ? "" : propertyName;
         return mappings.getPropertyAnnotatedWithMapsId(persistentXClass, propertyPath);
+	}
+	
+	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
+		Map<String,String> ret = new HashMap<String,String>();
+		for (int i = 0; i < aliases.length; i++){
+			if (StringHelper.isNotEmpty(aliases[i].table())){
+				ret.put(aliases[i].alias(), aliases[i].table());
+			}
+		}
+		return ret;
+	}
+	
+	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
+		Map<String,String> ret = new HashMap<String,String>();
+		for (int i = 0; i < aliases.length; i++){
+			if (aliases[i].entity() != void.class){
+				ret.put(aliases[i].alias(), aliases[i].entity().getName());
+			}
+		}
+		return ret;
 	}
 }

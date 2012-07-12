@@ -21,16 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.annotations;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 /**
- * Defines mapping elements to which filters may be applied.
+ * Describe aliases for filters
  *
- * @author Steve Ebersole
+ * @author Rob Worsnop
  */
-public interface Filterable {
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap);
-
-	public java.util.List getFilters();
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
+public @interface SqlFragmentAlias {
+	String alias();
+	String table() default "";
+	Class entity() default void.class;
 }

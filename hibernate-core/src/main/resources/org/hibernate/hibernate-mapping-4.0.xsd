@@ -675,12 +675,21 @@ arbitrary number of queries, and import declarations of arbitrary classes.
   	FILTER element; used to apply a filter.
   -->
   <xs:complexType name="filter-element" mixed="true">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute name="condition" type="xs:string"/>
-        <xs:attribute name="name" use="required" type="xs:string"/>
-      </xs:extension>
-    </xs:simpleContent>
+    <xs:sequence>
+    	<xs:element name="aliases" type="alias-table" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  	<xs:attribute name="condition" type="xs:string"/>
+    <xs:attribute name="name" use="required" type="xs:string"/>
+    <xs:attribute name="autoAliasInjection" default="true" type="xs:string"/>
+  </xs:complexType>
+  
+  <xs:complexType name="alias-table">
+  	<xs:simpleContent>
+  		<xs:extension base="xs:string">
+  			<xs:attribute name="alias" type="xs:string" use="required"/>
+  			<xs:attribute name="table" type="xs:string" use="required"/>
+  		</xs:extension>	
+  	</xs:simpleContent>
   </xs:complexType>
 
   <!-- Generators generate unique identifiers. The class attribute specifies a Java 
@@ -818,6 +827,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1586,6 +1596,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1670,6 +1681,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
       <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
       <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">

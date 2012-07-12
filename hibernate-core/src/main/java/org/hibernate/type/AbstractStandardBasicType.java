@@ -413,6 +413,33 @@ public abstract class AbstractStandardBasicType<T>
 			}
 		};
 
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, startIndex, options );
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract(
+				statement,
+				startIndex,
+				options
+		);
+	}
+
+	@Override
+	public T extract(CallableStatement statement, String[] paramNames, final SessionImplementor session) throws SQLException {
+		// todo : have SessionImplementor extend WrapperOptions
+		final WrapperOptions options = new WrapperOptions() {
+			public boolean useStreamForLobBinding() {
+				return Environment.useStreamsForBinary();
+			}
+
+			public LobCreator getLobCreator() {
+				return Hibernate.getLobCreator( session );
+			}
+
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
+			}
+		};
+
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
 	}
 }

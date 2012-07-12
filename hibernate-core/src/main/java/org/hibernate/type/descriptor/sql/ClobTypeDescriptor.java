@@ -65,6 +65,11 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getClob( index ), options );
 			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getClob( name ), options );
+			}
 		};
 	}
 

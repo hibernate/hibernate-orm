@@ -55,4 +55,18 @@ public interface ProcedureParameterExtractionAware<T> extends Type {
 	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
 	 */
 	public T extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException;
+
+	/**
+	 * Perform the extraction
+	 *
+	 * @param statement The CallableStatement from which to extract the parameter value(s).
+	 * @param paramNames The parameter names.
+	 * @param session The originating session
+	 *
+	 * @return The extracted value.
+	 *
+	 * @throws SQLException Indicates an issue calling into the CallableStatement
+	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
+	 */
+	public T extract(CallableStatement statement, String[] paramNames, SessionImplementor session) throws SQLException;
 }

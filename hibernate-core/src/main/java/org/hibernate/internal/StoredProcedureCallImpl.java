@@ -47,12 +47,14 @@ import org.hibernate.StoredProcedureCall;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
@@ -156,21 +158,41 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 
 	private void registerParameter(StoredProcedureParameterImplementor parameter) {
 		if ( StringHelper.isNotEmpty( parameter.getName() ) ) {
-			if ( typeOfParameters == TypeOfParameter.POSITIONAL ) {
-				throw new QueryException( "Cannot mix named and positional parameters" );
-			}
-			typeOfParameters = TypeOfParameter.NAMED;
-			registeredParameters.add( parameter );
+			prepareForNamedParameters();
 		}
 		else if ( parameter.getPosition() != null ) {
-			if ( typeOfParameters == TypeOfParameter.NAMED ) {
-				throw new QueryException( "Cannot mix named and positional parameters" );
-			}
-			typeOfParameters = TypeOfParameter.POSITIONAL;
-			registeredParameters.add( parameter.getPosition(), parameter );
+			prepareForPositionalParameters();
 		}
 		else {
 			throw new IllegalArgumentException( "Given parameter did not define name nor position [" + parameter + "]" );
+		}
+		registeredParameters.add( parameter );
+	}
+
+	private void prepareForPositionalParameters() {
+		if ( typeOfParameters == TypeOfParameter.NAMED ) {
+			throw new QueryException( "Cannot mix named and positional parameters" );
+		}
+		typeOfParameters = TypeOfParameter.POSITIONAL;
+	}
+
+	private void prepareForNamedParameters() {
+		if ( typeOfParameters == TypeOfParameter.POSITIONAL ) {
+			throw new QueryException( "Cannot mix named and positional parameters" );
+		}
+		if ( typeOfParameters == null ) {
+			// protect to only do this check once
+			final ExtractedDatabaseMetaData databaseMetaData = session().getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getLogicalConnection()
+					.getJdbcServices()
+					.getExtractedMetaDataSupport();
+			if ( ! databaseMetaData.supportsNamedParameters() ) {
+				throw new QueryException(
+						"Named stored procedure parameters used, but JDBC driver does not support named parameters"
+				);
+			}
+			typeOfParameters = TypeOfParameter.NAMED;
 		}
 	}
 
@@ -183,8 +205,8 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public List getRegisteredParameters() {
-		return registeredParameters;
+	public List<StoredProcedureParameter> getRegisteredParameters() {
+		return new ArrayList<StoredProcedureParameter>( registeredParameters );
 	}
 
 	@Override
@@ -197,7 +219,8 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 				return parameter;
 			}
 		}
-		throw new IllegalArgumentException( "Could not locate parameter registered under that name [" + name + "]" );	}
+		throw new IllegalArgumentException( "Could not locate parameter registered under that name [" + name + "]" );
+	}
 
 	@Override
 	public StoredProcedureParameterImplementor getRegisteredParameter(int position) {
@@ -318,6 +341,16 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 		qp.setAutoDiscoverScalarTypes( true );
 		qp.setCallable( true );
 		return qp;
+	}
+
+	public StoredProcedureParameterImplementor[] collectRefCursorParameters() {
+		List<StoredProcedureParameterImplementor> refCursorParams = new ArrayList<StoredProcedureParameterImplementor>();
+		for ( StoredProcedureParameterImplementor param : registeredParameters ) {
+			if ( param.getMode() == ParameterMode.REF_CURSOR ) {
+				refCursorParams.add( param );
+			}
+		}
+		return refCursorParams.toArray( new StoredProcedureParameterImplementor[refCursorParams.size()] );
 	}
 
 	/**
@@ -442,6 +475,19 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 					}
 				}
 			}
+			else {
+				// we have a REF_CURSOR type param
+				if ( procedureCall.typeOfParameters == TypeOfParameter.NAMED ) {
+					session().getFactory().getServiceRegistry()
+							.getService( RefCursorSupport.class )
+							.registerRefCursorParameter( statement, getName() );
+				}
+				else {
+					session().getFactory().getServiceRegistry()
+							.getService( RefCursorSupport.class )
+							.registerRefCursorParameter( statement, getPosition() );
+				}
+			}
 		}
 
 		public int[] getSqlTypes() {
@@ -476,6 +522,13 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 		@Override
 		@SuppressWarnings("unchecked")
 		public T extract(CallableStatement statement) {
+			if ( mode == ParameterMode.IN ) {
+				throw new QueryException( "IN parameter not valid for output extraction" );
+			}
+			else if ( mode == ParameterMode.REF_CURSOR ) {
+				throw new QueryException( "REF_CURSOR parameters should be accessed via results" );
+			}
+
 			try {
 				if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType ) ) {
 					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract( statement, startIndex, session() );

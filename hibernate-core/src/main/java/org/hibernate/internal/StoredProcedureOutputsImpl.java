@@ -23,24 +23,29 @@
  */
 package org.hibernate.internal;
 
+import javax.persistence.ParameterMode;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.JDBCException;
+import org.hibernate.StoredProcedureCall.StoredProcedureParameter;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.StoredProcedureResultSetReturn;
 import org.hibernate.StoredProcedureReturn;
 import org.hibernate.StoredProcedureUpdateCountReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.StoredProcedureCallImpl.StoredProcedureParameterImplementor;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
+import org.hibernate.service.jdbc.cursor.spi.RefCursorSupport;
 
 /**
  * @author Steve Ebersole
@@ -49,15 +54,19 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 	private final StoredProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
+	private final StoredProcedureParameterImplementor[] refCursorParameters;
 	private final CustomLoaderExtension loader;
 
 	private CurrentReturnDescriptor currentReturnDescriptor;
+
 	private boolean executed = false;
+	private int refCursorParamIndex = 0;
 
 	StoredProcedureOutputsImpl(StoredProcedureCallImpl procedureCall, CallableStatement callableStatement) {
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
 
+		this.refCursorParameters = procedureCall.collectRefCursorParameters();
 		// For now...
 		this.loader = buildSpecializedCustomLoader( procedureCall );
 	}
@@ -105,14 +114,16 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 				}
 			}
 
-			currentReturnDescriptor = new CurrentReturnDescriptor( isResultSet, updateCount );
+			currentReturnDescriptor = new CurrentReturnDescriptor( isResultSet, updateCount, refCursorParamIndex );
 		}
 
 		return hasMoreResults( currentReturnDescriptor );
 	}
 
 	private boolean hasMoreResults(CurrentReturnDescriptor descriptor) {
-		return currentReturnDescriptor.isResultSet || currentReturnDescriptor.updateCount >= 0;
+		return descriptor.isResultSet
+				|| descriptor.updateCount >= 0
+				|| descriptor.refCursorParamIndex < refCursorParameters.length;
 	}
 
 	@Override
@@ -141,22 +152,45 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 				throw convert( e, "Error calling CallableStatement.getResultSet" );
 			}
 		}
-		else {
+		else if ( copyReturnDescriptor.updateCount >= 0 ) {
 			return new UpdateCountReturn( this, copyReturnDescriptor.updateCount );
+		}
+		else {
+			this.refCursorParamIndex++;
+			ResultSet resultSet;
+			int refCursorParamIndex = copyReturnDescriptor.refCursorParamIndex;
+			StoredProcedureParameterImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
+			if ( refCursorParam.getName() != null ) {
+				resultSet = procedureCall.session().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( callableStatement, refCursorParam.getName() );
+			}
+			else {
+				resultSet = procedureCall.session().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( callableStatement, refCursorParam.getPosition() );
+			}
+			return new ResultSetReturn( this, resultSet );
 		}
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return procedureCall.session().getFactory().getSQLExceptionHelper().convert( e, message, procedureCall.getProcedureName() );
+		return procedureCall.session().getFactory().getSQLExceptionHelper().convert(
+				e,
+				message,
+				procedureCall.getProcedureName()
+		);
 	}
 
 	private static class CurrentReturnDescriptor {
 		private final boolean isResultSet;
 		private final int updateCount;
+		private final int refCursorParamIndex;
 
-		private CurrentReturnDescriptor(boolean resultSet, int updateCount) {
-			isResultSet = resultSet;
+		private CurrentReturnDescriptor(boolean isResultSet, int updateCount, int refCursorParamIndex) {
+			this.isResultSet = isResultSet;
 			this.updateCount = updateCount;
+			this.refCursorParamIndex = refCursorParamIndex;
 		}
 	}
 

@@ -78,6 +78,11 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getInt( index ), options );
 			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getInt( name ), options );
+			}
 		};
 	}
 }

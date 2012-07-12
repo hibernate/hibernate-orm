@@ -142,9 +142,13 @@ public class SqlTypeDescriptorRegistry {
 				}
 
 				@Override
-				protected Object doExtract(CallableStatement statement, int index, WrapperOptions options)
-						throws SQLException {
+				protected Object doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 					return statement.getObject( index );
+				}
+
+				@Override
+				protected Object doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+					return statement.getObject( name );
 				}
 			};
 		}

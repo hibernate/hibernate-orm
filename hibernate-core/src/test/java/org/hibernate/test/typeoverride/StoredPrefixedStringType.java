@@ -84,6 +84,15 @@ public class StoredPrefixedStringType
 							}
 							return javaTypeDescriptor.wrap( stringValue.substring( PREFIX.length() ), options );
 						}
+
+						@Override
+						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+							String stringValue = statement.getString( name );
+							if ( ! stringValue.startsWith( PREFIX ) ) {
+								throw new AssertionFailure( "Value read from procedure output param does not have prefix." );
+							}
+							return javaTypeDescriptor.wrap( stringValue.substring( PREFIX.length() ), options );
+						}
 					};
 				}
 			};

@@ -79,6 +79,11 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getBigDecimal( index ), options );
 			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBigDecimal( name ), options );
+			}
 		};
 	}
 }

@@ -120,4 +120,39 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	 * @throws SQLException Indicates a problem accessing the parameter value
 	 */
 	protected abstract J doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
+
+	@Override
+	public J extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException {
+		if ( paramNames.length > 1 ) {
+			throw new IllegalArgumentException( "Basic value extraction cannot handle multiple output parameters" );
+		}
+		final String paramName = paramNames[0];
+		final J value = doExtract( statement, paramName, options );
+		if ( value == null || statement.wasNull() ) {
+			LOG.tracev( "Found [null] as procedure output  parameter [{0}]", paramName );
+			return null;
+		}
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Found [{0}] as procedure output parameter [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), paramName );
+			}
+			return value;
+		}
+	}
+
+	/**
+	 * Perform the extraction.
+	 * <p/>
+	 * Called from {@link #extract}.  Null checking of the value (as well as consulting {@link ResultSet#wasNull}) is
+	 * done there.
+	 *
+	 * @param statement The callable statement containing the output parameter
+	 * @param name The output parameter name
+	 * @param options The binding options
+	 *
+	 * @return The extracted value.
+	 *
+	 * @throws SQLException Indicates a problem accessing the parameter value
+	 */
+	protected abstract J doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException;
 }

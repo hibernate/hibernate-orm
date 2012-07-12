@@ -501,6 +501,12 @@ public class SimpleValue implements KeyValue {
 						throws SQLException {
 					return (X) converter.convertToEntityAttribute( realExtractor.extract( statement, index, options ) );
 				}
+
+				@Override
+				@SuppressWarnings("unchecked")
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+					return (X) converter.convertToEntityAttribute( realExtractor.extract( statement, new String[] {name}, options ) );
+				}
 			};
 		}
 	}

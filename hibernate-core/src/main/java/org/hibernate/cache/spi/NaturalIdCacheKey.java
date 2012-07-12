@@ -44,7 +44,7 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
-	private final ValueHolder<String> toString;
+	private final transient ValueHolder<String> toString;
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.

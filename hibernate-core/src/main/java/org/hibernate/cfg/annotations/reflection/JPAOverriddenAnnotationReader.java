@@ -44,6 +44,7 @@ import javax.persistence.AssociationOverrides;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -225,6 +226,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( MapKeyJoinColumn.class, "map-key-join-column" );
 		annotationToXml.put( MapKeyJoinColumns.class, "map-key-join-column" );
 		annotationToXml.put( OrderColumn.class, "order-column" );
+		annotationToXml.put( Cacheable.class, "cacheable" );
 	}
 
 	private XMLContext xmlContext;
@@ -343,6 +345,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, getSecondaryTables( tree, defaults ) );
 				addIfNotNull( annotationList, getPrimaryKeyJoinColumns( tree, defaults, true ) );
 				addIfNotNull( annotationList, getIdClass( tree, defaults ) );
+				addIfNotNull( annotationList, getCacheable( tree, defaults ) );
 				addIfNotNull( annotationList, getInheritance( tree, defaults ) );
 				addIfNotNull( annotationList, getDiscriminatorValue( tree, defaults ) );
 				addIfNotNull( annotationList, getDiscriminatorColumn( tree, defaults ) );
@@ -833,6 +836,21 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		return mergeAttributeOverrides( defaults, attributes, false );
 	}
 
+	private Cacheable getCacheable(Element element, XMLContext.Default defaults){
+		if(element==null)return null;
+		String attValue = element.attributeValue( "cacheable" );
+		if(attValue!=null){
+			AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
+			ad.setValue( "value", Boolean.valueOf( attValue ) );
+			return AnnotationFactory.create( ad );
+		}
+		if ( defaults.canUseJavaAnnotations() ) {
+			return getJavaAnnotation( Cacheable.class );
+		}
+		else {
+			return null;
+		}
+	}
 	/**
 	 * Adds a @MapKeyEnumerated annotation to the specified annotationList if the specified element
 	 * contains a map-key-enumerated sub-element. This should only be the case for

@@ -36,11 +36,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  * @author Matthew Inger
  * @author Magnus Sandberg
+ * @author Rob Worsnop
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Filter {
 	String name();
-
 	String condition() default "";
+	boolean deduceAliasInjectionPoints() default true;
+	SqlFragmentAlias[] aliases() default {};
 }

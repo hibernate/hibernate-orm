@@ -25,10 +25,10 @@
 package org.hibernate.internal;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 
@@ -36,11 +36,14 @@ import org.hibernate.sql.Template;
  * Implementation of FilterHelper.
  *
  * @author Steve Ebersole
+ * @author Rob Worsnop
  */
 public class FilterHelper {
 
 	private final String[] filterNames;
 	private final String[] filterConditions;
+	private final boolean[] filterAutoAliasFlags;
+	private final Map<String,String>[] filterAliasTableMaps;
 
 	/**
 	 * The map of defined filters.  This is expected to be in format
@@ -49,23 +52,31 @@ public class FilterHelper {
 	 *
 	 * @param filters The map of defined filters.
 	 * @param dialect The sql dialect
-	 * @param functionRegistry The SQL function registry
+	 * @param factory The session factory
 	 */
-	public FilterHelper(Map filters, Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public FilterHelper(List filters, SessionFactoryImplementor factory) {
 		int filterCount = filters.size();
 		filterNames = new String[filterCount];
 		filterConditions = new String[filterCount];
-		Iterator iter = filters.entrySet().iterator();
+		filterAutoAliasFlags = new boolean[filterCount];
+		filterAliasTableMaps = new Map[filterCount];
+		Iterator iter = filters.iterator();
 		filterCount = 0;
 		while ( iter.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) iter.next();
-			filterNames[filterCount] = (String) entry.getKey();
-			filterConditions[filterCount] = Template.renderWhereStringTemplate(
-					(String) entry.getValue(),
-					FilterImpl.MARKER,
-					dialect,
-					functionRegistry
-				);
+			filterAutoAliasFlags[filterCount] = false;
+			final FilterConfiguration filter = (FilterConfiguration) iter.next();
+			filterNames[filterCount] = (String) filter.getName();
+			filterConditions[filterCount] = filter.getCondition();
+			filterAliasTableMaps[filterCount] = filter.getAliasTableMap(factory);
+			if ((filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass(filterAliasTableMaps[filterCount])) && filter.useAutoAliasInjection()){
+				filterConditions[filterCount] = Template.renderWhereStringTemplate(
+						filter.getCondition(),
+						FilterImpl.MARKER,
+						factory.getDialect(),
+						factory.getSqlFunctionRegistry()
+					);
+				filterAutoAliasFlags[filterCount] = true;
+			}
 			filterConditions[filterCount] = StringHelper.replace(
 					filterConditions[filterCount],
 					":",
@@ -73,6 +84,10 @@ public class FilterHelper {
 			);
 			filterCount++;
 		}
+	}
+	
+	private static boolean isTableFromPersistentClass(Map<String,String> aliasTableMap){
+		return aliasTableMap.size() == 1 && aliasTableMap.containsKey(null);
 	}
 
 	public boolean isAffectedBy(Map enabledFilters) {
@@ -84,23 +99,37 @@ public class FilterHelper {
 		return false;
 	}
 
-	public String render(String alias, Map enabledFilters) {
+	public String render(FilterAliasGenerator aliasGenerator, Map enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
-		render( buffer, alias, enabledFilters );
+		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuilder buffer, String alias, Map enabledFilters) {
+	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map enabledFilters) {
 		if ( filterNames != null && filterNames.length > 0 ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 				if ( enabledFilters.containsKey( filterNames[i] ) ) {
 					final String condition = filterConditions[i];
 					if ( StringHelper.isNotEmpty( condition ) ) {
-						buffer.append( " and " )
-								.append( StringHelper.replace( condition, FilterImpl.MARKER, alias ) );
+						buffer.append(" and " ).append(render(aliasGenerator, i));
 					}
 				}
 			}
+		}
+	}
+	
+	private String render(FilterAliasGenerator aliasGenerator, int filterIndex){
+		Map<String,String> aliasTableMap = filterAliasTableMaps[filterIndex];
+		String condition = filterConditions[filterIndex];
+		if (filterAutoAliasFlags[filterIndex]){
+			return StringHelper.replace(condition, FilterImpl.MARKER, aliasGenerator.getAlias(aliasTableMap.get(null)));
+		} else if (isTableFromPersistentClass(aliasTableMap)){
+			return condition.replace("{alias}", aliasGenerator.getAlias(aliasTableMap.get(null)));
+		} else {
+			for (Map.Entry<String, String> entry : aliasTableMap.entrySet()){
+				condition = condition.replace("{"+entry.getKey()+"}", aliasGenerator.getAlias(entry.getValue()));
+			}
+			return condition;
 		}
 	}
 }

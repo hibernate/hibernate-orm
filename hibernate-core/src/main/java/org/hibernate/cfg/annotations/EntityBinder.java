@@ -23,10 +23,14 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -34,8 +38,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -47,6 +49,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
@@ -95,6 +98,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
+
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -127,7 +132,7 @@ public class EntityBinder {
 	private String cacheConcurrentStrategy;
 	private String cacheRegion;
 	private String naturalIdCacheRegion;
-	private java.util.Map<String, String> filters = new HashMap<String, String>();
+	private List<Filter> filters = new ArrayList<Filter>();
 	private InheritanceState inheritanceState;
 	private boolean ignoreIdAnnotations;
 	private boolean cacheLazyProperty;
@@ -371,24 +376,20 @@ public class EntityBinder {
 			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
 		}
 
-		if ( !inheritanceState.hasParents() ) {
-			for ( Map.Entry<String, String> filter : filters.entrySet() ) {
-				String filterName = filter.getKey();
-				String cond = filter.getValue();
-				if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
-					FilterDefinition definition = mappings.getFilterDefinition( filterName );
-					cond = definition == null ? null : definition.getDefaultFilterCondition();
-					if ( StringHelper.isEmpty( cond ) ) {
-						throw new AnnotationException(
-								"no filter condition found for filter " + filterName + " in " + this.name
-						);
-					}
+		for ( Filter filter : filters ) {
+			String filterName = filter.name();
+			String cond = filter.condition();
+			if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
+				FilterDefinition definition = mappings.getFilterDefinition( filterName );
+				cond = definition == null ? null : definition.getDefaultFilterCondition();
+				if ( StringHelper.isEmpty( cond ) ) {
+					throw new AnnotationException(
+							"no filter condition found for filter " + filterName + " in " + this.name
+					);
 				}
-				persistentClass.addFilter( filterName, cond );
 			}
-		}
-		else if ( filters.size() > 0 ) {
-			LOG.filterAnnotationOnSubclass( persistentClass.getEntityName() );
+			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), 
+					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
 		LOG.debugf( "Import with entity name %s", name );
 		try {
@@ -402,7 +403,7 @@ public class EntityBinder {
 			throw new AnnotationException( "Use of the same entity name twice: " + name, me );
 		}
 	}
-
+	
 	public void bindDiscriminatorValue() {
 		if ( StringHelper.isEmpty( discriminatorValue ) ) {
 			Value discriminator = persistentClass.getDiscriminator();
@@ -889,8 +890,8 @@ public class EntityBinder {
 		return accessType == null ? null : accessType.getExternalName();
 	}
 
-	public void addFilter(String name, String condition) {
-		filters.put( name, condition );
+	public void addFilter(Filter filter) {
+		filters.add(filter);
 	}
 
 	public void setInheritanceState(InheritanceState inheritanceState) {

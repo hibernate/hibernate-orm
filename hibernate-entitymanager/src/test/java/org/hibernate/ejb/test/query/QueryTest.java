@@ -583,6 +583,9 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		Item itemView = em.createQuery( "select new Item(i.name,i.descr) from Item i", Item.class ).getSingleResult();
 		assertNotNull( itemView );
 		assertEquals( "Micro$oft mouse", itemView.getDescr() );
+		itemView = em.createNamedQuery( "query-construct", Item.class ).getSingleResult();
+		assertNotNull( itemView );
+		assertEquals( "Micro$oft mouse", itemView.getDescr() );
 		em.remove( item );
 		em.getTransaction().commit();
 

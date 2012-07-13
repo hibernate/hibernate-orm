@@ -48,7 +48,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class ConnectionProxyHandler
 		extends AbstractProxyHandler
-		implements InvocationHandler, NonDurableConnectionObserver {
+		implements NonDurableConnectionObserver {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ConnectionProxyHandler.class.getName());

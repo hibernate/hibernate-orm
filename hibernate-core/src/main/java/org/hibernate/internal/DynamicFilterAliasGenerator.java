@@ -21,16 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.internal;
 
+import org.hibernate.persister.entity.AbstractEntityPersister;
 
 /**
- * Defines mapping elements to which filters may be applied.
+ * 
+ * @author Rob Worsnop
  *
- * @author Steve Ebersole
  */
-public interface Filterable {
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap);
+public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
+	
+	private String[] tables;
+	private String rootAlias;
 
-	public java.util.List getFilters();
+	public DynamicFilterAliasGenerator(String[] tables, String rootAlias) {
+		this.tables = tables;
+		this.rootAlias = rootAlias;
+	}
+
+	@Override
+	public String getAlias(String table) {
+		if (table == null){
+			return rootAlias;
+		} else{
+			return AbstractEntityPersister.generateTableAlias(rootAlias, AbstractEntityPersister.getTableId(table, tables));
+		}
+	}
+
 }

@@ -39,6 +39,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
@@ -405,6 +406,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
     public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
 				.loadElement( session, key, incrementIndexByBase(index) );
+	}
+
+	@Override
+	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+		return getElementPersister().getFilterAliasGenerator(rootAlias);
 	}
 
 }

@@ -578,10 +578,7 @@ public final class AnnotationBinder {
 	    entityBinder.setCache( determineCacheSettings( clazzToProcess, mappings ) );
 	    entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
 
-		//Filters are not allowed on subclasses
-		if ( !inheritanceState.hasParents() ) {
-			bindFilters( clazzToProcess, entityBinder, mappings );
-		}
+		bindFilters( clazzToProcess, entityBinder, mappings );
 
 		entityBinder.bindEntity();
 
@@ -1208,13 +1205,13 @@ public final class AnnotationBinder {
 		Filters filtersAnn = annotatedElement.getAnnotation( Filters.class );
 		if ( filtersAnn != null ) {
 			for ( Filter filter : filtersAnn.value() ) {
-				entityBinder.addFilter( filter.name(), filter.condition() );
+				entityBinder.addFilter(filter);
 			}
 		}
 
 		Filter filterAnn = annotatedElement.getAnnotation( Filter.class );
 		if ( filterAnn != null ) {
-			entityBinder.addFilter( filterAnn.name(), filterAnn.condition() );
+			entityBinder.addFilter(filterAnn);
 		}
 	}
 

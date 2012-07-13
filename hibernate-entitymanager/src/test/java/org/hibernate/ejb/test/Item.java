@@ -10,6 +10,7 @@ import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SqlResultSetMapping;
 
@@ -35,6 +36,7 @@ import javax.persistence.SqlResultSetMapping;
 		resultClass = Item.class
 	)
 })
+@NamedQuery(name = "query-construct", query = "select new Item(i.name,i.descr) from Item i")
 //@Cache(region="Item", usage=NONSTRICT_READ_WRITE)
 public class Item implements Serializable {
 

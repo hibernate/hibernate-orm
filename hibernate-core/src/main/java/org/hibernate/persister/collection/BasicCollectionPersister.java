@@ -39,6 +39,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
@@ -352,6 +354,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				session.getFactory(),
 				session.getLoadQueryInfluencers() 
 		);
+	}
+
+	@Override
+	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+		return new StaticFilterAliasGenerator(rootAlias);
 	}
 
 }

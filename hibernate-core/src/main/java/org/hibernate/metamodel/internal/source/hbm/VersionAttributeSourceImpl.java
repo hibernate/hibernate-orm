@@ -79,7 +79,7 @@ class VersionAttributeSourceImpl
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return Helper.getBooleanValue( versionElement.isInsert(), true );
+						return Helper.getValue( versionElement.isInsert(), true );
 					}
 
 					@Override
@@ -169,7 +169,7 @@ class VersionAttributeSourceImpl
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return Helper.getBooleanValue( versionElement.isInsert(), true );
+		return Helper.getValue( versionElement.isInsert(), true );
 	}
 
 	@Override

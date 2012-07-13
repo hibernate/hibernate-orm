@@ -30,18 +30,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.LockMode;
 import org.hibernate.TruthValue;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement;
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbLockModeAttribute;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlDmlElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
@@ -80,6 +83,36 @@ public class Helper {
 		}
 	};
 
+	public static LockMode interpretLockMode(JaxbLockModeAttribute lockModeAttribute, Origin origin){
+		if(lockModeAttribute==null)return LockMode.READ;
+		switch ( lockModeAttribute ) {
+			case NONE:
+				return LockMode.NONE;
+			case UPGRADE:
+				return LockMode.UPGRADE;
+			case UPGRADE_NOWAIT:
+				return LockMode.UPGRADE_NOWAIT;
+			case READ:
+				return LockMode.READ;
+			case WRITE:
+				return LockMode.WRITE;
+			case FORCE:
+				return LockMode.FORCE;
+			case OPTIMISTIC:
+				return LockMode.OPTIMISTIC;
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return LockMode.OPTIMISTIC_FORCE_INCREMENT;
+			case PESSIMISTIC_READ:
+				return LockMode.PESSIMISTIC_READ;
+			case PESSIMISTIC_WRITE:
+				return LockMode.PESSIMISTIC_WRITE;
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
+			default:
+				throw new MappingException( "unknown lock mode: "+lockModeAttribute, origin );
+		}
+	}
+
 	public static InheritanceType interpretInheritanceType(EntityElement entityElement) {
 		if ( JaxbSubclassElement.class.isInstance( entityElement ) ) {
 			return InheritanceType.SINGLE_TABLE;
@@ -102,7 +135,7 @@ public class Helper {
 	 *
 	 * @return The {@link CustomSQL} representation
 	 */
-	public static CustomSQL buildCustomSql(CustomSqlElement customSqlElement) {
+	public static CustomSQL buildCustomSql(JaxbSqlDmlElement customSqlElement) {
 		if ( customSqlElement == null ) {
 			return null;
 		}
@@ -148,12 +181,8 @@ public class Helper {
 						}
 						final String region;
 						if ( StringHelper.isEmpty( cacheElement.getRegion() ) ) {
-							if ( entityCache != null ) {
-								region = entityCache.getRegion() + NATURAL_ID_CACHE_SUFFIX;
-							}
-							else {
-								region = entityName + NATURAL_ID_CACHE_SUFFIX;
-							}
+							String temp = entityCache != null ? entityCache.getRegion() : entityName;
+							region = temp + NATURAL_ID_CACHE_SUFFIX;
 						}
 						else {
 							region = cacheElement.getRegion();
@@ -183,7 +212,7 @@ public class Helper {
 	}
 
 	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {
-		return getStringValue( access, isEmbedded ? "embedded" : defaultAccess );
+		return getValue( access, isEmbedded ? "embedded" : defaultAccess );
 	}
 
 	public static MetaAttributeContext extractMetaAttributeContext(
@@ -210,19 +239,7 @@ public class Helper {
 		return subContext;
 	}
 
-	public static String getStringValue(String value, String defaultValue) {
-		return value == null ? defaultValue : value;
-	}
-
-	public static int getIntValue(String value, int defaultValue) {
-		return value == null ? defaultValue : Integer.parseInt( value );
-	}
-
-	public static long getLongValue(String value, long defaultValue) {
-		return value == null ? defaultValue : Long.parseLong( value );
-	}
-
-	public static boolean getBooleanValue(Boolean value, boolean defaultValue) {
+	public static <T> T getValue(T value, T defaultValue){
 		return value == null ? defaultValue : value;
 	}
 

@@ -239,7 +239,7 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return ! Helper.getBooleanValue( manyToOneElement.isNotNull(), false );
+		return ! Helper.getValue( manyToOneElement.isNotNull(), false );
 	}
 
 	@Override

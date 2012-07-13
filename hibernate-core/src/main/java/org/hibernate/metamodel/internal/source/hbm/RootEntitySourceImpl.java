@@ -172,7 +172,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public OptimisticLockStyle getOptimisticLockStyle() {
-		final String optimisticLockModeString = Helper.getStringValue( entityElement().getOptimisticLock(), "version" );
+		final String optimisticLockModeString = Helper.getValue( entityElement().getOptimisticLock(), "version" );
 		try {
 			return OptimisticLockStyle.valueOf( optimisticLockModeString.toUpperCase() );
 		}

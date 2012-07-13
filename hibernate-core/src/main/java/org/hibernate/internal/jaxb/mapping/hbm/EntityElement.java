@@ -32,10 +32,10 @@ public interface EntityElement extends MetaAttributeContainer {
 	public String getName();
 	public String getEntityName();
 
-    public Boolean isAbstract();
-    public Boolean isLazy();
+    public boolean isAbstract();
+    public boolean isLazy();
     public String getProxy();
-    public String getBatchSize();
+    public int getBatchSize();
     public boolean isDynamicInsert();
     public boolean isDynamicUpdate();
     public boolean isSelectBeforeUpdate();
@@ -44,9 +44,9 @@ public interface EntityElement extends MetaAttributeContainer {
     public String getPersister();
 
 	public JaxbLoaderElement getLoader();
-	public JaxbSqlInsertElement getSqlInsert();
-	public JaxbSqlUpdateElement getSqlUpdate();
-	public JaxbSqlDeleteElement getSqlDelete();
+	public JaxbSqlDmlElement getSqlInsert();
+	public JaxbSqlDmlElement getSqlUpdate();
+	public JaxbSqlDmlElement getSqlDelete();
 
 	public List<JaxbSynchronizeElement> getSynchronize();
 

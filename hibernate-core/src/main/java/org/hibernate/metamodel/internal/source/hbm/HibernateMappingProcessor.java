@@ -23,23 +23,47 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
+import org.hibernate.bytecode.buildtime.spi.Logger;
+import org.hibernate.cfg.HbmBinder;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping.JaxbImport;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbLoadCollectionElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbResultsetElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnJoinElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnScalarElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
@@ -49,6 +73,7 @@ import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.type.Type;
 
 /**
  * Responsible for processing a {@code <hibernate-mapping/>} element.  Allows processing to be coordinated across
@@ -56,8 +81,13 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * {@link org.hibernate.metamodel.spi.MetadataSourceProcessor}
  *
  * @author Steve Ebersole
+ * @author Strong Liu
  */
 public class HibernateMappingProcessor {
+	private static final CoreMessageLogger LOG = org.jboss
+			.logging
+			.Logger
+			.getMessageLogger( CoreMessageLogger.class, HibernateMappingProcessor.class.getName() );
 	private final MetadataImplementor metadata;
 	private final MappingDocument mappingDocument;
 
@@ -241,21 +271,141 @@ public class HibernateMappingProcessor {
 	}
 
 	private void bindResultSetMappingDefinitions(JaxbResultsetElement element) {
-		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( element.getName() );
+		final ResultSetMappingDefinition definition = new ResultSetMappingDefinition( element.getName() );
+		final List returns = element.getReturnScalarOrReturnOrReturnJoin();
+		int cnt=0;
+		for ( final Object obj : returns ) {
+			cnt++;
+			final NativeSQLQueryReturn nativeSQLQueryReturn;
+			if ( JaxbReturnScalarElement.class.isInstance( obj ) ) {
+				JaxbReturnScalarElement scalarElement = JaxbReturnScalarElement.class.cast( obj );
+				String column = scalarElement.getColumn();
+				String typeFromXML = scalarElement.getType();
+				Type type = metadata.getTypeResolver().heuristicType( typeFromXML );
+				nativeSQLQueryReturn = new NativeSQLQueryScalarReturn( column, type );
+			}
+			else if ( JaxbReturnJoinElement.class.isInstance( obj ) ) {
+				nativeSQLQueryReturn = bindReturnJoin(JaxbReturnJoinElement.class.cast( obj ), cnt);
+
+			}
+			else if ( JaxbLoadCollectionElement.class.isInstance( obj ) ) {
+				nativeSQLQueryReturn = bindLoadCollection(JaxbLoadCollectionElement.class.cast( obj ), cnt);
+			}
+			else if ( JaxbReturnElement.class.isInstance( obj ) ) {
+				nativeSQLQueryReturn= bindReturn(JaxbReturnElement.class.cast( obj ), cnt);
+
+			}else {
+				throw new MappingException( "unknown type of Result set mapping return: "+obj.getClass().getName() , origin());
+			}
+			definition.addQueryReturn( nativeSQLQueryReturn );
+		}
 		metadata.addResultSetMapping( definition );
+
+	}
+
+	private NativeSQLQueryReturn bindLoadCollection(JaxbLoadCollectionElement returnElement, int cnt) {
+		final String alias = returnElement.getAlias();
+		final String collectionAttribute = returnElement.getRole();
+		final LockMode lockMode = Helper.interpretLockMode( returnElement.getLockMode(), origin() );
+		int dot = collectionAttribute.lastIndexOf( '.' );
+		if ( dot == -1 ) {
+			throw new MappingException(
+					"Collection attribute for sql query return [alias=" + alias +
+							"] not formatted correctly {OwnerClassName.propertyName}", origin()
+			);
+		}
+		final String ownerClassName = HbmBinder.getClassName( collectionAttribute.substring( 0, dot ), bindingContext().getMappingDefaults().getPackageName() );
+		final String ownerPropertyName = collectionAttribute.substring( dot + 1 );
+
+//		//FIXME: get the PersistentClass
+//		java.util.Map propertyResults = bindPropertyResults(alias, returnElem, null, mappings );
+//
+//		return new NativeSQLQueryCollectionReturn(
+//				alias,
+//				ownerClassName,
+//				ownerPropertyName,
+//				propertyResults,
+//				lockMode
+//		);
+		return null;
+	}
+
+	private NativeSQLQueryReturn bindReturnJoin(JaxbReturnJoinElement returnJoinElement, int cnt) {
+		final String alias = returnJoinElement.getAlias();
+		final String roleAttribute = returnJoinElement.getProperty();
+		final LockMode lockMode  = Helper.interpretLockMode( returnJoinElement.getLockMode(), origin() );
+		int dot = roleAttribute.lastIndexOf( '.' );
+		if ( dot == -1 ) {
+			throw new MappingException(
+					"Role attribute for sql query return [alias=" + alias +
+							"] not formatted correctly {owningAlias.propertyName}", origin()
+			);
+		}
+		String roleOwnerAlias = roleAttribute.substring( 0, dot );
+		String roleProperty = roleAttribute.substring( dot + 1 );
+
+		//FIXME: get the PersistentClass
+//		java.util.Map propertyResults = bindPropertyResults( alias, returnJoinElement, null );
+
+//		return new NativeSQLQueryJoinReturn(
+//				alias,
+//				roleOwnerAlias,
+//				roleProperty,
+//				propertyResults, // TODO: bindpropertyresults(alias, returnElem)
+//				lockMode
+//		);
+		return null;
+	}
+
+	private NativeSQLQueryRootReturn bindReturn(JaxbReturnElement returnElement,int elementCount) {
+		String alias = returnElement.getAlias();
+		if( StringHelper.isEmpty( alias )) {
+			alias = "alias_" + elementCount; // hack/workaround as sqlquery impl depend on having a key.
+		}
+		String clazz = returnElement.getClazz();
+		String entityName = returnElement.getEntityName();
+		if(StringHelper.isEmpty( clazz ) && StringHelper.isEmpty( entityName )) {
+			throw new org.hibernate.MappingException( "<return alias='" + alias + "'> must specify either a class or entity-name");
+		}
+		LockMode lockMode = Helper.interpretLockMode( returnElement.getLockMode(), origin() );
+
+
+		EntityBinding entityBinding = null;
+
+		if ( StringHelper.isNotEmpty( entityName ) ) {
+			entityBinding = metadata.getEntityBinding( entityName );
+		}
+		if ( StringHelper.isNotEmpty( clazz ) ) {
+			//todo look up entitybinding by class name
+		}
+		java.util.Map<String, String[]> propertyResults = bindPropertyResults( alias, returnElement, entityBinding );
+
+		return new NativeSQLQueryRootReturn(
+				alias,
+				entityName,
+				propertyResults,
+				lockMode
+		);
+
+
+	}
+	//TODO impl this, see org.hibernate.metamodel.internal.source.annotations.global.SqlResultSetProcessor.bindEntityResult()
+	// and org.hibernate.cfg.ResultSetMappingBinder.bindPropertyResults()
+	private Map<String, String[]> bindPropertyResults(String alias, JaxbReturnElement returnElement, EntityBinding entityBinding) {
+		return null;
 	}
 
 	private void processNamedQueries() {
-		if ( mappingRoot().getQueryOrSqlQuery() == null ) {
+		if ( CollectionHelper.isEmpty( mappingRoot().getQueryOrSqlQuery() ) ) {
 			return;
 		}
 
 		for ( Object queryOrSqlQuery : mappingRoot().getQueryOrSqlQuery() ) {
 			if ( JaxbQueryElement.class.isInstance( queryOrSqlQuery ) ) {
-//					bindNamedQuery( element, null, mappings );
+					bindNamedQuery( JaxbQueryElement.class.cast( queryOrSqlQuery ) );
 			}
 			else if ( JaxbSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
-//				bindNamedSQLQuery( element, null, mappings );
+				bindNamedSQLQuery( JaxbSqlQueryElement.class.cast( queryOrSqlQuery ) );
 			}
 			else {
 				throw new MappingException(
@@ -264,5 +414,153 @@ public class HibernateMappingProcessor {
 				);
 			}
 		}
+	}
+
+	private void bindNamedQuery(JaxbQueryElement queryElement) {
+		final String queryName = queryElement.getName();
+		//path??
+		List<Serializable> list = queryElement.getContent();
+		final Map<String, String> queryParam;
+		String query = "";
+		if ( CollectionHelper.isNotEmpty( list ) ) {
+			queryParam = new HashMap<String, String>( list.size() );
+			for ( Serializable obj : list ) {
+				if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
+					JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
+					queryParam.put( element.getName(), element.getType() );
+				}else if(String.class.isInstance( obj )){
+					query = obj.toString();
+				}
+			}
+		}
+		else {
+			queryParam = Collections.emptyMap();
+		}
+		if ( StringHelper.isEmpty( query ) ) {
+			throw new MappingException( "Named query[" + queryName + "] has no hql defined", origin() );
+		}
+		final boolean cacheable = queryElement.isCacheable();
+		final String region = queryElement.getCacheRegion();
+		final Integer timeout = queryElement.getTimeout();
+		final Integer fetchSize = queryElement.getFetchSize();
+		final boolean readonly = queryElement.isReadOnly();
+		final CacheMode cacheMode = queryElement.getCacheMode() == null ? null : CacheMode.valueOf(
+				queryElement.getCacheMode()
+						.value()
+						.toUpperCase()
+		);
+		final String comment = queryElement.getComment();
+		final FlushMode flushMode = queryElement.getFlushMode() == null ? null : FlushMode.valueOf(
+				queryElement.getFlushMode()
+						.value()
+						.toUpperCase()
+		);
+		NamedQueryDefinition namedQuery = new NamedQueryDefinition(
+				queryName,
+				query,
+				cacheable,
+				region,
+				timeout,
+				fetchSize,
+				flushMode,
+				cacheMode,
+				readonly,
+				comment,
+				queryParam
+		);
+		metadata.addNamedQuery( namedQuery );
+
+	}
+
+	private void bindNamedSQLQuery(JaxbSqlQueryElement queryElement) {
+		final String queryName = queryElement.getName();
+		//todo patch
+		final boolean cacheable = queryElement.isCacheable();
+		String query = "";
+		final String region = queryElement.getCacheRegion();
+		final Integer timeout = queryElement.getTimeout();
+		final Integer fetchSize = queryElement.getFetchSize();
+		final boolean readonly = queryElement.isReadOnly();
+		final CacheMode cacheMode = queryElement.getCacheMode()==null ? null : CacheMode.valueOf( queryElement.getCacheMode().value().toUpperCase() );
+		final FlushMode flushMode = queryElement.getFlushMode() ==null ? null : FlushMode.valueOf( queryElement.getFlushMode().value().toUpperCase() );
+		final String comment = queryElement.getComment();
+		final boolean callable = queryElement.isCallable();
+		final String resultSetRef = queryElement.getResultsetRef();
+		final java.util.List<String> synchronizedTables = new ArrayList<String>();
+		final Map<String, String> queryParam = new HashMap<String, String>( );
+		List<Serializable> list = queryElement.getContent();
+		for ( Serializable obj : list ) {
+			if ( JaxbSynchronizeElement.class.isInstance( obj ) ) {
+				 JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( obj );
+				synchronizedTables.add( element.getTable() );
+			}
+			else if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
+				JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
+				queryParam.put( element.getName(), element.getType() );
+			}
+			else if ( JaxbLoadCollectionElement.class.isInstance( obj ) ) {
+
+			}
+			else if ( JaxbReturnScalarElement.class.isInstance( obj ) ) {
+
+			}
+			else if ( JaxbReturnElement.class.isInstance( obj ) ) {
+
+			}
+			else if ( JaxbReturnJoinElement.class.isInstance( obj ) ) {
+
+			}
+			else if ( String.class.isInstance( obj ) ){
+				query = obj.toString();
+			}
+
+		}
+		if ( StringHelper.isEmpty( query ) ) {
+			throw new MappingException( "Named sql query[" + queryName + "] has no sql defined", origin() );
+		}
+		NamedSQLQueryDefinition namedQuery=null;
+		if(StringHelper.isNotEmpty( resultSetRef )){
+			namedQuery = new NamedSQLQueryDefinition(
+					queryName,
+					query,
+					resultSetRef,
+					synchronizedTables,
+					cacheable,
+					region,
+					timeout,
+					fetchSize,
+					flushMode,
+					cacheMode,
+					readonly,
+					comment,
+					queryParam,
+					callable
+			);
+			//TODO check there is no actual definition elemnents when a ref is defined
+		}   else {
+//			ResultSetMappingDefinition definition = buildResultSetMappingDefinition( queryElem, path, mappings );
+//			namedQuery = new NamedSQLQueryDefinition(
+//					queryName,
+//					query,
+//					definition.getQueryReturns(),
+//					synchronizedTables,
+//					cacheable,
+//					region,
+//					timeout,
+//					fetchSize,
+//					flushMode,
+//					cacheMode,
+//					readonly,
+//					comment,
+//					queryParam,
+//					callable
+//			);
+
+		}
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Named SQL query: %s -> %s", namedQuery.getName(), namedQuery.getQueryString() );
+		}
+		metadata.addNamedNativeQuery( namedQuery );
+
 	}
 }

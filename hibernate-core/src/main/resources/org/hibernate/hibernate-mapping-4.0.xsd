@@ -54,12 +54,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
               	FILTER-PARAM element; qualifies parameters found within a FILTER-DEF
               	condition.
               -->
-              <xs:element name="filter-param">
-                <xs:complexType>
-                  <xs:attribute name="name" use="required" type="xs:string"/> <!-- The parameter name -->
-                  <xs:attribute name="type" use="required" type="xs:string"/> <!-- The parameter type -->
-                </xs:complexType>
-              </xs:element>
+                <xs:element name="filter-param">
+                    <xs:complexType>
+                        <xs:attribute name="name" use="required" type="xs:string"/> <!-- The parameter name -->
+                        <xs:attribute name="type" use="required" type="xs:string"/> <!-- The parameter type -->
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
             <xs:attribute name="condition" type="xs:string"/>
             <xs:attribute name="name" use="required" type="xs:string"/> <!-- The filter name -->
@@ -106,7 +106,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                       </xs:sequence>
                       <xs:attribute name="access" type="xs:string"/>
                       <xs:attribute name="column" type="xs:string"/>
-                      <xs:attribute name="length" type="xs:string"/>
+                      <xs:attribute name="length" type="xs:int"/>
                       <xs:attribute name="name" type="xs:string"/>
                       <xs:attribute name="node" type="xs:string"/>
                       <xs:attribute name="type" type="xs:string"/>
@@ -159,7 +159,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                     <xs:attribute name="force" default="false" type="xs:boolean"/>
                     <xs:attribute name="formula" type="xs:string"/>
                     <xs:attribute name="insert" default="true" type="xs:boolean"/>
-                    <xs:attribute name="length" type="xs:string"/>
+                    <xs:attribute name="length" type="xs:int"/>
                     <xs:attribute name="not-null" default="true" type="xs:boolean"/>
                     <xs:attribute name="type" default="string" type="xs:string"/>
                   </xs:complexType>
@@ -276,9 +276,9 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                   <xs:element name="union-subclass" minOccurs="0" maxOccurs="unbounded" type="union-subclass-element"/>
                 </xs:choice>
                 <xs:element name="loader" minOccurs="0" type="loader-element"/>
-                <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-                <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-                <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+                <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+                <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+                <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
                 <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
                 <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
                 <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
@@ -287,15 +287,15 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                   <xs:element name="sql-query" type="sql-query-element"/>
                 </xs:choice>
               </xs:sequence>
-              <xs:attribute name="abstract" type="xs:boolean"/>
-              <xs:attribute name="batch-size" type="xs:string"/>
+              <xs:attribute name="abstract" default="false" type="xs:boolean"/>
+              <xs:attribute name="batch-size" default="-1" type="xs:int"/>
               <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
               <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
               <xs:attribute name="discriminator-value" type="xs:string"/> <!-- default: unqualified class name | none -->
               <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
               <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
               <xs:attribute name="entity-name" type="xs:string"/>
-              <xs:attribute name="lazy" type="xs:boolean"/>
+              <xs:attribute name="lazy" default="true" type="xs:boolean"/>
               <xs:attribute name="mutable" default="true" type="xs:boolean"/>
               <xs:attribute name="name" type="xs:string"/> <!-- this is the class name -->
               <xs:attribute name="node" type="xs:string"/>
@@ -433,15 +433,15 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
     </xs:sequence>
+    <xs:attributeGroup ref="table-information-group"/>
     <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
+    <xs:attribute name="batch-size" default="-1" type="xs:int"/>
     <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="collection-type" type="xs:string"/>
     <xs:attribute name="element-class" type="xs:string"/>
@@ -454,9 +454,6 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
     <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
     <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
@@ -477,33 +474,20 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
     </xs:sequence>
-    <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="collection-type" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attributeGroup ref="plural-basic-attribute-group"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
     <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
-    <xs:attribute name="inverse" default="false" type="xs:boolean"/>
     <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
-    <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-    <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
-    <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="order-by" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
-    <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
-    <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
   <!-- The cache element enables caching of an entity class. -->
@@ -542,12 +526,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="check" type="xs:string"/> <!-- default: no check constraint -->
     <xs:attribute name="default" type="xs:string"/> <!-- default: no default value -->
     <xs:attribute name="index" type="xs:string"/>
-    <xs:attribute name="length" type="xs:string"/> <!-- default: 255 -->
+    <xs:attribute name="length" type="xs:int"/> <!-- default: 255 -->
     <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="not-null" type="xs:boolean"/> <!-- default: false (except for id properties) -->
-    <xs:attribute name="precision" type="xs:string"/>
+    <xs:attribute name="precision" type="xs:int"/>
     <xs:attribute name="read" type="xs:string"/> <!-- default: column name -->
-    <xs:attribute name="scale" type="xs:string"/>
+    <xs:attribute name="scale" type="xs:int"/>
     <xs:attribute name="sql-type" type="xs:string"/> <!-- override default column type for hibernate type -->
     <xs:attribute name="unique" type="xs:boolean"/> <!-- default: false (except for id properties) -->
     <xs:attribute name="unique-key" type="xs:string"/> <!-- default: no unique key -->
@@ -653,11 +637,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     </xs:sequence>
     <xs:attribute name="column" type="xs:string"/>
     <xs:attribute name="formula" type="xs:string"/>
-    <xs:attribute name="length" type="xs:string"/>
+    <xs:attribute name="length" type="xs:int"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="not-null" default="false" type="xs:boolean"/>
-    <xs:attribute name="precision" type="xs:string"/>
-    <xs:attribute name="scale" type="xs:string"/>
+    <xs:attribute name="precision" type="xs:int"/>
+    <xs:attribute name="scale" type="xs:int"/>
     <xs:attribute name="type" type="xs:string"/>
     <xs:attribute name="unique" default="false" type="xs:boolean"/>
   </xs:complexType>
@@ -728,7 +712,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             <xs:element name="generator" type="generator-element"/>
           </xs:sequence>
           <xs:attribute name="column" use="required" type="xs:string"/>
-          <xs:attribute name="length" type="xs:string"/>
+          <xs:attribute name="length" type="xs:int"/>
           <xs:attribute name="type" use="required" type="xs:string"/>
         </xs:complexType>
       </xs:element>
@@ -740,32 +724,20 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
     </xs:sequence>
-    <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="collection-type" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attributeGroup ref="plural-basic-attribute-group"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
     <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
     <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
-    <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-    <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
-    <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="order-by" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
-    <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
-    <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
   <xs:complexType name="index-element">
@@ -773,7 +745,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
     </xs:sequence>
     <xs:attribute name="column" type="xs:string"/>
-    <xs:attribute name="length" type="xs:string"/>
+    <xs:attribute name="length" type="xs:int"/>
     <xs:attribute name="type" type="xs:string"/> <!-- required for maps -->
   </xs:complexType>
 
@@ -791,17 +763,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="dynamic-component" type="dynamic-component-element"/>
         <xs:element name="any" type="any-element"/>
       </xs:choice>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
     </xs:sequence>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
+    <xs:attributeGroup ref="table-information-group"/>
     <xs:attribute name="fetch" default="join" type="fetch-attribute"/>
     <xs:attribute name="inverse" default="false" type="xs:boolean"/>
     <xs:attribute name="optional" default="false" type="xs:boolean"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" use="required" type="xs:string"/>
   </xs:complexType>
 
   <!--
@@ -835,9 +804,9 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       </xs:choice>
       <xs:element name="joined-subclass" minOccurs="0" maxOccurs="unbounded" type="joined-subclass-element"/>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -845,23 +814,20 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="sql-query" type="sql-query-element"/>
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="abstract" type="xs:boolean"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attribute name="abstract" default="false" type="xs:boolean"/>
+    <xs:attribute name="batch-size" default="-1" type="xs:int"/>
     <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
     <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
     <xs:attribute name="entity-name" type="xs:string"/>
     <xs:attribute name="extends" type="xs:string"/> <!-- default: none when toplevel, otherwise the nearest class definition -->
-    <xs:attribute name="lazy" type="xs:boolean"/>
+    <xs:attribute name="lazy" default="true" type="xs:boolean"/>
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="persister" type="xs:string"/>
     <xs:attribute name="proxy" type="xs:string"/> <!-- default: no proxy interface -->
-    <xs:attribute name="schema" type="xs:string"/>
     <xs:attribute name="select-before-update" default="false" type="xs:boolean"/>
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: unqualified class name -->
   </xs:complexType>
 
   <!-- Declares the column name of a foreign key. -->
@@ -910,7 +876,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     </xs:sequence>
     <xs:attribute name="access" type="xs:string"/>
     <xs:attribute name="column" type="xs:string"/>
-    <xs:attribute name="length" type="xs:string"/>
+    <xs:attribute name="length" type="xs:int"/>
     <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="type" type="xs:string"/>
@@ -937,32 +903,19 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
     </xs:sequence>
-    <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="collection-type" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attributeGroup ref="plural-basic-attribute-group"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
     <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
-    <xs:attribute name="inverse" default="false" type="xs:boolean"/>
     <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
-    <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-    <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
-    <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
-    <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
-    <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
   <!-- Declares the type and column mapping for a collection index (array or
@@ -1093,7 +1046,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             </xs:sequence>
             <xs:attribute name="column" type="xs:string"/>
             <xs:attribute name="formula" type="xs:string"/>
-            <xs:attribute name="length" type="xs:string"/>
+            <xs:attribute name="length" type="xs:int"/>
             <xs:attribute name="node" type="xs:string"/>
             <xs:attribute name="type" type="xs:string"/>
           </xs:complexType>
@@ -1170,34 +1123,21 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
     </xs:sequence>
-    <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="collection-type" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attributeGroup ref="plural-basic-attribute-group"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
     <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
-    <xs:attribute name="inverse" default="false" type="xs:boolean"/>
     <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
-    <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-    <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
-    <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="order-by" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
-    <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="sort" default="unsorted" type="xs:string"/> <!-- unsorted|natural|"comparator class", default: unsorted -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
-    <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
   <!--
@@ -1300,14 +1240,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       </xs:choice>
       <xs:element name="element" type="element-element"/>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
     </xs:sequence>
+    <xs:attributeGroup ref="table-information-group"/>
     <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
+    <xs:attribute name="batch-size" default="-1" type="xs:int"/>
     <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="collection-type" type="xs:string"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
@@ -1318,9 +1258,6 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
     <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
     <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
@@ -1371,7 +1308,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="index" type="xs:string"/> <!-- include the columns spanned by this property in an index -->
     <xs:attribute name="insert" type="xs:boolean"/>
     <xs:attribute name="lazy" default="false" type="xs:boolean"/>
-    <xs:attribute name="length" type="xs:string"/>
+    <xs:attribute name="length" type="xs:int"/>
     <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="not-null" type="xs:boolean"/>
@@ -1393,11 +1330,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="cache-region" type="xs:string"/>
     <xs:attribute name="cacheable" default="false" type="xs:boolean"/>
     <xs:attribute name="comment" type="xs:string"/>
-    <xs:attribute name="fetch-size" type="xs:string"/>
+    <xs:attribute name="fetch-size" type="xs:int"/>
     <xs:attribute name="flush-mode" type="flush-mode-attribute"/>
     <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="read-only" type="xs:boolean"/>
-    <xs:attribute name="timeout" type="xs:string"/>
+    <xs:attribute name="timeout" type="xs:int"/>
   </xs:complexType>
 
   <!-- The query-param element is used only by tools that generate
@@ -1468,6 +1405,20 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="type" type="xs:string"/>
   </xs:complexType>
 
+  <xs:attributeGroup name="plural-basic-attribute-group">
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="access" type="xs:string"/>
+      <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
+      <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
+      <xs:attribute name="cascade" type="xs:string"/>
+      <xs:attribute name="batch-size" default="-1" type="xs:int"/>
+      <xs:attribute name="inverse" default="false" type="xs:boolean"/>
+      <xs:attribute name="mutable" default="true" type="xs:boolean"/>
+      <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
+      <xs:attribute name="collection-type" type="xs:string"/>
+      <xs:attribute name="persister" type="xs:string"/>
+  </xs:attributeGroup>
+
   <xs:complexType name="set-element">
     <xs:sequence>
       <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
@@ -1485,56 +1436,24 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="many-to-any" type="many-to-any-element"/>
       </xs:choice>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
-      <xs:element name="sql-delete-all" minOccurs="0" type="sql-delete-all-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete-all" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
     </xs:sequence>
-    <xs:attribute name="access" type="xs:string"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="cascade" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
-    <xs:attribute name="collection-type" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attributeGroup ref="plural-basic-attribute-group"/>
     <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
     <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
-    <xs:attribute name="inverse" default="false" type="xs:boolean"/>
     <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
-    <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-    <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
-    <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/> <!-- only supported for properties of a class (not component) -->
     <xs:attribute name="order-by" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="outer-join" type="outer-join-attribute"/>
-    <xs:attribute name="persister" type="xs:string"/>
-    <xs:attribute name="schema" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="sort" default="unsorted" type="xs:string"/> <!-- unsorted|natural|"comparator class" -->
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: name -->
-    <xs:attribute name="where" type="xs:string"/> <!-- default: none -->
   </xs:complexType>
 
-  <xs:complexType name="sql-delete-all-element" mixed="true">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute name="callable" default="false" type="xs:boolean"/>
-        <xs:attribute name="check" type="check-attribute"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-
-  <xs:complexType name="sql-delete-element" mixed="true">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute name="callable" default="false" type="xs:boolean"/>
-        <xs:attribute name="check" type="check-attribute"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-
-  <!-- custom sql operations -->
-  <xs:complexType name="sql-insert-element" mixed="true">
+  <xs:complexType name="sql-dml-element" mixed="true">
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute name="callable" default="false" type="xs:boolean"/>
@@ -1558,21 +1477,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="cacheable" default="false" type="xs:boolean"/>
     <xs:attribute name="callable" default="false" type="xs:boolean"/>
     <xs:attribute name="comment" type="xs:string"/>
-    <xs:attribute name="fetch-size" type="xs:string"/>
+    <xs:attribute name="fetch-size" type="xs:int"/>
     <xs:attribute name="flush-mode" type="flush-mode-attribute"/>
     <xs:attribute name="name" use="required" type="xs:string"/>
     <xs:attribute name="read-only" type="xs:boolean"/>
     <xs:attribute name="resultset-ref" type="xs:string"/>
-    <xs:attribute name="timeout" type="xs:string"/>
-  </xs:complexType>
-
-  <xs:complexType name="sql-update-element" mixed="true">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute name="callable" default="false" type="xs:boolean"/>
-        <xs:attribute name="check" type="check-attribute"/>
-      </xs:extension>
-    </xs:simpleContent>
+    <xs:attribute name="timeout" type="xs:int"/>
   </xs:complexType>
 
   <!--
@@ -1603,9 +1513,9 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="join" minOccurs="0" maxOccurs="unbounded" type="join-element"/>
       <xs:element name="subclass" minOccurs="0" maxOccurs="unbounded" type="subclass-element"/>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1613,14 +1523,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="sql-query" type="sql-query-element"/>
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="abstract" type="xs:boolean"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
+    <xs:attribute name="abstract" default="false" type="xs:boolean"/>
+    <xs:attribute name="batch-size" default="-1" type="xs:int"/>
     <xs:attribute name="discriminator-value" type="xs:string"/> <!-- default: unqualified class name | none -->
     <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
     <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
     <xs:attribute name="entity-name" type="xs:string"/>
     <xs:attribute name="extends" type="xs:string"/> <!-- default: empty when a toplevel, otherwise the nearest class definition -->
-    <xs:attribute name="lazy" type="xs:boolean"/>
+    <xs:attribute name="lazy" default="true" type="xs:boolean"/>
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="persister" type="xs:string"/>
@@ -1657,6 +1567,13 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="name" use="required" type="xs:string"/>
   </xs:complexType>
 
+  <xs:attributeGroup name="table-information-group">
+    <xs:attribute name="schema" type="xs:string"/>
+    <xs:attribute name="catalog" type="xs:string"/>
+    <xs:attribute name="table" type="xs:string"/>
+    <!-- default: unqualified class name -->
+    <xs:attribute name="subselect" type="xs:string"/>
+  </xs:attributeGroup>
   <!--
   	Union subclasses are used for the table-per-concrete-class mapping strategy
   	See the note on the class element regarding <pojo/> vs. @name usage...
@@ -1687,9 +1604,9 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       </xs:choice>
       <xs:element name="union-subclass" minOccurs="0" maxOccurs="unbounded" type="union-subclass-element"/>
       <xs:element name="loader" minOccurs="0" type="loader-element"/>
-      <xs:element name="sql-insert" minOccurs="0" type="sql-insert-element"/>
-      <xs:element name="sql-update" minOccurs="0" type="sql-update-element"/>
-      <xs:element name="sql-delete" minOccurs="0" type="sql-delete-element"/>
+      <xs:element name="sql-insert" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-update" minOccurs="0" type="sql-dml-element"/>
+      <xs:element name="sql-delete" minOccurs="0" type="sql-dml-element"/>
       <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
       <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -1697,23 +1614,20 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:element name="sql-query" type="sql-query-element"/>
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="abstract" type="xs:boolean"/>
-    <xs:attribute name="batch-size" type="xs:string"/>
-    <xs:attribute name="catalog" type="xs:string"/>
+    <xs:attributeGroup ref="table-information-group"/>
+    <xs:attribute name="abstract" default="false" type="xs:boolean"/>
+    <xs:attribute name="batch-size" default="-1" type="xs:int"/>
     <xs:attribute name="check" type="xs:string"/> <!-- default: none -->
     <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
     <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
     <xs:attribute name="entity-name" type="xs:string"/>
     <xs:attribute name="extends" type="xs:string"/> <!-- default: none when toplevel, otherwise the nearest class definition -->
-    <xs:attribute name="lazy" type="xs:boolean"/>
+    <xs:attribute name="lazy" default="true" type="xs:boolean"/>
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="node" type="xs:string"/>
     <xs:attribute name="persister" type="xs:string"/>
     <xs:attribute name="proxy" type="xs:string"/> <!-- default: no proxy interface -->
-    <xs:attribute name="schema" type="xs:string"/>
     <xs:attribute name="select-before-update" default="false" type="xs:boolean"/>
-    <xs:attribute name="subselect" type="xs:string"/>
-    <xs:attribute name="table" type="xs:string"/> <!-- default: unqualified class name -->
   </xs:complexType>
 
   <xs:simpleType name="cache-mode-attribute">
@@ -1794,6 +1708,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:enumeration value="upgrade"/>
       <xs:enumeration value="upgrade-nowait"/>
       <xs:enumeration value="write"/>
+      <xs:enumeration value="force"/>
+      <xs:enumeration value="optimistic"/>
+      <xs:enumeration value="optimistic_force_increment"/>
+      <xs:enumeration value="pessimistic_read"/>
+      <xs:enumeration value="pessimistic_write"/>
+      <xs:enumeration value="pessimistic_force_increment"/>
     </xs:restriction>
   </xs:simpleType>
 

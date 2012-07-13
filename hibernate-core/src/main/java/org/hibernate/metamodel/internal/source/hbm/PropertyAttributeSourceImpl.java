@@ -98,12 +98,12 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return Helper.getBooleanValue( propertyElement.isInsert(), true );
+						return Helper.getValue( propertyElement.isInsert(), true );
 					}
 
 					@Override
 					public boolean isIncludedInUpdateByDefault() {
-						return Helper.getBooleanValue( propertyElement.isUpdate(), true );
+						return Helper.getValue( propertyElement.isUpdate(), true );
 					}
 				}
 		);
@@ -132,7 +132,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 
 	@Override
 	public boolean isLazy() {
-		return Helper.getBooleanValue( propertyElement.isLazy(), false );
+		return Helper.getValue( propertyElement.isLazy(), false );
 	}
 
 	@Override
@@ -142,7 +142,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
-		return Helper.getBooleanValue( propertyElement.isOptimisticLock(), true );
+		return Helper.getValue( propertyElement.isOptimisticLock(), true );
 	}
 
 	@Override
@@ -157,17 +157,17 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return Helper.getBooleanValue( propertyElement.isInsert(), true );
+		return Helper.getValue( propertyElement.isInsert(), true );
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return Helper.getBooleanValue( propertyElement.isUpdate(), true );
+		return Helper.getValue( propertyElement.isUpdate(), true );
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return ! Helper.getBooleanValue( propertyElement.isNotNull(), false );
+		return ! Helper.getValue( propertyElement.isNotNull(), false );
 	}
 
 	@Override

@@ -64,7 +64,7 @@ public class PluralAttributeKeySourceImpl
 
 					@Override
 					public boolean isIncludedInUpdateByDefault() {
-						return Helper.getBooleanValue( keyElement.isUpdate(), true );
+						return Helper.getValue( keyElement.isUpdate(), true );
 					}
 
 					@Override
@@ -84,7 +84,7 @@ public class PluralAttributeKeySourceImpl
 
 					@Override
 					public boolean isForceNotNull() {
-						return Helper.getBooleanValue( keyElement.isNotNull(), false );
+						return Helper.getValue( keyElement.isNotNull(), false );
 					}
 				}
 		);

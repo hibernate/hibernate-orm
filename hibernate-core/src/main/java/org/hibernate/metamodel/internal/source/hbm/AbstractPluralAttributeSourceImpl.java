@@ -300,7 +300,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		final String outerJoinSelection = pluralAttributeElement.getOuterJoin() != null
 				? pluralAttributeElement.getOuterJoin().value()
 				: null;
-		final int batchSize = Helper.getIntValue( pluralAttributeElement.getBatchSize(), -1 );
+		final int batchSize = pluralAttributeElement.getBatchSize();
 
 		if ( fetchSelection == null ) {
 			if ( outerJoinSelection == null ) {

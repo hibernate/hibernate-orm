@@ -252,12 +252,12 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public boolean isAbstract() {
-		return Helper.getBooleanValue( entityElement.isAbstract(), false );
+		return entityElement().isAbstract();
 	}
 
 	@Override
 	public boolean isLazy() {
-		return Helper.getBooleanValue( entityElement.isAbstract(), true );
+		return entityElement().isLazy();
 	}
 
 	@Override
@@ -267,7 +267,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public int getBatchSize() {
-		return Helper.getIntValue( entityElement.getBatchSize(), -1 );
+		return entityElement.getBatchSize();
 	}
 
 	@Override

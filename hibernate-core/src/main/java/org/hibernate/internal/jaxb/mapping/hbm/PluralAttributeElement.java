@@ -47,10 +47,10 @@ public interface PluralAttributeElement extends TableInformationSource, MetaAttr
 	public String getWhere();
 
 	public JaxbLoaderElement getLoader();
-	public JaxbSqlInsertElement getSqlInsert();
-    public JaxbSqlUpdateElement getSqlUpdate();
-    public JaxbSqlDeleteElement getSqlDelete();
-    public JaxbSqlDeleteAllElement getSqlDeleteAll();
+	public JaxbSqlDmlElement getSqlInsert();
+    public JaxbSqlDmlElement getSqlUpdate();
+    public JaxbSqlDmlElement getSqlDelete();
+    public JaxbSqlDmlElement getSqlDeleteAll();
 
 	public List<JaxbSynchronizeElement> getSynchronize();
 
@@ -62,7 +62,7 @@ public interface PluralAttributeElement extends TableInformationSource, MetaAttr
 	public JaxbLazyAttributeWithExtra getLazy();
 	public JaxbOuterJoinAttribute getOuterJoin();
 
-	public String getBatchSize();
+	public int getBatchSize();
 	public boolean isInverse();
     public boolean isMutable();
 	public boolean isOptimisticLock();

@@ -321,6 +321,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:complexType name="natural-id-element">
         <xs:sequence>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <simplify:as-element-property/>
+                    </xs:appinfo>
+                </xs:annotation>
                 <xs:element name="property" type="property-element"/>
                 <xs:element name="many-to-one" type="many-to-one-element"/>
                 <xs:element name="component" type="component-element"/>

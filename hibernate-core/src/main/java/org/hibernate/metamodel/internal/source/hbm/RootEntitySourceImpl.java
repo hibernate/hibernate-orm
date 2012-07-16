@@ -141,15 +141,14 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
 		final JaxbNaturalIdElement naturalId = entityElement().getNaturalId();
 		if ( naturalId != null ) {
-			return buildAttributeSources(
-					entityElement(), attributeSources, null, naturalId.isMutable()
-					? SingularAttributeBinding.NaturalIdMutability.MUTABLE
-					: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE
-			);
+			final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = naturalId.isMutable() ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
+			processPropertyAttributes( attributeSources, naturalId.getProperty(), null, naturalIdMutability );
+			processManyToOneAttributes( attributeSources, naturalId.getManyToOne(), null, naturalIdMutability );
+			processComponentAttributes( attributeSources, naturalId.getComponent(), null, naturalIdMutability );
+			processDynamicComponentAttributes( attributeSources, naturalId.getDynamicComponent(), null, naturalIdMutability );
+			processAnyAttributes( attributeSources, naturalId.getAny(), null, naturalIdMutability );
 		}
-		else {
-			return super.buildAttributeSources( attributeSources );
-		}
+		return super.buildAttributeSources( attributeSources );
 	}
 
 	@Override

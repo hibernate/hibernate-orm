@@ -977,7 +977,61 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="unique-key" type="xs:string"/>
     <xs:attribute name="update" default="true" type="xs:boolean"/>
   </xs:complexType>
-
+    <xs:complexType name="map-key-element">
+        <xs:sequence>
+            <xs:group minOccurs="0" maxOccurs="unbounded" ref="column-or-formula"/>
+            <xs:element name="type" minOccurs="0" type="type-element"/>
+        </xs:sequence>
+        <xs:attribute name="column" type="xs:string"/>
+        <xs:attribute name="formula" type="xs:string"/>
+        <xs:attribute name="length" type="xs:int"/>
+        <xs:attribute name="node" type="xs:string"/>
+        <xs:attribute name="type" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="composite-map-key-element">
+        <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="key-property" type="key-property-element"/>
+                <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="class" use="required" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="map-key-many-to-many">
+        <xs:sequence>
+            <xs:group minOccurs="0" maxOccurs="unbounded" ref="column-or-formula"/>
+        </xs:sequence>
+        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="column" type="xs:string"/>
+        <xs:attribute name="entity-name" type="xs:string"/>
+        <xs:attribute name="foreign-key" type="xs:string"/>
+        <xs:attribute name="formula" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="composite-index-element">
+        <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="key-property" type="key-property-element"/>
+                <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="class" use="required" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="index-many-to-many-element">
+        <xs:sequence>
+            <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
+        </xs:sequence>
+        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="column" type="xs:string"/>
+        <xs:attribute name="entity-name" type="xs:string"/>
+        <xs:attribute name="foreign-key" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="index-many-to-any-element">
+        <xs:sequence>
+            <xs:element name="column" type="column-element"/>
+        </xs:sequence>
+        <xs:attribute name="id-type" use="required" type="xs:string"/>
+        <xs:attribute name="meta-type" type="xs:string"/> <!--- default: Hibernate.CLASS -->
+    </xs:complexType>
   <!-- Collection declarations nested inside a class declaration indicate a foreign key 
   relationship from the collection table to the enclosing class. -->
   <xs:complexType name="map-element">
@@ -990,77 +1044,16 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="comment" minOccurs="0" type="xs:string"/>
       <xs:element name="key" type="key-element"/>
       <xs:choice>
-        <xs:element name="map-key">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:group minOccurs="0" maxOccurs="unbounded" ref="column-or-formula"/>
-              <xs:element name="type" minOccurs="0" type="type-element"/>
-            </xs:sequence>
-            <xs:attribute name="column" type="xs:string"/>
-            <xs:attribute name="formula" type="xs:string"/>
-            <xs:attribute name="length" type="xs:int"/>
-            <xs:attribute name="node" type="xs:string"/>
-            <xs:attribute name="type" type="xs:string"/>
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="map-key" type="map-key-element"/>
         <!-- Composite index of a map ie. a map keyed on components. -->
-        <xs:element name="composite-map-key">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="key-property" type="key-property-element"/>
-                <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
-              </xs:choice>
-            </xs:sequence>
-            <xs:attribute name="class" use="required" type="xs:string"/>
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="composite-map-key" type="composite-map-key-element"/>
         <!-- Many to many association mapped to the key of a map. ie. a map keyed
         on entities. -->
-        <xs:element name="map-key-many-to-many">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:group minOccurs="0" maxOccurs="unbounded" ref="column-or-formula"/>
-            </xs:sequence>
-            <xs:attribute name="class" type="xs:string"/>
-            <xs:attribute name="column" type="xs:string"/>
-            <xs:attribute name="entity-name" type="xs:string"/>
-            <xs:attribute name="foreign-key" type="xs:string"/>
-            <xs:attribute name="formula" type="xs:string"/>
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="map-key-many-to-many" type="map-key-many-to-many"/>
         <xs:element name="index" type="index-element"/>
-        <xs:element name="composite-index">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="key-property" type="key-property-element"/>
-                <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
-              </xs:choice>
-            </xs:sequence>
-            <xs:attribute name="class" use="required" type="xs:string"/>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="index-many-to-many">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
-            </xs:sequence>
-            <xs:attribute name="class" use="required" type="xs:string"/>
-            <xs:attribute name="column" type="xs:string"/>
-            <xs:attribute name="entity-name" type="xs:string"/>
-            <xs:attribute name="foreign-key" type="xs:string"/>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="index-many-to-any">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="column" type="column-element"/>
-            </xs:sequence>
-            <xs:attribute name="id-type" use="required" type="xs:string"/>
-            <xs:attribute name="meta-type" type="xs:string"/> <!--- default: Hibernate.CLASS -->
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="composite-index" type="composite-index-element"/>
+        <xs:element name="index-many-to-many" type="index-many-to-many-element"/>
+        <xs:element name="index-many-to-any" type="index-many-to-any-element"/>
       </xs:choice>
       <xs:choice>
         <xs:element name="element" type="element-element"/>
@@ -1111,6 +1104,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="parent" minOccurs="0" type="parent-element"/>
       <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
         <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="any" type="any-element"/>

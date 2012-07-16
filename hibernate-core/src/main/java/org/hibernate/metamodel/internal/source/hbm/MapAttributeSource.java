@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement.JaxbMapKey;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;
@@ -48,7 +48,7 @@ public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implem
 			JaxbMapElement mapElement,
 			AttributeSourceContainer container ) {
 		super( sourceMappingDocument, mapElement, container );
-		JaxbMapKey mapKey = mapElement.getMapKey();
+		JaxbMapKeyElement mapKey = mapElement.getMapKey();
 		if ( mapKey != null ) {
 			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, mapKey );
 		} else {

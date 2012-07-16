@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement.JaxbMapKey;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -43,7 +43,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 	/**
 	 * @param sourceMappingDocument
 	 */
-	public MapAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbMapKey mapKey ) {
+	public MapAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey ) {
 		super( sourceMappingDocument );
 		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
 

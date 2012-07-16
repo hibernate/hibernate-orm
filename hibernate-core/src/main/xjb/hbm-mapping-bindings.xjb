@@ -127,10 +127,10 @@
         <jaxb:bindings node="//xsd:complexType[@name='list-index-element']//xsd:attribute[@name='column']">
             <jaxb:property name="columnAttribute"/>
         </jaxb:bindings> 
-        <jaxb:bindings node="//xsd:complexType[@name='map-element']//xsd:element[@name='map-key']//xsd:attribute[@name='type']">
+        <jaxb:bindings node="//xsd:complexType[@name='map-key-element']//xsd:attribute[@name='type']">
             <jaxb:property name="typeAttribute"/>
         </jaxb:bindings> 
-        <jaxb:bindings node="//xsd:complexType[@name='map-element']//xsd:element[@name='index-many-to-many']//xsd:attribute[@name='column']">
+        <jaxb:bindings node="//xsd:complexType[@name='index-many-to-many-element']//xsd:attribute[@name='column']">
             <jaxb:property name="columnAttribute"/>
         </jaxb:bindings> 
         <jaxb:bindings node="//xsd:complexType[@name='one-to-one-element']//xsd:attribute[@name='formula']">

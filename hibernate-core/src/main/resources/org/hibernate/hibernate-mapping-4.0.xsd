@@ -11,8 +11,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+           xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
            targetNamespace="http://www.hibernate.org/xsd/hibernate-mapping"
            elementFormDefault="qualified"
+           jaxb:extensionBindingPrefixes="simplify"
            version="4.0">
 
   <!--

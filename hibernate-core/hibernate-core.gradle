@@ -95,7 +95,7 @@ task jaxb {
                 schema: hbmXsd.path,
                 extension: 'true'
         ) {
-            arg line:     '-Xinheritance'
+            arg line:     '-Xinheritance -Xsimplify'
         }
 
         // orm.xml (jpa)

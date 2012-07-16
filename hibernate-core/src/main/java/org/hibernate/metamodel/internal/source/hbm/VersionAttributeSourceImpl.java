@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbVersionElement;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -45,12 +47,12 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 class VersionAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements VersionAttributeSource {
-	private final JaxbHibernateMapping.JaxbClass.JaxbVersion versionElement;
+	private final JaxbVersionElement versionElement;
 	private final List<RelationalValueSource> valueSources;
 
 	VersionAttributeSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbHibernateMapping.JaxbClass.JaxbVersion versionElement) {
+			final JaxbVersionElement versionElement) {
 		super( mappingDocument );
 		this.versionElement = versionElement;
 		this.valueSources = Helper.buildValueSources(
@@ -104,7 +106,7 @@ class VersionAttributeSourceImpl
 
 	@Override
 	public String getUnsavedValue() {
-		return versionElement.getUnsavedValue();
+		return versionElement.getUnsavedValue().value();
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -43,13 +44,13 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 class SingularIdentifierAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements SingularAttributeSource {
-	private final JaxbHibernateMapping.JaxbClass.JaxbId idElement;
+	private final JaxbIdElement idElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	public SingularIdentifierAttributeSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbHibernateMapping.JaxbClass.JaxbId idElement) {
+			final JaxbIdElement idElement) {
 		super( mappingDocument );
 		this.idElement = idElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {

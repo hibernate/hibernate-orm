@@ -47,9 +47,12 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDatabaseObjectElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterDefElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping.JaxbImport;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdentifierGeneratorElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbImportElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbLoadCollectionElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryParamElement;
@@ -59,6 +62,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnJoinElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnScalarElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTypedefElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -128,7 +132,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbDatabaseObject databaseObjectElement : mappingRoot().getDatabaseObject() ) {
+		for ( JaxbDatabaseObjectElement databaseObjectElement : mappingRoot().getDatabaseObject() ) {
 			final AuxiliaryDatabaseObject auxiliaryDatabaseObject;
 			if ( databaseObjectElement.getDefinition() != null ) {
 				final String className = databaseObjectElement.getDefinition().getClazz();
@@ -148,7 +152,7 @@ public class HibernateMappingProcessor {
 			else {
 				Set<String> dialectScopes = new HashSet<String>();
 				if ( databaseObjectElement.getDialectScope() != null ) {
-					for ( JaxbHibernateMapping.JaxbDatabaseObject.JaxbDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
+					for ( JaxbDatabaseObjectElement.JaxbDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
 						dialectScopes.add( dialectScope.getName() );
 					}
 				}
@@ -168,7 +172,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbTypedef typeDefElement : mappingRoot().getTypedef() ) {
+		for ( JaxbTypedefElement typeDefElement : mappingRoot().getTypedef() ) {
 			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDefElement ) );
 		}
 	}
@@ -178,7 +182,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbFilterDef filterDefElement : mappingRoot().getFilterDef() ) {
+		for ( JaxbFilterDefElement filterDefElement : mappingRoot().getFilterDef() ) {
 			filterDefinitionSources.add( new FilterDefinitionSourceImpl( mappingDocument, filterDefElement ) );
 		}
 	}
@@ -189,7 +193,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( JaxbHibernateMapping.JaxbIdentifierGenerator identifierGeneratorElement : mappingRoot().getIdentifierGenerator() ) {
+		for ( JaxbIdentifierGeneratorElement identifierGeneratorElement : mappingRoot().getIdentifierGenerator() ) {
 			metadata.registerIdentifierGenerator(
 					identifierGeneratorElement.getName(),
 					identifierGeneratorElement.getClazz()
@@ -225,7 +229,7 @@ public class HibernateMappingProcessor {
 							origin()
 					);
 				}
-				fetches.add( new FetchProfile.Fetch( entityName, fetch.getAssociation(), fetch.getStyle() ) );
+				fetches.add( new FetchProfile.Fetch( entityName, fetch.getAssociation(), fetch.getStyle().value() ) );
 			}
 			metadata.addFetchProfile( new FetchProfile( profileName, fetches ) );
 		}
@@ -233,7 +237,7 @@ public class HibernateMappingProcessor {
 
 	private void processImports() {
 		JaxbHibernateMapping root = mappingRoot();
-		for ( JaxbImport importValue : root.getImport() ) {
+		for ( JaxbImportElement importValue : root.getImport() ) {
 			String className = mappingDocument.getMappingLocalBindingContext().qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;

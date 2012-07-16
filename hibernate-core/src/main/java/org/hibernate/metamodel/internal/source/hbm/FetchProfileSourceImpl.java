@@ -73,7 +73,7 @@ public class FetchProfileSourceImpl
 		private AssociationOverrideSourceImpl(JaxbFetchProfileElement.JaxbFetch fetchElement) {
 			this.entityName = fetchElement.getEntity();
 			this.attributeName = fetchElement.getAssociation();
-			this.fetchMode = fetchElement.getStyle();
+			this.fetchMode = fetchElement.getStyle().value();
 		}
 
 		@Override

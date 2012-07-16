@@ -74,7 +74,7 @@ class ComponentAttributeSourceImpl extends AbstractComponentAttributeSourceImpl 
 		}
 		final EntityMode entityMode = StringHelper.isEmpty( componentElement().getClazz() ) ? EntityMode.MAP : EntityMode.POJO;
 		for ( JaxbTuplizerElement tuplizerElement : componentElement().getTuplizer() ) {
-			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
+			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode().value() ) ) {
 				return tuplizerElement.getClazz();
 			}
 		}

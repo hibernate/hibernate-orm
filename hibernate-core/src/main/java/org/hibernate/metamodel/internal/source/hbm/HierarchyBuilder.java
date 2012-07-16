@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbClassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
@@ -66,9 +67,9 @@ public class HierarchyBuilder {
 	private void processCurrentMappingDocument() {
 		for ( Object entityElementO : currentMappingDocument.getMappingRoot().getClazzOrSubclassOrJoinedSubclass() ) {
 			final EntityElement entityElement = (EntityElement) entityElementO;
-			if ( JaxbHibernateMapping.JaxbClass.class.isInstance( entityElement ) ) {
+			if ( JaxbClassElement.class.isInstance( entityElement ) ) {
 				// we can immediately handle <class/> elements in terms of creating the hierarchy entry
-				final JaxbHibernateMapping.JaxbClass jaxbClass = (JaxbHibernateMapping.JaxbClass) entityElement;
+				final JaxbClassElement jaxbClass = (JaxbClassElement) entityElement;
 				final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument,
 																						jaxbClass
 				);
@@ -127,8 +128,8 @@ public class HierarchyBuilder {
 	}
 
 	private void processSubElements(EntityElement entityElement, SubclassEntityContainer container) {
-		if ( JaxbHibernateMapping.JaxbClass.class.isInstance( entityElement ) ) {
-			final JaxbHibernateMapping.JaxbClass jaxbClass = (JaxbHibernateMapping.JaxbClass) entityElement;
+		if ( JaxbClassElement.class.isInstance( entityElement ) ) {
+			final JaxbClassElement jaxbClass = (JaxbClassElement) entityElement;
 			processElements( jaxbClass.getJoinedSubclass(), container );
 			processElements( jaxbClass.getSubclass(), container );
 			processElements( jaxbClass.getUnionSubclass(), container );

@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTypedefElement;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
@@ -39,7 +40,7 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	private final String implementationClassName;
 	private final Map<String,String> params;
 
-	public TypeDescriptorSourceImpl(JaxbHibernateMapping.JaxbTypedef typeDefElement) {
+	public TypeDescriptorSourceImpl(JaxbTypedefElement typeDefElement) {
 		this.name = typeDefElement.getName();
 		this.implementationClassName = typeDefElement.getClazz();
 		this.params = Helper.extractParameters( typeDefElement.getParam() );

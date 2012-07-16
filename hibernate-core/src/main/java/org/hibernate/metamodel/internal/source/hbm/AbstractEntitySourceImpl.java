@@ -296,7 +296,7 @@ public abstract class AbstractEntitySourceImpl
 		}
 		final EntityMode entityMode = determineEntityMode();
 		for ( JaxbTuplizerElement tuplizerElement : entityElement.getTuplizer() ) {
-			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
+			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode().value() ) ) {
 				return tuplizerElement.getClazz();
 			}
 		}
@@ -375,7 +375,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override

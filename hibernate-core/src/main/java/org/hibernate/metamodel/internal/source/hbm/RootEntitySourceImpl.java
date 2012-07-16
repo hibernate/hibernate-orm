@@ -33,9 +33,15 @@ import org.hibernate.TruthValue;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbClassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeIdElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDiscriminatorElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMultiTenancyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
 import org.hibernate.internal.util.StringHelper;
@@ -70,7 +76,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	protected RootEntitySourceImpl(
 			MappingDocument sourceMappingDocument,
-			JaxbHibernateMapping.JaxbClass entityElement) {
+			JaxbClassElement entityElement) {
 		super( sourceMappingDocument, entityElement );
 		this.primaryTable = Helper.createTableSource( sourceMappingDocument(), entityElement, this );
 		this.caching = Helper.createCaching( entityElement().getCache(), getEntityName() );
@@ -83,8 +89,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
-	protected JaxbHibernateMapping.JaxbClass entityElement() {
-		return (JaxbHibernateMapping.JaxbClass) super.entityElement();
+	protected JaxbClassElement entityElement() {
+		return (JaxbClassElement) super.entityElement();
 	}
 
 	@Override
@@ -131,7 +137,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
-		final JaxbHibernateMapping.JaxbClass.JaxbNaturalId naturalId = entityElement().getNaturalId();
+		final JaxbNaturalIdElement naturalId = entityElement().getNaturalId();
 		if ( naturalId != null ) {
 			processAttributes(
 					attributeSources,
@@ -172,7 +178,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public OptimisticLockStyle getOptimisticLockStyle() {
-		final String optimisticLockModeString = Helper.getValue( entityElement().getOptimisticLock(), "version" );
+		final String optimisticLockModeString = Helper.getValue( entityElement().getOptimisticLock().value(), "version" );
 		try {
 			return OptimisticLockStyle.valueOf( optimisticLockModeString.toUpperCase() );
 		}
@@ -206,7 +212,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
-		final JaxbHibernateMapping.JaxbClass.JaxbDiscriminator discriminatorElement = entityElement().getDiscriminator();
+		final JaxbDiscriminatorElement discriminatorElement = entityElement().getDiscriminator();
 		if ( discriminatorElement == null ) {
 			return null;
 		}
@@ -270,7 +276,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public MultiTenancySource getMultiTenancySource() {
-		final JaxbHibernateMapping.JaxbClass.JaxbMultiTenancy jaxbMultiTenancy = entityElement().getMultiTenancy();
+		final JaxbMultiTenancyElement jaxbMultiTenancy = entityElement().getMultiTenancy();
 		if ( jaxbMultiTenancy == null ) {
 			return null;
 		}
@@ -413,7 +419,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 		@Override
 		public String getUnsavedValue() {
-			return entityElement().getCompositeId().getUnsavedValue();
+			return entityElement().getCompositeId().getUnsavedValue().value();
 		}
 
 		@Override
@@ -433,8 +439,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			);
 		}
 
-		protected JaxbHibernateMapping.JaxbClass.JaxbCompositeId compositeIdElement() {
-			return (JaxbHibernateMapping.JaxbClass.JaxbCompositeId) componentSourceElement();
+		protected JaxbCompositeIdElement compositeIdElement() {
+			return (JaxbCompositeIdElement) componentSourceElement();
 		}
 
 		@Override
@@ -577,7 +583,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 		@Override
 		public String getUnsavedValue() {
-			return entityElement().getCompositeId().getUnsavedValue();
+			return entityElement().getCompositeId().getUnsavedValue().value();
 		}
 
 		@Override

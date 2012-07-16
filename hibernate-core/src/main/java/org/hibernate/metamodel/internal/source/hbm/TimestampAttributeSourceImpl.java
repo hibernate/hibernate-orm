@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTimestampElement;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -44,12 +45,12 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 class TimestampAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements VersionAttributeSource {
-	private final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement;
+	private final JaxbTimestampElement timestampElement;
 	private final List<RelationalValueSource> valueSources;
 
 	TimestampAttributeSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement) {
+			final JaxbTimestampElement timestampElement) {
 		super( mappingDocument );
 		this.timestampElement = timestampElement;
 		this.valueSources = Helper.buildValueSources(
@@ -193,6 +194,6 @@ class TimestampAttributeSourceImpl
 
 	@Override
 	public String getUnsavedValue() {
-		return timestampElement.getUnsavedValue();
+		return timestampElement.getUnsavedValue().value();
 	}
 }

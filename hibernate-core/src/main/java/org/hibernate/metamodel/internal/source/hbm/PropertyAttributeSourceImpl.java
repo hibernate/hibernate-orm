@@ -127,7 +127,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 
 	@Override
 	public PropertyGeneration getGeneration() {
-		return PropertyGeneration.parse( propertyElement.getGenerated() );
+		return PropertyGeneration.parse( propertyElement.getGenerated().value() );
 	}
 
 	@Override

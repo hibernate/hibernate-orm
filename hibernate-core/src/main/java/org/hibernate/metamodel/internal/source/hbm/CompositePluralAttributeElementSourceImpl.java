@@ -81,7 +81,7 @@ public class CompositePluralAttributeElementSourceImpl
 		}
 		final EntityMode entityMode = StringHelper.isEmpty( compositeElement.getClazz() ) ? EntityMode.MAP : EntityMode.POJO;
 		for ( JaxbTuplizerElement tuplizerElement : compositeElement.getTuplizer() ) {
-			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
+			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode().value() ) ) {
 				return tuplizerElement.getClazz();
 			}
 		}

@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterDefElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
@@ -42,7 +43,7 @@ public class FilterDefinitionSourceImpl
 
 	public FilterDefinitionSourceImpl(
 			MappingDocument mappingDocument,
-			JaxbHibernateMapping.JaxbFilterDef filterDefElement) {
+			JaxbFilterDefElement filterDefElement) {
 		super( mappingDocument );
 		this.name = filterDefElement.getName();
 
@@ -56,7 +57,7 @@ public class FilterDefinitionSourceImpl
 			}
 			else {
 				parameterSources.add(
-						new FilterParameterSourceImpl( (JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam) content )
+						new FilterParameterSourceImpl( (JaxbFilterDefElement.JaxbFilterParam) content )
 				);
 			}
 		}
@@ -84,7 +85,7 @@ public class FilterDefinitionSourceImpl
 		private final String name;
 		private final String type;
 
-		public FilterParameterSourceImpl(JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam filterParamElement) {
+		public FilterParameterSourceImpl(JaxbFilterDefElement.JaxbFilterParam filterParamElement) {
 			this.name = filterParamElement.getName();
 			this.type = filterParamElement.getType();
 		}

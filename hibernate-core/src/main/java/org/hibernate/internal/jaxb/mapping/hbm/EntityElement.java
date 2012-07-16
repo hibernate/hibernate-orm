@@ -56,5 +56,18 @@ public interface EntityElement extends MetaAttributeContainer {
 
     public List<Object> getQueryOrSqlQuery();
 
-	public List<Object> getPropertyOrManyToOneOrOneToOne();
+	public List<JaxbPropertyElement> getProperty();
+	public List<JaxbManyToOneElement> getManyToOne();
+	public List<JaxbOneToOneElement> getOneToOne();
+	public List<JaxbComponentElement> getComponent();
+	public List<JaxbDynamicComponentElement> getDynamicComponent();
+//	public List<JaxbPropertiesElement> getProperties();
+	public List<JaxbAnyElement> getAny();
+	public List<JaxbMapElement> getMap();
+	public List<JaxbSetElement> getSet();
+	public List<JaxbListElement> getList();
+	public List<JaxbBagElement> getBag();
+	public List<JaxbIdbagElement> getIdbag();
+	public List<JaxbArrayElement> getArray();
+	public List<JaxbPrimitiveArrayElement> getPrimitiveArray();
 }

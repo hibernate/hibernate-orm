@@ -148,6 +148,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                 <xs:element name="multi-tenancy" type="multi-tenancy-element"/>
             </xs:choice>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <simplify:as-element-property/>
+                    </xs:appinfo>
+                </xs:annotation>
                 <xs:element name="property" type="property-element"/>
                 <xs:element name="many-to-one" type="many-to-one-element"/>
                 <xs:element name="one-to-one" type="one-to-one-element"/>
@@ -553,6 +558,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
   <xs:complexType name="dynamic-component-element">
     <xs:sequence>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
         <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="one-to-one" type="one-to-one-element"/>
@@ -704,7 +714,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="comment" minOccurs="0" type="xs:string"/>
       <xs:element name="key" type="key-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="property" type="property-element"/>
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
+          <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="component" type="component-element"/>
         <xs:element name="dynamic-component" type="dynamic-component-element"/>
@@ -734,7 +749,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
       <xs:element name="key" type="key-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="property" type="property-element"/>
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
+          <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="one-to-one" type="one-to-one-element"/>
         <xs:element name="component" type="component-element"/>
@@ -1400,6 +1420,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
       <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
         <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="one-to-one" type="one-to-one-element"/>
@@ -1480,7 +1505,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="comment" minOccurs="0" type="xs:string"/>
       <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="property" type="property-element"/>
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
+          <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="one-to-one" type="one-to-one-element"/>
         <xs:element name="component" type="component-element"/>

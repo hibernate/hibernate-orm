@@ -35,6 +35,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDynamicComponentElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdbagElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
@@ -105,96 +106,171 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
-		processAttributes(
+		return buildAttributeSources( entityElement, attributeSources, null, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID );
+	}
+	protected List<AttributeSource> buildAttributeSources(EntityElement element,
+														  List<AttributeSource> attributeSources,
+														  String logicTalbeName,
+														  SingularAttributeBinding.NaturalIdMutability naturalIdMutability){
+		processPropertyAttributes( attributeSources, element.getProperty(), logicTalbeName, naturalIdMutability );
+		processComponentAttributes(
 				attributeSources,
-				entityElement.getPropertyOrManyToOneOrOneToOne(),
-				null,
-				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+				element.getComponent(),
+				logicTalbeName,
+				naturalIdMutability
 		);
+		processDynamicComponentAttributes(
+				attributeSources,
+				element.getDynamicComponent(),
+				logicTalbeName,
+				naturalIdMutability
+		);
+		processManyToOneAttributes(
+				attributeSources,
+				element.getManyToOne(),
+				logicTalbeName,
+				naturalIdMutability
+		);
+		processOneToOneAttributes(
+				attributeSources,
+				element.getOneToOne(),
+				logicTalbeName,
+				naturalIdMutability
+		);
+		processAnyAttributes(
+				attributeSources,
+				element.getAny(),
+				logicTalbeName,
+				naturalIdMutability
+		);
+		processMapAttributes( attributeSources, element.getMap() );
+		processListAttributes( attributeSources, element.getList() );
+		processSetAttributes( attributeSources, element.getSet() );
+		processIdBagAttributes( attributeSources, element.getIdbag() );
+		processBagAttributes( attributeSources, element.getBag() );
 		return attributeSources;
 	}
 
-	protected void processAttributes(
-			List<AttributeSource> results,
-			List attributeElements,
-			String logicalTableName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
-		for ( Object attributeElement : attributeElements ) {
-			results.add( buildAttributeSource( attributeElement, logicalTableName, naturalIdMutability ) );
+	protected void processPropertyAttributes(List<AttributeSource> results,
+											 List<JaxbPropertyElement> propertyElements,
+											 String logicalTableName,
+											 SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		for ( JaxbPropertyElement element : propertyElements ) {
+			results.add(
+					new PropertyAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							logicalTableName,
+							naturalIdMutability
+					)
+			);
 		}
 	}
 
-	protected AttributeSource buildAttributeSource(
-			Object attributeElement,
-			String logicalTableName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
-		if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-			return new PropertyAttributeSourceImpl(
-					sourceMappingDocument(),
-					JaxbPropertyElement.class.cast( attributeElement ),
-					logicalTableName,
-					naturalIdMutability
+	protected void processComponentAttributes(List<AttributeSource> results,
+											 List<JaxbComponentElement> elements,
+											 String logicalTableName,
+											 SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		for ( JaxbComponentElement element : elements ) {
+			results.add(
+					new ComponentAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							this,
+							logicalTableName,
+							naturalIdMutability
+					)
 			);
 		}
-		else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-			return new ComponentAttributeSourceImpl(
-					sourceMappingDocument(),
-					(JaxbComponentElement) attributeElement,
-					this,
-					logicalTableName,
-					naturalIdMutability
-			);
-		}
-		else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-			return new ManyToOneAttributeSourceImpl(
-					sourceMappingDocument(),
-					JaxbManyToOneElement.class.cast( attributeElement ),
-					logicalTableName,
-					naturalIdMutability
-			);
-		}
-		else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
-			// todo : implement
-		}
-		else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
-			// todo : implement
-		}
-		else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
-			return new BagAttributeSourceImpl(
-					sourceMappingDocument(),
-					JaxbBagElement.class.cast( attributeElement ),
-					this
-			);
-		}
-		else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
-			// todo : implement
-		}
-		else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
-			return new SetAttributeSourceImpl(
-					sourceMappingDocument(),
-					JaxbSetElement.class.cast( attributeElement ),
-					this
-			);
-		}
-		else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
-			return new ListAttributeSource(
-					sourceMappingDocument(),
-					JaxbListElement.class.cast( attributeElement ),
-					this
-			);
-		}
-		else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
-			return new MapAttributeSource(
-					sourceMappingDocument(),
-					JaxbMapElement.class.cast( attributeElement ),
-					this
-			);
-		}
-
-		throw new UnexpectedAttributeSourceTypeException(
-				"Unexpected attribute element type encountered : " + attributeElement.getClass().getName()
-		);
 	}
+
+	protected void processDynamicComponentAttributes(List<AttributeSource> results,
+											  List<JaxbDynamicComponentElement> elements,
+											  String logicalTableName,
+											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		// todo : implement
+	}
+
+	protected void processManyToOneAttributes(List<AttributeSource> results,
+											  List<JaxbManyToOneElement> elements,
+											  String logicalTableName,
+											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		for ( JaxbManyToOneElement element : elements ) {
+			results.add(
+					new ManyToOneAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							logicalTableName,
+							naturalIdMutability
+					)
+			);
+		}
+	}
+	protected void processOneToOneAttributes(List<AttributeSource> results,
+											   List<JaxbOneToOneElement> elements,
+											   String logicalTableName,
+											   SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		// todo : implement
+	}
+
+	protected void processAnyAttributes(List<AttributeSource> results,
+											  List<JaxbAnyElement> elements,
+											  String logicalTableName,
+											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		// todo : implement
+	}
+
+	protected void processMapAttributes(List<AttributeSource> results,
+											 List<JaxbMapElement> propertyElements){
+		for ( JaxbMapElement element : propertyElements ) {
+			results.add(
+					new MapAttributeSource(
+							sourceMappingDocument(),
+							element, this
+					)
+			);
+		}
+	}
+	protected void processListAttributes(List<AttributeSource> results,
+											 List<JaxbListElement> propertyElements){
+		for ( JaxbListElement element : propertyElements ) {
+			results.add(
+					new ListAttributeSource(
+							sourceMappingDocument(),
+							element, this
+					)
+			);
+		}
+	}
+	protected void processSetAttributes(List<AttributeSource> results,
+											 List<JaxbSetElement> propertyElements){
+		for ( JaxbSetElement element : propertyElements ) {
+			results.add(
+					new SetAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							this
+					)
+			);
+		}
+	}
+	protected void processIdBagAttributes(List<AttributeSource> results,
+											 List<JaxbIdbagElement> propertyElements){
+		// todo : implement
+	}
+	protected void processBagAttributes(List<AttributeSource> results,
+											 List<JaxbBagElement> propertyElements) {
+		for ( JaxbBagElement element : propertyElements ) {
+			results.add(
+					new BagAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							this
+					)
+			);
+		}
+	}
+
 
 	private Set<SecondaryTableSource> buildSecondaryTables() {
 		if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
@@ -211,11 +287,36 @@ public abstract class AbstractEntitySourceImpl
 			secondaryTableSources.add( secondaryTableSource );
 
 			final String logicalTableName = secondaryTableSource.getLogicalTableNameForContainedColumns();
-			processAttributes(
+			final SingularAttributeBinding.NaturalIdMutability  naturalIdMutability = SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+			processAnyAttributes(
 					attributeSources,
-					joinElement.getPropertyOrManyToOneOrComponent(),
+					joinElement.getAny(),
 					logicalTableName,
-					SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+					naturalIdMutability
+			);
+			processComponentAttributes(
+					attributeSources,
+					joinElement.getComponent(),
+					logicalTableName,
+					naturalIdMutability
+			);
+			processDynamicComponentAttributes(
+					attributeSources,
+					joinElement.getDynamicComponent(),
+					logicalTableName,
+					naturalIdMutability
+			);
+			processManyToOneAttributes(
+					attributeSources,
+					joinElement.getManyToOne(),
+					logicalTableName,
+					naturalIdMutability
+			);
+			processPropertyAttributes(
+					attributeSources,
+					joinElement.getProperty(),
+					logicalTableName,
+					naturalIdMutability
 			);
 		}
 		return secondaryTableSources;

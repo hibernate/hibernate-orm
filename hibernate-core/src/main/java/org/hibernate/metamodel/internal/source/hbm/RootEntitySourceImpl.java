@@ -39,6 +39,8 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeIdElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbDiscriminatorElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyPropertyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMultiTenancyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdElement;
@@ -139,16 +141,15 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
 		final JaxbNaturalIdElement naturalId = entityElement().getNaturalId();
 		if ( naturalId != null ) {
-			processAttributes(
-					attributeSources,
-					naturalId.getPropertyOrManyToOneOrComponent(),
-					null,
-					naturalId.isMutable()
-							? SingularAttributeBinding.NaturalIdMutability.MUTABLE
-							: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE
+			return buildAttributeSources(
+					entityElement(), attributeSources, null, naturalId.isMutable()
+					? SingularAttributeBinding.NaturalIdMutability.MUTABLE
+					: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE
 			);
 		}
-		return super.buildAttributeSources( attributeSources );
+		else {
+			return super.buildAttributeSources( attributeSources );
+		}
 	}
 
 	@Override
@@ -446,8 +447,15 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		@Override
 		protected List<AttributeSource> buildAttributeSources() {
 			List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-			for ( Object attributeElement : compositeIdElement().getKeyPropertyOrKeyManyToOne() ) {
-				attributeSources.add( buildAttributeSource( attributeElement ) );
+//			for ( Object attributeElement : compositeIdElement().getKeyPropertyOrKeyManyToOne() ) {
+//				attributeSources.add( buildAttributeSource( attributeElement ) );
+//			}
+			for ( JaxbKeyPropertyElement element : compositeIdElement().getKeyProperty()){
+//				attributeSources.add( buildPropertyAttributeSource( element ) );
+				//todo : implement
+			}
+			for (JaxbKeyManyToOneElement element : compositeIdElement().getKeyManyToOne()){
+				//todo: implement
 			}
 			return attributeSources;
 		}
@@ -536,18 +544,33 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
-			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
-			for ( Object attributeElement : entityElement().getCompositeId().getKeyPropertyOrKeyManyToOne() ) {
-				final AttributeSource attributeSource = buildAttributeSource(
-						attributeElement,
-						null,
-						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
-				);
-				if ( ! attributeSource.isSingular() ) {
-					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );
-				}
-				attributeSources.add( (SingularAttributeSource) attributeSource );
+			final List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
+			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
+			for(final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty()){
+//				final AttributeSource attributeSource = buildAttributeSource(
+//						keyProperty,
+//						null,
+//						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+//				);
+//				if ( ! attributeSource.isSingular() ) {
+//					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );
+//				}
+//				attributeSources.add( (SingularAttributeSource) attributeSource );
+				//todo : implement
 			}
+			for(final JaxbKeyManyToOneElement keyProperty : compositeId.getKeyManyToOne()){
+//				final AttributeSource attributeSource = buildAttributeSource(
+//						keyProperty,
+//						null,
+//						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+//				);
+//				if ( ! attributeSource.isSingular() ) {
+//					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );
+//				}
+//				attributeSources.add( (SingularAttributeSource) attributeSource );
+				//todo : implement
+			}
+
 			return attributeSources;
 		}
 

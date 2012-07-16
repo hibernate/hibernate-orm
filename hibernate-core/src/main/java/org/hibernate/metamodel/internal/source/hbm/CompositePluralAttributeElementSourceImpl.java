@@ -97,9 +97,14 @@ public class CompositePluralAttributeElementSourceImpl
 	@Override
 	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-		for ( Object attribute : compositeElement.getPropertyOrManyToOneOrAny() ) {
-
-		}
+//		for ( Object attribute : compositeElement .getPropertyOrManyToOneOrAny() ) {
+//
+//		}
+		compositeElement.getAny();
+		compositeElement.getManyToOne();
+		compositeElement.getNestedCompositeElement();
+		compositeElement.getProperty();
+		//todo implement
 		return attributeSources;
 	}
 

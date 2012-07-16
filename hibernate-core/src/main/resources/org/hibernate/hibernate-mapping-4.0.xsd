@@ -506,6 +506,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
       <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
       <xs:element name="parent" minOccurs="0" type="parent-element"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+              <xs:appinfo>
+                  <simplify:as-element-property/>
+              </xs:appinfo>
+          </xs:annotation>
         <xs:element name="property" type="property-element"/>
         <xs:element name="many-to-one" type="many-to-one-element"/>
         <xs:element name="one-to-one" type="one-to-one-element"/>

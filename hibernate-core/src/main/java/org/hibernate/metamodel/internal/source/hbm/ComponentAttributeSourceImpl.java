@@ -27,7 +27,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbArrayElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDynamicComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPrimitiveArrayElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
@@ -56,8 +67,41 @@ class ComponentAttributeSourceImpl extends AbstractComponentAttributeSourceImpl 
 	@Override
 	protected List<AttributeSource> buildAttributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-		for ( Object attributeElement : componentElement().getPropertyOrManyToOneOrOneToOne() ) {
-			attributeSources.add( buildAttributeSource( attributeElement ) );
+		for(final JaxbPropertyElement element : componentElement().getProperty()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbManyToOneElement element : componentElement().getManyToOne()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbOneToOneElement element: componentElement().getOneToOne()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbComponentElement element: componentElement().getComponent()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbDynamicComponentElement element: componentElement().getDynamicComponent()){
+			attributeSources.add( buildAttributeSource(element) );
+		}
+		for(final JaxbAnyElement element: componentElement().getAny()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbMapElement element: componentElement().getMap()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbSetElement element: componentElement().getSet()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbListElement element: componentElement().getList()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbBagElement element: componentElement().getBag()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbArrayElement element: componentElement().getArray()){
+			attributeSources.add( buildAttributeSource( element ) );
+		}
+		for(final JaxbPrimitiveArrayElement element: componentElement().getPrimitiveArray()){
+			attributeSources.add( buildAttributeSource( element ) );
 		}
 		return attributeSources;
 	}

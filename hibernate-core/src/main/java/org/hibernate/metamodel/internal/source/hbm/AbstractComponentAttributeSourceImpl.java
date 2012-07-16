@@ -28,12 +28,19 @@ import java.util.List;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbArrayElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDynamicComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPrimitiveArrayElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -75,36 +82,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	protected abstract List<AttributeSource> buildAttributeSources();
-
-	protected AttributeSource buildAttributeSource(Object attributeElement) {
-		if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
-			return buildPropertyAttributeSource( (JaxbPropertyElement) attributeElement );
-		}
-		else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
-			return buildComponentAttributeSource( (JaxbComponentElement) attributeElement );
-		}
-		else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
-			return buildManyToOneAttributeSource( (JaxbManyToOneElement) attributeElement );
-		}
-		else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
-			return buildOneToOneAttributeSource( (JaxbOneToOneElement) attributeElement );
-		}
-		else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
-			return buildAnyAttributeSource( (JaxbAnyElement) attributeElement );
-		}
-		else if ( JaxbOneToManyElement.class.isInstance( attributeElement ) ) {
-			return buildOneToManyAttributeSource( (JaxbOneToManyElement) attributeElement );
-		}
-		else if ( JaxbManyToManyElement.class.isInstance( attributeElement ) ) {
-			return buildManyToManyAttributeSource( (JaxbManyToManyElement) attributeElement );
-		}
-
-		throw new UnexpectedAttributeSourceTypeException(
-				"Encountered an unanticipated AttributeSource type : " + attributeElement.getClass().getName()
-		);
-	}
-
-	protected SingularAttributeSource buildPropertyAttributeSource(JaxbPropertyElement attributeElement) {
+	protected SingularAttributeSource buildAttributeSource(JaxbPropertyElement attributeElement) {
 		return new PropertyAttributeSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
@@ -113,7 +91,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		);
 	}
 
-	protected AttributeSource buildComponentAttributeSource(JaxbComponentElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbComponentElement attributeElement) {
 		return new ComponentAttributeSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
@@ -122,8 +100,11 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 				naturalIdMutability
 		);
 	}
-
-	protected AttributeSource buildManyToOneAttributeSource(JaxbManyToOneElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbDynamicComponentElement attributeElement){
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbManyToOneElement attributeElement) {
 		return new ManyToOneAttributeSourceImpl(
 				sourceMappingDocument(),
 				JaxbManyToOneElement.class.cast( attributeElement ),
@@ -132,25 +113,51 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		);
 	}
 
-	protected AttributeSource buildOneToOneAttributeSource(JaxbOneToOneElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbOneToOneElement attributeElement) {
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
 
-	protected AttributeSource buildAnyAttributeSource(JaxbAnyElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbAnyElement attributeElement) {
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
 
-	protected AttributeSource buildOneToManyAttributeSource(JaxbOneToManyElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbOneToManyElement attributeElement) {
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
 
-	protected AttributeSource buildManyToManyAttributeSource(JaxbManyToManyElement attributeElement) {
+	protected AttributeSource buildAttributeSource(JaxbManyToManyElement attributeElement) {
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
+	// todo duplicated with org.hibernate.metamodel.internal.source.hbm.AbstractEntitySourceImpl
+	protected AttributeSource buildAttributeSource(JaxbMapElement attributeElement){
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbSetElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbListElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbBagElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbArrayElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+	protected AttributeSource buildAttributeSource(JaxbPrimitiveArrayElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+
 
 	protected ComponentSourceElement componentSourceElement() {
 		return componentSourceElement;

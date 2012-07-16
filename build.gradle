@@ -85,7 +85,7 @@ libraries = [
         jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.3',
         jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.3',
         jaxb2_jaxb:     'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb:2.2.4-1',
-        jaxb2_jaxb_xjc: 'org.jvent.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
+        jaxb2_jaxb_xjc: 'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
         // logging for testing

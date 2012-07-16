@@ -37,7 +37,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
  *
  * @author Steve Ebersole
  */
-public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer {
+public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer, MetaSource {
 
 	/**
 	 * Obtain the origin of this source.
@@ -187,13 +187,6 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 * @return Additional synchronized table names.
 	 */
 	public List<String> getSynchronizedTableNames();
-
-	/**
-	 * Obtain the meta-attribute sources associated with this entity.
-	 *
-	 * @return The meta-attribute sources.
-	 */
-	public Iterable<MetaAttributeSource> metaAttributes();
 
 	/**
 	 * Get the actual discriminator value in case of a single table inheritance

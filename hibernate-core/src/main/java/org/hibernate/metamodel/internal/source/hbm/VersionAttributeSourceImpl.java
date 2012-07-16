@@ -195,7 +195,7 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( versionElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return versionElement.getMeta();
 	}
 }

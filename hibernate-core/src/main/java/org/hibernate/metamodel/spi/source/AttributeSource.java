@@ -28,7 +28,7 @@ package org.hibernate.metamodel.spi.source;
  *
  * @author Steve Ebersole
  */
-public interface AttributeSource {
+public interface AttributeSource extends MetaSource{
 	/**
 	 * Obtain the attribute name.
 	 *
@@ -67,11 +67,4 @@ public interface AttributeSource {
 	 * @return {@code true} indicates it should be included; {@code false}, it should not.
 	 */
 	public boolean isIncludedInOptimisticLocking();
-
-	/**
-	 * Obtain the meta-attribute sources associated with this attribute.
-	 *
-	 * @return The meta-attribute sources.
-	 */
-	public Iterable<MetaAttributeSource> metaAttributes();
 }

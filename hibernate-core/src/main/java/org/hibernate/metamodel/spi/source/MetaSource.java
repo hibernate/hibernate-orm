@@ -23,41 +23,14 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.id.EntityIdentifierNature;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
-
 /**
- * Contract describing source of identifier information for the entity.
- *
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public interface IdentifierSource extends MetaSource{
-    /**
-     * Obtain the identifier generator source.
-	 *
-	 * @todo this should name a source as well, no?
-	 * 		Basically, not sure it should be up to the sources to build binding objects.
-	 * 		IdentifierGeneratorSource, possibly as a hierarchy as well to account for differences
-	 * 		in "global" versus "local" declarations
-     *
-     * @return The generator source.
-     */
-    IdGenerator getIdentifierGeneratorDescriptor();
-
+public interface MetaSource {
 	/**
-	 * Obtain the nature of this identifier source.
+	 * Obtain the meta-attribute sources associated with this attribute.
 	 *
-	 * @return The identifier source's nature.
+	 * @return The meta-attribute sources.
 	 */
-	public EntityIdentifierNature getNature();
-
-	/**
-	 *  Returns the "unsaved" entity identifier value.
-	 *
-	 *  @todo Not sure this is relevant for anything other than simple identifiers.  Move to SimpleIdentifierSource ?
-	 *
-	 *  @return the "unsaved" entity identifier value
-	 */
-	public String getUnsavedValue();
-
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources();
 }

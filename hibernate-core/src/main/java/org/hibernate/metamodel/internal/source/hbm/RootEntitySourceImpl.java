@@ -374,8 +374,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
-			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
+		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+			return entityElement().getId().getMeta();
 		}
 	}
 
@@ -424,8 +424,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
-			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
+		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+			return entityElement().getId().getMeta();
 		}
 	}
 
@@ -610,8 +610,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
-			return Helper.buildMetaAttributeSources( entityElement().getId().getMeta() );
+		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+			return entityElement().getId().getMeta();
 		}
 	}
 }

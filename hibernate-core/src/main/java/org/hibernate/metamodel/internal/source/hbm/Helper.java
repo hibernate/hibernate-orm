@@ -216,24 +216,24 @@ public class Helper {
 	}
 
 	public static MetaAttributeContext extractMetaAttributeContext(
-			List<JaxbMetaElement> metaElementList,
+			List<? extends MetaAttributeSource> metaAttributeSourceList,
 			boolean onlyInheritable,
 			MetaAttributeContext parentContext) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
 
-		for ( JaxbMetaElement metaElement : metaElementList ) {
-			if ( onlyInheritable & !metaElement.isInherit() ) {
+		for ( MetaAttributeSource meta : metaAttributeSourceList ) {
+			if ( onlyInheritable & !meta.isInheritable() ) {
 				continue;
 			}
 
-			final String name = metaElement.getAttribute();
+			final String name = meta.getName();
 			final MetaAttribute inheritedMetaAttribute = parentContext.getMetaAttribute( name );
 			MetaAttribute metaAttribute = subContext.getLocalMetaAttribute( name );
 			if ( metaAttribute == null || metaAttribute == inheritedMetaAttribute ) {
 				metaAttribute = new MetaAttribute( name );
 				subContext.add( metaAttribute );
 			}
-			metaAttribute.addValue( metaElement.getValue() );
+			metaAttribute.addValue( meta.getValue() );
 		}
 
 		return subContext;
@@ -265,35 +265,7 @@ public class Helper {
 		return params;
 	}
 
-	public static Iterable<MetaAttributeSource> buildMetaAttributeSources(List<JaxbMetaElement> metaElements) {
-		ArrayList<MetaAttributeSource> result = new ArrayList<MetaAttributeSource>();
-		if ( metaElements == null || metaElements.isEmpty() ) {
-			// do nothing
-		}
-		else {
-			for ( final JaxbMetaElement metaElement : metaElements ) {
-				result.add(
-						new MetaAttributeSource() {
-							@Override
-							public String getName() {
-								return metaElement.getAttribute();
-							}
 
-							@Override
-							public String getValue() {
-								return metaElement.getValue();
-							}
-
-							@Override
-							public boolean isInheritable() {
-								return metaElement.isInherit();
-							}
-						}
-				);
-			}
-		}
-		return result;
-	}
 
 	public static Schema.Name determineDatabaseSchemaName(
 			String explicitSchemaName,

@@ -243,8 +243,8 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( pluralAttributeElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return pluralAttributeElement.getMeta();
 	}
 
 	@Override

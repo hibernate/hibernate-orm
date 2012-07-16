@@ -439,8 +439,8 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( entityElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return entityElement.getMeta();
 	}
 
 	@Override

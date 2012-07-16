@@ -253,8 +253,8 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( manyToOneElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return manyToOneElement.getMeta();
 	}
 
 	@Override

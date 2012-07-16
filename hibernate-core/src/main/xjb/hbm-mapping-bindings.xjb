@@ -73,7 +73,17 @@
         <jaxb:bindings node="//xsd:complexType[@name='set-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='meta-element']">
+            <inheritance:implements>org.hibernate.metamodel.spi.source.MetaAttributeSource</inheritance:implements>
+        </jaxb:bindings>
 
+
+        <jaxb:bindings node="//xsd:complexType[@name='meta-element']//xsd:attribute[@name='attribute']">
+            <jaxb:property name="name"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='meta-element']//xsd:attribute[@name='inherit']">
+            <jaxb:property name="inheritable"/>
+        </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:complexType[@name='class-element']//xsd:attribute[@name='subselect']">
             <jaxb:property name="subselectAttribute"/>

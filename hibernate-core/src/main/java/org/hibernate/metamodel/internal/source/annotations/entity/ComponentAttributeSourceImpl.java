@@ -160,7 +160,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
+	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
 		// not relevant for annotations
 		return Collections.emptySet();
 	}

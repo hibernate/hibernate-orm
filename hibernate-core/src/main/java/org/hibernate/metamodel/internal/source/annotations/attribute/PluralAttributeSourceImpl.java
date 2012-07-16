@@ -175,7 +175,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
+	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

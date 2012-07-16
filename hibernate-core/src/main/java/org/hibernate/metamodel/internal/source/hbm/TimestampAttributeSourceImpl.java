@@ -188,8 +188,8 @@ class TimestampAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( timestampElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return timestampElement.getMeta();
 	}
 
 	@Override

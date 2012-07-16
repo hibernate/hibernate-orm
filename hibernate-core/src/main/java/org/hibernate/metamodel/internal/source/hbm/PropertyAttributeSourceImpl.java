@@ -181,7 +181,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( propertyElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return propertyElement.getMeta();
 	}
 }

@@ -1745,7 +1745,7 @@ public class Binder {
 			entityBinding.setCustomEntityPersisterClass( bindingContext.< EntityPersister >locateClassByName( customPersisterClassName ) );
 		}
 		entityBinding.setMetaAttributeContext( createMetaAttributeContext(
-				entitySource.metaAttributes(),
+				entitySource.getMetaAttributeSources(),
 				true,
 				metadata.getGlobalMetaAttributeContext() ) );
 		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );
@@ -1820,12 +1820,12 @@ public class Binder {
 	private MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource ) {
-		return createMetaAttributeContext( attributeBindingContainer, attributeSource.metaAttributes() );
+		return createMetaAttributeContext( attributeBindingContainer, attributeSource.getMetaAttributeSources() );
 	}
 
 	private MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
-			final Iterable< MetaAttributeSource > metaAttributeSources ) {
+			final Iterable<? extends MetaAttributeSource > metaAttributeSources ) {
 		return createMetaAttributeContext(
 				metaAttributeSources,
 				false,
@@ -1834,7 +1834,7 @@ public class Binder {
 	}
 
 	private MetaAttributeContext createMetaAttributeContext(
-			final Iterable< MetaAttributeSource > metaAttributeSources,
+			final Iterable<? extends MetaAttributeSource > metaAttributeSources,
 			final boolean onlyInheritable,
 			final MetaAttributeContext parentContext ) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );

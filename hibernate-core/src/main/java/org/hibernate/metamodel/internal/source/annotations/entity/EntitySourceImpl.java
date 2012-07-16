@@ -165,7 +165,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
+	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
 		return Collections.emptySet();
 	}
 

@@ -188,7 +188,7 @@ class SingularIdentifierAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( idElement.getMeta() );
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return idElement.getMeta();
 	}
 }

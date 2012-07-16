@@ -117,7 +117,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
+	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
 		return Collections.emptySet();
 	}
 

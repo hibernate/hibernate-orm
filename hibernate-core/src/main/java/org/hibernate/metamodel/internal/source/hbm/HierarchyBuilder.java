@@ -65,40 +65,48 @@ public class HierarchyBuilder {
 	}
 
 	private void processCurrentMappingDocument() {
-		for ( Object entityElementO : currentMappingDocument.getMappingRoot().getClazzOrSubclassOrJoinedSubclass() ) {
-			final EntityElement entityElement = (EntityElement) entityElementO;
-			if ( JaxbClassElement.class.isInstance( entityElement ) ) {
-				// we can immediately handle <class/> elements in terms of creating the hierarchy entry
-				final JaxbClassElement jaxbClass = (JaxbClassElement) entityElement;
-				final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument,
-																						jaxbClass
-				);
-				final EntityHierarchyImpl hierarchy = new EntityHierarchyImpl( rootEntitySource );
+		for(final JaxbClassElement jaxbClass : currentMappingDocument.getMappingRoot().getClazz()){
+			// we can immediately handle <class/> elements in terms of creating the hierarchy entry
+			final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument,
+					jaxbClass
+			);
+			final EntityHierarchyImpl hierarchy = new EntityHierarchyImpl( rootEntitySource );
 
-				entityHierarchies.add( hierarchy );
-				subEntityContainerMap.put( rootEntitySource.getEntityName(), rootEntitySource );
+			entityHierarchies.add( hierarchy );
+			subEntityContainerMap.put( rootEntitySource.getEntityName(), rootEntitySource );
 
-				processSubElements( entityElement, rootEntitySource );
-			}
-			else {
-				// we have to see if this things super-type has been found yet, and if not add it to the
-				// extends queue
-                final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext()
-						.qualifyClassName( ( (SubEntityElement) entityElement ).getExtends() );
-                final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
-				final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, entityElement, ( EntitySource ) container );
-				final String entityName = subClassEntitySource.getEntityName();
-				subEntityContainerMap.put( entityName, subClassEntitySource );
-				processSubElements( entityElement, subClassEntitySource );
-				if ( container != null ) {
-					// we already have this entity's super, attach it and continue
-					container.add( subClassEntitySource );
-				}
-				else {
-					// we do not yet have the super and have to wait, so add it fto the extends queue
-					extendsQueue.add( new ExtendsQueueEntry( subClassEntitySource, entityItExtends ) );
-				}
-			}
+			processSubElements( jaxbClass, rootEntitySource );
+		}
+		for(final JaxbJoinedSubclassElement element : currentMappingDocument.getMappingRoot().getJoinedSubclass()){
+			processSubclassElement( element );
+
+		}
+		for(final JaxbUnionSubclassElement element : currentMappingDocument.getMappingRoot().getUnionSubclass()){
+			processSubclassElement( element );
+		}
+		for(final JaxbSubclassElement element : currentMappingDocument.getMappingRoot().getSubclass()){
+			processSubclassElement( element );
+		}
+
+	}
+
+	private void processSubclassElement(SubEntityElement element) {
+		// we have to see if this things super-type has been found yet, and if not add it to the
+		// extends queue
+		final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext()
+				.qualifyClassName( element.getExtends() );
+		final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
+		final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, element, (EntitySource) container );
+		final String entityName = subClassEntitySource.getEntityName();
+		subEntityContainerMap.put( entityName, subClassEntitySource );
+		processSubElements( element, subClassEntitySource );
+		if ( container != null ) {
+			// we already have this entity's super, attach it and continue
+			container.add( subClassEntitySource );
+		}
+		else {
+			// we do not yet have the super and have to wait, so add it fto the extends queue
+			extendsQueue.add( new ExtendsQueueEntry( subClassEntitySource, entityItExtends ) );
 		}
 	}
 

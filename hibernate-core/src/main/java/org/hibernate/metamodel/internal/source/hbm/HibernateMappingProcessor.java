@@ -32,10 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.buildtime.spi.Logger;
 import org.hibernate.cfg.HbmBinder;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
@@ -47,12 +48,14 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbClassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbDatabaseObjectElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterDefElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdentifierGeneratorElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbImportElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbLoadCollectionElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryParamElement;
@@ -61,12 +64,13 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnJoinElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbReturnScalarElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTypedefElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
@@ -88,9 +92,7 @@ import org.hibernate.type.Type;
  * @author Strong Liu
  */
 public class HibernateMappingProcessor {
-	private static final CoreMessageLogger LOG = org.jboss
-			.logging
-			.Logger
+	private static final CoreMessageLogger LOG = Logger
 			.getMessageLogger( CoreMessageLogger.class, HibernateMappingProcessor.class.getName() );
 	private final MetadataImplementor metadata;
 	private final MappingDocument mappingDocument;
@@ -244,14 +246,27 @@ public class HibernateMappingProcessor {
 			metadata.addImport( className, rename );
 		}
 		if ( root.isAutoImport() ) {
-			for ( Object obj : root.getClazzOrSubclassOrJoinedSubclass() ) {
-				EntityElement entityElement = ( EntityElement ) obj;
-				String qualifiedName = bindingContext().determineEntityName( entityElement );
-				metadata.addImport( entityElement.getEntityName() == null
-									? entityElement.getName()
-									: entityElement.getEntityName(), qualifiedName );
+			for(final JaxbClassElement element : root.getClazz()){
+				processEntityElement( element );
+			}
+			for(final JaxbJoinedSubclassElement element : root.getJoinedSubclass()){
+				processEntityElement( element );
+			}
+			for(final JaxbUnionSubclassElement element : root.getUnionSubclass()){
+				processEntityElement( element );
+			}
+			for(final JaxbSubclassElement element : root.getSubclass()){
+				processEntityElement( element );
 			}
 		}
+	}
+
+	private void processEntityElement(EntityElement element) {
+		EntityElement entityElement = element;
+		String qualifiedName = bindingContext().determineEntityName( entityElement );
+		metadata.addImport( entityElement.getEntityName() == null
+							? entityElement.getName()
+							: entityElement.getEntityName(), qualifiedName );
 	}
 
 	private void processResultSetMappings() {
@@ -259,8 +274,22 @@ public class HibernateMappingProcessor {
 		if ( CollectionHelper.isNotEmpty( mappingRoot().getResultset() ) ) {
 			resultsetElements.addAll( mappingRoot().getResultset() );
 		}
-		for ( Object obj : mappingRoot().getClazzOrSubclassOrJoinedSubclass() ) {
-			EntityElement element = EntityElement.class.cast( obj );
+		for(final JaxbClassElement element : mappingRoot().getClazz()){
+			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
+				resultsetElements.addAll( element.getResultset() );
+			}
+		}
+		for(final JaxbJoinedSubclassElement element : mappingRoot().getJoinedSubclass()){
+			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
+				resultsetElements.addAll( element.getResultset() );
+			}
+		}
+		for(final JaxbUnionSubclassElement element : mappingRoot().getUnionSubclass()){
+			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
+				resultsetElements.addAll( element.getResultset() );
+			}
+		}
+		for(final JaxbSubclassElement element : mappingRoot().getSubclass()){
 			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
 				resultsetElements.addAll( element.getResultset() );
 			}
@@ -276,32 +305,33 @@ public class HibernateMappingProcessor {
 
 	private void bindResultSetMappingDefinitions(JaxbResultsetElement element) {
 		final ResultSetMappingDefinition definition = new ResultSetMappingDefinition( element.getName() );
-		final List returns = element.getReturnScalarOrReturnOrReturnJoin();
 		int cnt=0;
-		for ( final Object obj : returns ) {
+		NativeSQLQueryReturn nativeSQLQueryReturn;
+		for(final JaxbReturnScalarElement r : element.getReturnScalar()){
 			cnt++;
-			final NativeSQLQueryReturn nativeSQLQueryReturn;
-			if ( JaxbReturnScalarElement.class.isInstance( obj ) ) {
-				JaxbReturnScalarElement scalarElement = JaxbReturnScalarElement.class.cast( obj );
-				String column = scalarElement.getColumn();
-				String typeFromXML = scalarElement.getType();
-				Type type = metadata.getTypeResolver().heuristicType( typeFromXML );
-				nativeSQLQueryReturn = new NativeSQLQueryScalarReturn( column, type );
-			}
-			else if ( JaxbReturnJoinElement.class.isInstance( obj ) ) {
-				nativeSQLQueryReturn = bindReturnJoin(JaxbReturnJoinElement.class.cast( obj ), cnt);
-
-			}
-			else if ( JaxbLoadCollectionElement.class.isInstance( obj ) ) {
-				nativeSQLQueryReturn = bindLoadCollection(JaxbLoadCollectionElement.class.cast( obj ), cnt);
-			}
-			else if ( JaxbReturnElement.class.isInstance( obj ) ) {
-				nativeSQLQueryReturn= bindReturn(JaxbReturnElement.class.cast( obj ), cnt);
-
-			}else {
-				throw new MappingException( "unknown type of Result set mapping return: "+obj.getClass().getName() , origin());
-			}
+			String column = r.getColumn();
+			String typeFromXML = r.getType();
+			Type type = metadata.getTypeResolver().heuristicType( typeFromXML );
+			nativeSQLQueryReturn = new NativeSQLQueryScalarReturn( column, type );
 			definition.addQueryReturn( nativeSQLQueryReturn );
+		}
+		for(final JaxbReturnJoinElement r : element.getReturnJoin()){
+			cnt++;
+			nativeSQLQueryReturn = bindReturnJoin(r, cnt);
+			definition.addQueryReturn( nativeSQLQueryReturn );
+
+		}
+		for(final JaxbLoadCollectionElement r : element.getLoadCollection()){
+			cnt++;
+			nativeSQLQueryReturn = bindLoadCollection( r, cnt );
+			definition.addQueryReturn( nativeSQLQueryReturn );
+
+		}
+		for(final JaxbReturnElement r : element.getReturn()){
+			cnt++;
+			nativeSQLQueryReturn = bindReturn( r, cnt );
+			definition.addQueryReturn( nativeSQLQueryReturn );
+
 		}
 		metadata.addResultSetMapping( definition );
 

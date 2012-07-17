@@ -25,45 +25,49 @@ package org.hibernate.jpa.internal.event;
 
 import java.io.Serializable;
 
-import org.hibernate.event.internal.DefaultDeleteEventListener;
-import org.hibernate.event.spi.DeleteEvent;
+import org.hibernate.event.internal.DefaultMergeEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Overrides the LifeCycle OnSave call to call the PreRemove operation
+ * Overrides the LifeCycle OnSave call to call the PrePersist operation
  *
  * @author Emmanuel Bernard
  */
-public class EJB3DeleteEventListener extends DefaultDeleteEventListener implements CallbackHandlerConsumer {
+public class JpaMergeEventListener extends DefaultMergeEventListener implements CallbackHandlerConsumer {
 	private EntityCallbackHandler callbackHandler;
 
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3DeleteEventListener() {
+	public JpaMergeEventListener() {
 		super();
 	}
 
-	public EJB3DeleteEventListener(EntityCallbackHandler callbackHandler) {
-		this();
+	public JpaMergeEventListener(EntityCallbackHandler callbackHandler) {
+		super();
 		this.callbackHandler = callbackHandler;
 	}
 
 	@Override
-	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
-		callbackHandler.preRemove( entity );
-		return super.invokeDeleteLifecycle( session, entity, persister );
+	protected Serializable saveWithRequestedId(
+			Object entity,
+			Serializable requestedId,
+			String entityName,
+			Object anything,
+			EventSource source) {
+		callbackHandler.preCreate( entity );
+		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
 	}
 
 	@Override
-	protected void performDetachedEntityDeletionCheck(DeleteEvent event) {
-		EventSource source = event.getSession();
-		String entityName = event.getEntityName();
-		EntityPersister persister = source.getEntityPersister( entityName, event.getObject() );
-		Serializable id =  persister.getIdentifier( event.getObject(), source );
-		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName; 
-		throw new IllegalArgumentException("Removing a detached instance "+ entityName + "#" + id);
+	protected Serializable saveWithGeneratedId(
+			Object entity,
+			String entityName,
+			Object anything,
+			EventSource source,
+			boolean requiresImmediateIdAccess) {
+		callbackHandler.preCreate( entity );
+		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
 	}
 }

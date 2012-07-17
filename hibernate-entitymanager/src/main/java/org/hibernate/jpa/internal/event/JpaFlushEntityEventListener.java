@@ -37,18 +37,18 @@ import org.hibernate.type.Type;
  *
  * @author Emmanuel Bernard
  */
-public class EJB3FlushEntityEventListener extends DefaultFlushEntityEventListener implements CallbackHandlerConsumer {
+public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener implements CallbackHandlerConsumer {
 	private EntityCallbackHandler callbackHandler;
 
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3FlushEntityEventListener() {
+	public JpaFlushEntityEventListener() {
 		super();
 	}
 
-	public EJB3FlushEntityEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaFlushEntityEventListener(EntityCallbackHandler callbackHandler) {
 		super();
 		this.callbackHandler = callbackHandler;
 	}

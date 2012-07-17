@@ -53,7 +53,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.packaging.internal.JarVisitorFactory;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -397,7 +397,7 @@ public class PersistenceXmlParser {
 
 	private Schema v2Schema() {
 		if ( v2Schema == null ) {
-			v2Schema = resolveLocalSchema( "org/hibernate/ejb/persistence_2_0.xsd" );
+			v2Schema = resolveLocalSchema( "org/hibernate/jpa/persistence_2_0.xsd" );
 		}
 		return v2Schema;
 	}
@@ -406,7 +406,7 @@ public class PersistenceXmlParser {
 
 	private Schema v1Schema() {
 		if ( v1Schema == null ) {
-			v1Schema = resolveLocalSchema( "org/hibernate/ejb/persistence_1_0.xsd" );
+			v1Schema = resolveLocalSchema( "org/hibernate/jpa/persistence_1_0.xsd" );
 		}
 		return v1Schema;
 	}

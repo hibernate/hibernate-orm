@@ -23,30 +23,32 @@
  */
 package org.hibernate.jpa.internal.event;
 
-import java.util.IdentityHashMap;
-
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.event.internal.DefaultAutoFlushEventListener;
-import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 
 /**
- * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the save-update
- * operation in Hibernate).
- *
- * @author Gavin King
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
-public class EJB3AutoFlushEventListener
-		extends DefaultAutoFlushEventListener
-		implements HibernateEntityManagerEventListener {
+public class JpaPostLoadEventListener implements PostLoadEventListener, CallbackHandlerConsumer {
+	EntityCallbackHandler callbackHandler;
 
-	public static final AutoFlushEventListener INSTANCE = new EJB3AutoFlushEventListener();
-
-	protected CascadingAction getCascadingAction() {
-		return CascadingAction.PERSIST_ON_FLUSH;
+	@Override
+	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
+		this.callbackHandler = callbackHandler;
 	}
 
-	protected Object getAnything() {
-		return new IdentityHashMap( 10 );
+	public JpaPostLoadEventListener() {
+		super();
+	}
+
+	public JpaPostLoadEventListener(EntityCallbackHandler callbackHandler) {
+		this.callbackHandler = callbackHandler;
+	}
+
+	@Override
+	public void onPostLoad(PostLoadEvent event) {
+		Object entity = event.getEntity();
+		callbackHandler.postLoad( entity );
 	}
 
 }

@@ -30,19 +30,20 @@ import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.spi.FlushEventListener;
 
 /**
- * In EJB3, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the
+ * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the
  * save-update operation in Hibernate).
  *
  * @author Gavin King
  */
-public class EJB3FlushEventListener extends DefaultFlushEventListener implements HibernateEntityManagerEventListener {
+public class JpaFlushEventListener extends DefaultFlushEventListener implements HibernateEntityManagerEventListener {
+	public static final FlushEventListener INSTANCE = new JpaFlushEventListener();
 
-	public static final FlushEventListener INSTANCE = new EJB3FlushEventListener();
-
+	@Override
 	protected CascadingAction getCascadingAction() {
 		return CascadingAction.PERSIST_ON_FLUSH;
 	}
 
+	@Override
 	protected Object getAnything() {
 		return new IdentityHashMap( 10 );
 	}

@@ -25,7 +25,7 @@ package org.hibernate.jpa.internal.event;
 
 import java.io.Serializable;
 
-import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
+import org.hibernate.event.internal.DefaultSaveEventListener;
 import org.hibernate.event.spi.EventSource;
 
 /**
@@ -33,18 +33,18 @@ import org.hibernate.event.spi.EventSource;
  *
  * @author Emmanuel Bernard
  */
-public class EJB3SaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListener implements CallbackHandlerConsumer {
+public class JpaSaveEventListener extends DefaultSaveEventListener implements CallbackHandlerConsumer {
 	private EntityCallbackHandler callbackHandler;
 
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3SaveOrUpdateEventListener() {
+	public JpaSaveEventListener() {
 		super();
 	}
 
-	public EJB3SaveOrUpdateEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaSaveEventListener(EntityCallbackHandler callbackHandler) {
 		super();
 		this.callbackHandler = callbackHandler;
 	}

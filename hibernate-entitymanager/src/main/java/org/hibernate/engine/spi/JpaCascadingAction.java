@@ -27,7 +27,6 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
@@ -37,10 +36,9 @@ import org.hibernate.type.CollectionType;
  * TODO Get rid of it for 3.3
  * @author Emmanuel Bernard
  */
-public abstract class EJB3CascadingAction extends CascadingAction {
+public abstract class JpaCascadingAction extends CascadingAction {
+    private static final Logger LOG = Logger.getLogger( JpaCascadingAction.class.getName() );
 
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                           EJB3CascadingAction.class.getName());
 	/**
 	 * @see org.hibernate.Session#persist(Object)
 	 */

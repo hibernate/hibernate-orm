@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.boot;
+package org.hibernate.jpa.internal.event;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.ejb.test.jee.OrmVersionTest;
-import org.hibernate.jpa.HibernatePersistenceProvider;
-
-import org.junit.Test;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
 
 /**
- * @author Steve Ebersole
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
-public class NewBootProcessTest {
-	@Test
-	public void basicNewBootProcessTest() {
-		Map settings = new HashMap();
+public class JpaPostDeleteEventListener implements PostDeleteEventListener, CallbackHandlerConsumer {
+	EntityCallbackHandler callbackHandler;
 
-		HibernatePersistenceProvider persistenceProvider = new HibernatePersistenceProvider();
-		persistenceProvider.createContainerEntityManagerFactory(
-				new OrmVersionTest.PersistenceUnitInfoImpl( "my-test" ) {
-					@Override
-					public URL getPersistenceUnitRootUrl() {
-						// just get any known url...
-						return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
-					}
-				},
-				settings
-		);
+	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
+		this.callbackHandler = callbackHandler;
 	}
+
+	public JpaPostDeleteEventListener() {
+		super();
+	}
+
+	public JpaPostDeleteEventListener(EntityCallbackHandler callbackHandler) {
+		this.callbackHandler = callbackHandler;
+	}
+
+	public void onPostDelete(PostDeleteEvent event) {
+		Object entity = event.getEntity();
+		callbackHandler.postRemove( entity );
+	}
+
 }

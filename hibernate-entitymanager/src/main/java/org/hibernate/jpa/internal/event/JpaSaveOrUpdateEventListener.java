@@ -23,30 +23,51 @@
  */
 package org.hibernate.jpa.internal.event;
 
-import org.hibernate.event.spi.PostDeleteEvent;
-import org.hibernate.event.spi.PostDeleteEventListener;
+import java.io.Serializable;
+
+import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
+import org.hibernate.event.spi.EventSource;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * Overrides the LifeCycle OnSave call to call the PrePersist operation
+ *
+ * @author Emmanuel Bernard
  */
-public class EJB3PostDeleteEventListener implements PostDeleteEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
+public class JpaSaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListener implements CallbackHandlerConsumer {
+	private EntityCallbackHandler callbackHandler;
 
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3PostDeleteEventListener() {
+	public JpaSaveOrUpdateEventListener() {
 		super();
 	}
 
-	public EJB3PostDeleteEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaSaveOrUpdateEventListener(EntityCallbackHandler callbackHandler) {
+		super();
 		this.callbackHandler = callbackHandler;
 	}
 
-	public void onPostDelete(PostDeleteEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postRemove( entity );
+	@Override
+	protected Serializable saveWithRequestedId(
+			Object entity,
+			Serializable requestedId,
+			String entityName,
+			Object anything,
+			EventSource source) {
+		callbackHandler.preCreate( entity );
+		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
 	}
 
+	@Override
+	protected Serializable saveWithGeneratedId(
+			Object entity,
+			String entityName,
+			Object anything,
+			EventSource source,
+			boolean requiresImmediateIdAccess) {
+		callbackHandler.preCreate( entity );
+		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
+	}
 }

@@ -26,8 +26,8 @@ package org.hibernate.jpa.internal.event;
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.EJB3CascadeStyle;
-import org.hibernate.engine.spi.EJB3CascadingAction;
+import org.hibernate.engine.spi.JpaCascadeStyle;
+import org.hibernate.engine.spi.JpaCascadingAction;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.spi.EventSource;
 
@@ -36,22 +36,23 @@ import org.hibernate.event.spi.EventSource;
  *
  * @author Emmanuel Bernard
  */
-public class EJB3PersistEventListener extends DefaultPersistEventListener implements CallbackHandlerConsumer {
+public class JpaPersistEventListener extends DefaultPersistEventListener implements CallbackHandlerConsumer {
 	static {
-		EJB3CascadeStyle.PERSIST_EJB3.hasOrphanDelete(); //triggers class loading to override persist with PERSIST_EJB3
+		JpaCascadeStyle.PERSIST_JPA.hasOrphanDelete(); //triggers class loading to override persist with PERSIST_JPA
 	}
 
 	private EntityCallbackHandler callbackHandler;
 
+	@Override
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3PersistEventListener() {
+	public JpaPersistEventListener() {
 		super();
 	}
 
-	public EJB3PersistEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaPersistEventListener(EntityCallbackHandler callbackHandler) {
 		super();
 		this.callbackHandler = callbackHandler;
 	}
@@ -80,6 +81,6 @@ public class EJB3PersistEventListener extends DefaultPersistEventListener implem
 
 	@Override
 	protected CascadingAction getCascadeAction() {
-		return EJB3CascadingAction.PERSIST_SKIPLAZY;
+		return JpaCascadingAction.PERSIST_SKIPLAZY;
 	}
 }

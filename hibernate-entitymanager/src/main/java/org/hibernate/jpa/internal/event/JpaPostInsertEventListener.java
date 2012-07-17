@@ -23,51 +23,31 @@
  */
 package org.hibernate.jpa.internal.event;
 
-import java.io.Serializable;
-
-import org.hibernate.event.internal.DefaultSaveEventListener;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
 
 /**
- * Overrides the LifeCycle OnSave call to call the PrePersist operation
- *
- * @author Emmanuel Bernard
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
-public class EJB3SaveEventListener extends DefaultSaveEventListener implements CallbackHandlerConsumer {
-	private EntityCallbackHandler callbackHandler;
+public class JpaPostInsertEventListener implements PostInsertEventListener, CallbackHandlerConsumer {
+	EntityCallbackHandler callbackHandler;
 
+	@Override
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3SaveEventListener() {
+	public JpaPostInsertEventListener() {
 		super();
 	}
 
-	public EJB3SaveEventListener(EntityCallbackHandler callbackHandler) {
-		super();
+	public JpaPostInsertEventListener(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
 	@Override
-	protected Serializable saveWithRequestedId(
-			Object entity,
-			Serializable requestedId,
-			String entityName,
-			Object anything,
-			EventSource source) {
-		callbackHandler.preCreate( entity );
-		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
-	}
-
-	@Override
-	protected Serializable saveWithGeneratedId(
-			Object entity,
-			String entityName,
-			Object anything,
-			EventSource source,
-			boolean requiresImmediateIdAccess) {
-		callbackHandler.preCreate( entity );
-		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
+	public void onPostInsert(PostInsertEvent event) {
+		Object entity = event.getEntity();
+		callbackHandler.postCreate( entity );
 	}
 }

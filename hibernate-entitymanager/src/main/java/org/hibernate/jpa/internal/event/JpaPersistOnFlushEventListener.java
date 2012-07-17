@@ -23,30 +23,14 @@
  */
 package org.hibernate.jpa.internal.event;
 
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.engine.spi.CascadingAction;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Emmanuel Bernard
  */
-public class EJB3PostLoadEventListener implements PostLoadEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
-
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+public class JpaPersistOnFlushEventListener extends JpaPersistEventListener {
+	@Override
+	protected CascadingAction getCascadeAction() {
+		return CascadingAction.PERSIST_ON_FLUSH;
 	}
-
-	public EJB3PostLoadEventListener() {
-		super();
-	}
-
-	public EJB3PostLoadEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	public void onPostLoad(PostLoadEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postLoad( entity );
-	}
-
 }

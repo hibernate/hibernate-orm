@@ -41,7 +41,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
 @SuppressWarnings("serial")
-public class EJB3PostUpdateEventListener
+public class JpaPostUpdateEventListener
 		implements PostUpdateEventListener,
 				   CallbackHandlerConsumer,
 				   PostCollectionRecreateEventListener,
@@ -49,18 +49,20 @@ public class EJB3PostUpdateEventListener
 				   PostCollectionUpdateEventListener {
 	EntityCallbackHandler callbackHandler;
 
+	@Override
 	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
-	public EJB3PostUpdateEventListener() {
+	public JpaPostUpdateEventListener() {
 		super();
 	}
 
-	public EJB3PostUpdateEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaPostUpdateEventListener(EntityCallbackHandler callbackHandler) {
 		this.callbackHandler = callbackHandler;
 	}
 
+	@Override
 	public void onPostUpdate(PostUpdateEvent event) {
 		Object entity = event.getEntity();
 		EventSource eventSource = event.getSession();
@@ -76,18 +78,21 @@ public class EJB3PostUpdateEventListener
 		}
 	}
 
+	@Override
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
 		Object entity = event.getCollection().getOwner();
 		EventSource eventSource = event.getSession();
 		handlePostUpdate(entity, eventSource);
 	}
 
+	@Override
 	public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
 		Object entity = event.getCollection().getOwner();
 		EventSource eventSource = event.getSession();
 		handlePostUpdate(entity, eventSource);		
 	}
 
+	@Override
 	public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
 		Object entity = event.getCollection().getOwner();
 		EventSource eventSource = event.getSession();

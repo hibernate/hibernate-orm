@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2009-2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
-
-import org.hibernate.event.spi.PostInsertEvent;
-import org.hibernate.event.spi.PostInsertEventListener;
+package org.hibernate.engine.spi;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * Because CascadeStyle is not opened and package protected,
+ * I need to subclass and override the persist alias
+ *
+ * Note that This class has to be triggered by JpaPersistEventListener at class loading time
+ *
+ * TODO get rid of it for 3.3
+ *
+ * @author Emmanuel Bernard
  */
-public class EJB3PostInsertEventListener implements PostInsertEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
+public abstract class JpaCascadeStyle extends CascadeStyle {
 
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
+	/**
+	 * cascade using JpaCascadingAction
+	 */
+	public static final CascadeStyle PERSIST_JPA = new CascadeStyle() {
+		public boolean doCascade(CascadingAction action) {
+			return action== JpaCascadingAction.PERSIST_SKIPLAZY
+					|| action==CascadingAction.PERSIST_ON_FLUSH;
+		}
+		public String toString() {
+			return "STYLE_PERSIST_SKIPLAZY";
+		}
+	};
 
-	public EJB3PostInsertEventListener() {
-		super();
-	}
-
-	public EJB3PostInsertEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	public void onPostInsert(PostInsertEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postCreate( entity );
+	static {
+		STYLES.put( "persist", PERSIST_JPA );
 	}
 }

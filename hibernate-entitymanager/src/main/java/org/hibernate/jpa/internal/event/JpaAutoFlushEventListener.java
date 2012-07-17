@@ -23,14 +23,32 @@
  */
 package org.hibernate.jpa.internal.event;
 
+import java.util.IdentityHashMap;
+
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.event.internal.DefaultAutoFlushEventListener;
+import org.hibernate.event.spi.AutoFlushEventListener;
 
 /**
- * @author Emmanuel Bernard
+ * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the save-update
+ * operation in Hibernate).
+ *
+ * @author Gavin King
  */
-public class EJB3PersistOnFlushEventListener extends EJB3PersistEventListener {
+public class JpaAutoFlushEventListener
+		extends DefaultAutoFlushEventListener
+		implements HibernateEntityManagerEventListener {
+
+	public static final AutoFlushEventListener INSTANCE = new JpaAutoFlushEventListener();
+
 	@Override
-	protected CascadingAction getCascadeAction() {
+	protected CascadingAction getCascadingAction() {
 		return CascadingAction.PERSIST_ON_FLUSH;
 	}
+
+	@Override
+	protected Object getAnything() {
+		return new IdentityHashMap( 10 );
+	}
+
 }

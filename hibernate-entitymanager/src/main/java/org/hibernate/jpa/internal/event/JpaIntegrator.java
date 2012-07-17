@@ -97,15 +97,15 @@ public class JpaIntegrator implements Integrator {
 		eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
 
 		// op listeners
-		eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, EJB3AutoFlushEventListener.INSTANCE );
-		eventListenerRegistry.setListeners( EventType.DELETE, new EJB3DeleteEventListener() );
-		eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, new EJB3FlushEntityEventListener() );
-		eventListenerRegistry.setListeners( EventType.FLUSH, EJB3FlushEventListener.INSTANCE );
-		eventListenerRegistry.setListeners( EventType.MERGE, new EJB3MergeEventListener() );
-		eventListenerRegistry.setListeners( EventType.PERSIST, new EJB3PersistEventListener() );
-		eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new EJB3PersistOnFlushEventListener() );
-		eventListenerRegistry.setListeners( EventType.SAVE, new EJB3SaveEventListener() );
-		eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new EJB3SaveOrUpdateEventListener() );
+		eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, JpaAutoFlushEventListener.INSTANCE );
+		eventListenerRegistry.setListeners( EventType.DELETE, new JpaDeleteEventListener() );
+		eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, new JpaFlushEntityEventListener() );
+		eventListenerRegistry.setListeners( EventType.FLUSH, JpaFlushEventListener.INSTANCE );
+		eventListenerRegistry.setListeners( EventType.MERGE, new JpaMergeEventListener() );
+		eventListenerRegistry.setListeners( EventType.PERSIST, new JpaPersistEventListener() );
+		eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new JpaPersistOnFlushEventListener() );
+		eventListenerRegistry.setListeners( EventType.SAVE, new JpaSaveEventListener() );
+		eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new JpaSaveOrUpdateEventListener() );
 
 		// pre op listeners
 		if ( isSecurityEnabled ) {
@@ -117,10 +117,10 @@ public class JpaIntegrator implements Integrator {
 		}
 
 		// post op listeners
-		eventListenerRegistry.prependListeners( EventType.POST_DELETE, new EJB3PostDeleteEventListener() );
-		eventListenerRegistry.prependListeners( EventType.POST_INSERT, new EJB3PostInsertEventListener() );
-		eventListenerRegistry.prependListeners( EventType.POST_LOAD, new EJB3PostLoadEventListener() );
-		eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new EJB3PostUpdateEventListener() );
+		eventListenerRegistry.prependListeners( EventType.POST_DELETE, new JpaPostDeleteEventListener() );
+		eventListenerRegistry.prependListeners( EventType.POST_INSERT, new JpaPostInsertEventListener() );
+		eventListenerRegistry.prependListeners( EventType.POST_LOAD, new JpaPostLoadEventListener() );
+		eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new JpaPostUpdateEventListener() );
 
 		for ( Map.Entry<?,?> entry : configuration.getProperties().entrySet() ) {
 			if ( ! String.class.isInstance( entry.getKey() ) ) {
@@ -182,15 +182,15 @@ public class JpaIntegrator implements Integrator {
         eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
 
         // op listeners
-        eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, EJB3AutoFlushEventListener.INSTANCE );
-        eventListenerRegistry.setListeners( EventType.DELETE, new EJB3DeleteEventListener() );
-        eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, new EJB3FlushEntityEventListener() );
-        eventListenerRegistry.setListeners( EventType.FLUSH, EJB3FlushEventListener.INSTANCE );
-        eventListenerRegistry.setListeners( EventType.MERGE, new EJB3MergeEventListener() );
-        eventListenerRegistry.setListeners( EventType.PERSIST, new EJB3PersistEventListener() );
-        eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new EJB3PersistOnFlushEventListener() );
-        eventListenerRegistry.setListeners( EventType.SAVE, new EJB3SaveEventListener() );
-        eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new EJB3SaveOrUpdateEventListener() );
+        eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, JpaAutoFlushEventListener.INSTANCE );
+        eventListenerRegistry.setListeners( EventType.DELETE, new JpaDeleteEventListener() );
+        eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, new JpaFlushEntityEventListener() );
+        eventListenerRegistry.setListeners( EventType.FLUSH, JpaFlushEventListener.INSTANCE );
+        eventListenerRegistry.setListeners( EventType.MERGE, new JpaMergeEventListener() );
+        eventListenerRegistry.setListeners( EventType.PERSIST, new JpaPersistEventListener() );
+        eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new JpaPersistOnFlushEventListener() );
+        eventListenerRegistry.setListeners( EventType.SAVE, new JpaSaveEventListener() );
+        eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new JpaSaveOrUpdateEventListener() );
 
         // pre op listeners
         if ( isSecurityEnabled ) {
@@ -202,10 +202,10 @@ public class JpaIntegrator implements Integrator {
         }
 
         // post op listeners
-        eventListenerRegistry.prependListeners( EventType.POST_DELETE, new EJB3PostDeleteEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_INSERT, new EJB3PostInsertEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_LOAD, new EJB3PostLoadEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new EJB3PostUpdateEventListener() );
+        eventListenerRegistry.prependListeners( EventType.POST_DELETE, new JpaPostDeleteEventListener() );
+        eventListenerRegistry.prependListeners( EventType.POST_INSERT, new JpaPostInsertEventListener() );
+        eventListenerRegistry.prependListeners( EventType.POST_LOAD, new JpaPostLoadEventListener() );
+        eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new JpaPostUpdateEventListener() );
 
         for ( Map.Entry<?,?> entry : sessionFactory.getProperties().entrySet() ) {
             if ( ! String.class.isInstance( entry.getKey() ) ) {

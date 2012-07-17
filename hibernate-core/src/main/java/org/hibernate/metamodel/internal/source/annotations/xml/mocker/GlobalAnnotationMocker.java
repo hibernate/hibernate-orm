@@ -40,6 +40,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbQueryHint;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSequenceGenerator;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSqlResultSetMapping;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Strong Liu
@@ -139,7 +140,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	private void nestedEntityResultList(String name, List<JaxbEntityResult> entityResults, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( entityResults ) ) {
+		if ( CollectionHelper.isNotEmpty( entityResults ) ) {
 			AnnotationValue[] values = new AnnotationValue[entityResults.size()];
 			for ( int i = 0; i < entityResults.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserEntityResult( entityResults.get( i ) );
@@ -159,7 +160,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	private void nestedColumnResultList(String name, List<JaxbColumnResult> columnResults, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( columnResults ) ) {
+		if ( CollectionHelper.isNotEmpty( columnResults ) ) {
 			AnnotationValue[] values = new AnnotationValue[columnResults.size()];
 			for ( int i = 0; i < columnResults.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserColumnResult( columnResults.get( i ) );
@@ -183,7 +184,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 
 
 	private void nestedFieldResultList(String name, List<JaxbFieldResult> fieldResultList, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( fieldResultList ) ) {
+		if ( CollectionHelper.isNotEmpty( fieldResultList ) ) {
 			AnnotationValue[] values = new AnnotationValue[fieldResultList.size()];
 			for ( int i = 0; i < fieldResultList.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserFieldResult( fieldResultList.get( i ) );
@@ -270,7 +271,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	private void nestedQueryHintList(String name, List<JaxbQueryHint> constraints, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( constraints ) ) {
+		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserQueryHint( constraints.get( i ) );

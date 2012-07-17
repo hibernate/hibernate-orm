@@ -65,7 +65,8 @@ public class EntityMappingsMocker {
 	}
 
 	/**
-	 * Create new {@link Index} with mocking JPA annotations from {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings} and merge them with existing {@link Index}
+	 * Create new {@link Index} with mocking JPA annotations from {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings}
+	 * and merge them with existing {@link Index}
 	 *
 	 * @return new {@link Index}
 	 */

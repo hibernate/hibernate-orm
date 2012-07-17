@@ -459,30 +459,6 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			return attributeSources;
 		}
 
-		@Override
-		protected AttributeSource buildComponentAttributeSource(JaxbComponentElement attributeElement) {
-			throw new UnsupportedOperationException( "Composite identifier cannot contain component attributes" );
-		}
-
-		@Override
-		protected AttributeSource buildOneToManyAttributeSource(JaxbOneToManyElement attributeElement) {
-			throw new UnsupportedOperationException( "Composite identifier cannot contain one-to-many attributes" );
-		}
-
-		@Override
-		protected AttributeSource buildOneToOneAttributeSource(JaxbOneToOneElement attributeElement) {
-			throw new UnsupportedOperationException( "Composite identifier cannot contain one-to-one attributes" );
-		}
-
-		@Override
-		protected AttributeSource buildAnyAttributeSource(JaxbAnyElement attributeElement) {
-			throw new UnsupportedOperationException( "Composite identifier cannot contain ANY attributes" );
-		}
-
-		@Override
-		protected AttributeSource buildManyToManyAttributeSource(JaxbManyToManyElement attributeElement) {
-			throw new UnsupportedOperationException( "Composite identifier cannot contain many-to-many attributes" );
-		}
 
 		@Override
 		public String getParentReferenceAttributeName() {

@@ -36,18 +36,16 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
  * @author Strong Liu
  */
 class ManyToManyMocker extends PropertyMocker {
-	private JaxbManyToMany manyToMany;
+	private final JaxbManyToMany manyToMany;
 
 	ManyToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbManyToMany manyToMany) {
 		super( indexBuilder, classInfo, defaults );
 		this.manyToMany = manyToMany;
 	}
-
 	@Override
-	protected String getFieldName() {
-		return manyToMany.getName();
+	protected PropertyElement getPropertyElement() {
+		return manyToMany;
 	}
-
 
 	@Override
 	protected void processExtra() {
@@ -70,15 +68,5 @@ class ManyToManyMocker extends PropertyMocker {
 		if ( manyToMany.getOrderBy() != null ) {
 			create( ORDER_BY, MockHelper.stringValueArray( "value", manyToMany.getOrderBy() ) );
 		}
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return manyToMany.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		manyToMany.setAccess( accessType );
 	}
 }

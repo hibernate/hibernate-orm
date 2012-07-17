@@ -36,11 +36,16 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
  * @author Strong Liu
  */
 class ElementCollectionMocker extends PropertyMocker {
-	private JaxbElementCollection elementCollection;
+	private final JaxbElementCollection elementCollection;
 
 	ElementCollectionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbElementCollection elementCollection) {
 		super( indexBuilder, classInfo, defaults );
 		this.elementCollection = elementCollection;
+	}
+
+	@Override
+	protected PropertyElement getPropertyElement() {
+		return elementCollection;
 	}
 
 	@Override
@@ -71,20 +76,5 @@ class ElementCollectionMocker extends PropertyMocker {
 		parserMapKeyClass( elementCollection.getMapKeyClass(), getTarget() );
 		parserMapKeyEnumerated( elementCollection.getMapKeyEnumerated(), getTarget() );
 		parserMapKeyTemporal( elementCollection.getMapKeyTemporal(), getTarget() );
-	}
-
-	@Override
-	protected String getFieldName() {
-		return elementCollection.getName();
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return elementCollection.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		elementCollection.setAccess( accessType );
 	}
 }

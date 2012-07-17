@@ -45,11 +45,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
  * @author Strong Liu
  */
 class EmbeddableMocker extends AbstractEntityObjectMocker {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			EmbeddableMocker.class.getName()
-	);
-	private JaxbEmbeddable embeddable;
+	private final JaxbEmbeddable embeddable;
 
 	EmbeddableMocker(IndexBuilder indexBuilder, JaxbEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
@@ -60,25 +56,20 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 	protected AbstractAttributesBuilder getAttributesBuilder() {
 		if ( attributesBuilder == null ) {
 			attributesBuilder = new EmbeddableAttributesBuilder(
-					indexBuilder, classInfo, getAccessType(), getDefaults(), embeddable.getAttributes()
+					indexBuilder, classInfo, embeddable.getAccess(), getDefaults(), embeddable.getAttributes()
 			);
 		}
 		return attributesBuilder;
 	}
 
 	@Override
+	protected EntityElement getEntityElement() {
+		return embeddable;
+	}
+
+	@Override
 	protected void processExtra() {
 		create( EMBEDDABLE );
-	}
-
-	@Override
-	protected void applyDefaults() {
-		DefaultConfigurationHelper.INSTANCE.applyDefaults( embeddable, getDefaults() );
-	}
-
-	@Override
-	protected boolean isMetadataComplete() {
-		return embeddable.isMetadataComplete() != null && embeddable.isMetadataComplete();
 	}
 
 	@Override
@@ -99,16 +90,6 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 	@Override
 	protected JaxbEntityListeners getEntityListeners() {
 		return null;
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return embeddable.getAccess();
-	}
-
-	@Override
-	protected String getClassName() {
-		return embeddable.getClazz();
 	}
 
 	@Override

@@ -46,6 +46,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbLob;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbOrderColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPrimaryKeyJoinColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Strong Liu
@@ -112,7 +113,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	private AnnotationValue[] nestedJoinColumnList(String name, List<JaxbJoinColumn> columns, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( columns ) ) {
+		if ( CollectionHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserJoinColumn( columns.get( i ), null );
@@ -246,7 +247,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	protected AnnotationInstance parserPrimaryKeyJoinColumnList(List<JaxbPrimaryKeyJoinColumn> primaryKeyJoinColumnList, AnnotationTarget target) {
-		if ( MockHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
+		if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
 				return parserPrimaryKeyJoinColumn( primaryKeyJoinColumnList.get( 0 ), target );
 			}
@@ -264,7 +265,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	protected AnnotationValue[] nestedPrimaryKeyJoinColumnList(String name, List<JaxbPrimaryKeyJoinColumn> constraints, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( constraints ) ) {
+		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserPrimaryKeyJoinColumn( constraints.get( i ), null );
@@ -287,7 +288,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 			return;
 		}
 		List<AnnotationInstance> annotationInstanceList = annotatedMap.get( annName );
-		if ( MockHelper.isNotEmpty( annotationInstanceList ) ) {
+		if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
 			for ( AnnotationInstance annotationInstance : annotationInstanceList ) {
 				AnnotationTarget annotationTarget = annotationInstance.target();
 				if ( MockHelper.targetEquals( target, annotationTarget ) ) {
@@ -392,7 +393,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 
 	protected AnnotationInstance parserJoinColumnList(List<JaxbJoinColumn> joinColumnList, AnnotationTarget target) {
-		if ( MockHelper.isNotEmpty( joinColumnList ) ) {
+		if ( CollectionHelper.isNotEmpty( joinColumnList ) ) {
 			if ( joinColumnList.size() == 1 ) {
 				return parserJoinColumn( joinColumnList.get( 0 ), target );
 			}

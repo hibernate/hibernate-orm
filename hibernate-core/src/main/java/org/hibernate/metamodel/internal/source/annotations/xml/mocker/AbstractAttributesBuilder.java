@@ -63,37 +63,37 @@ abstract class AbstractAttributesBuilder {
 		for ( JaxbId id : getId() ) {
 			new IdMocker( indexBuilder, classInfo, defaults, id ).process();
 		}
-		for ( JaxbTransient transientObj : getTransient() ) {
+		for ( JaxbTransient transientObj : getAttributesContainer().getTransient() ) {
 			new TransientMocker( indexBuilder, classInfo, defaults, transientObj ).process();
 		}
 		for ( JaxbVersion version : getVersion() ) {
 			new VersionMocker( indexBuilder, classInfo, defaults, version ).process();
 		}
 
-		for ( JaxbBasic basic : getBasic() ) {
+		for ( JaxbBasic basic : getAttributesContainer().getBasic() ) {
 			new BasicMocker( indexBuilder, classInfo, defaults, basic ).process();
 		}
-		for ( JaxbElementCollection elementCollection : getElementCollection() ) {
+		for ( JaxbElementCollection elementCollection : getAttributesContainer().getElementCollection() ) {
 			new ElementCollectionMocker(
 					indexBuilder, classInfo, defaults, elementCollection
 			).process();
 		}
-		for ( JaxbEmbedded embedded : getEmbedded() ) {
+		for ( JaxbEmbedded embedded : getAttributesContainer().getEmbedded() ) {
 			new EmbeddedMocker( indexBuilder, classInfo, defaults, embedded ).process();
 		}
-		for ( JaxbManyToMany manyToMany : getManyToMany() ) {
+		for ( JaxbManyToMany manyToMany : getAttributesContainer().getManyToMany() ) {
 			new ManyToManyMocker( indexBuilder, classInfo, defaults, manyToMany ).process();
 		}
 
-		for ( JaxbManyToOne manyToOne : getManyToOne() ) {
+		for ( JaxbManyToOne manyToOne : getAttributesContainer().getManyToOne() ) {
 			new ManyToOneMocker( indexBuilder, classInfo, defaults, manyToOne ).process();
 		}
-		for ( JaxbOneToMany oneToMany : getOneToMany() ) {
+		for ( JaxbOneToMany oneToMany : getAttributesContainer().getOneToMany() ) {
 			new OneToManyMocker(
 					indexBuilder, classInfo, defaults, oneToMany
 			).process();
 		}
-		for ( JaxbOneToOne oneToOne : getOneToOne() ) {
+		for ( JaxbOneToOne oneToOne : getAttributesContainer().getOneToOne() ) {
 			new OneToOneMocker( indexBuilder, classInfo, defaults, oneToOne ).process();
 		}
 		if ( getEmbeddedId() != null ) {
@@ -104,24 +104,7 @@ abstract class AbstractAttributesBuilder {
 	}
 
 	abstract List<JaxbId> getId();
-
-	abstract List<JaxbTransient> getTransient();
-
 	abstract List<JaxbVersion> getVersion();
-
-	abstract List<JaxbBasic> getBasic();
-
-	abstract List<JaxbElementCollection> getElementCollection();
-
-	abstract List<JaxbEmbedded> getEmbedded();
-
-	abstract List<JaxbManyToMany> getManyToMany();
-
-	abstract List<JaxbManyToOne> getManyToOne();
-
-	abstract List<JaxbOneToMany> getOneToMany();
-
-	abstract List<JaxbOneToOne> getOneToOne();
-
 	abstract JaxbEmbeddedId getEmbeddedId();
+	abstract protected AttributesContainer getAttributesContainer();
 }

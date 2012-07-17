@@ -32,7 +32,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
  * @author Strong Liu
  */
 class VersionMocker extends PropertyMocker {
-	private JaxbVersion version;
+	private final JaxbVersion version;
 
 	VersionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbVersion version) {
 		super( indexBuilder, classInfo, defaults );
@@ -40,24 +40,13 @@ class VersionMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return version.getName();
+	protected PropertyElement getPropertyElement() {
+		return version;
 	}
-
 	@Override
 	protected void processExtra() {
 		create( VERSION );
 		parserColumn( version.getColumn(), getTarget() );
 		parserTemporalType( version.getTemporal(), getTarget() );
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return version.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		version.setAccess( accessType );
 	}
 }

@@ -45,7 +45,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
  * @author Strong Liu
  */
 class AttributesBuilder extends AbstractAttributesBuilder {
-	private JaxbAttributes attributes;
+	private final JaxbAttributes attributes;
 
 	AttributesBuilder(IndexBuilder indexBuilder, ClassInfo classInfo, JaxbAccessType accessType, EntityMappingsMocker.Default defaults, JaxbAttributes attributes) {
 		super( indexBuilder, classInfo, defaults );
@@ -53,8 +53,8 @@ class AttributesBuilder extends AbstractAttributesBuilder {
 	}
 
 	@Override
-	List<JaxbBasic> getBasic() {
-		return attributes.getBasic();
+	protected AttributesContainer getAttributesContainer() {
+		return attributes;
 	}
 
 	@Override
@@ -63,43 +63,8 @@ class AttributesBuilder extends AbstractAttributesBuilder {
 	}
 
 	@Override
-	List<JaxbTransient> getTransient() {
-		return attributes.getTransient();
-	}
-
-	@Override
 	List<JaxbVersion> getVersion() {
 		return attributes.getVersion();
-	}
-
-	@Override
-	List<JaxbElementCollection> getElementCollection() {
-		return attributes.getElementCollection();
-	}
-
-	@Override
-	List<JaxbEmbedded> getEmbedded() {
-		return attributes.getEmbedded();
-	}
-
-	@Override
-	List<JaxbManyToMany> getManyToMany() {
-		return attributes.getManyToMany();
-	}
-
-	@Override
-	List<JaxbManyToOne> getManyToOne() {
-		return attributes.getManyToOne();
-	}
-
-	@Override
-	List<JaxbOneToMany> getOneToMany() {
-		return attributes.getOneToMany();
-	}
-
-	@Override
-	List<JaxbOneToOne> getOneToOne() {
-		return attributes.getOneToOne();
 	}
 
 	@Override

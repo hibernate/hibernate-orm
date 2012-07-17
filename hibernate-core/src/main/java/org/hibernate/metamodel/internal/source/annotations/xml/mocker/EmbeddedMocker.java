@@ -32,7 +32,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
  * @author Strong Liu
  */
 class EmbeddedMocker extends PropertyMocker {
-	private JaxbEmbedded embedded;
+	private final JaxbEmbedded embedded;
 
 	EmbeddedMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbEmbedded embedded) {
 		super( indexBuilder, classInfo, defaults );
@@ -48,17 +48,7 @@ class EmbeddedMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return embedded.getName();
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return embedded.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		embedded.setAccess( accessType );
+	protected PropertyElement getPropertyElement() {
+		return embedded;
 	}
 }

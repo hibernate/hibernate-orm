@@ -100,20 +100,11 @@ class DefaultConfigurationHelper {
 		}
 	}
 
-	void applyDefaults(JaxbMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
-		applyDefaultsToEntityObject( new MappedSuperClassEntityObject( mappedSuperclass ), defaults );
+	void applyDefaults(EntityElement entityElement, EntityMappingsMocker.Default defaults) {
+		applyDefaultsToEntityObject(  entityElement , defaults );
 	}
 
-	void applyDefaults(JaxbEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
-		applyDefaultsToEntityObject( new EmbeddableEntityObject( embeddable ), defaults );
-	}
-
-	void applyDefaults(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
-		mockTableIfNonExist( entity, defaults );
-		applyDefaultsToEntityObject( new EntityEntityObject( entity ), defaults );
-	}
-
-	private void applyDefaultsToEntityObject(EntityObject entityObject, EntityMappingsMocker.Default defaults) {
+	private void applyDefaultsToEntityObject(EntityElement entityObject, EntityMappingsMocker.Default defaults) {
 		if ( defaults == null ) {
 			return;
 		}
@@ -159,16 +150,6 @@ class DefaultConfigurationHelper {
 			List<AnnotationInstance> annotationInstanceList = new ArrayList<AnnotationInstance>( 1 );
 			annotationInstanceList.add( table );
 			annotationsMap.put( JPADotNames.TABLE, annotationInstanceList );
-		}
-	}
-
-	private void mockTableIfNonExist(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
-		if ( hasSchemaOrCatalogDefined( defaults ) ) {
-			JaxbTable table = entity.getTable();
-			if ( table == null ) {
-				table = new JaxbTable();
-				entity.setTable( table );
-			}
 		}
 	}
 
@@ -292,98 +273,6 @@ class DefaultConfigurationHelper {
 		);
 	}
 
-	private static interface EntityObject {
-		String getClazz();
 
-		void setClazz(String className);
-
-		Boolean isMetadataComplete();
-
-		void setMetadataComplete(Boolean isMetadataComplete);
-	}
-
-	private static class EntityEntityObject implements EntityObject {
-		private JaxbEntity entity;
-
-		private EntityEntityObject(JaxbEntity entity) {
-			this.entity = entity;
-		}
-
-		@Override
-		public String getClazz() {
-			return entity.getClazz();
-		}
-
-		@Override
-		public void setClazz(String className) {
-			entity.setClazz( className );
-		}
-
-		@Override
-		public Boolean isMetadataComplete() {
-			return entity.isMetadataComplete();
-		}
-
-		@Override
-		public void setMetadataComplete(Boolean isMetadataComplete) {
-			entity.setMetadataComplete( isMetadataComplete );
-		}
-	}
-
-	private static class EmbeddableEntityObject implements EntityObject {
-		private JaxbEmbeddable entity;
-
-		private EmbeddableEntityObject(JaxbEmbeddable entity) {
-			this.entity = entity;
-		}
-
-		@Override
-		public String getClazz() {
-			return entity.getClazz();
-		}
-
-		@Override
-		public void setClazz(String className) {
-			entity.setClazz( className );
-		}
-
-		@Override
-		public Boolean isMetadataComplete() {
-			return entity.isMetadataComplete();
-		}
-
-		@Override
-		public void setMetadataComplete(Boolean isMetadataComplete) {
-			entity.setMetadataComplete( isMetadataComplete );
-		}
-	}
-
-	private static class MappedSuperClassEntityObject implements EntityObject {
-		private JaxbMappedSuperclass entity;
-
-		private MappedSuperClassEntityObject(JaxbMappedSuperclass entity) {
-			this.entity = entity;
-		}
-
-		@Override
-		public String getClazz() {
-			return entity.getClazz();
-		}
-
-		@Override
-		public void setClazz(String className) {
-			entity.setClazz( className );
-		}
-
-		@Override
-		public Boolean isMetadataComplete() {
-			return entity.isMetadataComplete();
-		}
-
-		@Override
-		public void setMetadataComplete(Boolean isMetadataComplete) {
-			entity.setMetadataComplete( isMetadataComplete );
-		}
-	}
 
 }

@@ -36,7 +36,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
  * @author Strong Liu
  */
 class BasicMocker extends PropertyMocker {
-	private JaxbBasic basic;
+	private final JaxbBasic basic;
 
 	BasicMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbBasic basic) {
 		super( indexBuilder, classInfo, defaults );
@@ -44,10 +44,9 @@ class BasicMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return basic.getName();
+	protected PropertyElement getPropertyElement() {
+		return basic;
 	}
-
 	@Override
 	protected void processExtra() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
@@ -59,16 +58,5 @@ class BasicMocker extends PropertyMocker {
 		parserLob( basic.getLob(), getTarget() );
 		parserTemporalType( basic.getTemporal(), getTarget() );
 
-	}
-
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return basic.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		basic.setAccess( accessType );
 	}
 }

@@ -53,6 +53,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSecondaryTable;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Mock <entity> to {@link javax.persistence.Entity @Entity}
@@ -60,20 +61,11 @@ import org.hibernate.internal.util.StringHelper;
  * @author Strong Liu
  */
 class EntityMocker extends AbstractEntityObjectMocker {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			EntityMocker.class.getName()
-	);
-	private JaxbEntity entity;
+	private final JaxbEntity entity;
 
 	EntityMocker(IndexBuilder indexBuilder, JaxbEntity entity, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
 		this.entity = entity;
-	}
-
-	@Override
-	protected String getClassName() {
-		return entity.getClazz();
 	}
 
 	@Override
@@ -134,7 +126,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	protected AccessType getAccessFromIndex(DotName className) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		List<AnnotationInstance> accessAnnotationInstances = indexedAnnotations.get( ACCESS );
-		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {
+		if ( CollectionHelper.isNotEmpty( accessAnnotationInstances ) ) {
 			for ( AnnotationInstance annotationInstance : accessAnnotationInstances ) {
 				if ( annotationInstance.target() != null && annotationInstance.target() instanceof ClassInfo ) {
 					ClassInfo ci = (ClassInfo) ( annotationInstance.target() );
@@ -149,8 +141,8 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected void applyDefaults() {
-		DefaultConfigurationHelper.INSTANCE.applyDefaults( entity, getDefaults() );
+	protected EntityElement getEntityElement() {
+		return entity;
 	}
 
 	@Override
@@ -193,10 +185,6 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		return entity.getAttributes();
 	}
 
-	@Override
-	protected boolean isMetadataComplete() {
-		return entity.isMetadataComplete() != null && entity.isMetadataComplete();
-	}
 
 	@Override
 	protected boolean isExcludeDefaultListeners() {
@@ -216,11 +204,6 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	@Override
 	protected JaxbEntityListeners getEntityListeners() {
 		return entity.getEntityListeners();
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return entity.getAccess();
 	}
 
 	//@Inheritance
@@ -250,11 +233,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		MockHelper.enumValue(
 				"discriminatorType", DISCRIMINATOR_TYPE, discriminatorColumn.getDiscriminatorType(), annotationValueList
 		);
-		return
-				create(
-						DISCRIMINATOR_COLUMN, annotationValueList
-
-				);
+		return create(DISCRIMINATOR_COLUMN, annotationValueList);
 
 	}
 
@@ -282,7 +261,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 
 
 	protected AnnotationInstance parserSecondaryTableList(List<JaxbSecondaryTable> primaryKeyJoinColumnList, AnnotationTarget target) {
-		if ( MockHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
+		if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
 				return parserSecondaryTable( primaryKeyJoinColumnList.get( 0 ), target );
 			}
@@ -299,7 +278,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	protected AnnotationValue[] nestedSecondaryTableList(String name, List<JaxbSecondaryTable> secondaryTableList, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( secondaryTableList ) ) {
+		if ( CollectionHelper.isNotEmpty( secondaryTableList ) ) {
 			AnnotationValue[] values = new AnnotationValue[secondaryTableList.size()];
 			for ( int i = 0; i < secondaryTableList.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserSecondaryTable( secondaryTableList.get( i ), null );

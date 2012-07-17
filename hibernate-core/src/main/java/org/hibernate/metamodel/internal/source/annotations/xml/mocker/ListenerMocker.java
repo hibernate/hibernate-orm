@@ -30,6 +30,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListener;
@@ -73,76 +74,25 @@ class ListenerMocker extends AbstractMocker {
 		String clazz = listener.getClazz();
 		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz );
 		ListenerMocker mocker = createListenerMocker( indexBuilder, tempClassInfo );
-		mocker.parser( listener.getPostLoad() );
-		mocker.parser( listener.getPostPersist() );
-		mocker.parser( listener.getPostRemove() );
-		mocker.parser( listener.getPostUpdate() );
-		mocker.parser( listener.getPrePersist() );
-		mocker.parser( listener.getPreRemove() );
-		mocker.parser( listener.getPreUpdate() );
+		mocker.parser( listener.getPostLoad(), POST_LOAD );
+		mocker.parser( listener.getPostPersist(), POST_PERSIST );
+		mocker.parser( listener.getPostRemove(), POST_REMOVE );
+		mocker.parser( listener.getPostUpdate(), POST_UPDATE );
+		mocker.parser( listener.getPrePersist(), PRE_PERSIST );
+		mocker.parser( listener.getPreRemove(), PRE_REMOVE );
+		mocker.parser( listener.getPreUpdate(), PRE_UPDATE );
 		indexBuilder.finishEntityObject( tempClassInfo.name(), null );
 	}
 
 	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
 		return new ListenerMocker( indexBuilder, classInfo );
 	}
-
-	//@PrePersist
-	AnnotationInstance parser(JaxbPrePersist callback) {
+	AnnotationInstance parser(Listener callback, DotName target) {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( PRE_PERSIST, getListenerTarget( callback.getMethodName() ) );
+		return create( target, getListenerTarget( callback.getMethodName() ) );
 	}
-
-	//@PreRemove
-	AnnotationInstance parser(JaxbPreRemove callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( PRE_REMOVE, getListenerTarget( callback.getMethodName() ) );
-	}
-
-	//@PreUpdate
-	AnnotationInstance parser(JaxbPreUpdate callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( PRE_UPDATE, getListenerTarget( callback.getMethodName() ) );
-	}
-
-	//@PostPersist
-	AnnotationInstance parser(JaxbPostPersist callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( POST_PERSIST, getListenerTarget( callback.getMethodName() ) );
-	}
-
-	//@PostUpdate
-	AnnotationInstance parser(JaxbPostUpdate callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( POST_UPDATE, getListenerTarget( callback.getMethodName() ) );
-	}
-
-	//@PostRemove
-	AnnotationInstance parser(JaxbPostRemove callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( POST_REMOVE, getListenerTarget( callback.getMethodName() ) );
-	}
-
-	//@PostLoad
-	AnnotationInstance parser(JaxbPostLoad callback) {
-		if ( callback == null ) {
-			return null;
-		}
-		return create( POST_LOAD, getListenerTarget( callback.getMethodName() ) );
-	}
-
 	private AnnotationTarget getListenerTarget(String methodName) {
 		return MockHelper.getTarget(
 				indexBuilder.getServiceRegistry(), classInfo, methodName, MockHelper.TargetType.METHOD

@@ -32,7 +32,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
  * @author Strong Liu
  */
 class EmbeddedIdMocker extends PropertyMocker {
-	private JaxbEmbeddedId embeddedId;
+	private final JaxbEmbeddedId embeddedId;
 
 	EmbeddedIdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbEmbeddedId embeddedId) {
 		super( indexBuilder, classInfo, defaults );
@@ -40,22 +40,12 @@ class EmbeddedIdMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return embeddedId.getName();
+	protected PropertyElement getPropertyElement() {
+		return embeddedId;
 	}
 
 	@Override
 	protected void processExtra() {
 		create( EMBEDDED_ID );
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return embeddedId.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		embeddedId.setAccess( accessType );
 	}
 }

@@ -38,6 +38,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.filter.IndexedAnnotationFilter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -50,14 +51,14 @@ public class IndexBuilder {
 			CoreMessageLogger.class,
 			IndexBuilder.class.getName()
 	);
-	private Map<DotName, List<AnnotationInstance>> annotations;
-	private Map<DotName, List<ClassInfo>> subclasses;
-	private Map<DotName, List<ClassInfo>> implementors;
-	private Map<DotName, ClassInfo> classes;
+	private final Map<DotName, List<AnnotationInstance>> annotations;
+	private final Map<DotName, List<ClassInfo>> subclasses;
+	private final Map<DotName, List<ClassInfo>> implementors;
+	private final Map<DotName, ClassInfo> classes;
 	private Index index;
-	private Map<DotName, Map<DotName, List<AnnotationInstance>>> classInfoAnnotationsMap;
-	private Map<DotName, Map<DotName, List<AnnotationInstance>>> indexedClassInfoAnnotationsMap;
-	private ServiceRegistry serviceRegistry;
+	private final Map<DotName, Map<DotName, List<AnnotationInstance>>> classInfoAnnotationsMap;
+	private final Map<DotName, Map<DotName, List<AnnotationInstance>>> indexedClassInfoAnnotationsMap;
+	private final ServiceRegistry serviceRegistry;
 
 	IndexBuilder(Index index, ServiceRegistry serviceRegistry) {
 		this.index = index;
@@ -167,7 +168,7 @@ public class IndexBuilder {
 	void collectGlobalConfigurationFromIndex(GlobalAnnotations globalAnnotations) {
 		for ( DotName annName : DefaultConfigurationHelper.GLOBAL_ANNOTATIONS ) {
 			List<AnnotationInstance> annotationInstanceList = index.getAnnotations( annName );
-			if ( MockHelper.isNotEmpty( annotationInstanceList ) ) {
+			if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
 				globalAnnotations.addIndexedAnnotationInstance( annotationInstanceList );
 			}
 		}

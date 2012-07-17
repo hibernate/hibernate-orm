@@ -36,7 +36,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
  * @author Strong Liu
  */
 class ManyToOneMocker extends PropertyMocker {
-	private JaxbManyToOne manyToOne;
+	private final JaxbManyToOne manyToOne;
 
 	ManyToOneMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbManyToOne manyToOne) {
 		super( indexBuilder, classInfo, defaults );
@@ -44,8 +44,8 @@ class ManyToOneMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return manyToOne.getName();
+	protected PropertyElement getPropertyElement() {
+		return manyToOne;
 	}
 
 	@Override
@@ -66,15 +66,5 @@ class ManyToOneMocker extends PropertyMocker {
 		if ( manyToOne.isId() != null && manyToOne.isId() ) {
 			create( ID );
 		}
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return manyToOne.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		manyToOne.setAccess( accessType );
 	}
 }

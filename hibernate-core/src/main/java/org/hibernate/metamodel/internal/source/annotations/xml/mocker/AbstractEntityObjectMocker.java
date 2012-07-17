@@ -59,13 +59,13 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	 * Pre-process Entity Objects to find the default {@link javax.persistence.Access} for later attributes processing.
 	 */
 	final void preProcess() {
-		applyDefaults();
-		classInfo = indexBuilder.createClassInfo( getClassName() );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( getEntityElement(), getDefaults() );
+		classInfo = indexBuilder.createClassInfo( getEntityElement().getClazz() );
 		DotName classDotName = classInfo.name();
-		if ( isMetadataComplete() ) {
+		if ( getEntityElement().isMetadataComplete() ) {
 			indexBuilder.metadataComplete( classDotName );
 		}
-		parserAccessType( getAccessType(), getTarget() );
+		parserAccessType( getEntityElement().getAccess(), getTarget() );
 		isPreProcessCalled = true;
 	}
 
@@ -73,7 +73,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		if ( !isPreProcessCalled ) {
 			throw new AssertionFailure( "preProcess should be called before process" );
 		}
-		if ( getAccessType() == null ) {
+		if ( getEntityElement().getAccess() == null ) {
 			JaxbAccessType accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
 			if ( accessType == null ) {
 				accessType = getDefaults().getAccess();
@@ -96,27 +96,19 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		if ( getEntityListeners() != null ) {
 			getListenerParser().parser( getEntityListeners() );
 		}
-		getListenerParser().parser( getPrePersist() );
-		getListenerParser().parser( getPreRemove() );
-		getListenerParser().parser( getPreUpdate() );
-		getListenerParser().parser( getPostPersist() );
-		getListenerParser().parser( getPostUpdate() );
-		getListenerParser().parser( getPostRemove() );
-		getListenerParser().parser( getPostLoad() );
+		getListenerParser().parser( getPrePersist(), PRE_PERSIST );
+		getListenerParser().parser( getPreRemove(), PRE_REMOVE );
+		getListenerParser().parser( getPreUpdate(), PRE_UPDATE );
+		getListenerParser().parser( getPostPersist(), POST_PERSIST );
+		getListenerParser().parser( getPostUpdate(), POST_UPDATE );
+		getListenerParser().parser( getPostRemove(), POST_REMOVE );
+		getListenerParser().parser( getPostLoad(), POST_LOAD );
 
 		indexBuilder.finishEntityObject( getTargetName(), getDefaults() );
 	}
 
-
+	abstract protected EntityElement getEntityElement();
 	abstract protected void processExtra();
-
-	/**
-	 * give a chance to the sub-classes to override defaults configuration
-	 */
-	abstract protected void applyDefaults();
-
-	abstract protected boolean isMetadataComplete();
-
 	abstract protected boolean isExcludeDefaultListeners();
 
 	abstract protected boolean isExcludeSuperclassListeners();
@@ -124,11 +116,6 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	abstract protected JaxbIdClass getIdClass();
 
 	abstract protected JaxbEntityListeners getEntityListeners();
-
-	abstract protected JaxbAccessType getAccessType();
-
-	abstract protected String getClassName();
-
 	abstract protected JaxbPrePersist getPrePersist();
 
 	abstract protected JaxbPreRemove getPreRemove();
@@ -155,7 +142,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	protected AbstractAttributesBuilder getAttributesBuilder() {
 		if ( attributesBuilder == null ) {
 			attributesBuilder = new AttributesBuilder(
-					indexBuilder, classInfo, getAccessType(), getDefaults(), getAttributes()
+					indexBuilder, classInfo, getEntityElement().getAccess(), getDefaults(), getAttributes()
 			);
 		}
 		return attributesBuilder;

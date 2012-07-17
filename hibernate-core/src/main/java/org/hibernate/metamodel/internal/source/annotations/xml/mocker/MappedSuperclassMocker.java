@@ -57,8 +57,8 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected void applyDefaults() {
-		DefaultConfigurationHelper.INSTANCE.applyDefaults( mappedSuperclass, getDefaults() );
+	protected EntityElement getEntityElement() {
+		return mappedSuperclass;
 	}
 
 	@Override
@@ -70,17 +70,6 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	protected JaxbAttributes getAttributes() {
 		return mappedSuperclass.getAttributes();
 	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return mappedSuperclass.getAccess();
-	}
-
-	@Override
-	protected boolean isMetadataComplete() {
-		return mappedSuperclass.isMetadataComplete() != null && mappedSuperclass.isMetadataComplete();
-	}
-
 	@Override
 	protected boolean isExcludeDefaultListeners() {
 		return mappedSuperclass.getExcludeDefaultListeners() != null;
@@ -99,10 +88,6 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	@Override
 	protected JaxbEntityListeners getEntityListeners() {
 		return mappedSuperclass.getEntityListeners();
-	}
-
-	protected String getClassName() {
-		return mappedSuperclass.getClazz();
 	}
 
 	@Override

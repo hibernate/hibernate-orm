@@ -33,6 +33,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
@@ -76,7 +77,7 @@ abstract class AbstractMocker implements JPADotNames {
 	}
 
 	protected void nestedUniqueConstraintList(String name, List<JaxbUniqueConstraint> constraints, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( constraints ) ) {
+		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserUniqueConstraint( constraints.get( i ), null );

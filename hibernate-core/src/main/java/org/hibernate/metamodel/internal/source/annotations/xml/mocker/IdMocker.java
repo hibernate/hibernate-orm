@@ -39,11 +39,16 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
  * @author Strong Liu
  */
 class IdMocker extends PropertyMocker {
-	private JaxbId id;
+	private final JaxbId id;
 
 	IdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbId id) {
 		super( indexBuilder, classInfo, defaults );
 		this.id = id;
+	}
+
+	@Override
+	protected PropertyElement getPropertyElement() {
+		return id;
 	}
 
 	@Override
@@ -65,20 +70,5 @@ class IdMocker extends PropertyMocker {
 		);
 
 		return create( GENERATED_VALUE, target, annotationValueList );
-	}
-
-	@Override
-	protected String getFieldName() {
-		return id.getName();
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return id.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		id.setAccess( accessType );
 	}
 }

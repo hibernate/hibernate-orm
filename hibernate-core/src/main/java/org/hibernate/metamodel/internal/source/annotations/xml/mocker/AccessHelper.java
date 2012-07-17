@@ -37,6 +37,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
@@ -91,7 +92,7 @@ class AccessHelper implements JPADotNames {
 			return null;
 		}
 		List<AnnotationInstance> idAnnotationInstances = annotations.get( ID );
-		if ( MockHelper.isNotEmpty( idAnnotationInstances ) ) {
+		if ( CollectionHelper.isNotEmpty( idAnnotationInstances ) ) {
 			return processIdAnnotations( idAnnotationInstances );
 		}
 		return null;
@@ -146,7 +147,7 @@ class AccessHelper implements JPADotNames {
 			return null;
 		}
 		List<AnnotationInstance> accessAnnotationInstances = annotations.get( JPADotNames.ACCESS );
-		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {
+		if ( CollectionHelper.isNotEmpty( accessAnnotationInstances ) ) {
 			for ( AnnotationInstance annotationInstance : accessAnnotationInstances ) {
 				if ( annotationInstance.target() != null && annotationInstance.target() instanceof ClassInfo ) {
 					return JandexHelper.getEnumValue(
@@ -172,7 +173,7 @@ class AccessHelper implements JPADotNames {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		if ( indexedAnnotations != null && indexedAnnotations.containsKey( ACCESS ) ) {
 			List<AnnotationInstance> annotationInstances = indexedAnnotations.get( ACCESS );
-			if ( MockHelper.isNotEmpty( annotationInstances ) ) {
+			if ( CollectionHelper.isNotEmpty( annotationInstances ) ) {
 				for ( AnnotationInstance annotationInstance : annotationInstances ) {
 					AnnotationTarget indexedPropertyTarget = annotationInstance.target();
 					if ( indexedPropertyTarget == null ) {

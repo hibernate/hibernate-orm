@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -42,6 +44,7 @@ import org.jboss.jandex.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -62,7 +65,7 @@ public class MockHelper {
 	 * @param annotationValueList
 	 */
 	static void stringArrayValue(String name, List<String> values, List<AnnotationValue> annotationValueList) {
-		if ( isNotEmpty( values ) ) {
+		if ( CollectionHelper.isNotEmpty( values ) ) {
 			AnnotationValue[] annotationValues = new AnnotationValue[values.size()];
 			for ( int j = 0; j < values.size(); j++ ) {
 				annotationValues[j] = stringValue( "", values.get( j ) );
@@ -149,13 +152,11 @@ public class MockHelper {
 	}
 
 	private static AnnotationValue[] nullSafe(AnnotationValue value) {
-		return value == null ? EMPTY_ANNOTATION_VALUE_ARRAY : new AnnotationValue[] {
-				value
-		};
+		return value == null ? EMPTY_ANNOTATION_VALUE_ARRAY : new AnnotationValue[] {value};
 	}
 
 	static void classArrayValue(String name, List<String> classNameList, List<AnnotationValue> list, ServiceRegistry serviceRegistry) {
-		if ( isNotEmpty( classNameList ) ) {
+		if ( CollectionHelper.isNotEmpty( classNameList ) ) {
 
 			List<AnnotationValue> clazzValueList = new ArrayList<AnnotationValue>( classNameList.size() );
 			for ( String clazz : classNameList ) {
@@ -172,7 +173,7 @@ public class MockHelper {
 
 	public static AnnotationValue[] toArray(List<AnnotationValue> list) {
 		AnnotationValue[] values = EMPTY_ANNOTATION_VALUE_ARRAY;
-		if ( isNotEmpty( list ) ) {
+		if ( CollectionHelper.isNotEmpty( list ) ) {
 			values = list.toArray( new AnnotationValue[list.size()] );
 		}
 		return values;
@@ -191,32 +192,26 @@ public class MockHelper {
 			enumList.add( javax.persistence.CascadeType.PERSIST );
 		}
 		if ( cascadeType != null ) {
-			if ( cascadeType.getCascadeAll() != null ) {
-				enumList.add( javax.persistence.CascadeType.ALL );
-			}
-			if ( cascadeType.getCascadePersist() != null && !isCascadePersistDefault ) {
-				enumList.add( javax.persistence.CascadeType.PERSIST );
-			}
-			if ( cascadeType.getCascadeMerge() != null ) {
-				enumList.add( javax.persistence.CascadeType.MERGE );
-			}
-			if ( cascadeType.getCascadeRemove() != null ) {
-				enumList.add( javax.persistence.CascadeType.REMOVE );
-			}
-			if ( cascadeType.getCascadeRefresh() != null ) {
-				enumList.add( javax.persistence.CascadeType.REFRESH );
-			}
-			if ( cascadeType.getCascadeDetach() != null ) {
-				enumList.add( javax.persistence.CascadeType.DETACH );
-			}
+			addIfNotNull( cascadeType.getCascadeAll(), enumList, CascadeType.ALL );
+			addIfNotNull( cascadeType.getCascadePersist(), enumList, CascadeType.PERSIST );
+			addIfNotNull( cascadeType.getCascadeMerge(), enumList, CascadeType.MERGE );
+			addIfNotNull( cascadeType.getCascadeRemove(), enumList, CascadeType.REMOVE );
+			addIfNotNull( cascadeType.getCascadeRefresh(), enumList, CascadeType.REFRESH );
+			addIfNotNull( cascadeType.getCascadeDetach(), enumList , CascadeType.DETACH );
 		}
 		if ( !enumList.isEmpty() ) {
 			MockHelper.enumArrayValue( name, JPADotNames.CASCADE_TYPE, enumList, annotationValueList );
 		}
 	}
 
+	private static void addIfNotNull(Object expect, List<Enum> enumList, CascadeType value) {
+		if ( expect != null ) {
+			enumList.add( value);
+		}
+	}
+
 	static void enumArrayValue(String name, DotName typeName, List<Enum> valueList, List<AnnotationValue> list) {
-		if ( isNotEmpty( valueList ) ) {
+		if ( CollectionHelper.isNotEmpty( valueList ) ) {
 
 			List<AnnotationValue> enumValueList = new ArrayList<AnnotationValue>( valueList.size() );
 			for ( Enum e : valueList ) {
@@ -269,11 +264,6 @@ public class MockHelper {
 		}
 		return false;
 	}
-
-	public static boolean isNotEmpty(Collection collection) {
-		return collection != null && !collection.isEmpty();
-	}
-
 
 	static AnnotationInstance create(DotName name, AnnotationTarget target, List<AnnotationValue> annotationValueList) {
 		return create(

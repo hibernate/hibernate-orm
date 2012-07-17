@@ -36,7 +36,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
  * @author Strong Liu
  */
 class OneToManyMocker extends PropertyMocker {
-	private JaxbOneToMany oneToMany;
+	private final JaxbOneToMany oneToMany;
 
 	OneToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbOneToMany oneToMany) {
 		super( indexBuilder, classInfo, defaults );
@@ -44,10 +44,9 @@ class OneToManyMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return oneToMany.getName();
+	protected PropertyElement getPropertyElement() {
+		return oneToMany;
 	}
-
 	@Override
 	protected void processExtra() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
@@ -72,15 +71,5 @@ class OneToManyMocker extends PropertyMocker {
 		if ( oneToMany.getOrderBy() != null ) {
 			create( ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
 		}
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return oneToMany.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		oneToMany.setAccess( accessType );
 	}
 }

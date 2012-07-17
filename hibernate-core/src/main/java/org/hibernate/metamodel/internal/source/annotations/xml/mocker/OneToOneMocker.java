@@ -44,8 +44,8 @@ class OneToOneMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return oneToOne.getName();
+	protected PropertyElement getPropertyElement() {
+		return oneToOne;
 	}
 
 	@Override
@@ -70,15 +70,5 @@ class OneToOneMocker extends PropertyMocker {
 		if ( oneToOne.isId() != null && oneToOne.isId() ) {
 			create( ID );
 		}
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return oneToOne.getAccess();
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		oneToOne.setAccess( accessType );
 	}
 }

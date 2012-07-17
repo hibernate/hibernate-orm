@@ -40,6 +40,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyClass;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyJoinColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Strong Liu
@@ -52,14 +53,8 @@ abstract class PropertyMocker extends AnnotationMocker {
 		super( indexBuilder, defaults );
 		this.classInfo = classInfo;
 	}
-
+	protected abstract PropertyElement getPropertyElement();
 	protected abstract void processExtra();
-
-	protected abstract String getFieldName();
-
-	protected abstract JaxbAccessType getAccessType();
-
-	protected abstract void setAccessType(JaxbAccessType accessType);
 
 	@Override
 	protected DotName getTargetName() {
@@ -68,10 +63,10 @@ abstract class PropertyMocker extends AnnotationMocker {
 
 	protected void resolveTarget() {
 		//attribute in orm.xml has access sub-element
-		JaxbAccessType accessType = getAccessType();
+		JaxbAccessType accessType = getPropertyElement().getAccess();
 		if ( accessType == null ) {
 			//attribute in the entity class has @Access
-			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getFieldName(), indexBuilder );
+			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getPropertyElement().getName(), indexBuilder );
 			if ( accessType == null ) {
 				accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
 			}
@@ -86,7 +81,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 				accessType = JaxbAccessType.PROPERTY;
 
 			}
-			setAccessType( accessType );
+			getPropertyElement().setAccess( accessType );
 		}
 
 	}
@@ -94,7 +89,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 	@Override
 	protected AnnotationTarget getTarget() {
 		if ( target == null ) {
-			target = getTargetFromAttributeAccessType( getAccessType() );
+			target = getTargetFromAttributeAccessType( getPropertyElement().getAccess() );
 		}
 		return target;
 	}
@@ -108,14 +103,14 @@ abstract class PropertyMocker extends AnnotationMocker {
 				return MockHelper.getTarget(
 						indexBuilder.getServiceRegistry(),
 						classInfo,
-						getFieldName(),
+						getPropertyElement().getName(),
 						MockHelper.TargetType.FIELD
 				);
 			case PROPERTY:
 				return MockHelper.getTarget(
 						indexBuilder.getServiceRegistry(),
 						classInfo,
-						getFieldName(),
+						getPropertyElement().getName(),
 						MockHelper.TargetType.PROPERTY
 				);
 			default:
@@ -187,7 +182,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 	}
 
 	private AnnotationValue[] nestedMapKeyJoinColumnList(String name, List<JaxbMapKeyJoinColumn> columns, List<AnnotationValue> annotationValueList) {
-		if ( MockHelper.isNotEmpty( columns ) ) {
+		if ( CollectionHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
 				AnnotationInstance annotationInstance = parserMapKeyJoinColumn( columns.get( i ), null );
@@ -204,7 +199,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 	}
 
 	protected AnnotationInstance parserMapKeyJoinColumnList(List<JaxbMapKeyJoinColumn> joinColumnList, AnnotationTarget target) {
-		if ( MockHelper.isNotEmpty( joinColumnList ) ) {
+		if ( CollectionHelper.isNotEmpty( joinColumnList ) ) {
 			if ( joinColumnList.size() == 1 ) {
 				return parserMapKeyJoinColumn( joinColumnList.get( 0 ), target );
 			}

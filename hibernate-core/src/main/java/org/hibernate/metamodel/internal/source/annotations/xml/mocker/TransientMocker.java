@@ -32,11 +32,27 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
  * @author Strong Liu
  */
 class TransientMocker extends PropertyMocker {
-	private JaxbTransient transientObj;
+	private final JaxbTransient transientObj;
+	private final PropertyElement wrapper;
 
-	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbTransient transientObj) {
+	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, final JaxbTransient transientObj) {
 		super( indexBuilder, classInfo, defaults );
 		this.transientObj = transientObj;
+		this.wrapper = new PropertyElement() {
+			@Override
+			public String getName() {
+				return transientObj.getName();
+			}
+
+			@Override
+			public JaxbAccessType getAccess() {
+				return JaxbAccessType.FIELD;
+			}
+
+			@Override
+			public void setAccess(JaxbAccessType accessType) {
+			}
+		};
 	}
 
 	@Override
@@ -45,17 +61,7 @@ class TransientMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected String getFieldName() {
-		return transientObj.getName();
-	}
-
-	@Override
-	protected JaxbAccessType getAccessType() {
-		return JaxbAccessType.FIELD;
-	}
-
-	@Override
-	protected void setAccessType(JaxbAccessType accessType) {
-		//ignore
+	protected PropertyElement getPropertyElement() {
+		return wrapper;
 	}
 }

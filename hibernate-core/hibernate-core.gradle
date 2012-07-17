@@ -92,7 +92,7 @@ task jaxb {
                 destdir: '${jaxbTargetDir}',
                 package: 'org.hibernate.internal.jaxb.mapping.hbm',
                 binding: hbmXjb.path,
-                schema: hbmXsd.path,
+                schema:  hbmXsd.path,
                 extension: 'true'
         ) {
             arg line:     '-Xinheritance -Xsimplify'
@@ -103,8 +103,11 @@ task jaxb {
                 destdir: '${jaxbTargetDir}',
                 package: 'org.hibernate.internal.jaxb.mapping.orm',
                 binding: 'src/main/xjb/orm-bindings.xjb',
-                schema: ormXsd.path
-        )
+                schema:  ormXsd.path,
+                extension: 'true'
+        ) {
+            arg line:     '-Xinheritance'
+        }
     }
 
 }

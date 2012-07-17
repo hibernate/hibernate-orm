@@ -114,10 +114,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( table == null ) {
 			return null;
 		}
-		DefaultConfigurationHelper.INSTANCE.applyDefaults(
-				new SchemaAware.TableSchemaAware( table ),
-				getDefaults()
-		);
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(table,getDefaults());
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", table.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", table.getCatalog(), annotationValueList );
@@ -266,10 +263,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( secondaryTable == null ) {
 			return null;
 		}
-		DefaultConfigurationHelper.INSTANCE.applyDefaults(
-				new SchemaAware.SecondaryTableSchemaAware( secondaryTable ),
-				getDefaults()
-		);
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(secondaryTable,getDefaults());
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", secondaryTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", secondaryTable.getCatalog(), annotationValueList );

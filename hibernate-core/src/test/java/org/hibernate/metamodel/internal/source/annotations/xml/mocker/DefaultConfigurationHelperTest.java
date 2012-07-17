@@ -54,8 +54,7 @@ public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 		assertNull( entity.getTable().getCatalog() );
 		assertTrue( entity.isMetadataComplete() );
 		assertEquals( "org.test.Entity", entity.getClazz() );
-		DefaultConfigurationHelper.INSTANCE
-				.applyDefaults( new SchemaAware.TableSchemaAware( entity.getTable() ), defaults );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( entity.getTable(), defaults );
 		assertEquals( "schema", entity.getTable().getSchema() );
 		assertNull( entity.getTable().getCatalog() );
 	}

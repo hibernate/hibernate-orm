@@ -73,10 +73,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( joinTable == null ) {
 			return null;
 		}
-		DefaultConfigurationHelper.INSTANCE.applyDefaults(
-				new SchemaAware.JoinTableSchemaAware( joinTable ),
-				getDefaults()
-		);
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(joinTable,getDefaults());
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", joinTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", joinTable.getCatalog(), annotationValueList );
@@ -383,10 +380,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( collectionTable == null ) {
 			return null;
 		}
-		DefaultConfigurationHelper.INSTANCE.applyDefaults(
-				new SchemaAware.CollectionTableSchemaAware( collectionTable ),
-				getDefaults()
-		);
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(collectionTable,getDefaults());
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", collectionTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", collectionTable.getCatalog(), annotationValueList );

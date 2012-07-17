@@ -2,6 +2,8 @@
 
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+        jaxb:extensionBindingPrefixes="inheritance"
         version="2.1">
 
     <jaxb:bindings schemaLocation="../resources/org/hibernate/ejb/orm_2_0.xsd" node="/xsd:schema">
@@ -13,6 +15,18 @@
                 <jaxb:anonymousTypeName prefix="Jaxb"/>
             </jaxb:nameXmlTransform>
         </jaxb:schemaBindings>
+        <jaxb:bindings node="//xsd:complexType[@name='secondary-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='join-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='collection-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
     </jaxb:bindings>
 
 </jaxb:bindings>

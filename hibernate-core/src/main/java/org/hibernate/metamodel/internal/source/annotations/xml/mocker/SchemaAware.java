@@ -31,7 +31,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
 /**
  * @author Strong Liu
  */
-interface SchemaAware {
+public interface SchemaAware {
 	String getSchema();
 
 	void setSchema(String schema);
@@ -39,116 +39,4 @@ interface SchemaAware {
 	String getCatalog();
 
 	void setCatalog(String catalog);
-
-	static class SecondaryTableSchemaAware implements SchemaAware {
-		private JaxbSecondaryTable table;
-
-		SecondaryTableSchemaAware(JaxbSecondaryTable table) {
-			this.table = table;
-		}
-
-		@Override
-		public String getCatalog() {
-			return table.getCatalog();
-		}
-
-		@Override
-		public String getSchema() {
-			return table.getSchema();
-		}
-
-		@Override
-		public void setSchema(String schema) {
-			table.setSchema( schema );
-		}
-
-		@Override
-		public void setCatalog(String catalog) {
-			table.setCatalog( catalog );
-		}
-	}
-
-	static class TableSchemaAware implements SchemaAware {
-		private JaxbTable table;
-
-		public TableSchemaAware(JaxbTable table) {
-			this.table = table;
-		}
-
-		@Override
-		public String getCatalog() {
-			return table.getCatalog();
-		}
-
-		@Override
-		public String getSchema() {
-			return table.getSchema();
-		}
-
-		@Override
-		public void setSchema(String schema) {
-			table.setSchema( schema );
-		}
-
-		@Override
-		public void setCatalog(String catalog) {
-			table.setCatalog( catalog );
-		}
-	}
-
-	static class JoinTableSchemaAware implements SchemaAware {
-		private JaxbJoinTable table;
-
-		public JoinTableSchemaAware(JaxbJoinTable table) {
-			this.table = table;
-		}
-
-		@Override
-		public String getCatalog() {
-			return table.getCatalog();
-		}
-
-		@Override
-		public String getSchema() {
-			return table.getSchema();
-		}
-
-		@Override
-		public void setSchema(String schema) {
-			table.setSchema( schema );
-		}
-
-		@Override
-		public void setCatalog(String catalog) {
-			table.setCatalog( catalog );
-		}
-	}
-
-	static class CollectionTableSchemaAware implements SchemaAware {
-		private JaxbCollectionTable table;
-
-		public CollectionTableSchemaAware(JaxbCollectionTable table) {
-			this.table = table;
-		}
-
-		@Override
-		public String getCatalog() {
-			return table.getCatalog();
-		}
-
-		@Override
-		public String getSchema() {
-			return table.getSchema();
-		}
-
-		@Override
-		public void setSchema(String schema) {
-			table.setSchema( schema );
-		}
-
-		@Override
-		public void setCatalog(String catalog) {
-			table.setCatalog( catalog );
-		}
-	}
 }

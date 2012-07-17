@@ -24,19 +24,23 @@
 package org.hibernate.ejb.criteria.subquery;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
-
-import org.junit.Test;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
+
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -56,6 +60,31 @@ public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		Root<Order> subqueryOrderRoot = subCriteria.from( Order.class );
 		subCriteria.select( builder.min( subqueryOrderRoot.get( Order_.totalPrice ) ) );
 		criteria.where( builder.equal( orderJoin.get( "totalPrice" ), builder.all( subCriteria ) ) );
+		em.createQuery( criteria ).getResultList();
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testLessThan() {
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaQuery<Customer> criteria = builder.createQuery( Customer.class );
+		Root<Customer> customerRoot = criteria.from( Customer.class );
+
+		Subquery<Double> subCriteria = criteria.subquery( Double.class );
+		Root<Customer> subQueryCustomerRoot = subCriteria.from( Customer.class );
+		subCriteria.select( builder.avg( subQueryCustomerRoot.get( Customer_.age ) ) );
+
+		criteria.where(
+				builder.lessThan(
+						customerRoot.get( Customer_.age ),
+						subCriteria.getSelection().as( Integer.class )
+				)
+		);
 		em.createQuery( criteria ).getResultList();
 
 		em.getTransaction().commit();

@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jpa.criteria;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import javax.persistence.criteria.Expression;
 
 /**
- * TODO : javadoc
+ * Internal contract for implementations of the JPA {@link Expression} contract.
  *
  * @author Steve Ebersole
  */

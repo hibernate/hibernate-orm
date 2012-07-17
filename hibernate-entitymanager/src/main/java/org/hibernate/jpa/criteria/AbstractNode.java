@@ -38,11 +38,11 @@ public class AbstractNode implements Serializable {
 	}
 
 	/**
-	 * Provides protected access to the underlying {@link CriteriaBuilderImpl}.
+	 * Provides access to the underlying {@link CriteriaBuilderImpl}.
 	 *
 	 * @return The underlying {@link CriteriaBuilderImpl} instance.
 	 */
-	protected CriteriaBuilderImpl criteriaBuilder() {
+	public CriteriaBuilderImpl criteriaBuilder() {
 		return criteriaBuilder;
 	}
 }

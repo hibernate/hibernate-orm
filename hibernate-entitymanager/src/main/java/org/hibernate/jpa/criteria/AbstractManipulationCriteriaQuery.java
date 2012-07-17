@@ -24,6 +24,7 @@
 package org.hibernate.jpa.criteria;
 
 import javax.persistence.Query;
+import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -32,7 +33,6 @@ import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.criteria.compile.CompilableCriteria;
 import org.hibernate.jpa.criteria.compile.CriteriaInterpretation;
@@ -48,7 +48,7 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractManipulationCriteriaQuery<T> implements CompilableCriteria {
+public abstract class AbstractManipulationCriteriaQuery<T> implements CompilableCriteria, CommonAbstractCriteria {
 	private final CriteriaBuilderImpl criteriaBuilder;
 
 	private RootImpl<T> root;
@@ -101,9 +101,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	}
 
 	public <U> Subquery<U> subquery(Class<U> type) {
-		// Need clarification on spec in terms of how the built Subquery.getParent should be handled since getParent
-		//		returns an AbstractQuery whereas neither CriteriaUpdate nor CriteriaDelete extend AbstractQuery
-		throw new NotYetImplementedException( "Need clarification on spec" );
+		return new CriteriaSubqueryImpl<U>( criteriaBuilder(), type, this );
 	}
 
 

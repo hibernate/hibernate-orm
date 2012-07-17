@@ -30,6 +30,7 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
+import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
@@ -49,6 +50,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.HibernateQuery;
@@ -205,9 +207,19 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	public EntityManager createEntityManager(Map map) {
 		//TODO support discardOnClose, persistencecontexttype?, interceptor,
 		return new EntityManagerImpl(
-				this, PersistenceContextType.EXTENDED, transactionType,
-				discardOnClose, sessionInterceptorClass, map
+				this,
+				PersistenceContextType.EXTENDED,
+				transactionType,
+				discardOnClose,
+				sessionInterceptorClass,
+				map
 		);
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+		// todo : implement it
+		throw new NotYetImplementedException( "Not yet implemented" );
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {

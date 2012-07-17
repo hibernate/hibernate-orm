@@ -25,6 +25,7 @@ package org.hibernate.jpa.internal;
 
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
+import javax.persistence.SynchronizationType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.util.Map;
 
@@ -35,10 +36,10 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.ejb.AbstractEntityManagerImpl;
-import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
+import org.hibernate.jpa.AvailableSettings;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -58,11 +59,12 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	public EntityManagerImpl(
 			EntityManagerFactoryImpl entityManagerFactory,
 			PersistenceContextType pcType,
+			SynchronizationType synchronizationType,
 			PersistenceUnitTransactionType transactionType,
 			boolean discardOnClose,
 			Class sessionInterceptorClass,
 			Map properties) {
-		super( entityManagerFactory, pcType, transactionType, properties );
+		super( entityManagerFactory, pcType, synchronizationType, transactionType, properties );
 		this.open = true;
 		this.discardOnClose = discardOnClose;
 		Object localSessionInterceptor = null;
@@ -109,10 +111,10 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 					sessionBuilder.interceptor( interceptor );
 				}
 				catch (InstantiationException e) {
-					throw new PersistenceException("Unable to instanciate session interceptor: " + sessionInterceptorClass, e);
+					throw new PersistenceException("Unable to instantiate session interceptor: " + sessionInterceptorClass, e);
 				}
 				catch (IllegalAccessException e) {
-					throw new PersistenceException("Unable to instanciate session interceptor: " + sessionInterceptorClass, e);
+					throw new PersistenceException("Unable to instantiate session interceptor: " + sessionInterceptorClass, e);
 				}
 				catch (ClassCastException e) {
 					throw new PersistenceException("Session interceptor does not implement Interceptor: " + sessionInterceptorClass, e);

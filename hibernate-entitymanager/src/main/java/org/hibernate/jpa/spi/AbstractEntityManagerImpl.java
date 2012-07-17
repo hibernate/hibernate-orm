@@ -42,6 +42,7 @@ import javax.persistence.PessimisticLockScope;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
 import javax.persistence.StoredProcedureQuery;
+import javax.persistence.SynchronizationType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
@@ -156,6 +157,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
 	protected PersistenceContextType persistenceContextType;
+	private SynchronizationType synchronizationType;
 	private PersistenceUnitTransactionType transactionType;
 	private Map<String, Object> properties;
 	private LockOptions lockOptions;
@@ -163,10 +165,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	protected AbstractEntityManagerImpl(
 			EntityManagerFactoryImpl entityManagerFactory,
 			PersistenceContextType type,
+			SynchronizationType synchronizationType,
 			PersistenceUnitTransactionType transactionType,
 			Map properties) {
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceContextType = type;
+		this.synchronizationType = synchronizationType;
 		this.transactionType = transactionType;
 
 		this.lockOptions = new LockOptions();
@@ -181,13 +185,29 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+//	protected PersistenceUnitTransactionType transactionType() {
+//		return transactionType;
+//	}
+//
+//	protected SynchronizationType synchronizationType() {
+//		return synchronizationType;
+//	}
+//
+//	public boolean shouldAutoJoinTransactions() {
+//		// the Session should auto join only if using non-JTA transactions or if the synchronization type
+//		// was specified as SYNCHRONIZED
+//		return transactionType != PersistenceUnitTransactionType.JTA
+//				|| synchronizationType == SynchronizationType.SYNCHRONIZED;
+//	}
+
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionType;
 	}
 
 	protected void postInit() {
 		//register in Sync if needed
-		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) {
+		if ( transactionType == PersistenceUnitTransactionType.JTA
+				&& synchronizationType == SynchronizationType.SYNCHRONIZED ) {
 			joinTransaction( false );
 		}
 

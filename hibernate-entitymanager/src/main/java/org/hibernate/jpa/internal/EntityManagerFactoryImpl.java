@@ -50,14 +50,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
-import org.hibernate.ejb.HibernateQuery;
-import org.hibernate.jpa.boot.internal.SettingsImpl;
-import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
-import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -67,6 +60,12 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.HibernateQuery;
+import org.hibernate.jpa.boot.internal.SettingsImpl;
+import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
@@ -205,21 +204,21 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public EntityManager createEntityManager(Map map) {
+		return createEntityManager( SynchronizationType.SYNCHRONIZED, map );
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
 		//TODO support discardOnClose, persistencecontexttype?, interceptor,
 		return new EntityManagerImpl(
 				this,
 				PersistenceContextType.EXTENDED,
+				synchronizationType,
 				transactionType,
 				discardOnClose,
 				sessionInterceptorClass,
 				map
 		);
-	}
-
-	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
-		// todo : implement it
-		throw new NotYetImplementedException( "Not yet implemented" );
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {

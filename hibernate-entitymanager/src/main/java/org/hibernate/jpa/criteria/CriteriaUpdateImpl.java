@@ -47,8 +47,13 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <Y, X extends Y> CriteriaUpdate<T> set(SingularAttribute<? super T, Y> singularAttribute, X value) {
-		addAssignment( getRoot().get( singularAttribute ), criteriaBuilder().literal( value ) );
+		final Path<Y> attributePath = getRoot().get( singularAttribute );
+		final Expression valueExpression = value == null
+				? criteriaBuilder().nullLiteral( attributePath.getJavaType() )
+				: criteriaBuilder().literal( value );
+		addAssignment( attributePath, valueExpression );
 		return this;
 	}
 
@@ -61,8 +66,12 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <Y, X extends Y> CriteriaUpdate<T> set(Path<Y> attributePath, X value) {
-		addAssignment( attributePath, criteriaBuilder().literal( value ) );
+		final Expression valueExpression = value == null
+				? criteriaBuilder().nullLiteral( attributePath.getJavaType() )
+				: criteriaBuilder().literal( value );
+		addAssignment( attributePath, valueExpression );
 		return this;
 	}
 
@@ -73,8 +82,13 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public CriteriaUpdate<T> set(String attributeName, Object value) {
-		addAssignment( getRoot().get( attributeName ), criteriaBuilder().literal( value ) );
+		final Path attributePath = getRoot().get( attributeName );
+		final Expression valueExpression = value == null
+				? criteriaBuilder().nullLiteral( attributePath.getJavaType() )
+				: criteriaBuilder().literal( value );
+		addAssignment( attributePath, valueExpression );
 		return this;
 	}
 
@@ -87,6 +101,9 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 					"Attribute path for assignment must represent a singular attribute ["
 							+ ( (PathImplementor) attributePath ).getPathIdentifier() + "]"
 			);
+		}
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Assignment value expression cannot be null. Did you mean to pass null as a literal?" );
 		}
 		assignments.add( new Assignment<Y>( (SingularAttributePath<Y>) attributePath, value ) );
 	}

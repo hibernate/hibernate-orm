@@ -24,6 +24,7 @@
 package org.hibernate.ejb;
 
 import javax.persistence.PersistenceContextType;
+import javax.persistence.SynchronizationType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.io.Serializable;
 import java.util.Map;
@@ -41,8 +42,9 @@ public abstract class AbstractEntityManagerImpl
 	protected AbstractEntityManagerImpl(
 			EntityManagerFactoryImpl entityManagerFactory,
 			PersistenceContextType type,
+			SynchronizationType synchronizationType,
 			PersistenceUnitTransactionType transactionType,
 			Map properties) {
-		super( entityManagerFactory, type, transactionType, properties );
+		super( entityManagerFactory, type, synchronizationType, transactionType, properties );
 	}
 }

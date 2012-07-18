@@ -24,24 +24,17 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -50,6 +43,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+
+import javax.naming.NamingException;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -72,6 +67,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	// themselves as dirty as a performance optimization
 	private boolean dirty;
 	private Serializable storedSnapshot;
+
+	private String sessionFactoryUuid;
+	private boolean specjLazyLoad = false;
 
 	public final String getRole() {
 		return role;
@@ -123,54 +121,82 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				return true;
 			}
 			else {
-				throwLazyInitializationExceptionIfNotConnected();
-				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
-				CollectionPersister persister = entry.getLoadedPersister();
-				if ( persister.isExtraLazy() ) {
-					if ( hasQueuedOperations() ) {
-						session.flush();
+				try {
+					if(specjLazyLoad) {
+						specialSpecjInitialization(false);
 					}
-					cachedSize = persister.getSize( entry.getLoadedKey(), session );
-					return true;
+					else
+						throwLazyInitializationExceptionIfNotConnected();
+					CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
+					CollectionPersister persister = entry.getLoadedPersister();
+					if ( persister.isExtraLazy() ) {
+						if ( hasQueuedOperations() ) {
+							session.flush();
+						}
+						cachedSize = persister.getSize( entry.getLoadedKey(), session );
+						return true;
+					}
+				}
+				finally {
+					if(specjLazyLoad)
+						session = null;
 				}
 			}
 		}
 		read();
 		return false;
 	}
-	
+
 	protected Boolean readIndexExistence(Object index) {
 		if (!initialized) {
-			throwLazyInitializationExceptionIfNotConnected();
-			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
-			CollectionPersister persister = entry.getLoadedPersister();
-			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
-					session.flush();
+			try {
+				if(specjLazyLoad) {
+					specialSpecjInitialization(false);
 				}
-				return persister.indexExists( entry.getLoadedKey(), index, session );
+				else
+					throwLazyInitializationExceptionIfNotConnected();
+				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
+				CollectionPersister persister = entry.getLoadedPersister();
+				if ( persister.isExtraLazy() ) {
+					if ( hasQueuedOperations() ) {
+						session.flush();
+					}
+					return persister.indexExists( entry.getLoadedKey(), index, session );
+				}
+			}
+			finally {
+				if(specjLazyLoad)
+					session = null;
 			}
 		}
 		read();
 		return null;
-		
 	}
-	
+
 	protected Boolean readElementExistence(Object element) {
 		if (!initialized) {
-			throwLazyInitializationExceptionIfNotConnected();
-			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
-			CollectionPersister persister = entry.getLoadedPersister();
-			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
-					session.flush();
+			try {
+				if(specjLazyLoad) {
+					specialSpecjInitialization(false);
 				}
-				return persister.elementExists( entry.getLoadedKey(), element, session );
+				else
+					throwLazyInitializationExceptionIfNotConnected();
+				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
+				CollectionPersister persister = entry.getLoadedPersister();
+				if ( persister.isExtraLazy() ) {
+					if ( hasQueuedOperations() ) {
+						session.flush();
+					}
+					return persister.elementExists( entry.getLoadedKey(), element, session );
+				}
+			}
+			finally {
+				if(specjLazyLoad)
+					session = null;
 			}
 		}
 		read();
 		return null;
-		
 	}
 	
 	protected static final Object UNKNOWN = new MarkerObject("UNKNOWN");
@@ -184,7 +210,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				if ( hasQueuedOperations() ) {
 					session.flush();
 				}
-				return persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+				return persister.getElementByIndex(entry.getLoadedKey(), index, session, owner);
 			}
 		}
 		read();
@@ -376,11 +402,25 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if (initializing) {
 				throw new LazyInitializationException("illegal access to loading collection");
 			}
-			throwLazyInitializationExceptionIfNotConnected();
-			session.initializeCollection(this, writing);
+			else if ( specjLazyLoad ) {
+				specialSpecjInitialization(writing);
+			}
+			else if ( session==null ) {
+				throw new LazyInitializationException("could not initialize proxy - no Session");
+			}
+			else if ( !session.isOpen() ) {
+				throw new LazyInitializationException("could not initialize proxy - the owning Session was closed");
+			}
+			else if ( !session.isConnected() ) {
+				throw new LazyInitializationException("could not initialize proxy - the owning Session is disconnected");
+			}
+			else {
+				throwLazyInitializationExceptionIfNotConnected();
+				session.initializeCollection(this, writing);
+			}
 		}
 	}
-	
+
 	private void throwLazyInitializationExceptionIfNotConnected() {
 		if ( !isConnectedToSession() )  {
 			throwLazyInitializationException("no session or session was closed");
@@ -389,6 +429,40 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
             throwLazyInitializationException("session is disconnected");
 		}		
 	}
+
+	protected void specialSpecjInitialization(boolean writing) {
+		if ( session == null ) {
+			//we have a detached collection thats set to null, reattach
+			if ( sessionFactoryUuid == null ) {
+				throwLazyInitializationExceptionIfNotConnected();
+			}
+			try {
+				SessionFactoryImplementor  sf = (SessionFactoryImplementor)
+						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
+				session =  (SessionImplementor) sf.openSession();
+				CollectionPersister collectionPersister =
+						session.getFactory().getCollectionPersister( this.getRole() );
+				session.getPersistenceContext()
+						.addUninitializedDetachedCollection( collectionPersister, this );
+
+				session.initializeCollection(this, writing);
+
+				//CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
+				//CollectionPersister persister = entry.getLoadedPersister();
+				//cachedSize = persister.getSize( entry.getLoadedKey(), session);
+
+				//session = null;
+			}
+			catch( Exception e ) {
+				e.printStackTrace();
+				throw new LazyInitializationException(e.getMessage());
+			}
+		}
+		else {
+			session.initializeCollection(this, writing);
+		}
+	}
+
 	
 	private void throwLazyInitializationException(String message) {
 		throw new LazyInitializationException(
@@ -420,6 +494,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @return true if this was currently associated with the given session
 	 */
 	public final boolean unsetSession(SessionImplementor currentSession) {
+        prepareForPossibleSpecialSpecjInitialization();
 		if (currentSession==this.session) {
 			this.session=null;
 			return true;
@@ -428,6 +503,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return false;
 		}
 	}
+
+	protected void prepareForPossibleSpecialSpecjInitialization() {
+		if ( session != null ) {
+			specjLazyLoad = Boolean.parseBoolean( session.getFactory().getProperties().getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS));
+
+			if ( specjLazyLoad && sessionFactoryUuid == null) {
+				try {
+					sessionFactoryUuid = (String) session.getFactory().getReference().get("uuid").getContent();
+				}
+				catch (NamingException e) {
+					//not much we can do if this fails...
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * Associate the collection with the given session.

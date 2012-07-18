@@ -707,7 +707,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			 */
 			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
 			//TODO clean this up to avoid downcasting
-			final SessionFactoryImplementor factoryImplementor = ( SessionFactoryImplementor ) entityManagerFactory.getSessionFactory();
+			final SessionFactoryImplementor factoryImplementor = entityManagerFactory.getSessionFactory();
 			final NamedSQLQueryDefinition queryDefinition = factoryImplementor.getNamedSQLQuery( name );
 			try {
 				if ( queryDefinition != null ) {

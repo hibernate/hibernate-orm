@@ -5,7 +5,7 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0">
     <persistence-unit name="defaultpar">
-        <class>org.hibernate.ejb.test.pack.defaultpar.Lighter</class>
+        <class>org.hibernate.jpa.test.pack.defaultpar.Lighter</class>
         <validation-mode>CALLBACK</validation-mode>
         <properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>

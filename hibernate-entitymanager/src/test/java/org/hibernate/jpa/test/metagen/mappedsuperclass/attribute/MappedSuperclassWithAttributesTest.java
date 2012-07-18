@@ -1,0 +1,60 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
+
+import javax.persistence.EntityManagerFactory;
+import java.util.Arrays;
+
+import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
+import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.AbstractNameable_;
+import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.Product_;
+import org.hibernate.jpa.AvailableSettings;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
+
+/**
+ * @author Steve Ebersole
+ */
+@TestForIssue( jiraKey = "HHH-5024" )
+public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
+	@Test
+	public void testStaticMetamodel() {
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList( Product.class )
+		);
+
+		assertNotNull( "'Product_.id' should not be null)", Product_.id );
+		assertNotNull( "'Product_.name' should not be null)", Product_.name );
+
+		assertNotNull( "'AbstractNameable_.name' should not be null)", AbstractNameable_.name );
+
+		emf.close();
+	}
+}

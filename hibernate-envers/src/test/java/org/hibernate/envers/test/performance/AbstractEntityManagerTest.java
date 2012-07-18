@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
-import org.hibernate.ejb.test.PersistenceUnitDescriptorAdapter;
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.envers.test.AbstractEnversTest;
 import org.junit.Before;
 
@@ -41,7 +41,6 @@ import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.AfterClassOnce;

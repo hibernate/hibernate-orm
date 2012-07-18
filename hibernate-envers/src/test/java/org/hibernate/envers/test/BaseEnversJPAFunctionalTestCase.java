@@ -35,7 +35,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.ejb.test.PersistenceUnitDescriptorAdapter;
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;

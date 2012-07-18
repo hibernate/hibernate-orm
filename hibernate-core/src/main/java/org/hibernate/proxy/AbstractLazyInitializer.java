@@ -23,14 +23,18 @@
  */
 package org.hibernate.proxy;
 
+import javax.naming.NamingException;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -50,6 +54,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private transient SessionImplementor session;
 	private Boolean readOnlyBeforeAttachedToSession;
 
+	private String sessionFactoryUuid;
+	private boolean specjLazyLoad = false;
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
 	 */
@@ -137,6 +143,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final void unsetSession() {
+		prepareForPossibleSpecialSpecjInitialization();
 		session = null;
 		readOnly = false;
 		readOnlyBeforeAttachedToSession = null;
@@ -145,7 +152,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final void initialize() throws HibernateException {
 		if (!initialized) {
-			if ( session==null ) {
+			if( specjLazyLoad ) {
+				specialSpecjInitialization();
+			}
+			else if ( session==null ) {
 				throw new LazyInitializationException("could not initialize proxy - no Session");
 			}
 			else if ( !session.isOpen() ) {
@@ -162,6 +172,55 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			checkTargetState();
+		}
+	}
+
+	protected void specialSpecjInitialization() {
+		if ( session == null ) {
+			//we have a detached collection thats set to null, reattach
+			if ( sessionFactoryUuid == null ) {
+				throw new LazyInitializationException("could not initialize proxy - no Session");
+			}
+			try {
+				SessionFactoryImplementor sf = (SessionFactoryImplementor)
+						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
+				session =  (SessionImplementor) sf.openSession();
+
+				target = session.immediateLoad( entityName, id );
+				initialized = true;
+				checkTargetState();
+			}
+			catch( Exception e ) {
+				e.printStackTrace();
+				throw new LazyInitializationException(e.getMessage());
+			}
+			finally {
+				session = null;
+			}
+		}
+		else if(session.isOpen() && session.isConnected()) {
+			target = session.immediateLoad( entityName, id );
+			initialized = true;
+			checkTargetState();
+		}
+		else {
+			throw new LazyInitializationException("could not initialize proxy - Session was closed or disced");
+		}
+	}
+
+	protected void prepareForPossibleSpecialSpecjInitialization() {
+		if ( session != null ) {
+			specjLazyLoad =
+					Boolean.parseBoolean( session.getFactory().getProperties().getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS));
+
+			if ( specjLazyLoad && sessionFactoryUuid == null) {
+				try {
+					sessionFactoryUuid = (String) session.getFactory().getReference().get("uuid").getContent();
+				}
+				catch (NamingException e) {
+					//not much we can do if this fails...
+				}
+			}
 		}
 	}
 

@@ -191,10 +191,29 @@ tokens
 		return x;
 	}
 
-	public void weakKeywords() throws TokenStreamException { }
+	public void weakKeywords() throws TokenStreamException {
+	}
 
-	public void processMemberOf(Token n,AST p,ASTPair currentAST) { }
+	public void processMemberOf(Token n,AST p,ASTPair currentAST) {
+	}
 
+	protected boolean validateSoftKeyword(String text) throws TokenStreamException {
+		return validateLookAheadText(1, text);
+	}
+
+	protected boolean validateLookAheadText(int lookAheadPosition, String text) throws TokenStreamException {
+		String text2Validate = retrieveLookAheadText( lookAheadPosition );
+		return text2Validate == null ? false : text2Validate.equalsIgnoreCase( text );
+	}
+
+	protected String retrieveLookAheadText(int lookAheadPosition) throws TokenStreamException {
+		Token token = LT(lookAheadPosition);
+		return token == null ? null : token.getText();
+	}
+
+    protected String unquote(String text) {
+        return text.substring( 1, text.length() - 1 );
+    }
 }
 
 statement
@@ -331,11 +350,32 @@ fromClause
 
 fromJoin
 	: ( ( ( LEFT | RIGHT ) (OUTER)? ) | FULL | INNER )? JOIN^ (FETCH)? 
-	  path (asAlias)? (propertyFetch)? (withClause)?
+	        joinPath (asAlias)? (propertyFetch)? (withClause)?
 	;
+
+joinPath
+    : { validateSoftKeyword("treat") && LA(2) == OPEN }? castedJoinPath
+    | path
+    ;
+
+/**
+ * Represents the JPA 2.1 TREAT construct when applied to a join.  Hibernate already handles subclass
+ * property references implicitly, so we simply "eat" all tokens of the TREAT construct and just return the
+ * join path itself.
+ *
+ * Uses a validating semantic predicate to make sure the text of the matched first IDENT is the TREAT keyword
+ */
+castedJoinPath
+    : i:IDENT! OPEN! p:path AS! path! CLOSE! {i.getText().equals("treat") }?
+    ;
 
 withClause
 	: WITH^ logicalExpression
+	// JPA 2.1 support for an ON clause that isn't really an ON clause...
+	| ON! le:logicalExpression {
+	    // it's really just a WITH clause, so treat it as such...
+	    #withClause = #( [WITH, "with"], #le );
+	}
 	;
 
 fromRange
@@ -594,10 +634,13 @@ quantifiedExpression
 	;
 
 // level 0 - expression atom
-// ident qualifier ('.' ident ), array index ( [ expr ] ),
-// method call ( '.' ident '(' exprList ') )
+//      * ident qualifier ('.' ident )
+//      * array index ( [ expr ] )
+//      * method call ( '.' ident '(' exprList ') )
+//      * function : differentiated from method call via explicit keyword
 atom
-	 : primaryExpression
+    : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
+    | primaryExpression
 		(
 			DOT^ identifier
 				( options { greedy=true; } :
@@ -605,6 +648,14 @@ atom
 		|	lb:OPEN_BRACKET^ {#lb.setType(INDEX_OP);} expression CLOSE_BRACKET!
 		)*
 	;
+
+jpaFunctionSyntax!
+    : i:IDENT OPEN n:QUOTED_STRING COMMA a:exprList CLOSE {
+        #i.setType( METHOD_CALL );
+        #i.setText( #i.getText() + " (" + #n.getText() + ")" );
+        #jpaFunctionSyntax = #( #i, [IDENT, unquote( #n.getText() )], #a );
+    }
+    ;
 
 // level 0 - the basic element of an expression
 primaryExpression
@@ -640,7 +691,7 @@ vectorExpr
 // NOTE: handleDotIdent() is called immediately after the first IDENT is recognized because
 // the method looks a head to find keywords after DOT and turns them into identifiers.
 identPrimary
-    : i:identifier { handleDotIdent(); }
+    : i:identPrimaryBase { handleDotIdent(); }
 			( options { greedy=true; } : DOT^ ( identifier | ELEMENTS | o:OBJECT { #o.setType(IDENT); } ) )*
 			( options { greedy=true; } :
 				( op:OPEN^ { #op.setType(METHOD_CALL);} e:exprList CLOSE! ) {
@@ -660,10 +711,19 @@ identPrimary
 	| aggregate
 	;
 
+identPrimaryBase
+    : { validateSoftKeyword("treat") && LA(2) == OPEN }? castedIdentPrimaryBase
+    | i:identifier
+    ;
+
+castedIdentPrimaryBase
+    : i:IDENT! OPEN! p:path AS! path! CLOSE! { i.getText().equals("treat") }?
+    ;
+
 aggregate
 	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! additiveExpression CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
-	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr ) ) ) CLOSE!
+	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT ) ) ) CLOSE!
 	|  collectionExpr
 	;
 

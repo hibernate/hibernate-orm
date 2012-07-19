@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefEdEntity;
 import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefIngEntity;
@@ -45,9 +44,9 @@ public class HasChangedBidirectional2 extends AbstractModifiedFlagsEntityTest {
     private Integer ed1_id;
     private Integer ed2_id;
 
-	public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BiRefEdEntity.class);
-        cfg.addAnnotatedClass(BiRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BiRefEdEntity.class, BiRefIngEntity.class };
     }
 
     @Test

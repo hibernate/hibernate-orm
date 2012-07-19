@@ -48,8 +48,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MapsId;
@@ -63,6 +65,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
@@ -259,6 +262,7 @@ public class Configuration implements Serializable {
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 	private boolean specjProprietarySyntaxEnabled;
 
+	private ConcurrentHashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 	protected Configuration(SettingsFactory settingsFactory) {
 		this.settingsFactory = settingsFactory;
@@ -2450,6 +2454,52 @@ public class Configuration implements Serializable {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
 	}
 
+	/**
+	 * Adds the AttributeConverter Class to this Configuration.
+	 *
+	 * @param attributeConverterClass The AttributeConverter class.
+	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
+	 * by its "entity attribute" parameterized type?
+	 */
+	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
+		final AttributeConverter attributeConverter;
+		try {
+			attributeConverter = attributeConverterClass.newInstance();
+		}
+		catch (Exception e) {
+			throw new AnnotationException(
+					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]"
+			);
+		}
+		addAttributeConverter( attributeConverter, autoApply );
+	}
+
+	/**
+	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
+	 * to programatically add their own AttributeConverter instance.  HEM, instead, uses the
+	 * {@link #addAttributeConverter(Class, boolean)} form
+	 *
+	 * @param attributeConverter The AttributeConverter instance.
+	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
+	 * by its "entity attribute" parameterized type?
+	 */
+	public void addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+		if ( attributeConverterDefinitionsByClass == null ) {
+			attributeConverterDefinitionsByClass = new ConcurrentHashMap<Class, AttributeConverterDefinition>();
+		}
+
+		final Object old = attributeConverterDefinitionsByClass.put(
+				attributeConverter.getClass(),
+				new AttributeConverterDefinition( attributeConverter, autoApply )
+		);
+
+		if ( old != null ) {
+			throw new AssertionFailure(
+					"AttributeConverter class [" + attributeConverter.getClass() + "] registered multiple times"
+			);
+		}
+	}
+
 
 	// Mappings impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2982,6 +3032,22 @@ public class Configuration implements Serializable {
 			else {
 				secondPasses.add( sp );
 			}
+		}
+
+		@Override
+		public AttributeConverterDefinition locateAttributeConverter(Class converterClass) {
+			if ( attributeConverterDefinitionsByClass == null ) {
+				return null;
+			}
+			return attributeConverterDefinitionsByClass.get( converterClass );
+		}
+
+		@Override
+		public java.util.Collection<AttributeConverterDefinition> getAttributeConverters() {
+			if ( attributeConverterDefinitionsByClass == null ) {
+				return Collections.emptyList();
+			}
+			return attributeConverterDefinitionsByClass.values();
 		}
 
 		public void addPropertyReference(String referencedClass, String propertyName) {

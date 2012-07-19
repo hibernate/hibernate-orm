@@ -8,14 +8,14 @@
     <persistence-unit-metadata>
         <persistence-unit-defaults>
             <entity-listeners>
-                <entity-listener class="org.hibernate.ejb.test.pack.defaultpar.IncrementListener">
+                <entity-listener class="org.hibernate.jpa.test.pack.defaultpar.IncrementListener">
                     <pre-persist method-name="increment"/>
                 </entity-listener>
             </entity-listeners>
 
         </persistence-unit-defaults>
     </persistence-unit-metadata>
-    <package>org.hibernate.ejb.test.pack.defaultpar</package>
+    <package>org.hibernate.jpa.test.pack.defaultpar</package>
     <entity class="Lighter" access="FIELD" metadata-complete="true">
         <attributes>
             <id name="name">

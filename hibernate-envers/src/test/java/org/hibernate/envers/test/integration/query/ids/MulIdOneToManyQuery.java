@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -52,9 +51,9 @@ public class MulIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
     private MulId id3;
     private MulId id4;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(SetRefEdMulIdEntity.class);
-        cfg.addAnnotatedClass(SetRefIngMulIdEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { SetRefEdMulIdEntity.class, SetRefIngMulIdEntity.class };
     }
 
     @Test

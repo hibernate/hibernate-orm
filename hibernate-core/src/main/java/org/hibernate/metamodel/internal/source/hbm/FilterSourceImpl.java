@@ -23,7 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterAliasMappingType;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterElement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.FilterSource;
 
 /**
@@ -34,6 +40,9 @@ public class FilterSourceImpl
 		implements FilterSource {
 	private final String name;
 	private final String condition;
+	private final boolean autoAliasInjection;
+	private final Map<String, String> aliasTableMap = new HashMap<String, String>();
+	private final Map<String, String> aliasEntityMap = new HashMap<String, String>();
 
 	public FilterSourceImpl(
 			MappingDocument mappingDocument,
@@ -41,9 +50,34 @@ public class FilterSourceImpl
 		super( mappingDocument );
 		this.name = filterElement.getName();
 
+		String explicitAutoAliasInjectionSetting = filterElement.getAutoAliasInjection();
+
 		String conditionAttribute = filterElement.getCondition();
-		String conditionContent = filterElement.getValue();
+		String conditionContent = null;
+
+		for ( Serializable content : filterElement.getContent() ) {
+			if ( String.class.isInstance( content ) ) {
+				conditionContent = String.class.cast( content );
+			}
+			else {
+				final JaxbFilterAliasMappingType aliasMapping = JaxbFilterAliasMappingType.class.cast( content );
+				if ( StringHelper.isNotEmpty( aliasMapping.getTable() ) ) {
+					aliasTableMap.put( aliasMapping.getAlias(), aliasMapping.getTable() );
+				}
+				else if ( StringHelper.isNotEmpty( aliasMapping.getEntity() ) ) {
+					aliasEntityMap.put( aliasMapping.getAlias(), aliasMapping.getTable() );
+				}
+				else {
+					throw mappingDocument.getMappingLocalBindingContext()
+							.makeMappingException( "filter alias must define either table or entity attribute" );
+				}
+			}
+		}
+
 		this.condition = Helper.coalesce( conditionContent, conditionAttribute );
+		this.autoAliasInjection = StringHelper.isNotEmpty( explicitAutoAliasInjectionSetting )
+				? Boolean.valueOf( explicitAutoAliasInjectionSetting )
+				: ! ( aliasTableMap.isEmpty() && aliasEntityMap.isEmpty() );
 	}
 
 	@Override
@@ -54,5 +88,20 @@ public class FilterSourceImpl
 	@Override
 	public String getCondition() {
 		return condition;
+	}
+
+	@Override
+	public boolean shouldAutoInjectAliases() {
+		return autoAliasInjection;
+	}
+
+	@Override
+	public Map<String, String> getAliasToTableMap() {
+		return aliasTableMap;
+	}
+
+	@Override
+	public Map<String, String> getAliasToEntityMap() {
+		return aliasEntityMap;
 	}
 }

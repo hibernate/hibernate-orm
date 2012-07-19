@@ -62,7 +62,7 @@ public class JPAMetadataProvider implements MetadataProvider, Serializable {
 		delegate = new JavaMetadataProvider();
 		cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
 	}
-
+	@Override
 	public AnnotationReader getAnnotationReader(AnnotatedElement annotatedElement) {
 		AnnotationReader reader = cache.get( annotatedElement );
 		if (reader == null) {
@@ -76,7 +76,7 @@ public class JPAMetadataProvider implements MetadataProvider, Serializable {
 		}
 		return reader;
 	}
-
+	@Override
 	public Map<Object, Object> getDefaults() {
 		if ( defaults == null ) {
 			defaults = new HashMap<Object, Object>();

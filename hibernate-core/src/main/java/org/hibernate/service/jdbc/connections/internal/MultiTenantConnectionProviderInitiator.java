@@ -34,6 +34,7 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -84,7 +85,7 @@ public class MultiTenantConnectionProviderInitiator implements BasicServiceIniti
 				}
 				catch (ClassLoadingException cle) {
 					log.warn( "Unable to locate specified class [" + className + "]", cle );
-					return null;
+					throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]" );
 				}
 			}
 
@@ -93,7 +94,7 @@ public class MultiTenantConnectionProviderInitiator implements BasicServiceIniti
 			}
 			catch (Exception e) {
 				log.warn( "Unable to instantiate specified class [" + implClass.getName() + "]", e );
-				return null;
+				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + implClass.getName() + "]" );
 			}
 		}
 	}

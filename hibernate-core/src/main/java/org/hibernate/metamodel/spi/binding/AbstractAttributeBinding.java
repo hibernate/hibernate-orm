@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -49,7 +49,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private boolean isAlternateUniqueKey;
 
 	private final MetaAttributeContext metaAttributeContext;
-	private final Value<String> roleHolder;
+	private final ValueHolder<String> roleHolder;
 
 	protected AbstractAttributeBinding(
 			AttributeBindingContainer container,
@@ -62,8 +62,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.propertyAccessorName = propertyAccessorName;
 		this.includedInOptimisticLocking = includedInOptimisticLocking;
 		this.metaAttributeContext = metaAttributeContext;
-		this.roleHolder = new Value<String>(
-				new Value.DeferredInitializer<String>() {
+		this.roleHolder = new ValueHolder<String>(
+				new ValueHolder.DeferredInitializer<String>() {
 					@Override
 					public String initialize() {
 						return getContainer().getPathBase() + '.' + getAttribute().getName();

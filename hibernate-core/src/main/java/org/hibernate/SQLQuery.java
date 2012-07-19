@@ -22,6 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate;
+import java.util.List;
+
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.type.Type;
 
 /**
@@ -44,40 +47,15 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SQLQuery extends Query {
+public interface SQLQuery extends Query, SynchronizeableQuery {
+	@Override
+	SQLQuery addSynchronizedQuerySpace(String querySpace);
 
-	/**
-	 * Adds a query space (table name) for (a) auto-flush checking and (b) query result cache invalidation checking
-	 *
-	 * @param querySpace The query space to be auto-flushed for this query.
-	 *
-	 * @return this, for method chaining
-	 */
-	public SQLQuery addSynchronizedQuerySpace(String querySpace);
+	@Override
+	SQLQuery addSynchronizedEntityName(String entityName) throws MappingException;
 
-	/**
-	 * Adds an entity name for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
-	 * {@link #addSynchronizedQuerySpace} for all tables associated with the given entity.
-	 *
-	 * @param entityName The name of the entity upon whose defined query spaces we should additionally synchronize.
-	 *
-	 * @return this, for method chaining
-	 *
-	 * @throws MappingException Indicates the given name could not be resolved as an entity
-	 */
-	public SQLQuery addSynchronizedEntityName(String entityName) throws MappingException;
-
-	/**
-	 * Adds an entity for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
-	 * {@link #addSynchronizedQuerySpace} for all tables associated with the given entity.
-	 *
-	 * @param entityClass The class of the entity upon whose defined query spaces we should additionally synchronize.
-	 *
-	 * @return this, for method chaining
-	 *
-	 * @throws MappingException Indicates the given class could not be resolved as an entity
-	 */
-	public SQLQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	@Override
+	SQLQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	/**
 	 * Use a predefined named result-set mapping.  This might be defined by a {@code <result-set/>} element in a
@@ -88,6 +66,15 @@ public interface SQLQuery extends Query {
 	 * @return this, for method chaining
 	 */
 	public SQLQuery setResultSetMapping(String name);
+
+	/**
+	 * Is this native-SQL query known to be callable?
+	 *
+	 * @return {@code true} if the query is known to be callable; {@code false} otherwise.
+	 */
+	public boolean isCallable();
+
+	public List<NativeSQLQueryReturn> getQueryReturns();
 
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically detect the underlying type.

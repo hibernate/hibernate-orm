@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
@@ -30,10 +29,9 @@ public class M2MIndexedListNotAuditedTarget extends BaseEnversJPAFunctionalTestC
     private UnversionedStrTestEntity uste1;
     private UnversionedStrTestEntity uste2;
 
-
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(UnversionedStrTestEntity.class);
-        cfg.addAnnotatedClass(M2MIndexedListTargetNotAuditedEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { UnversionedStrTestEntity.class, M2MIndexedListTargetNotAuditedEntity.class };
     }
 
     @Test

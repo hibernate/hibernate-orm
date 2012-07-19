@@ -31,7 +31,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Ignore;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -39,8 +38,9 @@ import org.hibernate.envers.test.entities.StrTestEntity;
  */
 @Ignore
 public class UpdatesPerformance extends AbstractPerformanceTest {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class };
     }
 
     private final static int NUMBER_UPDATES = 5000;

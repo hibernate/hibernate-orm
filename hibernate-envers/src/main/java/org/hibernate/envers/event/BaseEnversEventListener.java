@@ -31,6 +31,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.tools.Tools;
@@ -126,4 +127,11 @@ public abstract class BaseEnversEventListener implements EnversListener {
 				toPropertyName, enversConfiguration, id, value));
 	}
 
+    protected void checkIfTransactionInProgress(SessionImplementor session) {
+        if (!session.isTransactionInProgress()) {
+            // Historical data would not be flushed to audit tables if outside of active transaction
+            // (AuditProcess#doBeforeTransactionCompletion(SessionImplementor) not executed). 
+            throw new AuditException("Unable to create revision because of non-active transaction");
+        }
+    }
 }

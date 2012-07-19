@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -113,10 +114,17 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		//testing @OrderBy with explicit values including Formula
+		// Assert the primary key value relationship amongst the 3 streets...
+		Assert.assertTrue( rochechoir.getId() < chmpsElysees.getId() );
+		Assert.assertTrue( chmpsElysees.getId() < grandeArmee.getId() );
+
 		paris = ( City ) s.get( City.class, paris.getId() );
+
+		// City.streets is defined to be ordered by name primarily...
 		assertEquals( 3, paris.getStreets().size() );
 		assertEquals( chmpsElysees.getStreetName(), paris.getStreets().get( 0 ).getStreetName() );
+		assertEquals( grandeArmee.getStreetName(), paris.getStreets().get( 1 ).getStreetName() );
+		// City.mainStreets is defined to be ordered by street id
 		List<Street> mainStreets = paris.getMainStreets();
 		assertEquals( 2, mainStreets.size() );
 		Integer previousId = -1;
@@ -445,7 +453,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-3577")
+	@TestForIssue( jiraKey = "HHH-4394" )
 	public void testOrderByOnSuperclassProperty() {
 		OrganisationUser user = new OrganisationUser();
 		user.setFirstName( "Emmanuel" );

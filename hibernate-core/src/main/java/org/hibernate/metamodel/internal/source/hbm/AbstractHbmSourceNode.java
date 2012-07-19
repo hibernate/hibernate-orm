@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.source.MappingException;
 
 /**
@@ -59,7 +59,7 @@ public abstract class AbstractHbmSourceNode {
 		return sourceMappingDocument().getJaxbRoot();
 	}
 
-	protected Value<Class<?>> makeClassReference(String className) {
+	protected ValueHolder<Class<?>> makeClassReference(String className) {
 		return bindingContext().makeClassReference( bindingContext().qualifyClassName( className ) );
 	}
 

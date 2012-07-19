@@ -25,26 +25,29 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-                <!--
-                            <identifier-generator.../> allows customized short-naming of IdentifierGenerator implementations.
-                        -->
+
+                <!-- <identifier-generator.../> allows customized short-naming of IdentifierGenerator implementations. -->
                 <xs:element name="identifier-generator"
                             minOccurs="0"
                             maxOccurs="unbounded"
                             type="identifier-generator-element"/>
+
                 <!--
-                            <typedef.../> allows defining a customized type mapping for a Hibernate type. May
-                            contain parameters for parameterizable types.
-                        -->
+                    <typedef.../> allows defining a customized type mapping for a Hibernate type. May
+                    contain parameters for parameterizable types.
+                -->
                 <xs:element name="typedef" minOccurs="0" maxOccurs="unbounded" type="typedef-element"/>
+
                 <!--
-                            FILTER-DEF element; top-level filter definition.
-                        -->
+                    FILTER-DEF element; top-level filter definition.
+                -->
                 <xs:element name="filter-def" minOccurs="0" maxOccurs="unbounded" type="filter-def-element"/>
+
                 <!--
-                            IMPORT element definition; an explicit query language "import"
-                        -->
+                    IMPORT element definition; an explicit query language "import"
+                -->
                 <xs:element name="import" minOccurs="0" maxOccurs="unbounded" type="import-element"/>
+
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <xs:annotation>
                         <xs:appinfo>
@@ -52,20 +55,24 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                         </xs:appinfo>
                     </xs:annotation>
                     <!--
-                                  Root entity mapping.  Poorly named as entities do not have to be represented by
-                                  classes at all.  Mapped entities may be represented via different methodologies
-                                  (POJO, Map, Dom4j).
-                              -->
+                        Root entity mapping.  Poorly named as entities do not have to be represented by
+                        classes at all.  Mapped entities may be represented via different methodologies
+                        (POJO, Map, Dom4j).
+                    -->
                     <xs:element name="class" type="class-element"/>
                     <xs:element name="subclass" type="subclass-element"/>
                     <xs:element name="joined-subclass" type="joined-subclass-element"/>
                     <xs:element name="union-subclass" type="union-subclass-element"/>
                 </xs:choice>
+
                 <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
+
                 <xs:group ref="query-or-sql-query" minOccurs="0" maxOccurs="unbounded"/>
+
                 <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+
                 <!--
-                            Element for defining "auxiliary" database objects.  Must be one of two forms:
+                    Element for defining "auxiliary" database objects.  Must be one of two forms:
                             #1 :
                                 <database-object>
                                     <definition class="CustomClassExtendingAuxiliaryObject"/>
@@ -75,9 +82,10 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                                     <create>CREATE OR REPLACE ....</create>
                                     <drop>DROP ....</drop>
                                 </database-object>
-                        -->
+                -->
                 <xs:element name="database-object" minOccurs="0" maxOccurs="unbounded" type="database-object-element"/>
             </xs:sequence>
+
             <xs:attribute name="auto-import" default="true" type="xs:boolean"/>
             <xs:attribute name="catalog" type="xs:string"/>
             <!-- default: none -->
@@ -85,11 +93,10 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             <xs:attribute name="default-cascade" default="none" type="xs:string"/>
             <xs:attribute name="default-lazy" default="true" type="xs:boolean"/>
             <xs:attribute name="package" type="xs:string"/>
-            <!-- default: none -->
             <xs:attribute name="schema" type="xs:string"/>
-            <!-- default: none -->
         </xs:complexType>
     </xs:element>
+
     <xs:group name="query-or-sql-query">
         <xs:choice>
             <xs:element name="query" type="query-element"/>
@@ -685,17 +692,28 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             <xs:enumeration value="select"/>
         </xs:restriction>
     </xs:simpleType>
-    <!--
-          FILTER element; used to apply a filter.
-      -->
-    <xs:complexType name="filter-element" mixed="true">
-        <xs:simpleContent>
-            <xs:extension base="xs:string">
-                <xs:attribute name="condition" type="xs:string"/>
-                <xs:attribute name="name" use="required" type="xs:string"/>
-            </xs:extension>
-        </xs:simpleContent>
-    </xs:complexType>
+
+  <!--
+  	FILTER element; used to apply a filter.
+  -->
+  <xs:complexType name="filter-element" mixed="true">
+      <xs:sequence>
+          <xs:element name="aliases" type="filter-alias-mapping-type" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="condition" type="xs:string"/>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="autoAliasInjection" type="xs:string"/>
+  </xs:complexType>
+  
+  <xs:complexType name="filter-alias-mapping-type">
+  	<xs:simpleContent>
+  		<xs:extension base="xs:string">
+  			<xs:attribute name="alias" type="xs:string" use="required"/>
+  			<xs:attribute name="table" type="xs:string" />
+  			<xs:attribute name="entity" type="xs:string" />
+  		</xs:extension>
+  	</xs:simpleContent>
+  </xs:complexType>
 
     <!-- Generators generate unique identifiers. The class attribute specifies a Java
       class implementing an id generation algorithm. -->
@@ -860,7 +878,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="foreign-key" type="xs:string"/>
         <xs:attribute name="not-null" type="xs:boolean"/>
-        <xs:attribute name="on-delete" default="noaction" type="on-delete-attribute"/>
+        <xs:attribute name="on-delete" default="noaction">
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="cascade"/>
+                    <xs:enumeration value="noaction"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
         <xs:attribute name="property-ref" type="xs:string"/>
         <xs:attribute name="unique" type="xs:boolean"/>
         <xs:attribute name="update" type="xs:boolean"/>
@@ -1567,10 +1592,8 @@ arbitrary number of queries, and import declarations of arbitrary classes.
           TUPLIZER element; defines tuplizer to use for a component/entity for a given entity-mode
       -->
     <xs:complexType name="tuplizer-element">
-        <xs:attribute name="class" use="required" type="xs:string"/>
-        <!-- the tuplizer class to use -->
+        <xs:attribute name="class" use="required" type="xs:string"/> <!-- the tuplizer class to use -->
         <xs:attribute name="entity-mode" type="entity-mode-attribute"/>
-        <!-- entity mode for which tuplizer is in effect -->
     </xs:complexType>
 
     <!-- Declares the type of the containing property (overrides an eventually existing type

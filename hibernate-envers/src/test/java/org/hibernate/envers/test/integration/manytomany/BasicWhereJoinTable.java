@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;
@@ -49,9 +48,9 @@ public class BasicWhereJoinTable extends BaseEnversJPAFunctionalTestCase {
     private Integer wjte1_id;
     private Integer wjte2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(WhereJoinTableEntity.class);
-        cfg.addAnnotatedClass(IntNoAutoIdTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { WhereJoinTableEntity.class, IntNoAutoIdTestEntity.class };
     }
 
     @Test

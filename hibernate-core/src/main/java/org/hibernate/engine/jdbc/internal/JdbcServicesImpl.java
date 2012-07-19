@@ -57,6 +57,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.service.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -92,6 +93,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		Dialect dialect = null;
 		LobCreatorBuilder lobCreatorBuilder = null;
 
+		boolean metaSupportsRefCursors = false;
+		boolean metaSupportsNamedParams = false;
 		boolean metaSupportsScrollable = false;
 		boolean metaSupportsGetGeneratedKeys = false;
 		boolean metaSupportsBatchUpdates = false;
@@ -133,6 +136,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 						LOG.debugf( "JDBC version : %s.%s", meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion() );
 					}
 
+					metaSupportsRefCursors = StandardRefCursorSupport.supportsRefCursors( meta );
+					metaSupportsNamedParams = meta.supportsNamedParameters();
 					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
 					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
@@ -191,6 +196,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl(
+				metaSupportsRefCursors,
+				metaSupportsNamedParams,
 				metaSupportsScrollable,
 				metaSupportsGetGeneratedKeys,
 				metaSupportsBatchUpdates,
@@ -316,6 +323,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	private static class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData {
+		private final boolean supportsRefCursors;
+		private final boolean supportsNamedParameters;
 		private final boolean supportsScrollableResults;
 		private final boolean supportsGetGeneratedKeys;
 		private final boolean supportsBatchUpdates;
@@ -329,6 +338,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		private final LinkedHashSet<TypeInfo> typeInfoSet;
 
 		private ExtractedDatabaseMetaDataImpl(
+				boolean supportsRefCursors,
+				boolean supportsNamedParameters,
 				boolean supportsScrollableResults,
 				boolean supportsGetGeneratedKeys,
 				boolean supportsBatchUpdates,
@@ -340,6 +351,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				String connectionSchemaName,
 				String connectionCatalogName,
 				LinkedHashSet<TypeInfo> typeInfoSet) {
+			this.supportsRefCursors = supportsRefCursors;
+			this.supportsNamedParameters = supportsNamedParameters;
 			this.supportsScrollableResults = supportsScrollableResults;
 			this.supportsGetGeneratedKeys = supportsGetGeneratedKeys;
 			this.supportsBatchUpdates = supportsBatchUpdates;
@@ -351,6 +364,16 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 			this.connectionSchemaName = connectionSchemaName;
 			this.connectionCatalogName = connectionCatalogName;
 			this.typeInfoSet = typeInfoSet;
+		}
+
+		@Override
+		public boolean supportsRefCursors() {
+			return supportsRefCursors;
+		}
+
+		@Override
+		public boolean supportsNamedParameters() {
+			return supportsNamedParameters;
 		}
 
 		@Override

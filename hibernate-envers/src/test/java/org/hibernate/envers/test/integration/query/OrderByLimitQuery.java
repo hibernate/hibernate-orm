@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -46,8 +45,9 @@ public class OrderByLimitQuery extends BaseEnversJPAFunctionalTestCase {
     private Integer id4;
     private Integer id5;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(IntTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { IntTestEntity.class };
     }
 
     @Test

@@ -159,7 +159,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public boolean isTransactionInProgress() {
-		return getTransaction().isActive() && getTransaction().getJoinStatus() == JoinStatus.JOINED;
+		return open && getTransaction().isActive() && getTransaction().getJoinStatus() == JoinStatus.JOINED;
 	}
 
 	@Override
@@ -218,10 +218,15 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			return;
 		}
 
-		if ( ! transactionContext.shouldAutoJoinTransaction() ) {
-			if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
-				LOG.debug( "Skipping JTA sync registration due to auto join checking" );
-				return;
+		if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.JOINED ) {
+			// the transaction is not (yet) joined, see if we should join...
+			if ( ! transactionContext.shouldAutoJoinTransaction() ) {
+				// we are supposed to not auto join transactions; if the transaction is not marked for join
+				// we cannot go any further in attempting to join (register sync).
+				if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
+					LOG.debug( "Skipping JTA sync registration due to auto join checking" );
+					return;
+				}
 			}
 		}
 

@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
@@ -19,8 +18,9 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
     private Long qfeId1 = null;
     private Long qfeId2 = null;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(QuotedFieldsEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { QuotedFieldsEntity.class };
     }
 
     @Test

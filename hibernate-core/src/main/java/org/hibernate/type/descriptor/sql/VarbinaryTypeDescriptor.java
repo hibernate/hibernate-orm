@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,6 +41,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	public static final VarbinaryTypeDescriptor INSTANCE = new VarbinaryTypeDescriptor();
+
+	public VarbinaryTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
 
 	public int getSqlType() {
 		return Types.VARBINARY;
@@ -63,8 +68,17 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				final byte[] bytes = rs.getBytes( name );
-				return javaTypeDescriptor.wrap( bytes, options );
+				return javaTypeDescriptor.wrap( rs.getBytes( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBytes( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBytes( name ), options );
 			}
 		};
 	}

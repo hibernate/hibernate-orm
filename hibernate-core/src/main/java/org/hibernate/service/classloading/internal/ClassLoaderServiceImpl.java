@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
@@ -45,6 +47,8 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Steve Ebersole
  */
 public class ClassLoaderServiceImpl implements ClassLoaderService {
+	private static final Logger log = Logger.getLogger( ClassLoaderServiceImpl.class );
+
 	private final ClassLoader classClassLoader;
 	private final ClassLoader resourcesClassLoader;
 
@@ -164,15 +168,41 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public InputStream locateResourceStream(String name) {
 		// first we try name as a URL
 		try {
+			log.tracef( "trying via [new URL(\"%s\")]", name );
 			return new URL( name ).openStream();
 		}
 		catch ( Exception ignore ) {
 		}
 
 		try {
-			return resourcesClassLoader.getResourceAsStream( name );
+			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
+			InputStream stream =  resourcesClassLoader.getResourceAsStream( name );
+			if ( stream != null ) {
+				return stream;
+			}
 		}
 		catch ( Exception ignore ) {
+		}
+
+		final String stripped = name.startsWith( "/" ) ? name.substring(1) : null;
+
+		if ( stripped != null ) {
+			try {
+				log.tracef( "trying via [new URL(\"%s\")]", stripped );
+				return new URL( stripped ).openStream();
+			}
+			catch ( Exception ignore ) {
+			}
+
+			try {
+				log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
+				InputStream stream = resourcesClassLoader.getResourceAsStream( stripped );
+				if ( stream != null ) {
+					return stream;
+				}
+			}
+			catch ( Exception ignore ) {
+			}
 		}
 
 		return null;

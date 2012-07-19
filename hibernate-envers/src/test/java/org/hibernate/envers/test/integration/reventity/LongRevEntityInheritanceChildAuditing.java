@@ -28,7 +28,6 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
@@ -42,10 +41,9 @@ import static org.junit.Assert.assertEquals;
  * @author Adam Warski (adam at warski dot org)
  */
 public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunctionalTestCase {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ChildEntity.class);
-        cfg.addAnnotatedClass(ParentEntity.class);
-        cfg.addAnnotatedClass(LongRevNumberRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ChildEntity.class, ParentEntity.class, LongRevNumberRevEntity.class };
     }
 
     @Test

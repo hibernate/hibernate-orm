@@ -24,20 +24,23 @@
 package org.hibernate.envers.test.performance;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.envers.test.AbstractEnversTest;
 import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.AfterClassOnce;
@@ -50,16 +53,15 @@ import org.hibernate.testing.BeforeClassOnce;
 public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
     public static final Dialect DIALECT = Dialect.getDialect();
 
-    private EntityManagerFactoryImpl emf;
+	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
+	private StandardServiceRegistryImpl serviceRegistry;
+	private EntityManagerFactoryImpl emf;
     private EntityManager entityManager;
     private AuditReader auditReader;
-    private Ejb3Configuration cfg;
-	private StandardServiceRegistryImpl serviceRegistry;
     private boolean audited;
 
-    public abstract void configure(Ejb3Configuration cfg);
-
-    public void addConfigurationProperties(Properties configuration) { }
+    public void addConfigurationProperties(Properties configuration) {
+	}
 
     protected static Dialect getDialect() {
         return DIALECT;
@@ -105,18 +107,25 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
 
-        addConfigurationProperties(configurationProperties);
+        addConfigurationProperties( configurationProperties );
 
-        cfg = new Ejb3Configuration();
-        configure(cfg);
-        cfg.configure(configurationProperties);
+		configurationProperties.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() ) );
 
-        emf = (EntityManagerFactoryImpl) cfg.buildEntityManagerFactory( createBootstrapRegistryBuilder() );
+		entityManagerFactoryBuilder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+				new PersistenceUnitDescriptorAdapter(),
+				configurationProperties
+		);
 
-		serviceRegistry = (StandardServiceRegistryImpl) ( (SessionFactoryImpl) emf.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
+        emf = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.buildEntityManagerFactory();
+
+		serviceRegistry = (StandardServiceRegistryImpl) emf.getSessionFactory().getServiceRegistry().getParentServiceRegistry();
 
         newEntityManager();
     }
+
+	protected Class[] getAnnotatedClasses() {
+		return new Class[0];
+	}
 
 	protected boolean createSchema() {
 		return true;
@@ -139,9 +148,5 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 
     public AuditReader getAuditReader() {
         return auditReader;
-    }
-
-    public Ejb3Configuration getCfg() {
-        return cfg;
     }
 }

@@ -71,3 +71,16 @@ task copyBundleResources (type: Copy) {
 }
 processTestResources.dependsOn copyBundleResources
 
+// create an artifact configuration composed of the test classes so that envers can access hem test classes
+task testJar(type: Jar, dependsOn: testClasses) {
+    classifier = 'test'
+    from sourceSets.test.classes
+}
+
+configurations {
+    tests
+}
+
+artifacts {
+    tests testJar
+}

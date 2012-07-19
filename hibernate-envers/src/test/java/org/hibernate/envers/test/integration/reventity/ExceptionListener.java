@@ -27,7 +27,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
@@ -35,9 +34,9 @@ import org.hibernate.envers.test.entities.StrTestEntity;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ExceptionListener extends BaseEnversJPAFunctionalTestCase {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class, ExceptionListenerRevEntity.class };
     }
 
     @Test(expected = RuntimeException.class)

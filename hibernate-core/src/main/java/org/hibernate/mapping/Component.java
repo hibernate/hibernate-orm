@@ -42,6 +42,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 
 /**
  * The mapping for a component, composite element,
@@ -166,25 +167,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 		this.dynamic = dynamic;
 	}
 
-	private Type type;
-
 	public Type getType() throws MappingException {
-		// added this caching as I noticed that getType() is being called multiple times...
-		if ( type == null ) {
-			type = buildType();
-		}
-		return type;
-	}
-
-	private Type buildType() {
 		// TODO : temporary initial step towards HHH-1907
-		ComponentMetamodel metamodel = new ComponentMetamodel( this );
-		if ( isEmbedded() ) {
-			return getMappings().getTypeResolver().getTypeFactory().embeddedComponent( metamodel );
-		}
-		else {
-			return getMappings().getTypeResolver().getTypeFactory().component( metamodel );
-		}
+		final ComponentMetamodel metamodel = new ComponentMetamodel( this );
+		final TypeFactory factory = getMappings().getTypeResolver().getTypeFactory();
+		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}
 
 	public void setTypeUsingReflection(String className, String propertyName)

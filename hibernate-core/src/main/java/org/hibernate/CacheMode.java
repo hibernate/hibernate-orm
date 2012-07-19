@@ -20,9 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
+
+import org.hibernate.tool.hbm2ddl.SchemaExportTask;
 
 /**
  * Controls how the session interacts with the second-level
@@ -37,29 +38,29 @@ public enum CacheMode {
 	/**
 	 * The session may read items from the cache, and add items to the cache
 	 */
-	NORMAL( true, true),
+	NORMAL( true, true ),
 	/**
 	 * The session will never interact with the cache, except to invalidate
 	 * cache items when updates occur
 	 */
-	IGNORE( false, false),
+	IGNORE( false, false ),
 	/**
 	 * The session may read items from the cache, but will not add items,
 	 * except to invalidate items when updates occur
 	 */
-	GET( false, true),
+	GET( false, true ),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database.
 	 */
-	PUT( true, false),
+	PUT( true, false ),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database. In this mode, the
 	 * effect of <tt>hibernate.cache.use_minimal_puts</tt> is bypassed, in
 	 * order to <em>force</em> a cache refresh
 	 */
-	REFRESH( true, false);
+	REFRESH( true, false );
 
 
 	private final boolean isPutEnabled;
@@ -76,5 +77,29 @@ public enum CacheMode {
 
 	public boolean isPutEnabled() {
 		return isPutEnabled;
+	}
+
+	public static CacheMode interpretExternalSetting(String setting) {
+		if (setting == null) {
+			return null;
+		}
+
+		if ( GET.name().equalsIgnoreCase( setting ) ) {
+			return CacheMode.GET;
+		}
+		if ( IGNORE.name().equalsIgnoreCase( setting ) ) {
+			return CacheMode.IGNORE;
+		}
+		if ( NORMAL.name().equalsIgnoreCase( setting ) ) {
+			return CacheMode.NORMAL;
+		}
+		if ( PUT.name().equalsIgnoreCase( setting ) ) {
+			return CacheMode.PUT;
+		}
+		if ( REFRESH.name().equalsIgnoreCase( setting ) ) {
+			return CacheMode.REFRESH;
+		}
+
+		throw new MappingException( "Unknown Cache Mode: " + setting );
 	}
 }

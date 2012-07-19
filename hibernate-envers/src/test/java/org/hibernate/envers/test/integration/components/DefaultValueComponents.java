@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent1;
@@ -57,8 +56,8 @@ public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 	private Integer id6;
 
 	@Override
-    public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(DefaultValueComponentTestEntity.class);
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { DefaultValueComponentTestEntity.class };
 	}
 
 	@Test

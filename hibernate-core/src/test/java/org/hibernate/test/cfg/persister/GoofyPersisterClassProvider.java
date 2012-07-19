@@ -43,6 +43,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -558,6 +559,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+			return null;
+		}
+
+		@Override
+		public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+			// TODO Auto-generated method stub
 			return null;
 		}
 	}

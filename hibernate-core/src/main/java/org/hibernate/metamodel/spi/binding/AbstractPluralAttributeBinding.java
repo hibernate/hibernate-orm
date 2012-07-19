@@ -23,12 +23,16 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -67,8 +71,9 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	private String referencedPropertyName;
 
-	private final java.util.Map filters = new HashMap();
-//	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
+	private List<FilterConfiguration> filterConfigurations = new ArrayList<FilterConfiguration>();
+
+	//	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
 
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
@@ -296,15 +301,14 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return comparatorClassName;
 	}
 
-	public void addFilter(String name, String condition) {
-		filters.put( name, condition );
+	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
+		filterConfigurations.add( filterConfiguration );
 	}
 
-	@Override
-	public java.util.Map getFilterMap() {
-		return filters;
+		@Override
+	public List<FilterConfiguration> getFilterConfigurations() {
+		return filterConfigurations;
 	}
-
 
 	@Override
 	public FetchMode getFetchMode() {

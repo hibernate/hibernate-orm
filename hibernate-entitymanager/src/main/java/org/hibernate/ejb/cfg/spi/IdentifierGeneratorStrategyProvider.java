@@ -20,16 +20,9 @@
  */
 package org.hibernate.ejb.cfg.spi;
 
-import java.util.Map;
-
 /**
- * Provide a set of IdentifierGenerator strategies allowing to override the Hibernate Core default ones
- *
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @deprecated Use {@link org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider} instead
  */
-public interface IdentifierGeneratorStrategyProvider {
-	/**
-	 * set of strategy / generator class pairs to register as accepted strategies
-	 */
-	Map<String,Class<?>> getStrategies();
+@Deprecated
+public interface IdentifierGeneratorStrategyProvider extends org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider {
 }

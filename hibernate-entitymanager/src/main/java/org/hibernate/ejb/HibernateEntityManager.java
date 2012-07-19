@@ -23,21 +23,9 @@
  */
 package org.hibernate.ejb;
 
-import javax.persistence.EntityManager;
-
-import org.hibernate.Session;
-
 /**
- * Additional contract for Hibernate implementations of {@link EntityManager} providing access to various Hibernate
- * specific functionality.
- *
- * @author Gavin King
+ * @deprecated Use {@link org.hibernate.jpa.HibernateEntityManager} instead
  */
-public interface HibernateEntityManager extends EntityManager {
-	/**
-	 * Retrieve a reference to the Hibernate {@link Session} used by this {@link EntityManager}.
-	 *
-	 * @return The session
-	 */
-	public Session getSession();
+@Deprecated
+public interface HibernateEntityManager extends org.hibernate.jpa.HibernateEntityManager {
 }

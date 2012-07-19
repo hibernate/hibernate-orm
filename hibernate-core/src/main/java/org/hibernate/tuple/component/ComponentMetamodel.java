@@ -77,12 +77,10 @@ public class ComponentMetamodel implements Serializable {
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
 		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
 		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
-		if ( tuplizerClassName == null ) {
-			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer( entityMode, component );
-		}
-		else {
-			componentTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
-		}
+		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
+				entityMode,
+				component
+		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 	}
 
 	public boolean isKey() {

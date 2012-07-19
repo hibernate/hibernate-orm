@@ -65,46 +65,36 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 		this.comparator = Comparable.class.isAssignableFrom( type )
 				? (Comparator<T>) ComparableComparator.INSTANCE
 				: null;
+
+		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public MutabilityPlan<T> getMutabilityPlan() {
 		return mutabilityPlan;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<T> getJavaTypeClass() {
 		return type;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int extractHashCode(T value) {
 		return value.hashCode();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean areEqual(T one, T another) {
 		return EqualsHelper.equals( one, another );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Comparator<T> getComparator() {
 		return comparator;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String extractLoggableRepresentation(T value) {
 		return (value == null) ? "null" : value.toString();
 	}

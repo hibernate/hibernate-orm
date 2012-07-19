@@ -74,30 +74,142 @@ import org.hibernate.type.Type;
  *
  * @see org.hibernate.Session#createQuery(java.lang.String)
  * @see org.hibernate.ScrollableResults
+ *
  * @author Gavin King
  */
-public interface Query {
+public interface Query extends BasicQueryContract {
 	/**
 	 * Get the query string.
 	 *
 	 * @return the query string
 	 */
 	public String getQueryString();
+
 	/**
-	 * Return the Hibernate types of the query result set.
-	 * @return an array of types
+	 * Obtains the limit set on the maximum number of rows to retrieve.  No set limit means there is no limit set
+	 * on the number of rows returned.  Technically both {@code null} and any negative values are interpreted as no
+	 * limit; however, this method should always return null in such case.
+	 *
+	 * @return The
 	 */
-	public Type[] getReturnTypes() throws HibernateException;
+	public Integer getMaxResults();
+
+	/**
+	 * Set the maximum number of rows to retrieve.
+	 *
+	 * @param maxResults the maximum number of rows
+	 *
+	 * @see #getMaxResults()
+	 */
+	public Query setMaxResults(int maxResults);
+
+	/**
+	 * Obtain the value specified (if any) for the first row to be returned from the query results; zero-based.  Used,
+	 * in conjunction with {@link #getMaxResults()} in "paginated queries".  No value specified means the first result
+	 * is returned.  Zero and negative numbers are the same as no setting.
+	 *
+	 * @return The first result number.
+	 */
+	public Integer getFirstResult();
+
+	/**
+	 * Set the first row to retrieve.
+	 *
+	 * @param firstResult a row number, numbered from <tt>0</tt>
+	 *
+	 * @see #getFirstResult()
+	 */
+	public Query setFirstResult(int firstResult);
+
+	@Override
+	public Query setFlushMode(FlushMode flushMode);
+
+	@Override
+	public Query setCacheMode(CacheMode cacheMode);
+
+	@Override
+	public Query setCacheable(boolean cacheable);
+
+	@Override
+	public Query setCacheRegion(String cacheRegion);
+
+	@Override
+	public Query setTimeout(int timeout);
+
+	@Override
+	public Query setFetchSize(int fetchSize);
+
+	@Override
+	public Query setReadOnly(boolean readOnly);
+
+	/**
+	 * Obtains the LockOptions in effect for this query.
+	 *
+	 * @return The LockOptions
+	 *
+	 * @see LockOptions
+	 */
+	public LockOptions getLockOptions();
+
+	/**
+	 * Set the lock options for the query.  Specifically only the following are taken into consideration:<ol>
+	 *     <li>{@link LockOptions#getLockMode()}</li>
+	 *     <li>{@link LockOptions#getScope()}</li>
+	 *     <li>{@link LockOptions#getTimeOut()}</li>
+	 * </ol>
+	 * For alias-specific locking, use {@link #setLockMode(String, LockMode)}.
+	 *
+	 * @see #getLockOptions()
+	 */
+	public Query setLockOptions(LockOptions lockOptions);
+
+	/**
+	 * Set the LockMode to use for specific alias (as defined in the query's <tt>FROM</tt> clause).
+	 *
+	 * The alias-specific lock modes specified here are added to the query's internal
+	 * {@link #getLockOptions() LockOptions}.
+	 *
+	 * The effect of these alias-specific LockModes is somewhat dependent on the driver/database in use.  Generally
+	 * speaking, for maximum portability, this method should only be used to mark that the rows corresponding to
+	 * the given alias should be included in pessimistic locking ({@link LockMode#PESSIMISTIC_WRITE}).
+	 *
+	 * @param alias a query alias, or <tt>this</tt> for a collection filter
+	 *
+	 * @see #getLockOptions()
+	 */
+	public Query setLockMode(String alias, LockMode lockMode);
+
+	/**
+	 * Obtain the comment currently associated with this query.  Provided SQL commenting is enabled
+	 * (generally by enabling the {@code hibernate.use_sql_comments} config setting), this comment will also be added
+	 * to the SQL query sent to the database.  Often useful for identifying the source of troublesome queries on the
+	 * database side.
+	 *
+	 * @return The comment.
+	 */
+	public String getComment();
+
+	/**
+	 * Set the comment for this query.
+	 *
+	 * @param comment The human-readable comment
+	 *
+	 * @see #getComment()
+	 */
+	public Query setComment(String comment);
+
 	/**
 	 * Return the HQL select clause aliases (if any)
 	 * @return an array of aliases as strings
 	 */
 	public String[] getReturnAliases() throws HibernateException;
+
 	/**
 	 * Return the names of all named parameters of the query.
 	 * @return the parameter names, in no particular order
 	 */
 	public String[] getNamedParameters() throws HibernateException;
+
 	/**
 	 * Return the query results as an <tt>Iterator</tt>. If the query
 	 * contains multiple results pre row, the results are returned in
@@ -110,6 +222,7 @@ public interface Query {
 	 * @throws HibernateException
 	 */
 	public Iterator iterate() throws HibernateException;
+
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
 	 * scrollability of the returned results depends upon JDBC driver
@@ -120,6 +233,7 @@ public interface Query {
 	 * @throws HibernateException
 	 */
 	public ScrollableResults scroll() throws HibernateException;
+
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
 	 * scrollability of the returned results depends upon JDBC driver
@@ -131,6 +245,7 @@ public interface Query {
 	 * @throws HibernateException
 	 */
 	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException;
+
 	/**
 	 * Return the query results as a <tt>List</tt>. If the query contains
 	 * multiple results pre row, the results are returned in an instance
@@ -140,6 +255,7 @@ public interface Query {
 	 * @throws HibernateException
 	 */
 	public List list() throws HibernateException;
+
 	/**
 	 * Convenience method to return a single instance that matches
 	 * the query, or null if the query returns no results.
@@ -161,118 +277,6 @@ public interface Query {
 	public int executeUpdate() throws HibernateException;
 
 	/**
-	 * Set the maximum number of rows to retrieve. If not set,
-	 * there is no limit to the number of rows retrieved.
-	 * @param maxResults the maximum number of rows
-	 */
-	public Query setMaxResults(int maxResults);
-	/**
-	 * Set the first row to retrieve. If not set, rows will be
-	 * retrieved beginnning from row <tt>0</tt>.
-	 * @param firstResult a row number, numbered from <tt>0</tt>
-	 */
-	public Query setFirstResult(int firstResult);
-	
-	/**
-	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
-	 * read-only/modifiable setting was not initialized, then the default
-	 * read-only/modifiable setting for the persistence context is returned instead.
-	 * @see Query#setReadOnly(boolean)
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session before the query was executed.
-	 *
-	 * @return true, entities and proxies loaded by the query will be put in read-only mode
-	 *         false, entities and proxies loaded by the query will be put in modifiable mode
-	 */
-	public boolean isReadOnly();
-
-	/**
-	 * Set the read-only/modifiable mode for entities and proxies
-	 * loaded by this Query. This setting overrides the default setting
-	 * for the persistence context.
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.engine.spi.PersistenceContext#setDefaultReadOnly(boolean)
-	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
-	 *
-	 * Read-only entities are not dirty-checked and snapshots of persistent
-	 * state are not maintained. Read-only entities can be modified, but
-	 * changes are not persisted.
-	 *
-	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized
-	 * proxy has, regardless of the session's current setting.
-	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session before the query was executed.
-	 *
-	 * @param readOnly true, entities and proxies loaded by the query will be put in read-only mode
-	 *                 false, entities and proxies loaded by the query will be put in modifiable mode
-	 */
-	public Query setReadOnly(boolean readOnly);
-
-	/**
-	 * Enable caching of this query result set.
-	 * @param cacheable Should the query results be cacheable?
-	 */
-	public Query setCacheable(boolean cacheable);
-
-	/**
-	 * Set the name of the cache region.
-	 * @param cacheRegion the name of a query cache region, or <tt>null</tt>
-	 * for the default query cache
-	 */
-	public Query setCacheRegion(String cacheRegion);
-
-	/**
-	 * Set a timeout for the underlying JDBC query.
-	 * @param timeout the timeout in seconds
-	 */
-	public Query setTimeout(int timeout);
-	/**
-	 * Set a fetch size for the underlying JDBC query.
-	 * @param fetchSize the fetch size
-	 */
-	public Query setFetchSize(int fetchSize);
-
-	/**
-	 * Set the lock options for the objects idententified by the
-	 * given alias that appears in the <tt>FROM</tt> clause.
-	 */
-	public Query setLockOptions(LockOptions lockOptions);
-
-	/**
-	 * Set the lockmode for the objects idententified by the
-	 * given alias that appears in the <tt>FROM</tt> clause.
-	 * @param alias a query alias, or <tt>this</tt> for a collection filter
-	 */
-	public Query setLockMode(String alias, LockMode lockMode);
-
-	/**
-	 * Add a comment to the generated SQL.
-	 * @param comment a human-readable string
-	 */
-	public Query setComment(String comment);
-	
-	/**
-	 * Override the current session flush mode, just for
-	 * this query.
-	 * @see org.hibernate.FlushMode
-	 */
-	public Query setFlushMode(FlushMode flushMode);
-
-	/**
-	 * Override the current session cache mode, just for
-	 * this query.
-	 * @see org.hibernate.CacheMode
-	 */
-	public Query setCacheMode(CacheMode cacheMode);
-
-	/**
 	 * Bind a value to a JDBC-style query parameter.
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
@@ -280,6 +284,7 @@ public interface Query {
 	 * @param type the Hibernate type
 	 */
 	public Query setParameter(int position, Object val, Type type);
+
 	/**
 	 * Bind a value to a named query parameter.
 	 * @param name the name of the parameter
@@ -298,6 +303,7 @@ public interface Query {
 	 * @throws org.hibernate.HibernateException if no type could be determined
 	 */
 	public Query setParameter(int position, Object val) throws HibernateException;
+
 	/**
 	 * Bind a value to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly 

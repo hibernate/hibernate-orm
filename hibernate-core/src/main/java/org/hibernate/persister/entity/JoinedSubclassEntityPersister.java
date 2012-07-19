@@ -39,6 +39,8 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.DynamicFilterAliasGenerator;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
@@ -694,15 +696,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableNames[0];
 	}
 
-	private static int getTableId(String tableName, String[] tables) {
-		for ( int j = 0; j < tables.length; j++ ) {
-			if ( tableName.equals( tables[j] ) ) {
-				return j;
-			}
-		}
-		throw new AssertionFailure( "Table " + tableName + " not found" );
-	}
-
 	public void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 		if ( hasSubclasses() ) {
 			select.setExtraSelectList( discriminatorFragment( name ), getDiscriminatorAlias() );
@@ -835,9 +828,35 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public Declarer getSubclassPropertyDeclarer(String propertyPath) {
 		if ( "class".equals( propertyPath ) ) {
-			// special case where we need to force incloude all subclass joins
+			// special case where we need to force include all subclass joins
 			return Declarer.SUBCLASS;
 		}
 		return super.getSubclassPropertyDeclarer( propertyPath );
+	}
+
+	@Override
+	public int determineTableNumberForColumn(String columnName) {
+		final String[] subclassColumnNameClosure = getSubclassColumnClosure();
+		for ( int i = 0, max = subclassColumnNameClosure.length; i < max; i++ ) {
+			final boolean quoted = subclassColumnNameClosure[i].startsWith( "\"" )
+					&& subclassColumnNameClosure[i].endsWith( "\"" );
+			if ( quoted ) {
+				if ( subclassColumnNameClosure[i].equals( columnName ) ) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
+			}
+			else {
+				if ( subclassColumnNameClosure[i].equalsIgnoreCase( columnName ) ) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
+			}
+		}
+		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+	}
+
+
+	@Override
+	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
 	}
 }

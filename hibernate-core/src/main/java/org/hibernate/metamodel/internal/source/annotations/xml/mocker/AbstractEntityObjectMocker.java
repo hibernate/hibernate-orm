@@ -62,7 +62,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		DefaultConfigurationHelper.INSTANCE.applyDefaults( getEntityElement(), getDefaults() );
 		classInfo = indexBuilder.createClassInfo( getEntityElement().getClazz() );
 		DotName classDotName = classInfo.name();
-		if ( getEntityElement().isMetadataComplete() ) {
+		if ( getEntityElement().isMetadataComplete() != null &&  getEntityElement().isMetadataComplete() ) {
 			indexBuilder.metadataComplete( classDotName );
 		}
 		parserAccessType( getEntityElement().getAccess(), getTarget() );

@@ -41,7 +41,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPrimitiveArrayElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -60,7 +60,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	private final AttributeSourceContainer parentContainer;
 	private final List<AttributeSource> subAttributeSources;
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
-	private final Value<Class<?>> componentClassReference;
+	private final ValueHolder<Class<?>> componentClassReference;
 	private final String logicalTableName;
 	private final String path;
 
@@ -169,7 +169,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	@Override
-	public Value<Class<?>> getClassReference() {
+	public ValueHolder<Class<?>> getClassReference() {
 		return componentClassReference;
 	}
 

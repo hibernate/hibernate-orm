@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.Serializable;
 
 /**
- * TODO : javadoc
+ * Describes the mutability aspects of a Java type.  The term mutability refers to the fact that generally speaking
+ * the aspects described by this contract are defined by whether the Java type's internal state is mutable or not.
  *
  * @author Steve Ebersole
  */

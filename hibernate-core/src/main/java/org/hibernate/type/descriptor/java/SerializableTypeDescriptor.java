@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for general {@link Serializable} handling.
  *
  * @author Steve Ebersole
  */

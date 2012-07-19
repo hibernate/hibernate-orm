@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,6 +41,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class BooleanTypeDescriptor implements SqlTypeDescriptor {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
+
+	public BooleanTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
 
 	public int getSqlType() {
 		return Types.BOOLEAN;
@@ -64,6 +69,16 @@ public class BooleanTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getBoolean( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBoolean( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBoolean( name ), options );
 			}
 		};
 	}

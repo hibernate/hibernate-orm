@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -22,10 +21,9 @@ public class MultipleAssociationsTest extends BaseEnversJPAFunctionalTestCase {
     private long warsawId = 0;
     private long cracowId = 0;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Person.class);
-        cfg.addAnnotatedClass(Address.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Person.class, Address.class };
     }
 
     @Test

@@ -23,87 +23,73 @@
  */
 package org.hibernate.ejb;
 
-import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.ProviderUtil;
 
-import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 /**
  * Hibernate EJB3 persistence provider implementation
  *
+ * @deprecated Use {@link HibernatePersistenceProvider} instead
+ *
  * @author Gavin King
  */
-public class HibernatePersistence extends AvailableSettings implements PersistenceProvider {
+@Deprecated
+public class HibernatePersistence extends HibernatePersistenceProvider implements PersistenceProvider, AvailableSettings {
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
-	/**
-	 * Get an entity manager factory by its entity manager name, using the specified
-	 * properties (they override any found in the peristence.xml file).
-	 * <p/>
-	 * This is the form used in JSE environments.
-	 *
-	 * @param persistenceUnitName entity manager name
-	 * @param properties The explicit property values
-	 *
-	 * @return initialized EntityManagerFactory
-	 */
-	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		Ejb3Configuration cfg = new Ejb3Configuration();
-		Ejb3Configuration configured = cfg.configure( persistenceUnitName, properties );
-		return configured != null ? configured.buildEntityManagerFactory() : null;
-	}
+//	/**
+//	 * Get an entity manager factory by its entity manager name, using the specified
+//	 * properties (they override any found in the peristence.xml file).
+//	 * <p/>
+//	 * This is the form used in JSE environments.
+//	 *
+//	 * @param persistenceUnitName entity manager name
+//	 * @param properties The explicit property values
+//	 *
+//	 * @return initialized EntityManagerFactory
+//	 */
+//	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+//		Ejb3Configuration cfg = new Ejb3Configuration();
+//		Ejb3Configuration configured = cfg.configure( persistenceUnitName, properties );
+//		return configured != null ? configured.buildEntityManagerFactory() : null;
+//	}
 
-	/**
-	 * Create an entity manager factory from the given persistence unit info, using the specified
-	 * properties (they override any on the PUI).
-	 * <p/>
-	 * This is the form used by the container in a JEE environment.
-	 *
-	 * @param info The persistence unit information
-	 * @param properties The explicit property values
-	 *
-	 * @return initialized EntityManagerFactory
-	 */
-	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		Ejb3Configuration cfg = new Ejb3Configuration();
-		Ejb3Configuration configured = cfg.configure( info, properties );
-		return configured != null ? configured.buildEntityManagerFactory() : null;
-	}
+//	/**
+//	 * Create an entity manager factory from the given persistence unit info, using the specified
+//	 * properties (they override any on the PUI).
+//	 * <p/>
+//	 * This is the form used by the container in a JEE environment.
+//	 *
+//	 * @param info The persistence unit information
+//	 * @param properties The explicit property values
+//	 *
+//	 * @return initialized EntityManagerFactory
+//	 */
+//	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
+//		Ejb3Configuration cfg = new Ejb3Configuration();
+//		Ejb3Configuration configured = cfg.configure( info, properties );
+//		return configured != null ? configured.buildEntityManagerFactory() : null;
+//	}
 
-	/**
-	 * create a factory from a canonical version
-	 * @deprecated
-	 */
-	@Deprecated
-    public EntityManagerFactory createEntityManagerFactory(Map properties) {
-		// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
-		Ejb3Configuration cfg = new Ejb3Configuration();
-		return cfg.createEntityManagerFactory( properties );
-	}
 
-	private final ProviderUtil providerUtil = new ProviderUtil() {
-		public LoadState isLoadedWithoutReference(Object proxy, String property) {
-			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property, cache );
-		}
+//	private final ProviderUtil providerUtil = new ProviderUtil() {
+//		public LoadState isLoadedWithoutReference(Object proxy, String property) {
+//			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property, cache );
+//		}
+//
+//		public LoadState isLoadedWithReference(Object proxy, String property) {
+//			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
+//		}
+//
+//		public LoadState isLoaded(Object o) {
+//			return PersistenceUtilHelper.isLoaded(o);
+//		}
+//	};
 
-		public LoadState isLoadedWithReference(Object proxy, String property) {
-			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
-		}
-
-		public LoadState isLoaded(Object o) {
-			return PersistenceUtilHelper.isLoaded(o);
-		}
-	};
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public ProviderUtil getProviderUtil() {
-		return providerUtil;
-	}
+//	public ProviderUtil getProviderUtil() {
+//		return providerUtil;
+//	}
 
 }

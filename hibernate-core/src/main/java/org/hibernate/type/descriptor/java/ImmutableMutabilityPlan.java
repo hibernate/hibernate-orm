@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.Serializable;
 
 /**
@@ -32,30 +33,22 @@ import java.io.Serializable;
 public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	public static final ImmutableMutabilityPlan INSTANCE = new ImmutableMutabilityPlan();
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public T deepCopy(T value) {
 		return value;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Serializable disassemble(T value) {
 		return (Serializable) value;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public T assemble(Serializable cached) {
 		return (T) cached;

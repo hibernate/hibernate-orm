@@ -25,6 +25,7 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,7 +56,7 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  *
  * @author Gavin King
  */
-public class ComponentType extends AbstractType implements CompositeType {
+public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
 	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
@@ -719,5 +720,86 @@ public class ComponentType extends AbstractType implements CompositeType {
 		throw new PropertyNotFoundException(
 				"Unable to locate property named " + name + " on " + getReturnedClass().getName()
 		);
+	}
+
+	private Boolean canDoExtraction;
+
+	@Override
+	public boolean canDoExtraction() {
+		if ( canDoExtraction == null ) {
+			canDoExtraction = determineIfProcedureParamExtractionCanBePerformed();
+		}
+		return canDoExtraction;
+	}
+
+	private boolean determineIfProcedureParamExtractionCanBePerformed() {
+		for ( Type propertyType : propertyTypes ) {
+			if ( ! ProcedureParameterExtractionAware.class.isInstance( propertyType ) ) {
+				return false;
+			}
+			if ( ! ( (ProcedureParameterExtractionAware) propertyType ).canDoExtraction() ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public Object extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException {
+		Object[] values = new Object[propertySpan];
+
+		int currentIndex = startIndex;
+		boolean notNull = false;
+		for ( int i = 0; i < propertySpan; i++ ) {
+			// we know this cast is safe from canDoExtraction
+			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[i];
+			final Object value = propertyType.extract( statement, currentIndex, session );
+			if ( value == null ) {
+				if ( isKey ) {
+					return null; //different nullability rules for pk/fk
+				}
+			}
+			else {
+				notNull = true;
+			}
+			values[i] = value;
+			currentIndex += propertyType.getColumnSpan( session.getFactory() );
+		}
+
+		if ( ! notNull ) {
+			values = null;
+		}
+
+		return resolve( values, session, null );
+	}
+
+	@Override
+	public Object extract(CallableStatement statement, String[] paramNames, SessionImplementor session) throws SQLException {
+		// for this form to work all sub-property spans must be one (1)...
+
+		Object[] values = new Object[propertySpan];
+
+		int indx = 0;
+		boolean notNull = false;
+		for ( String paramName : paramNames ) {
+			// we know this cast is safe from canDoExtraction
+			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
+			final Object value = propertyType.extract( statement, new String[] { paramName }, session );
+			if ( value == null ) {
+				if ( isKey ) {
+					return null; //different nullability rules for pk/fk
+				}
+			}
+			else {
+				notNull = true;
+			}
+			values[indx] = value;
+		}
+
+		if ( ! notNull ) {
+			values = null;
+		}
+
+		return resolve( values, session, null );
 	}
 }

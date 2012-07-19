@@ -39,7 +39,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.HbmBinder;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
@@ -69,7 +68,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTypedefElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
@@ -97,8 +96,8 @@ public class HibernateMappingProcessor {
 	private final MetadataImplementor metadata;
 	private final MappingDocument mappingDocument;
 
-	private Value<ClassLoaderService> classLoaderService = new Value<ClassLoaderService>(
-			new Value.DeferredInitializer<ClassLoaderService>() {
+	private ValueHolder<ClassLoaderService> classLoaderService = new ValueHolder<ClassLoaderService>(
+			new ValueHolder.DeferredInitializer<ClassLoaderService>() {
 				@Override
 				public ClassLoaderService initialize() {
 					return metadata.getServiceRegistry().getService( ClassLoaderService.class );

@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -49,11 +48,14 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 	private Integer vjtrte_id;
 	private Integer vjtrtae_id1;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(VersionsJoinTableRangeComponentTestEntity.class);
-		cfg.addAnnotatedClass(VersionsJoinTableRangeTestEntitySuperClass.class);
-		cfg.addAnnotatedClass(VersionsJoinTableRangeTestEntity.class);
-		cfg.addAnnotatedClass(VersionsJoinTableRangeTestAlternateEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				VersionsJoinTableRangeComponentTestEntity.class,
+				VersionsJoinTableRangeTestEntitySuperClass.class,
+				VersionsJoinTableRangeTestEntity.class,
+				VersionsJoinTableRangeTestAlternateEntity.class
+		};
 	}
 
 	@Test

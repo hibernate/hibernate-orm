@@ -70,6 +70,8 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
             return;
         }
         if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+            checkIfTransactionInProgress(event.getSession());
+            
             AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
 
             String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();

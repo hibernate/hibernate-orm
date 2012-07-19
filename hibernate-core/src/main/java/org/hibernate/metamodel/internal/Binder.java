@@ -39,7 +39,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.FetchTiming;
@@ -338,7 +337,7 @@ public class Binder {
 		final List< RelationalValueBinding > relationalValueBindings =
 				bindValues( attributeBindingContainer, attributeSource, attribute, table );
 
-		org.hibernate.internal.util.Value< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
+		org.hibernate.internal.util.ValueHolder< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
 		final String referencedEntityName =
 				bindingContext().qualifyClassName( attributeSource.getReferencedEntityName() != null
 						? attributeSource.getReferencedEntityName()
@@ -1044,7 +1043,7 @@ public class Binder {
 	private void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final ExplicitHibernateTypeSource explicitTypeSource,
-			final org.hibernate.internal.util.Value< Class< ? >> defaultJavaType ) {
+			final org.hibernate.internal.util.ValueHolder< Class< ? >> defaultJavaType ) {
 		// if there is an explicit type name specified, then there's no reason to
 		// initialize the default Java type name; simply pass a null default instead.
 		bindHibernateTypeDescriptor(
@@ -2073,17 +2072,17 @@ public class Binder {
 		}
 	}
 
-	private static org.hibernate.internal.util.Value< Class< ? >> createSingularAttributeJavaType(
+	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
 			final SingularAttribute attribute ) {
-		org.hibernate.internal.util.Value.DeferredInitializer< Class< ? >> deferredInitializer =
-				new org.hibernate.internal.util.Value.DeferredInitializer< Class< ? >>() {
+		org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >> deferredInitializer =
+				new org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >>() {
 					public Class< ? > initialize() {
 						return ReflectHelper.reflectedPropertyClass(
 								attribute.getAttributeContainer().getClassReference(),
 								attribute.getName() );
 					}
 				};
-		return new org.hibernate.internal.util.Value< Class< ? >>( deferredInitializer );
+		return new org.hibernate.internal.util.ValueHolder< Class< ? >>( deferredInitializer );
 	}
 
 	private static String interpretIdentifierUnsavedValue( IdentifierSource identifierSource, IdGenerator generator ) {

@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -44,9 +43,9 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
     private Integer uni1_id;
     private Integer str1_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(DetachedNamingTestEntity.class);
-        cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { DetachedNamingTestEntity.class, StrTestEntity.class };
     }
 
     @Test

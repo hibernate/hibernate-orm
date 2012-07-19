@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -63,7 +62,7 @@ import org.hibernate.type.Type;
  */
 public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
-	private NativeSQLQueryReturn[] queryReturns;
+	private List<NativeSQLQueryReturn> queryReturns;
 	private List<ReturnBuilder> queryReturnBuilders;
 	private boolean autoDiscoverTypes;
 
@@ -89,63 +88,47 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 						queryDef.getResultSetRef()
 					);
 			}
-			this.queryReturns = definition.getQueryReturns();
+			this.queryReturns = Arrays.asList( definition.getQueryReturns() );
 		}
 		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			this.queryReturns = queryDef.getQueryReturns();
+			this.queryReturns = Arrays.asList( queryDef.getQueryReturns() );
 		}
 		else {
-			this.queryReturns = new NativeSQLQueryReturn[]{};
+			this.queryReturns = new ArrayList<NativeSQLQueryReturn>();
 		}
 
 		this.querySpaces = queryDef.getQuerySpaces();
 		this.callable = queryDef.isCallable();
 	}
 
-	SQLQueryImpl(
-			final String sql,
-	        final String returnAliases[],
-	        final Class returnClasses[],
-	        final LockMode[] lockModes,
-	        final SessionImplementor session,
-	        final Collection<String> querySpaces,
-	        final FlushMode flushMode,
-	        ParameterMetadata parameterMetadata) {
-		// TODO : this constructor form is *only* used from constructor directly below us; can it go away?
-		super( sql, flushMode, session, parameterMetadata );
-		this.queryReturns = new NativeSQLQueryReturn[returnAliases.length];
-		for ( int i=0; i<returnAliases.length; i++ ) {
-			NativeSQLQueryRootReturn ret = new NativeSQLQueryRootReturn(
-					returnAliases[i],
-					returnClasses[i].getName(),
-					lockModes==null ? LockMode.NONE : lockModes[i]
-			);
-			queryReturns[i] = ret;
-		}
-		this.querySpaces = querySpaces;
-		this.callable = false;
-	}
-
-	SQLQueryImpl(
-			final String sql,
-	        final String returnAliases[],
-	        final Class returnClasses[],
-	        final SessionImplementor session,
-	        ParameterMetadata parameterMetadata) {
-		this( sql, returnAliases, returnClasses, null, session, null, null, parameterMetadata );
-	}
-
 	SQLQueryImpl(String sql, SessionImplementor session, ParameterMetadata parameterMetadata) {
-		super( sql, null, session, parameterMetadata );
-		queryReturns = new NativeSQLQueryReturn[0];
-		querySpaces = null;
-		callable = false;
+		this( sql, false, session, parameterMetadata );
 	}
 
-	private NativeSQLQueryReturn[] getQueryReturns() {
+	SQLQueryImpl(String sql, boolean callable, SessionImplementor session, ParameterMetadata parameterMetadata) {
+		super( sql, null, session, parameterMetadata );
+		this.queryReturns = new ArrayList<NativeSQLQueryReturn>();
+		this.querySpaces = null;
+		this.callable = callable;
+	}
+
+	@Override
+	public List<NativeSQLQueryReturn>  getQueryReturns() {
+		prepareQueryReturnsIfNecessary();
 		return queryReturns;
 	}
 
+	@Override
+	public Collection<String> getSynchronizedQuerySpaces() {
+		return querySpaces;
+	}
+
+	@Override
+	public boolean isCallable() {
+		return callable;
+	}
+
+	@Override
 	public List list() throws HibernateException {
 		verifyParameters();
 		before();
@@ -164,7 +147,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	private NativeSQLQuerySpecification generateQuerySpecification(Map namedParams) {
 		return new NativeSQLQuerySpecification(
 		        expandParameterLists(namedParams),
-		        getQueryReturns(),
+				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
 		        querySpaces
 		);
 	}
@@ -207,7 +190,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
     protected void verifyParameters() {
 		// verifyParameters is called at the start of all execution type methods, so we use that here to perform
 		// some preparation work.
-		prepare();
+		prepareQueryReturnsIfNecessary();
 		verifyParameters( callable );
 		if ( CollectionHelper.isEmpty( queryReturns ) ) {
 			this.autoDiscoverTypes = true;
@@ -225,16 +208,15 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
-	private void prepare() {
+	private void prepareQueryReturnsIfNecessary() {
 		if ( queryReturnBuilders != null ) {
 			if ( ! queryReturnBuilders.isEmpty() ) {
 				if ( queryReturns != null ) {
 					queryReturns = null;
 				}
-				int size = queryReturnBuilders.size();
-				queryReturns = new NativeSQLQueryReturn[size];
-				for(int i=0;i<size;i++){
-					queryReturns[i] = queryReturnBuilders.get( i ).buildReturn();
+				queryReturns = new ArrayList<NativeSQLQueryReturn>();
+				for ( ReturnBuilder queryReturnBuilder : queryReturnBuilders ) {
+					queryReturns.add( queryReturnBuilder.buildReturn() );
 				}
 				queryReturnBuilders.clear();
 			}
@@ -362,7 +344,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
-		queryReturns = mapping.getQueryReturns();
+		queryReturns.addAll( Arrays.asList( mapping.getQueryReturns() ) );
 		return this;
 	}
 

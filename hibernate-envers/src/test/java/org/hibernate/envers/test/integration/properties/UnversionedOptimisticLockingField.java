@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.PersistentClass;
@@ -42,8 +41,9 @@ import org.hibernate.mapping.Property;
 public class UnversionedOptimisticLockingField extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(UnversionedOptimisticLockingFieldEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { UnversionedOptimisticLockingFieldEntity.class };
 
 	}
 

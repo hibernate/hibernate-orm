@@ -31,9 +31,12 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.jboss.logging.Logger;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -83,42 +86,40 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 		Attribute ref = queryElem.attribute( "resultset-ref" );
 		String resultSetRef = ref == null ? null : ref.getValue();
 		if ( StringHelper.isNotEmpty( resultSetRef ) ) {
-			namedQuery = new NamedSQLQueryDefinition(
-					queryName,
-					queryElem.getText(),
-					resultSetRef,
-					synchronizedTables,
-					cacheable,
-					region,
-					timeout,
-					fetchSize,
-					HbmBinder.getFlushMode( queryElem.attributeValue( "flush-mode" ) ),
-					HbmBinder.getCacheMode( cacheMode ),
-					readOnly,
-					comment,
-					HbmBinder.getParameterTypes( queryElem ),
-					callable
-			);
+			namedQuery = new NamedSQLQueryDefinitionBuilder().setName( queryName )
+					.setQuery( queryElem.getText() )
+					.setResultSetRef( resultSetRef )
+					.setQuerySpaces( synchronizedTables )
+					.setCacheable( cacheable )
+					.setCacheRegion( region )
+					.setTimeout( timeout )
+					.setFetchSize( fetchSize )
+					.setFlushMode( FlushMode.interpretExternalSetting( queryElem.attributeValue( "flush-mode" ) ) )
+					.setCacheMode( CacheMode.interpretExternalSetting( cacheMode ) )
+					.setReadOnly( readOnly )
+					.setComment( comment )
+					.setParameterTypes( HbmBinder.getParameterTypes( queryElem ) )
+					.setCallable( callable )
+					.createNamedQueryDefinition();
 			//TODO check there is no actual definition elemnents when a ref is defined
 		}
 		else {
 			ResultSetMappingDefinition definition = buildResultSetMappingDefinition( queryElem, path, mappings );
-			namedQuery = new NamedSQLQueryDefinition(
-					queryName,
-					queryElem.getText(),
-					definition.getQueryReturns(),
-					synchronizedTables,
-					cacheable,
-					region,
-					timeout,
-					fetchSize,
-					HbmBinder.getFlushMode( queryElem.attributeValue( "flush-mode" ) ),
-					HbmBinder.getCacheMode( cacheMode ),
-					readOnly,
-					comment,
-					HbmBinder.getParameterTypes( queryElem ),
-					callable
-			);
+			namedQuery = new NamedSQLQueryDefinitionBuilder().setName( queryName )
+					.setQuery( queryElem.getText() )
+					.setQueryReturns( definition.getQueryReturns() )
+					.setQuerySpaces( synchronizedTables )
+					.setCacheable( cacheable )
+					.setCacheRegion( region )
+					.setTimeout( timeout )
+					.setFetchSize( fetchSize )
+					.setFlushMode( FlushMode.interpretExternalSetting( queryElem.attributeValue( "flush-mode" ) ) )
+					.setCacheMode( CacheMode.interpretExternalSetting( cacheMode ) )
+					.setReadOnly( readOnly )
+					.setComment( comment )
+					.setParameterTypes( HbmBinder.getParameterTypes( queryElem ) )
+					.setCallable( callable )
+					.createNamedQueryDefinition();
 		}
 
 		if ( LOG.isDebugEnabled() ) {

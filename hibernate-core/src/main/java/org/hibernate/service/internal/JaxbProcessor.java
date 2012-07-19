@@ -26,6 +26,9 @@ package org.hibernate.service.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -33,9 +36,15 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.ValidationEventLocator;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventFactory;
+import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.Namespace;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -56,6 +65,8 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 public class JaxbProcessor {
 	private static final Logger log = Logger.getLogger( JaxbProcessor.class );
 
+	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/hibernate-configuration";
+
 	private final ClassLoaderService classLoaderService;
 
 	public JaxbProcessor(ClassLoaderService classLoaderService) {
@@ -64,7 +75,7 @@ public class JaxbProcessor {
 
 	public JaxbHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
 		try {
-			XMLStreamReader staxReader = staxFactory().createXMLStreamReader( stream );
+			XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
 			try {
 				return unmarshal( staxReader, origin );
 			}
@@ -97,7 +108,29 @@ public class JaxbProcessor {
 	}
 
 	@SuppressWarnings( { "unchecked" })
-	private JaxbHibernateConfiguration unmarshal(XMLStreamReader staxReader, final Origin origin) {
+	private JaxbHibernateConfiguration unmarshal(XMLEventReader staxEventReader, final Origin origin) {
+		XMLEvent event;
+		try {
+			event = staxEventReader.peek();
+			while ( event != null && !event.isStartElement() ) {
+				staxEventReader.nextEvent();
+				event = staxEventReader.peek();
+			}
+		}
+		catch ( Exception e ) {
+			throw new MappingException( "Error accessing stax stream", e, origin );
+		}
+
+		if ( event == null ) {
+			throw new MappingException( "Could not locate root element", origin );
+		}
+
+		if ( !isNamespaced( event.asStartElement() ) ) {
+			// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
+			log.debug( "cfg.xml document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
+			staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_CONFIGURATION_URI );
+		}
+
 		final Object target;
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
@@ -105,7 +138,7 @@ public class JaxbProcessor {
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema() );
 			unmarshaller.setEventHandler( handler );
-			target = unmarshaller.unmarshal( staxReader );
+			target = unmarshaller.unmarshal( staxEventReader );
 			return (JaxbHibernateConfiguration) target;
 		}
 		catch ( JAXBException e ) {
@@ -119,6 +152,10 @@ public class JaxbProcessor {
 					.append( handler.getMessage() );
 			throw new ConfigurationException( builder.toString(), e );
 		}
+	}
+
+	private boolean isNamespaced(StartElement startElement) {
+		return ! "".equals( startElement.getName().getNamespaceURI() );
 	}
 
 	private Schema schema;
@@ -190,6 +227,56 @@ public class JaxbProcessor {
 
 		public String getMessage() {
 			return message;
+		}
+	}
+
+	public class NamespaceAddingEventReader extends EventReaderDelegate {
+		private final XMLEventFactory xmlEventFactory;
+		private final String namespaceUri;
+
+		public NamespaceAddingEventReader(XMLEventReader reader, String namespaceUri) {
+			this( reader, XMLEventFactory.newInstance(), namespaceUri );
+		}
+
+		public NamespaceAddingEventReader(XMLEventReader reader, XMLEventFactory xmlEventFactory, String namespaceUri) {
+			super( reader );
+			this.xmlEventFactory = xmlEventFactory;
+			this.namespaceUri = namespaceUri;
+		}
+
+		private StartElement withNamespace(StartElement startElement) {
+			// otherwise, wrap the start element event to provide a default namespace mapping
+			final List<Namespace> namespaces = new ArrayList<Namespace>();
+			namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
+			Iterator<?> originalNamespaces = startElement.getNamespaces();
+			while ( originalNamespaces.hasNext() ) {
+				namespaces.add( (Namespace) originalNamespaces.next() );
+			}
+			return xmlEventFactory.createStartElement(
+					new QName( namespaceUri, startElement.getName().getLocalPart() ),
+					startElement.getAttributes(),
+					namespaces.iterator()
+			);
+		}
+
+		@Override
+		public XMLEvent nextEvent() throws XMLStreamException {
+			XMLEvent event = super.nextEvent();
+			if ( event.isStartElement() ) {
+				return withNamespace( event.asStartElement() );
+			}
+			return event;
+		}
+
+		@Override
+		public XMLEvent peek() throws XMLStreamException {
+			XMLEvent event = super.peek();
+			if ( event.isStartElement() ) {
+				return withNamespace( event.asStartElement() );
+			}
+			else {
+				return event;
+			}
 		}
 	}
 }

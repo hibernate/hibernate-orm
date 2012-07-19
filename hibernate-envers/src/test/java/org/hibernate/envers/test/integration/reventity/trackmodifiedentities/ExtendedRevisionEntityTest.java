@@ -5,20 +5,19 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionListener;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Tests proper behavior of revision entity that extends {@link DefaultTrackingModifiedEntitiesRevisionEntity}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ExtendedRevisionEntityTest extends DefaultTrackingEntitiesTest {
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        super.configure(cfg);
-        cfg.addAnnotatedClass(ExtendedRevisionEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return ArrayHelper.join( super.getAnnotatedClasses(), ExtendedRevisionEntity.class );
     }
 
     @Override

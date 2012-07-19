@@ -34,19 +34,18 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 
 import org.junit.After;
@@ -63,7 +62,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 	private static final Dialect dialect = Dialect.getDialect();
 
-	protected Ejb3Configuration ejb3Configuration;
+	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private EntityManagerFactoryImpl entityManagerFactory;
 
@@ -83,97 +82,68 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		return serviceRegistry;
 	}
 
-	protected Configuration getCfg(){
-		return ejb3Configuration.getHibernateConfiguration();
+	protected Configuration getCfg() {
+		return entityManagerFactoryBuilder.getHibernateConfiguration();
 	}
 
 	@BeforeClassOnce
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void buildEntityManagerFactory() throws Exception {
-		log.trace( "Building session factory" );
-		ejb3Configuration = buildConfiguration();
-		ejb3Configuration.configure( getConfig() );
-		configure(ejb3Configuration);
+		log.trace( "Building EntityManagerFactory" );
 
-		afterConfigurationBuilt( ejb3Configuration );
-
-		entityManagerFactory = (EntityManagerFactoryImpl) ejb3Configuration.buildEntityManagerFactory(
-				bootstrapRegistryBuilder()
+		entityManagerFactoryBuilder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+				buildPersistenceUnitDescriptor(),
+				buildSettings()
 		);
-		serviceRegistry = (StandardServiceRegistryImpl) ( (SessionFactoryImpl) entityManagerFactory.getSessionFactory() )
+		entityManagerFactory = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.buildEntityManagerFactory();
+
+		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()
 				.getParentServiceRegistry();
 
 		afterEntityManagerFactoryBuilt();
 	}
-	public void configure(Ejb3Configuration cfg) {
+
+	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
+		return new PersistenceUnitDescriptorAdapter();
 	}
 
-	private BootstrapServiceRegistryBuilder bootstrapRegistryBuilder() {
-		return new BootstrapServiceRegistryBuilder();
-	}
+	private Map buildSettings() {
+		Map settings = getConfig();
+		addMappings( settings );
 
-	protected Ejb3Configuration buildConfiguration() {
-		Ejb3Configuration ejb3Cfg = constructConfiguration();
-		addMappings( ejb3Cfg.getHibernateConfiguration() );
-		return ejb3Cfg;
-	}
-
-	protected Ejb3Configuration constructConfiguration() {
-		Ejb3Configuration ejb3Configuration = new Ejb3Configuration();
 		if ( createSchema() ) {
-			ejb3Configuration.getHibernateConfiguration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
+
 		if ( StringHelper.isNotEmpty( getAuditStrategy() ) ) {
-			ejb3Configuration.getHibernateConfiguration().setProperty(
-					"org.hibernate.envers.audit_strategy",
-					getAuditStrategy()
-			);
+			settings.put( "org.hibernate.envers.audit_strategy", getAuditStrategy() );
 		}
-		if (!isAudit()){
-			ejb3Configuration.getHibernateConfiguration().setProperty( EnversIntegrator.AUTO_REGISTER, "false" );
+
+		if ( ! isAudit() ) {
+			settings.put( EnversIntegrator.AUTO_REGISTER, "false" );
 		}
-		ejb3Configuration
-				.getHibernateConfiguration()
-				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 
-        ejb3Configuration
-				.getHibernateConfiguration()
-				.setProperty( "org.hibernate.envers.use_revision_entity_with_native_id", "false" );
+		settings.put( "org.hibernate.envers.use_revision_entity_with_native_id", "false" );
 
-		ejb3Configuration
-				.getHibernateConfiguration()
-				.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
-		return ejb3Configuration;
-	}
-
-	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource( mapping, getClass().getClassLoader() );
-			}
-		}
-	}
-
-	protected static final String[] NO_MAPPINGS = new String[0];
-
-	protected String[] getMappings() {
-		return NO_MAPPINGS;
+		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
+		return settings;
 	}
 
 	protected Map getConfig() {
 		Map<Object, Object> config = new HashMap<Object, Object>();
-		ArrayList<Class> classes = new ArrayList<Class>();
 
-		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() ) );
+
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
+
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
 			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
+
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<String>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
@@ -181,7 +151,22 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 
 		addConfigOptions( config );
+
 		return config;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void addMappings(Map settings) {
+		String[] mappings = getMappings();
+		if ( mappings != null ) {
+			settings.put( AvailableSettings.HBXML_FILES, StringHelper.join( ",", mappings ) );
+		}
+	}
+
+	protected static final String[] NO_MAPPINGS = new String[0];
+
+	protected String[] getMappings() {
+		return NO_MAPPINGS;
 	}
 
 	protected void addConfigOptions(Map options) {
@@ -203,14 +188,6 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 	public String[] getEjb3DD() {
 		return new String[] { };
-	}
-
-	@SuppressWarnings({ "UnusedParameters" })
-	protected void afterConfigurationBuilt(Ejb3Configuration ejb3Configuration) {
-	}
-
-	@SuppressWarnings({ "UnusedParameters" })
-	protected void applyServices(ServiceRegistryBuilder registryBuilder) {
 	}
 
 	protected void afterEntityManagerFactoryBuilt() {

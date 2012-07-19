@@ -31,7 +31,7 @@ import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
@@ -132,7 +132,7 @@ public class MappingDocument {
 		}
 
 		@Override
-		public Value<Class<?>> makeClassReference(String className) {
+		public ValueHolder<Class<?>> makeClassReference(String className) {
 			return metadata.makeClassReference( className );
 		}
 

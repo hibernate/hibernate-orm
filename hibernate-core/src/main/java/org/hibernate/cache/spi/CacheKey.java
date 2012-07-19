@@ -75,7 +75,11 @@ public class CacheKey implements Serializable {
 
 	@Override
 	public boolean equals(Object other) {
-		if ( !(other instanceof CacheKey) ) {
+		if ( this == other ) {
+			return true;
+		}
+		if ( hashCode != other.hashCode() || !(other instanceof CacheKey) ) {
+			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 		CacheKey that = (CacheKey) other;

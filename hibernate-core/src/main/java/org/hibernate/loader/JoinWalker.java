@@ -930,7 +930,7 @@ public class JoinWalker {
 		if ( buf.length()>0 ) buf.setLength( buf.length()-2 );
 		return buf.toString();
 	}
-	
+
 	/**
 	 * Render the where condition for a (batch) load by identifier / collection key
 	 */

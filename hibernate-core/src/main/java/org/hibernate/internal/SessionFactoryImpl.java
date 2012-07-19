@@ -23,6 +23,8 @@
  */
 package org.hibernate.internal;
 
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -38,9 +40,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
 
 import org.jboss.logging.Logger;
 
@@ -59,12 +58,10 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
-import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -98,12 +95,14 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -128,10 +127,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
@@ -201,16 +200,12 @@ public final class SessionFactoryImpl
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
-	private final transient QueryCache queryCache;
-	private final transient UpdateTimestampsCache updateTimestampsCache;
-	private final transient ConcurrentMap<String,QueryCache> queryCaches;
-	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 	private final transient ConcurrentHashMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<EntityNameResolver, Object>();
 	private final transient QueryPlanCache queryPlanCache;
-	private final transient Cache cacheAccess = new CacheImpl();
+	private final transient CacheImplementor cacheAccess;
 	private transient boolean isClosed = false;
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
@@ -310,6 +305,8 @@ public final class SessionFactoryImpl
 		);
         this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
         this.dialect = this.jdbcServices.getDialect();
+		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
+		final RegionFactory regionFactory = cacheAccess.getRegionFactory();
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 		for ( SessionFactoryObserver observer : sessionFactoryOptions.getSessionFactoryObservers() ) {
 			this.observer.addObserver( observer );
@@ -324,9 +321,7 @@ public final class SessionFactoryImpl
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
-		// Caches
-		final RegionFactory regionFactory = settings.getRegionFactory();
-		regionFactory.start( settings, properties );
+
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		// todo : everything above here consider implementing as standard SF service.  specifically: stats, caches, types, function-reg
@@ -395,7 +390,7 @@ public final class SessionFactoryImpl
 					EntityRegion entityRegion = regionFactory.buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
-					allCacheRegions.put( cacheRegionName, entityRegion );
+					cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
 				}
 			}
 			
@@ -424,7 +419,7 @@ public final class SessionFactoryImpl
 					if (naturalIdRegion != null) {
 						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
 						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
-						allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+						cacheAccess.addCacheRegion(  naturalIdCacheRegionName, naturalIdRegion );
 					}
 				}
 			}
@@ -456,7 +451,7 @@ public final class SessionFactoryImpl
 						.decode( model ) );
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
-				allCacheRegions.put( cacheRegionName, collectionRegion );
+				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 			}
 			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
 					cfg,
@@ -552,20 +547,6 @@ public final class SessionFactoryImpl
 
 		currentSessionContext = buildCurrentSessionContext();
 
-		if ( settings.isQueryCacheEnabled() ) {
-			updateTimestampsCache = new UpdateTimestampsCache(settings, properties, this);
-			queryCache = settings.getQueryCacheFactory()
-			        .getQueryCache(null, updateTimestampsCache, settings, properties);
-			queryCaches = new ConcurrentHashMap<String, QueryCache>();
-			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
-			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
-		}
-		else {
-			updateTimestampsCache = null;
-			queryCache = null;
-			queryCaches = null;
-		}
-
 		//checking for named queries
 		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
 			final Map<String,HibernateException> errors = checkNamedQueries();
@@ -621,6 +602,54 @@ public final class SessionFactoryImpl
 		this.observer.sessionFactoryCreated( this );
 	}
 
+	@SuppressWarnings({ "unchecked" })
+	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy() {
+		CustomEntityDirtinessStrategy defaultValue = new CustomEntityDirtinessStrategy() {
+			@Override
+			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
+				return false;
+			}
+
+			@Override
+			public boolean isDirty(Object entity, EntityPersister persister, Session session) {
+				return false;
+			}
+
+			@Override
+			public void resetDirty(Object entity, EntityPersister persister, Session session) {
+			}
+
+			@Override
+			public void findDirty(
+					Object entity,
+					EntityPersister persister,
+					Session session,
+					DirtyCheckContext dirtyCheckContext) {
+				// todo : implement proper method body
+			}
+		};
+		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY,
+				CustomEntityDirtinessStrategy.class,
+				defaultValue
+		);
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
+			CurrentTenantIdentifierResolver explicitResolver) {
+		if ( explicitResolver != null ) {
+			return explicitResolver;
+		}
+		return serviceRegistry.getService( ConfigurationService.class )
+				.getSetting(
+						AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
+						CurrentTenantIdentifierResolver.class,
+						null
+				);
+
+	}
+
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(MetadataImplementor metadata,SessionFactoryOptions sessionFactoryOptions) throws HibernateException {
 		LOG.debug( "Building session factory" );
@@ -644,6 +673,7 @@ public final class SessionFactoryImpl
 
 		this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
 		this.dialect = this.jdbcServices.getDialect();
+		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 
 		// TODO: get SQL functions from JdbcServices (HHH-6559)
 		//this.sqlFunctionRegistry = new SQLFunctionRegistry( this.jdbcServices.getSqlFunctions() );
@@ -667,8 +697,6 @@ public final class SessionFactoryImpl
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
-		// TODO: get RegionFactory from service registry
-		settings.getRegionFactory().start( settings, properties );
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		class IntegratorObserver implements SessionFactoryObserver {
@@ -743,7 +771,7 @@ public final class SessionFactoryImpl
 					);
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
-					allCacheRegions.put( cacheRegionName, entityRegion );
+					cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
 				}
 			}
 
@@ -779,7 +807,7 @@ public final class SessionFactoryImpl
 					if ( naturalIdRegion != null ) {
 						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
 						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
-						allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+						cacheAccess.addCacheRegion( naturalIdCacheRegionName, naturalIdRegion );
 					}
 				}
 			}
@@ -818,8 +846,14 @@ public final class SessionFactoryImpl
 					);
 					accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
-					allCacheRegions.put( cacheRegionName, collectionRegion );
+					cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 				}
+				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+						cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+				);
+				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
+				entityAccessStrategies.put( cacheRegionName, accessStrategy );
+				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 			}
 			CollectionPersister persister = serviceRegistry
 					.getService( PersisterFactory.class )
@@ -914,20 +948,6 @@ public final class SessionFactoryImpl
 
 		currentSessionContext = buildCurrentSessionContext();
 
-		if ( settings.isQueryCacheEnabled() ) {
-			updateTimestampsCache = new UpdateTimestampsCache( settings, properties, this );
-			queryCache = settings.getQueryCacheFactory()
-			        .getQueryCache( null, updateTimestampsCache, settings, properties );
-			queryCaches = new ConcurrentHashMap<String, QueryCache>();
-			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
-			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
-		}
-		else {
-			updateTimestampsCache = null;
-			queryCache = null;
-			queryCaches = null;
-		}
-
 		//checking for named queries
 		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
 			final Map<String,HibernateException> errors = checkNamedQueries();
@@ -972,10 +992,6 @@ public final class SessionFactoryImpl
 				( ( Loadable ) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
 			}
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
-		}
-
-		for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
-			registerEntityNameResolver( resolver );
 		}
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
@@ -1161,6 +1177,16 @@ public final class SessionFactoryImpl
 		return result;
 	}
 
+	@Override
+	public Map<String, CollectionPersister> getCollectionPersisters() {
+		return collectionPersisters;
+	}
+
+	@Override
+	public Map<String, EntityPersister> getEntityPersisters() {
+		return entityPersisters;
+	}
+
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
 		CollectionPersister result = collectionPersisters.get(role);
 		if ( result == null ) {
@@ -1216,26 +1242,59 @@ public final class SessionFactoryImpl
 				null
 		);
 	}
+
+	@Override
+	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
+		if ( NamedSQLQueryDefinition.class.isInstance( definition ) ) {
+			throw new IllegalArgumentException( "NamedSQLQueryDefinition instance incorrectly passed to registerNamedQueryDefinition" );
+		}
+		final NamedQueryDefinition previous = namedQueries.put( name, definition );
+		if ( previous != null ) {
+			LOG.debugf(
+					"registering named query definition [%s] overriding previously registered definition [%s]",
+					name,
+					previous
+			);
+		}
+	}
+
 	@Override
 	public NamedQueryDefinition getNamedQuery(String queryName) {
 		return namedQueries.get( queryName );
 	}
+
+	@Override
+	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
+		final NamedSQLQueryDefinition previous = namedSqlQueries.put( name, definition );
+		if ( previous != null ) {
+			LOG.debugf(
+					"registering named SQL query definition [%s] overriding previously registered definition [%s]",
+					name,
+					previous
+			);
+		}
+	}
+
 	@Override
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
 		return namedSqlQueries.get( queryName );
 	}
+
 	@Override
 	public ResultSetMappingDefinition getResultSetMapping(String resultSetName) {
 		return sqlResultSetMappings.get( resultSetName );
 	}
+
 	@Override
 	public Type getIdentifierType(String className) throws MappingException {
 		return getEntityPersister(className).getIdentifierType();
 	}
+
 	@Override
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return getEntityPersister(className).getIdentifierPropertyName();
 	}
+
 	@Override
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
 		return queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
@@ -1254,7 +1313,7 @@ public final class SessionFactoryImpl
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return collectionMetadata.get(roleName);
+		return collectionMetadata.get( roleName );
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
@@ -1276,9 +1335,9 @@ public final class SessionFactoryImpl
 
 		final Class clazz;
 		try {
-			clazz = ReflectHelper.classForName(className);
+			clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassLoadingException cnfe) {
 			return new String[] { className }; //for a dynamic-class
 		}
 
@@ -1324,10 +1383,10 @@ public final class SessionFactoryImpl
 		String result = imports.get(className);
 		if (result==null) {
 			try {
-				ReflectHelper.classForName( className );
+				serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
 				return className;
 			}
-			catch (ClassNotFoundException cnfe) {
+			catch (ClassLoadingException cnfe) {
 				return null;
 			}
 		}
@@ -1395,18 +1454,7 @@ public final class SessionFactoryImpl
 			}
 		}
 
-		if ( settings.isQueryCacheEnabled() )  {
-			queryCache.destroy();
-
-			iter = queryCaches.values().iterator();
-			while ( iter.hasNext() ) {
-				QueryCache cache = (QueryCache) iter.next();
-				cache.destroy();
-			}
-			updateTimestampsCache.destroy();
-		}
-
-		settings.getRegionFactory().stop();
+		cacheAccess.close();
 
 		queryPlanCache.cleanup();
 
@@ -1423,162 +1471,6 @@ public final class SessionFactoryImpl
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
-	}
-
-	private class CacheImpl implements Cache {
-		public boolean containsEntity(Class entityClass, Serializable identifier) {
-			return containsEntity( entityClass.getName(), identifier );
-		}
-
-		public boolean containsEntity(String entityName, Serializable identifier) {
-			EntityPersister p = getEntityPersister( entityName );
-			return p.hasCache() &&
-					p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( identifier, p ) );
-		}
-
-		public void evictEntity(Class entityClass, Serializable identifier) {
-			evictEntity( entityClass.getName(), identifier );
-		}
-
-		public void evictEntity(String entityName, Serializable identifier) {
-			EntityPersister p = getEntityPersister( entityName );
-			if ( p.hasCache() ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting second-level cache: %s",
-							MessageHelper.infoString( p, identifier, SessionFactoryImpl.this ) );
-				}
-				p.getCacheAccessStrategy().evict( buildCacheKey( identifier, p ) );
-			}
-		}
-
-		private CacheKey buildCacheKey(Serializable identifier, EntityPersister p) {
-			return new CacheKey(
-					identifier,
-					p.getIdentifierType(),
-					p.getRootEntityName(),
-					null, 						// have to assume non tenancy
-					SessionFactoryImpl.this
-			);
-		}
-
-		public void evictEntityRegion(Class entityClass) {
-			evictEntityRegion( entityClass.getName() );
-		}
-
-		public void evictEntityRegion(String entityName) {
-			EntityPersister p = getEntityPersister( entityName );
-			if ( p.hasCache() ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
-				}
-				p.getCacheAccessStrategy().evictAll();
-			}
-		}
-
-		public void evictEntityRegions() {
-			for ( String s : entityPersisters.keySet() ) {
-				evictEntityRegion( s );
-			}
-		}
-
-		public void evictNaturalIdRegion(Class entityClass) {
-			evictNaturalIdRegion( entityClass.getName() );
-		}
-
-		public void evictNaturalIdRegion(String entityName) {
-			EntityPersister p = getEntityPersister( entityName );
-			if ( p.hasNaturalIdCache() ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );
-				}
-				p.getNaturalIdCacheAccessStrategy().evictAll();
-			}
-		}
-
-		public void evictNaturalIdRegions() {
-			for ( String s : entityPersisters.keySet() ) {
-				evictNaturalIdRegion( s );
-			}
-		}
-
-		public boolean containsCollection(String role, Serializable ownerIdentifier) {
-			CollectionPersister p = getCollectionPersister( role );
-			return p.hasCache() &&
-					p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( ownerIdentifier, p ) );
-		}
-
-		public void evictCollection(String role, Serializable ownerIdentifier) {
-			CollectionPersister p = getCollectionPersister( role );
-			if ( p.hasCache() ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting second-level cache: %s",
-							MessageHelper.collectionInfoString( p, ownerIdentifier, SessionFactoryImpl.this ) );
-				}
-				CacheKey cacheKey = buildCacheKey( ownerIdentifier, p );
-				p.getCacheAccessStrategy().evict( cacheKey );
-			}
-		}
-
-		private CacheKey buildCacheKey(Serializable ownerIdentifier, CollectionPersister p) {
-			return new CacheKey(
-					ownerIdentifier,
-					p.getKeyType(),
-					p.getRole(),
-					null,						// have to assume non tenancy
-					SessionFactoryImpl.this
-			);
-		}
-
-		public void evictCollectionRegion(String role) {
-			CollectionPersister p = getCollectionPersister( role );
-			if ( p.hasCache() ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Evicting second-level cache: %s", p.getRole() );
-				}
-				p.getCacheAccessStrategy().evictAll();
-			}
-		}
-
-		public void evictCollectionRegions() {
-			for ( String s : collectionPersisters.keySet() ) {
-				evictCollectionRegion( s );
-			}
-		}
-
-		public boolean containsQuery(String regionName) {
-			return queryCaches.containsKey( regionName );
-		}
-
-		public void evictDefaultQueryRegion() {
-			if ( settings.isQueryCacheEnabled() ) {
-				queryCache.clear();
-			}
-		}
-
-		public void evictQueryRegion(String regionName) {
-			if ( regionName == null ) {
-				throw new NullPointerException(
-						"Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)"
-				);
-			}
-			if ( settings.isQueryCacheEnabled() ) {
-				QueryCache namedQueryCache = queryCaches.get( regionName );
-				// TODO : cleanup entries in queryCaches + allCacheRegions ?
-				if ( namedQueryCache != null ) {
-					namedQueryCache.clear();
-				}
-			}
-		}
-
-		public void evictQueryRegions() {
-			if ( CollectionHelper.isEmpty( queryCaches ) ) {
-				return;
-			}
-			for ( QueryCache queryCache : queryCaches.values() ) {
-				queryCache.clear();
-				// TODO : cleanup entries in queryCaches + allCacheRegions ?
-			}
-		}
 	}
 
 	public Cache getCache() {
@@ -1610,9 +1502,7 @@ public final class SessionFactoryImpl
 	}
 
 	public void evictQueries() throws HibernateException {
-		if ( settings.isQueryCacheEnabled() ) {
-			queryCache.clear();
-		}
+		cacheAccess.evictQueries();
 	}
 
 	public void evictQueries(String regionName) throws HibernateException {
@@ -1620,50 +1510,28 @@ public final class SessionFactoryImpl
 	}
 
 	public UpdateTimestampsCache getUpdateTimestampsCache() {
-		return updateTimestampsCache;
+		return cacheAccess.getUpdateTimestampsCache();
 	}
 
 	public QueryCache getQueryCache() {
-		return queryCache;
+		return cacheAccess.getQueryCache();
 	}
 
 	public QueryCache getQueryCache(String regionName) throws HibernateException {
-		if ( regionName == null ) {
-			return getQueryCache();
-		}
-
-		if ( !settings.isQueryCacheEnabled() ) {
-			return null;
-		}
-
-		QueryCache currentQueryCache = queryCaches.get( regionName );
-		if ( currentQueryCache == null ) {
-			synchronized ( allCacheRegions ) {
-				currentQueryCache = queryCaches.get( regionName );
-				if ( currentQueryCache == null ) {
-					currentQueryCache = settings.getQueryCacheFactory()
-							.getQueryCache( regionName, updateTimestampsCache, settings, properties );
-					queryCaches.put( regionName, currentQueryCache );
-					allCacheRegions.put( currentQueryCache.getRegion().getName(), currentQueryCache.getRegion() );
-				} else {
-					return currentQueryCache;
-				}
-			}
-		}
-		return currentQueryCache;
+		return cacheAccess.getQueryCache( regionName );
 	}
 
 	public Region getSecondLevelCacheRegion(String regionName) {
-		return allCacheRegions.get( regionName );
+		return cacheAccess.getSecondLevelCacheRegion( regionName );
 	}
 
 	public Region getNaturalIdCacheRegion(String regionName) {
-		return allCacheRegions.get( regionName );
+		return cacheAccess.getNaturalIdCacheRegion( regionName );
 	}
 
 	@SuppressWarnings( {"unchecked"})
 	public Map getAllSecondLevelCacheRegions() {
-		return new HashMap( allCacheRegions );
+		return cacheAccess.getAllSecondLevelCacheRegions();
 	}
 
 	public boolean isClosed() {
@@ -1737,7 +1605,7 @@ public final class SessionFactoryImpl
 		}
 		else {
 			try {
-				Class implClass = ReflectHelper.classForName( impl );
+				Class implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( impl );
 				return ( CurrentSessionContext ) implClass
 						.getConstructor( new Class[] { SessionFactoryImplementor.class } )
 						.newInstance( this );

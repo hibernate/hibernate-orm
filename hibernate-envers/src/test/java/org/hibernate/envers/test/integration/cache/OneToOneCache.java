@@ -27,7 +27,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefEdEntity;
@@ -43,9 +42,9 @@ public class OneToOneCache extends BaseEnversJPAFunctionalTestCase {
 
     private Integer ing1_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BiRefEdEntity.class);
-        cfg.addAnnotatedClass(BiRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BiRefEdEntity.class, BiRefIngEntity.class };
     }
 
     @Test

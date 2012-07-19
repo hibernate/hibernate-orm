@@ -49,7 +49,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -171,9 +171,9 @@ public class Helper {
 		return new Caching( region, accessType, cacheLazyProps );
 	}
 
-	public static Value<Caching> createNaturalIdCachingHolder(final JaxbNaturalIdCacheElement cacheElement, final String entityName, final Caching entityCache) {
-		return new Value<Caching>(
-				new Value.DeferredInitializer<Caching>() {
+	public static ValueHolder<Caching> createNaturalIdCachingHolder(final JaxbNaturalIdCacheElement cacheElement, final String entityName, final Caching entityCache) {
+		return new ValueHolder<Caching>(
+				new ValueHolder.DeferredInitializer<Caching>() {
 					@Override
 					public Caching initialize() {
 						if ( cacheElement == null ) {

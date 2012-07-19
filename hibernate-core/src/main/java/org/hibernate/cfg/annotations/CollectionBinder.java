@@ -23,14 +23,15 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.ArrayList;
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.ElementCollection;
@@ -43,8 +44,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
@@ -110,11 +109,10 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
+import org.jboss.logging.Logger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -815,27 +813,57 @@ public abstract class CollectionBinder {
 		//if ( StringHelper.isNotEmpty( where ) ) collection.setWhere( where );
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
-				collection.addManyToManyFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addManyToManyFilter(
+						simpleFilter.name(),
+						getCondition(simpleFilter),
+						simpleFilter.deduceAliasInjectionPoints(),
+						toAliasTableMap(simpleFilter.aliases()),
+						toAliasEntityMap(simpleFilter.aliases())
+				);
 			}
 			else {
-				collection.addFilter( simpleFilter.name(), getCondition( simpleFilter ) );
+				collection.addFilter(
+						simpleFilter.name(),
+						getCondition(simpleFilter),
+						simpleFilter.deduceAliasInjectionPoints(),
+						toAliasTableMap(simpleFilter.aliases()),
+						toAliasEntityMap(simpleFilter.aliases())
+				);
 			}
 		}
 		Filters filters = property.getAnnotation( Filters.class );
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
-					collection.addManyToManyFilter( filter.name(), getCondition( filter ) );
+					collection.addManyToManyFilter(
+							filter.name(),
+							getCondition(filter),
+							filter.deduceAliasInjectionPoints(),
+							toAliasTableMap(filter.aliases()),
+							toAliasEntityMap(filter.aliases())
+					);
 				}
 				else {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter(
+							filter.name(),
+							getCondition(filter),
+							filter.deduceAliasInjectionPoints(),
+							toAliasTableMap(filter.aliases()),
+							toAliasEntityMap(filter.aliases())
+					);
 				}
 			}
 		}
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter( simpleFilterJoinTable.name(), getCondition( simpleFilterJoinTable ) );
+				collection.addFilter(
+						simpleFilterJoinTable.name(),
+						simpleFilterJoinTable.condition(),
+						simpleFilterJoinTable.deduceAliasInjectionPoints(),
+						toAliasTableMap(simpleFilterJoinTable.aliases()),
+						toAliasEntityMap(simpleFilterJoinTable.aliases())
+				);
 			}
 			else {
 				throw new AnnotationException(
@@ -848,7 +876,13 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter( filter.name(), getCondition( filter ) );
+					collection.addFilter(
+							filter.name(),
+							filter.condition(),
+							filter.deduceAliasInjectionPoints(),
+							toAliasTableMap(filter.aliases()),
+							toAliasEntityMap(filter.aliases())
+					);
 				}
 				else {
 					throw new AnnotationException(
@@ -893,14 +927,14 @@ public abstract class CollectionBinder {
 //				);
 //		}
 	}
-
+	
 	private String getCondition(FilterJoinTable filter) {
 		//set filtering
 		String name = filter.name();
 		String cond = filter.condition();
 		return getCondition( cond, name );
 	}
-
+	
 	private String getCondition(Filter filter) {
 		//set filtering
 		String name = filter.name();
@@ -946,192 +980,39 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static String buildOrderByClauseFromHql(String hqlOrderBy, PersistentClass associatedClass, String role) {
-		String orderByString = null;
-		if ( hqlOrderBy != null ) {
-			List<String> properties = new ArrayList<String>();
-			List<String> ordering = new ArrayList<String>();
-			StringBuilder orderByBuffer = new StringBuilder();
-			if ( hqlOrderBy.length() == 0 ) {
+	private static String buildOrderByClauseFromHql(String orderByFragment, PersistentClass associatedClass, String role) {
+		if ( orderByFragment != null ) {
+			if ( orderByFragment.length() == 0 ) {
 				//order by id
-				Iterator it = associatedClass.getIdentifier().getColumnIterator();
-				while ( it.hasNext() ) {
-					Selectable col = (Selectable) it.next();
-					orderByBuffer.append( col.getText() ).append( " asc" ).append( ", " );
-				}
+				return "id asc";
 			}
-			else {
-				StringTokenizer st = new StringTokenizer( hqlOrderBy, " ,", false );
-				String currentOrdering = null;
-				//FIXME make this code decent
-				while ( st.hasMoreTokens() ) {
-					String token = st.nextToken();
-					if ( isNonPropertyToken( token ) ) {
-						if ( currentOrdering != null ) {
-							throw new AnnotationException(
-									"Error while parsing HQL orderBy clause: " + hqlOrderBy
-											+ " (" + role + ")"
-							);
-						}
-						currentOrdering = token;
-					}
-					else {
-						//Add ordering of the previous
-						if ( currentOrdering == null ) {
-							//default ordering
-							ordering.add( "asc" );
-						}
-						else {
-							ordering.add( currentOrdering );
-							currentOrdering = null;
-						}
-						properties.add( token );
-					}
-				}
-				ordering.remove( 0 ); //first one is the algorithm starter
-				// add last one ordering
-				if ( currentOrdering == null ) {
-					//default ordering
-					ordering.add( "asc" );
-				}
-				else {
-					ordering.add( currentOrdering );
-					currentOrdering = null;
-				}
-				int index = 0;
-
-				for (String property : properties) {
-					Property p = BinderHelper.findPropertyByName( associatedClass, property );
-					if ( p == null ) {
-						throw new AnnotationException(
-								"property from @OrderBy clause not found: "
-										+ associatedClass.getEntityName() + "." + property
-						);
-					}
-					PersistentClass pc = p.getPersistentClass();
-					String table;
-					if ( pc == null ) {
-						//we are touching a @IdClass property, the pc is not set
-						//this means pc == associatedClass
-						//TODO check whether @ManyToOne @JoinTable in @IdClass used for @OrderBy works: doh!
-						table = "";
-					}
-
-					else if (pc == associatedClass
-							|| (associatedClass instanceof SingleTableSubclass && pc
-									.getMappedClass().isAssignableFrom(
-											associatedClass.getMappedClass()))) {
-						table = "";
-					} else {
-						table = pc.getTable().getQuotedName() + ".";
-					}
-
-					Iterator propertyColumns = p.getColumnIterator();
-					while ( propertyColumns.hasNext() ) {
-						Selectable column = (Selectable) propertyColumns.next();
-						orderByBuffer.append( table )
-								.append( column.getText() )
-								.append( " " )
-								.append( ordering.get( index ) )
-								.append( ", " );
-					}
-					index++;
-				}
-			}
-			orderByString = orderByBuffer.substring( 0, orderByBuffer.length() - 2 );
-		}
-		return orderByString;
-	}
-
-	private static String buildOrderByClauseFromHql(String hqlOrderBy, Component component, String role) {
-		String orderByString = null;
-		if ( hqlOrderBy != null ) {
-			List<String> properties = new ArrayList<String>();
-			List<String> ordering = new ArrayList<String>();
-			StringBuilder orderByBuffer = new StringBuilder();
-			if ( hqlOrderBy.length() == 0 ) {
-				//TODO : Check that. Maybe order by key for maps
-			}
-			else {
-				StringTokenizer st = new StringTokenizer( hqlOrderBy, " ,", false );
-				String currentOrdering = null;
-				//FIXME make this code decent
-				while ( st.hasMoreTokens() ) {
-					String token = st.nextToken();
-					if ( isNonPropertyToken( token ) ) {
-						if ( currentOrdering != null ) {
-							throw new AnnotationException(
-									"Error while parsing HQL orderBy clause: " + hqlOrderBy
-											+ " (" + role + ")"
-							);
-						}
-						currentOrdering = token;
-					}
-					else {
-						//Add ordering of the previous
-						if ( currentOrdering == null ) {
-							//default ordering
-							ordering.add( "asc" );
-						}
-						else {
-							ordering.add( currentOrdering );
-							currentOrdering = null;
-						}
-						properties.add( token );
-					}
-				}
-				ordering.remove( 0 ); //first one is the algorithm starter
-				// add last one ordering
-				if ( currentOrdering == null ) {
-					//default ordering
-					ordering.add( "asc" );
-				}
-				else {
-					ordering.add( currentOrdering );
-					currentOrdering = null;
-				}
-				int index = 0;
-
-				for (String property : properties) {
-					Property p = BinderHelper.findPropertyByName( component, property );
-					if ( p == null ) {
-						throw new AnnotationException(
-								"property from @OrderBy clause not found: "
-										+ role + "." + property
-						);
-					}
-
-					Iterator propertyColumns = p.getColumnIterator();
-					while ( propertyColumns.hasNext() ) {
-						Selectable column = (Selectable) propertyColumns.next();
-						orderByBuffer.append( column.getText() )
-								.append( " " )
-								.append( ordering.get( index ) )
-								.append( ", " );
-					}
-					index++;
-				}
-
-				if ( orderByBuffer.length() >= 2 ) {
-					orderByString = orderByBuffer.substring( 0, orderByBuffer.length() - 2 );
-				}
+			else if ( "desc".equals( orderByFragment ) ) {
+				return "id desc";
 			}
 		}
-		return orderByString;
+		return orderByFragment;
 	}
 
-	private static boolean isNonPropertyToken(String token) {
-		if ( " ".equals( token ) ) return true;
-		if ( ",".equals( token ) ) return true;
-		if ( token.equalsIgnoreCase( "desc" ) ) return true;
-		if ( token.equalsIgnoreCase( "asc" ) ) return true;
-		return false;
+	private static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
+		if ( orderByFragment != null ) {
+			// NOTE: "$element$" is a specially recognized collection property recognized by the collection persister
+			if ( orderByFragment.length() == 0 ) {
+				//order by element
+				return "$element$ asc";
+			}
+			else if ( "desc".equals( orderByFragment ) ) {
+				return "$element$ desc";
+			}
+		}
+		return orderByFragment;
 	}
 
 	private static SimpleValue buildCollectionKey(
-			Collection collValue, Ejb3JoinColumn[] joinColumns, boolean cascadeDeleteEnabled,
-			XProperty property, Mappings mappings
-	) {
+			Collection collValue,
+			Ejb3JoinColumn[] joinColumns,
+			boolean cascadeDeleteEnabled,
+			XProperty property,
+			Mappings mappings) {
 		//binding key reference using column
 		KeyValue keyVal;
 		//give a chance to override the referenced property name
@@ -1406,7 +1287,7 @@ public abstract class CollectionBinder {
 
 				if ( StringHelper.isNotEmpty( hqlOrderBy ) ) {
 					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
-					String orderBy = buildOrderByClauseFromHql( hqlOrderBy, component, path );
+					String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 					if ( orderBy != null ) {
 						collValue.setOrderBy( orderBy );
 					}
@@ -1437,6 +1318,10 @@ public abstract class CollectionBinder {
 				elementBinder.setColumns( elementColumns );
 				elementBinder.setType( property, elementClass );
 				collValue.setElement( elementBinder.make() );
+				String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
+				if ( orderBy != null ) {
+					collValue.setOrderBy( orderBy );
+				}
 			}
 		}
 
@@ -1451,7 +1336,7 @@ public abstract class CollectionBinder {
 
 	private static void checkFilterConditions(Collection collValue) {
 		//for now it can't happen, but sometime soon...
-		if ( ( collValue.getFilterMap().size() != 0 || StringHelper.isNotEmpty( collValue.getWhere() ) ) &&
+		if ( ( collValue.getFilters().size() != 0 || StringHelper.isNotEmpty( collValue.getWhere() ) ) &&
 				collValue.getFetchMode() == FetchMode.JOIN &&
 				!( collValue.getElement() instanceof SimpleValue ) && //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
 				collValue.getElement().getFetchMode() != FetchMode.JOIN ) {

@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -40,9 +39,9 @@ public class ChangingHashcode extends BaseEnversJPAFunctionalTestCase {
 	private Long pageId;
 	private Long imageId;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(WikiPage.class);
-        cfg.addAnnotatedClass(WikiImage.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { WikiPage.class, WikiImage.class };
     }
 
     @Test

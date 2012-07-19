@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -55,13 +55,13 @@ import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private static final String PATH_SEPARATOR = ".";
 	private final EmbeddableClass embeddableClass;
-	private final Value<Class<?>> classReference;
+	private final ValueHolder<Class<?>> classReference;
 	private final Map<String, AttributeOverride> attributeOverrides;
 	private final String path;
 
 	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, String parentPath, Map<String, AttributeOverride> attributeOverrides) {
 		this.embeddableClass = embeddableClass;
-		this.classReference = new Value<Class<?>>( embeddableClass.getConfiguredClass() );
+		this.classReference = new ValueHolder<Class<?>>( embeddableClass.getConfiguredClass() );
 		this.attributeOverrides = attributeOverrides;
 		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
 	}
@@ -87,7 +87,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public Value<Class<?>> getClassReference() {
+	public ValueHolder<Class<?>> getClassReference() {
 		return classReference;
 	}
 
@@ -111,8 +111,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		return embeddableClass.getLocalBindingContext();
 	}
 
-	private final Value<List<AttributeSource>> attributeSourcesValue = new Value<List<AttributeSource>>(
-			new Value.DeferredInitializer<List<AttributeSource>>() {
+	private final ValueHolder<List<AttributeSource>> attributeSourcesValue = new ValueHolder<List<AttributeSource>>(
+			new ValueHolder.DeferredInitializer<List<AttributeSource>>() {
 				@Override
 				public List<AttributeSource> initialize() {
 					List<AttributeSource> attributeList = new ArrayList<AttributeSource>();

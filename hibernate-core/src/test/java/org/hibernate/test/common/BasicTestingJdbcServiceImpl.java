@@ -106,6 +106,16 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	private static class MetaDataSupportImpl implements ExtractedDatabaseMetaData {
+		@Override
+		public boolean supportsRefCursors() {
+			return false;
+		}
+
+		@Override
+		public boolean supportsNamedParameters() {
+			return false;
+		}
+
 		public boolean supportsScrollableResults() {
 			return false;
 		}

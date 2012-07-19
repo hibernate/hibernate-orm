@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.CharacterStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@code Character[]} handling.
  *
  * @author Steve Ebersole
  */

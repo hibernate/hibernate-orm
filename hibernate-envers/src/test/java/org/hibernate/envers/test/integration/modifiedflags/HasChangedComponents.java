@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.QueryException;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
@@ -50,8 +49,9 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
     private Integer id3;
     private Integer id4;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ComponentTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ComponentTestEntity.class };
     }
 
     @Test

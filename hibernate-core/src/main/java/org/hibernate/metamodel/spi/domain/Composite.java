@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Models the notion of a component (what JPA calls an Embeddable).
@@ -33,7 +33,7 @@ import org.hibernate.internal.util.Value;
  * @author Steve Ebersole
  */
 public class Composite extends AbstractAttributeContainer {
-	public Composite(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
+	public Composite(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
 		super( name, className, classReference, superType );
 	}
 

@@ -33,11 +33,13 @@ import java.lang.annotation.Target;
  * Add filters to a join table collection
  *
  * @author Emmanuel Bernard
+ * @author Rob Worsnop
  */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FilterJoinTable {
 	String name();
-
 	String condition() default "";
+	boolean deduceAliasInjectionPoints() default true;
+	SqlFragmentAlias[] aliases() default {};
 }

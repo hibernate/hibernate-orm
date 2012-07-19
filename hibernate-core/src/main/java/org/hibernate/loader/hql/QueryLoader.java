@@ -487,11 +487,11 @@ public class QueryLoader extends BasicLoader {
 		}
 
 		try {
-			final PreparedStatement st = prepareQueryStatement( queryParameters, false, session );
 			if ( queryParameters.isCallable() ) {
 				throw new QueryException("iterate() not supported for callable statements");
 			}
-			final ResultSet rs = getResultSet(st, queryParameters.hasAutoDiscoverScalarTypes(), false, queryParameters.getRowSelection(), session);
+			final ResultSet rs = executeQueryStatement( queryParameters, false, session );
+			final PreparedStatement st = (PreparedStatement) rs.getStatement();
 			final Iterator result = new IteratorImpl(
 					rs,
 			        st,

@@ -5,7 +5,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -14,9 +13,9 @@ public class ManyToOneNotInsertable extends BaseEnversJPAFunctionalTestCase {
     private Integer type_id1;
     private Integer type_id2;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ManyToOneNotInsertableEntity.class);
-        cfg.addAnnotatedClass(NotInsertableEntityType.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ManyToOneNotInsertableEntity.class, NotInsertableEntityType.class };
     }
 
     @Test

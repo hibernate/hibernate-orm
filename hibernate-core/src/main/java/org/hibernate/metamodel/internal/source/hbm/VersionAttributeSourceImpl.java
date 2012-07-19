@@ -26,10 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbVersionElement;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -124,8 +122,8 @@ class VersionAttributeSourceImpl
 		return versionElement.getAccess();
 	}
 
-	private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
-			new Value.DeferredInitializer<PropertyGeneration>() {
+	private ValueHolder<PropertyGeneration> propertyGenerationValue = new ValueHolder<PropertyGeneration>(
+			new ValueHolder.DeferredInitializer<PropertyGeneration>() {
 				@Override
 				public PropertyGeneration initialize() {
 					final PropertyGeneration propertyGeneration = versionElement.getGenerated() == null
@@ -138,7 +136,6 @@ class VersionAttributeSourceImpl
 				}
 			}
 	);
-
 	@Override
 	public PropertyGeneration getGeneration() {
 		return propertyGenerationValue.getValue();

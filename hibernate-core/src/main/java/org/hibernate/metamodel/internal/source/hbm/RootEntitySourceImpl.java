@@ -47,7 +47,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -74,7 +74,7 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements RootEntitySource {
 	private final TableSpecificationSource primaryTable;
 	private final Caching caching;
-	private final Value<Caching> naturalIdCachingHolder;
+	private final ValueHolder<Caching> naturalIdCachingHolder;
 
 	protected RootEntitySourceImpl(
 			MappingDocument sourceMappingDocument,

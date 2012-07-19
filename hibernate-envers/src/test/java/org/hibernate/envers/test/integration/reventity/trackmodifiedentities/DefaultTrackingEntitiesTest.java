@@ -3,12 +3,10 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -30,10 +28,9 @@ public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase
     private Integer steId = null;
     private Integer siteId = null;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class, StrIntTestEntity.class };
     }
 
 	@Override

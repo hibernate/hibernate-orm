@@ -73,6 +73,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
+import org.hibernate.StoredProcedureCall;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -1740,6 +1741,27 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return super.createSQLQuery( sql );
+	}
+
+	@Override
+	public StoredProcedureCall createStoredProcedureCall(String procedureName) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return super.createStoredProcedureCall( procedureName );
+	}
+
+	@Override
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return super.createStoredProcedureCall( procedureName, resultSetMappings );
+	}
+
+	@Override
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return super.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
 	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)

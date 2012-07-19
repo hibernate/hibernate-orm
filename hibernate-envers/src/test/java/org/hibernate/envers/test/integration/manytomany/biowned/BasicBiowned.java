@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
@@ -46,9 +45,9 @@ public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
     private Integer o2_1_id;
     private Integer o2_2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ListBiowning1Entity.class);
-        cfg.addAnnotatedClass(ListBiowning2Entity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ListBiowning1Entity.class, ListBiowning2Entity.class };
     }
 
     @Test

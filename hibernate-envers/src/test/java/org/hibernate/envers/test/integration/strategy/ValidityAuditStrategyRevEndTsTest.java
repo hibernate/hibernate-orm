@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -66,11 +65,9 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	private Integer c2_2_id;
 	private Map<Number, SequenceIdRevisionEntity> revisions;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(ParentEntity.class);
-		cfg.addAnnotatedClass(Child1Entity.class);
-		cfg.addAnnotatedClass(Child2Entity.class);
-
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ParentEntity.class, Child1Entity.class, Child2Entity.class };
 	}
 
 	@Override

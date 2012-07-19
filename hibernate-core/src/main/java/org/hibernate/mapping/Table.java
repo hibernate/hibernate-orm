@@ -23,21 +23,17 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A relational table
@@ -311,8 +307,8 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( removeIt ) {
-					uniqueKeys.remove( uniqueKeyEntry.getKey() );
-				}
+                    uniqueKeyEntries.remove();
+                }
 			}
 
 		}

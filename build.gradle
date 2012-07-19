@@ -22,6 +22,8 @@ buildscript {
     }
 }
 
+hibernateTargetVersion = '4.2.0-SNAPSHOT'
+
 idea {
     project {
         jdkName = "1.6"
@@ -113,7 +115,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.1.6-SNAPSHOT'
+    version = rootProject.hibernateTargetVersion
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"

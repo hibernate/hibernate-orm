@@ -32,6 +32,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 
@@ -45,7 +47,6 @@ public class ComponentMetamodel implements Serializable {
 	// TODO : will need reference to session factory to fully complete HHH-1907
 
 //	private final SessionFactoryImplementor sessionFactory;
-	private final String role;
 	private final boolean isKey;
 	private final StandardProperty[] properties;
 
@@ -54,12 +55,11 @@ public class ComponentMetamodel implements Serializable {
 
 	// cached for efficiency...
 	private final int propertySpan;
-	private final Map propertyIndexes = new HashMap();
+	private final Map<String,Integer> propertyIndexes = new HashMap<String,Integer>();
 
 //	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
 	public ComponentMetamodel(Component component) {
 //		this.sessionFactory = sessionFactory;
-		this.role = component.getRoleName();
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
 		properties = new StandardProperty[propertySpan];
@@ -83,6 +83,31 @@ public class ComponentMetamodel implements Serializable {
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 	}
 
+	public ComponentMetamodel(CompositeAttributeBinding component, boolean isIdentifierAttributeBinding) {
+		this.isKey = isIdentifierAttributeBinding;
+		propertySpan = component.attributeBindingSpan();
+		properties = new StandardProperty[propertySpan];
+		int i = 0;
+		for ( AttributeBinding attributeBinding : component.attributeBindings() ) {
+			properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, false );
+			propertyIndexes.put( attributeBinding.getAttribute().getName(), i );
+			i++;
+		}
+
+		entityMode = component.seekEntityBinding().getHierarchyDetails().getEntityMode();
+
+		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
+		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
+		// TODO: provide support for custom tuplizer
+		final String tuplizerClassName = null;
+		if ( tuplizerClassName == null ) {
+			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer( entityMode, component );
+		}
+		else {
+			componentTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+		}
+	}
+
 	public boolean isKey() {
 		return isKey;
 	}
@@ -103,11 +128,11 @@ public class ComponentMetamodel implements Serializable {
 	}
 
 	public int getPropertyIndex(String propertyName) {
-		Integer index = ( Integer ) propertyIndexes.get( propertyName );
+		Integer index = propertyIndexes.get( propertyName );
 		if ( index == null ) {
 			throw new HibernateException( "component does not contain such a property [" + propertyName + "]" );
 		}
-		return index.intValue();
+		return index;
 	}
 
 	public StandardProperty getProperty(String propertyName) {

@@ -35,6 +35,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
@@ -42,6 +44,7 @@ import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
+import org.hibernate.tuple.PropertyFactory;
 
 /**
  * A {@link ComponentTuplizer} specific to the pojo entity mode.
@@ -70,6 +73,44 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 
 		final String parentPropertyName = component.getParentProperty();
+		if ( parentPropertyName == null ) {
+			parentSetter = null;
+			parentGetter = null;
+		}
+		else {
+			PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( null );
+			parentSetter = pa.getSetter( componentClass, parentPropertyName );
+			parentGetter = pa.getGetter( componentClass, parentPropertyName );
+		}
+
+		if ( hasCustomAccessors || !Environment.useReflectionOptimizer() ) {
+			optimizer = null;
+		}
+		else {
+			// TODO: here is why we need to make bytecode provider global :(
+			// TODO : again, fix this after HHH-1907 is complete
+			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+					componentClass, getterNames, setterNames, propTypes
+			);
+		}
+	}
+
+	public PojoComponentTuplizer(CompositeAttributeBinding component) {
+		super( component );
+
+		this.componentClass = component.getClassReference();
+
+		String[] getterNames = new String[propertySpan];
+		String[] setterNames = new String[propertySpan];
+		Class[] propTypes = new Class[propertySpan];
+		for ( int i = 0; i < propertySpan; i++ ) {
+			getterNames[i] = getters[i].getMethodName();
+			setterNames[i] = setters[i].getMethodName();
+			propTypes[i] = getters[i].getReturnType();
+		}
+
+		final String parentPropertyName =
+				component.getParentReference() == null ? null : component.getParentReference().getName();
 		if ( parentPropertyName == null ) {
 			parentSetter = null;
 			parentGetter = null;
@@ -159,12 +200,38 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		return prop.getSetter( component.getComponentClass() );
 	}
 
+	protected Instantiator buildInstantiator(CompositeAttributeBinding component) {
+		if ( component.getAttribute().isSynthetic() && ReflectHelper.isAbstractClass( component.getClassReference() ) ) {
+			return new ProxiedInstantiator( component );
+		}
+		if ( optimizer == null ) {
+			return new PojoInstantiator( component, null );
+		}
+		else {
+			return new PojoInstantiator( component, optimizer.getInstantiationOptimizer() );
+		}
+	}
+
 	private static class ProxiedInstantiator implements Instantiator {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
 		public ProxiedInstantiator(Component component) {
 			proxiedClass = component.getComponentClass();
+			if ( proxiedClass.isInterface() ) {
+				factory = Environment.getBytecodeProvider()
+						.getProxyFactoryFactory()
+						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
+			}
+			else {
+				factory = Environment.getBytecodeProvider()
+						.getProxyFactoryFactory()
+						.buildBasicProxyFactory( proxiedClass, null );
+			}
+		}
+
+		public ProxiedInstantiator(CompositeAttributeBinding component) {
+			proxiedClass = component.getClassReference();
 			if ( proxiedClass.isInterface() ) {
 				factory = Environment.getBytecodeProvider()
 						.getProxyFactoryFactory()

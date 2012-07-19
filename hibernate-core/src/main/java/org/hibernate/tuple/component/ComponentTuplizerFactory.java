@@ -32,6 +32,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 
 /**
  * A registry allowing users to define the default {@link ComponentTuplizer} class to use per {@link EntityMode}.
@@ -40,6 +41,8 @@ import org.hibernate.mapping.Component;
  */
 public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
+	private static final Class[] COMPONENT_TUP_CTOR_SIG_NEW = new Class[] { CompositeAttributeBinding.class };
+
 
 	private Map<EntityMode,Class<? extends ComponentTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
@@ -53,9 +56,11 @@ public class ComponentTuplizerFactory implements Serializable {
 	public void registerDefaultTuplizerClass(EntityMode entityMode, Class<? extends ComponentTuplizer> tuplizerClass) {
 		assert isComponentTuplizerImplementor( tuplizerClass )
 				: "Specified tuplizer class [" + tuplizerClass.getName() + "] does not implement " + ComponentTuplizer.class.getName();
-		assert hasProperConstructor( tuplizerClass )
+		// TODO: for now we need constructors for both PersistentClass and EntityBinding
+		assert hasProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG )
 				: "Specified tuplizer class [" + tuplizerClass.getName() + "] is not properly instantiatable";
-
+		assert hasProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG_NEW )
+				: "Specified tuplizer class [" + tuplizerClass.getName() + "] is not properly instantiatable";
 		defaultImplClassByMode.put( entityMode, tuplizerClass );
 	}
 
@@ -84,6 +89,28 @@ public class ComponentTuplizerFactory implements Serializable {
 	/**
 	 * Construct an instance of the given tuplizer class.
 	 *
+	 * @param tuplizerClassName The name of the tuplizer class to instantiate
+	 * @param metadata The metadata for the component.
+	 *
+	 * @return The instantiated tuplizer
+	 *
+	 * @throws HibernateException If class name cannot be resolved to a class reference, or if the
+	 * {@link Constructor#newInstance} call fails.
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ComponentTuplizer constructTuplizer(String tuplizerClassName, CompositeAttributeBinding metadata) {
+		try {
+			Class<? extends ComponentTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
+			return constructTuplizer( tuplizerClass, metadata );
+		}
+		catch ( ClassNotFoundException e ) {
+			throw new HibernateException( "Could not locate specified tuplizer class [" + tuplizerClassName + "]" );
+		}
+	}
+
+	/**
+	 * Construct an instance of the given tuplizer class.
+	 *
 	 * @param tuplizerClass The tuplizer class to instantiate
 	 * @param metadata The metadata for the component.
 	 *
@@ -92,7 +119,28 @@ public class ComponentTuplizerFactory implements Serializable {
 	 * @throws HibernateException if the {@link java.lang.reflect.Constructor#newInstance} call fails.
 	 */
 	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, Component metadata) {
-		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass );
+		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG );
+		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
+		try {
+			return constructor.newInstance( metadata );
+		}
+		catch ( Throwable t ) {
+			throw new HibernateException( "Unable to instantiate default tuplizer [" + tuplizerClass.getName() + "]", t );
+		}
+	}
+
+	/**
+	 * Construct an instance of the given tuplizer class.
+	 *
+	 * @param tuplizerClass The tuplizer class to instantiate
+	 * @param metadata The metadata for the component.
+	 *
+	 * @return The instantiated tuplizer
+	 *
+	 * @throws HibernateException if the {@link java.lang.reflect.Constructor#newInstance} call fails.
+	 */
+	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, CompositeAttributeBinding metadata) {
+		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG_NEW );
 		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
 		try {
 			return constructor.newInstance( metadata );
@@ -122,19 +170,41 @@ public class ComponentTuplizerFactory implements Serializable {
 		return constructTuplizer( tuplizerClass, metadata );
 	}
 
+	/**
+	 * Construct am instance of the default tuplizer for the given entity-mode.
+	 *
+	 * @param entityMode The entity mode for which to build a default tuplizer.
+	 * @param metadata The metadata for the component.
+	 *
+	 * @return The instantiated tuplizer
+	 *
+	 * @throws HibernateException If no default tuplizer found for that entity-mode; may be re-thrown from
+	 * {@link #constructTuplizer} too.
+	 */
+	public ComponentTuplizer constructDefaultTuplizer(EntityMode entityMode, CompositeAttributeBinding metadata) {
+		Class<? extends ComponentTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
+		if ( tuplizerClass == null ) {
+			throw new HibernateException( "could not determine default tuplizer class to use [" + entityMode + "]" );
+		}
+
+		return constructTuplizer( tuplizerClass, metadata );
+	}
+
 	private boolean isComponentTuplizerImplementor(Class tuplizerClass) {
 		return ReflectHelper.implementsInterface( tuplizerClass, ComponentTuplizer.class );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private boolean hasProperConstructor(Class tuplizerClass) {
-		return getProperConstructor( tuplizerClass ) != null;
+	private boolean hasProperConstructor(Class tuplizerClass, Class[] clazzConstructorSignature) {
+		return getProperConstructor( tuplizerClass, clazzConstructorSignature ) != null;
 	}
 
-	private Constructor<? extends ComponentTuplizer> getProperConstructor(Class<? extends ComponentTuplizer> clazz) {
+	private Constructor<? extends ComponentTuplizer> getProperConstructor(
+			Class<? extends ComponentTuplizer> clazz,
+			Class[] clazzConstructorSignature) {
 		Constructor<? extends ComponentTuplizer> constructor = null;
 		try {
-			constructor = clazz.getDeclaredConstructor( COMPONENT_TUP_CTOR_SIG );
+			constructor = clazz.getDeclaredConstructor( clazzConstructorSignature );
 			if ( ! ReflectHelper.isPublic( constructor ) ) {
 				try {
 					// found a constructor, but it was not publicly accessible so try to request accessibility

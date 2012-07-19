@@ -117,7 +117,8 @@ class ColumnSourceImpl
 
 	@Override
 	public boolean isUnique() {
-		return columnElement.isUnique();
+		// TODO: should TruthValue be returned instead of boolean?
+		return columnElement.isUnique() != null && columnElement.isUnique().booleanValue();
 	}
 
 	@Override

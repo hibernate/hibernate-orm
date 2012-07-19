@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
-<hibernate-mapping package="org.hibernate.test.bidir.onetomany.nonindexed.inverse"
+<hibernate-mapping package="org.hibernate.test.bidir.onetomany.nonindexed"
                    xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
 
 <class name="Child">
         <id name="name"/>
         <property name="age" not-null="true"/>
-        <many-to-one name="parent" column="parent_id"/>
+        <many-to-one name="parent" column="parent_id" insert="false" update="false"/>
     </class>
 
     <class name="Parent">
 		<id name="name"/>
-		<set name="children" cascade="persist,merge" inverse="true">
+		<set name="children" cascade="persist,merge" inverse="false">
 			<key column="parent_id"/>
 			<one-to-many class="Child"/>
 		</set>

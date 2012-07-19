@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bidir.onetomany.nonindexed.inverse;
+package org.hibernate.test.bidir.onetomany.nonindexed;
 
 import org.junit.Test;
 
@@ -31,12 +31,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Gail Badner
  */
-public class BidirectionalOneToManyInverseTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "bidir/onetomany/nonindexed/inverse/ParentChild.hbm.xml" };
-	}
+public class AbstractBidirectionalOneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {

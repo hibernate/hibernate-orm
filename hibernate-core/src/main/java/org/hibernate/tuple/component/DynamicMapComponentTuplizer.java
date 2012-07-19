@@ -27,12 +27,15 @@ import java.util.Map;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.PropertyFactory;
 
 /**
  * A {@link ComponentTuplizer} specific to the dynamic-map entity mode.
@@ -66,4 +69,8 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 		return buildPropertyAccessor(prop).getSetter( null, prop.getName() );
 	}
 
+	@Override
+	protected Instantiator buildInstantiator(CompositeAttributeBinding component) {
+		return new DynamicMapInstantiator();
+	}
 }

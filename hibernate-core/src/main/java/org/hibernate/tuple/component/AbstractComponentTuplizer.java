@@ -30,9 +30,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.PropertyFactory;
 
 /**
  * Support for tuplizers relating to components.
@@ -51,6 +54,8 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	protected abstract Getter buildGetter(Component component, Property prop);
 	protected abstract Setter buildSetter(Component component, Property prop);
 
+	protected abstract Instantiator buildInstantiator(CompositeAttributeBinding component);
+
 	protected AbstractComponentTuplizer(Component component) {
 		propertySpan = component.getPropertySpan();
 		getters = new Getter[propertySpan];
@@ -64,6 +69,25 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 			getters[i] = buildGetter( component, prop );
 			setters[i] = buildSetter( component, prop );
 			if ( !prop.isBasicPropertyAccessor() ) {
+				foundCustomAccessor = true;
+			}
+			i++;
+		}
+		hasCustomAccessors = foundCustomAccessor;
+		instantiator = buildInstantiator( component );
+	}
+
+	protected AbstractComponentTuplizer(CompositeAttributeBinding component) {
+		propertySpan = component.attributeBindingSpan();
+		getters = new Getter[propertySpan];
+		setters = new Setter[propertySpan];
+
+		boolean foundCustomAccessor=false;
+		int i = 0;
+		for ( AttributeBinding attributeBinding : component.attributeBindings() ) {
+			getters[i] = PropertyFactory.getGetter( attributeBinding );
+			setters[i] = PropertyFactory.getSetter( attributeBinding );
+			if ( !attributeBinding.isBasicPropertyAccessor() ) {
 				foundCustomAccessor = true;
 			}
 			i++;

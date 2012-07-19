@@ -50,6 +50,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.internal.source.hbm.ListAttributeSource;
 import org.hibernate.metamodel.internal.source.hbm.MapAttributeSource;
@@ -148,6 +149,7 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
@@ -210,6 +212,12 @@ public class Binder {
 		}
 	}
 
+	private SingularAttributeBinding bindIdentifierAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final SingularAttributeSource attributeSource) {
+		return bindSingularAttribute( attributeBindingContainer, attributeSource, true );
+	}
+
 	private AttributeBinding bindAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource) {
@@ -220,15 +228,20 @@ public class Binder {
 			return attributeBinding;
 		}
 		return attributeSource.isSingular() ?
-				bindSingularAttribute(attributeBindingContainer,SingularAttributeSource.class.cast( attributeSource ))
-				: bindPluralAttribute( attributeBindingContainer,PluralAttributeSource.class.cast( attributeSource ) );
+				bindSingularAttribute(
+						attributeBindingContainer,
+						SingularAttributeSource.class.cast( attributeSource ),
+						false
+				) :
+				bindPluralAttribute( attributeBindingContainer,PluralAttributeSource.class.cast( attributeSource ) );
 	}
 
 	// Singular attributes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private SingularAttributeBinding bindSingularAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final SingularAttributeSource attributeSource ) {
+			final SingularAttributeSource attributeSource,
+			boolean isIdentifierAttribute) {
 		final SingularAttributeNature nature = attributeSource.getNature();
 		final SingularAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
@@ -245,7 +258,8 @@ public class Binder {
 				return bindComponentAttribute(
 						attributeBindingContainer,
 						ComponentAttributeSource.class.cast( attributeSource ),
-						attribute
+						attribute,
+						isIdentifierAttribute
 				);
 			default:
 				throw new NotYetImplementedException( nature.toString() );
@@ -290,27 +304,46 @@ public class Binder {
 	private CompositeAttributeBinding bindComponentAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final ComponentAttributeSource attributeSource,
-			SingularAttribute attribute ) {
+			SingularAttribute attribute,
+			boolean isAttributeIdentifier) {
 		final Composite composite;
+		ValueHolder<Class<?>> defaultJavaClassReference = null;
 		if ( attribute == null ) {
-			composite = new Composite(
-							attributeSource.getPath(),
-							attributeSource.getClassName(),
-							attributeSource.getClassReference(),
-							null );
+			if ( attributeSource.getClassName() != null ) {
+				composite = new Composite(
+						attributeSource.getPath(),
+						attributeSource.getClassName(),
+						attributeSource.getClassReference() != null ?
+								attributeSource.getClassReference() :
+								bindingContext().makeClassReference( attributeSource.getClassName() ),
+						null
+				);
+				// no need for a default because there's an explicit class name provided
+			}
+			else {
+				defaultJavaClassReference = createSingularAttributeJavaType(
+						attributeBindingContainer.getClassReference(), attributeSource.getName()
+				);
+				composite = new Composite(
+						attributeSource.getPath(),
+						defaultJavaClassReference.getValue().getName(),
+						defaultJavaClassReference,
+						null
+				);
+			}
 			attribute = attributeBindingContainer.getAttributeContainer().createCompositeAttribute(
-							attributeSource.getName(),
-							composite );
-		} else {
-			composite = ( Composite ) attribute.getSingularAttributeType();
+					attributeSource.getName(),
+					composite
+			);
+		}
+		else {
+			composite = (Composite) attribute.getSingularAttributeType();
 		}
 
-		final SingularAttribute referencingAttribute;
-		if ( StringHelper.isEmpty( attributeSource.getParentReferenceAttributeName() ) ) {
-			referencingAttribute = null;
-		} else {
-			referencingAttribute = composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
-		}
+		final SingularAttribute referencingAttribute =
+				StringHelper.isEmpty( attributeSource.getParentReferenceAttributeName() ) ?
+						null :
+						composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = attributeSource.getNaturalIdMutability();
 		final CompositeAttributeBinding attributeBinding =
 				attributeBindingContainer.makeComponentAttributeBinding(
@@ -321,7 +354,28 @@ public class Binder {
 						attributeSource.isLazy(),
 						naturalIdMutability,
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
-		bindAttributes( attributeBinding, attributeSource );
+		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
+		bindHibernateTypeDescriptor(
+				attributeBinding.getHibernateTypeDescriptor(),
+				composite.getClassName(),
+				null,
+				defaultJavaClassReference == null ? null : defaultJavaClassReference.getValue().getName()
+		);
+		if (  referencingAttribute == null ) {
+			bindAttributes( attributeBinding, attributeSource );
+		}
+		else {
+			for ( final AttributeSource subAttributeSource : attributeSource.attributeSources() ) {
+				// TODO: don't create a "parent" attribute binding???
+				if ( ! subAttributeSource.getName().equals( referencingAttribute.getName() ) ) {
+					bindAttribute( attributeBinding, subAttributeSource );
+				}
+			}
+		}
+		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
+				new ComponentMetamodel( attributeBinding, isAttributeIdentifier )
+		);
+		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		return attributeBinding;
 	}
 
@@ -1040,6 +1094,8 @@ public class Binder {
 		}
 	}
 
+	// TODO: simplify how HibernateTypeDescriptor is bound
+
 	private void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final ExplicitHibernateTypeSource explicitTypeSource,
@@ -1047,7 +1103,9 @@ public class Binder {
 		// if there is an explicit type name specified, then there's no reason to
 		// initialize the default Java type name; simply pass a null default instead.
 		bindHibernateTypeDescriptor(
-				hibernateTypeDescriptor, explicitTypeSource, explicitTypeSource.getName() == null
+				hibernateTypeDescriptor,
+				explicitTypeSource,
+				explicitTypeSource == null || explicitTypeSource.getName() == null
 				? defaultJavaType.getValue().getName()
 				: null
 		);
@@ -1131,8 +1189,9 @@ public class Binder {
 
 	private void bindSimpleIdentifier( final EntityBinding rootEntityBinding, final SimpleIdentifierSource identifierSource ) {
 		// locate the attribute binding
-		final BasicAttributeBinding idAttributeBinding =
-				( BasicAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+		final BasicAttributeBinding idAttributeBinding = ( BasicAttributeBinding ) bindIdentifierAttribute(
+				rootEntityBinding, identifierSource.getIdentifierAttributeSource()
+		);
 
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
@@ -1155,8 +1214,9 @@ public class Binder {
 			EntityBinding rootEntityBinding,
 			AggregatedCompositeIdentifierSource identifierSource ) {
 		// locate the attribute binding
-		final CompositeAttributeBinding idAttributeBinding =
-				( CompositeAttributeBinding ) bindAttribute( rootEntityBinding, identifierSource.getIdentifierAttributeSource() );
+		final CompositeAttributeBinding idAttributeBinding = ( CompositeAttributeBinding ) bindIdentifierAttribute(
+				rootEntityBinding, identifierSource.getIdentifierAttributeSource()
+		);
 
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
@@ -1181,7 +1241,7 @@ public class Binder {
 		// locate the attribute bindings for the real attributes
 		List< SingularAttributeBinding > idAttributeBindings = new ArrayList< SingularAttributeBinding >();
 		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
-			idAttributeBindings.add( ( SingularAttributeBinding ) bindAttribute( rootEntityBinding, attributeSource ) );
+			idAttributeBindings.add( bindIdentifierAttribute( rootEntityBinding, attributeSource ) );
 		}
 
 		// Create the synthetic attribute
@@ -1571,7 +1631,10 @@ public class Binder {
 			if(isNaturalId){
 				addUniqueConstraintForNaturalIdColumn( defaultTable, column );
 			}
-			valueBindings.add( new RelationalValueBinding( column, true, !isImmutableNaturalId ) );
+			valueBindings.add( new RelationalValueBinding(
+					column,
+					valueSourceContainer.areValuesIncludedInInsertByDefault(),
+					valueSourceContainer.areValuesIncludedInUpdateByDefault() && !isImmutableNaturalId ) );
 		} else {
 			final String name = attribute.getName();
 			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
@@ -2074,16 +2137,26 @@ public class Binder {
 
 	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
 			final SingularAttribute attribute ) {
+		return createSingularAttributeJavaType(
+				attribute.getAttributeContainer().getClassReference(),
+				attribute.getName()
+		);
+	}
+
+	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
+			final Class< ? > attributeContainerClassReference,
+			final String attributeName ) {
 		org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >> deferredInitializer =
 				new org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >>() {
 					public Class< ? > initialize() {
 						return ReflectHelper.reflectedPropertyClass(
-								attribute.getAttributeContainer().getClassReference(),
-								attribute.getName() );
+								attributeContainerClassReference,
+								attributeName );
 					}
 				};
 		return new org.hibernate.internal.util.ValueHolder< Class< ? >>( deferredInitializer );
 	}
+
 
 	private static String interpretIdentifierUnsavedValue( IdentifierSource identifierSource, IdGenerator generator ) {
 		if ( identifierSource == null ) {

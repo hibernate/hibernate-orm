@@ -43,6 +43,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.PropertyFactory;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.
@@ -128,21 +129,12 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		return pf;
 	}
 
-	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
-		if ( mappedProperty.isBackRef() ) {
-			return PropertyAccessorFactory.getPropertyAccessor( null, mappedProperty.getPropertyAccessorName() );
-		}
-		else {
-			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-		}
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getAttribute().getName() );
+		return PropertyFactory.getGetter( mappedProperty );
 	}
 
 	/**
@@ -150,7 +142,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	 */
 	@Override
 	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		return buildPropertyAccessor( mappedProperty ).getSetter( null, mappedProperty.getAttribute().getName() );
+		return PropertyFactory.getSetter( mappedProperty );
 	}
 
 	/**

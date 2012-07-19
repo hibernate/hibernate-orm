@@ -1,5 +1,5 @@
 //$Id: Parent.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.bidir.onetomany.nonindexed.inverse;
+package org.hibernate.test.bidir.onetomany.nonindexed;
 import java.util.HashSet;
 import java.util.Set;
 

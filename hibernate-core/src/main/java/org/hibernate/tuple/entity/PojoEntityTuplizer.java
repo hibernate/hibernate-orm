@@ -36,7 +36,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
@@ -52,13 +51,12 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
+import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -295,11 +293,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 
 		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
-			Method method = getGetter( property ).getMethod();
+			Method method = PropertyFactory.getGetter( property ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
 				LOG.gettersOfLazyClassesCannotBeFinal(entityBinding.getEntity().getName(), property.getAttribute().getName());
 			}
-			method = getSetter( property ).getMethod();
+			method = PropertyFactory.getSetter( property ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
 				LOG.settersOfLazyClassesCannotBeFinal(entityBinding.getEntity().getName(), property.getAttribute().getName());
 			}
@@ -448,7 +446,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	 */
 	@Override
 	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return getGetter( mappedProperty );
+		return PropertyFactory.getGetter( mappedProperty );
 	}
 
 	/**
@@ -456,26 +454,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	 */
 	@Override
 	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		return getSetter( mappedProperty );
-	}
-
-	private Getter getGetter(AttributeBinding mappedProperty)  throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessor( mappedProperty ).getGetter(
-				mappedProperty.getContainer().getClassReference(),
-				mappedProperty.getAttribute().getName()
-		);
-	}
-
-	private Setter getSetter(AttributeBinding mappedProperty) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessor( mappedProperty ).getSetter(
-				mappedProperty.getContainer().getClassReference(),
-				mappedProperty.getAttribute().getName()
-		);
-	}
-
-	private PropertyAccessor getPropertyAccessor(AttributeBinding mappedProperty) throws MappingException {
-		// TODO: Fix this then backrefs are working in new metamodel
-		return PropertyAccessorFactory.getPropertyAccessor( mappedProperty, getEntityMode() );
+		return PropertyFactory.getSetter( mappedProperty );
 	}
 
 	/**

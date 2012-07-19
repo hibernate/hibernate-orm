@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -116,7 +117,7 @@ public class CompositeAttributeBinding
 		this.path = container.getPathBase() + '.' + attribute.getName();
 
 		if ( subAttributeBindings == null ) {
-			attributeBindingMap = new HashMap<String, AttributeBinding>();
+			attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
 		}
 		else {
 			HashMap<String, AttributeBinding> map = new HashMap<String, AttributeBinding>();
@@ -175,8 +176,15 @@ public class CompositeAttributeBinding
 
 	@Override
 	public boolean isNullable() {
-		// todo : not sure this is even relevant for components
-		return false;
+		// return false if there are any singular attributes are non-nullable
+		for ( AttributeBinding attributeBinding : attributeBindings() ) {
+			// only check singular attributes
+			if ( attributeBinding.getAttribute().isSingular() &&
+					! ( (SingularAttributeBinding) attributeBinding ).isNullable() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -203,6 +211,10 @@ public class CompositeAttributeBinding
 			}
 		}
 		return null;
+	}
+
+	public int attributeBindingSpan() {
+		return attributeBindingMap.size();
 	}
 
 	@Override

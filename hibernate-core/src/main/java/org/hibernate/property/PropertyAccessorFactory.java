@@ -96,22 +96,30 @@ public final class PropertyAccessorFactory {
      * @throws MappingException
      */
 	public static PropertyAccessor getPropertyAccessor(AttributeBinding property, EntityMode mode) throws MappingException {
-		//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-		if ( property.isBackRef() ) {
-			BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) property;
-			return new BackrefPropertyAccessor(
-					backRefAttributeBinding.getCollectionRole(), backRefAttributeBinding.getEntityName()
-			);
+		if ( null == mode || EntityMode.POJO.equals( mode ) ) {
+			if ( property.isBackRef() ) {
+				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
+				BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) property;
+				return new BackrefPropertyAccessor(
+						backRefAttributeBinding.getCollectionRole(), backRefAttributeBinding.getEntityName()
+				);
+			}
+			else {
+				return getPojoPropertyAccessor( property.getPropertyAccessorName() );
+			}
 		}
-	    else if ( null == mode || EntityMode.POJO.equals( mode ) ) {
-		    return getPojoPropertyAccessor( property.getPropertyAccessorName() );
-	    }
-	    else if ( EntityMode.MAP.equals( mode ) ) {
-		    return getDynamicMapPropertyAccessor();
-	    }
-	    else {
-		    throw new MappingException( "Unknown entity mode [" + mode + "]" );
-	    }
+		else if (EntityMode.MAP.equals( mode ) ) {
+			if ( property.isBackRef() ) {
+				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
+				return PropertyAccessorFactory.getPropertyAccessor( null, property.getPropertyAccessorName() );
+			}
+			else {
+				return getDynamicMapPropertyAccessor();
+			}
+		}
+		else {
+			throw new MappingException( "Unknown entity mode [" + mode + "]" );
+		}
 	}
 
 	/**

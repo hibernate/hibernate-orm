@@ -301,6 +301,15 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		private String test;
 		@Parent
 		private MainEntity parent;
+
+		// require getter/setter for parent because of HHH-1614
+		public MainEntity getParent() {
+			return parent;
+		}
+
+		public void setParent(MainEntity parent) {
+			this.parent = parent;
+		}
 	}
 
 	@Entity
@@ -331,13 +340,21 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 	public interface Car {
 		int getHorsePower();
+		void setHorsePower(int horsePower);
 	}
 
 	@Embeddable
 	public class CarImpl implements Car {
+		private int horsePower;
+
 		@Override
 		public int getHorsePower() {
-			return 0;
+			return horsePower;
+		}
+
+		@Override
+		public void setHorsePower(int horsePower) {
+			this.horsePower = horsePower;
 		}
 	}
 

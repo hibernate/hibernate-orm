@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.IdentifierValue;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
+import org.hibernate.property.Setter;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -122,7 +124,7 @@ public class PropertyFactory {
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
-				getGetter( property ),
+				getGetterOrNull( property ),
 				type,
 				getConstructor( mappedEntity )
 			);
@@ -201,7 +203,7 @@ public class PropertyFactory {
 		final String mappedUnsavedValue = entityBinding.getHierarchyDetails().getEntityVersion().getUnsavedValue();
 		final VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
-				getGetter( property ),
+				getGetterOrNull( property ),
 				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				getConstructor( (EntityBinding) property.getContainer() )
 		);
@@ -307,13 +309,13 @@ public class PropertyFactory {
 					null,
 					type,
 					lazyAvailable && singularAttributeBinding.isLazy(),
-					true, // insertable
-					true, // updatable
+					areAnyValuesIncludedInInsert( singularAttributeBinding ), // insertable
+					areAnyValuesIncludedInUpdate( singularAttributeBinding ), // updatable
 					propertyGeneration == PropertyGeneration.INSERT
 							|| propertyGeneration == PropertyGeneration.ALWAYS,
 					propertyGeneration == PropertyGeneration.ALWAYS,
 					singularAttributeBinding.isNullable(),
-					alwaysDirtyCheck || areAllValuesIncludedInUpdate( singularAttributeBinding ),
+					alwaysDirtyCheck || areAnyValuesIncludedInUpdate( singularAttributeBinding ),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode
@@ -349,16 +351,22 @@ public class PropertyFactory {
 		}
 	}
 
-	private static boolean areAllValuesIncludedInUpdate(SingularAttributeBinding attributeBinding) {
-		if ( attributeBinding.hasDerivedValue() ) {
-			return false;
-		}
+	private static boolean areAnyValuesIncludedInInsert(SingularAttributeBinding attributeBinding) {
 		for ( RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
-			if ( ! valueBinding.isIncludeInUpdate() ) {
-				return false;
+			if ( valueBinding.isIncludeInInsert() ) {
+				return true;
 			}
 		}
-		return true;
+		return false;
+	}
+
+	private static boolean areAnyValuesIncludedInUpdate(SingularAttributeBinding attributeBinding) {
+		for ( RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
+			if ( valueBinding.isIncludeInUpdate() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static Constructor getConstructor(PersistentClass persistentClass) {
@@ -396,17 +404,36 @@ public class PropertyFactory {
 		return pa.getGetter( mappingProperty.getPersistentClass().getMappedClass(), mappingProperty.getName() );
 	}
 
-	private static Getter getGetter(AttributeBinding mappingProperty) {
-		if ( mappingProperty == null || mappingProperty.getContainer().getClassReference() == null ) {
-			return null;
-		}
-
-		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
-		return pa.getGetter(
+	public static Getter getGetter(AttributeBinding mappingProperty) {
+		return getPropertyAccessor( mappingProperty ).getGetter(
 				mappingProperty.getContainer().getClassReference(),
 				mappingProperty.getAttribute().getName()
 		);
 	}
 
+	private static Getter getGetterOrNull(AttributeBinding mappingProperty) {
+		try {
+			return getGetter( mappingProperty );
+		}
+		catch ( PropertyNotFoundException ex ) {
+			// ignore exception
+		}
+		return null;
+	}
+
+	public static Setter getSetter(AttributeBinding mappingProperty) {
+		return getPropertyAccessor( mappingProperty ).getSetter(
+				mappingProperty.getContainer().getClassReference(),
+				mappingProperty.getAttribute().getName()
+		);
+	}
+
+	private static PropertyAccessor getPropertyAccessor(AttributeBinding mappingProperty) {
+		// TODO: fix this to work w/ component entity mode also
+		return PropertyAccessorFactory.getPropertyAccessor(
+				mappingProperty,
+				mappingProperty.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode()
+		);
+	}
 
 }

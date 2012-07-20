@@ -28,7 +28,7 @@
 			<generator class="assigned"/>
 		</id>
 		
-        <discriminator column="TYPE" type="character"/>
+        <discriminator column="`TYPE`" type="character"/>
 
 		<property name="name"
 			not-null="true"

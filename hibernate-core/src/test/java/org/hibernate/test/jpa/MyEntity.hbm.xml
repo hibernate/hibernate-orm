@@ -8,7 +8,7 @@
         <id name="id" column="ID" type="long">
             <generator class="increment"/>
         </id>
-        <discriminator column="TYPE" />
+        <discriminator column="`TYPE`" />
         <property name="name" type="string"/>
         <many-to-one name="other" class="MyEntity" />
         <subclass name="MySubclassEntity" discriminator-value="S">

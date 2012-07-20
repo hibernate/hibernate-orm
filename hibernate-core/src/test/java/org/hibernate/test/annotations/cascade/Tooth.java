@@ -14,6 +14,7 @@ public class Tooth {
 	@Id
 	@GeneratedValue
 	public Integer id;
+    @Column(name = "`type`")
 	public String type;
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	public Tooth leftNeighbour;

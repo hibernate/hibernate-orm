@@ -63,6 +63,7 @@ public class BasicFormatterImpl implements Formatter {
 		END_CLAUSES.add( "join" );
 		END_CLAUSES.add( "into" );
 		END_CLAUSES.add( "union" );
+		END_CLAUSES.add( "minus" );
 
 		LOGICAL.add( "and" );
 		LOGICAL.add( "or" );
@@ -99,6 +100,7 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterOn = false;
 		boolean afterBetween = false;
 		boolean afterInsert = false;
+		boolean hyphenComment = false;
 		int inFunction = 0;
 		int parensSinceSelect = 0;
 		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
@@ -108,9 +110,10 @@ public class BasicFormatterImpl implements Formatter {
 
 		StringBuilder result = new StringBuilder();
 		StringTokenizer tokens;
-		String lastToken;
 		String token;
 		String lcToken;
+		String lastLcToken;
+		String lastLcTokenWord;
 
 		public FormatProcess(String sql) {
 			tokens = new StringTokenizer(
@@ -128,7 +131,7 @@ public class BasicFormatterImpl implements Formatter {
 				token = tokens.nextToken();
 				lcToken = token.toLowerCase();
 
-				if ( "'".equals( token ) ) {
+				if ( "'".equals( token ) && tokens.hasMoreTokens() ) {
 					String t;
 					do {
 						t = tokens.nextToken();
@@ -136,13 +139,26 @@ public class BasicFormatterImpl implements Formatter {
 					}
 					while ( !"'".equals( t ) && tokens.hasMoreTokens() ); // cannot handle single quotes
 				}
-				else if ( "\"".equals( token ) ) {
+				else if ( "\"".equals( token ) && tokens.hasMoreTokens() ) {
 					String t;
 					do {
 						t = tokens.nextToken();
 						token += t;
 					}
-					while ( !"\"".equals( t ) );
+					while ( !"\"".equals( t ) && tokens.hasMoreTokens() );
+				}
+				else if ( "-".equals( token ) && "-".equals( lastLcToken ) && tokens.hasMoreTokens() ) {
+					hyphenComment = true;
+					while ( true )
+					{
+						String t = tokens.nextToken();
+						if ( "\n".equals( t ) )
+							break;
+						token += t;
+						if ( ! tokens.hasMoreTokens() )
+							break;
+					}
+					lcToken = token.toLowerCase();
 				}
 
 				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
@@ -196,12 +212,19 @@ public class BasicFormatterImpl implements Formatter {
 					white();
 				}
 
+				else if ( hyphenComment ) {
+					out();
+					newline();
+					hyphenComment = false;
+				}
+
 				else {
 					misc();
 				}
 
+				lastLcToken = lcToken;
 				if ( !isWhitespace( token ) ) {
-					lastToken = lcToken;
+					lastLcTokenWord = lcToken;
 				}
 
 			}
@@ -298,7 +321,8 @@ public class BasicFormatterImpl implements Formatter {
 				newline();
 			}
 			out();
-			if ( !"union".equals( lcToken ) ) {
+			if ( ! ( "union".equals( lcToken )
+					|| "minus".equals( lcToken ) ) ) {
 				indent++;
 			}
 			newline();
@@ -354,7 +378,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void openParen() {
-			if ( isFunctionName( lastToken ) || inFunction > 0 ) {
+			if ( isFunctionName( lastLcTokenWord ) || inFunction > 0 ) {
 				inFunction++;
 			}
 			beginLine = false;

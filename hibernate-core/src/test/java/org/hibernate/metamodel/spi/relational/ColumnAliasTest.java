@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -49,17 +51,31 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  */
 public class ColumnAliasTest extends BaseUnitTestCase {
 
-	private final Schema schema = new Schema( null, null );
-	private final Table table0 = new Table(
-			schema,
-			Identifier.toIdentifier( "table0" ),
-			Identifier.toIdentifier( "table0" )
-	);
-	private final Table table1 = new Table(
-			schema,
-			Identifier.toIdentifier( "table1" ),
-			Identifier.toIdentifier( "table1" )
-	);
+	private Schema schema;
+	private Table table0;
+	private Table table1;
+
+	@Before
+	public void setUp() {
+		schema = new Schema( null, null );
+		table0 = new Table(
+				schema,
+				Identifier.toIdentifier( "table0" ),
+				Identifier.toIdentifier( "table0" )
+		);
+		table1 = new Table(
+				schema,
+				Identifier.toIdentifier( "table1" ),
+				Identifier.toIdentifier( "table1" )
+		);
+	}
+
+	@After
+	public void tearDown() {
+		schema = null;
+		table0 = null;
+		table1 = null;
+	}
 
 	@Test
 	public void testNoCharactersInNameNoTruncation() {

@@ -476,7 +476,7 @@ public class HibernateMappingProcessor {
 		final String region = queryElement.getCacheRegion();
 		final Integer timeout = queryElement.getTimeout();
 		final Integer fetchSize = queryElement.getFetchSize();
-		final boolean readonly = queryElement.isReadOnly() == null ? false : queryElement.isReadOnly();
+		final boolean readonly = queryElement.isReadOnly();
 		final CacheMode cacheMode = queryElement.getCacheMode() == null ? null : CacheMode.valueOf(
 				queryElement.getCacheMode()
 						.value()
@@ -513,7 +513,7 @@ public class HibernateMappingProcessor {
 		final String region = queryElement.getCacheRegion();
 		final Integer timeout = queryElement.getTimeout();
 		final Integer fetchSize = queryElement.getFetchSize();
-		final boolean readonly = queryElement.isReadOnly() == null ? false : queryElement.isReadOnly();
+		final boolean readonly = queryElement.isReadOnly();
 		final CacheMode cacheMode = queryElement.getCacheMode()==null ? null : CacheMode.valueOf( queryElement.getCacheMode().value().toUpperCase() );
 		final FlushMode flushMode = queryElement.getFlushMode() ==null ? null : FlushMode.valueOf( queryElement.getFlushMode().value().toUpperCase() );
 		final String comment = queryElement.getComment();

@@ -1363,7 +1363,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:attribute name="fetch-size" type="xs:int"/>
         <xs:attribute name="flush-mode" type="flush-mode-attribute"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
-        <xs:attribute name="read-only" type="xs:boolean"/>
+        <xs:attribute name="read-only" default="false" type="xs:boolean"/>
         <xs:attribute name="timeout" type="xs:int"/>
     </xs:complexType>
 
@@ -1521,7 +1521,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:attribute name="fetch-size" type="xs:int"/>
         <xs:attribute name="flush-mode" type="flush-mode-attribute"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
-        <xs:attribute name="read-only" type="xs:boolean"/>
+        <xs:attribute name="read-only" default="false" type="xs:boolean"/>
         <xs:attribute name="resultset-ref" type="xs:string"/>
         <xs:attribute name="timeout" type="xs:int"/>
     </xs:complexType>

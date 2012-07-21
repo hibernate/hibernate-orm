@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -25,13 +24,15 @@ public class TotalAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
     private long babyCompleteId = 1L;
     private Integer siteCompleteId = null;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(MappedGrandparentEntity.class);
-        cfg.addAnnotatedClass(MappedParentEntity.class);
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
-        cfg.addAnnotatedClass(ChildCompleteEntity.class);
-        cfg.addAnnotatedClass(BabyCompleteEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				MappedGrandparentEntity.class,
+				MappedParentEntity.class,
+				StrIntTestEntity.class,
+				ChildCompleteEntity.class,
+				BabyCompleteEntity.class
+		};
     }
 
     @Test

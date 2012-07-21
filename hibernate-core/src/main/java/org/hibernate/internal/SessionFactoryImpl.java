@@ -23,6 +23,8 @@
  */
 package org.hibernate.internal;
 
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -38,9 +40,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
 
 import org.jboss.logging.Logger;
 
@@ -59,8 +58,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.engine.spi.CacheImplementor;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
@@ -98,12 +95,14 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -112,7 +111,6 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -1160,8 +1158,33 @@ public final class SessionFactoryImpl
 		);
 	}
 
+	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
+		if ( NamedSQLQueryDefinition.class.isInstance( definition ) ) {
+			throw new IllegalArgumentException( "NamedSQLQueryDefinition instance incorrectly passed to registerNamedQueryDefinition" );
+		}
+		final NamedQueryDefinition previous = namedQueries.put( name, definition );
+		if ( previous != null ) {
+			LOG.debugf(
+					"registering named query definition [%s] overriding previously registered definition [%s]",
+					name,
+					previous
+			);
+		}
+	}
+
 	public NamedQueryDefinition getNamedQuery(String queryName) {
 		return namedQueries.get( queryName );
+	}
+
+	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
+		final NamedSQLQueryDefinition previous = namedSqlQueries.put( name, definition );
+		if ( previous != null ) {
+			LOG.debugf(
+					"registering named SQL query definition [%s] overriding previously registered definition [%s]",
+					name,
+					previous
+			);
+		}
 	}
 
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {

@@ -33,7 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@link java.sql.Date} handling.
  *
  * @author Steve Ebersole
  */

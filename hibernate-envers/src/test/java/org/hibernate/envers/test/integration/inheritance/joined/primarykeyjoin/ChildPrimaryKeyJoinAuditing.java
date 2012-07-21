@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
@@ -42,9 +41,9 @@ import org.hibernate.mapping.Column;
 public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ChildPrimaryKeyJoinEntity.class);
-        cfg.addAnnotatedClass(ParentEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ChildPrimaryKeyJoinEntity.class, ParentEntity.class };
     }
 
     @Test

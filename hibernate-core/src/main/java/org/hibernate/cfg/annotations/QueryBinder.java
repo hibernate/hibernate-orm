@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 import java.util.HashMap;
+import javax.persistence.LockModeType;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -38,16 +39,21 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.LockModeConverter;
 
 /**
  * Query binder
@@ -65,29 +71,41 @@ public abstract class QueryBinder {
 		//EJBQL Query
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
-		NamedQueryDefinition query = new NamedQueryDefinition(
-				queryAnn.name(),
-				queryName,
-				getBoolean( queryName, "org.hibernate.cacheable", hints ),
-				getString( queryName, "org.hibernate.cacheRegion", hints ),
-				getTimeout( queryName, hints ),
-				getInteger( queryName, "javax.persistence.lock.timeout", hints ),
-				getInteger( queryName, "org.hibernate.fetchSize", hints ),
-				getFlushMode( queryName, hints ),
-				getCacheMode( queryName, hints ),
-				getBoolean( queryName, "org.hibernate.readOnly", hints ),
-				getString( queryName, "org.hibernate.comment", hints ),
-				null
-		);
+		NamedQueryDefinition queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
+				.setLockOptions( determineLockOptions( queryAnn, hints ) )
+				.setQuery( queryName )
+				.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
+				.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
+				.setTimeout( getTimeout( queryName, hints ) )
+				.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
+				.setFlushMode( getFlushMode( queryName, hints ) )
+				.setCacheMode( getCacheMode( queryName, hints ) )
+				.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
+				.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+				.setParameterTypes( null )
+				.createNamedQueryDefinition();
+
 		if ( isDefault ) {
-			mappings.addDefaultQuery( query.getName(), query );
+			mappings.addDefaultQuery( queryDefinition.getName(), queryDefinition );
 		}
 		else {
-			mappings.addQuery( query.getName(), query );
+			mappings.addQuery( queryDefinition.getName(), queryDefinition );
 		}
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+			LOG.debugf( "Binding named query: %s => %s", queryDefinition.getName(), queryDefinition.getQueryString() );
 		}
+	}
+
+	private static LockOptions determineLockOptions(NamedQuery namedQueryAnnotation, QueryHint[] hints) {
+		LockModeType lockModeType = namedQueryAnnotation.lockMode();
+		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), "javax.persistence.lock.timeout", hints );
+
+		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( lockModeType ) );
+		if ( lockTimeoutHint != null ) {
+			lockOptions.setTimeOut( lockTimeoutHint );
+		}
+
+		return lockOptions;
 	}
 
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
@@ -102,44 +120,42 @@ public abstract class QueryBinder {
 		String queryName = queryAnn.query();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			query = new NamedSQLQueryDefinition(
-					queryAnn.name(),
-					queryName,
-					resultSetMapping,
-					null,
-					getBoolean( queryName, "org.hibernate.cacheable", hints ),
-					getString( queryName, "org.hibernate.cacheRegion", hints ),
-					getTimeout( queryName, hints ),
-					getInteger( queryName, "org.hibernate.fetchSize", hints ),
-					getFlushMode( queryName, hints ),
-					getCacheMode( queryName, hints ),
-					getBoolean( queryName, "org.hibernate.readOnly", hints ),
-					getString( queryName, "org.hibernate.comment", hints ),
-					null,
-					getBoolean( queryName, "org.hibernate.callable", hints )
-			);
+			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
+					.setQuery( queryName )
+					.setResultSetRef( resultSetMapping )
+					.setQuerySpaces( null )
+					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
+					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
+					.setTimeout( getTimeout( queryName, hints ) )
+					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
+					.setFlushMode( getFlushMode( queryName, hints ) )
+					.setCacheMode( getCacheMode( queryName, hints ) )
+					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
+					.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+					.setParameterTypes( null )
+					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
+					.createNamedQueryDefinition();
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinition(
-					queryAnn.name(),
-					queryName,
-					new NativeSQLQueryReturn[] { entityQueryReturn },
-					null,
-					getBoolean( queryName, "org.hibernate.cacheable", hints ),
-					getString( queryName, "org.hibernate.cacheRegion", hints ),
-					getTimeout( queryName, hints ),
-					getInteger( queryName, "org.hibernate.fetchSize", hints ),
-					getFlushMode( queryName, hints ),
-					getCacheMode( queryName, hints ),
-					getBoolean( queryName, "org.hibernate.readOnly", hints ),
-					getString( queryName, "org.hibernate.comment", hints ),
-					null,
-					getBoolean( queryName, "org.hibernate.callable", hints )
-			);
+			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
+					.setQuery( queryName )
+					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
+					.setQuerySpaces( null )
+					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
+					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
+					.setTimeout( getTimeout( queryName, hints ) )
+					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
+					.setFlushMode( getFlushMode( queryName, hints ) )
+					.setCacheMode( getCacheMode( queryName, hints ) )
+					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
+					.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+					.setParameterTypes( null )
+					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
+					.createNamedQueryDefinition();
 		}
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
@@ -165,44 +181,50 @@ public abstract class QueryBinder {
 		String resultSetMapping = queryAnn.resultSetMapping();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			query = new NamedSQLQueryDefinition(
-					queryAnn.name(),
-					queryAnn.query(),
-					resultSetMapping,
-					null,
-					queryAnn.cacheable(),
-					BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
-					queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
-					queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
-					getFlushMode( queryAnn.flushMode() ),
-					getCacheMode( queryAnn.cacheMode() ),
-					queryAnn.readOnly(),
-					BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
-					null,
-					queryAnn.callable()
-			);
+			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
+					.setQuery( queryAnn.query() )
+					.setResultSetRef( resultSetMapping )
+					.setQuerySpaces( null )
+					.setCacheable( queryAnn.cacheable() )
+					.setCacheRegion(
+							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
+									null :
+									queryAnn.cacheRegion()
+					)
+					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
+					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
+					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
+					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
+					.setReadOnly( queryAnn.readOnly() )
+					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
+					.setParameterTypes( null )
+					.setCallable( queryAnn.callable() )
+					.createNamedQueryDefinition();
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
 			//class mapping usage
 			//FIXME should be done in a second pass due to entity name?
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinition(
-					queryAnn.name(),
-					queryAnn.query(),
-					new NativeSQLQueryReturn[] { entityQueryReturn },
-					null,
-					queryAnn.cacheable(),
-					BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
-					queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
-					queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
-					getFlushMode( queryAnn.flushMode() ),
-					getCacheMode( queryAnn.cacheMode() ),
-					queryAnn.readOnly(),
-					BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
-					null,
-					queryAnn.callable()
-			);
+			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
+					.setQuery( queryAnn.query() )
+					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
+					.setQuerySpaces( null )
+					.setCacheable( queryAnn.cacheable() )
+					.setCacheRegion(
+							BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
+									null :
+									queryAnn.cacheRegion()
+					)
+					.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
+					.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
+					.setFlushMode( getFlushMode( queryAnn.flushMode() ) )
+					.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
+					.setReadOnly( queryAnn.readOnly() )
+					.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
+					.setParameterTypes( null )
+					.setCallable( queryAnn.callable() )
+					.createNamedQueryDefinition();
 		}
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
@@ -244,19 +266,22 @@ public abstract class QueryBinder {
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
-		NamedQueryDefinition query = new NamedQueryDefinition(
-				queryAnn.name(),
-				queryAnn.query(),
-				queryAnn.cacheable(),
-				BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
-				queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
-				queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
-				flushMode,
-				getCacheMode( queryAnn.cacheMode() ),
-				queryAnn.readOnly(),
-				BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
-				null
-		);
+		NamedQueryDefinition query = new NamedQueryDefinitionBuilder().setName( queryAnn.name() )
+				.setQuery( queryAnn.query() )
+				.setCacheable( queryAnn.cacheable() )
+				.setCacheRegion(
+						BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ?
+								null :
+								queryAnn.cacheRegion()
+				)
+				.setTimeout( queryAnn.timeout() < 0 ? null : queryAnn.timeout() )
+				.setFetchSize( queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize() )
+				.setFlushMode( flushMode )
+				.setCacheMode( getCacheMode( queryAnn.cacheMode() ) )
+				.setReadOnly( queryAnn.readOnly() )
+				.setComment( BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment() )
+				.setParameterTypes( null )
+				.createNamedQueryDefinition();
 
 		mappings.addQuery( query.getName(), query );
 		if ( LOG.isDebugEnabled() ) {

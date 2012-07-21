@@ -36,7 +36,6 @@ import javax.persistence.Query;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -63,11 +62,14 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 	private Integer c2_2_id;
 	private Map<Number, CustomDateRevEntity> revisions;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(ParentEntity.class);
-		cfg.addAnnotatedClass(Child1Entity.class);
-		cfg.addAnnotatedClass(Child2Entity.class);
-        cfg.addAnnotatedClass(CustomDateRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				ParentEntity.class,
+				Child1Entity.class,
+				Child2Entity.class,
+				CustomDateRevEntity.class
+		};
 	}
 
 	@Override

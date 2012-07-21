@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -34,9 +33,9 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
         options.put("org.hibernate.envers.default_schema", SCHEMA_NAME);
     }
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class };
     }
 
     @Test

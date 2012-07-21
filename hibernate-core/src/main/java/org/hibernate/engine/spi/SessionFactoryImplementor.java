@@ -184,7 +184,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public StatisticsImplementor getStatisticsImplementor();
 
 	public NamedQueryDefinition getNamedQuery(String queryName);
+
+	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition);
+
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName);
+
+	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition);
+
 	public ResultSetMappingDefinition getResultSetMapping(String name);
 
 	/**

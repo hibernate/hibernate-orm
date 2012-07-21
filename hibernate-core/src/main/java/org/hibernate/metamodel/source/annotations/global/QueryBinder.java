@@ -41,8 +41,9 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -163,13 +164,21 @@ public class QueryBinder {
 		}
 
 		metadata.addNamedQuery(
-				new NamedQueryDefinition(
-						name,
-						query, getBoolean( hints, QueryHints.CACHEABLE, name ), cacheRegion,
-						timeout, fetchSize, getFlushMode( hints, QueryHints.FLUSH_MODE, name ),
-						getCacheMode( hints, QueryHints.CACHE_MODE, name ),
-						getBoolean( hints, QueryHints.READ_ONLY, name ), comment, null
-				)
+				new NamedQueryDefinitionBuilder().setName( name ).setQuery( query ).setCacheable(
+						getBoolean(
+								hints,
+								QueryHints.CACHEABLE,
+								name
+						)
+				).setCacheRegion( cacheRegion ).setTimeout( timeout ).setFetchSize( fetchSize ).setFlushMode(
+						getFlushMode( hints, QueryHints.FLUSH_MODE, name )
+				).setCacheMode( getCacheMode( hints, QueryHints.CACHE_MODE, name ) ).setReadOnly(
+						getBoolean(
+								hints,
+								QueryHints.READ_ONLY,
+								name
+						)
+				).setComment( comment ).setParameterTypes( null ).createNamedQueryDefinition()
 		);
 		LOG.debugf( "Binding named query: %s => %s", name, query );
 	}
@@ -215,13 +224,23 @@ public class QueryBinder {
 		boolean callable = getBoolean( hints, QueryHints.CALLABLE, name );
 		NamedSQLQueryDefinition def;
 		if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
-			def = new NamedSQLQueryDefinition(
-					name,
-					query, resultSetMapping, null, cacheable,
-					cacheRegion, timeout, fetchSize,
-					flushMode, cacheMode, readOnly, comment,
-					null, callable
-			);
+			def = new NamedSQLQueryDefinitionBuilder().setName( name )
+					.setQuery( query )
+					.setResultSetRef(
+							resultSetMapping
+					)
+					.setQuerySpaces( null )
+					.setCacheable( cacheable )
+					.setCacheRegion( cacheRegion )
+					.setTimeout( timeout )
+					.setFetchSize( fetchSize )
+					.setFlushMode( flushMode )
+					.setCacheMode( cacheMode )
+					.setReadOnly( readOnly )
+					.setComment( comment )
+					.setParameterTypes( null )
+					.setCallable( callable )
+					.createNamedQueryDefinition();
 		}
 		else {
 			AnnotationValue annotationValue = annotation.value( "resultClass" );
@@ -236,22 +255,21 @@ public class QueryBinder {
 							LockMode.READ
 					)
 			};
-			def = new NamedSQLQueryDefinition(
-					name,
-					query,
-					queryRoots,
-					null,
-					cacheable,
-					cacheRegion,
-					timeout,
-					fetchSize,
-					flushMode,
-					cacheMode,
-					readOnly,
-					comment,
-					null,
-					callable
-			);
+			def = new NamedSQLQueryDefinitionBuilder().setName( name )
+					.setQuery( query )
+					.setQueryReturns( queryRoots )
+					.setQuerySpaces( null )
+					.setCacheable( cacheable )
+					.setCacheRegion( cacheRegion )
+					.setTimeout( timeout )
+					.setFetchSize( fetchSize )
+					.setFlushMode( flushMode )
+					.setCacheMode( cacheMode )
+					.setReadOnly( readOnly )
+					.setComment( comment )
+					.setParameterTypes( null )
+					.setCallable( callable )
+					.createNamedQueryDefinition();
 		}
 		metadata.addNamedNativeQuery( def );
 		LOG.debugf( "Binding named native query: %s => %s", name, query );

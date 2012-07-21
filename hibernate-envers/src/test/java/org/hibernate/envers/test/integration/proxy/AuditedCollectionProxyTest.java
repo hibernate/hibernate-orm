@@ -27,7 +27,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.ListRefEdEntity;
@@ -45,9 +44,9 @@ public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase 
 
     Integer id_ListRefEdEntity1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ListRefEdEntity.class);
-        cfg.addAnnotatedClass(ListRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ListRefEdEntity.class, ListRefIngEntity.class };
     }
 
     @Test

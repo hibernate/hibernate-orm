@@ -28,6 +28,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -668,12 +669,9 @@ public abstract class Loader {
 
 		applyPostLoadLocks( row, lockModesArray, session );
 
-		return forcedResultTransformer == null ?
-				getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session ) :
-				forcedResultTransformer.transformTuple(
-						getResultRow( row, resultSet, session ),
-						getResultRowAliases()
-				)
+		return forcedResultTransformer == null
+				? getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session )
+				: forcedResultTransformer.transformTuple( getResultRow( row, resultSet, session ), getResultRowAliases() )
 		;
 	}
 
@@ -825,11 +823,8 @@ public abstract class Loader {
 				selection.getMaxRows() :
 				Integer.MAX_VALUE;
 
-		final int entitySpan = getEntityPersisters().length;
-
-		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
 		final ResultSet rs = executeQueryStatement( queryParameters, false, session );
-		final PreparedStatement st = (PreparedStatement) rs.getStatement();
+		final Statement st = rs.getStatement();
 
 // would be great to move all this below here into another method that could also be used
 // from the new scrolling stuff.
@@ -837,47 +832,59 @@ public abstract class Loader {
 // Would need to change the way the max-row stuff is handled (i.e. behind an interface) so
 // that I could do the control breaking at the means to know when to stop
 
-		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
-		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
-		final boolean createSubselects = isSubselectLoadingEnabled();
-		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
-		final List results = new ArrayList();
-
 		try {
-			handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
-			EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
-			LOG.trace( "Processing result set" );
-			int count;
-			for ( count = 0; count < maxRows && rs.next(); count++ ) {
-				LOG.debugf( "Result set row: %s", count );
-				Object result = getRowFromResultSet(
-						rs,
-						session,
-						queryParameters,
-						lockModesArray,
-						optionalObjectKey,
-						hydratedObjects,
-						keys,
-						returnProxies,
-						forcedResultTransformer
-				);
-				results.add( result );
-				if ( createSubselects ) {
-					subselectResultKeys.add(keys);
-					keys = new EntityKey[entitySpan]; //can't reuse in this case
-				}
-			}
-
-			LOG.tracev( "Done processing result set ({0} rows)", count );
-
+			return processResultSet( rs, queryParameters, session, returnProxies, forcedResultTransformer, maxRows );
 		}
 		finally {
 			st.close();
 		}
+
+	}
+
+	protected List processResultSet(
+			ResultSet rs,
+			QueryParameters queryParameters,
+			SessionImplementor session,
+			boolean returnProxies,
+			ResultTransformer forcedResultTransformer,
+			int maxRows) throws SQLException {
+		final int entitySpan = getEntityPersisters().length;
+		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
+		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
+		final boolean createSubselects = isSubselectLoadingEnabled();
+		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
+		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
+		final List results = new ArrayList();
+
+		handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
+		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
+		LOG.trace( "Processing result set" );
+		int count;
+		for ( count = 0; count < maxRows && rs.next(); count++ ) {
+			LOG.debugf( "Result set row: %s", count );
+			Object result = getRowFromResultSet(
+					rs,
+					session,
+					queryParameters,
+					lockModesArray,
+					optionalObjectKey,
+					hydratedObjects,
+					keys,
+					returnProxies,
+					forcedResultTransformer
+			);
+			results.add( result );
+			if ( createSubselects ) {
+				subselectResultKeys.add(keys);
+				keys = new EntityKey[entitySpan]; //can't reuse in this case
+			}
+		}
+
+		LOG.tracev( "Done processing result set ({0} rows)", count );
+
 		initializeEntitiesAndCollections( hydratedObjects, rs, session, queryParameters.isReadOnly( session ) );
 		if ( createSubselects ) createSubselects( subselectResultKeys, queryParameters, session );
 		return results;
-
 	}
 
 	protected boolean isSubselectLoadingEnabled() {
@@ -1060,8 +1067,11 @@ public abstract class Loader {
 	 * This empty implementation merely returns its first argument. This is
 	 * overridden by some subclasses.
 	 */
-	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
-			throws SQLException, HibernateException {
+	protected Object getResultColumnOrRow(
+			Object[] row,
+			ResultTransformer transformer,
+			ResultSet rs,
+			SessionImplementor session) throws SQLException, HibernateException {
 		return row;
 	}
 
@@ -1069,10 +1079,10 @@ public abstract class Loader {
 		return null;
 	}
 
-	protected Object[] getResultRow(Object[] row,
-														 ResultSet rs,
-														 SessionImplementor session)
-			throws SQLException, HibernateException {
+	protected Object[] getResultRow(
+			Object[] row,
+			ResultSet rs,
+			SessionImplementor session) throws SQLException, HibernateException {
 		return row;
 	}
 
@@ -1455,7 +1465,7 @@ public abstract class Loader {
 				persister,
 				key.getIdentifier(),
 				session
-			);
+		);
 
 		final Object object;
 		if ( optionalObjectKey != null && key.equals( optionalObjectKey ) ) {
@@ -1687,7 +1697,10 @@ public abstract class Loader {
 		queryParameters.processFilters( getSQLString(), session );
 
 		// Applying LIMIT clause.
-		final LimitHandler limitHandler = getLimitHandler( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
+		final LimitHandler limitHandler = getLimitHandler(
+				queryParameters.getFilteredSQL(),
+				queryParameters.getRowSelection()
+		);
 		String sql = limitHandler.getProcessedSql();
 
 		// Adding locks and comments.

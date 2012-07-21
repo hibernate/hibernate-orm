@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -21,8 +20,9 @@ public class HierarchyTest extends BaseEnversJPAFunctionalTestCase {
     private Long child1Id = null;
     private Long child2Id = null;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Node.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Node.class };
     }
 
     @Test

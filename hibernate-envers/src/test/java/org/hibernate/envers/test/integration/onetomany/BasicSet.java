@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
@@ -46,9 +45,9 @@ public class BasicSet extends BaseEnversJPAFunctionalTestCase {
     private Integer ing1_id;
     private Integer ing2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(SetRefEdEntity.class);
-        cfg.addAnnotatedClass(SetRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { SetRefEdEntity.class, SetRefIngEntity.class };
     }
 
     @Test

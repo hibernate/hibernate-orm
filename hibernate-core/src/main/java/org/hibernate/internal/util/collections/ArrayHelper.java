@@ -188,7 +188,7 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	public static <T> T[] join(T[] x, T[] y) {
+	public static <T> T[] join(T[] x, T... y) {
 		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
@@ -372,8 +372,6 @@ public final class ArrayHelper {
 		}
         return true;
 	}
-
-
 }
 
 

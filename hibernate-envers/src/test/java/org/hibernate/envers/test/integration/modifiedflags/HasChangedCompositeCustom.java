@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.Component;
 import org.hibernate.envers.test.entities.customtype.CompositeCustomTypeEntity;
@@ -44,8 +43,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class HasChangedCompositeCustom extends AbstractModifiedFlagsEntityTest {
     private Integer ccte_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(CompositeCustomTypeEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { CompositeCustomTypeEntity.class };
     }
 
     @Test

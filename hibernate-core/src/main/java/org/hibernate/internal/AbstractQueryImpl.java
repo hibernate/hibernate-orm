@@ -120,54 +120,90 @@ public abstract class AbstractQueryImpl implements Query {
 		return parameterMetadata;
 	}
 
+	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) + '(' + queryString + ')';
 	}
 
+	@Override
 	public final String getQueryString() {
 		return queryString;
 	}
 
-	//TODO: maybe call it getRowSelection() ?
-	public RowSelection getSelection() {
-		return selection;
-	}
-	
-	public Query setFlushMode(FlushMode flushMode) {
-		this.flushMode = flushMode;
-		return this;
-	}
-	
-	public Query setCacheMode(CacheMode cacheMode) {
-		this.cacheMode = cacheMode;
-		return this;
+	@Override
+	public boolean isCacheable() {
+		return cacheable;
 	}
 
-	public CacheMode getCacheMode() {
-		return cacheMode;
-	}
-
+	@Override
 	public Query setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 		return this;
 	}
 
+	@Override
+	public String getCacheRegion() {
+		return cacheRegion;
+	}
+
+	@Override
 	public Query setCacheRegion(String cacheRegion) {
-		if (cacheRegion != null)
+		if (cacheRegion != null) {
 			this.cacheRegion = cacheRegion.trim();
+		}
 		return this;
 	}
 
+	@Override
+	public FlushMode getFlushMode() {
+		return flushMode;
+	}
+
+	@Override
+	public Query setFlushMode(FlushMode flushMode) {
+		this.flushMode = flushMode;
+		return this;
+	}
+
+	@Override
+	public CacheMode getCacheMode() {
+		return cacheMode;
+	}
+
+	@Override
+	public Query setCacheMode(CacheMode cacheMode) {
+		this.cacheMode = cacheMode;
+		return this;
+	}
+
+	@Override
+	public String getComment() {
+		return comment;
+	}
+
+	@Override
 	public Query setComment(String comment) {
 		this.comment = comment;
 		return this;
 	}
 
+	@Override
+	public Integer getFirstResult() {
+		return selection.getFirstRow();
+	}
+
+	@Override
 	public Query setFirstResult(int firstResult) {
 		selection.setFirstRow( firstResult);
 		return this;
 	}
 
+	@Override
+	public Integer getMaxResults() {
+		return selection.getMaxRows();
+	}
+
+	@Override
 	public Query setMaxResults(int maxResults) {
 		if ( maxResults < 0 ) {
 			// treat negatives specically as meaning no limit...
@@ -179,10 +215,23 @@ public abstract class AbstractQueryImpl implements Query {
 		return this;
 	}
 
+	@Override
+	public Integer getTimeout() {
+		return selection.getTimeout();
+	}
+
+	@Override
 	public Query setTimeout(int timeout) {
 		selection.setTimeout( timeout);
 		return this;
 	}
+
+	@Override
+	public Integer getFetchSize() {
+		return selection.getFetchSize();
+	}
+
+	@Override
 	public Query setFetchSize(int fetchSize) {
 		selection.setFetchSize( fetchSize);
 		return this;
@@ -920,7 +969,7 @@ public abstract class AbstractQueryImpl implements Query {
 				valueArray(),
 				namedParams,
 				getLockOptions(),
-				getSelection(),
+				getRowSelection(),
 				true,
 				isReadOnly(),
 				cacheable,

@@ -31,7 +31,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
@@ -51,10 +50,9 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase  {
     private Integer c2_1_id;
     private Integer c2_2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ParentEntity.class);
-        cfg.addAnnotatedClass(Child1Entity.class);
-        cfg.addAnnotatedClass(Child2Entity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ParentEntity.class, Child1Entity.class, Child2Entity.class };
     }
 
     @Test

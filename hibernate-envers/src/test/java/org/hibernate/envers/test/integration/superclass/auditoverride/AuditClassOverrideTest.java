@@ -5,7 +5,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
@@ -22,10 +21,9 @@ public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
     private Table classAuditedTable = null;
     private Table classNotAuditedTable = null;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ClassOverrideAuditedEntity.class);
-        cfg.addAnnotatedClass(ClassOverrideNotAuditedEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ClassOverrideAuditedEntity.class, ClassOverrideNotAuditedEntity.class };
     }
 
     @Test

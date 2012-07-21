@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +42,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 	public static final VarcharTypeDescriptor INSTANCE = new VarcharTypeDescriptor();
 
+	public VarcharTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.VARCHAR;
 	}
@@ -50,6 +56,7 @@ public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
@@ -59,11 +66,22 @@ public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
+	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getString( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getString( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getString( name ), options );
 			}
 		};
 	}

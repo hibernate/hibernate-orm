@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
@@ -46,9 +45,9 @@ public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
     private EmbIdNaming ed_id2;
     private EmbIdNaming ing_id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(JoinEmbIdNamingRefEdEntity.class);
-        cfg.addAnnotatedClass(JoinEmbIdNamingRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { JoinEmbIdNamingRefEdEntity.class, JoinEmbIdNamingRefIngEntity.class };
     }
 
     @Test

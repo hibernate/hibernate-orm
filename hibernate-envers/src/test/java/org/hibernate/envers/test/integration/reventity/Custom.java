@@ -32,7 +32,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -49,9 +48,9 @@ public class Custom extends BaseEnversJPAFunctionalTestCase {
     private long timestamp2;
     private long timestamp3;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(CustomRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class, CustomRevEntity.class };
     }
 
     @Test

@@ -36,6 +36,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.StoredProcedureCall;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -142,8 +143,8 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			        getHQLQueryPlan( queryString, false ).getParameterMetadata()
 			);
 			query.setComment( "named HQL query " + queryName );
-			if ( nqd.getLockTimeout() != null ) {
-				( (QueryImpl) query ).getLockOptions().setTimeOut( nqd.getLockTimeout() );
+			if ( nqd.getLockOptions() != null ) {
+				query.setLockOptions( nqd.getLockOptions() );
 			}
 		}
 		else {
@@ -181,14 +182,34 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		return query;
 	}
 
+	@SuppressWarnings("UnnecessaryUnboxing")
 	private void initQuery(Query query, NamedQueryDefinition nqd) {
+		// todo : cacheable and readonly should be Boolean rather than boolean...
 		query.setCacheable( nqd.isCacheable() );
 		query.setCacheRegion( nqd.getCacheRegion() );
-		if ( nqd.getTimeout()!=null ) query.setTimeout( nqd.getTimeout().intValue() );
-		if ( nqd.getFetchSize()!=null ) query.setFetchSize( nqd.getFetchSize().intValue() );
-		if ( nqd.getCacheMode() != null ) query.setCacheMode( nqd.getCacheMode() );
 		query.setReadOnly( nqd.isReadOnly() );
-		if ( nqd.getComment() != null ) query.setComment( nqd.getComment() );
+
+		if ( nqd.getTimeout() != null ) {
+			query.setTimeout( nqd.getTimeout().intValue() );
+		}
+		if ( nqd.getFetchSize() != null ) {
+			query.setFetchSize( nqd.getFetchSize().intValue() );
+		}
+		if ( nqd.getCacheMode() != null ) {
+			query.setCacheMode( nqd.getCacheMode() );
+		}
+		if ( nqd.getComment() != null ) {
+			query.setComment( nqd.getComment() );
+		}
+		if ( nqd.getFirstResult() != null ) {
+			query.setFirstResult( nqd.getFirstResult() );
+		}
+		if ( nqd.getMaxResults() != null ) {
+			query.setMaxResults( nqd.getMaxResults() );
+		}
+		if ( nqd.getFlushMode() != null ) {
+			query.setFlushMode( nqd.getFlushMode() );
+		}
 	}
 
 	@Override
@@ -213,6 +234,33 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		);
 		query.setComment( "dynamic native SQL query" );
 		return query;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultClasses );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public StoredProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		errorIfClosed();
+		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultSetMappings );
+//		call.setComment( "Dynamic stored procedure call" );
+		return call;
 	}
 
 	protected HQLQueryPlan getHQLQueryPlan(String query, boolean shallow) throws HibernateException {

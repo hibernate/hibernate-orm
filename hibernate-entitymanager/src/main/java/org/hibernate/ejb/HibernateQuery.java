@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb;
-import javax.persistence.Query;
 
-public interface HibernateQuery extends Query {
-	public org.hibernate.Query getHibernateQuery();
+/**
+ * @deprecated Use {@link org.hibernate.jpa.HibernateQuery} instead
+ */
+@Deprecated
+public interface HibernateQuery extends org.hibernate.jpa.HibernateQuery {
 }

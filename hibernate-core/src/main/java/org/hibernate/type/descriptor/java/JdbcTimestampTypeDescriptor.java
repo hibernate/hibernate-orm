@@ -34,7 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@link Timestamp} handling.
  *
  * @author Steve Ebersole
  */
@@ -53,8 +53,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 				return ts;
 			}
 			else {
-				Date orig = value;
-				return new Date( orig.getTime() );
+				return new Date( value.getTime() );
 			}
 		}
 	}

@@ -27,7 +27,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@link Class} handling.
  *
  * @author Steve Ebersole
  */

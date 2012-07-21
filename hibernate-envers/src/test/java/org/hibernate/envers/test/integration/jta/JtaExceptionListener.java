@@ -30,7 +30,6 @@ import javax.transaction.RollbackException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -44,9 +43,9 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  * @author Adam Warski (adam at warski dot org)
  */
 public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-        cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class, ExceptionListenerRevEntity.class };
     }
 
     @Override

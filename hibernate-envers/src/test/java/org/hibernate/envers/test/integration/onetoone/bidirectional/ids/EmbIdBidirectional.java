@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
@@ -42,9 +41,9 @@ public class EmbIdBidirectional extends BaseEnversJPAFunctionalTestCase {
 
     private EmbId ing1_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BiEmbIdRefEdEntity.class);
-        cfg.addAnnotatedClass(BiEmbIdRefIngEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BiEmbIdRefEdEntity.class, BiEmbIdRefIngEntity.class };
     }
 
     @Test

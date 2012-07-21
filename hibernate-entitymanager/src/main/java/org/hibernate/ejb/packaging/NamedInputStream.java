@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,33 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.InputStream;
 
 /**
- * @author Emmanuel Bernard
+ * @deprecated Use {@link org.hibernate.jpa.packaging.spi.NamedInputStream} instead
  */
-public class NamedInputStream {
+@Deprecated
+public class NamedInputStream extends org.hibernate.jpa.packaging.spi.NamedInputStream {
 	public NamedInputStream(String name, InputStream stream) {
-		this.name = name;
-		this.stream = stream;
-	}
-
-	private String name;
-	private InputStream stream;
-
-	public InputStream getStream() {
-		return stream;
-	}
-
-	public void setStream(InputStream stream) {
-		this.stream = stream;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+		super( name, stream );
 	}
 }

@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
@@ -30,10 +29,9 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 
     private Integer ed_id;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(SetOwningEntity.class);
-        cfg.addAnnotatedClass(SetOwnedEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { SetOwningEntity.class, SetOwnedEntity.class };
     }
 
 	@Override

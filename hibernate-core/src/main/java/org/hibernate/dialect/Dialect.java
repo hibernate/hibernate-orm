@@ -1466,20 +1466,41 @@ public abstract class Dialect implements ConversionContext {
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Registers an OUT parameter which will be returning a
-	 * {@link java.sql.ResultSet}.  How this is accomplished varies greatly
-	 * from DB to DB, hence its inclusion (along with {@link #getResultSet}) here.
+	 * Registers a parameter (either OUT, or the new REF_CURSOR param type available in Java 8) capable of
+	 * returning {@link java.sql.ResultSet} *by position*.  Pre-Java 8, registering such ResultSet-returning
+	 * parameters varied greatly across database and drivers; hence its inclusion as part of the Dialect contract.
 	 *
 	 * @param statement The callable statement.
-	 * @param position The bind position at which to register the OUT param.
+	 * @param position The bind position at which to register the output param.
+	 *
 	 * @return The number of (contiguous) bind positions used.
-	 * @throws SQLException Indicates problems registering the OUT param.
+	 *
+	 * @throws SQLException Indicates problems registering the param.
 	 */
 	public int registerResultSetOutParameter(CallableStatement statement, int position) throws SQLException {
 		throw new UnsupportedOperationException(
 				getClass().getName() +
 				" does not support resultsets via stored procedures"
 			);
+	}
+
+	/**
+	 * Registers a parameter (either OUT, or the new REF_CURSOR param type available in Java 8) capable of
+	 * returning {@link java.sql.ResultSet} *by name*.  Pre-Java 8, registering such ResultSet-returning
+	 * parameters varied greatly across database and drivers; hence its inclusion as part of the Dialect contract.
+	 *
+	 * @param statement The callable statement.
+	 * @param name The parameter name (for drivers which support named parameters).
+	 *
+	 * @return The number of (contiguous) bind positions used.
+	 *
+	 * @throws SQLException Indicates problems registering the param.
+	 */
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		throw new UnsupportedOperationException(
+				getClass().getName() +
+						" does not support resultsets via stored procedures"
+		);
 	}
 
 	/**
@@ -1495,6 +1516,42 @@ public abstract class Dialect implements ConversionContext {
 				getClass().getName() +
 				" does not support resultsets via stored procedures"
 			);
+	}
+
+	/**
+	 * Given a callable statement previously processed by {@link #registerResultSetOutParameter},
+	 * extract the {@link java.sql.ResultSet}.
+	 *
+	 * @param statement The callable statement.
+	 * @param position The bind position at which to register the output param.
+	 *
+	 * @return The extracted result set.
+	 *
+	 * @throws SQLException Indicates problems extracting the result set.
+	 */
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		throw new UnsupportedOperationException(
+				getClass().getName() +
+						" does not support resultsets via stored procedures"
+		);
+	}
+
+	/**
+	 * Given a callable statement previously processed by {@link #registerResultSetOutParameter},
+	 * extract the {@link java.sql.ResultSet} from the OUT parameter.
+	 *
+	 * @param statement The callable statement.
+	 * @param name The parameter name (for drivers which support named parameters).
+	 *
+	 * @return The extracted result set.
+	 *
+	 * @throws SQLException Indicates problems extracting the result set.
+	 */
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		throw new UnsupportedOperationException(
+				getClass().getName() +
+						" does not support resultsets via stored procedures"
+		);
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

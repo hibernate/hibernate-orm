@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -39,8 +38,9 @@ public class BasicNaming extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
     private Integer id2;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(NamingTestEntity1.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { NamingTestEntity1.class };
     }
 
     @Test

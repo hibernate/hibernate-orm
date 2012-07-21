@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ChildIndexedListJoinColumnBidirectionalRefIngEntity;
@@ -51,10 +50,13 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPA
     private Integer ing1_id;
     private Integer ing2_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ParentIndexedListJoinColumnBidirectionalRefIngEntity.class);
-        cfg.addAnnotatedClass(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class);
-        cfg.addAnnotatedClass(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				ParentIndexedListJoinColumnBidirectionalRefIngEntity.class,
+				ChildIndexedListJoinColumnBidirectionalRefIngEntity.class,
+				ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class
+		};
     }
 
     @Test

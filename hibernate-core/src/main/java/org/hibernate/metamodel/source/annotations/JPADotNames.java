@@ -35,6 +35,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
+import javax.persistence.Convert;
+import javax.persistence.Converter;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -129,6 +131,8 @@ public interface JPADotNames {
 	DotName COLLECTION_TABLE = DotName.createSimple( CollectionTable.class.getName() );
 	DotName COLUMN = DotName.createSimple( Column.class.getName() );
 	DotName COLUMN_RESULT = DotName.createSimple( ColumnResult.class.getName() );
+	DotName CONVERT = DotName.createSimple( Convert.class.getName() );
+	DotName CONVERTER = DotName.createSimple( Converter.class.getName() );
 	DotName DISCRIMINATOR_COLUMN = DotName.createSimple( DiscriminatorColumn.class.getName() );
 	DotName DISCRIMINATOR_TYPE = DotName.createSimple( DiscriminatorType.class.getName() );
 	DotName DISCRIMINATOR_VALUE = DotName.createSimple( DiscriminatorValue.class.getName() );

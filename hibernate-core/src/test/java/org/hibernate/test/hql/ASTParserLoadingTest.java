@@ -903,6 +903,18 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		new SyntaxChecker( "from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
 		new SyntaxChecker( "select da.father from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
+		new SyntaxChecker( "select da.father from DomesticAnimal da where da.owner.nickName = 'Gavin'" ).checkAll();
+	}
+
+	/**
+	 * {@link #testSubclassOrSuperclassPropertyReferenceInJoinedSubclass} tests the implicit form of entity casting
+	 * that Hibernate has always supported.  THis method tests the explicit variety added by JPA 2.1 using the TREAT
+	 * keyword.
+	 */
+	@Test
+	public void testExplicitEntityCasting() {
+		new SyntaxChecker( "from Zoo z join treat(z.mammals as Human) as m where m.name.first = 'John'" ).checkIterate();
+		new SyntaxChecker( "from Zoo z join z.mammals as m where treat(m as Human).name.first = 'John'" ).checkIterate();
 	}
 
 	@Test

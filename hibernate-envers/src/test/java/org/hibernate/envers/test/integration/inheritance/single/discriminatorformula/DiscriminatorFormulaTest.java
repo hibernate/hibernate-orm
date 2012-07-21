@@ -8,7 +8,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Formula;
@@ -24,11 +23,9 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
     private ParentEntity parentVer1 = null;
     private ParentEntity parentVer2 = null;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ClassTypeEntity.class);
-        cfg.addAnnotatedClass(ParentEntity.class);
-        cfg.addAnnotatedClass(ChildEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ClassTypeEntity.class, ParentEntity.class, ChildEntity.class };
     }
 
     @Test

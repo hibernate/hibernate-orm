@@ -23,29 +23,19 @@
  */
 package org.hibernate.service;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
-import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
-import org.hibernate.service.internal.JaxbProcessor;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.spi.BasicServiceInitiator;
@@ -59,8 +49,6 @@ import org.hibernate.service.spi.BasicServiceInitiator;
  * @see BootstrapServiceRegistryBuilder
  */
 public class ServiceRegistryBuilder {
-	private static final Logger log = Logger.getLogger( ServiceRegistryBuilder.class );
-
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
 	private final Map settings;
@@ -68,6 +56,7 @@ public class ServiceRegistryBuilder {
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
+	private final ConfigLoader configLoader;
 
 	/**
 	 * Create a default builder
@@ -84,6 +73,7 @@ public class ServiceRegistryBuilder {
 	public ServiceRegistryBuilder(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		this.settings = Environment.getProperties();
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 	}
 
 	/**
@@ -110,27 +100,7 @@ public class ServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistryBuilder loadProperties(String resourceName) {
-		InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
-		try {
-			Properties properties = new Properties();
-			properties.load( stream );
-			settings.putAll( properties );
-		}
-		catch (IOException e) {
-			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]", e );
-		}
-		finally {
-			try {
-				stream.close();
-			}
-			catch (IOException e) {
-				log.debug(
-						String.format( "Unable to close properties file [%s] stream", resourceName ),
-						e
-				);
-			}
-		}
-
+		settings.putAll( configLoader.loadProperties( resourceName ) );
 		return this;
 	}
 
@@ -158,26 +128,13 @@ public class ServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistryBuilder configure(String resourceName) {
-		InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
-		JaxbHibernateConfiguration configurationElement = jaxbProcessorHolder.getValue().unmarshal(
-				stream,
-				new Origin( SourceType.RESOURCE, resourceName )
-		);
+		JaxbHibernateConfiguration configurationElement = configLoader.loadConfigXmlResource( resourceName );
 		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
 			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
 		}
 
 		return this;
 	}
-
-	private ValueHolder<JaxbProcessor> jaxbProcessorHolder = new ValueHolder<JaxbProcessor>(
-			new ValueHolder.DeferredInitializer<JaxbProcessor>() {
-				@Override
-				public JaxbProcessor initialize() {
-					return new JaxbProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
-				}
-			}
-	);
 
 	/**
 	 * Apply a setting value

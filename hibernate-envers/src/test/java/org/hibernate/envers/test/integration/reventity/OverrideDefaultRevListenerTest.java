@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.reventity;
 
-import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -8,9 +9,8 @@ import org.hibernate.testing.TestForIssue;
  */
 @TestForIssue(jiraKey = "HHH-6696")
 public class OverrideDefaultRevListenerTest extends GloballyConfiguredRevListenerTest {
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        super.configure(cfg);
-        cfg.addAnnotatedClass(LongRevNumberRevEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return ArrayHelper.join( super.getAnnotatedClasses(), LongRevNumberRevEntity.class );
     }
 }

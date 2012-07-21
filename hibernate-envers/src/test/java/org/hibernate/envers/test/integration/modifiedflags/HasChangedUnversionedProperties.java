@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.QueryException;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.basic.BasicTestEntity2;
 
@@ -44,8 +43,9 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
 public class HasChangedUnversionedProperties extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(BasicTestEntity2.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { BasicTestEntity2.class };
     }
 
     private Integer addNewEntity(String str1, String str2) {

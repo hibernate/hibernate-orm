@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -83,6 +84,16 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 				@Override
 				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 					return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getObject( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getObject( name ), options );
 				}
 			};
 		}

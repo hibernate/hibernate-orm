@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 
+import javax.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -508,6 +509,23 @@ public interface Mappings {
 	 * @param onTopOfTheQueue True to add to the beginning of the queue; false to add to the end.
 	 */
 	public void addSecondPass(SecondPass sp, boolean onTopOfTheQueue);
+
+	/**
+	 * Locate the AttributeConverterDefinition corresponding to the given AttributeConverter Class.
+	 *
+	 * @param attributeConverterClass The AttributeConverter Class for which to get the definition
+	 *
+	 * @return The corresponding AttributeConverter definition; will return {@code null} if no corresponding
+	 * definition found.
+	 */
+	public AttributeConverterDefinition locateAttributeConverter(Class attributeConverterClass);
+
+	/**
+	 * All all AttributeConverter definitions
+	 *
+	 * @return The collection of all AttributeConverter definitions.
+	 */
+	public java.util.Collection<AttributeConverterDefinition> getAttributeConverters();
 
 	/**
 	 * Represents a property-ref mapping.

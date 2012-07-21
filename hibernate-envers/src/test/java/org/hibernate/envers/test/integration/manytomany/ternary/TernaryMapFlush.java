@@ -29,7 +29,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;
@@ -48,10 +47,9 @@ public class TernaryMapFlush extends BaseEnversJPAFunctionalTestCase {
     private Integer int2_id;
     private Integer map1_id;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(TernaryMapEntity.class);
-        cfg.addAnnotatedClass(StrTestPrivSeqEntity.class);
-        cfg.addAnnotatedClass(IntTestPrivSeqEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { TernaryMapEntity.class, StrTestPrivSeqEntity.class, IntTestPrivSeqEntity.class };
     }
 
     @Test

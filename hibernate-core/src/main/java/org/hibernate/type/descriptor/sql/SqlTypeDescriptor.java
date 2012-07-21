@@ -31,6 +31,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Descriptor for the <tt>SQL</tt>/<tt>JDBC</tt> side of a value mapping.
+ * <p/>
+ * NOTE : Implementations should be registered with the {@link SqlTypeDescriptor}.  The built-in Hibernate
+ * implementations register themselves on construction.
  *
  * @author Steve Ebersole
  */
@@ -52,7 +55,23 @@ public interface SqlTypeDescriptor extends Serializable {
 	 */
 	public boolean canBeRemapped();
 
+	/**
+	 * Get the binder (setting JDBC in-going parameter values) capable of handling values of the type described by the
+	 * passed descriptor.
+	 *
+	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be bound
+	 *
+	 * @return The appropriate binder.
+	 */
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
 
+	/**
+	 * Get the extractor (pulling out-going values from JDBC objects) capable of handling values of the type described
+	 * by the passed descriptor.
+	 *
+	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be extracted
+	 *
+	 * @return The appropriate extractor
+	 */
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
 }

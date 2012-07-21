@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.CustomEnum;
@@ -50,10 +49,9 @@ public class CompositeIds extends BaseEnversJPAFunctionalTestCase {
     private EmbIdWithCustomType id5;
     private EmbIdWithCustomType id6;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(EmbIdTestEntity.class);
-        cfg.addAnnotatedClass(MulIdTestEntity.class);
-        cfg.addAnnotatedClass(EmbIdWithCustomTypeTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { EmbIdTestEntity.class, MulIdTestEntity.class, EmbIdWithCustomTypeTestEntity.class };
     }
 
     @Test

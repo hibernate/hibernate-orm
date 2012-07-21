@@ -8,7 +8,6 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -19,9 +18,9 @@ public class ReadWriteExpressionChange extends BaseEnversJPAFunctionalTestCase {
 
     private Integer id;
 
-    @Override
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Staff.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Staff.class };
     }
 
     @Test

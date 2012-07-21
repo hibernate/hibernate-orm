@@ -24,6 +24,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,12 +49,12 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * TODO : javadoc
+ * Convenience base class for {@link BasicType} implementations
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T> {
+		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T>, ProcedureParameterExtractionAware<T> {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -385,5 +386,60 @@ public abstract class AbstractStandardBasicType<T>
 		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT == foreignKeyDirection
 				? getReplacement( (T) original, (T) target, session )
 				: target;
+	}
+
+	@Override
+	public boolean canDoExtraction() {
+		return true;
+	}
+
+	@Override
+	public T extract(CallableStatement statement, int startIndex, final SessionImplementor session) throws SQLException {
+		// todo : have SessionImplementor extend WrapperOptions
+		final WrapperOptions options = new WrapperOptions() {
+			public boolean useStreamForLobBinding() {
+				return Environment.useStreamsForBinary();
+			}
+
+			public LobCreator getLobCreator() {
+				return Hibernate.getLobCreator( session );
+			}
+
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
+			}
+		};
+
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract(
+				statement,
+				startIndex,
+				options
+		);
+	}
+
+	@Override
+	public T extract(CallableStatement statement, String[] paramNames, final SessionImplementor session) throws SQLException {
+		// todo : have SessionImplementor extend WrapperOptions
+		final WrapperOptions options = new WrapperOptions() {
+			public boolean useStreamForLobBinding() {
+				return Environment.useStreamsForBinary();
+			}
+
+			public LobCreator getLobCreator() {
+				return Hibernate.getLobCreator( session );
+			}
+
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
+			}
+		};
+
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
 	}
 }

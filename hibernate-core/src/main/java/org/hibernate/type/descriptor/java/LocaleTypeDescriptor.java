@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * TODO : javadoc
+ * Descriptor for {@link Locale} handling.
  *
  * @author Steve Ebersole
  */

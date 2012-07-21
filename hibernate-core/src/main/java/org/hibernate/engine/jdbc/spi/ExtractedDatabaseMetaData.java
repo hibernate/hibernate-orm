@@ -45,6 +45,22 @@ public interface ExtractedDatabaseMetaData {
 	}
 
 	/**
+	 * Does the driver report supporting named parameters?
+	 *
+	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
+	 * or that the driver could not be asked.
+	 */
+	public boolean supportsNamedParameters();
+
+	/**
+	 * Does the driver report supporting REF_CURSORs?
+	 *
+	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
+	 * or that the driver could not be asked.
+	 */
+	public boolean supportsRefCursors();
+
+	/**
 	 * Did the driver report to supporting scrollable result sets?
 	 *
 	 * @return True if the driver reported to support {@link java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE}.

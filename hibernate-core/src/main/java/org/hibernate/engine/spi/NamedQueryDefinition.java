@@ -31,9 +31,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 
 /**
- * Definition of a named query, defined in the mapping metadata.
+ * Definition of a named query, defined in the mapping metadata.  Additional, as of JPA 2.1, named query definition
+ * can also come from a compiled query.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class NamedQueryDefinition implements Serializable {
 	private final String name;
@@ -41,39 +43,38 @@ public class NamedQueryDefinition implements Serializable {
 	private final boolean cacheable;
 	private final String cacheRegion;
 	private final Integer timeout;
-	private final Integer lockTimeout;
+	private final LockOptions lockOptions;
 	private final Integer fetchSize;
 	private final FlushMode flushMode;
 	private final Map parameterTypes;
-	private CacheMode cacheMode;
-	private boolean readOnly;
-	private String comment;
+	private final CacheMode cacheMode;
+	private final boolean readOnly;
+	private final String comment;
 
-	// kept for backward compatibility until after the 3.1beta5 release of HA
-	// TODO: is this still needed?
-	public NamedQueryDefinition(
-			String query,
-			boolean cacheable,
-			String cacheRegion,
-			Integer timeout,
-			Integer fetchSize,
-			FlushMode flushMode,
-			Map parameterTypes) {
-		this(
-				null,
-				query,
-				cacheable,
-				cacheRegion,
-				timeout,
-				fetchSize,
-				flushMode,
-				null,
-				false,
-				null,
-				parameterTypes
-		);
-	}
+	// added for jpa 2.1
+	private final Integer firstResult;
+	private final Integer maxResults;
 
+	/**
+	 * This form is used to bind named queries from Hibernate metadata, both {@code hbm.xml} files and
+	 * {@link org.hibernate.annotations.NamedQuery} annotation.
+	 *
+	 * @param name The name under which to key/register the query
+	 * @param query The query string.
+	 * @param cacheable Is the query cacheable?
+	 * @param cacheRegion If cacheable, was there a specific region named?
+	 * @param timeout Query timeout, {@code null} indicates no timeout
+	 * @param fetchSize Fetch size associated with the query, {@code null} indicates no limit
+	 * @param flushMode Flush mode associated with query
+	 * @param cacheMode Cache mode associated with query
+	 * @param readOnly Should entities returned from this query (those not already associated with the Session anyway)
+	 * 		be loaded as read-only?
+	 * @param comment SQL comment to be used in the generated SQL, {@code null} indicates none
+	 * @param parameterTypes (no idea, afaict this is always passed as null)
+	 *
+	 * @deprecated Use {@link NamedQueryDefinitionBuilder} instead.
+	 */
+	@Deprecated
 	public NamedQueryDefinition(
 			String name,
 			String query,
@@ -86,11 +87,42 @@ public class NamedQueryDefinition implements Serializable {
 			boolean readOnly,
 			String comment,
 			Map parameterTypes) {
-		this(name, query, cacheable, cacheRegion,
-				timeout, LockOptions.WAIT_FOREVER, fetchSize,
-				flushMode, cacheMode, readOnly, comment, parameterTypes);
+		this(
+				name,
+				query,
+				cacheable,
+				cacheRegion,
+				timeout,
+				LockOptions.WAIT_FOREVER,
+				fetchSize,
+				flushMode,
+				cacheMode,
+				readOnly,
+				comment,
+				parameterTypes
+		);
 	}
 
+	/**
+	 * This version is used to bind named queries defined via {@link javax.persistence.NamedQuery}.
+	 *
+	 * @param name The name under which to key/register the query
+	 * @param query The query string.
+	 * @param cacheable Is the query cacheable?
+	 * @param cacheRegion If cacheable, was there a specific region named?
+	 * @param timeout Query timeout, {@code null} indicates no timeout
+	 * @param lockTimeout Specifies the lock timeout for queries that apply lock modes.
+	 * @param fetchSize Fetch size associated with the query, {@code null} indicates no limit
+	 * @param flushMode Flush mode associated with query
+	 * @param cacheMode Cache mode associated with query
+	 * @param readOnly Should entities returned from this query (those not already associated with the Session anyway)
+	 * 		be loaded as read-only?
+	 * @param comment SQL comment to be used in the generated SQL, {@code null} indicates none
+	 * @param parameterTypes (no idea, afaict this is always passed as null)
+	 *
+	 * @deprecated Use {@link NamedQueryDefinitionBuilder} instead.
+	 */
+	@Deprecated
 	public NamedQueryDefinition(
 			String name,
 			String query,
@@ -104,18 +136,54 @@ public class NamedQueryDefinition implements Serializable {
 			boolean readOnly,
 			String comment,
 			Map parameterTypes) {
+		this(
+				name,
+				query,
+				cacheable,
+				cacheRegion,
+				timeout,
+				new LockOptions().setTimeOut( lockTimeout ),
+				fetchSize,
+				flushMode,
+				cacheMode,
+				readOnly,
+				comment,
+				parameterTypes,
+				null,		// firstResult
+				null		// maxResults
+		);
+	}
+
+	NamedQueryDefinition(
+			String name,
+			String query,
+			boolean cacheable,
+			String cacheRegion,
+			Integer timeout,
+			LockOptions lockOptions,
+			Integer fetchSize,
+			FlushMode flushMode,
+			CacheMode cacheMode,
+			boolean readOnly,
+			String comment,
+			Map parameterTypes,
+			Integer firstResult,
+			Integer maxResults) {
 		this.name = name;
 		this.query = query;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.timeout = timeout;
-		this.lockTimeout = lockTimeout;
+		this.lockOptions = lockOptions;
 		this.fetchSize = fetchSize;
 		this.flushMode = flushMode;
 		this.parameterTypes = parameterTypes;
 		this.cacheMode = cacheMode;
 		this.readOnly = readOnly;
 		this.comment = comment;
+
+		this.firstResult = firstResult;
+		this.maxResults = maxResults;
 	}
 
 	public String getName() {
@@ -146,11 +214,8 @@ public class NamedQueryDefinition implements Serializable {
 		return flushMode;
 	}
 
-	public String toString() {
-		return getClass().getName() + '(' + query + ')';
-	}
-
 	public Map getParameterTypes() {
+		// todo : currently these are never used...
 		return parameterTypes;
 	}
 
@@ -170,7 +235,20 @@ public class NamedQueryDefinition implements Serializable {
 		return comment;
 	}
 
-	public Integer getLockTimeout() {
-		return lockTimeout;
+	public LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	public Integer getFirstResult() {
+		return firstResult;
+	}
+
+	public Integer getMaxResults() {
+		return maxResults;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getName() + '(' + name + " [" + query + "])";
 	}
 }

@@ -7,7 +7,6 @@ import ee.estonia.entities.Parent;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -21,9 +20,9 @@ public class EstonianTableAlias extends BaseEnversJPAFunctionalTestCase {
     private Long parentId = null;
     private Long childId = null;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(Parent.class);
-        cfg.addAnnotatedClass(Child.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Parent.class, Child.class };
     }
 
     @Test

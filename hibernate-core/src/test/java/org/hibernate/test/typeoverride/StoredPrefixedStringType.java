@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.typeoverride;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,6 +71,25 @@ public class StoredPrefixedStringType
 							String stringValue = rs.getString( name );
 							if ( ! stringValue.startsWith( PREFIX ) ) {
 								throw new AssertionFailure( "Value read from resultset does not have prefix." );
+							}
+							return javaTypeDescriptor.wrap( stringValue.substring( PREFIX.length() ), options );
+						}
+
+						@Override
+						protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+								throws SQLException {
+							String stringValue = statement.getString( index );
+							if ( ! stringValue.startsWith( PREFIX ) ) {
+								throw new AssertionFailure( "Value read from procedure output param does not have prefix." );
+							}
+							return javaTypeDescriptor.wrap( stringValue.substring( PREFIX.length() ), options );
+						}
+
+						@Override
+						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+							String stringValue = statement.getString( name );
+							if ( ! stringValue.startsWith( PREFIX ) ) {
+								throw new AssertionFailure( "Value read from procedure output param does not have prefix." );
 							}
 							return javaTypeDescriptor.wrap( stringValue.substring( PREFIX.length() ), options );
 						}

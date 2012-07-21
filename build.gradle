@@ -22,6 +22,8 @@ buildscript {
     }
 }
 
+hibernateTargetVersion = '4.2.0-SNAPSHOT'
+
 idea {
     project {
         jdkName = "1.6"
@@ -71,7 +73,7 @@ libraries = [
         javassist:      'org.javassist:javassist:3.15.0-GA',
 
         // javax
-        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
+        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-7plus',
         jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
         validation:     'javax.validation:validation-api:1.0.0.GA',
         jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
@@ -113,7 +115,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.1.6-SNAPSHOT'
+    version = rootProject.hibernateTargetVersion
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -168,7 +170,7 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
 
-        aptDumpDir = file( "${buildDir}/tmp/apt" )
+        aptDumpDir = subProject.file( "${buildDir}/tmp/apt" )
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -200,7 +202,7 @@ subprojects { subProject ->
             );
             outputs.dir sourceSets.main.generatedLoggingSrcDir;
             doFirst {
-                source = sourceSets.main.originalJavaSrcDirs
+//                source = sourceSets.main.originalJavaSrcDirs
                 sourceSets.main.generatedLoggingSrcDir.mkdirs()
             }
         }

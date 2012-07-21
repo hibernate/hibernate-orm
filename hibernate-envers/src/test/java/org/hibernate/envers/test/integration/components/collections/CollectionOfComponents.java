@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -44,8 +43,9 @@ import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
 public class CollectionOfComponents extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ComponentSetTestEntity.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { ComponentSetTestEntity.class };
     }
 
     @Test

@@ -5,7 +5,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -14,8 +13,9 @@ import static org.junit.Assert.assertEquals;
 public class ImmutableClassAccessType extends BaseEnversJPAFunctionalTestCase {
 	private Country country;
 
-	public void configure(Ejb3Configuration cfg) {
-		cfg.addAnnotatedClass(Country.class);
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Country.class };
 	}
 
 	@Test

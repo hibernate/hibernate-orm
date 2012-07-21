@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.sql;
+
 import java.sql.Types;
 
 /**
@@ -31,6 +32,10 @@ import java.sql.Types;
  */
 public class NumericTypeDescriptor extends DecimalTypeDescriptor {
 	public static final NumericTypeDescriptor INSTANCE = new NumericTypeDescriptor();
+
+	public NumericTypeDescriptor() {
+		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+	}
 
 	@Override
 	public int getSqlType() {

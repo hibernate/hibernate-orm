@@ -627,9 +627,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				continue; // skip identifier binding
 			}
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				continue;
-			}
 			propertyTableNumbers[ i++ ] = 0;
 		}
 
@@ -643,11 +640,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				continue; // skip identifier binding
 			}
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				continue;
-			}
-			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
 			// TODO: fix when joins are working (HHH-6391)
 			//int join = entityBinding.getJoinNumber(singularAttributeBinding);
 			int join = 0;
@@ -655,16 +647,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 			//propertyTableNumbersByName.put( singularAttributeBinding.getName(), join );
 			propertyTableNumbersByNameAndSubclass.put(
-					singularAttributeBinding.getContainer().getPathBase() + '.' + singularAttributeBinding.getAttribute().getName(),
+					attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName(),
 					join
 			);
 
-			for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
-				if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
-					formulaJoinedNumbers.add( join );
-				}
-				else {
-					columnJoinNumbers.add( join );
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+					if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
+						formulaJoinedNumbers.add( join );
+					}
+					else {
+						columnJoinNumbers.add( join );
+					}
 				}
 			}
 		}

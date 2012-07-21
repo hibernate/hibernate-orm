@@ -42,15 +42,19 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheModeAttribute;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbClassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbDatabaseObjectElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbDialectScopeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterDefElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFlushModeAttribute;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdentifierGeneratorElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbImportElement;
@@ -153,7 +157,7 @@ public class HibernateMappingProcessor {
 			else {
 				Set<String> dialectScopes = new HashSet<String>();
 				if ( databaseObjectElement.getDialectScope() != null ) {
-					for ( JaxbDatabaseObjectElement.JaxbDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
+					for ( JaxbDialectScopeElement dialectScope : databaseObjectElement.getDialectScope() ) {
 						dialectScopes.add( dialectScope.getName() );
 					}
 				}
@@ -245,24 +249,21 @@ public class HibernateMappingProcessor {
 			metadata.addImport( className, rename );
 		}
 		if ( root.isAutoImport() ) {
-			for(final JaxbClassElement element : root.getClazz()){
-				processEntityElement( element );
-			}
-			for(final JaxbJoinedSubclassElement element : root.getJoinedSubclass()){
-				processEntityElement( element );
-			}
-			for(final JaxbUnionSubclassElement element : root.getUnionSubclass()){
-				processEntityElement( element );
-			}
-			for(final JaxbSubclassElement element : root.getSubclass()){
-				processEntityElement( element );
-			}
+			processEntityElementsImport( root.getClazz() );
+			processEntityElementsImport( root.getJoinedSubclass() );
+			processEntityElementsImport( root.getUnionSubclass() );
+			processEntityElementsImport( root.getSubclass() );
 		}
 	}
 
-	private void processEntityElement(EntityElement element) {
-		EntityElement entityElement = element;
-		String qualifiedName = bindingContext().determineEntityName( entityElement );
+	private void processEntityElementsImport(List<? extends EntityElement> entityElements){
+		for(final EntityElement element : entityElements){
+			processEntityElementImport( element );
+		}
+	}
+
+	private void processEntityElementImport(EntityElement entityElement) {
+		final String qualifiedName = bindingContext().determineEntityName( entityElement );
 		metadata.addImport( entityElement.getEntityName() == null
 							? entityElement.getName()
 							: entityElement.getEntityName(), qualifiedName );
@@ -270,29 +271,11 @@ public class HibernateMappingProcessor {
 
 	private void processResultSetMappings() {
 		List<JaxbResultsetElement> resultsetElements = new ArrayList<JaxbResultsetElement>();
-		if ( CollectionHelper.isNotEmpty( mappingRoot().getResultset() ) ) {
-			resultsetElements.addAll( mappingRoot().getResultset() );
-		}
-		for(final JaxbClassElement element : mappingRoot().getClazz()){
-			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
-				resultsetElements.addAll( element.getResultset() );
-			}
-		}
-		for(final JaxbJoinedSubclassElement element : mappingRoot().getJoinedSubclass()){
-			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
-				resultsetElements.addAll( element.getResultset() );
-			}
-		}
-		for(final JaxbUnionSubclassElement element : mappingRoot().getUnionSubclass()){
-			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
-				resultsetElements.addAll( element.getResultset() );
-			}
-		}
-		for(final JaxbSubclassElement element : mappingRoot().getSubclass()){
-			if ( CollectionHelper.isNotEmpty( element.getResultset() ) ) {
-				resultsetElements.addAll( element.getResultset() );
-			}
-		}
+		addAllIfNotEmpty( resultsetElements, mappingRoot().getResultset() );
+		findResultSets( resultsetElements, mappingRoot().getClazz() );
+		findResultSets( resultsetElements, mappingRoot().getJoinedSubclass() );
+		findResultSets( resultsetElements, mappingRoot().getUnionSubclass() );
+		findResultSets( resultsetElements, mappingRoot().getSubclass() );
 		if ( resultsetElements.isEmpty() ) {
 			return;
 		}
@@ -300,6 +283,18 @@ public class HibernateMappingProcessor {
 			bindResultSetMappingDefinitions( element );
 		}
 
+	}
+
+	private static void findResultSets(List<JaxbResultsetElement> resultsetElements, List<? extends EntityElement> entityElements) {
+		for(final EntityElement element : entityElements){
+			addAllIfNotEmpty( resultsetElements, element.getResultset() );
+		}
+	}
+
+	private static void addAllIfNotEmpty(List target, List values) {
+		if ( CollectionHelper.isNotEmpty( values ) ) {
+			target.addAll(values );
+		}
 	}
 
 	private void bindResultSetMappingDefinitions(JaxbResultsetElement element) {
@@ -429,107 +424,96 @@ public class HibernateMappingProcessor {
 	}
 
 	private void processNamedQueries() {
-		if ( CollectionHelper.isEmpty( mappingRoot().getQueryOrSqlQuery() ) ) {
-			return;
+		for(final JaxbQueryElement element : mappingRoot().getQuery()){
+			bindNamedQuery( element );
 		}
-
-		for ( Object queryOrSqlQuery : mappingRoot().getQueryOrSqlQuery() ) {
-			if ( JaxbQueryElement.class.isInstance( queryOrSqlQuery ) ) {
-					bindNamedQuery( JaxbQueryElement.class.cast( queryOrSqlQuery ) );
-			}
-			else if ( JaxbSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
-				bindNamedSQLQuery( JaxbSqlQueryElement.class.cast( queryOrSqlQuery ) );
-			}
-			else {
-				throw new MappingException(
-						"unknown type of query: " +
-								queryOrSqlQuery.getClass().getName(), origin()
-				);
-			}
+		for(final JaxbSqlQueryElement element : mappingRoot().getSqlQuery()){
+			bindNamedSQLQuery( element );
 		}
 	}
 
 	private void bindNamedQuery(JaxbQueryElement queryElement) {
-		final String queryName = queryElement.getName();
-		//path??
-		List<Serializable> list = queryElement.getContent();
-		final Map<String, String> queryParam;
-		String query = "";
-		if ( CollectionHelper.isNotEmpty( list ) ) {
-			queryParam = new HashMap<String, String>( list.size() );
-			for ( Serializable obj : list ) {
-				if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
-					JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
-					queryParam.put( element.getName(), element.getType() );
-				}else if(String.class.isInstance( obj )){
-					query = obj.toString();
-				}
-			}
-		}
-		else {
-			queryParam = Collections.emptyMap();
-		}
-		if ( StringHelper.isEmpty( query ) ) {
-			throw new MappingException( "Named query[" + queryName + "] has no hql defined", origin() );
-		}
-		final boolean cacheable = queryElement.isCacheable();
-		final String region = queryElement.getCacheRegion();
-		final Integer timeout = queryElement.getTimeout();
-		final Integer fetchSize = queryElement.getFetchSize();
-		final boolean readonly = queryElement.isReadOnly();
-		final CacheMode cacheMode = queryElement.getCacheMode() == null ? null : CacheMode.valueOf(
-				queryElement.getCacheMode()
-						.value()
-						.toUpperCase()
-		);
-		final String comment = queryElement.getComment();
-		final FlushMode flushMode = queryElement.getFlushMode() == null ? null : FlushMode.valueOf(
-				queryElement.getFlushMode()
-						.value()
-						.toUpperCase()
-		);
-		NamedQueryDefinition namedQuery = new NamedQueryDefinition(
-				queryName,
-				query,
-				cacheable,
-				region,
-				timeout,
-				fetchSize,
-				flushMode,
-				cacheMode,
-				readonly,
-				comment,
-				queryParam
-		);
-		metadata.addNamedQuery( namedQuery );
+		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder(  );
+		parseQueryElement( builder, queryElement, new QueryElementContentsParserImpl() );
+		metadata.addNamedQuery( builder.createNamedQueryDefinition() );
 
 	}
 
-	private void bindNamedSQLQuery(JaxbSqlQueryElement queryElement) {
+	private static FlushMode getFlushMode(JaxbFlushModeAttribute flushModeAttribute){
+		return flushModeAttribute == null ? null : FlushMode.valueOf( flushModeAttribute.value().toUpperCase() );
+	}
+	private static void parseQueryElement(NamedQueryDefinitionBuilder builder, JaxbQueryElement queryElement, QueryElementContentsParser parser) {
 		final String queryName = queryElement.getName();
-		//todo patch
 		final boolean cacheable = queryElement.isCacheable();
-		String query = "";
 		final String region = queryElement.getCacheRegion();
 		final Integer timeout = queryElement.getTimeout();
 		final Integer fetchSize = queryElement.getFetchSize();
 		final boolean readonly = queryElement.isReadOnly();
-		final CacheMode cacheMode = queryElement.getCacheMode()==null ? null : CacheMode.valueOf( queryElement.getCacheMode().value().toUpperCase() );
-		final FlushMode flushMode = queryElement.getFlushMode() ==null ? null : FlushMode.valueOf( queryElement.getFlushMode().value().toUpperCase() );
 		final String comment = queryElement.getComment();
-		final boolean callable = queryElement.isCallable();
-		final String resultSetRef = queryElement.getResultsetRef();
-		final java.util.List<String> synchronizedTables = new ArrayList<String>();
-		final Map<String, String> queryParam = new HashMap<String, String>( );
-		List<Serializable> list = queryElement.getContent();
-		for ( Serializable obj : list ) {
-			if ( JaxbSynchronizeElement.class.isInstance( obj ) ) {
-				 JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( obj );
-				synchronizedTables.add( element.getTable() );
+		final CacheMode cacheMode = queryElement.getCacheMode() == null ? null : CacheMode.valueOf( queryElement.getCacheMode().value().toUpperCase() );
+		final FlushMode flushMode = queryElement.getFlushMode() == null ? null : FlushMode.valueOf( queryElement.getFlushMode().value().toUpperCase() );
+
+		builder.setName( queryName )
+				.setCacheable( cacheable )
+				.setCacheRegion( region )
+				.setTimeout( timeout )
+				.setFetchSize( fetchSize )
+				.setFlushMode( flushMode )
+				.setCacheMode( cacheMode )
+				.setReadOnly( readonly )
+				.setComment( comment );
+
+		final List<Serializable> list = queryElement.getContent();
+		parser.parse( queryName, list, builder );
+	}
+	private static interface QueryElementContentsParser{
+		void parse(String queryName, List<Serializable> contents, NamedQueryDefinitionBuilder builder);
+	}
+
+	private  class QueryElementContentsParserImpl implements QueryElementContentsParser {
+		@Override
+		public void parse(String queryName, List<Serializable> contents, NamedQueryDefinitionBuilder builder) {
+			final Map<String, String> queryParam = new HashMap<String, String>();
+			String query = "";
+			boolean isQueryDefined=false;
+			for ( Serializable obj : contents ) {
+				if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
+					JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
+					queryParam.put( element.getName(), element.getType() );
+				}
+				else if ( String.class.isInstance( obj ) ) {
+					if ( !isQueryDefined ) {
+						query = obj.toString();
+					}
+					else {
+						throw new MappingException(
+								"Duplicated query string is defined in Named query[+"+queryName+"]",
+								HibernateMappingProcessor.this.origin()
+						);
+					}
+				}
+				parseExtra(queryName, obj, builder);
 			}
-			else if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
-				JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
-				queryParam.put( element.getName(), element.getType() );
+			builder.setParameterTypes( queryParam );
+			if ( StringHelper.isEmpty( query ) ) {
+				throw new MappingException(
+						"Named query[" + queryName + "] has no query string defined",
+						HibernateMappingProcessor.this.origin()
+				);
+			}
+		}
+
+		protected void parseExtra(String queryName, Serializable obj, NamedQueryDefinitionBuilder builder) {
+			//do nothing here
+		}
+	}
+
+	private class SQLQueryElementContentParserImpl extends QueryElementContentsParserImpl{
+		@Override
+		protected void parseExtra(String queryName, Serializable obj, NamedQueryDefinitionBuilder builder) {
+			if ( JaxbSynchronizeElement.class.isInstance( obj ) ) {
+				JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( obj );
+//				synchronizedTables.add( element.getTable() );
 			}
 			else if ( JaxbLoadCollectionElement.class.isInstance( obj ) ) {
 
@@ -543,33 +527,20 @@ public class HibernateMappingProcessor {
 			else if ( JaxbReturnJoinElement.class.isInstance( obj ) ) {
 
 			}
-			else if ( String.class.isInstance( obj ) ){
-				query = obj.toString();
-			}
+		}
+	}
 
-		}
-		if ( StringHelper.isEmpty( query ) ) {
-			throw new MappingException( "Named sql query[" + queryName + "] has no sql defined", origin() );
-		}
+	private void bindNamedSQLQuery(JaxbSqlQueryElement queryElement) {
+		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder(  );
+		parseQueryElement( builder, queryElement, new SQLQueryElementContentParserImpl() );
+
+		final boolean callable = queryElement.isCallable();
+		final String resultSetRef = queryElement.getResultsetRef();
+		builder.setCallable( callable ).setResultSetRef( resultSetRef );
+
 		NamedSQLQueryDefinition namedQuery=null;
 		if(StringHelper.isNotEmpty( resultSetRef )){
-			namedQuery = new NamedSQLQueryDefinition(
-					queryName,
-					query,
-					resultSetRef,
-					synchronizedTables,
-					cacheable,
-					region,
-					timeout,
-					fetchSize,
-					flushMode,
-					cacheMode,
-					readonly,
-					comment,
-					queryParam,
-					callable
-			);
-			//TODO check there is no actual definition elemnents when a ref is defined
+			namedQuery = builder.createNamedQueryDefinition();
 		}   else {
 //			ResultSetMappingDefinition definition = buildResultSetMappingDefinition( queryElem, path, mappings );
 //			namedQuery = new NamedSQLQueryDefinition(

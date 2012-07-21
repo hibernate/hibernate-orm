@@ -29,6 +29,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -63,17 +64,22 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
-						return manyToOneElement.getColumn();
+						return manyToOneElement.getColumnAttribute();
 					}
 
 					@Override
 					public String getFormulaAttribute() {
-						return manyToOneElement.getFormula();
+						return manyToOneElement.getFormulaAttribute();
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
-						return manyToOneElement.getColumnOrFormula();
+					public List<JaxbColumnElement> getColumn() {
+						return manyToOneElement.getColumn();
+					}
+
+					@Override
+					public List<String> getFormula() {
+						return manyToOneElement.getFormula();
 					}
 
 					@Override

@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTimestampElement;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
@@ -59,23 +60,6 @@ class TimestampAttributeSourceImpl
 					public String getColumnAttribute() {
 						return timestampElement.getColumn();
 					}
-
-					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
-
-					@Override
-					public List getColumnOrFormulaElements() {
-						return null;
-					}
-
-					@Override
-					public String getContainingTableName() {
-						// by definition the version should come from the primary table of the root entity.
-						return null;
-					}
-
 					@Override
 					public boolean isIncludedInInsertByDefault() {
 						return true;

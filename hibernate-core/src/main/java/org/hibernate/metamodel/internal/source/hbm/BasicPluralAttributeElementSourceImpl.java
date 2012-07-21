@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -49,11 +50,6 @@ public class BasicPluralAttributeElementSourceImpl
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
-					public String getContainingTableName() {
-						return null;
-					}
-
-					@Override
 					public boolean isIncludedInInsertByDefault() {
 						return BasicPluralAttributeElementSourceImpl.this.areValuesIncludedInInsertByDefault();
 					}
@@ -65,17 +61,22 @@ public class BasicPluralAttributeElementSourceImpl
 
 					@Override
 					public String getColumnAttribute() {
-						return elementElement.getColumn();
+						return elementElement.getColumnAttribute();
 					}
 
 					@Override
 					public String getFormulaAttribute() {
-						return elementElement.getFormula();
+						return elementElement.getFormulaAttribute();
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
-						return elementElement.getColumnOrFormula();
+					public List<JaxbColumnElement> getColumn() {
+						return elementElement.getColumn();
+					}
+
+					@Override
+					public List<String> getFormula() {
+						return elementElement.getFormula();
 					}
 
 					@Override

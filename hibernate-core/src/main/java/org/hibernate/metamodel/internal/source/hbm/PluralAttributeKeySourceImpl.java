@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyElement;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -53,11 +54,6 @@ public class PluralAttributeKeySourceImpl
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
-					public String getContainingTableName() {
-						return null;
-					}
-
-					@Override
 					public boolean isIncludedInInsertByDefault() {
 						return true;
 					}
@@ -73,12 +69,7 @@ public class PluralAttributeKeySourceImpl
 					}
 
 					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
-
-					@Override
-					public List getColumnOrFormulaElements() {
+					public List<JaxbColumnElement> getColumn() {
 						return keyElement.getColumn();
 					}
 

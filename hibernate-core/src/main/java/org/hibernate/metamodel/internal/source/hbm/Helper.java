@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +51,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -84,7 +86,9 @@ public class Helper {
 	};
 
 	public static LockMode interpretLockMode(JaxbLockModeAttribute lockModeAttribute, Origin origin){
-		if(lockModeAttribute==null)return LockMode.READ;
+		if ( lockModeAttribute == null ) {
+			return LockMode.READ;
+		}
 		switch ( lockModeAttribute ) {
 			case NONE:
 				return LockMode.NONE;
@@ -388,14 +392,28 @@ public class Helper {
             return null;
         }
 
-        public List getColumnOrFormulaElements() {
-            return null;
-        }
+        public List<JaxbColumnElement> getColumn(){
+			return Collections.emptyList();
+		}
+
+		public List<String> getFormula(){
+			return Collections.emptyList();
+		}
 
         public boolean isForceNotNull() {
             return false;
         }
     }
+
+	private static void checkColumnOrFormulaElements(MappingDocument mappingDocument, ValueSourcesAdapter valueSourcesAdapter) {
+		if ( CollectionHelper.isNotEmpty( valueSourcesAdapter.getColumn() ) || CollectionHelper.isNotEmpty(
+				valueSourcesAdapter.getFormula()
+		) ) {
+			throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
+					"column/formula attribute may not be used together with <column>/<formula> subelement"
+			);
+		}
+	}
 
 	/**
 	 * Given a {@link ValueSourcesAdapter}, build the corresponding list of {@link RelationalValueSource}
@@ -413,12 +431,7 @@ public class Helper {
 		if ( StringHelper.isNotEmpty( valueSourcesAdapter.getColumnAttribute() ) ) {
 			// we have the XML defining a column attribute.
 			//		it is therefore illegal for there to also be any nested formula or column elements
-			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
-					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
-						"column/formula attribute may not be used together with <column>/<formula> subelement"
-				);
-			}
+			checkColumnOrFormulaElements(mappingDocument, valueSourcesAdapter);
 			//		it is also illegal for there to also be a formula attribute
 			if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
 				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
@@ -440,12 +453,7 @@ public class Helper {
 		else if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
 			// we have the XML defining a formula attribute (and not a column attribute)
 			//		it is therefore illegal for there to also be any nested formula or column elements
-			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
-					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-				throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
-						"column/formula attribute may not be used together with <column>/<formula> subelement"
-				);
-			}
+			checkColumnOrFormulaElements( mappingDocument, valueSourcesAdapter );
 			// 		column/formula attribute combo checked already
 
 			result.add(
@@ -456,31 +464,30 @@ public class Helper {
 					)
 			);
 		}
-		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
-				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
-			// we have the XML defining nested formula or column elements (and not column attribute nor formula attribute)
-			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
-				if ( JaxbColumnElement.class.isInstance( columnOrFormulaElement ) ) {
-					result.add(
-							new ColumnSourceImpl(
-									mappingDocument,
-									valueSourcesAdapter.getContainingTableName(),
-									(JaxbColumnElement) columnOrFormulaElement,
-									valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
-									valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
-                                    valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.TRUE
-							)
-					);
-				}
-				else {
-					result.add(
-							new FormulaImpl(
-									mappingDocument,
-									valueSourcesAdapter.getContainingTableName(),
-									(String) columnOrFormulaElement
-							)
-					);
-				}
+		// we have the XML defining nested formula or column elements (and not column attribute nor formula attribute)
+		if ( CollectionHelper.isNotEmpty( valueSourcesAdapter.getColumn() ) ) {
+			for ( JaxbColumnElement column : valueSourcesAdapter.getColumn() ) {
+				result.add(
+						new ColumnSourceImpl(
+								mappingDocument,
+								valueSourcesAdapter.getContainingTableName(),
+								column,
+								valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+								valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+								valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.TRUE
+						)
+				);
+			}
+		}
+		if ( CollectionHelper.isNotEmpty( valueSourcesAdapter.getFormula() ) ) {
+			for ( String formula : valueSourcesAdapter.getFormula() ) {
+				result.add(
+						new FormulaImpl(
+								mappingDocument,
+								valueSourcesAdapter.getContainingTableName(),
+								formula
+						)
+				);
 			}
 		}
 		return result;

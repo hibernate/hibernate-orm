@@ -47,9 +47,7 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 		super( sourceMappingDocument );
 		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
 
-			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null
-					? Collections.EMPTY_LIST
-					: Collections.singletonList( indexElement.getColumn() );
+			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null ? Collections.EMPTY_LIST : Collections.singletonList( indexElement.getColumn() );
 
 			@Override
 			public String getColumnAttribute() {
@@ -57,18 +55,8 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 			}
 
 			@Override
-			public List getColumnOrFormulaElements() {
+			public List<JaxbColumnElement> getColumn() {
 				return columnElements;
-			}
-
-			@Override
-			public String getContainingTableName() {
-				return null;
-			}
-
-			@Override
-			public String getFormulaAttribute() {
-				return null;
 			}
 
 			@Override
@@ -106,18 +94,8 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 			}
 
 			@Override
-			public List getColumnOrFormulaElements() {
+			public List<JaxbColumnElement> getColumn() {
 				return indexElement.getColumn();
-			}
-
-			@Override
-			public String getContainingTableName() {
-				return null;
-			}
-
-			@Override
-			public String getFormulaAttribute() {
-				return null;
 			}
 
 			@Override

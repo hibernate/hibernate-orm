@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
@@ -58,11 +59,6 @@ public class ManyToManyPluralAttributeElementSourceImpl
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
-					public String getContainingTableName() {
-						return null;
-					}
-
-					@Override
 					public boolean isIncludedInInsertByDefault() {
 						return true;
 					}
@@ -74,17 +70,22 @@ public class ManyToManyPluralAttributeElementSourceImpl
 
 					@Override
 					public String getColumnAttribute() {
-						return manyToManyElement.getColumn();
+						return manyToManyElement.getColumnAttribute();
 					}
 
 					@Override
 					public String getFormulaAttribute() {
-						return manyToManyElement.getFormula();
+						return manyToManyElement.getFormulaAttribute();
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
-						return manyToManyElement.getColumnOrFormula();
+					public List<JaxbColumnElement> getColumn() {
+						return manyToManyElement.getColumn();
+					}
+
+					@Override
+					public List<String> getFormula() {
+						return manyToManyElement.getFormula();
 					}
 				}
 		);

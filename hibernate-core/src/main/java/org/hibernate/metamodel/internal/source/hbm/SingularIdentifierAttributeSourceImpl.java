@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdElement;
 import org.hibernate.mapping.PropertyGeneration;
@@ -82,29 +83,13 @@ class SingularIdentifierAttributeSourceImpl
 					}
 
 					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
-
-					@Override
-					public List getColumnOrFormulaElements() {
+					public List<JaxbColumnElement> getColumn() {
 						return idElement.getColumn();
-					}
-
-					@Override
-					public String getContainingTableName() {
-						// by definition, the identifier should be bound to the primary table of the root entity
-						return null;
 					}
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
 						return true;
-					}
-
-					@Override
-					public boolean isIncludedInUpdateByDefault() {
-						return false;
 					}
 
                     @Override

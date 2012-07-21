@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -49,22 +50,22 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 
 			@Override
 			public String getColumnAttribute() {
+				return mapKey.getColumnAttribute();
+			}
+
+			@Override
+			public List<JaxbColumnElement> getColumn() {
 				return mapKey.getColumn();
 			}
 
 			@Override
-			public List getColumnOrFormulaElements() {
-				return mapKey.getColumnOrFormula();
-			}
-
-			@Override
-			public String getContainingTableName() {
-				return null;
+			public List<String> getFormula() {
+				return mapKey.getFormula();
 			}
 
 			@Override
 			public String getFormulaAttribute() {
-				return mapKey.getFormula();
+				return mapKey.getFormulaAttribute();
 			}
 
 			@Override
@@ -109,18 +110,8 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 			}
 
 			@Override
-			public List getColumnOrFormulaElements() {
+			public List<JaxbColumnElement> getColumn() {
 				return indexElement.getColumn();
-			}
-
-			@Override
-			public String getContainingTableName() {
-				return null;
-			}
-
-			@Override
-			public String getFormulaAttribute() {
-				return null;
 			}
 
 			@Override

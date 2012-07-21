@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbVersionElement;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
@@ -60,21 +61,9 @@ class VersionAttributeSourceImpl
 					public String getColumnAttribute() {
 						return versionElement.getColumnAttribute();
 					}
-
 					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
-
-					@Override
-					public List getColumnOrFormulaElements() {
+					public List<JaxbColumnElement> getColumn() {
 						return versionElement.getColumn();
-					}
-
-					@Override
-					public String getContainingTableName() {
-						// by definition the version should come from the primary table of the root entity.
-						return null;
 					}
 
 					@Override

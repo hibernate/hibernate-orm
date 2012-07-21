@@ -76,7 +76,18 @@
         <jaxb:bindings node="//xsd:complexType[@name='meta-element']">
             <inheritance:implements>org.hibernate.metamodel.spi.source.MetaAttributeSource</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']">
+            <inheritance:implements>org.hibernate.metamodel.spi.source.FilterParameterSource</inheritance:implements>
+        </jaxb:bindings>
 
+
+        <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']//xsd:attribute[@name='name']">
+            <jaxb:property name="parameterName"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']//xsd:attribute[@name='type']">
+            <jaxb:property name="parameterValueTyeName"/>
+        </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:complexType[@name='meta-element']//xsd:attribute[@name='attribute']">
             <jaxb:property name="name"/>
@@ -93,7 +104,43 @@
         </jaxb:bindings> 
         <jaxb:bindings node="//xsd:complexType[@name='discriminator-element']//xsd:attribute[@name='formula']">
             <jaxb:property name="formulaAttribute"/>
-        </jaxb:bindings> 
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='map-key-many-to-many']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='map-key-many-to-many']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='element-element']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='element-element']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='property-element']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='property-element']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='map-key-element']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='map-key-element']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-one-element']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-one-element']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-many-element']//xsd:attribute[@name='column']">
+            <jaxb:property name="columnAttribute"/>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-many-element']//xsd:attribute[@name='formula']">
+            <jaxb:property name="formulaAttribute"/>
+        </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='id-element']//xsd:attribute[@name='column']">
             <jaxb:property name="columnAttribute"/>
         </jaxb:bindings> 

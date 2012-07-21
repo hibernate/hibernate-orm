@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -78,17 +79,22 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
-						return propertyElement.getColumn();
+						return propertyElement.getColumnAttribute();
 					}
 
 					@Override
 					public String getFormulaAttribute() {
-						return propertyElement.getFormula();
+						return propertyElement.getFormulaAttribute();
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
-						return propertyElement.getColumnOrFormula();
+					public List<JaxbColumnElement> getColumn() {
+						return propertyElement.getColumn();
+					}
+
+					@Override
+					public List<String> getFormula() {
+						return propertyElement.getFormula();
 					}
 
 					@Override

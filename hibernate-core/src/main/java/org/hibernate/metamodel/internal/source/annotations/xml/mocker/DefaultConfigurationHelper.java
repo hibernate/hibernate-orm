@@ -101,7 +101,19 @@ class DefaultConfigurationHelper {
 	}
 
 	void applyDefaults(EntityElement entityElement, EntityMappingsMocker.Default defaults) {
+		if(JaxbEntity.class.isInstance( entityElement ))
+		mockTableIfNonExist( JaxbEntity.class.cast( entityElement ), defaults );
 		applyDefaultsToEntityObject(  entityElement , defaults );
+	}
+
+	private void mockTableIfNonExist(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
+		if ( hasSchemaOrCatalogDefined( defaults ) ) {
+			JaxbTable table = entity.getTable();
+			if ( table == null ) {
+				table = new JaxbTable();
+				entity.setTable( table );
+			}
+		}
 	}
 
 	private void applyDefaultsToEntityObject(EntityElement entityObject, EntityMappingsMocker.Default defaults) {

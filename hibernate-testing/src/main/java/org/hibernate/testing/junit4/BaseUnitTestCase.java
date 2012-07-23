@@ -40,12 +40,13 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  *
  * @author Steve Ebersole
  */
-@RunWith( CustomRunner.class )
+@RunWith(CustomRunner.class)
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
 
 	@Rule
-	public TestRule globalTimeout= new Timeout(30 * 60 * 1000); // no test should run longer than 30 minutes
+	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
+
 	@After
 	public void releaseTransactions() {
 		if ( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {
@@ -53,7 +54,7 @@ public abstract class BaseUnitTestCase {
 			try {
 				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 			}
-			catch (SystemException ignored) {
+			catch ( SystemException ignored ) {
 			}
 		}
 	}

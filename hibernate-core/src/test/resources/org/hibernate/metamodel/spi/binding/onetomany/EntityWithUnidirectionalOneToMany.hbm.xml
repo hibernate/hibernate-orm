@@ -1,35 +1,35 @@
 <?xml version="1.0"?>
-<hibernate-mapping package="org.hibernate.metamodel.spi.binding"
+<hibernate-mapping package="org.hibernate.metamodel.spi.binding.onetomany"
                    xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <class name="EntityWithUnidirectionalOneToManys">
+    <class name="EntityWithUnidirectionalOneToMany">
         <id name="id">
             <generator class="increment"/>
         </id>
         <property name="name"/>
         <bag name="theBag">
             <key column="theBagOwner"/>
-            <one-to-many class="SimpleEntity"/>
+            <one-to-many class="org.hibernate.metamodel.spi.binding.SimpleEntity"/>
         </bag>
         <set name="theSet" lazy="false">
             <key column="theSetOwner" not-null="true"/>
-            <one-to-many class="SimpleEntity"/>
+            <one-to-many class="org.hibernate.metamodel.spi.binding.SimpleEntity"/>
         </set>
         <list name="theList" lazy="false">
             <key column="theListOwner" not-null="true"/>
             <list-index column="list_index"/>
-            <one-to-many class="SimpleEntity"/>
+            <one-to-many class="org.hibernate.metamodel.spi.binding.SimpleEntity"/>
         </list>
         <map name="theMap">
             <key column="theMapOwner" not-null="true"/>
             <map-key column="map_key" type="string"/>
-            <one-to-many class="SimpleEntity"/>
+            <one-to-many class="org.hibernate.metamodel.spi.binding.SimpleEntity"/>
         </map>
         <bag name="thePropertyRefBag" lazy="extra">
             <key column="ownerName" property-ref="name" not-null="true"/>
-            <one-to-many class="SimpleEntity"/>
+            <one-to-many class="org.hibernate.metamodel.spi.binding.SimpleEntity"/>
         </bag>
     </class>
 

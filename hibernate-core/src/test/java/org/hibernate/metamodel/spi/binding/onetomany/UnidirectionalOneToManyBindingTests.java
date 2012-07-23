@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.binding;
+package org.hibernate.metamodel.spi.binding.onetomany;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,6 +37,13 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.SimpleEntity;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
@@ -64,7 +72,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = ( StandardServiceRegistryImpl ) new ServiceRegistryBuilder().buildServiceRegistry();
 	}
 
 	@After
@@ -85,22 +93,25 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 	private void doTest(MetadataSourceProcessingOrder processingOrder) {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
 //		sources.addAnnotatedClass( EntityWithBasicCollections.class );
-		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithUnidirectionalOneToManys.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/spi/binding/onetomany/EntityWithUnidirectionalOneToMany.hbm.xml" );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
-		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
+		MetadataImpl metadata = ( MetadataImpl ) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
 
-		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalOneToManys.class.getName() );
+		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalOneToMany.class.getName() );
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertNotNull( entityBinding );
 
-		assertEquals( Identifier.toIdentifier( "SimpleEntity" ), simpleEntityBinding.getPrimaryTable().getLogicalName() );
+		assertEquals(
+				Identifier.toIdentifier( "SimpleEntity" ),
+				simpleEntityBinding.getPrimaryTable().getLogicalName()
+		);
 		assertEquals( 1, simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() );
 		Column simpleEntityIdColumn = simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 );
-		assertEquals( Identifier.toIdentifier("id") , simpleEntityIdColumn.getColumnName() );
+		assertEquals( Identifier.toIdentifier( "id" ), simpleEntityIdColumn.getColumnName() );
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theBag" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theBag" ),
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
@@ -112,7 +123,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theSet" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theSet" ),
 				SetType.class,
 				Set.class,
 				simpleEntityBinding,
@@ -124,7 +135,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theList" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theList" ),
 				ListType.class,
 				List.class,
 				simpleEntityBinding,
@@ -136,7 +147,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".theMap" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theMap" ),
 				MapType.class,
 				Map.class,
 				simpleEntityBinding,
@@ -148,11 +159,11 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToManys.class.getName() + ".thePropertyRefBag" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".thePropertyRefBag" ),
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
-				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
+				( SingularAttributeBinding ) entityBinding.locateAttributeBinding( "name" ),
 				Identifier.toIdentifier( "ownerName" ),
 				FetchTiming.EXTRA_DELAYED,
 				false
@@ -169,12 +180,15 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 			Identifier expectedKeySourceColumnName,
 			FetchTiming expectedFetchTiming,
 			boolean expectedNullableCollectionKey) {
-		assertEquals(
+		Assert.assertEquals(
 				PluralAttributeElementNature.ONE_TO_MANY,
 				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
 		);
-		assertSame( collectionBinding, collectionOwnerBinding.locateAttributeBinding( collectionBinding.getAttribute().getName() ) );
-		assertEquals( expectedFetchTiming, collectionBinding.getFetchTiming()  );
+		assertSame(
+				collectionBinding,
+				collectionOwnerBinding.locateAttributeBinding( collectionBinding.getAttribute().getName() )
+		);
+		assertEquals( expectedFetchTiming, collectionBinding.getFetchTiming() );
 		assertEquals( expectedFetchTiming != FetchTiming.IMMEDIATE, collectionBinding.isLazy() );
 
 		final String role = collectionBinding.getAttribute().getRole();
@@ -213,7 +227,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 		assertEquals( 1, fk.getTargetColumns().size() );
 
 		SingularAttributeBinding keySourceAttributeBinding =
-				( SingularAttributeBinding) expectedElementEntityBinding.locateAttributeBinding(
+				( SingularAttributeBinding ) expectedElementEntityBinding.locateAttributeBinding(
 						"_" + role + "BackRef"
 				);
 		assertEquals( expectedNullableCollectionKey, keyBinding.isNullable() );
@@ -224,7 +238,7 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 			assertEquals( 1, keySourceAttributeBinding.getRelationalValueBindings().size() );
 			Value keySourceValue = keySourceAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
 			assertTrue( keySourceValue instanceof Column );
-			Column keySourceColumn = (Column) keySourceValue;
+			Column keySourceColumn = ( Column ) keySourceValue;
 			assertEquals( expectedKeySourceColumnName, keySourceColumn.getColumnName() );
 			assertSame( keySourceColumn, fk.getColumns().get( 0 ) );
 			assertSame( keySourceColumn, fk.getSourceColumns().get( 0 ) );

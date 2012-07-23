@@ -4,11 +4,10 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <class name="SimpleEntity">
-
-    	<id name="id">
-    		<generator class="increment"/>
-    	</id>
+        <id name="id">
+            <generator class="increment"/>
+        </id>
         <property name="name" unique="true"/>
-	</class>
+    </class>
 
 </hibernate-mapping>

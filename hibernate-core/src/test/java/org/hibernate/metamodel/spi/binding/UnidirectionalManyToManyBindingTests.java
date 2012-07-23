@@ -23,35 +23,23 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Collection;
-import java.util.Set;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.binding.EntityWithUnidirectionalManyToMany;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.BagType;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.SetType;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -86,7 +74,7 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
 
-		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalManyToManys.class.getName() );
+		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalManyToMany.class.getName() );
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertNotNull( entityBinding );
 

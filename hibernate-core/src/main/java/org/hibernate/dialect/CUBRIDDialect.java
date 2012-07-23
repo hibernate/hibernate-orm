@@ -58,10 +58,10 @@ public class CUBRIDDialect extends Dialect {
 		registerColumnType( Types.INTEGER, "int" );
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 		registerColumnType( Types.REAL,    "double"        );
-        registerColumnType( Types.SMALLINT, "smallint" );
+        registerColumnType( Types.SMALLINT, "short" );
         registerColumnType( Types.TIME,     "time" );
         registerColumnType( Types.TIMESTAMP, "timestamp" );
-        registerColumnType( Types.TINYINT, "smallint" );
+        registerColumnType( Types.TINYINT, "short" );
 		registerColumnType( Types.VARBINARY, 2000, "bit varying($l)" );
         registerColumnType( Types.VARCHAR, 4000, "varchar($l)" );
 

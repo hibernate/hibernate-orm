@@ -31,7 +31,7 @@ package org.hibernate.jpa;
  *
  * @author Steve Ebersole
  */
-public interface AvailableSettings {
+public interface AvailableSettings extends org.hibernate.cfg.AvailableSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA defined settings
@@ -193,6 +193,17 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Names a {@link org.hibernate.jpa.boot.spi.IntegratorProvider} to supply custom Integrator instances to
+	 * the underlying SessionFactory when built.
+	 */
+	public static final String INTEGRATOR_PROVIDER = "hibernate.integrator_provider";
+
+	/**
+	 * Names a Jandex {@link org.jboss.jandex.Index} instance to use, as opposed to Hibernate using its own.
+	 */
+	public static final String JANDEX_INDEX = "hibernate.jandex_index";
+
+	/**
 	 * Query hint (aka {@link javax.persistence.Query#setHint}) for applying
 	 * an alias specific lock mode (aka {@link org.hibernate.Query#setLockMode}).
 	 * <p/>
@@ -292,7 +303,7 @@ public interface AvailableSettings {
 	public static final String FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
-	 * Pass an implementation of {@link org.hibernate.ejb.packaging.Scanner}:
+	 * Pass an implementation of {@link org.hibernate.jpa.packaging.spi.Scanner}:
 	 *  - preferably an actual instance
 	 *  - or a class name with a no-arg constructor 
 	 */
@@ -314,30 +325,6 @@ public interface AvailableSettings {
 	 * EntityManagerFactory name
 	 */
 	public static final String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
-
-	/**
-	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
-	 */
-	@Deprecated
-	public static final String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
-
-	/**
-	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
-	 * 3 values:<ul>
-	 *     <li>
-	 *         <b>enabled</b> - Do the population
-	 *     </li>
-	 *     <li>
-	 *         <b>disabled</b> - Do not do the population
-	 *     </li>
-	 *     <li>
-	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
-	 *         result in the population failing.
-	 *     </li>
-	 * </ul>
-	 *
-	 */
-	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
 
 
 	/**

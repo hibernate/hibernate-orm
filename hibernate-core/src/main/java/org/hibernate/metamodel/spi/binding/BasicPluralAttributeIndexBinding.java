@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
+import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -30,48 +32,44 @@ import org.hibernate.metamodel.spi.relational.Value;
  */
 public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBinding {
 
-	private final AbstractPluralAttributeBinding pluralAttributeBinding;
+	private final IndexedPluralAttributeBinding pluralAttributeBinding;
+	private final PluralAttributeIndexNature pluralAttributeIndexNature;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private Value value;
 
-	/**
-	 * @param pluralAttributeBinding
-	 */
-	public BasicPluralAttributeIndexBinding( final AbstractPluralAttributeBinding pluralAttributeBinding ) {
+	public BasicPluralAttributeIndexBinding(
+			IndexedPluralAttributeBinding pluralAttributeBinding,
+			PluralAttributeIndexNature pluralAttributeIndexNature) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
+		this.pluralAttributeIndexNature = pluralAttributeIndexNature;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding#getHibernateTypeDescriptor()
-	 */
 	@Override
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		return hibernateTypeDescriptor;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding#getIndexRelationalValue()
-	 */
 	@Override
 	public Value getIndexRelationalValue() {
 		return value;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding#getPluralAttributeBinding()
-	 */
 	@Override
-	public PluralAttributeBinding getPluralAttributeBinding() {
+	public IndexedPluralAttributeBinding getPluralAttributeBinding() {
 		return pluralAttributeBinding;
 	}
 
 	public void setIndexRelationalValue( Value value ) {
 		this.value = value;
+	}
+
+	@Override
+	public Type getPluralAttributeIndexType() {
+		return ( (IndexedPluralAttribute) getPluralAttributeBinding().getAttribute() ).getIndexType();
+	}
+
+	@Override
+	public PluralAttributeIndexNature getPluralAttributeIndexNature() {
+		return pluralAttributeIndexNature;
 	}
 }

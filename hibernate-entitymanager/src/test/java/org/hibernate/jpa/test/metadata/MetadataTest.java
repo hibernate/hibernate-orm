@@ -41,7 +41,7 @@ import javax.persistence.metamodel.Type;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 

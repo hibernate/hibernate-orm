@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**

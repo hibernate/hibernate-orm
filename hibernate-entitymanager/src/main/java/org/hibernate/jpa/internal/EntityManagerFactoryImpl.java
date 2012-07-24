@@ -64,7 +64,8 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
+import org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -122,19 +123,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
-
-		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
-		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
-			this.metamodel = null;
-		}
-		else {
-			this.metamodel = MetamodelImpl.buildMetamodel(
-					classes,
-					sessionFactory,
-					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
-			);
-		}
+		this.metamodel = sessionFactory.getJpaMetamodel();
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
 
@@ -152,43 +141,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
-	}
-
-	private enum JpaMetaModelPopulationSetting {
-		ENABLED,
-		DISABLED,
-		IGNORE_UNSUPPORTED;
-		
-		private static JpaMetaModelPopulationSetting parse(String setting) {
-			if ( "enabled".equalsIgnoreCase( setting ) ) {
-				return ENABLED;
-			}
-			else if ( "disabled".equalsIgnoreCase( setting ) ) {
-				return DISABLED;
-			}
-			else {
-				return IGNORE_UNSUPPORTED;
-			}
-		}
-	}
-	
-	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
-		String setting = ConfigurationHelper.getString(
-				AvailableSettings.JPA_METAMODEL_POPULATION,
-				cfg.getProperties(),
-				null
-		);
-		if ( setting == null ) {
-			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, cfg.getProperties(), null );
-			if ( setting != null ) {
-				log.infof( 
-						"Encountered deprecated setting [%s], use [%s] instead",
-						AvailableSettings.JPA_METAMODEL_GENERATION,
-						AvailableSettings.JPA_METAMODEL_POPULATION
-				);
-			}
-		}
-		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
 	private static void addAll(HashMap<String, Object> destination, Map<?,?> source) {

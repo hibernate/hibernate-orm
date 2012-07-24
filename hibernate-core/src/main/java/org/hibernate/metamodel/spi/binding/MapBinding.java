@@ -37,6 +37,7 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
 			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeIndexNature pluralAttributeIndexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -48,8 +49,9 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext );
-		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this );
+				metaAttributeContext
+		);
+		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, pluralAttributeIndexNature );
 	}
 
 	/**

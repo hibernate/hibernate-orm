@@ -23,16 +23,20 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * @author Steve Ebersole
  */
 public interface PluralAttributeIndexBinding {
+	IndexedPluralAttributeBinding getPluralAttributeBinding();
 
-	PluralAttributeBinding getPluralAttributeBinding();
+	PluralAttributeIndexNature getPluralAttributeIndexNature();
 
 	Value getIndexRelationalValue();
 
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
+
+	Type getPluralAttributeIndexType();
 }

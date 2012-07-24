@@ -25,6 +25,7 @@ package org.hibernate.internal;
 
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import javax.persistence.metamodel.Metamodel;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -111,9 +112,9 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.StrategyInstanceResolver;
+import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
+import org.hibernate.jpa.metamodel.internal.builder.MetamodelBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -211,6 +212,7 @@ public final class SessionFactoryImpl
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
+	private final transient Metamodel jpaMetamodel;
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
@@ -600,6 +602,23 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
+			this.jpaMetamodel = org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl.buildMetamodel(
+					cfg.getClassMappings(),
+					this,
+					jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED
+			);
+		}
+		else {
+			jpaMetamodel = null;
+		}
+	}
+
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+		final String setting = cfg.getProperties().getProperty( AvailableSettings.JPA_METAMODEL_POPULATION );
+		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -738,6 +757,8 @@ public final class SessionFactoryImpl
 		// Prepare persisters and link them up with their cache
 		// region/access-strategy
 
+		final MetamodelBuilder jpaMetamodelBuilder = new MetamodelBuilder( this );
+
 		StringBuilder stringBuilder = new StringBuilder();
 		if ( settings.getCacheRegionPrefix() != null) {
 			stringBuilder
@@ -816,6 +837,7 @@ public final class SessionFactoryImpl
 			);
 			entityPersisters.put( model.getEntity().getName(), cp );
 			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
+			jpaMetamodelBuilder.add( model );
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
@@ -996,6 +1018,8 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		this.jpaMetamodel = jpaMetamodelBuilder.buildMetamodel();
 	}
 
 	@SuppressWarnings( {"unchecked"} )
@@ -1777,6 +1801,11 @@ public final class SessionFactoryImpl
 	@Override
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
 		return sessionFactoryOptions.getCurrentTenantIdentifierResolver();
+	}
+
+	@Override
+	public Metamodel getJpaMetamodel() {
+		return jpaMetamodel;
 	}
 
 

@@ -51,7 +51,8 @@ public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implem
 		JaxbMapKeyElement mapKey = mapElement.getMapKey();
 		if ( mapKey != null ) {
 			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, mapKey );
-		} else {
+		}
+		else {
 			JaxbIndexElement indexElement = mapElement.getIndex();
 			if ( indexElement != null ) {
 				this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, indexElement );

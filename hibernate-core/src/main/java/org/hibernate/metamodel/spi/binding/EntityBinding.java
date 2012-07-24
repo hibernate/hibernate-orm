@@ -643,7 +643,8 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementNature elementNature,
+			PluralAttributeIndexNature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -652,7 +653,8 @@ public class EntityBinding implements AttributeBindingContainer {
 		final MapBinding binding = new MapBinding(
 				this,
 				attribute,
-				nature,
+				elementNature,
+				indexNature,
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,

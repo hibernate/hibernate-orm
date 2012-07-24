@@ -182,7 +182,7 @@ public class Configuration implements Serializable {
 
 	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS;
 
-	public static final String ARTEFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.METADATA_PROCESSING_ORDER;
 
 	/**
 	 * Class name of the class needed to enable Search.

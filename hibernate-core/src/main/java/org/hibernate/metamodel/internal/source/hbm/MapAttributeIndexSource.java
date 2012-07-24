@@ -30,6 +30,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -37,49 +38,48 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  *
  */
 public class MapAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
-
-	private final List< RelationalValueSource > valueSources;
+	private final PluralAttributeIndexNature nature;
+	private final List<RelationalValueSource> valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 
-	/**
-	 * @param sourceMappingDocument
-	 */
-	public MapAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey ) {
+	public MapAttributeIndexSource(MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument(), new Helper.ValueSourcesAdapter() {
+		valueSources = Helper.buildValueSources(
+				sourceMappingDocument(),
+				new Helper.ValueSourcesAdapter() {
 
-			@Override
-			public String getColumnAttribute() {
-				return mapKey.getColumnAttribute();
-			}
+					@Override
+					public String getColumnAttribute() {
+						return mapKey.getColumnAttribute();
+					}
 
-			@Override
-			public List<JaxbColumnElement> getColumn() {
-				return mapKey.getColumn();
-			}
+					@Override
+					public List<JaxbColumnElement> getColumn() {
+						return mapKey.getColumn();
+					}
 
-			@Override
-			public List<String> getFormula() {
-				return mapKey.getFormula();
-			}
+					@Override
+					public List<String> getFormula() {
+						return mapKey.getFormula();
+					}
 
-			@Override
-			public String getFormulaAttribute() {
-				return mapKey.getFormulaAttribute();
-			}
+					@Override
+					public String getFormulaAttribute() {
+						return mapKey.getFormulaAttribute();
+					}
 
-			@Override
-			public boolean isIncludedInInsertByDefault() {
-				return areValuesIncludedInInsertByDefault();
-			}
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return areValuesIncludedInInsertByDefault();
+					}
 
-			@Override
-			public boolean isIncludedInUpdateByDefault() {
-				return areValuesIncludedInUpdateByDefault();
-			}
-		} );
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return areValuesIncludedInUpdateByDefault();
+					}
+				}
+		);
 		this.typeSource = new ExplicitHibernateTypeSource() {
-
 			@Override
 			public String getName() {
 				if ( mapKey.getTypeAttribute() != null ) {
@@ -92,99 +92,84 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 			}
 
 			@Override
-			public Map< String, String > getParameters() {
+			public Map<String, String> getParameters() {
 				return mapKey.getType() != null
 						? Helper.extractParameters( mapKey.getType().getParam() )
-						: java.util.Collections.< String, String >emptyMap();
+						: java.util.Collections.<String, String>emptyMap();
 			}
 		};
+		this.nature = PluralAttributeIndexNature.BASIC;
 	}
 
-	public MapAttributeIndexSource( MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement ) {
+	public MapAttributeIndexSource(MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
+		valueSources = Helper.buildValueSources(
+				sourceMappingDocument,
+				new Helper.ValueSourcesAdapter() {
 
-			@Override
-			public String getColumnAttribute() {
-				return indexElement.getColumnAttribute();
-			}
+					@Override
+					public String getColumnAttribute() {
+						return indexElement.getColumnAttribute();
+					}
 
-			@Override
-			public List<JaxbColumnElement> getColumn() {
-				return indexElement.getColumn();
-			}
+					@Override
+					public List<JaxbColumnElement> getColumn() {
+						return indexElement.getColumn();
+					}
 
-			@Override
-			public boolean isIncludedInInsertByDefault() {
-				return areValuesIncludedInInsertByDefault();
-			}
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return areValuesIncludedInInsertByDefault();
+					}
 
-			@Override
-			public boolean isIncludedInUpdateByDefault() {
-				return areValuesIncludedInUpdateByDefault();
-			}
-		} );
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return areValuesIncludedInUpdateByDefault();
+					}
+				}
+		);
 		typeSource = new ExplicitHibernateTypeSource() {
-
 			@Override
 			public String getName() {
 				return indexElement.getType();
 			}
 
 			@Override
-			public Map< String, String > getParameters() {
-				return java.util.Collections.< String, String >emptyMap();
+			public Map<String, String> getParameters() {
+				return java.util.Collections.<String, String>emptyMap();
 			}
 		};
+
+		this.nature = PluralAttributeIndexNature.BASIC;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesIncludedInInsertByDefault()
-	 */
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesIncludedInUpdateByDefault()
-	 */
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesNullableByDefault()
-	 */
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.PluralAttributeIndexSource#explicitHibernateTypeSource()
-	 */
+	@Override
+	public PluralAttributeIndexNature getNature() {
+		return nature;
+	}
+
 	@Override
 	public ExplicitHibernateTypeSource explicitHibernateTypeSource() {
 		return typeSource;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.RelationalValueSourceContainer#relationalValueSources()
-	 */
 	@Override
-	public List< RelationalValueSource > relationalValueSources() {
+	public List<RelationalValueSource> relationalValueSources() {
 		return valueSources;
 	}
 }

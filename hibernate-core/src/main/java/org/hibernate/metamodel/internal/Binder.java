@@ -79,6 +79,7 @@ import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBindin
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
@@ -182,6 +183,8 @@ public class Binder {
 	private final LinkedList<EntityMode> entityModes = new LinkedList<EntityMode>();
 
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
+
+	// todo : apply org.hibernate.metamodel.MetadataSources.getExternalCacheRegionDefinitions()
 
 	public Binder( final MetadataImplementor metadata, final IdentifierGeneratorFactory identifierGeneratorFactory ) {
 		this.metadata = metadata;
@@ -648,6 +651,7 @@ public class Binder {
 		return attributeBindingContainer.makeMapAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
+				pluralAttributeIndexNature( attributeSource ),
 				determinePluralAttributeKeyReferencedBinding( attributeBindingContainer, attributeSource ),
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
@@ -2022,8 +2026,17 @@ public class Binder {
 		}
 	}
 
-	private PluralAttributeElementNature pluralAttributeElementNature( final PluralAttributeSource attributeSource ) {
+	private PluralAttributeElementNature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
 		return PluralAttributeElementNature.valueOf( attributeSource.getElementSource().getNature().name() );
+	}
+
+	private PluralAttributeIndexNature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {
+		if ( ! IndexedPluralAttributeSource.class.isInstance( attributeSource ) ) {
+			return null;
+		}
+		return PluralAttributeIndexNature.valueOf(
+				( (IndexedPluralAttributeSource) attributeSource ).getIndexSource().getNature().name()
+		);
 	}
 
 	private SingularAttributeBinding determinePluralAttributeKeyReferencedBinding(

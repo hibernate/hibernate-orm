@@ -72,10 +72,17 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public AnnotationMetadataSourceProcessorImpl(MetadataImpl metadata, MetadataSources metadataSources) {
 		this.metadata = metadata;
 
+		// todo : use the Jandex from JBoss/JPA if available...
+		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
+
 		// create a jandex index from the annotated classes
 		Indexer indexer = new Indexer();
 		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
 			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
+		}
+
+		for ( String className : metadataSources.getAnnotatedClassNames() ) {
+			indexClass( indexer, className.replace( '.', '/' ) + ".class" );
 		}
 
 		// add package-info from the configured packages

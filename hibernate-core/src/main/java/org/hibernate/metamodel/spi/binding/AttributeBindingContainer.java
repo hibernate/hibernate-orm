@@ -195,7 +195,8 @@ public interface AttributeBindingContainer {
 	 *
 	 *
 	 * @param attribute The attribute for which to make a binding.
-	 * @param nature The nature of the collection elements.
+	 * @param elementNature The nature of the collection elements.
+	 * @param indexNature The nature of the collection indexes.
 	 * @param referencedAttributeBinding
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
@@ -205,7 +206,8 @@ public interface AttributeBindingContainer {
 	 */
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementNature elementNature,
+			PluralAttributeIndexNature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,

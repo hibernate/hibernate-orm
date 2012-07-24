@@ -31,6 +31,7 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -38,7 +39,6 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  *
  */
 public class ListAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
-
 	private final List< RelationalValueSource > valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final int base;
@@ -123,31 +123,16 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 		base = 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesIncludedInInsertByDefault()
-	 */
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesIncludedInUpdateByDefault()
-	 */
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.ColumnBindingDefaults#areValuesNullableByDefault()
-	 */
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return false;
@@ -157,21 +142,16 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 		return base;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.PluralAttributeIndexSource#explicitHibernateTypeSource()
-	 */
+	@Override
+	public PluralAttributeIndexNature getNature() {
+		return PluralAttributeIndexNature.BASIC;
+	}
+
 	@Override
 	public ExplicitHibernateTypeSource explicitHibernateTypeSource() {
 		return typeSource;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.spi.source.RelationalValueSourceContainer#relationalValueSources()
-	 */
 	@Override
 	public List< RelationalValueSource > relationalValueSources() {
 		return valueSources;

@@ -77,6 +77,15 @@ public class ServiceRegistryBuilder {
 	}
 
 	/**
+	 * Allows access to the underlying boot-strap registry.
+	 *
+	 * @return The boot-strap registry
+	 */
+	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
+		return bootstrapServiceRegistry;
+	}
+
+	/**
 	 * Used from the {@link #initiators} variable initializer
 	 *
 	 * @return List of standard initiators

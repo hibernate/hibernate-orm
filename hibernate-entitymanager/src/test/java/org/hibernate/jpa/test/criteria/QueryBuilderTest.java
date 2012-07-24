@@ -44,7 +44,7 @@ import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Info;
 import org.hibernate.jpa.test.metamodel.LineItem;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;

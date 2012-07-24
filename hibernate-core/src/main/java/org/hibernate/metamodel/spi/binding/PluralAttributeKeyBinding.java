@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -67,6 +68,7 @@ public class PluralAttributeKeyBinding {
 	public SingularAttributeBinding getReferencedAttributeBinding() {
 		return referencedAttributeBinding;
 	}
+
 	/**
 	 * The foreign key that defines the scope of this relationship.
 	 *

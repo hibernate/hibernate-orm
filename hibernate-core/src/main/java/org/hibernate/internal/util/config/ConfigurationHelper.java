@@ -57,14 +57,13 @@ public final class ConfigurationHelper {
 	 * @return The value, or null if not found
 	 */
 	public static String getString(String name, Map values) {
-		Object value = values.get( name );
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isInstance( value ) ) {
-			return (String) value;
-		}
-		return value.toString();
+		return asString( values.get( name ) );
+	}
+
+	public static String asString(Object value) {
+		return value == null
+				? null
+				: value.toString();
 	}
 
 	/**
@@ -116,6 +115,18 @@ public final class ConfigurationHelper {
 		throw new ConfigurationException(
 				"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
 		);
+	}
+
+	public static Boolean asBoolean(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+		if ( Boolean.class.isInstance( value ) ) {
+			return ( (Boolean) value );
+		}
+		else {
+			return Boolean.valueOf( value.toString() );
+		}
 	}
 
 	/**

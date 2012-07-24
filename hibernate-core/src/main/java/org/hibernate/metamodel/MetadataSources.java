@@ -39,6 +39,7 @@ import java.util.zip.ZipEntry;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 
+import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
@@ -60,7 +61,10 @@ public class MetadataSources {
 
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
+	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
+
+	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 
 	private final JaxbHelper jaxbHelper;
 
@@ -90,6 +94,14 @@ public class MetadataSources {
 
 	public Iterable<Class<?>> getAnnotatedClasses() {
 		return annotatedClasses;
+	}
+
+	public Iterable<String> getAnnotatedClassNames() {
+		return annotatedClassNames;
+	}
+
+	public List<CacheRegionDefinition> getExternalCacheRegionDefinitions() {
+		return externalCacheRegionDefinitions;
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -125,6 +137,18 @@ public class MetadataSources {
 	 */
 	public MetadataSources addAnnotatedClass(Class annotatedClass) {
 		annotatedClasses.add( annotatedClass );
+		return this;
+	}
+
+	/**
+	 * Read metadata from the annotations attached to the given class.
+	 *
+	 * @param annotatedClassName The name of a class containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addAnnotatedClassName(String annotatedClassName) {
+		annotatedClassNames.add( annotatedClassName );
 		return this;
 	}
 
@@ -381,6 +405,11 @@ public class MetadataSources {
 				addFile( file );
 			}
 		}
+		return this;
+	}
+
+	public MetadataSources addCacheRegionDefinitions(List<CacheRegionDefinition> cacheRegionDefinitions) {
+		externalCacheRegionDefinitions.addAll( cacheRegionDefinitions );
 		return this;
 	}
 }

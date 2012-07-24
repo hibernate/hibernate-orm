@@ -602,4 +602,35 @@ public interface AvailableSettings {
 	 * </ul>
 	 */
 	public static final String INTERCEPTOR = "hibernate.sessionFactory.interceptor";
+
+	/**
+	 * Setting which defines the order (and therefore precedence) in whcih Hibernate will process mapping information.
+	 * Valid values include: <ul>
+	 *     <li>{@code hbm}</li>
+	 *     <li>{@code class}</li>
+	 *     <li>both {@code hbm} and {@code class} separated by comma</li>
+	 * </ul>
+	 *
+	 * Starting in 5.0 it is also valid to pass a value of {@link org.hibernate.metamodel.MetadataSourceProcessingOrder}
+	 * which is an enum specifying which should be processed first.
+	 */
+	public static final String METADATA_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         result in the population failing.
+	 *     </li>
+	 * </ul>
+	 */
+	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+
 }

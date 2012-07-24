@@ -1574,4 +1574,19 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "NaturalId queries executed to database: %s", id = 442)
 	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
+
+
+	// moved from hibernate-entitymanager ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 15007 )
+	void illegalArgumentOnStaticMetamodelFieldInjection( String metamodelClassName,
+														 String attributeName,
+														 String attributeJavaType,
+														 String metamodelFieldJavaType );
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Unable to locate static metamodel field : %s#%s", id = 15011 )
+	void unableToLocateStaticMetamodelField( String metamodelClassName,
+											 String attributeName );
 }

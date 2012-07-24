@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.spi;
 
+import javax.persistence.metamodel.Metamodel;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -287,4 +288,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	@Deprecated
 	@SuppressWarnings("JavaDoc")
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+
+	/**
+	 * Obtain the JPA Metamodel instance.
+	 *
+	 * @since 5.0
+	 */
+	public Metamodel getJpaMetamodel();
 }

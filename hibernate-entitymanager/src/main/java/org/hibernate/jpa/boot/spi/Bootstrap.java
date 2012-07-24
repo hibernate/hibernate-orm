@@ -27,6 +27,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import java.util.Map;
 
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderUsingMetamodelImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 /**
@@ -35,15 +36,57 @@ import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
  * @author Steve Ebersole
  */
 public final class Bootstrap {
+	/**
+	 * Builds and returns an EntityManagerFactoryBuilder that can be used to then create an
+	 * {@link javax.persistence.EntityManagerFactory}.  Essentially this represents phase 1 of a 2 phase
+	 * {@link javax.persistence.EntityManagerFactory} building process.
+	 *
+	 * @param persistenceUnitDescriptor The persistence-unit description.  Note that this is the Hibernate abstraction
+	 * hiding where this info comes from.
+	 * @param integration The map of integration settings.  Generally speaking, integration settings take precedence
+	 * over persistence-unit settings.
+	 *
+	 * @return The {@link javax.persistence.EntityManagerFactory} builder.
+	 */
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration );
 	}
 
+	/**
+	 * Builds and returns an EntityManagerFactoryBuilder that can be used to then create an
+	 * {@link javax.persistence.EntityManagerFactory}.  Essentially this represents phase 1 of a 2 phase
+	 * {@link javax.persistence.EntityManagerFactory} building process.
+	 *
+	 * This form accepts the JPA container bootstrap persistence-unit descriptor representation
+	 * ({@link PersistenceUnitInfo}) and wraps it in our {@link PersistenceUnitDescriptor} abstraction.  It then
+	 * just delegates the call to {@link #getEntityManagerFactoryBuilder(PersistenceUnitDescriptor, Map)}
+	 *
+	 * @param persistenceUnitInfo The persistence-unit description as defined by the JPA PersistenceUnitInfo contract
+	 * @param integration The map of integration settings.  Generally speaking, integration settings take precedence
+	 * over persistence-unit settings.
+	 *
+	 * @return The {@link javax.persistence.EntityManagerFactory} builder.
+	 */
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
+	}
+
+	/**
+	 * Specifically builds and returns a EntityManagerFactoryBuilder that leverages the new metamodel codebase.
+	 * Eventually this will be the normal operation of {@link #getEntityManagerFactoryBuilder(PersistenceUnitDescriptor, Map)},
+	 * but for now due to the incompleteness of the metamodel codebase, this is not integrated as the main way to
+	 * build the EntityManagerFactoryBuilder.  This allows tests in the nor-core modules to keep running.
+	 *
+	 * @deprecated This is a temporary method until metamodel codebase is more complete
+	 */
+	@Deprecated
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilderUsingMetamodel(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration) {
+		return new EntityManagerFactoryBuilderUsingMetamodelImpl( persistenceUnitDescriptor, integration );
 	}
 }

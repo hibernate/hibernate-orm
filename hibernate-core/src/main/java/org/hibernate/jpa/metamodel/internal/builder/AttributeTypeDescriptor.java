@@ -40,8 +40,6 @@ public interface AttributeTypeDescriptor {
 		BASIC
 	}
 
-	public org.hibernate.metamodel.spi.domain.Type getHibernateMetamodelType();
-
 	public org.hibernate.type.Type getHibernateType();
 
 	public Class getBindableType();

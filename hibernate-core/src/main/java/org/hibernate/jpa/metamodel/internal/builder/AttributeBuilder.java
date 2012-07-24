@@ -242,9 +242,8 @@ public class AttributeBuilder {
 						(ComponentType) attributeTypeDescriptor.getHibernateType()
 				);
 				context.registerEmbeddedableType( embeddableType );
-
 				CompositeAttributeBinding compositeAttributeBinding =
-						(CompositeAttributeBinding) attributeTypeDescriptor.getHibernateMetamodelType();
+						(CompositeAttributeBinding) attributeTypeDescriptor.getAttributeMetadata().getAttributeBinding();
 				for ( AttributeBinding subAttributeBinding : compositeAttributeBinding.attributeBindings() ) {
 					final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
 					if ( attribute != null ) {

@@ -28,7 +28,6 @@ import java.lang.reflect.Member;
 
 import org.hibernate.jpa.metamodel.internal.AbstractManagedType;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**
 * @author Steve Ebersole
@@ -45,11 +44,6 @@ public class SingularAttributeMetadataImpl<X,Y>
 			Attribute.PersistentAttributeType persistentAttributeType) {
 		super( attributeBinding, ownerType, member, persistentAttributeType );
 		attributeTypeDescriptor = new AttributeTypeDescriptor() {
-			@Override
-			public org.hibernate.metamodel.spi.domain.Type getHibernateMetamodelType() {
-				return ( (SingularAttribute) getAttributeMetadata().getAttributeBinding().getAttribute() ).getSingularAttributeType();
-			}
-
 			@Override
 			public org.hibernate.type.Type getHibernateType() {
 				return getAttributeMetadata().getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();

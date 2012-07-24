@@ -76,7 +76,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.sql.Select;
 import org.hibernate.tuple.ElementWrapper;
+import org.hibernate.type.CollectionType;
 
 /**
  * A <strong>stateful</strong> implementation of the {@link PersistenceContext} contract meaning that we maintain this
@@ -775,6 +777,64 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	public Object getCollectionOwner(Serializable key, CollectionPersister collectionPersister) throws MappingException {
+		// todo : we really just need to add a split in the notions of:
+		//		1) collection key
+		//		2) collection owner key
+		// these 2 are not always the same.  Same is true in the case of ToOne associations with property-ref...
+		final EntityPersister ownerPersister = collectionPersister.getOwnerEntityPersister();
+		if ( ownerPersister.getIdentifierType().getReturnedClass().isInstance( key ) ) {
+			return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
+		}
+
+		// we have a property-ref type mapping for the collection key.  But that could show up a few ways here...
+		//
+		//		1) The incoming key could be the entity itself...
+		if ( ownerPersister.isInstance( key ) ) {
+			final Serializable owenerId = ownerPersister.getIdentifier( key, session );
+			if ( owenerId == null ) {
+				return null;
+			}
+			return getEntity( session.generateEntityKey( owenerId, ownerPersister ) );
+		}
+
+		final CollectionType collectionType = collectionPersister.getCollectionType();
+
+		//		2) The incoming key is most likely the collection key which we need to resolve to the owner key
+		//			find the corresponding owner instance
+		//			a) try by EntityUniqueKey
+		if ( collectionType.getLHSPropertyName() != null ) {
+			Object owner = getEntity(
+					new EntityUniqueKey(
+							ownerPersister.getEntityName(),
+							collectionType.getLHSPropertyName(),
+							key,
+							collectionPersister.getKeyType(),
+							ownerPersister.getEntityMode(),
+							session.getFactory()
+					)
+			);
+			if ( owner != null ) {
+				return owner;
+			}
+
+			//		b) try by EntityKey, which means we need to resolve owner-key -> collection-key
+			//			IMPL NOTE : yes if we get here this impl is very non-performant, but PersistenceContext
+			//					was never designed to handle this case; adding that capability for real means splitting
+			//					the notions of:
+			//						1) collection key
+			//						2) collection owner key
+			// 					these 2 are not always the same (same is true in the case of ToOne associations with
+			// 					property-ref).  That would require changes to (at least) CollectionEntry and quite
+			//					probably changes to how the sql for collection initializers are generated
+			//
+			//			We could also possibly see if the referenced property is a natural id since we already have caching
+			//			in place of natural id snapshots.  BUt really its better to just do it the right way ^^ if we start
+			// 			going that route
+			final Serializable ownerId = ownerPersister.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
+			return getEntity( session.generateEntityKey( ownerId, ownerPersister ) );
+		}
+
+		// as a last resort this is what the old code did...
 		return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
 	}
 

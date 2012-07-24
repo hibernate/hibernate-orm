@@ -52,7 +52,7 @@
 		<property name="endDate" insert="false"/>
 		<property name="regionCode" update="false"/>
 	  <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
-			<column name="VALUE" sql-type="float"/>
+			<column name="`VALUE`" sql-type="float"/>
 			<column name="CURRENCY"/>			
 		</property>
 		<loader query-ref="employment"/>
@@ -160,7 +160,7 @@
 			<return-property name="salary"> 
 		      <!-- as multi column properties are not supported via the
 		      {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
-  			  <return-column name="VALUE"/>
+  			  <return-column name="`VALUE`"/>
 			  <return-column name="CURRENCY"/>			
 			</return-property>
 			<!-- Here we are remapping endDate. Notice that we can still use {emp.endDate} in the SQL. -->
@@ -177,18 +177,18 @@
 
 	<sql-query name="simpleScalar" callable="true">
 	 <return-scalar column="name" type="string"/>
-	 <return-scalar column="value" type="long"/>
+	 <return-scalar column="`value`" type="long"/>
 		{ call simpleScalar(:number) }
 	</sql-query>
 
 	<sql-query name="paramhandling" callable="true">
-		<return-scalar column="value" type="long"/>
+		<return-scalar column="`value`" type="long"/>
 		<return-scalar column="value2" type="long"/>
 		{ call paramHandling(?,?) }
 	</sql-query>
 
 	<sql-query name="paramhandling_mixed" callable="true">
-		<return-scalar column="value" type="long" />
+		<return-scalar column="`value`" type="long" />
 		<return-scalar column="value2" type="long" />
 		{ call paramHandling(?,:second) }
 	</sql-query>
@@ -204,7 +204,7 @@
 			<return-property name="salary"> 
 				<!-- as multi column properties are not supported via the
 				{}-syntax, we need to provide an explicit column list for salary via <return-property> -->
-				<return-column name="VALUE"/>
+				<return-column name="`VALUE`"/>
 				<return-column name="CURRENCY"/>			
 			</return-property>
 		</return>

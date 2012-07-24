@@ -10,17 +10,17 @@
 
 	<sql-query name="simpleScalar" callable="true">
 	 <return-scalar column="name" type="string"/>
-	 <return-scalar column="value" type="long"/>
+	 <return-scalar column="`value`" type="long"/>
 	 { call simpleScalar(:number) }
 	</sql-query>
 	<sql-query name="paramhandling" callable="true">
-		<return-scalar column="value" type="long" />
+		<return-scalar column="`value`" type="long" />
 		<return-scalar column="value2" type="long" />
 		{ call testParamHandling(?,?) }
 	</sql-query>
 
 	<sql-query name="paramhandling_mixed" callable="true">
-		<return-scalar column="value" type="long" />
+		<return-scalar column="`value`" type="long" />
 		<return-scalar column="value2" type="long" />
 		{ call testParamHandling(?,:second) }
 	</sql-query>
@@ -34,7 +34,7 @@
 			<return-property name="regionCode" column="REGIONCODE"/>			
 			<return-property name="employmentId" column="EMPID"/>						
 			<return-property name="salary">
-  			  <return-column name="VALUE"/>
+  			  <return-column name="`VALUE`"/>
 			  <return-column name="CURRENCY"/>			
 			</return-property>
 		</return>

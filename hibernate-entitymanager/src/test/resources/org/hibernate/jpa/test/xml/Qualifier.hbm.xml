@@ -17,7 +17,7 @@
             <column name="NAME" length="20" not-null="true"/>
         </property>
         <property name="value" type="string">
-            <column name="VALUE" length="1948"/>
+            <column name="`VALUE`" length="1948"/>
         </property>
     </class>
 

@@ -3,6 +3,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Column;
 
 @Entity
 @Table( name = "char_property" )
@@ -11,6 +12,7 @@ public class CharProperty implements Property {
 
 	private String name;
 
+    @Column(name = "`value`")
 	private Character value;
 
 	public CharProperty() {

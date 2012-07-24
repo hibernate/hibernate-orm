@@ -60,6 +60,7 @@
             not-null="true"
             cascade="none"
             lazy="false"/>
+
     </class>
 
     <class name="Vehicle" table="HB_Vehicle">

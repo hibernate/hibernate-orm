@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.event.collection.association.unidirectional">
+
+    <class name="ParentWithCollectionOfEntities" table="PARENT">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <list name="children"
+             cascade="all">
+            <key column="parent_id"/>
+            <list-index column="list_index"/>
+            <one-to-many class="org.hibernate.test.event.collection.ChildEntity"/>
+        </list>
+    </class>
+
+    <class name="org.hibernate.test.event.collection.ChildEntity" table="CHILD">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+    </class>
+
+</hibernate-mapping>

@@ -509,6 +509,8 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)
 	throws HibernateException;
 
+	public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session);
+
 	/**
 	 * Get the current version of the object, or return null if there is no row for
 	 * the given identifier. In the case of unversioned data, return any object

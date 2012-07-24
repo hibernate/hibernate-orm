@@ -1008,7 +1008,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			keyVal = (KeyValue) collValue.getOwner()
-					.getRecursiveProperty( propRef )
+					.getReferencedProperty( propRef )
 					.getValue();
 		}
 		DependantValue key = new DependantValue( mappings, collValue.getCollectionTable(), keyVal );

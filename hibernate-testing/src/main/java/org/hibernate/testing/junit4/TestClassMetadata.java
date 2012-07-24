@@ -193,6 +193,19 @@ public class TestClassMetadata {
 
 	private void invokeCallback(Method callback, Object target) {
 		try {
+			performCallbackInvocation( callback, target );
+		}
+		catch (CallbackException e) {
+			// this is getting eaten, at least when run from IntelliJ.  The test fails to start (for start up
+			// callbacks), but the exception is never shown..
+			System.out.println( "Error performing callback invocation : " + e.getLocalizedMessage() );
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	private void performCallbackInvocation(Method callback, Object target) {
+		try {
 			callback.invoke( target, NO_ARGS );
 		}
 		catch (InvocationTargetException e) {

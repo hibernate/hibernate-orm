@@ -44,6 +44,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyAccessException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
@@ -1502,6 +1503,107 @@ public abstract class AbstractEntityPersister
 		}
 
 	}
+
+	@Override
+	public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session) throws HibernateException {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
+					"resolving unique key [%s] to identifier for entity [%s]",
+					key,
+					getEntityName()
+			);
+		}
+
+		int propertyIndex = getSubclassPropertyIndex( uniquePropertyName );
+		if ( propertyIndex < 0 ) {
+			throw new HibernateException(
+					"Could not determine Type for property [" + uniquePropertyName + "] on entity [" + getEntityName() + "]"
+			);
+		}
+		Type propertyType = getSubclassPropertyType( propertyIndex );
+
+		try {
+			PreparedStatement ps = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( generateIdByUniqueKeySelectString( uniquePropertyName ) );
+			try {
+				propertyType.nullSafeSet( ps, key, 1, session );
+				ResultSet rs = ps.executeQuery();
+				try {
+					//if there is no resulting row, return null
+					if ( !rs.next() ) {
+						return null;
+					}
+					return (Serializable) getIdentifierType().nullSafeGet( rs, getIdentifierAliases(), session, null );
+				}
+				finally {
+					rs.close();
+				}
+			}
+			finally {
+				ps.close();
+			}
+		}
+		catch ( SQLException e ) {
+			throw getFactory().getSQLExceptionHelper().convert(
+					e,
+					String.format(
+							"could not resolve unique property [%s] to identifier for entity [%s]",
+							uniquePropertyName,
+							getEntityName()
+					),
+					getSQLSnapshotSelectString()
+			);
+		}
+
+	}
+
+	protected String generateIdByUniqueKeySelectString(String uniquePropertyName) {
+		Select select = new Select( getFactory().getDialect() );
+
+		if ( getFactory().getSettings().isCommentsEnabled() ) {
+			select.setComment( "resolve id by unique property [" + getEntityName() + "." + uniquePropertyName + "]" );
+		}
+
+		final String rooAlias = getRootAlias();
+
+		select.setFromClause( fromTableFragment( rooAlias ) + fromJoinFragment( rooAlias, true, false ) );
+
+		SelectFragment selectFragment = new SelectFragment();
+		selectFragment.addColumns( rooAlias, getIdentifierColumnNames(), getIdentifierAliases() );
+		select.setSelectClause( selectFragment );
+
+		StringBuilder whereClauseBuffer = new StringBuilder();
+		final int uniquePropertyIndex = getSubclassPropertyIndex( uniquePropertyName );
+		final String uniquePropertyTableAlias = generateTableAlias(
+				rooAlias,
+				getSubclassPropertyTableNumber( uniquePropertyIndex )
+		);
+		String sep = "";
+		for ( String columnTemplate : getSubclassPropertyColumnReaderTemplateClosure()[uniquePropertyIndex] ) {
+			if ( columnTemplate == null ) {
+				continue;
+			}
+			final String columnReference = StringHelper.replace( columnTemplate, Template.TEMPLATE, uniquePropertyTableAlias );
+			whereClauseBuffer.append( sep ).append( columnReference ).append( "=?" );
+			sep = " and ";
+		}
+		for ( String formulaTemplate : getSubclassPropertyFormulaTemplateClosure()[uniquePropertyIndex] ) {
+			if ( formulaTemplate == null ) {
+				continue;
+			}
+			final String formulaReference = StringHelper.replace( formulaTemplate, Template.TEMPLATE, uniquePropertyTableAlias );
+			whereClauseBuffer.append( sep ).append( formulaReference ).append( "=?" );
+			sep = " and ";
+		}
+		whereClauseBuffer.append( whereJoinFragment( rooAlias, true, false ) );
+
+		select.setWhereClause( whereClauseBuffer.toString() );
+
+		return select.setOuterJoins( "", "" ).toStatementString();
+	}
+
 
 	/**
 	 * Generate the SQL that selects the version number by id

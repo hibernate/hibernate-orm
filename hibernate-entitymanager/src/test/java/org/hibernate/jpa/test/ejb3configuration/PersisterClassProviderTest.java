@@ -452,6 +452,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session) {
+			throw new UnsupportedOperationException( "Not supported" );
+		}
+
+		@Override
 		public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
 			return null;
 		}

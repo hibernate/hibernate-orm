@@ -41,7 +41,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -59,15 +58,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
 

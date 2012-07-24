@@ -196,6 +196,14 @@ class MetadataContext {
                 LOG.trace("Starting entity [" + safeMapping.getEntityName() + "]");
 				try {
 					final EntityTypeImpl<?> jpa2Mapping = entityTypesByPersistentClass.get( safeMapping );
+					if ( ! safeMapping.getEntityName().equals( jpa2Mapping.getJavaType().getName() ) ) {
+						// skip it
+						continue;
+					}
+					if ( sessionFactory.getEntityPersister( safeMapping.getEntityName() ).getEntityMetamodel() == null ) {
+						// skip it
+						continue;
+					}
 					applyIdMetadata( safeMapping, jpa2Mapping );
 					applyVersionAttribute( safeMapping, jpa2Mapping );
 					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
@@ -481,5 +489,22 @@ class MetadataContext {
 					+ mappedSuperclassType.getJavaType() );
 		}
 		return persistentClass;
+	}
+
+	public void handleAnyMapping() {
+		// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
+		if ( isIgnoreUnsupported() ) {
+		}
+		else {
+			throw new UnsupportedOperationException( "ANY not supported" );
+		}
+	}
+
+	public void handleArrayMapping() {
+		if ( isIgnoreUnsupported() ) {
+		}
+		else {
+			throw new UnsupportedOperationException( "Arrays not supported" );
+		}
 	}
 }

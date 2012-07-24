@@ -25,7 +25,6 @@ package org.hibernate.jpa.boot.spi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +98,7 @@ public class JpaUnifiedSettingsBuilder {
 	}
 
 	private static class ResultImpl implements Result {
-		private final Map<?,?> settings = new ConcurrentHashMap();
+		private final Map settings = new ConcurrentHashMap();
 		private final CfgXmlMappingArtifactsImpl cfgXmlMappingArtifacts = new CfgXmlMappingArtifactsImpl();
 
 		@Override
@@ -118,8 +117,8 @@ public class JpaUnifiedSettingsBuilder {
 				PersistenceUnitDescriptor persistenceUnit,
 				Map integrationSettings,
 				final BootstrapServiceRegistry bootstrapServiceRegistry) {
-			final Map merged = new HashMap();
 			// first, apply persistence.xml-defined settings
+			final Map merged = new HashMap();
 			if ( persistenceUnit.getProperties() != null ) {
 				merged.putAll( persistenceUnit.getProperties() );
 			}
@@ -174,12 +173,13 @@ public class JpaUnifiedSettingsBuilder {
 				}
 			}
 
-			// was getting NPE exceptions from the underlying map when just using #putAll, so going this safer route...
-			Iterator itr = merged.entrySet().iterator();
-			while ( itr.hasNext() ) {
-				final Map.Entry entry = (Map.Entry) itr.next();
-				if ( entry.getValue() == null ) {
-					itr.remove();
+			applyAllNonNull( merged );
+		}
+
+		private void applyAllNonNull(Map<?,?> values) {
+			for ( Map.Entry entry : values.entrySet() ) {
+				if ( entry.getValue() != null ) {
+					settings.put( entry.getKey(), entry.getValue() );
 				}
 			}
 		}

@@ -74,6 +74,7 @@ public abstract class AbstractManagedType<X>
 			throw new IllegalStateException( "Type has been locked" );
 		}
 		return new Builder<X>() {
+			@Override
 			public void addAttribute(Attribute<X,?> attribute) {
 				declaredAttributes.put( attribute.getName(), attribute );
 				final Bindable.BindableType bindableType = ( ( Bindable ) attribute ).getBindableType();

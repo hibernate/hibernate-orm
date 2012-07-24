@@ -30,7 +30,8 @@ package org.hibernate.jpa.metamodel.internal;
  * @author Steve Ebersole
 */
 public enum UnsupportedFeature {
-	ANY( "ANY mappings not supported in JPA metamodel" );
+	ANY( "ANY mappings not supported in JPA metamodel" ),
+	ARRAY( "Arrays (HBM <array/> mappings) are not supported in JPA metamodel" );
 
 	private final String message;
 

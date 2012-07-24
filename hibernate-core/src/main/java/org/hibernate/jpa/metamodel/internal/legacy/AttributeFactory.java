@@ -40,11 +40,13 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -441,19 +443,17 @@ public class AttributeFactory {
         LOG.trace("Starting attribute metadata determination [" + attributeContext.getPropertyMapping().getName() + "]");
 		final Member member = memberResolver.resolveMember( attributeContext );
         LOG.trace("    Determined member [" + member + "]");
+		if ( member == null ) {
+			return null;
+		}
 
 		final Value value = attributeContext.getPropertyMapping().getValue();
 		final org.hibernate.type.Type type = value.getType();
         LOG.trace("    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]");
 
 		if ( type.isAnyType() ) {
-			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
-            if ( context.isIgnoreUnsupported() ) {
-                return null;
-            }
-			else {
-                throw new UnsupportedOperationException( "ANY not supported" );
-            }
+			context.handleAnyMapping();
+			return null;
 		}
 		else if ( type.isAssociationType() ) {
 			// collection or entity
@@ -466,8 +466,15 @@ public class AttributeFactory {
 						determineSingularAssociationAttributeType( member )
 				);
 			}
+
             // collection
             if (value instanceof Collection) {
+				if ( Array.class.isInstance( value )
+						|| PrimitiveArray.class.isInstance( value ) ) {
+					context.handleArrayMapping();
+					return null;
+				}
+
                 final Collection collValue = (Collection)value;
                 final Value elementValue = collValue.getElement();
                 final org.hibernate.type.Type elementType = elementValue.getType();
@@ -476,8 +483,9 @@ public class AttributeFactory {
                 // collection type)
                 final Attribute.PersistentAttributeType elementPersistentAttributeType;
                 final Attribute.PersistentAttributeType persistentAttributeType;
-                if (elementType.isAnyType()) {
-                    throw new UnsupportedOperationException("collection of any not supported yet");
+                if ( elementType.isAnyType() ) {
+					context.handleAnyMapping();
+					return null;
                 }
                 final boolean isManyToMany = isManyToMany(member);
                 if (elementValue instanceof Component) {
@@ -498,15 +506,33 @@ public class AttributeFactory {
                     final Value keyValue = ((Map)value).getIndex();
                     final org.hibernate.type.Type keyType = keyValue.getType();
 
-                    if (keyType.isAnyType()) throw new UnsupportedOperationException("collection of any not supported yet");
-                    if (keyValue instanceof Component) keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
-                    else if (keyType.isAssociationType()) keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
-                    else keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
-                } else keyPersistentAttributeType = null;
-                return new PluralAttributeMetadataImpl(attributeContext.getPropertyMapping(), attributeContext.getOwnerType(),
-                                                       member, persistentAttributeType, elementPersistentAttributeType,
-                                                       keyPersistentAttributeType);
-            } else if (value instanceof OneToMany) {
+                    if ( keyType.isAnyType() ) {
+						context.handleAnyMapping();
+						return null;
+					}
+                    if (keyValue instanceof Component) {
+						keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
+					}
+                    else if (keyType.isAssociationType()) {
+						keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
+					}
+                    else {
+						keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
+					}
+                }
+				else {
+					keyPersistentAttributeType = null;
+				}
+                return new PluralAttributeMetadataImpl(
+						attributeContext.getPropertyMapping(),
+						attributeContext.getOwnerType(),
+						member,
+						persistentAttributeType,
+						elementPersistentAttributeType,
+						keyPersistentAttributeType
+				);
+            }
+			else if (value instanceof OneToMany) {
                 // TODO : is this even possible??? Really OneToMany should be describing the
                 // element value within a o.h.mapping.Collection (see logic branch above)
                 throw new IllegalArgumentException("HUH???");
@@ -878,9 +904,7 @@ public class AttributeFactory {
 	}
 
 	private final MemberResolver EMBEDDED_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) attributeContext.getOwnerType();
 			final String attributeName = attributeContext.getPropertyMapping().getName();
@@ -893,21 +917,23 @@ public class AttributeFactory {
 
 
 	private final MemberResolver VIRTUAL_IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			if ( entityMetamodel == null ) {
+				// this happens with badly written custom persisters, like the ones in our test suite :)
+				return null;
+			}
 			if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
 			}
 			org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
-			if ( ! EmbeddedComponentType.class.isInstance( type ) ) {
+			if ( ! ComponentType.class.isInstance( type ) ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
 			}
 
-			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+			final ComponentType componentType = (ComponentType) type;
 			final String attributeName = attributeContext.getPropertyMapping().getName();
 			return componentType.getComponentTuplizer()
 					.getGetter( componentType.getPropertyIndex( attributeName ) )
@@ -919,9 +945,7 @@ public class AttributeFactory {
 	 * A {@link java.lang.reflect.Member} resolver for normal attributes.
 	 */
 	private final MemberResolver NORMAL_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractManagedType ownerType = attributeContext.getOwnerType();
 			final Property property = attributeContext.getPropertyMapping();
@@ -933,6 +957,10 @@ public class AttributeFactory {
 					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
 				final IdentifiableType identifiableType = (IdentifiableType) ownerType;
 				final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+				if ( entityMetamodel == null ) {
+					// this happens with badly written custom persisters, like the ones in our test suite :)
+					return null;
+				}
 				final String propertyName = property.getName();
 				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
 				if ( index == null ) {
@@ -952,9 +980,14 @@ public class AttributeFactory {
 	};
 
 	private final MemberResolver IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			if ( entityMetamodel == null ) {
+				// this happens with badly written custom persisters, like the ones in our test suite :)
+				return null;
+			}
 			if ( ! attributeContext.getPropertyMapping().getName()
 					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
 				// this *should* indicate processing part of an IdClass...
@@ -965,9 +998,14 @@ public class AttributeFactory {
 	};
 
 	private final MemberResolver VERSION_MEMBER_RESOLVER = new MemberResolver() {
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			if ( entityMetamodel == null ) {
+				// this happens with badly written custom persisters, like the ones in our test suite :)
+				return null;
+			}
 			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
 			if ( ! versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
 				// this should never happen, but to be safe...

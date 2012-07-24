@@ -321,6 +321,10 @@ public class AttributeBuilder {
 		else {
 			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
 
+			if ( pluralAttributeBinding.getAttribute().getNature() == PluralAttributeNature.ARRAY ) {
+				context.handleUnsupportedFeature( UnsupportedFeature.ARRAY );
+			}
+
 			// First, determine the type of the elements and use that to help determine the
 			// collection type)
 			final PluralAttributeElementBinding elementBinding = pluralAttributeBinding.getPluralAttributeElementBinding();
@@ -368,18 +372,6 @@ public class AttributeBuilder {
 				}
 				else {
 					keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
-				}
-			}
-			else {
-				// for the sake of symmetry...
-				if ( pluralAttributeBinding.getPluralAttributeKeyBinding() != null ) {
-					throw new HibernateException(
-							String.format(
-									"Encountered non-Map attribute binding with associated map-key binding : %s#%s",
-									jpaOwner.getJavaType().getName(),
-									pluralAttributeBinding.getAttribute().getName()
-							)
-					);
 				}
 			}
 

@@ -34,6 +34,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public enum PluralAttributeNature {
+	ARRAY( "array", Object[].class ),
 	BAG( "bag", Collection.class ),
 	IDBAG( "idbag", Collection.class ),
 	SET( "set", Set.class ),
@@ -47,7 +48,9 @@ public enum PluralAttributeNature {
 	PluralAttributeNature(String name, Class javaContract) {
 		this.name = name;
 		this.javaContract = javaContract;
-		this.indexed = Map.class.isAssignableFrom( javaContract ) || List.class.isAssignableFrom( javaContract );
+		this.indexed = Map.class.isAssignableFrom( javaContract )
+				|| List.class.isAssignableFrom( javaContract )
+				|| javaContract.isArray();
 	}
 
 	public String getName() {

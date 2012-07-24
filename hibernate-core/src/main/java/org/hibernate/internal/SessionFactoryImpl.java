@@ -757,7 +757,12 @@ public final class SessionFactoryImpl
 		// Prepare persisters and link them up with their cache
 		// region/access-strategy
 
-		final MetamodelBuilder jpaMetamodelBuilder = new MetamodelBuilder( this );
+		final MetamodelBuilder jpaMetamodelBuilder = new MetamodelBuilder(
+				this,
+				JpaMetaModelPopulationSetting.parse(
+						properties.getProperty( AvailableSettings.JPA_METAMODEL_POPULATION  )
+				)
+		);
 
 		StringBuilder stringBuilder = new StringBuilder();
 		if ( settings.getCacheRegionPrefix() != null) {

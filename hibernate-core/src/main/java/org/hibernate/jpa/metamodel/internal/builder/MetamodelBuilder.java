@@ -42,6 +42,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.metamodel.internal.AbstractIdentifiableType;
 import org.hibernate.jpa.metamodel.internal.EmbeddableTypeImpl;
 import org.hibernate.jpa.metamodel.internal.EntityTypeImpl;
+import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.jpa.metamodel.internal.MappedSuperclassTypeImpl;
 import org.hibernate.jpa.metamodel.internal.MetamodelImpl;
 import org.hibernate.jpa.metamodel.internal.UnsupportedFeature;
@@ -82,6 +83,7 @@ public class MetamodelBuilder {
 	private final Map<Class<?>, MappedSuperclassTypeImpl<?>> mappedSuperclassTypeMap = new HashMap<Class<?>, MappedSuperclassTypeImpl<?>>();
 
 	// these fields are needed just for the duration of building the metamodel
+	private final JpaMetaModelPopulationSetting populationSetting;
 	private final AttributeBuilder attributeBuilder;
 	private final Map<String,EntityTypeImpl> entityTypeByNameMap = new HashMap<String, EntityTypeImpl>();
 	private final Map<MappedSuperclassTypeImpl,String> mappedSuperclassEntityNameMap = new HashMap<MappedSuperclassTypeImpl, String>();
@@ -89,8 +91,9 @@ public class MetamodelBuilder {
 	private Set<Hierarchical> alreadyProcessed = new HashSet<Hierarchical>();
 
 
-	public MetamodelBuilder(SessionFactoryImplementor sessionFactory) {
+	public MetamodelBuilder(SessionFactoryImplementor sessionFactory, JpaMetaModelPopulationSetting populationSetting) {
 		this.sessionFactory = sessionFactory;
+		this.populationSetting = populationSetting;
 		this.attributeBuilder = new AttributeBuilder( new AttributeBuilderContext() );
 	}
 
@@ -328,10 +331,18 @@ public class MetamodelBuilder {
 	}
 
 	private void populateStaticMetamodel(AbstractIdentifiableType jpaDescriptor) {
+		if ( populationSetting == JpaMetaModelPopulationSetting.DISABLED ) {
+			return;
+		}
+
 		// todo : implement !
 	}
 
 	private void populateStaticMetamodel(EmbeddableTypeImpl embeddable) {
+		if ( populationSetting == JpaMetaModelPopulationSetting.DISABLED ) {
+			return;
+		}
+
 		// todo : implement !
 	}
 
@@ -340,6 +351,9 @@ public class MetamodelBuilder {
 	 * Implementation of AttributeBuilder.Context
 	 */
 	class AttributeBuilderContext implements AttributeBuilder.Context {
+		public AttributeBuilderContext() {
+		}
+
 		public Type locateEntityTypeByName(String entityName) {
 			return entityTypeByNameMap.get( entityName );
 		}
@@ -379,8 +393,7 @@ public class MetamodelBuilder {
 
 		@Override
 		public void handleUnsupportedFeature(UnsupportedFeature feature) {
-			boolean ignoreUnsupported = true;
-			if ( ignoreUnsupported ) {
+			if ( populationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED ) {
 				log.debug( "Ignoring mapping construct not supported as part of JPA metamodel [" + feature.getMessage() + "]" );
 			}
 			else {

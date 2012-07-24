@@ -62,9 +62,7 @@ public abstract class AbstractIdentifiableType<X>
 		isVersioned = versioned;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public AbstractIdentifiableType<? super X> getSupertype() {
 		return ( AbstractIdentifiableType<? super X> ) super.getSupertype();
 	}
@@ -87,16 +85,12 @@ public abstract class AbstractIdentifiableType<X>
 		return getSupertype();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasSingleIdAttribute() {
 		return hasIdentifierProperty;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> javaType) {
 		final SingularAttribute<? super X, Y> id_;
@@ -137,10 +131,7 @@ public abstract class AbstractIdentifiableType<X>
 		}
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> javaType) {
 		checkDeclaredId();
@@ -161,9 +152,7 @@ public abstract class AbstractIdentifiableType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type<?> getIdType() {
 		if ( id != null ) {
 			checkSimpleId();
@@ -179,9 +168,7 @@ public abstract class AbstractIdentifiableType<X>
 				( getSupertype() != null && getSupertype().hasIdClassAttributesDefined() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
 		if ( idClassAttributes != null ) {
 			checkIdClass();
@@ -215,9 +202,7 @@ public abstract class AbstractIdentifiableType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasVersionAttribute() {
 		return isVersioned;
 	}
@@ -226,9 +211,7 @@ public abstract class AbstractIdentifiableType<X>
 		return isVersioned && version != null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> javaType) {
 		if ( ! hasVersionAttribute() ) {
@@ -247,9 +230,7 @@ public abstract class AbstractIdentifiableType<X>
 		return version_;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<X, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
@@ -279,14 +260,17 @@ public abstract class AbstractIdentifiableType<X>
 		}
 	}
 
+	@Override
 	public Builder<X> getBuilder() {
 		final AbstractManagedType.Builder<X> managedBuilder = super.getBuilder();
 		return new Builder<X>() {
+			@Override
 			public void applyIdAttribute(SingularAttributeImpl<X, ?> idAttribute) {
 				AbstractIdentifiableType.this.id = idAttribute;
 				managedBuilder.addAttribute( idAttribute );
 			}
 
+			@Override
 			public void applyIdClassAttributes(Set<SingularAttribute<? super X,?>> idClassAttributes) {
 				for ( SingularAttribute<? super X,?> idClassAttribute : idClassAttributes ) {
 					if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
@@ -297,12 +281,13 @@ public abstract class AbstractIdentifiableType<X>
 				}
 				AbstractIdentifiableType.this.idClassAttributes = idClassAttributes;
 			}
-
+			@Override
 			public void applyVersionAttribute(SingularAttributeImpl<X, ?> versionAttribute) {
 				AbstractIdentifiableType.this.version = versionAttribute;
 				managedBuilder.addAttribute( versionAttribute );
 			}
 
+			@Override
 			public void addAttribute(Attribute<X, ?> attribute) {
 				managedBuilder.addAttribute( attribute );
 			}

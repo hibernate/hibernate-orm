@@ -74,6 +74,10 @@ public class Property implements Serializable, MetaAttributable {
 	 * @return True if synthetic; false otherwise.
 	 */
 	public boolean isSynthetic() {
+		//noinspection SimplifiableIfStatement
+		if ( isComposite() ) {
+			return ( (Component) value ).isEmbedded();
+		}
 		return false;
 	}
 

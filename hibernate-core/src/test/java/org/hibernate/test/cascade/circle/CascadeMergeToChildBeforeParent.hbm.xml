@@ -57,8 +57,10 @@
         <many-to-one name="vehicle"
             column="vehicleID"
             unique="false"
-            not-null="true"
+            not-null="false"
             cascade="none"
+            insert = "false"
+            update = "false"
             lazy="false"/>
 
     </class>

@@ -25,9 +25,8 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
@@ -41,6 +40,7 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
@@ -55,13 +55,21 @@ import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSou
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
@@ -69,10 +77,10 @@ import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
-import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
+import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -92,7 +100,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Options options;
 
 	private final ValueHolder<ClassLoaderService> classLoaderService;
-	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
+//	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
 
 	private TypeResolver typeResolver = new TypeResolver();
 
@@ -159,14 +167,14 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					}
 				}
 		);
-		this.persisterClassResolverService = new ValueHolder<PersisterClassResolver>(
-				new ValueHolder.DeferredInitializer<PersisterClassResolver>() {
-					@Override
-					public PersisterClassResolver initialize() {
-						return serviceRegistry.getService( PersisterClassResolver.class );
-					}
-				}
-		);
+//		this.persisterClassResolverService = new ValueHolder<PersisterClassResolver>(
+//				new ValueHolder.DeferredInitializer<PersisterClassResolver>() {
+//					@Override
+//					public PersisterClassResolver initialize() {
+//						return serviceRegistry.getService( PersisterClassResolver.class );
+//					}
+//				}
+//		);
 
 		//check for typeContributingIntegrators integrators
 		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
@@ -303,6 +311,71 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {
+		// Create required back references, which are required for one-to-many associations with key bindings that are non-inverse,
+		// non-nullable, and unidirectional
+		for ( PluralAttributeBinding pluralAttributeBinding : collectionBindingMap.values() ) {
+			// Find one-to-many associations with key bindings that are non-inverse and non-nullable
+			PluralAttributeKeyBinding keyBinding = pluralAttributeBinding.getPluralAttributeKeyBinding();
+			if ( keyBinding.isInverse() || keyBinding.isNullable() ||
+					pluralAttributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() !=
+							PluralAttributeElementNature.ONE_TO_MANY ) {
+				continue;
+			}
+			// Ensure this isn't a bidirectional association by ensuring FK columns don't match relational columns of any
+			// many-to-one on opposite side
+			EntityBinding referencedEntityBinding =
+					entityBindingMap.get(
+							pluralAttributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().
+									getResolvedTypeMapping().getName() );
+			List<Column> columns = keyBinding.getForeignKey().getColumns();
+			boolean bidirectional = false;
+			for ( AttributeBinding attributeBinding : referencedEntityBinding.attributeBindings() ) {
+				if ( !(attributeBinding instanceof ManyToOneAttributeBinding) ) {
+					continue;
+				}
+				// Check if the opposite many-to-one attribute binding references the one-to-many attribute binding being processed
+				ManyToOneAttributeBinding manyToOneAttributeBinding = ( ManyToOneAttributeBinding ) attributeBinding;
+				if ( !manyToOneAttributeBinding.getReferencedEntityBinding().equals(
+						pluralAttributeBinding.getContainer().seekEntityBinding() ) ) {
+					continue;
+				}
+				// Check if the many-to-one attribute binding's columns match the one-to-many attribute binding's FK columns
+				// (meaning this is a bidirectional association, and no back reference should be created)
+				List<RelationalValueBinding> valueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
+				if ( columns.size() != valueBindings.size() ) {
+					continue;
+				}
+				bidirectional = true;
+				for ( int ndx = valueBindings.size(); --ndx >= 0; ) {
+					if ( columns.get(ndx) != valueBindings.get( ndx ).getValue() ) {
+						bidirectional = false;
+						break;
+					}
+				}
+				if ( bidirectional ) {
+					break;
+				}
+			}
+			if ( bidirectional ) continue;
+
+			// Create the synthetic back reference attribute
+			SingularAttribute syntheticAttribute =
+					referencedEntityBinding.getEntity().createSyntheticSingularAttribute(
+							SyntheticAttributeHelper.createBackRefAttributeName( pluralAttributeBinding.getAttribute().getRole() ) );
+			// Create the back reference attribute binding.
+			BackRefAttributeBinding backRefAttributeBinding =
+					referencedEntityBinding.makeBackRefAttributeBinding( syntheticAttribute, pluralAttributeBinding );
+			final HibernateTypeDescriptor keyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
+			final HibernateTypeDescriptor hibernateTypeDescriptor = backRefAttributeBinding.getHibernateTypeDescriptor();
+			hibernateTypeDescriptor.setJavaTypeName( keyTypeDescriptor.getJavaTypeName() );
+			hibernateTypeDescriptor.setExplicitTypeName( keyTypeDescriptor.getExplicitTypeName() );
+			hibernateTypeDescriptor.setToOne( keyTypeDescriptor.isToOne() );
+			hibernateTypeDescriptor.getTypeParameters().putAll( keyTypeDescriptor.getTypeParameters() );
+			hibernateTypeDescriptor.setResolvedTypeMapping( keyTypeDescriptor.getResolvedTypeMapping() );
+			backRefAttributeBinding.getAttribute().resolveType(
+					keyBinding.getReferencedAttributeBinding().getAttribute().getSingularAttributeType() );
+		}
+
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
 			metadataSourceProcessor.processMappingDependentMetadata();
 		}
@@ -383,9 +456,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return classLoaderService.getValue();
 	}
 
-	private PersisterClassResolver persisterClassResolverService() {
-		return persisterClassResolverService.getValue();
-	}
+//	private PersisterClassResolver persisterClassResolverService() {
+//		return persisterClassResolverService.getValue();
+//	}
 
 	@Override
 	public Options getOptions() {

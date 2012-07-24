@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.cascade.circle;
 
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -119,7 +123,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		route.getNodes().add( pickupNode );
 		route.getNodes().add( deliveryNode );
 
-		Route mergedRoute = (Route) s.merge( route );
+		assertThat( s.merge( route ), instanceOf( Route.class ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -189,7 +193,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		vehicle.setTransientField( "anewvalue" );
 		vehicle.setRoute( route );
 
-		Route mergedRoute = (Route) s.merge( route );
+		assertThat( s.merge( route ), instanceOf( Route.class ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -276,7 +280,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 		vehicle.setTransientField( "anewvalue" );
 		vehicle.setRoute( route );
 
-		Route mergedRoute = (Route) s.merge( route );
+		assertThat( s.merge( route ), instanceOf( Route.class ) );
 
 		s.getTransaction().commit();
 		s.close();

@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 import org.junit.Ignore;
-import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -42,6 +41,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.Skip;
@@ -59,7 +59,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private TestClassMetadata testClassMetadata;
 
-	public CustomRunner(Class<?> clazz) throws InitializationError, NoTestsRemainException {
+	public CustomRunner(Class<?> clazz) throws InitializationError {
 		super( clazz );
 	}
 
@@ -167,17 +167,44 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
         // Now process that full list of test methods and build our custom result
         final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
+		final boolean useNewMetamodel = Boolean.getBoolean( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS );
 		int testCount = 0;
 
 		Ignore virtualIgnore;
 
 		for ( FrameworkMethod frameworkMethod : methods ) {
+            FailureExpected failureExpected = null;
+			// Convert @FailureExpectedWithNewMetamodel annotations to @FailureExpected annotations
+            if ( useNewMetamodel ) {
+	            final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel =
+	            		Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
+	            if ( failureExpectedWithNewMetamodel != null ) {
+	            	failureExpected = new FailureExpected() {
+
+						@Override
+						public Class< ? extends Annotation > annotationType() {
+							return FailureExpected.class;
+						}
+
+						@Override
+						public String message() {
+							return failureExpectedWithNewMetamodel.message();
+						}
+
+						@Override
+						public String jiraKey() {
+							return failureExpectedWithNewMetamodel.jiraKey();
+						}
+					};
+	            }
+            }
 			// potentially ignore based on expected failure
-            final FailureExpected failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
+            if ( failureExpected == null ) {
+            	failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
+            }
 			if ( failureExpected != null && !doValidation ) {
 				virtualIgnore = new IgnoreImpl( Helper.extractIgnoreMessage( failureExpected, frameworkMethod ) );
-			}
-			else {
+			} else {
 				virtualIgnore = convertSkipToIgnore( frameworkMethod );
 			}
 

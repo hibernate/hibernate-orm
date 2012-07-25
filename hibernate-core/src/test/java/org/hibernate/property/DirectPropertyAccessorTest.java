@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Michael Rudolf
  */
+@FailureExpectedWithNewMetamodel
 public class DirectPropertyAccessorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey="HHH-3718" )

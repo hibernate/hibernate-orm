@@ -36,6 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -108,27 +110,27 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	public void testCompositeIds() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Product p = new Product();
 		p.setProductId("A123");
 		p.setDescription("nipple ring");
 		p.setPrice( new BigDecimal(1.0) );
 		p.setNumberAvailable(1004);
 		s.persist(p);
-		
+
 		Product p2 = new Product();
 		p2.setProductId("X525");
 		p2.setDescription("nose stud");
 		p2.setPrice( new BigDecimal(3.0) );
 		p2.setNumberAvailable(105);
 		s.persist(p2);
-		
+
 		Customer c = new Customer();
 		c.setAddress("St Kilda Rd, MEL, 3000");
 		c.setName("Virginia");
 		c.setCustomerId("C111");
 		s.persist(c);
-		
+
 		Order o = new Order(c);
 		o.setOrderDate( Calendar.getInstance() );
 		LineItem li = new LineItem(o, p);
@@ -136,7 +138,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		o = (Order) s.get( Order.class, new Order.Id("C111", 0) );
@@ -150,13 +152,13 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p").list();
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.createQuery("from Order o left join fetch o.lineItems li left join fetch li.product p").list();
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		Iterator iter = s.createQuery("select o.id, li.id from Order o join o.lineItems li").list().iterator();
@@ -171,7 +173,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		}
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Customer) s.get( Customer.class, "C111" );
@@ -184,7 +186,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( bigOrders.size(), 1 );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.createQuery("delete from LineItem").executeUpdate();
@@ -199,27 +201,27 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	public void testNonLazyFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Product p = new Product();
 		p.setProductId("A123");
 		p.setDescription("nipple ring");
 		p.setPrice( new BigDecimal(1.0) );
 		p.setNumberAvailable(1004);
 		s.persist(p);
-		
+
 		Product p2 = new Product();
 		p2.setProductId("X525");
 		p2.setDescription("nose stud");
 		p2.setPrice( new BigDecimal(3.0) );
 		p2.setNumberAvailable(105);
 		s.persist(p2);
-		
+
 		Customer c = new Customer();
 		c.setAddress("St Kilda Rd, MEL, 3000");
 		c.setName("Virginia");
 		c.setCustomerId("C111");
 		s.persist(c);
-		
+
 		Order o = new Order(c);
 		o.setOrderDate( Calendar.getInstance() );
 		LineItem li = new LineItem(o, p);
@@ -227,7 +229,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		o = (Order) s.get( Order.class, new Order.Id("C111", 0) );
@@ -255,8 +257,8 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( li.getProduct() ) );
 		t.commit();
 		s.close();
-		
-		
+
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.createQuery("delete from LineItem").executeUpdate();
@@ -265,34 +267,34 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("delete from Product").executeUpdate();
 		t.commit();
 		s.close();
-		
+
 	}
 
 	@Test
 	public void testMultipleCollectionFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Product p = new Product();
 		p.setProductId("A123");
 		p.setDescription("nipple ring");
 		p.setPrice( new BigDecimal(1.0) );
 		p.setNumberAvailable(1004);
 		s.persist(p);
-		
+
 		Product p2 = new Product();
 		p2.setProductId("X525");
 		p2.setDescription("nose stud");
 		p2.setPrice( new BigDecimal(3.0) );
 		p2.setNumberAvailable(105);
 		s.persist(p2);
-		
+
 		Customer c = new Customer();
 		c.setAddress("St Kilda Rd, MEL, 3000");
 		c.setName("Virginia");
 		c.setCustomerId("C111");
 		s.persist(c);
-		
+
 		Order o = new Order(c);
 		o.setOrderDate( Calendar.getInstance() );
 		LineItem li = new LineItem(o, p);
@@ -309,7 +311,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Customer) s.createQuery("from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p").uniqueResult();
@@ -321,7 +323,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( ( (Order) c.getOrders().get(1) ).getLineItems().size(), 2 );
 		t.commit();
 		s.close();
-				
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.createQuery("delete from LineItem").executeUpdate();

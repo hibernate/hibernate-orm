@@ -21,42 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.abstractembeddedcomponents.cid;
+package org.hibernate.testing;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author Steve Ebersole
+ * Used to mark test classes or methods as expecting to fail when using the new metamodel introduced in 5.0.  This annotation is
+ * only honored when the system property
+ * {@value org.hibernate.testing.junit4.BaseCoreFunctionalTestCase#USE_NEW_METADATA_MAPPINGS} is set to <code>true</code>.
  */
-@FailureExpectedWithNewMetamodel
-public class AbstractCompositeIdTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "abstractembeddedcomponents/cid/Mappings.hbm.xml" };
-	}
+@Retention( RetentionPolicy.RUNTIME )
+@Target( { ElementType.METHOD, ElementType.TYPE } )
+public @interface FailureExpectedWithNewMetamodel {
 
-	@Test
-	public void testEmbeddedCompositeIdentifierOnAbstractClass() {
-		MyInterfaceImpl myInterface = new MyInterfaceImpl();
-		myInterface.setKey1( "key1" );
-		myInterface.setKey2( "key2" );
-		myInterface.setName( "test" );
+	/**
+	 * @return an optional JIRA issue key that covers the expected failure
+	 */
+	String jiraKey() default "";
 
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.save( myInterface );
-		s.flush();
-
-		s.createQuery( "from MyInterface" ).list();
-
-		s.delete( myInterface );
-		t.commit();
-		s.close();
-
-	}
+	/**
+	 * @return an optional message related to the expected failure
+	 */
+	String message() default "";
 }

@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.access.Closet;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +44,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewMetamodel
 public class AccessTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultConfigurationModeIsInherited() throws Exception {
@@ -197,7 +199,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 			circle.getColor().getR();
 			fail();
 		} catch (RuntimeException e) {
-			// success		
+			// success
 		}
 		s.delete( circle );
 		tx.commit();

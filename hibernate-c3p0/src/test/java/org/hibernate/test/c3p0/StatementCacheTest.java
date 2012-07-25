@@ -25,6 +25,7 @@ package org.hibernate.test.c3p0;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.*;
@@ -32,13 +33,15 @@ import org.junit.*;
 import java.util.List;
 
 /**
- * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions. 
- * 
+ * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions.
+ *
  * @author Shawn Clowater
  */
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-7193" )
+	@FailureExpectedWithNewMetamodel
 	public void testStatementCaching() {
 		Session session = openSession();
 		session.beginTransaction();

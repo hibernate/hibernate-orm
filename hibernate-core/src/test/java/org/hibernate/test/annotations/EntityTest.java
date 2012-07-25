@@ -39,6 +39,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.type.StandardBasicTypes;
@@ -51,6 +52,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class EntityTest extends BaseCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
 
@@ -98,7 +100,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		tx.commit();
 		s.close();
-		
+
 
 		s = openSession();
 		tx = s.beginTransaction();

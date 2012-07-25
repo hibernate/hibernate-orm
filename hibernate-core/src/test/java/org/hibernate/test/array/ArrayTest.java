@@ -36,6 +36,8 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  */
 public class ArrayTest extends BaseCoreFunctionalTestCase {
+
+	@Override
 	public String[] getMappings() {
 		return new String[] { "array/A.hbm.xml" };
 	}
@@ -60,7 +62,7 @@ public class ArrayTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( a.getBs() );
 		assertEquals( 1, a.getBs().length );
 		assertNotNull( a.getBs()[0] );
-		
+
 		s.delete(a);
 		s.delete(a.getBs()[0]);
 		tx.commit();

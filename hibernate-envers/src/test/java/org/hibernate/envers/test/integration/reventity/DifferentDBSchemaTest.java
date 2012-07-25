@@ -29,8 +29,12 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
         super.addConfigOptions(options);
         // Creates new schema after establishing connection
         options.putAll(Environment.getProperties());
-        options.put(Environment.URL, options.get(Environment.URL) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME);
         options.put("org.hibernate.envers.default_schema", SCHEMA_NAME);
+    }
+
+    @Override
+    protected String createSecondSchema() {
+        return SCHEMA_NAME;
     }
 
 	@Override

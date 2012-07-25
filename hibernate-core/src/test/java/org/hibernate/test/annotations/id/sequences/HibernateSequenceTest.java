@@ -33,9 +33,11 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.addResource( "org/hibernate/test/annotations/id/sequences/orm.xml" );
-		cfg.setProperty(
-				Environment.URL, cfg.getProperty( Environment.URL ) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME
-		);
+	}
+
+	@Override
+	protected String createSecondSchema() {
+		return SCHEMA_NAME;
 	}
 
 	@Test

@@ -264,9 +264,25 @@ public class HibernateMappingProcessor {
 
 	private void processEntityElementImport(EntityElement entityElement) {
 		final String qualifiedName = bindingContext().determineEntityName( entityElement );
-		metadata.addImport( entityElement.getEntityName() == null
-							? entityElement.getName()
-							: entityElement.getEntityName(), qualifiedName );
+		final String importName = entityElement.getEntityName() == null
+				? entityElement.getName()
+				: entityElement.getEntityName();
+		metadata.addImport( importName, qualifiedName );
+
+		if ( JaxbClassElement.class.isInstance( entityElement ) ) {
+			processEntityElementsImport( ( (JaxbClassElement) entityElement ).getSubclass() );
+			processEntityElementsImport( ( (JaxbClassElement) entityElement ).getJoinedSubclass() );
+			processEntityElementsImport( ( (JaxbClassElement) entityElement ).getUnionSubclass() );
+		}
+		else if ( JaxbSubclassElement.class.isInstance( entityElement ) ) {
+			processEntityElementsImport( ( (JaxbSubclassElement) entityElement ).getSubclass() );
+		}
+		else if ( JaxbJoinedSubclassElement.class.isInstance( entityElement ) ) {
+			processEntityElementsImport( ( (JaxbJoinedSubclassElement) entityElement ).getJoinedSubclass() );
+		}
+		else if ( JaxbUnionSubclassElement.class.isInstance( entityElement ) ) {
+			processEntityElementsImport( ( (JaxbUnionSubclassElement) entityElement ).getUnionSubclass() );
+		}
 	}
 
 	private void processResultSetMappings() {

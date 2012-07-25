@@ -31,6 +31,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class TablePerClassTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testUnionSubClass() throws Exception {

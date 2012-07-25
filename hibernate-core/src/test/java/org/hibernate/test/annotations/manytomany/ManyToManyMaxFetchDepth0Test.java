@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.manytomany;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Many to many tests using max_fetch_depth == 0
@@ -33,6 +34,7 @@ import org.hibernate.cfg.Environment;
  * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyTest {
 	@Override
 	protected void configure(Configuration cfg) {

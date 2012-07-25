@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,9 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );

@@ -37,6 +37,7 @@ import org.hibernate.Transaction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.Country;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +49,7 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimpleElement() throws Exception {

@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.collectionelement.embeddables.withcustome
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -33,6 +34,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class TestBasicOps extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

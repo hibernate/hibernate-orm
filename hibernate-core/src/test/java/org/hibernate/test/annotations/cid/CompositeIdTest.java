@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneInCompositePk() throws Exception {
@@ -330,28 +332,28 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
         someEntity.getId().setVersion( 11 );
         someEntity.setProp( "aa" );
         s.persist( someEntity );
-        
+
         someEntity = new SomeEntity();
         someEntity.setId( new SomeEntityId( ) );
         someEntity.getId().setId( 1 );
         someEntity.getId().setVersion( 12 );
         someEntity.setProp( "bb" );
         s.persist( someEntity );
-        
+
         someEntity = new SomeEntity();
         someEntity.setId( new SomeEntityId( ) );
         someEntity.getId().setId( 10 );
         someEntity.getId().setVersion( 21 );
         someEntity.setProp( "cc1" );
         s.persist( someEntity );
-        
+
         someEntity = new SomeEntity();
         someEntity.setId( new SomeEntityId( ) );
         someEntity.getId().setId( 10 );
         someEntity.getId().setVersion( 22 );
         someEntity.setProp( "cc2" );
         s.persist( someEntity );
-        
+
         someEntity = new SomeEntity();
         someEntity.setId( new SomeEntityId( ) );
         someEntity.getId().setId( 10 );

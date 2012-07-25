@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,9 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  */
 public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCustomColumnReadAndWrite() throws Exception{
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -74,7 +77,7 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 			.add( Restrictions.between("sizeInInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, staff.getSizeInInches(), 0.01d);
-		
+
 		// Test predicate and entity load via HQL
 		staff = (Staff)s.createQuery("from Staff s where s.sizeInInches between ? and ?")
 			.setDouble(0, HEIGHT_INCHES - 0.01d)

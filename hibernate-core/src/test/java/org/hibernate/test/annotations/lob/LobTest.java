@@ -25,12 +25,14 @@
 package org.hibernate.test.annotations.lob;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@FailureExpectedWithNewMetamodel
 public class LobTest extends AbstractLobTest<Book, CompiledCode> {
 	@Override
 	protected Class<Book> getBookClass() {

@@ -48,6 +48,7 @@ import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -61,6 +62,7 @@ import static junit.framework.Assert.assertNotNull;
  */
 @SuppressWarnings("unchecked")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@FailureExpectedWithNewMetamodel
 public class IdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testGenericGenerator() throws Exception {

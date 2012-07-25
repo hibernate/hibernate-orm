@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.byteman.BytemanHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-6271")
 @RunWith(BMUnitRunner.class)
 public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
+
 	@Test
 	@BMRules(rules = {
 			@BMRule(targetClass = "org.hibernate.internal.CoreMessageLogger_$logger",
@@ -53,6 +55,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 					action = "countInvocation()",
 					name = "testOrm1Support")
 	})
+	@FailureExpectedWithNewMetamodel
 	public void testOrm1Support() {
 		// need to call buildSessionFactory, because this test is not using org.hibernate.testing.junit4.CustomRunner
 		buildSessionFactory();

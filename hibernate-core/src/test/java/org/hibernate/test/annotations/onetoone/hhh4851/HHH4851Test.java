@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -39,6 +40,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @TestForIssue( jiraKey = "HHH-4851" )
+@FailureExpectedWithNewMetamodel
 public class HHH4851Test extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHHH4851() throws Exception {

@@ -45,6 +45,7 @@ import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -59,6 +60,7 @@ import static org.junit.Assert.fail;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {

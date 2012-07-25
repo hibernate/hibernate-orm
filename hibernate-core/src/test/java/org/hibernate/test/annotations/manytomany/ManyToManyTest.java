@@ -38,6 +38,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -53,7 +54,9 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class ManyToManyTest extends BaseCoreFunctionalTestCase {
+@FailureExpectedWithNewMetamodel
+public class ManyToManyTest
+ extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefault() throws Exception {
 		Session s;
@@ -313,7 +316,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testRemoveInBetween() throws Exception {
 		Session s;
@@ -536,15 +539,15 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Permission readAccess = new Permission();
 		readAccess.setPermission( "read" );
 		readAccess.setExpirationDate( new Date() );
-		
+
 		Permission writeAccess = new Permission();
 		writeAccess.setPermission( "write" );
 		writeAccess.setExpirationDate( new Date( new Date().getTime() - 10*60*1000 ) );
-		
+
 		Permission executeAccess = new Permission();
 		executeAccess.setPermission( "execute" );
 		executeAccess.setExpirationDate( new Date( new Date().getTime() - 5*60*1000 ) );
-		
+
 		Set<Permission> coll = new HashSet<Permission>( 3 );
 		coll.add( readAccess );
 		coll.add( writeAccess );
@@ -567,7 +570,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testJoinedSubclassManyToMany() throws Exception {
 		Session s = openSession();
@@ -666,7 +669,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = (Employee)s.get( e.getClass(),e.getId() );
-		// follow both directions of many to many association 
+		// follow both directions of many to many association
 		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
 		s.getTransaction().commit();
 
@@ -702,7 +705,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = (Employee) s.get( e.getClass(), e.getId() );
-		assertEquals( "same job in both directions", 
+		assertEquals( "same job in both directions",
 			e.getJobInfo().getJobDescription(),
 			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
 		s.getTransaction().commit();

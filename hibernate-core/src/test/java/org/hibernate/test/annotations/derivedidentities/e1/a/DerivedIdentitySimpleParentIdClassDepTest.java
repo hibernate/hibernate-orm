@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
@@ -81,7 +83,7 @@ public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctiona
 		Query query = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.empName='Paula'");
 		List depList = query.list();
 		assertEquals( 1, depList.size() );
-		Object newDependent = (Dependent) depList.get(0);
+		Object newDependent = depList.get(0);
 		assertSame( d, newDependent );
 		s.getTransaction().rollback();
 		s.close();

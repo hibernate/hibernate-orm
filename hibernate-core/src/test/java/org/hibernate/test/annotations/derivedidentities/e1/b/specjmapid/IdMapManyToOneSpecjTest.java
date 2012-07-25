@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
+@FailureExpectedWithNewMetamodel
 public class IdMapManyToOneSpecjTest extends BaseCoreFunctionalTestCase {
 
 	public IdMapManyToOneSpecjTest() {
@@ -83,7 +85,7 @@ public class IdMapManyToOneSpecjTest extends BaseCoreFunctionalTestCase {
 		c1.addInventory( house, 100, new BigDecimal( 50000 ) );
 		s.merge( c1 );
 		tx.commit();
-		
+
 
 		tx = s.beginTransaction();
 		Customer c12 = ( Customer ) s.createQuery( "select c from Customer c" ).uniqueResult();
@@ -116,20 +118,20 @@ public class IdMapManyToOneSpecjTest extends BaseCoreFunctionalTestCase {
 				.uniqueResult();
 		assertEquals( 3, c13.getInventories().size() );
 
-		
-		
+
+
 		Customer customer2 = new Customer(
                 "foo2", "bar2", "contact12", "1002", new BigDecimal( 10002 ), new BigDecimal( 10002 ), new BigDecimal( 1000 ));
 		customer2.setId(2);
 		s.persist(customer2);
-		
+
 		customer2.addInventory(boat, 10, new BigDecimal(400));
 		customer2.addInventory(house2, 3, new BigDecimal(4000));
 		s.merge(customer2);
-		
+
 		Customer c23 = ( Customer ) s.createQuery( "select c from Customer c where c.id = 2" ).uniqueResult();
 		assertEquals( 2, c23.getInventories().size() );
-	
+
 		tx.rollback();
 		s.close();
 	}

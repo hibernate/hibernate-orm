@@ -37,6 +37,7 @@ import org.hibernate.Transaction;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimple() throws Exception {
@@ -104,7 +106,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		reg = (RegionalArticle) s.get( RegionalArticle.class, (Serializable) reg.getPk() );
+		reg = (RegionalArticle) s.get( RegionalArticle.class, reg.getPk() );
 		assertNotNull( reg );
 		assertNotNull( reg.getPk() );
 		assertEquals( "Je ne veux pes rester sage - Dolly", reg.getName() );
@@ -396,7 +398,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 		Set<Manager> topManagement = provider.getOwner().getTopManagement();
 		assertNotNull( "OneToMany not set", topManagement );
 		assertEquals( "Wrong number of elements", 1, topManagement.size() );
-		manager = (Manager) topManagement.iterator().next();
+		manager = topManagement.iterator().next();
 		assertEquals( "Wrong element", "Bill", manager.getName() );
 		s.delete( manager );
 		s.delete( provider );

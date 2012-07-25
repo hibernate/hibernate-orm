@@ -30,18 +30,17 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,6 +52,7 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-750" )
 public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
+
 	private static final Logger log = Logger.getLogger( NaturalIdOnSingleManyToOneTest.class );
 
 	@After
@@ -68,6 +68,7 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMappingProperties() {
         log.warn("Commented out test");
 
@@ -83,6 +84,7 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOneNaturalIdCached() {
 		NaturalIdOnManyToOne singleManyToOne = new NaturalIdOnManyToOne();
 		Citizen c1 = new Citizen();
@@ -103,7 +105,7 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( singleManyToOne );
 		tx.commit();
 		s.close();
-		
+
 		s.getSessionFactory().getCache().evictNaturalIdRegions();
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );

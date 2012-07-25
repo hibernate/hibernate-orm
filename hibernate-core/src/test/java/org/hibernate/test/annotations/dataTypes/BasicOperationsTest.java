@@ -38,6 +38,7 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
@@ -49,6 +50,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(value = {DialectChecks.SupportsExpectedLobUsagePattern.class, BasicOperationsTest.OracleDialectChecker.class}, jiraKey = "HHH-6834")
+@FailureExpectedWithNewMetamodel
 public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";

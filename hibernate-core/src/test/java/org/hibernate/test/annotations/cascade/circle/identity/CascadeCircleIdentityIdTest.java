@@ -27,11 +27,13 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+@FailureExpectedWithNewMetamodel
 public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5472" )
@@ -47,28 +49,28 @@ public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
 
 		a.getBCollection().add(b);
 		b.setA(a);
-		
+
 		a.getCCollection().add(c);
 		c.setA(a);
-		
+
 		b.getCCollection().add(c);
 		c.setB(b);
-		
+
 		a.getDCollection().add(d);
 		d.getACollection().add(a);
-		
+
 		d.getECollection().add(e);
 		e.setF(f);
-		
+
 		f.getBCollection().add(b);
 		b.setF(f);
-		
+
 		c.setG(g);
 		g.getCCollection().add(c);
-		
+
 		f.setH(h);
 		h.setG(g);
-		
+
 		Session s;
 		s = openSession();
 		s.getTransaction().begin();

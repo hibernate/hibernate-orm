@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.cid.keymanytoone;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -36,6 +37,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";

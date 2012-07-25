@@ -34,6 +34,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },

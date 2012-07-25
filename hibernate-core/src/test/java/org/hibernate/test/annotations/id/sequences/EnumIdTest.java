@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.id.sequences.entities.Planet;
 import org.hibernate.test.annotations.id.sequences.entities.PlanetCheatSheet;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -44,9 +45,11 @@ import static org.junit.Assert.assertNull;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-744" )
 public class EnumIdTest extends BaseCoreFunctionalTestCase {
+
 	private static final Logger log = Logger.getLogger( EnumIdTest.class );
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEnumAsId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

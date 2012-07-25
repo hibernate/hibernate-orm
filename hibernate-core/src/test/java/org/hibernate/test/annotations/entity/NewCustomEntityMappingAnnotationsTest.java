@@ -27,6 +27,7 @@ import org.hibernate.mapping.RootClass;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

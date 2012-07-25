@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -95,6 +96,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBidirDefaultIdGenerator() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();

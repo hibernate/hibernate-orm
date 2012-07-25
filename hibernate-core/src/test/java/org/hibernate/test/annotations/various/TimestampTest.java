@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.TimestampType;
@@ -42,12 +43,15 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 public class TimestampTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTimestampSourceIsVM() throws Exception {
 		assertTimestampSource( VMTimestamped.class, TimestampType.class );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTimestampSourceIsDB() throws Exception {
 		assertTimestampSource( DBTimestamped.class, DbTimestampType.class );
 	}

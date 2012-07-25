@@ -34,6 +34,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Sharath Reddy
  */
+@FailureExpectedWithNewMetamodel
 public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneFromNonPk() throws Exception {

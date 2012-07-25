@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Join;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() throws Exception {
@@ -147,7 +149,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() throws Exception {
 		Session s=openSession();
@@ -161,7 +163,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
@@ -195,7 +197,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 

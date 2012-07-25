@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.id.entities.Location;
 import org.hibernate.test.annotations.id.entities.Tower;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class IdClassTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIdClassInSuperclass() throws Exception {

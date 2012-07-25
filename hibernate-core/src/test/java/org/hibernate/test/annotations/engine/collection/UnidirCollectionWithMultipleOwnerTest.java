@@ -27,11 +27,13 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class UnidirCollectionWithMultipleOwnerTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testUnidirCollectionWithMultipleOwner() throws Exception {

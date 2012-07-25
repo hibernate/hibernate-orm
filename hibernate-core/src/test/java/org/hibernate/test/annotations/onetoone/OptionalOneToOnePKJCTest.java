@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -90,6 +91,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 	// @PrimaryKeyJoinColumn @OneToOne(optional=true) non-foreign generator
 	@Test
 	@TestForIssue( jiraKey = "HHH-4982")
+	@FailureExpectedWithNewMetamodel
 	public void testNotFoundBidirDefaultIdGenerator() {
 		Session s = openSession();
 		s.getTransaction().begin();

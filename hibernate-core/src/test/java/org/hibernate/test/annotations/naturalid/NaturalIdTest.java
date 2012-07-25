@@ -36,6 +36,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertTrue;
  */
 @SuppressWarnings("unchecked")
 public class NaturalIdTest extends BaseCoreFunctionalTestCase {
+
 	@After
 	public void cleanupData() {
 		super.cleanupCache();
@@ -63,6 +65,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMappingProperties() {
 		ClassMetadata metaData = sessionFactory().getClassMetadata(
 				Citizen.class
@@ -76,16 +79,17 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
 		Criteria criteria = s.createCriteria( Citizen.class );
 		criteria.add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", france ) );
 		criteria.setCacheable( true );
-		
+
 		this.cleanupCache();
 
 		Statistics stats = sessionFactory().getStatistics();
@@ -115,6 +119,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdLoaderNotCached() {
 		saveSomeCitizens();
 
@@ -148,26 +153,27 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdLoaderCached() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		saveSomeCitizens();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		
+
 		//Try NaturalIdLoadAccess after insert
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -188,8 +194,8 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
-		
-		
+
+
 		//Try NaturalIdLoadAccess
 
 		s = openSession();
@@ -211,9 +217,9 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 
-		
+
 		//Try NaturalIdLoadAccess after load
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		france = this.getState( s, "Ile de France" );
@@ -238,6 +244,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdUncached() {
 		saveSomeCitizens();
 
@@ -252,7 +259,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 				)
 		);
 		criteria.setCacheable( false );
-		
+
 		this.cleanupCache();
 
 		Statistics stats = sessionFactory().getStatistics();

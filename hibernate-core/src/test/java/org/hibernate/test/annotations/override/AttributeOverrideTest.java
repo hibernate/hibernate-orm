@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.override;
 import org.junit.Test;
 
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class AttributeOverrideTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMapKeyValue() throws Exception {
@@ -53,7 +55,7 @@ public class AttributeOverrideTest extends BaseCoreFunctionalTestCase {
 
 		//legacy mappings
 		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET") );		
+		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET") );
 	}
 
 	public boolean isColumnPresent(String tableName, String columnName) {

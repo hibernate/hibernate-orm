@@ -40,6 +40,7 @@ import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {
@@ -231,7 +233,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 		party.partyId = "id";
 		party.partyAffiliate = affiliate;
 		affiliate.party = party;
-		
+
 		s.persist( party );
 		s.getTransaction().commit();
 
@@ -342,14 +344,14 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist( owner );
 		s.flush();
 		s.clear();
-		
+
 		owner = ( Owner ) s.get( Owner.class, owner.getId() );
 		assertNotNull( owner );
 		assertNotNull( owner.getAddress() );
 		assertEquals( owner.getId(), owner.getAddress().getId() );
 		s.flush();
 		s.clear();
-		
+
 		address = ( OwnerAddress ) s.get( OwnerAddress.class, address.getId() );
 		assertNotNull( address );
 		assertNotNull( address.getOwner() );
@@ -383,7 +385,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -414,31 +416,32 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 
 
 /**
- * Verifies that generated 'select' statement has desired number of joins 
+ * Verifies that generated 'select' statement has desired number of joins
  * @author Sharath Reddy
  *
  */
 class JoinCounter extends EmptyInterceptor {
-	 
+
 	private static final long serialVersionUID = -3689681272273261051L;
-	
+
 	private int expectedNumberOfJoins = 0;
-			
+
 	public JoinCounter(int val) {
 		super();
 		this.expectedNumberOfJoins = val;
 	}
 
+	@Override
 	public String onPrepareStatement(String sql) {
 		int numberOfJoins = 0;
 		if (sql.startsWith("select") & !sql.contains("nextval")) {
 			 numberOfJoins = count(sql, "join");
 			 assertEquals( expectedNumberOfJoins, numberOfJoins );
 		}
-						
+
 		return sql;
 	 }
-	
+
 	 /**
 	   * Count the number of instances of substring within a string.
 	   *
@@ -459,5 +462,5 @@ class JoinCounter extends EmptyInterceptor {
 
 	     return count;
 	  }
-	
+
 }

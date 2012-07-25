@@ -34,6 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -48,6 +49,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ImmutableTest.class );
 

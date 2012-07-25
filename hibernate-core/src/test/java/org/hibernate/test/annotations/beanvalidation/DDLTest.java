@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewMetamodel
 public class DDLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testBasicDDL() {

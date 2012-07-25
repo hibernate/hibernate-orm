@@ -6,6 +6,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -14,9 +15,11 @@ import static org.junit.Assert.fail;
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
+@FailureExpectedWithNewMetamodel
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 
-    protected Class[] getAnnotatedClasses() {
+    @Override
+	protected Class[] getAnnotatedClasses() {
         return new Class[]{
                 Room.class,
                 Building.class,
@@ -56,5 +59,5 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
         tx.rollback();
         s.close();
     }
-    
+
 }

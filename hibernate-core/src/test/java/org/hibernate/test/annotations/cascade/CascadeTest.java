@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertNull;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class CascadeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testPersist() {
@@ -166,7 +168,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		s.delete( s.get( Mouth.class, mouth.id ) );
-		
+
 		tx.commit();
 		s.close();
 	}

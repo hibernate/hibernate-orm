@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class LoaderTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getXmlFiles() {
@@ -62,14 +64,14 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 		p.setName("me");
 		t.getPlayers().add(p);
 		p.setTeam(t);
-		
+
 
 		try {
 			s.persist(p);
 			s.persist(t);
 			tx.commit();
 			s.close();
-			
+
 			s= openSession( );
 			tx = s.beginTransaction();
 			Team t2 = (Team)s.load(Team.class,new Long(1));
@@ -77,7 +79,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 			Iterator<Player> iterator = players.iterator();
 			assertEquals("me", iterator.next().getName());
 			tx.commit();
-			
+
 		}
 		catch (Exception e) {
 			e.printStackTrace();

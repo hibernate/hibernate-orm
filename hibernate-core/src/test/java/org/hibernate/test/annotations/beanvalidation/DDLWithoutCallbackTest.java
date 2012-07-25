@@ -34,6 +34,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -45,8 +46,10 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
+
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
+	@FailureExpectedWithNewMetamodel
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -55,6 +58,7 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
+	@FailureExpectedWithNewMetamodel
 	public void testMinAndMaxChecksGetApplied() {
 		MinMax minMax = new MinMax( 1 );
 		assertDatabaseConstraintViolationThrown( minMax );
@@ -73,6 +77,7 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
+	@FailureExpectedWithNewMetamodel
 	public void testRangeChecksGetApplied() {
 		Range range = new Range( 1 );
 		assertDatabaseConstraintViolationThrown( range );
@@ -90,6 +95,7 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDDLEnabled() {
 		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();

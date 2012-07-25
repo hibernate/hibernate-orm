@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewMetamodel
 public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testFetchWithTwoOverrides() throws Exception {

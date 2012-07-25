@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,7 +44,9 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -71,7 +74,7 @@ public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
 			// TODO - seems this explicit case is necessary with JDK 5 (at least on Mac). With Java 6 there is no problem
-			Annotation annotation = (Annotation) e.getConstraintViolations()
+			Annotation annotation = e.getConstraintViolations()
 					.iterator()
 					.next()
 					.getConstraintDescriptor()

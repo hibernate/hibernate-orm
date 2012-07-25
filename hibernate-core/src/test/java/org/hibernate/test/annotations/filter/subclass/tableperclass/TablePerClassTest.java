@@ -1,13 +1,15 @@
 package org.hibernate.test.annotations.filter.subclass.tableperclass;
 
 import org.hibernate.test.annotations.filter.subclass.SubClassTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
+@FailureExpectedWithNewMetamodel
 public class TablePerClassTest extends SubClassTest{
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{Animal.class, Mammal.class, Human.class};
 	}
-	
+
 	@Override
 	protected void persistTestData() {
 		createHuman(false, 90);
@@ -22,6 +24,6 @@ public class TablePerClassTest extends SubClassTest{
 		human.setIq(iq);
 		session.persist(human);
 	}
-	
+
 
 }

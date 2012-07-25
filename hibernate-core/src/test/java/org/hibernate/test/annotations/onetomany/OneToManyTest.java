@@ -47,7 +47,7 @@ import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
 import org.hibernate.test.annotations.TicketComparator;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -66,6 +66,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testColumnDefinitionPropagation() throws Exception {
@@ -307,7 +308,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
-		Soldier soldier = ( Soldier ) troop.getSoldiers().iterator().next();
+		Soldier soldier = troop.getSoldiers().iterator().next();
 		tx.commit();
 		s.close();
 		troop.getSoldiers().clear();

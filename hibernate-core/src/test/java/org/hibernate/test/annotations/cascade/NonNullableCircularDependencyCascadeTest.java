@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.fail;
@@ -39,6 +40,7 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class NonNullableCircularDependencyCascadeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIdClassInSuperclass() throws Exception {

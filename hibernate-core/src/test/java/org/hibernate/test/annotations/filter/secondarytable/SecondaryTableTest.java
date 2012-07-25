@@ -1,9 +1,11 @@
 package org.hibernate.test.annotations.filter.secondarytable;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
+@FailureExpectedWithNewMetamodel
 public class SecondaryTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -20,14 +22,14 @@ public class SecondaryTableTest extends BaseCoreFunctionalTestCase {
 		insertUser("t@s.com", 24, false, "a4", "b");
 		session.flush();
 	}
-	
+
 	@Test
 	public void testFilter(){
 		Assert.assertEquals(Long.valueOf(4), session.createQuery("select count(u) from User u").uniqueResult());
 		session.enableFilter("ageFilter").setParameter("age", 24);
 		Assert.assertEquals(Long.valueOf(2), session.createQuery("select count(u) from User u").uniqueResult());
 	}
-	
+
 	private void insertUser(String emailAddress, int age, boolean lockedOut, String username, String password){
 		User user = new User();
 		user.setEmailAddress(emailAddress);

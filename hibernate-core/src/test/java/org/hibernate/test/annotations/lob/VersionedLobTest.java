@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Gail Badner
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@FailureExpectedWithNewMetamodel
 public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCompiledCode> {
 	@Override
 	protected Class<VersionedBook> getBookClass() {

@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNull;
@@ -35,7 +36,9 @@ import static org.junit.Assert.assertNull;
  * @author Emmanuel Bernard
  */
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOne() throws Exception {
 		Currency euro = new Currency();
 		euro.setName( "Euro" );

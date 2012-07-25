@@ -40,6 +40,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -54,6 +55,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -193,26 +195,26 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	/*
-	 * Test import of TypeDefs from MappedSuperclass and 
+	 * Test import of TypeDefs from MappedSuperclass and
 	 * Embedded classes.
-	 * The classes 'Name' and 'FormalLastName' both embed the same 
-	 * component 'LastName'. This is to verify that processing the 
-	 * typedef defined in the component TWICE does not create any 
-	 * issues.  
+	 * The classes 'Name' and 'FormalLastName' both embed the same
+	 * component 'LastName'. This is to verify that processing the
+	 * typedef defined in the component TWICE does not create any
+	 * issues.
 	 */
 	@Test
 	public void testImportTypeDefinitions() throws Exception {
 		LastName lastName = new LastName();
 		lastName.setName("reddy");
-				
+
 		Name name = new Name();
 		name.setFirstName("SHARATH");
 		name.setLastName(lastName);
-		
+
 		FormalLastName formalName = new FormalLastName();
 		formalName.setLastName(lastName);
 		formalName.setDesignation("Mr");
-				
+
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -221,17 +223,17 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.persist(formalName);
 		tx.commit();
 		s.close();
-		 
+
 		s = openSession();
 		tx = s.beginTransaction();
 		name = (Name) s.get( Name.class, name.getId() );
 		assertNotNull( name );
 		assertEquals( "sharath", name.getFirstName() );
 		assertEquals( "REDDY", name.getLastName().getName() );
-		
+
 		formalName = (FormalLastName) s.get(FormalLastName.class, formalName.getId());
 		assertEquals( "REDDY", formalName.getLastName().getName() );
-		
+
 		s.delete(name);
 		s.delete(formalName);
 		tx.commit();
@@ -293,19 +295,19 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testFilterOnCollection() {
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		
+
 		Topic topic = new Topic();
 		Narrative n1 = new Narrative();
 		n1.setState("published");
 		topic.addNarrative(n1);
-		
+
 		Narrative n2 = new Narrative();
 		n2.setState("draft");
 		topic.addNarrative(n2);
-		
+
 		s.persist(topic);
 		tx.commit();
 		s.close();
@@ -313,16 +315,16 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		topic = (Topic) s.load( Topic.class, topic.getId() );
-		
+
 		s.enableFilter("byState").setParameter("state", "published");
 		topic = (Topic) s.load( Topic.class, topic.getId() );
-		assertNotNull(topic); 
-		assertTrue(topic.getNarratives().size() == 1); 
+		assertNotNull(topic);
+		assertTrue(topic.getNarratives().size() == 1);
 		assertEquals("published", topic.getNarratives().iterator().next().getState());
 		tx.commit();
 		s.close();
-		
-	} 
+
+	}
 
 	@Test
 	public void testCascadedDeleteOfChildEntitiesBug2() {
@@ -379,7 +381,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
 		// Clear the Team reference to players, which should orphan the teams.
-		// Orphaning the team should delete the team. 
+		// Orphaning the team should delete the team.
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -455,7 +457,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	  
+
 	/**
 	 * Tests the functionality of inheriting @Filter and @FilterDef annotations
 	 * defined on a parent MappedSuperclass(s)
@@ -483,8 +485,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		 
-		//We test every filter with 2 queries, the first on the base class of the 
+
+		//We test every filter with 2 queries, the first on the base class of the
 		//inheritance hierarchy (Drill), and the second on a subclass (PowerDrill)
 		s.enableFilter( "byName" ).setParameter( "name", "HomeDrill1");
 		long count = ( (Long) s.createQuery( "select count(*) from Drill" ).iterate().next() ).intValue();
@@ -492,18 +494,18 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next() ).intValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byName" );
-		
+
 		s.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
 		count = ( (Long) s.createQuery( "select count(*) from Drill" ).iterate().next() ).longValue();
 		assertEquals( 1, count );
 		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next() ).longValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byCategory" );
-		
+
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testParameterizedType() throws Exception {
@@ -619,23 +621,23 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-		
+
 	@Test
 	public void testTypeDefNameAndDefaultForTypeAttributes() {
 		ContactDetails contactDetails = new ContactDetails();
 		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
 		contactDetails.setOverseasPhoneNumber(
 				new OverseasPhoneNumber("041", "111111"));
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		s.persist(contactDetails);
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
-		contactDetails = 
+		contactDetails =
 			(ContactDetails) s.get( ContactDetails.class, contactDetails.getId() );
 		assertNotNull( contactDetails );
 		assertEquals( "999999", contactDetails.getLocalPhoneNumber().getNumber() );
@@ -643,9 +645,9 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.delete(contactDetails);
 		tx.commit();
 		s.close();
-	
+
 	}
-	
+
 	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
 		try {
@@ -658,25 +660,25 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			assertEquals(
 					"Either name or defaultForType (or both) attribute should be set in TypeDefinition having typeClass org.hibernate.test.annotations.entity.PhoneNumberType",
 					ex.getMessage());
-		}	
+		}
 	}
 
-	
+
 	/**
-	 * A custom type is used in the base class, but defined in the derived class. 
-	 * This would have caused an exception, because the base class is processed 
-	 * BEFORE the derived class, and the custom type is not yet defined. However, 
-	 * it works now because we are setting the typeName for SimpleValue in the second 
-	 * pass. 
-	 * 
-	 * 
+	 * A custom type is used in the base class, but defined in the derived class.
+	 * This would have caused an exception, because the base class is processed
+	 * BEFORE the derived class, and the custom type is not yet defined. However,
+	 * it works now because we are setting the typeName for SimpleValue in the second
+	 * pass.
+	 *
+	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testSetSimpleValueTypeNameInSecondPass() throws Exception {
 		Peugot derived = new Peugot();
 		derived.setName("sharath");
-		
+
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -684,7 +686,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.persist(derived);
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		derived = (Peugot) s.get( Peugot.class, derived.getId() );

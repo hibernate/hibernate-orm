@@ -39,6 +39,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -53,6 +54,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testJPA2DefaultMapColumns() throws Exception {
@@ -492,7 +494,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 		Atmosphere atm = new Atmosphere();
 		atm.colorPerDate.put( new Date(1234567000), "red" );
 		s.persist( atm );
-		
+
 		s.flush();
 		s.clear();
 

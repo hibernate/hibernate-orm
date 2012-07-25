@@ -135,7 +135,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				},
 				false
 		);
-		if ( true ) {
+		if ( isMetadataUsed ) {
 			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
 		}
 		else {

@@ -438,10 +438,6 @@ public class HibernateMappingProcessor {
 		metadata.addNamedQuery( builder.createNamedQueryDefinition() );
 
 	}
-
-	private static FlushMode getFlushMode(JaxbFlushModeAttribute flushModeAttribute){
-		return flushModeAttribute == null ? null : FlushMode.valueOf( flushModeAttribute.value().toUpperCase() );
-	}
 	private static void parseQueryElement(NamedQueryDefinitionBuilder builder, JaxbQueryElement queryElement, QueryElementContentsParser parser) {
 		final String queryName = queryElement.getName();
 		final boolean cacheable = queryElement.isCacheable();
@@ -501,6 +497,7 @@ public class HibernateMappingProcessor {
 						HibernateMappingProcessor.this.origin()
 				);
 			}
+			builder.setQuery( query );
 		}
 
 		protected void parseExtra(String queryName, Serializable obj, NamedQueryDefinitionBuilder builder) {

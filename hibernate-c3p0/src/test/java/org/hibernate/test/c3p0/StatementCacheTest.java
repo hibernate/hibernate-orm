@@ -23,14 +23,15 @@
  */
 package org.hibernate.test.c3p0;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.*;
-
-import java.util.List;
 
 /**
  * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions.
@@ -40,8 +41,7 @@ import java.util.List;
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7193" )
-	@FailureExpectedWithNewMetamodel
+	@TestForIssue(jiraKey = "HHH-7193")
 	public void testStatementCaching() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -57,7 +57,7 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 			session.flush();
 			Assert.fail( "Validation exception did not occur" );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			//this is expected roll the transaction back
 			session.getTransaction().rollback();
 		}
@@ -87,6 +87,6 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ IrrelevantEntity.class };
+		return new Class[] { IrrelevantEntity.class };
 	}
 }

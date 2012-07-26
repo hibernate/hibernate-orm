@@ -21,12 +21,14 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 
+@FailureExpectedWithNewMetamodel
 public class MultiTableTest extends LegacyTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {

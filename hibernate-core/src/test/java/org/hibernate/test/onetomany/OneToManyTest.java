@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetomany/Parent.hbm.xml" };
 	}
@@ -52,16 +55,16 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		c.setParent(p);
 		s.save(p);
 		s.flush();
-		
+
 		p.getChildren().remove(c);
 		c.setParent(null);
 		s.flush();
-		
+
 		p.getChildren().add(c);
 		c.setParent(p);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		c.setParent(null);
@@ -76,7 +79,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Child) s.createQuery("from Child").uniqueResult();
@@ -86,11 +89,11 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		p = (Parent) s.createQuery("from Parent p left join fetch p.children").uniqueResult();
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.createQuery("delete from Child").executeUpdate();
-		s.createQuery("delete from Parent").executeUpdate();		
+		s.createQuery("delete from Parent").executeUpdate();
 		t.commit();
 		s.close();
 

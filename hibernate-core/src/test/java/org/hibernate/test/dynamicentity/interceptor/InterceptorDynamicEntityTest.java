@@ -31,6 +31,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.ProxyHelper;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,7 @@ public class InterceptorDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIt() {
 		// Test saving these dyna-proxies
 		Session session = openSession();

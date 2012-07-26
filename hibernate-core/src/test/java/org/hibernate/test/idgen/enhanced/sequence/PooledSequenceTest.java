@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
@@ -45,6 +46,7 @@ public class PooledSequenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNormalBoundary() {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );

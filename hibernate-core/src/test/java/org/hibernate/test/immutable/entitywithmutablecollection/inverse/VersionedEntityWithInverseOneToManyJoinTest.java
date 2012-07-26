@@ -24,6 +24,7 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 
@@ -31,15 +32,19 @@ import org.hibernate.testing.TestForIssue;
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-4992" )
+@FailureExpectedWithNewMetamodel
 public class VersionedEntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };
 	}
 
+	@Override
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
 		return false;
 	}
 
+	@Override
 	protected boolean checkUpdateCountsAfterRemovingElementWithoutDelete() {
 		return false;
 	}

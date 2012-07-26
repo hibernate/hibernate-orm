@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -45,6 +46,7 @@ public class PersistentBagTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWriteMethodDirtying() {
 		BagOwner parent = new BagOwner( "root" );
 		BagOwner child = new BagOwner( "c1" );

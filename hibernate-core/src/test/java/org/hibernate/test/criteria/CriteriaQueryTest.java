@@ -61,6 +61,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -81,6 +82,7 @@ import static org.junit.Assert.fail;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@FailureExpectedWithNewMetamodel
 public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -1811,7 +1813,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 			assertEquals( 1, result.size() );
 			assertEquals( kinga, result.get( 0 ) );
 		}
-		
+
 		tx.commit();
 		session.close();
 
@@ -1906,13 +1908,13 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-7194")
 	public void testNestedCorrelatedSubquery() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
-		
+
 		Course course = new Course();
 		course.setCourseCode("HIB");
 		course.setDescription("Hibernate Training");
@@ -1922,7 +1924,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		gavin.setName("Gavin King");
 		gavin.setStudentNumber(232);
 		gavin.setPreferredCourse(course);
-		
+
 		Enrolment enrolment = new Enrolment();
 		enrolment.setCourse( course );
 		enrolment.setCourseCode( course.getCourseCode() );
@@ -1934,13 +1936,13 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.persist(course);
 		session.persist(gavin);
 		session.persist(enrolment);
-		
+
 		session.flush();
 		session.clear();
-		
+
 		//execute a nested subquery
 		DetachedCriteria mainCriteria = DetachedCriteria.forClass(Student.class, "student");
-		
+
 		DetachedCriteria nestedSubQuery = DetachedCriteria.forClass( Enrolment.class, "maxStudentEnrolment" );
 		nestedSubQuery.add(Restrictions.eqProperty("student.preferredCourse", "maxStudentEnrolment.course"));
 		nestedSubQuery.setProjection(Projections.max("maxStudentEnrolment.year"));
@@ -1948,14 +1950,14 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		DetachedCriteria subQuery = DetachedCriteria.forClass( Enrolment.class, "enrolment" );
 		subQuery.add(Subqueries.propertyEq("enrolment.year", nestedSubQuery));
 		subQuery.setProjection(Projections.property("student"));
-		
+
 		mainCriteria.add(Subqueries.exists(subQuery));
 
 		//query should complete and return gavin in the list
 		List results = mainCriteria.getExecutableCriteria(session).list();
 		assertEquals(1, results.size());
 		assertEquals(gavin.getStudentNumber(), ((Student) results.get(0)).getStudentNumber());
-		
+
 		t.rollback();
 		session.close();
 	}
@@ -1968,7 +1970,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		Student gavin = new Student();
 		gavin.setName("Gavin King");
 		gavin.setStudentNumber(232);
-		
+
 		Country gb = new Country("GB", "United Kingdom");
 		Country fr = new Country("FR", "France");
 		session.persist(gb);
@@ -1980,21 +1982,21 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		studyAbroads.add(sa1);
 		studyAbroads.add(sa2);
 		gavin.setStudyAbroads(studyAbroads);
-		
+
 		session.persist(gavin);
 
 		session.flush();
 		session.clear();
-		
+
 		List results = session.createCriteria(Student.class)
 		    .setFetchMode("studyAbroads", FetchMode.JOIN)
 		    .setFetchMode("studyAbroads.country", FetchMode.JOIN)
 		    .list();
 
-		
+
 		assertEquals(results.size(), 2);
 		Student st = (Student)results.get(0);
-		
+
 		assertNotNull(st.getStudyAbroads());
 		assertTrue(Hibernate.isInitialized(st.getStudyAbroads()));
 		assertEquals(st.getStudyAbroads().size(), 2);
@@ -2006,10 +2008,10 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.delete(st);
 		session.delete(c1);
 		session.delete(c2);
-		
+
 		t.commit();
 		session.close();
-		
+
 	}
 
 }

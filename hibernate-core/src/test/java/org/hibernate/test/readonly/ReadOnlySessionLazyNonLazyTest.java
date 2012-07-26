@@ -37,6 +37,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,6 +67,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {
@@ -1063,19 +1065,19 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						c.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
@@ -1141,19 +1143,19 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 				)
 		);
 		expectedReadOnlyObjects = new HashSet();
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
@@ -1233,17 +1235,17 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						c.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
@@ -1308,17 +1310,17 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 				)
 		);
 		expectedReadOnlyObjects = new HashSet();
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );

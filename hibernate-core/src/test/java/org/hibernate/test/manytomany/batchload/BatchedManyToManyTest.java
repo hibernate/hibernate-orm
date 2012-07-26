@@ -42,6 +42,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.stat.CollectionStatistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
@@ -54,6 +55,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -161,6 +163,7 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Override
 	protected void cleanupTestData() {
 		// clean up the test data
 		Session s = openSession();

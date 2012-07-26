@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -67,7 +69,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.persist(hb);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = (User) s.get(User.class, gavin);
@@ -91,7 +93,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, group.getUsers().size() );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = (User) s.createCriteria(User.class)
@@ -105,7 +107,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, group.getUsers().size() );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = (User) s.createQuery("from User u join fetch u.groups g join fetch g.users").uniqueResult();

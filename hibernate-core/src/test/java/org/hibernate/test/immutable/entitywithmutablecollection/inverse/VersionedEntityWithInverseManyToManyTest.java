@@ -24,10 +24,12 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithManyToManyTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class VersionedEntityWithInverseManyToManyTest extends AbstractEntityWithManyToManyTest {
 	@Override
 	public String[] getMappings() {

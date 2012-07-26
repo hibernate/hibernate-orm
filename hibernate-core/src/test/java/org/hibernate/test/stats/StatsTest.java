@@ -39,6 +39,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -51,10 +52,12 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  */
 public class StatsTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "stats/Continent.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -62,6 +65,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -152,6 +156,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryStatGathering() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

@@ -4,6 +4,7 @@ import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.EnversSchemaGenerator;
 import org.junit.Assert;
@@ -23,12 +24,14 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase  {
         return new Class[] {StrTestEntity.class};
     }
 
+	@Override
 	protected boolean createSchema() {
 		// Disable schema auto generation.
 		return false;
 	}
     @Test
     @Priority(10)
+    @FailureExpectedWithNewMetamodel
     public void testSchemaCreation() {
         // Generate complete schema.
         new EnversSchemaGenerator(configuration()).export().create( true, true );
@@ -45,6 +48,7 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase  {
 
 	@Test
     @Priority(9)
+    @FailureExpectedWithNewMetamodel
     public void testAuditDataRetrieval() {
         Assert.assertEquals(Arrays.asList(1), getAuditReader().getRevisions(StrTestEntity.class, id));
         Assert.assertEquals(new StrTestEntity("data", id), getAuditReader().find(StrTestEntity.class, id, 1));

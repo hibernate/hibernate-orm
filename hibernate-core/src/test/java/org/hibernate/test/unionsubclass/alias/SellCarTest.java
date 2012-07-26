@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -38,8 +39,10 @@ import static org.junit.Assert.assertNotNull;
  * @author Strong Liu <stliu@redhat.com>
  */
 @TestForIssue( jiraKey = "HHH-4825" )
+@FailureExpectedWithNewMetamodel
 public class SellCarTest extends BaseCoreFunctionalTestCase {
-    public String[] getMappings() {
+    @Override
+	public String[] getMappings() {
         return new String[] { "unionsubclass/alias/mapping.hbm.xml" };
     }
 

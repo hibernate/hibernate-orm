@@ -28,14 +28,17 @@ import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class IJ2Test extends LegacyTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/IJ2.hbm.xml" };
 	}

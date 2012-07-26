@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,7 +41,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "typedmanytoone/Customer.hbm.xml" };
 	}
@@ -50,7 +53,7 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		Customer cust = new Customer();
 		cust.setCustomerId("abc123");
 		cust.setName("Matt");
-		
+
 		Address ship = new Address();
 		ship.setStreet("peachtree rd");
 		ship.setState("GA");
@@ -58,7 +61,7 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		ship.setZip("30326");
 		ship.setAddressId( new AddressId("SHIPPING", "xyz123") );
 		ship.setCustomer(cust);
-		
+
 		Address bill = new Address();
 		bill.setStreet("peachtree rd");
 		bill.setState("GA");
@@ -66,16 +69,16 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		bill.setZip("30326");
 		bill.setAddressId( new AddressId("BILLING", "xyz123") );
 		bill.setCustomer(cust);
-		
+
 		cust.setBillingAddress(bill);
 		cust.setShippingAddress(ship);
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.persist(cust);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		List results = s.createQuery("from Customer cust left join fetch cust.billingAddress where cust.customerId='abc123'").list();
@@ -89,7 +92,7 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "SHIPPING", cust.getShippingAddress().getAddressId().getType() );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.saveOrUpdate(cust);
@@ -108,13 +111,13 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		Customer cust = new Customer();
 		cust.setCustomerId("xyz123");
 		cust.setName("Matt");
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.persist(cust);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		List results = s.createQuery("from Customer cust left join fetch cust.billingAddress where cust.customerId='xyz123'").list();
@@ -125,7 +128,7 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 		s.delete( cust );
 		t.commit();
 		s.close();
-		
+
 	}
 
 }

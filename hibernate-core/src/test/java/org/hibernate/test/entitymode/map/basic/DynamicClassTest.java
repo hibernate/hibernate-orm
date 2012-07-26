@@ -36,6 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -81,15 +83,15 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
 		models = (List) cars.get("models");
 		assertFalse( Hibernate.isInitialized(models) );
 		assertEquals( models.size(), 2);
 		assertTrue( Hibernate.isInitialized(models) );
-		
+
 		s.clear();
-		
+
 		List list = s.createQuery("from Model m").list();
 		for ( Iterator i=list.iterator(); i.hasNext(); ) {
 			assertFalse( Hibernate.isInitialized( ( (Map) i.next() ).get("productLine") ) );
@@ -97,7 +99,7 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 		Map model = (Map) list.get(0);
 		assertTrue( ( (List) ( (Map) model.get("productLine") ).get("models") ).contains(model) );
 		s.clear();
-		
+
 		t.commit();
 		s.close();
 

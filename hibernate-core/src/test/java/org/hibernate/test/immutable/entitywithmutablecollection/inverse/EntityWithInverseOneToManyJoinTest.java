@@ -24,11 +24,14 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class EntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationOneToManyJoin.hbm.xml" };
 	}

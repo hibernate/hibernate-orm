@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.fail;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {
@@ -49,6 +51,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		return new Membership( name );
 	}
 
+	@Override
 	@Test
 	public void testRemoveAndAddEqualElement() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
@@ -75,6 +78,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		}
 	}
 
+	@Override
 	@Test
 	public void testRemoveAndAddEqualCollection() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
@@ -103,6 +107,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		}
 	}
 
+	@Override
 	@Test
 	public void testRemoveAndAddEqualElementNonKeyModified() {
 		deleteMembership( getUser(), getGroup(), getMembership() );

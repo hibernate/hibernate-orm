@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,15 +43,16 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the use of composite-id with a generator.  
- * Test this behavior in all the various entity states (transient, managed, detached) 
+ * Tests the use of composite-id with a generator.
+ * Test this behavior in all the various entity states (transient, managed, detached)
  * and the different state transitions.
- * 
+ *
  * For HHH-2060.
- * 
+ *
  * @author Jacob Robertson
  */
 @TestForIssue( jiraKey = "HHH-2060" )
+@FailureExpectedWithNewMetamodel
 public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 
@@ -77,10 +79,10 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(generatedId);
 		assertNotNull( generatedId.getPurchaseSequence() );
 		assertTrue(generatedId.getPurchaseNumber() > 0);
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		// find the record, and see that the ids match
 		PurchaseRecord find = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
 		assertNotNull(find);
@@ -92,11 +94,11 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		// generate another new record
 		PurchaseRecord record2 = new PurchaseRecord();
 		s.persist(record2);
-		
+
 		t.commit();
 		s.close();
 
@@ -105,12 +107,12 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		PurchaseRecord find2 = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId2);
-		
+
 		t.commit();
 		s.close();
-		
+
 		// test that the ids are different
 		PurchaseRecord.Id id1 = find.getId();
 		PurchaseRecord.Id id2 = find2.getId();
@@ -118,7 +120,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		String seq2 = id2.getPurchaseSequence();
 		int num1 = id1.getPurchaseNumber();
 		int num2 = id2.getPurchaseNumber();
-		
+
 		assertEquals( df.format(timestamp2), df.format(find2.getTimestamp()) );
 		assertFalse( id1.equals(id2) );
 		assertFalse( seq1.equals(seq2) );
@@ -133,7 +135,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
 		s.persist(record);
-		
+
 		// close session so we know the record is detached
 		t.commit();
 		s.close();
@@ -144,34 +146,34 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		Date persistedTimestamp = record.getTimestamp();
 		Date newTimestamp = new Date(persistedTimestamp.getTime() + 1);
 		record.setTimestamp(newTimestamp);
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		PurchaseRecord find = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
-		
+
 		t.commit();
 		s.close();
 
 		// see that we get the original id, and the original timestamp
 		assertEquals( generatedId, find.getId() );
 		assertEquals( df.format(persistedTimestamp), df.format(find.getTimestamp()) );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		// update with the new timestamp
 		s.update(record);
-		
+
 		t.commit();
 		s.close();
-		
+
 		// find the newly updated record
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		PurchaseRecord find2 = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
-		
+
 		t.commit();
 		s.close();
 
@@ -195,27 +197,27 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		record2.setTimestamp(timestamp2);
 		s.persist(record1);
 		s.persist(record2);
-		
+
 		// close session so we know the records are detached
 		t.commit();
 		s.close();
 
 		PurchaseRecord.Id generatedId1 = record1.getId();
 		PurchaseRecord.Id generatedId2 = record2.getId();
-		
+
 		// change the ids around - effectively making record1 have the same id as record2
 		// do not persist yet
 		PurchaseRecord.Id toChangeId1 = new PurchaseRecord.Id();
 		toChangeId1.setPurchaseNumber( record2.getId().getPurchaseNumber() );
 		toChangeId1.setPurchaseSequence( record2.getId().getPurchaseSequence() );
 		record1.setId(toChangeId1);
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		PurchaseRecord find1 = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId1);
 		PurchaseRecord find2 = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId2);
-		
+
 		t.commit();
 		s.close();
 
@@ -225,13 +227,13 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		assertEquals( df.format(timestamp1), df.format(find1.getTimestamp()) );
 		assertEquals( generatedId2, find2.getId() );
 		assertEquals( df.format(timestamp2), df.format(find2.getTimestamp()) );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		// update with the new changed record id
 		s.update(record1);
-		
+
 		t.commit();
 		s.close();
 
@@ -240,13 +242,13 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		assertSame(toChangeId1, foundId1);
 		assertEquals( toChangeId1.getPurchaseNumber(), foundId1.getPurchaseNumber() );
 		assertEquals( toChangeId1.getPurchaseSequence(), foundId1.getPurchaseSequence() );
-		
+
 		// find record 2 and see that it has the timestamp originally found in record 1
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		find2 = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId2);
-		
+
 		t.commit();
 		s.close();
 
@@ -267,7 +269,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord record = new PurchaseRecord();
 		record.setTimestamp(timestamp1);
 		s.saveOrUpdate(record);
-		
+
 		t.commit();
 		s.close();
 
@@ -275,15 +277,15 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord.Id generatedId = record.getId();
 		assertNotNull(generatedId);
 		assertNotNull( generatedId.getPurchaseSequence() );
-		
+
 		// change the timestamp
 		record.setTimestamp(timestamp2);
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		s.saveOrUpdate(record);
-		
+
 		t.commit();
 		s.close();
 
@@ -300,24 +302,24 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		// persist the record, then get the id and timestamp back
 		PurchaseRecord record = new PurchaseRecord();
 		s.persist(record);
-		
+
 		t.commit();
 		s.close();
 
 		PurchaseRecord.Id id = record.getId();
 		Date timestamp = record.getTimestamp();
-		
+
 		// using the given id, load a transient record
 		PurchaseRecord toLoad = new PurchaseRecord();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
 		s.load(toLoad, id);
-		
+
 		t.commit();
 		s.close();
-		
+
 		// show that the correct timestamp and ids were loaded
 		assertEquals( id, toLoad.getId() );
 		assertEquals( df.format(timestamp), df.format(toLoad.getTimestamp()) );
@@ -330,34 +332,34 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		Date timestamp1 = new Date();
 		Date timestamp2 = new Date(timestamp1.getTime() + 1);
-		
+
 		// persist the record, then evict it, then make changes to it ("within" the session)
 		PurchaseRecord record = new PurchaseRecord();
 		record.setTimestamp(timestamp1);
 		s.persist(record);
 		s.flush();
 		s.evict(record);
-		
+
 		record.setTimestamp(timestamp2);
-		
+
 		t.commit();
 		s.close();
 
 		PurchaseRecord.Id generatedId = record.getId();
-		
+
 		// now, re-fetch the record and show that the timestamp change wasn't persisted
 		s = openSession();
 		t = s.beginTransaction();
 
 		PurchaseRecord persistent = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
-		
+
 		t.commit();
 		s.close();
-		
+
 		assertEquals( generatedId, persistent.getId() );
 		assertEquals( df.format(timestamp1), df.format(persistent.getTimestamp()) );
 	}
-	
+
 	@Test
 	public void testMerge() {
 		Session s = openSession();
@@ -369,7 +371,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
 		s.persist(record);
-		
+
 		t.commit();
 		s.close();
 
@@ -377,7 +379,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord.Id generatedId = record.getId();
 		assertNotNull(generatedId);
 		assertNotNull( generatedId.getPurchaseSequence() );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
@@ -385,18 +387,18 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord detached = record;
 		detached.setTimestamp(timestamp2);
 		PurchaseRecord persistent = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
-		
+
 		// show that the timestamp hasn't changed
 		assertEquals( df.format(timestamp1), df.format(persistent.getTimestamp()) );
-		
+
 		s.merge(detached);
-		
+
 		t.commit();
 		s.close();
 
 		// show that the persistent object was changed only after the session flush
 		assertEquals( timestamp2, persistent.getTimestamp() );
-		
+
 		// show that the persistent store was updated - not just the in-memory object
 		s = openSession();
 		t = s.beginTransaction();
@@ -405,7 +407,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
-		
+
 		assertEquals( df.format(timestamp2), df.format(persistent.getTimestamp()) );
 	}
 
@@ -417,12 +419,12 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
 		s.saveOrUpdate(record);
-		
+
 		t.commit();
 		s.close();
 
 		PurchaseRecord.Id generatedId = record.getId();
-		
+
 		// re-fetch, then delete the record
 		s = openSession();
 		t = s.beginTransaction();
@@ -430,7 +432,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord find = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
 		s.delete(find);
 		assertFalse( s.contains(find) );
-		
+
 		t.commit();
 		s.close();
 
@@ -442,13 +444,13 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
-		
+
 		assertNull(find);
 	}
-	
+
 	@Test
 	public void testGeneratedIdsWithChildren() {
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
@@ -459,17 +461,17 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		details.add( new PurchaseDetail(record, "p@2", 2) );
 
 		s.persist(record);
-		
+
 		t.commit();
 		s.close();
-		
+
 		// show that the ids were generated (non-zero) and come out the same
 		int foundPurchaseNumber = record.getId().getPurchaseNumber();
 		String foundPurchaseSequence = record.getId().getPurchaseSequence();
 		assertNotNull( record.getId() );
 		assertTrue(foundPurchaseNumber > 0);
 		assertNotNull(foundPurchaseSequence);
-		
+
 		// search on detail1 by itself and show it got the parent's id
 		s = openSession();
 		t = s.beginTransaction();
@@ -478,7 +480,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		PurchaseRecord foundRecord = (PurchaseRecord) s.get(PurchaseRecord.class,
 				new PurchaseRecord.Id(foundPurchaseNumber, foundPurchaseSequence)
 				);
-		
+
 		t.commit();
 		s.close();
 

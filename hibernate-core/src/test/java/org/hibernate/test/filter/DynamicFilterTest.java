@@ -51,6 +51,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
@@ -66,6 +67,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
+@FailureExpectedWithNewMetamodel
 public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );
 

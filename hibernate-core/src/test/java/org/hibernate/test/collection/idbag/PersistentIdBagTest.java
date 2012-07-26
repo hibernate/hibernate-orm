@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -45,6 +46,7 @@ public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWriteMethodDirtying() {
 		IdbagOwner parent = new IdbagOwner( "root" );
 		IdbagOwner child = new IdbagOwner( "c1" );

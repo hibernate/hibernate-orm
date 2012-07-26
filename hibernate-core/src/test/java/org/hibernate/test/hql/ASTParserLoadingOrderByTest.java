@@ -36,6 +36,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;
@@ -108,7 +110,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		zoo2Director2 = new Human();
 		zoo2Director2.setName( new Name( "Fat", 'A', "Cat" ) );
 		zoo2.getDirectors().put( "Head Honcho", zoo2Director1 );
-		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );		
+		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );
 
 		zoo3 = new Zoo();
 		zoo3.setName( "Zoo" );
@@ -183,7 +185,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		}
 		if ( zoo2Director2 != null ) {
 			s.delete( zoo2Director2 );
-			zoo2Director2 = null;			
+			zoo2Director2 = null;
 		}
 		if ( stateProvince != null ) {
 			s.delete( stateProvince );

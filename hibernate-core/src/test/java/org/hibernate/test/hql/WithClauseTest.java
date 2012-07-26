@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;
@@ -41,7 +42,9 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class WithClauseTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };
 	}

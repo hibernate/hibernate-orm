@@ -25,6 +25,7 @@ package org.hibernate.test.entityname;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author stliu
  */
+@FailureExpectedWithNewMetamodel
 public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "entityname/Vehicle.hbm.xml" };
 	}
@@ -50,7 +53,7 @@ public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
 		s.save(stliu);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s=openSession();
 		s.beginTransaction();
 		Person p = (Person)s.get(Person.class, stliu.getId());

@@ -31,6 +31,7 @@ import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
@@ -40,11 +41,13 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class HiLoSequenceTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "idgen/enhanced/sequence/HiLo.hbm.xml" };
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNormalBoundary() {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );

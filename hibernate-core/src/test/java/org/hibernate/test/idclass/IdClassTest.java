@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class IdClassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idclass/Customer.hbm.xml" };
 	}
@@ -47,7 +50,7 @@ public class IdClassTest extends BaseCoreFunctionalTestCase {
 		s.persist(cust);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		CustomerId custId = new CustomerId("JBoss", "RouteOne");
 		t = s.beginTransaction();
@@ -56,7 +59,7 @@ public class IdClassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( cust.getCustomerName(), custId.getCustomerName() );
 		assertEquals( cust.getOrgName(), custId.getOrgName() );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -73,9 +76,9 @@ public class IdClassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Detroit", cust.getAddress() );
 		assertEquals( cust.getCustomerName(), custId.getCustomerName() );
 		assertEquals( cust.getOrgName(), custId.getOrgName() );
-		
+
 		s.createQuery( "delete from Customer" ).executeUpdate();
-		
+
 		t.commit();
 		s.close();
 	}

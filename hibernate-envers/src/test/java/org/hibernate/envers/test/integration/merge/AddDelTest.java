@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -23,6 +24,7 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 
     @Test
     @Priority(10)
+    @FailureExpectedWithNewMetamodel
     public void initData() {
         // Revision 1
         Session session = openSession();
@@ -51,6 +53,7 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
     }
 
     @Test
+    @FailureExpectedWithNewMetamodel
     public void testRevisionsCountOfGivenIdStrEntity() {
         // Revision 2 has not changed entity's state.
         Assert.assertEquals(Arrays.asList(1, 3), getAuditReader().getRevisions(GivenIdStrEntity.class, 1));
@@ -59,6 +62,7 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
     }
 
     @Test
+    @FailureExpectedWithNewMetamodel
     public void testHistoryOfGivenIdStrEntity() {
         Assert.assertEquals(new GivenIdStrEntity(1, "data"), getAuditReader().find(GivenIdStrEntity.class, 1, 1));
         Assert.assertEquals(new GivenIdStrEntity(1, "modified data"), getAuditReader().find(GivenIdStrEntity.class, 1, 3));

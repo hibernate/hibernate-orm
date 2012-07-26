@@ -32,6 +32,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.LocalStatus;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,6 +42,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {

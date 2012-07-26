@@ -34,6 +34,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -74,7 +76,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "delete from Item" ).executeUpdate();
 		t.commit();
 		s.close();
-		
+
 		Category cat = new Category("Photography");
 		Item i = new Item(cat, "Camera");
 		Bid b = new Bid(i, 100.0f);
@@ -83,14 +85,14 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		new Comment(i, "Is it the latest version?");
 		new Comment(i, "<comment deleted>");
 		System.out.println( b.getTimestamp() );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.persist(cat);
 		s.persist(i);
 		t.commit();
 		s.close();
-		
+
 		sessionFactory().evict(Item.class);
 
 		s = openSession();
@@ -116,7 +118,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		sessionFactory().evictCollection(Item.class.getName() + ".bids");
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		i = (Item) s.createCriteria( Item.class )
@@ -129,7 +131,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( b.getItem() ) );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		i = (Item) s.createQuery("from Item i left join fetch i.bids left join fetch i.comments").uniqueResult();
@@ -204,7 +206,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 	}
-	
+
 	@Test
 	public void testCollectionFilter() {
 		Session s = openSession();
@@ -219,7 +221,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.persist(hb);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		hb = (Group) s.createCriteria(Group.class)
@@ -234,9 +236,9 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.delete(hb);
 		t.commit();
 		s.close();
-		
+
 	}
-	
+
 	@Test
 	public void testJoinFetchManyToMany() {
 		Session s = openSession();
@@ -251,7 +253,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		s.persist(hb);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		hb = (Group) s.get(Group.class, "hibernate");

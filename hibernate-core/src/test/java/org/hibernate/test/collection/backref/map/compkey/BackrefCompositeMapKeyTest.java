@@ -30,6 +30,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

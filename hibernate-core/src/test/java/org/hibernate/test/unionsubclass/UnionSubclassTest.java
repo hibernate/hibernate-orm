@@ -34,6 +34,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -57,16 +59,16 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Location mel = new Location("Earth");
 		s.save(mel);
-		
+
 		Human gavin = new Human();
 		gavin.setIdentity("gavin");
 		gavin.setSex('M');
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
-		
+
 		gavin.getInfo().put("foo", "bar");
 		gavin.getInfo().put("x", "y");
-		
+
 		t.commit();
 		s.close();
 
@@ -86,7 +88,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Location mel = new Location("Earth");
 		s.save(mel);
-		
+
 		Human gavin = new Human();
 		gavin.setIdentity("gavin");
 		gavin.setSex('M');
@@ -97,15 +99,15 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		max.setSex('M');
 		max.setLocation(mel);
 		mel.addBeing(gavin);
-		
+
 		s.flush();
 		s.clear();
-		
+
 		List list = s.createCriteria(Human.class)
 			.setFetchMode("location", FetchMode.JOIN)
 			.setFetchMode("location.beings", FetchMode.JOIN)
 			.list();
-		
+
 		for (int i=0; i<list.size(); i++ ) {
 			Human h = (Human) list.get(i);
 			assertTrue( Hibernate.isInitialized( h.getLocation() ) );
@@ -116,7 +118,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUnionSubclassOneToMany() {
 		Session s = openSession();
@@ -125,25 +127,25 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Location mars = new Location("Mars");
 		s.save(mel);
 		s.save(mars);
-		
+
 		Human gavin = new Human();
 		gavin.setIdentity("gavin");
 		gavin.setSex('M');
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
-		
+
 		Alien x23y4 = new Alien();
 		x23y4.setIdentity("x23y4$$hu%3");
 		x23y4.setLocation(mars);
 		x23y4.setSpecies("martian");
 		mars.addBeing(x23y4);
-		
+
 		Alien yy3dk = new Alien();
 		yy3dk.setIdentity("yy3dk&*!!!");
 		yy3dk.setLocation(mars);
 		yy3dk.setSpecies("martian");
 		mars.addBeing(yy3dk);
-		
+
 		Hive hive = new Hive();
 		hive.setLocation(mars);
 		hive.getMembers().add(x23y4);
@@ -151,37 +153,37 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		hive.getMembers().add(yy3dk);
 		yy3dk.setHive(hive);
 		s.persist(hive);
-		
+
 		yy3dk.getHivemates().add(x23y4);
 		x23y4.getHivemates().add(yy3dk);
-		
+
 		s.flush();
 		s.clear();
-		
+
 		hive = (Hive) s.createQuery("from Hive h").uniqueResult();
 		assertFalse( Hibernate.isInitialized( hive.getMembers() ) );
 		assertEquals( hive.getMembers().size(), 2 );
-		
+
 		s.clear();
-		
+
 		hive = (Hive) s.createQuery("from Hive h left join fetch h.location left join fetch h.members").uniqueResult();
 		assertTrue( Hibernate.isInitialized( hive.getMembers() ) );
 		assertEquals( hive.getMembers().size(), 2 );
-		
+
 		s.clear();
-		
+
 		x23y4 = (Alien) s.createQuery("from Alien a left join fetch a.hivemates where a.identity like 'x%'").uniqueResult();
 		assertTrue( Hibernate.isInitialized( x23y4.getHivemates() ) );
 		assertEquals( x23y4.getHivemates().size(), 1 );
-		
+
 		s.clear();
-		
+
 		x23y4 = (Alien) s.createQuery("from Alien a where a.identity like 'x%'").uniqueResult();
 		assertFalse( Hibernate.isInitialized( x23y4.getHivemates() ) );
 		assertEquals( x23y4.getHivemates().size(), 1 );
-		
+
 		s.clear();
-		
+
 		x23y4 = (Alien) s.createCriteria(Alien.class).addOrder( Order.asc("identity") ).list().get(0);
 		s.delete( x23y4.getHive() );
 		s.delete( s.get(Location.class, new Long( mel.getId() ) ) );
@@ -199,83 +201,83 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Location mars = new Location("Mars");
 		s.save(mel);
 		s.save(mars);
-		
+
 		Human gavin = new Human();
 		gavin.setIdentity("gavin");
 		gavin.setSex('M');
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
-		
+
 		Alien x23y4 = new Alien();
 		x23y4.setIdentity("x23y4$$hu%3");
 		x23y4.setLocation(mars);
 		x23y4.setSpecies("martian");
 		mars.addBeing(x23y4);
-		
+
 		Hive hive = new Hive();
 		hive.setLocation(mars);
 		hive.getMembers().add(x23y4);
 		x23y4.setHive(hive);
 		s.persist(hive);
-		
+
 		Thing thing = new Thing();
 		thing.setDescription("some thing");
 		thing.setOwner(gavin);
 		gavin.getThings().add(thing);
 		s.save(thing);
 		s.flush();
-		
+
 		s.clear();
-		
+
 		thing = (Thing) s.createQuery("from Thing t left join fetch t.owner").uniqueResult();
 		assertTrue( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "gavin" );
 		s.clear();
-		
+
 		thing = (Thing) s.createQuery("select t from Thing t left join t.owner where t.owner.identity='gavin'").uniqueResult();
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "gavin" );
 		s.clear();
-		
+
 		gavin = (Human) s.createQuery("from Human h left join fetch h.things").uniqueResult();
 		assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
 		assertEquals( ( (Thing) gavin.getThings().get(0) ).getDescription(), "some thing" );
 		s.clear();
-		
+
 		assertTrue( s.createQuery("from Being b left join fetch b.things").list().size()==2 );
 		s.clear();
-		
+
 		gavin = (Human) s.createQuery("from Being b join fetch b.things").uniqueResult();
 		assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
 		assertEquals( ( (Thing) gavin.getThings().get(0) ).getDescription(), "some thing" );
 		s.clear();
-		
+
 		gavin = (Human) s.createQuery("select h from Human h join h.things t where t.description='some thing'").uniqueResult();
 		assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
 		assertEquals( ( (Thing) gavin.getThings().get(0) ).getDescription(), "some thing" );
 		s.clear();
-		
+
 		gavin = (Human) s.createQuery("select b from Being b join b.things t where t.description='some thing'").uniqueResult();
 		assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
 		assertEquals( ( (Thing) gavin.getThings().get(0) ).getDescription(), "some thing" );
 		s.clear();
-		
+
 		thing = (Thing) s.get( Thing.class, new Long( thing.getId() ) );
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "gavin" );
-		
+
 		thing.getOwner().getThings().remove(thing);
 		thing.setOwner(x23y4);
 		x23y4.getThings().add(thing);
-		
+
 		s.flush();
-		
+
 		s.clear();
 
 		thing = (Thing) s.get( Thing.class, new Long( thing.getId() ) );
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "x23y4$$hu%3" );
-		
+
 		s.delete(thing);
 		x23y4 = (Alien) s.createCriteria(Alien.class).uniqueResult();
 		s.delete( x23y4.getHive() );
@@ -293,28 +295,28 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Location mel = new Location("Melbourne, Australia");
 		Location atl = new Location("Atlanta, GA");
 		Location mars = new Location("Mars");
-		s.save(mel); 
-		s.save(atl); 
+		s.save(mel);
+		s.save(atl);
 		s.save(mars);
-		
+
 		Human gavin = new Human();
 		gavin.setIdentity("gavin");
 		gavin.setSex('M');
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
-		
+
 		Alien x23y4 = new Alien();
 		x23y4.setIdentity("x23y4$$hu%3");
 		x23y4.setLocation(mars);
 		x23y4.setSpecies("martian");
 		mars.addBeing(x23y4);
-		
+
 		Hive hive = new Hive();
 		hive.setLocation(mars);
 		hive.getMembers().add(x23y4);
 		x23y4.setHive(hive);
 		s.persist(hive);
-		
+
 		assertEquals( s.createQuery("from Being").list().size(), 2 );
 		assertEquals( s.createQuery("from Being b where b.class = Alien").list().size(), 1 );
 		assertEquals( s.createQuery("from Being b where type(b) = :what").setParameter("what", Alien.class).list().size(), 1 );
@@ -332,7 +334,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( beings.size(), 2 );
 		s.clear();
-		
+
 		beings = s.createQuery("from Being").list();
 		for ( Iterator iter = beings.iterator(); iter.hasNext(); ) {
 			Being b = (Being) iter.next();
@@ -343,8 +345,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( beings.size(), 2 );
 		s.clear();
-		
-		List locations = s.createQuery("from Location").list(); 
+
+		List locations = s.createQuery("from Location").list();
 		int count = 0;
 		for ( Iterator iter = locations.iterator(); iter.hasNext(); ) {
 			Location l = (Location) iter.next();
@@ -359,7 +361,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( locations.size(), 3 );
 		s.clear();
 
-		locations = s.createQuery("from Location loc left join fetch loc.beings").list(); 
+		locations = s.createQuery("from Location loc left join fetch loc.beings").list();
 		count = 0;
 		for ( Iterator iter = locations.iterator(); iter.hasNext(); ) {
 			Location l = (Location) iter.next();
@@ -376,14 +378,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 		gavin = (Human) s.get( Human.class, new Long( gavin.getId() ) );
 		atl = (Location) s.get( Location.class, new Long( atl.getId() ) );
-		
+
  		atl.addBeing(gavin);
 		assertEquals( s.createQuery("from Human h where h.location.name like '%GA'").list().size(), 1 );
 		s.delete(gavin);
 		x23y4 = (Alien) s.createCriteria(Alien.class).uniqueResult();
 		s.delete( x23y4.getHive() );
 		assertTrue( s.createQuery("from Being").list().isEmpty() );
-		
+
 		s.createQuery("delete from Location").executeUpdate();
 		t.commit();
 		s.close();

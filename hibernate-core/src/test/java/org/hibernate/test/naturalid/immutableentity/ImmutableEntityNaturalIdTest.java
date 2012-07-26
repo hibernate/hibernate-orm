@@ -28,10 +28,10 @@ import org.junit.Test;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -62,6 +62,7 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImmutableNaturalIdLifecycle() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
@@ -71,7 +72,7 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "Cache put should be empty", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "Query count should be empty", 0, stats.getNaturalIdQueryExecutionCount() );
-		
+
 		Building b1 = new Building();
 		b1.setName( "Computer Science" );
 		b1.setAddress( "1210 W. Dayton St." );
@@ -88,14 +89,14 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "Cache put should be one after insert", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "Query count should be empty", 0, stats.getNaturalIdQueryExecutionCount() );
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
-		
+
 		//Clear caches and reset cache stats
 		s.getSessionFactory().getCache().evictNaturalIdRegions();
 		stats.clear();
-		
+
 		NaturalIdLoadAccess naturalIdLoader = s.byNaturalId( Building.class );
 		naturalIdLoader.using( "address", "1210 W. Dayton St." ).using( "city", "Madison" ).using( "state", "WI" );
 
@@ -110,9 +111,9 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
-		
+
 		//Try two, should be a cache hit
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		naturalIdLoader = s.byNaturalId( Building.class );
@@ -125,10 +126,10 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Cache misses should be one after second query", 1, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "Query count should be one after second query", 1, stats.getNaturalIdQueryExecutionCount() );
-		
+
 		// Try Deleting
 		s.delete( building );
-		
+
 		// third query
 		building = (Building) naturalIdLoader.load();
 		assertNull( building );
@@ -140,9 +141,9 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.commit();
 		s.close();
-		
+
 		//Try three, should be db lookup and miss
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		naturalIdLoader = s.byNaturalId( Building.class );

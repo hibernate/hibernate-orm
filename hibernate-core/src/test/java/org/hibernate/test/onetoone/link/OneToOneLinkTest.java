@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +49,7 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOneViaAssociationTable() {
 		Person p = new Person();
 		p.setName("Gavin King");
@@ -55,13 +57,13 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		Employee e = new Employee();
 		p.setEmployee(e);
 		e.setPerson(p);
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.persist(p);
 		t.commit();
 		s.close();
-	
+
 		s = openSession();
 		t = s.beginTransaction();
 		e = (Employee) s.createQuery("from Employee e where e.person.name like 'Gavin%'").uniqueResult();
@@ -77,10 +79,10 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( e.getPerson() ) );
 		assertNull( e.getPerson().getCustomer() );
 		s.clear();
-		
+
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
@@ -90,10 +92,10 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		Customer c = new Customer();
 		e.getPerson().setCustomer(c);
 		c.setPerson( e.getPerson() );
-		
+
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 
@@ -104,7 +106,7 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		s.delete(e);
 		t.commit();
 		s.close();
-		
+
 	}
 
 }

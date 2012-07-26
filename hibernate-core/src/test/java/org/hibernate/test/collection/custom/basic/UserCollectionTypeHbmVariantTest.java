@@ -23,9 +23,12 @@
  */
 package org.hibernate.test.collection.custom.basic;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class UserCollectionTypeHbmVariantTest extends UserCollectionTypeTest {
 	@Override
 	public String[] getMappings() {

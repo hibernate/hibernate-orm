@@ -23,9 +23,12 @@
  */
 package org.hibernate.test.collection.custom.parameterized;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ParameterizedUserCollectionTypeAnnotationsVariantTest extends ParameterizedUserCollectionTypeTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

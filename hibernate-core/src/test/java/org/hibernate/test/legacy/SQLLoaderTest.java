@@ -19,6 +19,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+@FailureExpectedWithNewMetamodel
 public class SQLLoaderTest extends LegacyTestCase {
 	static int nextInt = 1;
 	static long nextLong = 1;
@@ -179,7 +181,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		list.get(0);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		if ( getDialect() instanceof MySQLDialect ) {
 			return;
 		}
@@ -191,7 +193,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assertNotNull(query);
 		list = query.list();
         assertNotNull(list);
-		
+
 		Object[] values = (Object[]) list.get(0);
 		assertNotNull(values[0]);
 		assertNotNull(values[1]);
@@ -399,7 +401,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		Query query;
 		if( getDialect() instanceof TimesTenDialect) {
             // TimesTen does not permit general expressions (like UPPER) in the second part of a LIKE expression,
-            // so we execute a similar test 
+            // so we execute a similar test
             query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'" )
 					.addEntity( "a", A.class );
         }
@@ -505,26 +507,26 @@ public class SQLLoaderTest extends LegacyTestCase {
 	public void testReturnPropertyComponentRename() throws HibernateException, SQLException {
 		// failure expected because this was a regression introduced previously which needs to get tracked down.
 		Componentizable componentizable = setupComponentData();
-		
+
 		Session session = openSession();
 		session.beginTransaction();
 		Query namedQuery = session.getNamedQuery("queryComponentWithOtherColumn");
 		List list = namedQuery.list();
-		
+
 		assertEquals(1, list.size());
 		assertEquals( "flakky comp", ( (Componentizable) list.get(0) ).getComponent().getName() );
-		
+
 		session.clear();
 		session.delete(componentizable);
 		session.getTransaction().commit();
 		session.close();
 	}
-	
+
 	@Test
 	public void testComponentStar() throws HibernateException, SQLException {
 	    componentTest("select {comp.*} from Componentizable comp");
 	}
-	
+
 	@Test
 	public void testComponentNoStar() throws HibernateException, SQLException {
 	    componentTest("select comp.id as {comp.id}, comp.nickName as {comp.nickName}, comp.name as {comp.component.name}, comp.subName as {comp.component.subComponent.subName}, comp.subName1 as {comp.component.subComponent.subName1} from Componentizable comp");
@@ -560,9 +562,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 	    SubComponent subComponent = new SubComponent();
 	    subComponent.setSubName("subway");
         component.setSubComponent(subComponent);
-	    
+
         c.setComponent(component);
-        
+
         session.save(c);
 		session.getTransaction().commit();
         session.clear();
@@ -662,7 +664,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.clear();
 		List list2 = session.getNamedQuery("propertyResultDiscriminator").list();
 		assertEquals(2, list2.size());
-		
+
 		session.getTransaction().commit();
 		session.close();
 	}

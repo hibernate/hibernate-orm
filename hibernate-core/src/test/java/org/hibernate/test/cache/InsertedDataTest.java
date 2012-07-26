@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 public class InsertedDataTest extends BaseCoreFunctionalTestCase {
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { CacheableItem.class };
@@ -56,6 +58,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInsert() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -95,6 +98,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInsertThenUpdate() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -119,6 +123,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInsertThenUpdateThenRollback() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -143,6 +148,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInsertWithRefresh() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -193,6 +199,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInsertWithClear() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();

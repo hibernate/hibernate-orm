@@ -34,6 +34,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -123,8 +124,8 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
-	
+
+
 	@Test
 	public void testReattachmentUnmodifiedNaturalIdCheck() throws Throwable {
 		Session s = openSession();
@@ -134,7 +135,7 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		
+
 		s = openSession();
 		s.beginTransaction();
 		try {
@@ -166,7 +167,7 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 
 	@Test
 	public void testNonexistentNaturalIdCache() {
@@ -267,6 +268,7 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdCache() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -430,7 +432,7 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		sessionFactory().getStatistics().clear();
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s = openSession();
 		s.beginTransaction();
 		u = ( User ) s.createCriteria( User.class )
@@ -451,6 +453,7 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQuerying() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

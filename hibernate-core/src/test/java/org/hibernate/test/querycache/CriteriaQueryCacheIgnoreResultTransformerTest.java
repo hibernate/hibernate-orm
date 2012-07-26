@@ -24,10 +24,12 @@
 package org.hibernate.test.querycache;
 
 import org.hibernate.CacheMode;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class CriteriaQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
 	@Override
 	protected CacheMode getQueryCacheMode() {

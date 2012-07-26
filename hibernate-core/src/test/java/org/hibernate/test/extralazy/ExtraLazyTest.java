@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -57,7 +59,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = (User) s.get(User.class, "gavin");
@@ -84,7 +86,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testGet() {
 		Session s = openSession();
@@ -119,7 +121,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testRemoveClear() {
 		Session s = openSession();
@@ -162,7 +164,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testIndexFormulaMap() {
 		Session s = openSession();
@@ -177,7 +179,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		gavin.getSession().put( "bar", new SessionAttribute("bar", "foo bar baz 2") );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
@@ -215,7 +217,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testSQLQuery() {
 		Session s = openSession();
@@ -237,7 +239,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("delete User").executeUpdate();
 		t.commit();
 		s.close();
-		
+
 	}
 
 }

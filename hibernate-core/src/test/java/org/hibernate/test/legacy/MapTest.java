@@ -35,9 +35,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 
+@FailureExpectedWithNewMetamodel
 public class MapTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

@@ -34,6 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -217,11 +219,11 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		Employee e = new Employee();
 		e.setName("Steve");
 		e.setSex('M');
-		e.setTitle("Mr");		
+		e.setTitle("Mr");
 		e.setPasswordExpiryDays(PASSWORD_EXPIRY_DAYS);
 		s.persist(e);
 		s.flush();
-		
+
 		// Test value conversion during insert
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
@@ -235,13 +237,13 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
-		
+
 		// Test projection
 		Double heightViaHql = (Double)s.createQuery("select p.heightInches from Person p where p.name = 'Emmanuel'").uniqueResult();
 		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
 		Double expiryViaHql = (Double)s.createQuery("select e.passwordExpiryDays from Employee e where e.name = 'Steve'").uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, expiryViaHql, 0.01d);
-		
+
 		// Test restriction and entity load via criteria
 		p = (Person)s.createCriteria(Person.class)
 			.add(Restrictions.between("heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
@@ -251,7 +253,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 			.add(Restrictions.between("passwordExpiryDays", PASSWORD_EXPIRY_DAYS - 0.01d, PASSWORD_EXPIRY_DAYS + 0.01d))
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test predicate and entity load via HQL
 		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
 			.setDouble(0, HEIGHT_INCHES - 0.01d)
@@ -263,7 +265,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test update
 		p.setHeightInches(1);
 		e.setPasswordExpiryDays(7);
@@ -279,10 +281,10 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 				).doubleValue();
 		assertEquals(1d, expiryViaSql, 0.01d);
 		s.delete(p);
-		s.delete(e);	
+		s.delete(e);
 		t.commit();
 		s.close();
-		
+
 	}
 
 	@Test

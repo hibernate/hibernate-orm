@@ -32,6 +32,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -47,12 +48,13 @@ import static org.junit.Assert.fail;
 		value = DialectChecks.DoesRepeatableReadNotCauseReadersToBlockWritersCheck.class,
 		comment = "potential deadlock"
 )
+@FailureExpectedWithNewMetamodel
 public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "optlock/Document.hbm.xml" };
 	}
-	
+
 	@Test
 	public void testOptimisticLockDirty() {
 		testUpdateOptimisticLockFailure( "LockDirty" );

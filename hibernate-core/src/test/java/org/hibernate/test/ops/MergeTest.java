@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,6 +47,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	public void testMergeStaleVersionFails() throws Exception {

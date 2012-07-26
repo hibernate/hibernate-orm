@@ -38,6 +38,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,9 +49,10 @@ import static org.junit.Assert.fail;
 
 /**
  * Tests making initialized and uninitialized proxies read-only/modifiable
- * 
+ *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {
@@ -625,7 +627,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			s.getTransaction().rollback();
 			s.close();
 			s = openSession();
-			s.beginTransaction();			
+			s.beginTransaction();
 			s.delete( dp );
 			s.getTransaction().commit();
 			s.close();
@@ -713,7 +715,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.delete( dp );
 		s.getTransaction().commit();
 		s.close();
-	}	
+	}
 
 	@Test
 	public void testReadOnlyToModifiableInitWhenModifiedIsUpdated() {
@@ -1614,7 +1616,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertNull( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().getSession() );
 		assertTrue( ( (SessionImplementor) s ).isClosed() );
 		try {
-			( ( HibernateProxy ) dp ).getHibernateLazyInitializer().setSession( ( SessionImplementor ) s );			
+			( ( HibernateProxy ) dp ).getHibernateLazyInitializer().setSession( ( SessionImplementor ) s );
 			fail( "should have failed because session was closed" );
 		}
 		catch ( SessionException ex) {

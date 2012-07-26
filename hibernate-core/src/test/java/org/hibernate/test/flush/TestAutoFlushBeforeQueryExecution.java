@@ -33,7 +33,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -47,17 +46,18 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-6960" )
+@FailureExpectedWithNewMetamodel
 public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCase {
 
 	@Test

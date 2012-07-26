@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +39,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "formulajoin/Master.hbm.xml" };
 	}
@@ -65,7 +68,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		s.persist(current);
 		tx.commit();
 		s.close();
-		
+
 		if ( getDialect() instanceof PostgreSQLDialect  || getDialect() instanceof PostgreSQL81Dialect ) return;
 
 		s = openSession();
@@ -74,7 +77,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Master m left join fetch m.detail").list();
@@ -84,14 +87,14 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertTrue( m==m.getDetail().getMaster() );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Master m join fetch m.detail").list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.currentMaster.master").list();
@@ -103,10 +106,10 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.currentMaster.master m join fetch m.detail").list();
 		assertEquals( l.size(), 2 );
-		
+
 		s.createQuery("delete from Detail").executeUpdate();
 		s.createQuery("delete from Master").executeUpdate();
-		
+
 		tx.commit();
 		s.close();
 

@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -51,6 +52,7 @@ public class MixedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMixedInheritance() {
 		Session s = openSession( new DocumentInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -67,7 +69,7 @@ public class MixedTest extends BaseCoreFunctionalTestCase {
 		SecureDocument d2 = new SecureDocument();
 		d2.setName( "Secret" );
 		d2.setContent( s.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
-		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint 
+		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint
 		// column (0 <= val < 128)
 		d2.setPermissionBits( (byte) 127 );
 		d2.setOwner( "gavin" );
@@ -117,7 +119,7 @@ public class MixedTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( d2.getContent() );
 		assertEquals( "max", d2.getOwner() );
 		assertEquals( "/", d2.getParent().getName() );
-		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint 
+		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint
 		// column (0 <= val < 128)
 		assertEquals( (byte) 127, d2.getPermissionBits() );
 		assertNotNull( d2.getCreated() );

@@ -76,6 +76,7 @@ import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -105,6 +106,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve
  */
+@FailureExpectedWithNewMetamodel
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 

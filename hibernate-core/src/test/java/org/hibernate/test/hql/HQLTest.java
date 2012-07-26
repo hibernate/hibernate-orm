@@ -69,6 +69,7 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -87,6 +88,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	public boolean createSchema() {
@@ -131,7 +133,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal a where a.offspring.description = 'xyz'" );
 		assertTranslation( "from Animal a where a.offspring.father.description = 'xyz'" );
 	}
-	
+
 	@Test
 	@FailureExpected( jiraKey = "N/A", message = "Lacking ClassicQueryTranslatorFactory support" )
     public void testRowValueConstructorSyntaxInInList2() {
@@ -180,7 +182,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		AST inNode = whereNode.getFirstChild();
 		assertEquals( message, expected, inNode != null && inNode.getType() == HqlTokenTypes.IN );
 	}
-    
+
 	@Test
 	public void testSubComponentReferences() {
 		assertTranslation( "select c.address.zip.code from ComponentContainer c" );
@@ -198,7 +200,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testJoinFetchCollectionOfValues() {
 		assertTranslation( "select h from Human as h join fetch h.nickNames" );
 	}
-	
+
 	@Test
 	public void testCollectionMemberDeclarations2() {
 		assertTranslation( "from Customer c, in(c.orders) o" );
@@ -211,9 +213,9 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testCollectionMemberDeclarations(){
 		// both these two query translators throw exeptions for this HQL since
 		// IN asks an alias, but the difference is that the error message from AST
-		// contains the error token location (by lines and columns), which is hardly 
+		// contains the error token location (by lines and columns), which is hardly
 		// to get from Classic query translator --stliu
-		assertTranslation( "from Customer c, in(c.orders)" ); 
+		assertTranslation( "from Customer c, in(c.orders)" );
 	}
 
 	@Test
@@ -346,7 +348,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation("from Animal where abs(:x - :y) < 2.0");
 		assertTranslation("from Animal where lower(upper(:foo)) like 'f%'");
 		if ( ! ( getDialect() instanceof SybaseDialect ) &&  ! ( getDialect() instanceof Sybase11Dialect ) &&  ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
-			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len; 
+			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len;
 			// classic translator does not consider that *when nested*;
 			// SybaseAnywhereDialect supports the length function
 
@@ -744,13 +746,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 				|| getDialect() instanceof Sybase11Dialect
 				|| getDialect() instanceof SybaseASE15Dialect
 				|| getDialect() instanceof SybaseAnywhereDialect
-				|| getDialect() instanceof SQLServerDialect 
+				|| getDialect() instanceof SQLServerDialect
 				|| getDialect() instanceof IngresDialect) {
 			// SybaseASE15Dialect and SybaseAnywhereDialect support '||'
 			// MySQL uses concat(x, y, z)
 			// SQL Server replaces '||' with '+'
 			//
-			// this is syntax checked in {@link ASTParserLoadingTest#testConcatenation} 
+			// this is syntax checked in {@link ASTParserLoadingTest#testConcatenation}
 			// Ingres supports both "||" and '+' but IngresDialect originally
 			// uses '+' operator; updated Ingres9Dialect to use "||".
 			return;

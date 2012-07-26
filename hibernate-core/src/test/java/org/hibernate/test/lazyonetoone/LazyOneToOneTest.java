@@ -32,6 +32,7 @@ import org.hibernate.Transaction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -47,11 +48,14 @@ import static org.junit.Assert.assertTrue;
 		condition = LazyOneToOneTest.DomainClassesInstrumentedMatcher.class,
 		message = "Test domain classes were not instrumented"
 )
+@FailureExpectedWithNewMetamodel
 public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lazyonetoone/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.MAX_FETCH_DEPTH, "2");
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
@@ -71,7 +75,7 @@ public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
 		s.persist(p2);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		p = (Person) s.createQuery("from Person where name='Gavin'").uniqueResult();

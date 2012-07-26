@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class MutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

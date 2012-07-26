@@ -36,6 +36,7 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
@@ -44,6 +45,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
 	private Connection connectionUnderTest;

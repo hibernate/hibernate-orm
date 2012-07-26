@@ -38,6 +38,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@FailureExpectedWithNewMetamodel
 public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 
@@ -248,14 +250,14 @@ public class FumTest extends LegacyTestCase {
 		s.save(fr2);
 		s.save( fum.getFo() );
 		s.save(fum);
-		
+
 		Criteria test = s.createCriteria(Fum.class, "xam")
 			.createCriteria("fo", "fo")
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
-		
+
 		Map fc = (Map) test.list().get(0);
 		assertNotNull(fc.get("xam"));
-		
+
 		Criteria base = s.createCriteria(Fum.class, "fum")
 		.add( Restrictions.like("fum", "f%") )
 		.setResultTransformer(Transformers.aliasToBean(ABean.class))
@@ -267,7 +269,7 @@ public class FumTest extends LegacyTestCase {
 		assertTrue(
 				map.getFum()==fum &&
 				map.getFo()==fum.getFo() );
-		
+
 		s.delete(fr);
 		s.delete(fr2);
 		s.delete(fum);
@@ -862,7 +864,7 @@ public class FumTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s2 = spoofSerialization(s);
 		s.close();
-		
+
 		s = s2;
 		s.beginTransaction();
 		s.flush();

@@ -36,6 +36,7 @@ import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,10 +55,12 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "dynamicentity/tuplizer2/Customer.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
@@ -65,6 +68,7 @@ public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCas
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
+	@FailureExpectedWithNewMetamodel
 	public void testIt() {
 		// Test saving these dyna-proxies
 		Session session = openSession();

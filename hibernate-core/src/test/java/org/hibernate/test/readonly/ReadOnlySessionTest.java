@@ -37,6 +37,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {
@@ -293,7 +295,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		ScrollableResults sr = query.scroll(ScrollMode.FORWARD_ONLY);
 		assertFalse( s.isDefaultReadOnly() );
 		assertTrue( query.isReadOnly() );
-		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class, dp.getId() );		
+		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
 		assertFalse( s.isReadOnly( dpLast ) );
 		query.setReadOnly( false );
 		assertFalse( query.isReadOnly() );
@@ -607,7 +609,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		int nExpectedChanges = 0;
 		assertFalse( s.isDefaultReadOnly() );
 		while ( it.hasNext() ) {
-			assertFalse( s.isDefaultReadOnly() );		
+			assertFalse( s.isDefaultReadOnly() );
 			dp = (DataPoint) it.next();
 			assertFalse( s.isDefaultReadOnly() );
 			if ( dp.getId() == dpLast.getId() ) {
@@ -903,7 +905,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.refresh( dp );
 		assertEquals( "original", dp.getDescription() );
 		assertTrue( s.isReadOnly( dp ) );
-		assertTrue( s.isReadOnly( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().getImplementation() ) );		
+		assertTrue( s.isReadOnly( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().getImplementation() ) );
 		dp.setDescription( "changed" );
 		assertEquals( "changed", dp.getDescription() );
 		t.commit();
@@ -1188,7 +1190,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		dpProxy = ( DataPoint ) s.merge( dp );
 		assertTrue( s.isReadOnly( dpProxy ) );
 		assertTrue( Hibernate.isInitialized( dpProxy ) );
-		assertEquals( "description", dpProxy.getDescription() );		
+		assertEquals( "description", dpProxy.getDescription() );
 		t.commit();
 		s.close();
 

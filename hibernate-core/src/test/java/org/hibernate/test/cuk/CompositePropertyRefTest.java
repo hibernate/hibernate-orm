@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,11 +45,14 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "cuk/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "1");
 	}
@@ -78,7 +82,7 @@ public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
 		s.save(act);
 		s.flush();
 		s.clear();
-		
+
 		p = (Person) s.get( Person.class, p.getId() ); //get address reference by outer join
 		p2 = (Person) s.get( Person.class, p2.getId() ); //get null address reference by outer join
 		assertNull( p2.getAddress() );
@@ -87,13 +91,13 @@ public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
 		assertEquals( l.size(), 2 );
 		assertTrue( l.contains(p) && l.contains(p2) );
 		s.clear();
-		
+
 		l = s.createQuery("from Person p order by p.name").list(); //get address references by sequential selects
 		assertEquals( l.size(), 2 );
 		assertNull( ( (Person) l.get(0) ).getAddress() );
 		assertNotNull( ( (Person) l.get(1) ).getAddress() );
 		s.clear();
-		
+
 		l = s.createQuery("from Person p left join fetch p.address a order by a.country").list(); //get em by outer join
 		assertEquals( l.size(), 2 );
 		if ( ( (Person) l.get(0) ).getName().equals("Max") ) {
@@ -105,7 +109,7 @@ public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( ( (Person) l.get(0) ).getAddress() );
 		}
 		s.clear();
-		
+
 		l = s.createQuery("from Person p left join p.accounts").list();
 		for ( int i=0; i<2; i++ ) {
 			Object[] row = (Object[]) l.get(i);
@@ -125,13 +129,13 @@ public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( p1.getAccounts() ) );
 		assertEquals( p1.getAccounts().size(), 0 );
 		s.clear();
-		
+
 		l = s.createQuery("from Account a join fetch a.user").list();
-		
+
 		s.clear();
-		
+
 		l = s.createQuery("from Person p left join fetch p.address").list();
-		
+
 		s.clear();
 		s.createQuery( "delete Address" ).executeUpdate();
 		s.createQuery( "delete Account" ).executeUpdate();

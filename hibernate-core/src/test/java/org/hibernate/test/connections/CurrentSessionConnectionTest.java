@@ -24,12 +24,14 @@
 package org.hibernate.test.connections;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Implementation of CurrentSessionConnectionTest.
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class CurrentSessionConnectionTest extends AggressiveReleaseTest {
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {

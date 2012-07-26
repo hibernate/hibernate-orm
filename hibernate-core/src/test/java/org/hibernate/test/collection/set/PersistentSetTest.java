@@ -35,6 +35,7 @@ import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class PersistentSetTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel
 public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {

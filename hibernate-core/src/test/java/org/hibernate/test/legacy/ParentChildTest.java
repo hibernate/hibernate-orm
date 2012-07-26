@@ -54,6 +54,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,7 @@ import static org.junit.Assert.fail;
 
 
 @SuppressWarnings( {"UnnecessaryBoxing"})
+@FailureExpectedWithNewMetamodel
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -199,7 +201,7 @@ public class ParentChildTest extends LegacyTestCase {
 		assertEquals( foo.getKey(), "xyzid" );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		foo = (FooProxy) s.load(Foo.class, id);
@@ -214,13 +216,13 @@ public class ParentChildTest extends LegacyTestCase {
 		assertEquals( 2, doDelete( s, "from java.lang.Object" ) );
 		t.commit();
 		s.close();
-		
+
 		//to account for new id rollback shit
 		foo.setKey(fookey);
 		foo.getDependent().setKey( feekey );
 		foo.getComponent().setGlarch( null );
 		foo.getComponent().setSubcomponent(null);
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		//foo.getComponent().setGlarch(null); //no id property!
@@ -284,17 +286,17 @@ public class ParentChildTest extends LegacyTestCase {
 
 		List list = crit.list();
 		assertTrue( list.size()==2 );
-		
+
 		s.createCriteria(Glarch.class).setLockMode(LockMode.UPGRADE).list();
 		s.createCriteria(Glarch.class).setLockMode(Criteria.ROOT_ALIAS, LockMode.UPGRADE).list();
-		
+
 		g2.setName(null);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		list = s.createCriteria(Baz.class).add( Restrictions.isEmpty("fooSet") ).list();
 		assertEquals( list.size(), 0 );
 
@@ -303,7 +305,7 @@ public class ParentChildTest extends LegacyTestCase {
 
 		list = s.createCriteria(Baz.class).add( Restrictions.sizeEq("fooSet", 2) ).list();
 		assertEquals( new HashSet(list).size(), 1 );
-		
+
 		t.commit();
 		s.close();
 
@@ -358,7 +360,7 @@ public class ParentChildTest extends LegacyTestCase {
 		baz = (Baz) crit.uniqueResult();
 		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
 		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
-		
+
 		s.createCriteria(Child.class).setFetchMode("parent", FetchMode.JOIN).list();
 
 		doDelete( s, "from Glarch g" );
@@ -923,7 +925,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.save(c);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s=openSession();
 		s.beginTransaction();
 		c = (Container) s.createQuery( "from ContainerX c" ).iterate().next();
@@ -946,7 +948,7 @@ public class ParentChildTest extends LegacyTestCase {
 		list.add(cic);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s=openSession();
 		s.beginTransaction();
 		c = (Container) s.createQuery( "from ContainerX c" ).iterate().next();

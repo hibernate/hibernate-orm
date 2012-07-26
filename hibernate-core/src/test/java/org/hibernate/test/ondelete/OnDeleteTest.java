@@ -33,6 +33,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -62,10 +64,10 @@ public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 	public void testJoinedSubclass() {
 		Statistics statistics = sessionFactory().getStatistics();
 		statistics.clear();
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Salesperson mark = new Salesperson();
 		mark.setName("Mark");
 		mark.setTitle("internal sales");
@@ -73,7 +75,7 @@ public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 		mark.setAddress("buckhead");
 		mark.setZip("30305");
 		mark.setCountry("USA");
-		
+
 		Person joe = new Person();
 		joe.setName("Joe");
 		joe.setAddress("San Francisco");
@@ -82,16 +84,16 @@ public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 		joe.setSex('M');
 		joe.setSalesperson(mark);
 		mark.getCustomers().add(joe);
-				
+
 		s.save(mark);
-		
+
 		t.commit();
-		
+
 		assertEquals( statistics.getEntityInsertCount(), 2 );
 		assertEquals( statistics.getPrepareStatementCount(), 5 );
-		
+
 		statistics.clear();
-		
+
 		t = s.beginTransaction();
 		s.delete(mark);
 		t.commit();
@@ -100,7 +102,7 @@ public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 		if ( getDialect().supportsCascadeDelete() ) {
 			assertEquals( statistics.getPrepareStatementCount(), 1 );
 		}
-		
+
 		t = s.beginTransaction();
 		List names = s.createQuery("select name from Person").list();
 		assertTrue( names.isEmpty() );

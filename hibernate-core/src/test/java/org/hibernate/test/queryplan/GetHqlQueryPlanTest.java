@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotSame;
@@ -42,7 +43,9 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{
 			"queryplan/filter-defs.hbm.xml",

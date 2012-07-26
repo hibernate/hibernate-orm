@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -46,6 +47,7 @@ public class OneToOneCacheTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOneCache() throws HibernateException {
 
 		//create a new MainObject

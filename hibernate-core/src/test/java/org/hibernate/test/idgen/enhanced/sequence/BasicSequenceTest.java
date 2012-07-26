@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel
 public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

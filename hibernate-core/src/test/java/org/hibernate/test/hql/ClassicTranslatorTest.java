@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Some simple test queries using the classic translator explicitly
@@ -38,6 +39,7 @@ import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ClassicTranslatorTest extends QueryTranslatorTestCase {
 	@Override
 	public void configure(Configuration cfg) {

@@ -26,6 +26,7 @@ package org.hibernate.test.nonflushedchanges;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**
@@ -34,6 +35,7 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  * @author Gail Badner
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class DeleteTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

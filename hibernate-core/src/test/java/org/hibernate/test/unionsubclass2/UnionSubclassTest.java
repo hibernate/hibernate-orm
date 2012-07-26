@@ -34,6 +34,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,7 +46,9 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 @SuppressWarnings( {"UnnecessaryBoxing"})
+@FailureExpectedWithNewMetamodel
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "unionsubclass2/Person.hbm.xml" };
 	}
@@ -54,7 +57,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	public void testUnionSubclass() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Employee mark = new Employee();
 		mark.setName("Mark");
 		mark.setTitle("internal sales");
@@ -62,7 +65,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		mark.setAddress("buckhead");
 		mark.setZip("30305");
 		mark.setCountry("USA");
-		
+
 		Customer joe = new Customer();
 		joe.setName("Joe");
 		joe.setAddress("San Francisco");
@@ -71,17 +74,17 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		joe.setComments("Very demanding");
 		joe.setSex('M');
 		joe.setSalesperson(mark);
-		
+
 		Person yomomma = new Person();
 		yomomma.setName("mum");
 		yomomma.setSex('F');
-		
+
 		s.save(yomomma);
 		s.save(mark);
 		s.save(joe);
-		
+
 		assertEquals( s.createQuery("from java.io.Serializable").list().size(), 0 );
-		
+
 		assertEquals( s.createQuery("from Person").list().size(), 3 );
 		assertEquals( s.createQuery("from Person p where p.class = Customer").list().size(), 1 );
 		assertEquals( s.createQuery("from Person p where p.class = Person").list().size(), 1 );
@@ -97,7 +100,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( customers.size(), 1 );
 		s.clear();
-		
+
 		customers = s.createQuery("from Customer").list();
 		for ( Object customer : customers ) {
 			Customer c = (Customer) customer;
@@ -106,18 +109,18 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( customers.size(), 1 );
 		s.clear();
-		
+
 
 		mark = (Employee) s.get( Employee.class, Long.valueOf( mark.getId() ) );
 		joe = (Customer) s.get( Customer.class, Long.valueOf( joe.getId() ) );
-		
+
  		mark.setZip("30306");
 		assertEquals( s.createQuery("from Person p where p.address.zip = '30306'").list().size(), 1 );
 
         s.createCriteria( Person.class ).add(
                 Restrictions.in( "address", new Address[] { mark.getAddress(),
                         joe.getAddress() } ) ).list();
-		
+
 		s.delete(mark);
 		s.delete(joe);
 		s.delete(yomomma);
@@ -131,7 +134,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		if ( getDialect() instanceof HSQLDialect ) {
 			return; // TODO : why??
 		}
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Person p = new Person();
@@ -148,9 +151,9 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		List result = s.createQuery("from Person where salary > 100").list();
 		assertEquals( result.size(), 1 );
 		assertSame( result.get(0), q );
-		
+
 		result = s.createQuery("from Person where salary > 100 or name like 'E%'").list();
-		assertEquals( result.size(), 2 );		
+		assertEquals( result.size(), 2 );
 
 		result = s.createCriteria(Person.class)
 			.add( Property.forName("salary").gt( new BigDecimal(100) ) )
@@ -161,7 +164,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		result = s.createQuery("select salary from Person where salary > 100").list();
 		assertEquals( result.size(), 1 );
 		assertEquals( ( (BigDecimal) result.get(0) ).intValue(), 1000 );
-		
+
 		s.delete(p);
 		s.delete(q);
 		t.commit();
@@ -184,11 +187,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Employee e = new Employee();
 		e.setName("Steve");
 		e.setSex('M');
-		e.setTitle("Mr");		
+		e.setTitle("Mr");
 		e.setPasswordExpiryDays(PASSWORD_EXPIRY_DAYS);
 		s.persist(e);
 		s.flush();
-		
+
 		// Test value conversion during insert
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
@@ -201,13 +204,13 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
-		
+
 		// Test projection
 		Double heightViaHql = (Double)s.createQuery("select p.heightInches from Person p where p.name = 'Emmanuel'").uniqueResult();
 		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
 		Double expiryViaHql = (Double)s.createQuery("select e.passwordExpiryDays from Employee e where e.name = 'Steve'").uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, expiryViaHql, 0.01d);
-		
+
 		// Test restriction and entity load via criteria
 		p = (Person)s.createCriteria(Person.class)
 			.add(Restrictions.between("heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
@@ -217,7 +220,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			.add(Restrictions.between("passwordExpiryDays", PASSWORD_EXPIRY_DAYS - 0.01d, PASSWORD_EXPIRY_DAYS + 0.01d))
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test predicate and entity load via HQL
 		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
 			.setDouble(0, HEIGHT_INCHES - 0.01d)
@@ -229,7 +232,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test update
 		p.setHeightInches(1);
 		e.setPasswordExpiryDays(7);
@@ -248,9 +251,9 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s.delete(e);
 		t.commit();
 		s.close();
-		
+
 	}
-	
-	
+
+
 }
 

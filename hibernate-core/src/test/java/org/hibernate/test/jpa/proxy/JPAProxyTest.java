@@ -33,6 +33,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -44,6 +45,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class JPAProxyTest extends AbstractJPATest {
 	@Test
 	public void testEjb3ProxyUsage() {

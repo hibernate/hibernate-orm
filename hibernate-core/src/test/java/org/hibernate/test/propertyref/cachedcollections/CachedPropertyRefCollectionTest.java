@@ -30,6 +30,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -49,6 +50,7 @@ public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRetrievalOfCachedCollectionWithPropertyRefKey() {
 		// create the test data...
 		Session session = openSession();

@@ -27,10 +27,12 @@ import org.junit.Test;
 
 import org.hibernate.CacheMode;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
 	@Override
 	protected CacheMode getQueryCacheMode() {

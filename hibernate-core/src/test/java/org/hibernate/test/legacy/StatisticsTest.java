@@ -30,12 +30,14 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class StatisticsTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -71,7 +73,7 @@ public class StatisticsTest extends LegacyTestCase {
 		s.close();
 		assertEquals(1, stats.getQueryExecutionCount() );
 		assertEquals(1, stats.getQueryStatistics(hql).getExecutionCount() );
-		
+
 		stats.setStatisticsEnabled(isStats);
 	}
 

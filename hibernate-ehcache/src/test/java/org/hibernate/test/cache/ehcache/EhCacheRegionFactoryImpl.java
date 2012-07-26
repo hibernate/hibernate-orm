@@ -6,10 +6,12 @@ import java.util.Map;
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Alex Snaps
  */
+@FailureExpectedWithNewMetamodel
 public class EhCacheRegionFactoryImpl extends EhCacheTest {
 
 	@Override

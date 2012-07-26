@@ -25,6 +25,7 @@ package org.hibernate.test.manytomanyassociationclass.compositeid;
 
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Tests on many-to-many association using an association class with a composite ID containing
@@ -32,6 +33,7 @@ import org.hibernate.test.manytomanyassociationclass.Membership;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

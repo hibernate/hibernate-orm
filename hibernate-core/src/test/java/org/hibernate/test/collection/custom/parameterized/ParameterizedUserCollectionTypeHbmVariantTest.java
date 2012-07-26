@@ -23,10 +23,14 @@
  */
 package org.hibernate.test.collection.custom.parameterized;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ParameterizedUserCollectionTypeHbmVariantTest extends ParameterizedUserCollectionTypeTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/custom/parameterized/Mapping.hbm.xml" };
 	}

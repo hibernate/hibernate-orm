@@ -26,6 +26,7 @@ package org.hibernate.test.naturalid.nullable;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class NullableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -48,7 +49,9 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };
 	}
@@ -173,7 +176,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 
 		assertFalse( results.isFirst() );
 		assertFalse( results.isLast() );
-		assertFalse( results.previous() );		
+		assertFalse( results.previous() );
 
 		assertTrue( results.next() );
 		assertTrue( results.isFirst() );
@@ -217,7 +220,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 
 		assertTrue( results.first() );
 		assertTrue( results.isFirst() );
-		assertTrue( results.isLast() );		
+		assertTrue( results.isLast() );
 
 		for ( int i=1; i<3; i++ ) {
 			assertTrue( results.setRowNumber( 1 ) );
@@ -424,7 +427,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 		private void cleanup() {
 			Session s = openSession();
 			Transaction txn = s.beginTransaction();
-			
+
 			s.createQuery( "delete Animal where description like 'grand%'" ).executeUpdate();
 			s.createQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
 			s.createQuery( "delete Animal" ).executeUpdate();

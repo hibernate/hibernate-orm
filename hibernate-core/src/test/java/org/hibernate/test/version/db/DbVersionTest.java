@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class DbVersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

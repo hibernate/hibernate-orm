@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
@@ -61,7 +63,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testGetLoad() {
 		clearCounts();
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Employer emp = new Employer();
@@ -72,7 +74,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 		s.persist(parent);
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		emp = (Employer) s.get(Employer.class, emp.getId());
@@ -96,7 +98,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized(node) );
 		tx.commit();
 		s.close();
-	
+
 		s = openSession();
 		tx = s.beginTransaction();
 		emp = (Employer) s.get("org.hibernate.test.ops.Employer", emp.getId());
@@ -116,7 +118,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized(node) );
 		tx.commit();
 		s.close();
-		
+
 		assertFetchCount(0);
 	}
 
@@ -144,7 +146,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	private void clearCounts() {
 		sessionFactory().getStatistics().clear();
 	}
-	
+
 	private void assertFetchCount(int count) {
 		int fetches = (int) sessionFactory().getStatistics().getEntityFetchCount();
 		assertEquals(count, fetches);

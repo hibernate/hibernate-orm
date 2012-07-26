@@ -17,6 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
@@ -29,6 +30,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {

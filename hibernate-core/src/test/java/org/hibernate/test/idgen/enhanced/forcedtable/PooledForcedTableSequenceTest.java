@@ -31,6 +31,7 @@ import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,11 +41,13 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class PooledForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idgen/enhanced/forcedtable/Pooled.hbm.xml" };
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNormalBoundary() {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertTrue(

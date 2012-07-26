@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	private static final String QUERY_STRING =
 			"select u.name as username, g.name as groupname, m.joindate " +

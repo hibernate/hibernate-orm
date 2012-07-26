@@ -34,6 +34,7 @@ import org.hibernate.dialect.MySQLMyISAMDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -44,7 +45,9 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {"exception/User.hbm.xml", "exception/Group.hbm.xml"};
 	}

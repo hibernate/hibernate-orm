@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "map/UserGroup.hbm.xml" };
 	}
@@ -70,7 +73,7 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 		gavin.getSession().put( "bar", new SessionAttribute("bar", "foo bar baz 2") );
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
@@ -108,7 +111,7 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testSQLQuery() {

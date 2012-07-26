@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class MapElementFormulaTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "mapelemformula/UserGroup.hbm.xml" };
 	}
@@ -52,7 +55,7 @@ public class MapElementFormulaTest extends BaseCoreFunctionalTestCase {
 		s.persist(g);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "users");

@@ -31,6 +31,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +45,9 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class GetLoadTest extends AbstractOperationTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );

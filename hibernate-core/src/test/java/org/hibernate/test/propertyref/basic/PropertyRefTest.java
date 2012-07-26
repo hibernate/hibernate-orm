@@ -37,6 +37,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -49,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -139,7 +141,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testOneToOnePropertyRef() {
 		Session s = openSession();
@@ -164,7 +166,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		s.save(act);
 		s.flush();
 		s.clear();
-		
+
 		p = (Person) s.get( Person.class, p.getId() ); //get address reference by outer join
 		p2 = (Person) s.get( Person.class, p2.getId() ); //get null address reference by outer join
 		assertNull( p2.getAddress() );
@@ -173,13 +175,13 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		assertEquals( l.size(), 2 );
 		assertTrue( l.contains(p) && l.contains(p2) );
 		s.clear();
-		
+
 		l = s.createQuery("from Person p order by p.name").list(); //get address references by sequential selects
 		assertEquals( l.size(), 2 );
 		assertNull( ( (Person) l.get(0) ).getAddress() );
 		assertNotNull( ( (Person) l.get(1) ).getAddress() );
 		s.clear();
-		
+
 		l = s.createQuery("from Person p left join fetch p.address a order by a.country").list(); //get em by outer join
 		assertEquals( l.size(), 2 );
 		if ( ( (Person) l.get(0) ).getName().equals("Max") ) {
@@ -191,7 +193,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( ( (Person) l.get(0) ).getAddress() );
 		}
 		s.clear();
-		
+
 		l = s.createQuery("from Person p left join p.accounts a").list();
 		for ( int i=0; i<2; i++ ) {
 			Object[] row = (Object[]) l.get(i);
@@ -214,11 +216,11 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized(acc.getUser()) );
 		assertNotNull(acc.getUser());
 		assertTrue( acc.getUser().getAccounts().contains(acc) );
-		
+
 		s.createQuery("delete from Address").executeUpdate();
 		s.createQuery("delete from Account").executeUpdate(); // to not break constraint violation between Person and Account
 		s.createQuery("delete from Person").executeUpdate();
-		
+
 		t.commit();
 		s.close();
 	}
@@ -243,7 +245,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		sessionFactory().getStatistics().clear();
 
 		p = (Person) s.get( Person.class, p.getId() ); //get address reference by outer join
-		
+
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNotNull( p.getAddress() );
         assertEquals( sessionFactory().getStatistics().getPrepareStatementCount(), 1 );
@@ -256,7 +258,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		p = (Person) s.createCriteria(Person.class)
 			.setFetchMode("address", FetchMode.SELECT)
 			.uniqueResult(); //get address reference by select
-		
+
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNotNull( p.getAddress() );
         assertEquals( sessionFactory().getStatistics().getPrepareStatementCount(), 2 );
@@ -264,7 +266,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 		s.createQuery("delete from Address").executeUpdate();
 		s.createQuery("delete from Person").executeUpdate();
-		
+
 		t.commit();
 		s.close();
 	}
@@ -272,23 +274,23 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testForeignKeyCreation() {
 		PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
-		
+
 		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
 		boolean found = false;
 		while ( foreignKeyIterator.hasNext() ) {
 			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
 			if(element.getReferencedEntityName().equals(Person.class.getName() ) ) {
-				
+
 				if(!element.isReferenceToPrimaryKey() ) {
 					List referencedColumns = element.getReferencedColumns();
 					Column column = (Column) referencedColumns.get(0);
 					if(column.getName().equals("person_userid") ) {
 						found = true; // extend test to include the columns
-					}				
+					}
 				}
 			}
 		}
-		
+
 		assertTrue("Property ref foreign key not found",found);
 	}
 }

@@ -30,6 +30,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -54,9 +56,9 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 		session.persist(p);
 		tx.commit();
 		session.close();
-		
+
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
+
 		session = openSession();
 		tx = session.beginTransaction();
 		p = (Person) session.get(Person.class, "gavin");
@@ -66,7 +68,7 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
+
 		session = openSession();
 		tx = session.beginTransaction();
 		p = (Person) session.get(Person.class, "gavin");
@@ -86,9 +88,9 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 		session.persist(p);
 		tx.commit();
 		session.close();
-		
+
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
+
 		session = openSession();
 		tx = session.beginTransaction();
 		p = (Person) session.createCriteria(Person.class)
@@ -101,7 +103,7 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
+
 		session = openSession();
 		tx = session.beginTransaction();
 		p = (Person) session.createCriteria(Person.class)
@@ -124,7 +126,7 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 		session.persist(p);
 		tx.commit();
 		session.close();
-		
+
 		session = openSession();
 		tx = session.beginTransaction();
 		p = (Person) session.get(Person.class, "gavin");

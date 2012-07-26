@@ -33,6 +33,7 @@ import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class TransactionJoiningTest extends AbstractJPATest {
 	@Override
 	public void configure(Configuration cfg) {

@@ -27,13 +27,16 @@ import org.junit.Test;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  *
  * These tests reproduce HHH-4992.
  */
+@FailureExpectedWithNewMetamodel
 public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersioned.hbm.xml" };
 	}

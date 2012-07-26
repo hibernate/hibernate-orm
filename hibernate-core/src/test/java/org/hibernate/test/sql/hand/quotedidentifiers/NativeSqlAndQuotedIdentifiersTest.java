@@ -29,6 +29,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -38,7 +39,9 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature( value = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class )
+@FailureExpectedWithNewMetamodel
 public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/quotedidentifiers/Mappings.hbm.xml" };
 	}

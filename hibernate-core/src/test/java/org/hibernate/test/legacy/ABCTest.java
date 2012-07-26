@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,7 +37,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings( {"UnnecessaryBoxing"})
+@FailureExpectedWithNewMetamodel
 public class ABCTest extends LegacyTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
 	}
@@ -55,7 +58,7 @@ public class ABCTest extends LegacyTestCase {
 		d.inverse = a;
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		d = (D) s.get(D.class, did);
@@ -110,7 +113,7 @@ public class ABCTest extends LegacyTestCase {
 		s.close();
 
 		sessionFactory().getCache().evictEntityRegion( A.class );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		c1 = (C1) s.get( A.class, c1.getId() );
@@ -123,7 +126,7 @@ public class ABCTest extends LegacyTestCase {
 		assertEquals( "a funny name", c1.getBName() );
 		t.commit();
 		s.close();
-		
+
 		sessionFactory().getCache().evictEntityRegion( A.class );
 
 		s = openSession();
@@ -162,7 +165,7 @@ public class ABCTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testGetSave() throws Exception {
 		Session s = openSession();

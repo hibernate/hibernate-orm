@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -17,12 +18,15 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
+@FailureExpectedWithNewMetamodel
 public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "generatedkeys/identity/MyEntity.hbm.xml" };
 	}

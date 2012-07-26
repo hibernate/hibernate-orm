@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -40,10 +40,11 @@ import static org.junit.Assert.assertFalse;
 /**
  * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. The bug has to do
  * with new {@link SQLServerDialect} that uses row_number function for pagination
- * 
+ *
  * @author Valotasios Yoryos
  */
 @TestForIssue( jiraKey = "HHH-5715" )
+@FailureExpectedWithNewMetamodel
 public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 	private static final int NUM_OF_USERS = 30;
 

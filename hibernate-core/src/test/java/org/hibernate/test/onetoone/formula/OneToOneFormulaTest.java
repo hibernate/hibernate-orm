@@ -33,6 +33,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -48,6 +49,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
@@ -59,10 +61,12 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetoone/formula/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
 			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );
@@ -83,17 +87,17 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		a.setState("VIC");
 		a.setStreet("Karbarook Ave");
 		p.setAddress(a);
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.persist(p);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		p = (Person) s.createQuery("from Person").uniqueResult();
-		
+
 		assertNotNull( p.getAddress() );
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNull( p.getMailingAddress() );
@@ -121,7 +125,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 				.add( Property.forName("zip").eq("3181") )
 			.uniqueResult();
 		assertNotNull(p);
-		
+
 		s.clear();
 
 		p = (Person) s.createCriteria(Person.class)
@@ -131,7 +135,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( p.getAddress() );
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNull( p.getMailingAddress() );
-		
+
 		s.clear();
 
 		p = (Person) s.createCriteria(Person.class)
@@ -141,9 +145,9 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( p.getAddress() );
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNull( p.getMailingAddress() );
-		
+
 		s.delete(p);
-		
+
 		t.commit();
 		s.close();
 	}
@@ -159,16 +163,16 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		a.setState("VIC");
 		a.setStreet("Karbarook Ave");
 		p.setAddress(a);
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.persist(p);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		a = new Address();
 		a.setType("HOME");
 		a.setPerson(p);
@@ -178,9 +182,9 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		a.getType();
 		assertFalse( Hibernate.isInitialized(a) );
 		assertEquals(a.getZip(), "3181");
-		
+
 		s.clear();
-		
+
 		a = new Address();
 		a.setType("HOME");
 		a.setPerson(p);
@@ -189,13 +193,13 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		assertSame(a2, a);
 		assertSame(a2.getPerson(), p); //this is a little bit desirable
 		assertEquals(a.getZip(), "3181");
-		
+
 		s.delete(a2);
 		s.delete( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
-		
+
 		t.commit();
 		s.close();
-		
+
 	}
 
 }

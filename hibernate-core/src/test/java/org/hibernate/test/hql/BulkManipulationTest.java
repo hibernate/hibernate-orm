@@ -39,6 +39,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -53,7 +54,9 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -239,7 +242,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		data.cleanup();
 	}
-	
+
 	@Test
 	public void testInsertWithManyToOne() {
 		TestData data = new TestData();
@@ -506,7 +509,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "insert into CompositeIdEntity (key2, someProperty, key1) select a.key2, 'COPY', a.key1 from CompositeIdEntity a" ).executeUpdate();
 		s.createQuery( "delete from CompositeIdEntity" ).executeUpdate();
 		s.getTransaction().commit();
-		s.close();		
+		s.close();
 	}
 
 	@Test
@@ -1082,7 +1085,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		data.cleanup();
 	}
-	
+
 	@Test
 	public void testDeleteUnionSubclassAbstractRoot() {
 		TestData data = new TestData();

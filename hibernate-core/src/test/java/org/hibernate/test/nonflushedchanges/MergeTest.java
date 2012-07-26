@@ -12,6 +12,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.criterion.Projections;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
@@ -27,6 +28,7 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
@@ -852,6 +854,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	}
 
+	@Override
 	@SuppressWarnings( {"unchecked"})
 	protected void cleanupTestData() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();

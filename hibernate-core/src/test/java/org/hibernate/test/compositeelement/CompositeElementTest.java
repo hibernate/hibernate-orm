@@ -35,6 +35,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class CompositeElementTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -56,7 +58,7 @@ public class CompositeElementTest extends BaseCoreFunctionalTestCase {
 		Component childComponents = ( Component ) children.getElement();
 		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
 
-		SQLFunction lengthFunction = ( SQLFunction ) dialect.getFunctions().get( "length" );
+		SQLFunction lengthFunction = dialect.getFunctions().get( "length" );
 		if ( lengthFunction != null ) {
 			ArrayList args = new ArrayList();
 			args.add( "bio" );

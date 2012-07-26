@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class TernaryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -77,7 +79,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		tim.getManagerBySite().put(melb, tom);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		tom = (Employee) s.get(Employee.class, "Tom");
@@ -91,7 +93,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		assertTrue( melb.getEmployees().contains(bob) );
 		assertTrue( melb.getManagers().contains(tom) );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();

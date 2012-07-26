@@ -43,6 +43,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 
 import static org.junit.Assert.assertEquals;
@@ -57,6 +58,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {
@@ -923,7 +925,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testScrollCriteria() {
 		Session session = openSession();
@@ -946,7 +948,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		t.commit();
 		session.close();
 	}
-	
+
 	@Test
     @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3032", strictMatching = true)
 	public void testSubselect() {

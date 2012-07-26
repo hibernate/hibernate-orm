@@ -1,16 +1,15 @@
 package org.hibernate.envers.test.integration.proxy;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -26,6 +25,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 
     @Test
     @Priority(10)
+    @FailureExpectedWithNewMetamodel
     public void initData() {
         // Revision 1
         getSession().getTransaction().begin();
@@ -39,6 +39,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
     @Test
     @TestForIssue(jiraKey="HHH-4760")
     @SuppressWarnings("unchecked")
+    @FailureExpectedWithNewMetamodel
     public void testQueryingWithProxyObject() {
         StrTestEntity originalSte = new StrTestEntity("data", id);
         // Load the proxy instance

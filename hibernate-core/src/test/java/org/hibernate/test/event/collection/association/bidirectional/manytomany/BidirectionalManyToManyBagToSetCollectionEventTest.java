@@ -27,11 +27,13 @@ import java.util.Collection;
 
 import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.test.event.collection.association.AbstractAssociationCollectionEventTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class BidirectionalManyToManyBagToSetCollectionEventTest extends AbstractAssociationCollectionEventTest {
 	@Override
 	public String[] getMappings() {

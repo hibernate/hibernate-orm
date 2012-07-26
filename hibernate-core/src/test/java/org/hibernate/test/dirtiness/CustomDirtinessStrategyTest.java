@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	private static final String INITIAL_NAME = "thing 1";
 	private static final String SUBSEQUENT_NAME = "thing 2";

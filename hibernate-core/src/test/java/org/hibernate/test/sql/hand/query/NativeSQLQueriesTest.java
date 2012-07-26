@@ -34,6 +34,7 @@ import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -58,7 +59,9 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
+@FailureExpectedWithNewMetamodel
 public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/query/NativeSQLQueries.hbm.xml" };
 	}

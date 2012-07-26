@@ -35,6 +35,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -71,16 +73,16 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar1") );
 		q.getChildren().add( new Child("bar2") );
 		q.getMoreChildren().addAll( p.getChildren() );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		sessionFactory().getStatistics().clear();
-		
+
 		List parents = s.createQuery("from Parent where name between 'bar' and 'foo' order by name desc")
 			.list();
 		p = (Parent) parents.get(0);
@@ -90,33 +92,33 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( q.getChildren() ) );
 
 		assertEquals( p.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( p.getChildren().iterator().next() ) );
-				
+
 		assertTrue( Hibernate.isInitialized( q.getChildren() ) );
-		
+
 		assertEquals( q.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getChildren().iterator().next() ) );
-		
+
 		assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
 		assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
 
 		assertEquals( p.getMoreChildren().size(), 0 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
-	
+
 		assertEquals( q.getMoreChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
-		
+
 		assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 		Child c = (Child) p.getChildren().get(0);
 		c.getFriends().size();
 
 		s.delete(p);
-		s.delete(q);		
+		s.delete(q);
 
 		t.commit();
 		s.close();
@@ -133,16 +135,16 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar1") );
 		q.getChildren().add( new Child("bar2") );
 		q.getMoreChildren().addAll( p.getChildren() );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		sessionFactory().getStatistics().clear();
-		
+
 		List parents = s.createQuery("from Parent where name between :bar and :foo order by name desc")
 			.setParameter("bar", "bar")
 			.setParameter("foo", "foo")
@@ -154,33 +156,33 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( q.getChildren() ) );
 
 		assertEquals( p.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( p.getChildren().iterator().next() ) );
-				
+
 		assertTrue( Hibernate.isInitialized( q.getChildren() ) );
-		
+
 		assertEquals( q.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getChildren().iterator().next() ) );
-		
+
 		assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
 		assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
 
 		assertEquals( p.getMoreChildren().size(), 0 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
-	
+
 		assertEquals( q.getMoreChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
-		
+
 		assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 		Child c = (Child) p.getChildren().get(0);
 		c.getFriends().size();
 
 		s.delete(p);
-		s.delete(q);		
+		s.delete(q);
 
 		t.commit();
 		s.close();
@@ -197,16 +199,16 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar1") );
 		q.getChildren().add( new Child("bar2") );
 		q.getMoreChildren().addAll( p.getChildren() );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		sessionFactory().getStatistics().clear();
-		
+
 		List parents = s.createQuery("from Parent where name between ? and ? order by name desc")
 			.setParameter(0, "bar")
 			.setParameter(1, "foo")
@@ -218,33 +220,33 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( q.getChildren() ) );
 
 		assertEquals( p.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( p.getChildren().iterator().next() ) );
-				
+
 		assertTrue( Hibernate.isInitialized( q.getChildren() ) );
-		
+
 		assertEquals( q.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getChildren().iterator().next() ) );
-		
+
 		assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
 		assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
 
 		assertEquals( p.getMoreChildren().size(), 0 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
-	
+
 		assertEquals( q.getMoreChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
-		
+
 		assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 		Child c = (Child) p.getChildren().get(0);
 		c.getFriends().size();
 
 		s.delete(p);
-		s.delete(q);		
+		s.delete(q);
 
 		t.commit();
 		s.close();
@@ -262,17 +264,17 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar2") );
 		Parent r = new Parent("aaa");
 		r.getChildren().add( new Child("aaa1") );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		s.persist(r);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		sessionFactory().getStatistics().clear();
-		
+
 		List parents = s.createQuery("from Parent order by name desc")
 			.setMaxResults(2)
 			.list();
@@ -286,9 +288,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertEquals( p.getChildren().size(), 2 );
 		assertTrue( Hibernate.isInitialized( q.getChildren() ) );
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
-		
+
 		assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
-		
+
 		r = (Parent) s.get( Parent.class, r.getName() );
 		assertTrue( Hibernate.isInitialized( r.getChildren() ) );
 		assertFalse( Hibernate.isInitialized( r.getMoreChildren() ) );
@@ -296,9 +298,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertEquals( r.getMoreChildren().size(), 0 );
 
 		s.delete(p);
-		s.delete(q);		
+		s.delete(q);
 		s.delete(r);
-		
+
 		t.commit();
 		s.close();
 	}
@@ -314,14 +316,14 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar1") );
 		q.getChildren().add( new Child("bar2") );
 		q.getMoreChildren().addAll( p.getChildren() );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		List parents = s.createCriteria(Parent.class)
 			.createCriteria("moreChildren")
 			.createCriteria("friends")
@@ -352,16 +354,16 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		q.getChildren().add( new Child("bar1") );
 		q.getChildren().add( new Child("bar2") );
 		q.getMoreChildren().addAll( p.getChildren() );
-		s.persist(p); 
+		s.persist(p);
 		s.persist(q);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
-		
+
 		sessionFactory().getStatistics().clear();
-		
+
 		List parents = s.createCriteria(Parent.class)
 			.add( Property.forName("name").between("bar", "foo") )
 			.addOrder( Order.desc("name") )
@@ -373,33 +375,33 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( q.getChildren() ) );
 
 		assertEquals( p.getChildren().size(), 2 );
-				
+
 		assertTrue( Hibernate.isInitialized( p.getChildren().iterator().next() ) );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getChildren() ) );
-		
+
 		assertEquals( q.getChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getChildren().iterator().next() ) );
-		
+
 		assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
 		assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
 
 		assertEquals( p.getMoreChildren().size(), 0 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
-	
+
 		assertEquals( q.getMoreChildren().size(), 2 );
-		
+
 		assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
-		
+
 		assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 		Child c = (Child) p.getChildren().get(0);
 		c.getFriends().size();
 
 		s.delete(p);
-		s.delete(q);		
+		s.delete(q);
 
 		t.commit();
 		s.close();

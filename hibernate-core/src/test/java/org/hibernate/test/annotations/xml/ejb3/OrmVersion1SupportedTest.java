@@ -55,8 +55,12 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 					action = "countInvocation()",
 					name = "testOrm1Support")
 	})
-	@FailureExpectedWithNewMetamodel
+	@FailureExpectedWithNewMetamodel // This doesn't actually work since this test class requires BMUnitRunner instead of
+	// CustomRunner.  Thus, the if block below skips the test if the new metamodel is being used.
 	public void testOrm1Support() {
+		if ( Boolean.getBoolean( USE_NEW_METADATA_MAPPINGS ) ) {
+			return;
+		}
 		// need to call buildSessionFactory, because this test is not using org.hibernate.testing.junit4.CustomRunner
 		buildSessionFactory();
 

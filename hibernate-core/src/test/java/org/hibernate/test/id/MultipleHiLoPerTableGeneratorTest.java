@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -35,11 +36,13 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  */
 public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{ "id/Car.hbm.xml", "id/Plane.hbm.xml", "id/Radio.hbm.xml" };
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDistinctId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -60,7 +63,7 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 			assertEquals(i+1, cars[i].getId().intValue());
 			//assertEquals(i+1, planes[i].getId().intValue());
 		}
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		s.createQuery( "delete from Car" ).executeUpdate();
@@ -69,6 +72,7 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRollingBack() throws Throwable {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -102,6 +106,7 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAllParams() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -115,7 +120,7 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 		assertEquals( new Integer(2), radio.getId() );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		s.createQuery( "delete from Radio" ).executeUpdate();

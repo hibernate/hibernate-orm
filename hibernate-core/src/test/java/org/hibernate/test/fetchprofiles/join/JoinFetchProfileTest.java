@@ -32,6 +32,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,14 +46,17 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "fetchprofiles/join/Mappings.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
@@ -170,6 +174,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBasicFetchProfileOperation() {
 		assertTrue( "fetch profile not parsed properly", sessionFactory().containsFetchProfileDefinition( "enrollment.details" ) );
 		assertTrue( "fetch profile not parsed properly", sessionFactory().containsFetchProfileDefinition( "offering.details" ) );
@@ -232,6 +237,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLoadOneToManyFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -251,6 +257,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLoadDeepFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -274,6 +281,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLoadComponentDerefFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -298,6 +306,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	 * TODO : this is actually not strictly true.  what we should have happen is to subsequently load those fetches
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testHQL() {
 		performWithStandardData(
 				new TestCode() {

@@ -26,6 +26,7 @@ package org.hibernate.test.component.cascading.toone;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -41,6 +42,7 @@ public class CascadeToComponentAssociationTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMerging() {
 		// step1, we create a document with owner
 		Session session = openSession();

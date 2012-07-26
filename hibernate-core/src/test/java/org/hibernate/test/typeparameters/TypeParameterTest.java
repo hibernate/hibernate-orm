@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,10 +41,12 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Test for parameterizable types.
- * 
+ *
  * @author Michael Gloegl
  */
+@FailureExpectedWithNewMetamodel
 public class TypeParameterTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"typeparameters/Typedef.hbm.xml",
@@ -109,7 +112,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		assertEquals("Default value incorrectly loaded", obj.getValueThree(), -1);
 		assertEquals("Default value incorrectly loaded", obj.getValueFour(), -5);
 
-		
+
 		t.commit();
 		s.close();
 		deleteData();

@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.jdbc.AbstractWork;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -54,7 +56,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	public void testSequentialSelects() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Employee mark = new Employee();
 		mark.setName("Mark");
 		mark.setTitle("internal sales");
@@ -62,7 +64,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		mark.setAddress("buckhead");
 		mark.setZip("30305");
 		mark.setCountry("USA");
-		
+
 		Customer joe = new Customer();
 		joe.setName("Joe");
 		joe.setAddress("San Francisco");
@@ -71,17 +73,17 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		joe.setComments("Very demanding");
 		joe.setSex('M');
 		joe.setSalesperson(mark);
-		
+
 		Person yomomma = new Person();
 		yomomma.setName("mum");
 		yomomma.setSex('F');
-		
+
 		s.save(yomomma);
 		s.save(mark);
-		s.save(joe);		
-		
+		s.save(joe);
+
 		assertEquals( s.createQuery("from java.io.Serializable").list().size(), 0 );
-		
+
 		assertEquals( s.createQuery("from Person").list().size(), 3 );
 		assertEquals( s.createQuery("from Person p where p.class is null").list().size(), 1 );
 		assertEquals( s.createQuery("from Person p where p.class = Customer").list().size(), 1 );
@@ -96,7 +98,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( customers.size(), 1 );
 		s.clear();
-		
+
 		customers = s.createQuery("from Customer").list();
 		for ( Iterator iter = customers.iterator(); iter.hasNext(); ) {
 			Customer c = (Customer) iter.next();
@@ -105,11 +107,11 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		}
 		assertEquals( customers.size(), 1 );
 		s.clear();
-		
+
 
 		mark = (Employee) s.get( Employee.class, new Long( mark.getId() ) );
 		joe = (Customer) s.get( Customer.class, new Long( joe.getId() ) );
-		
+
  		mark.setZip("30306");
 		assertEquals( s.createQuery("from Person p where p.zip = '30306'").list().size(), 1 );
 		s.delete(mark);
@@ -132,7 +134,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.save(jesus);
 
 		assertEquals( s.createQuery("from java.io.Serializable").list().size(), 0 );
-		
+
 		assertEquals( s.createQuery("from Person").list().size(), 1 );
 		assertEquals( s.createQuery("from Person p where p.class is null").list().size(), 0 );
 		assertEquals( s.createQuery("from Person p where p.class = User").list().size(), 1 );
@@ -160,7 +162,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
@@ -180,7 +182,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		u.setPasswordExpiryDays(PASSWORD_EXPIRY_DAYS);
 		s.persist(u);
 		s.flush();
-		
+
 		// Test value conversion during insert
 		// Oracle returns BigDecimaal while other dialects return Double;
 		// casting to Number so it works on all dialects
@@ -190,13 +192,13 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 			.setLong(0, u.getId())
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql.doubleValue(), 0.01d);
-		
+
 		// Test projection
 		Double heightViaHql = (Double)s.createQuery("select p.heightInches from Person p where p.name = 'Emmanuel'").uniqueResult();
 		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
 		Double expiryViaHql = (Double)s.createQuery("select u.passwordExpiryDays from User u where u.name = 'Steve'").uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, expiryViaHql, 0.01d);
-		
+
 		// Test restriction and entity load via criteria
 		p = (Person)s.createCriteria(Person.class)
 			.add(Restrictions.between("heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
@@ -206,7 +208,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 			.add(Restrictions.between("passwordExpiryDays", PASSWORD_EXPIRY_DAYS - 0.01d, PASSWORD_EXPIRY_DAYS + 0.01d))
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test predicate and entity load via HQL
 		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
 			.setDouble(0, HEIGHT_INCHES - 0.01d)
@@ -218,7 +220,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
-		
+
 		// Test update
 		p.setHeightInches(1);
 		u.setPasswordExpiryDays(7d);
@@ -229,16 +231,16 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 			.setLong(0, u.getId())
 			.uniqueResult();
 		assertEquals(1d, expiryViaSql.doubleValue(), 0.01d);
-		
+
 		s.delete(p);
 		s.delete(u);
-		assertTrue( s.createQuery("from Person").list().isEmpty() );		
-		
+		assertTrue( s.createQuery("from Person").list().isEmpty() );
+
 		t.commit();
 		s.close();
-		
+
 	}
-	
+
 
 }
 

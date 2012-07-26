@@ -30,6 +30,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class EmbeddedCompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -57,17 +59,17 @@ public class EmbeddedCompositeIdTest extends BaseCoreFunctionalTestCase {
 		s.persist(c);
 		t.commit();
 		s.close();
-		
+
 		c.setDescription("Grade 5 English");
 		uc.setDescription("Second year mathematics");
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.merge(c);
 		s.merge(uc);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.delete(c);
@@ -116,7 +118,7 @@ public class EmbeddedCompositeIdTest extends BaseCoreFunctionalTestCase {
 		s.persist(c);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		Course ucid = new Course("mat2000", "Monash", null);
@@ -160,17 +162,17 @@ public class EmbeddedCompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( uc.getCourseCode(), "mat2000" );
 		t.commit();
 		s.close();
-		
+
 		c.setDescription("Grade 5 English");
 		uc.setDescription("Second year mathematics");
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.saveOrUpdate(c);
 		s.saveOrUpdate(uc);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		s.delete(c);

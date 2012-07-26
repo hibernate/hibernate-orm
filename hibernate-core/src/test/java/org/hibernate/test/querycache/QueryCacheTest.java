@@ -37,6 +37,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -159,6 +160,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 	private static final String queryString = "from Item i where i.name='widget'";
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryCacheInvalidation() throws Exception {
 
 		sessionFactory().evictQueries();

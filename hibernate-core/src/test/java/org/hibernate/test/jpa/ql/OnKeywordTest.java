@@ -30,12 +30,14 @@ import org.hibernate.Session;
 import org.junit.Test;
 
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Tests of the JPA decision (ugh) to use ON as a keyword for what Hibernate/HQL termed WITH.
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class OnKeywordTest extends AbstractJPATest {
 	@Test
 	public void basicTest() {

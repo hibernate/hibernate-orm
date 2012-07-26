@@ -35,6 +35,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -51,6 +52,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
@@ -69,7 +71,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		}
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
-	}	
+	}
 
 	@Override
 	public String[] getMappings() {
@@ -733,7 +735,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertUpdateCount( 0 );
-		assertDeleteCount( 3 );		
+		assertDeleteCount( 3 );
 	}
 
 
@@ -1124,7 +1126,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertUpdateCount( 0 );
-		assertDeleteCount( 3 );		
+		assertDeleteCount( 3 );
 	}
 
 	@Test
@@ -1396,7 +1398,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		assertUpdateCount( 0 );
 		assertDeleteCount( 4 );
 	}
-	
+
 	@Test
 	public void testImmutableEntityRemoveImmutableFromInverseMutableCollection() {
 		clearCounts();

@@ -31,6 +31,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +64,7 @@ public class IdBagTest extends BaseCoreFunctionalTestCase {
 		s.persist(banned);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = (User) s.createCriteria(User.class).uniqueResult();
@@ -79,12 +80,13 @@ public class IdBagTest extends BaseCoreFunctionalTestCase {
 		s.delete(moderators);
 		s.delete(admins);
 		s.delete(gavin);
-		
+
 		t.commit();
-		s.close();		
+		s.close();
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoin() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -96,22 +98,22 @@ public class IdBagTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		s.persist(plebs);
 		s.persist(admins);
-		
+
 		List l = s.createQuery("from User u join u.groups g").list();
 		assertEquals( l.size(), 2 );
 		s.clear();
-		
+
 		gavin = (User) s.createQuery("from User u join fetch u.groups").uniqueResult();
 		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
 		assertEquals( gavin.getGroups().size(), 2 );
 		assertEquals( ( (Group) gavin.getGroups().get(0) ).getName(), "admins" );
-		
+
 		s.delete( gavin.getGroups().get(0) );
 		s.delete( gavin.getGroups().get(1) );
 		s.delete(gavin);
-		
+
 		t.commit();
-		s.close();		
+		s.close();
 	}
 
 }

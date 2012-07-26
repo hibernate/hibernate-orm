@@ -26,11 +26,14 @@ package org.hibernate.test.collection.set;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class PersistentSetNonLazyTest extends PersistentSetTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/set/MappingsNonLazy.hbm.xml" };
 	}

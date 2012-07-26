@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +49,7 @@ public class BatchFetchTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBatchFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

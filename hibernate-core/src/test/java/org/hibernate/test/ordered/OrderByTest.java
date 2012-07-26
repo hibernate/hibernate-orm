@@ -31,6 +31,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -41,23 +42,25 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class OrderByTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "ordered/Search.hbm.xml" };
 	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBy() {
 		Search s = new Search("Hibernate");
 		s.getSearchResults().add("jboss.com");
 		s.getSearchResults().add("hibernate.org");
 		s.getSearchResults().add("HiA");
-		
+
 		Session sess = openSession();
 		Transaction tx = sess.beginTransaction();
 		sess.persist(s);
 		sess.flush();
-		
+
 		sess.clear();
 		s = (Search) sess.createCriteria(Search.class).uniqueResult();
 		assertFalse( Hibernate.isInitialized( s.getSearchResults() ) );
@@ -66,7 +69,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( iter.next(), "hibernate.org" );
 		assertEquals( iter.next(), "jboss.com" );
 		assertFalse( iter.hasNext() );
-		
+
 		sess.clear();
 		s = (Search) sess.createCriteria(Search.class)
 				.setFetchMode("searchResults", FetchMode.JOIN)
@@ -77,7 +80,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( iter.next(), "hibernate.org" );
 		assertEquals( iter.next(), "jboss.com" );
 		assertFalse( iter.hasNext() );
-		
+
 		sess.clear();
 		s = (Search) sess.createQuery("from Search s left join fetch s.searchResults")
 				.uniqueResult();
@@ -87,7 +90,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( iter.next(), "hibernate.org" );
 		assertEquals( iter.next(), "jboss.com" );
 		assertFalse( iter.hasNext() );
-		
+
 		/*sess.clear();
 		s = (Search) sess.createCriteria(Search.class).uniqueResult();
 		assertFalse( Hibernate.isInitialized( s.getSearchResults() ) );
@@ -96,7 +99,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( iter.next(), "hibernate.org" );
 		assertEquals( iter.next(), "jboss.com" );
 		assertFalse( iter.hasNext() );*/
-		
+
 		sess.delete(s);
 		tx.commit();
 		sess.close();

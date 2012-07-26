@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class RemovedEntityTest extends AbstractJPATest {
 	@Test
 	public void testRemoveThenContains() {

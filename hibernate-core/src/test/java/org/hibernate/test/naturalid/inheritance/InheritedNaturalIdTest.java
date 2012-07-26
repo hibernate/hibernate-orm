@@ -26,6 +26,7 @@ package org.hibernate.test.naturalid.inheritance;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class InheritedNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

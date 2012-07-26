@@ -604,7 +604,7 @@ public interface AvailableSettings {
 	public static final String INTERCEPTOR = "hibernate.sessionFactory.interceptor";
 
 	/**
-	 * Setting which defines the order (and therefore precedence) in whcih Hibernate will process mapping information.
+	 * Setting which defines the order (and therefore precedence) in which Hibernate will process mapping information.
 	 * Valid values include: <ul>
 	 *     <li>{@code hbm}</li>
 	 *     <li>{@code class}</li>

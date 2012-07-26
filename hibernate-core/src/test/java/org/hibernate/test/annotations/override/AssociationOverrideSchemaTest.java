@@ -34,7 +34,7 @@ public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSchemaName() {
+	public void testJoinTableSchemaName() {
 		Iterator<Table> tableIterator = configuration().getTableMappings();
 		while ( tableIterator.hasNext() ) {
 			Table table = tableIterator.next();
@@ -47,12 +47,12 @@ public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJoinColumnName() {
+	public void testJoinTableJoinColumnName() {
 		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, configuration() ) );
 	}
 
 	@Test
-	public void testColumnName() {
+	public void testJoinTableColumnName() {
 		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, configuration() ) );
 	}
 }

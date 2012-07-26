@@ -48,7 +48,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -82,8 +81,7 @@ class TypeSafeActivator {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Configuration configuration) {
-		final Properties properties = configuration.getProperties();
+	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Properties properties) {
 		ValidatorFactory factory = getValidatorFactory( properties );
 		BeanValidationEventListener listener = new BeanValidationEventListener(
 				factory, properties
@@ -95,24 +93,8 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 
-		listener.initialize( configuration );
+		listener.initialize( properties );
 	}
-
-//    public static void activateBeanValidation( EventListenerRegistry listenerRegistry ) {
-//        final Properties properties = configuration.getProperties();
-//        ValidatorFactory factory = getValidatorFactory( properties );
-//        BeanValidationEventListener listener = new BeanValidationEventListener(
-//                factory, properties
-//        );
-//
-//        listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
-//
-//        listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
-//        listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
-//        listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
-//
-//        listener.initialize( configuration );
-//    }
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void applyDDL(Collection<PersistentClass> persistentClasses, Properties properties, Dialect dialect) {

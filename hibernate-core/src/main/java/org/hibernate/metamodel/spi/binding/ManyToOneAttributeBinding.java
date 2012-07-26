@@ -45,6 +45,7 @@ public class ManyToOneAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularAssociationAttributeBinding {
 
+	private final EntityBinding referencedEntityBinding;
 	private final SingularAttributeBinding referencedAttributeBinding;
 	private final List<RelationalValueBinding> relationalValueBindings;
 
@@ -60,6 +61,7 @@ public class ManyToOneAttributeBinding
 			boolean lazy,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> relationalValueBindings) {
 		super(
@@ -72,6 +74,9 @@ public class ManyToOneAttributeBinding
 				metaAttributeContext
 		);
 
+		if ( referencedEntityBinding == null ) {
+			throw new IllegalArgumentException( "referencedEntityBinding must be non-null." );
+		}
 		if ( referencedAttributeBinding == null ) {
 			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
 		}
@@ -79,6 +84,7 @@ public class ManyToOneAttributeBinding
 			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
 		}
 
+		this.referencedEntityBinding = referencedEntityBinding;
 		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 	}
@@ -106,7 +112,7 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public final String getReferencedEntityName() {
-		return getReferencedEntityBinding().getEntity().getName();
+		return referencedEntityBinding.getEntity().getName();
 	}
 
 	@Override
@@ -175,7 +181,7 @@ public class ManyToOneAttributeBinding
 
 	@Override
 	public final EntityBinding getReferencedEntityBinding() {
-		return referencedAttributeBinding.getContainer().seekEntityBinding();
+		return referencedEntityBinding;
 	}
 
 	@Override

@@ -577,6 +577,7 @@ public class EntityBinding implements AttributeBindingContainer {
 			boolean lazy,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
@@ -587,6 +588,7 @@ public class EntityBinding implements AttributeBindingContainer {
 				lazy,
 				naturalIdMutability,
 				metaAttributeContext,
+				referencedEntityBinding,
 				referencedAttributeBinding,
 				valueBindings
 		);

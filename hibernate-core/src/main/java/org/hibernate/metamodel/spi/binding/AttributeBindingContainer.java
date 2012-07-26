@@ -131,6 +131,7 @@ public interface AttributeBindingContainer {
 	 * @param includedInOptimisticLocking
 	 * @param lazy
 	 * @param metaAttributeContext
+	 * @param referencedEntityBinding
 	 * @param referencedAttributeBinding
 	 * @param valueBindings
 	 *
@@ -143,6 +144,7 @@ public interface AttributeBindingContainer {
 			boolean lazy,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings);
 

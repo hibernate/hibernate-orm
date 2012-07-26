@@ -745,6 +745,7 @@ public class Binder {
 		try {
 			// Create new entity binding
 			entityBinding = createEntityBinding( entitySource, superEntityBinding );
+			entityBinding.setMutable( entityBinding.getHierarchyDetails().getRootEntityBinding().isMutable() );
 			bindSecondaryTables( entityBinding, entitySource );
 			bindUniqueConstraints( entityBinding, entitySource );
 			bindAttributes( entityBinding, entitySource );
@@ -1046,6 +1047,7 @@ public class Binder {
 						attributeSource.isLazy(),
 						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
+						referencedEntityBinding,
 						(SingularAttributeBinding) referencedAttributeBinding,
 						relationalValueBindings
 				);

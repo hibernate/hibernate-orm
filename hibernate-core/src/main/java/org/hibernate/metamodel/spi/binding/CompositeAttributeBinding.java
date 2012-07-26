@@ -283,6 +283,7 @@ public class CompositeAttributeBinding
 			boolean lazy,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			List<RelationalValueBinding> valueBindings) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
@@ -293,6 +294,7 @@ public class CompositeAttributeBinding
 				lazy,
 				naturalIdMutability,
 				metaAttributeContext,
+				referencedEntityBinding,
 				referencedAttributeBinding,
 				valueBindings
 		);

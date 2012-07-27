@@ -70,7 +70,6 @@ public class BeanValidationIntegrator implements Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-
 		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
@@ -98,10 +97,7 @@ public class BeanValidationIntegrator implements Integrator {
 	public void integrate(MetadataImplementor metadata,
 						  SessionFactoryImplementor sessionFactory,
 						  SessionFactoryServiceRegistry serviceRegistry) {
-		final Set<ValidationMode> modes = ValidationMode.getModes(
-				sessionFactory.getProperties()
-						.get( MODE_PROPERTY )
-		);
+		final Set<ValidationMode> modes = ValidationMode.getModes(sessionFactory.getProperties().get( MODE_PROPERTY ));
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		final boolean isBeanValidationAvailable = isBeanValidationOnClasspath( classLoaderService );
 		final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( serviceRegistry );

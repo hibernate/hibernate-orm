@@ -288,26 +288,6 @@ class TypeSafeActivator {
 //        return hasNotNull;
 //    }
 
-//    private static boolean applyNotNull( AttributeBinding attributeBinding,
-//                                         ConstraintDescriptor<?> descriptor ) {
-//        boolean hasNotNull = false;
-//        if (NotNull.class.equals(descriptor.getAnnotation().annotationType())) {
-//            if ( !( attributeBinding.getPersistentClass() instanceof SingleTableSubclass ) ) {
-//                //single table should not be forced to null
-//                if ( !property.isComposite() ) { //composite should not add not-null on all columns
-//                    @SuppressWarnings( "unchecked" )
-//                    Iterator<Column> iter = property.getColumnIterator();
-//                    while ( iter.hasNext() ) {
-//                        iter.next().setNullable( false );
-//                        hasNotNull = true;
-//                    }
-//                }
-//            }
-//            hasNotNull = true;
-//        }
-//        return hasNotNull;
-//    }
-
 	/**
 	 * Locates a mapping property of a persistent class by property name
 	 *

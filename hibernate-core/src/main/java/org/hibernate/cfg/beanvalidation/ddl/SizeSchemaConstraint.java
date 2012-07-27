@@ -37,8 +37,11 @@ import org.hibernate.mapping.Property;
 public class SizeSchemaConstraint implements SchemaConstraint {
 	@Override
 	public boolean applyConstraint(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		if ( !Size.class.equals( descriptor.getAnnotation().annotationType() )
-				|| !String.class.equals( propertyDescriptor.getElementClass() ) ) {
+		if ( !Size.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
+
+		if ( !String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			return false;
 		}
 

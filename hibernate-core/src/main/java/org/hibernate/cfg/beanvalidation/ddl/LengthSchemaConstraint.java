@@ -41,8 +41,11 @@ public class LengthSchemaConstraint implements SchemaConstraint {
 
 	@Override
 	public boolean applyConstraint(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		if ( !LENGTH_CONSTRAINT.equals( descriptor.getAnnotation().annotationType().getName() )
-				|| !String.class.equals( propertyDescriptor.getElementClass() ) ) {
+		if ( !LENGTH_CONSTRAINT.equals( descriptor.getAnnotation().annotationType().getName() ) ) {
+			return false;
+		}
+
+		if ( !String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			return false;
 		}
 

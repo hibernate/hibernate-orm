@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -55,23 +56,17 @@ public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Connection getConnection() throws SQLException {
-		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
+		throw new UserSuppliedConnectionException();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
-		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
+		throw new UserSuppliedConnectionException();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}

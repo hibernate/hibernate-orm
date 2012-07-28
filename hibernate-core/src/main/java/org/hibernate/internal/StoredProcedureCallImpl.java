@@ -47,7 +47,7 @@ import org.hibernate.StoredProcedureCall;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.QueryParameters;

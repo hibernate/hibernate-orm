@@ -640,4 +640,6 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	public static final String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
+	// todo : add to Environment
+	String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
 }

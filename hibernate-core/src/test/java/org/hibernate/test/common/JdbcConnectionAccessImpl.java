@@ -26,7 +26,7 @@ package org.hibernate.test.common;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -57,5 +57,10 @@ public class JdbcConnectionAccessImpl implements JdbcConnectionAccess {
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
 		connectionProvider.closeConnection( connection );
+	}
+
+	@Override
+	public boolean supportsAggressiveRelease() {
+		return connectionProvider.supportsAggressiveRelease();
 	}
 }

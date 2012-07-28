@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.internal;
+package org.hibernate.service.jdbc.env.internal;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -38,49 +38,70 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.jdbc.env.spi.LobCreatorBuilder;
 
 /**
  * Builds {@link LobCreator} instances based on the capabilities of the environment.
  *
  * @author Steve Ebersole
  */
-public class LobCreatorBuilder {
+public class LobCreatorBuilderImpl implements LobCreatorBuilder {
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LobCreatorBuilderImpl.class.getName());
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LobCreatorBuilder.class.getName());
+    private final boolean useContextualLobCreation;
 
-    private boolean useContextualLobCreation;
+	private LobCreatorBuilderImpl(boolean useContextualLobCreation) {
+		this.useContextualLobCreation = useContextualLobCreation;
+	}
+
+	@Override
+	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
+		return useContextualLobCreation
+				? new ContextualLobCreator( lobCreationContext )
+				: NonContextualLobCreator.INSTANCE;
+	}
+
+
+	// factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The public factory method for obtaining the appropriate (according to given JDBC {@link java.sql.Connection}.
-	 *
+	 * The public factory method for obtaining the appropriate LOB creator (according to given
+	 * JDBC {@link java.sql.Connection}).
 	 *
 	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
-	public LobCreatorBuilder(Map configValues, Connection jdbcConnection) {
-		this.useContextualLobCreation = useContextualLobCreation( configValues, jdbcConnection );
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Map configValues, Connection jdbcConnection) {
+		return new LobCreatorBuilderImpl( useContextualLobCreation( configValues, jdbcConnection ) );
+	}
+
+	/**
+	 * For used when JDBC Connection is not available.
+	 *
+	 * @return Appropriate LobCreatorBuilder
+	 */
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder() {
+		LOG.disablingContextualLOBCreationSinceConnectionNull();
+		return new LobCreatorBuilderImpl( false );
 	}
 
 	private static final Class[] NO_ARG_SIG = new Class[0];
 	private static final Object[] NO_ARGS = new Object[0];
 
-	/**
-	 * Basically here we are simply checking whether we can call the {@link Connection} methods for
-	 * LOB creation added in JDBC 4.  We not only check whether the {@link Connection} declares these methods,
-	 * but also whether the actual {@link Connection} instance implements them (i.e. can be called without simply
-	 * throwing an exception).
-	 *
-	 * @param jdbcConnection The connection which can be used in level-of-support testing.
-	 *
-	 * @return True if the connection can be used to create LOBs; false otherwise.
-	 */
 	private static boolean useContextualLobCreation(Map configValues, Connection jdbcConnection) {
+		// Basically here we are simply checking whether we can call the {@link Connection} methods for
+		// LOB creation added in JDBC 4.  We not only check whether the {@link Connection} declares these methods,
+		// but also whether the actual {@link Connection} instance implements them (i.e. can be called without simply
+		// throwing an exception).
+
+		// First, did the user explicitly configure to use non-contextual creation?
 		boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
 			LOG.disablingContextualLOBCreation( Environment.NON_CONTEXTUAL_LOB_CREATION );
 			return false;
 		}
+
 		if ( jdbcConnection == null ) {
 			LOG.disablingContextualLOBCreationSinceConnectionNull();
 			return false;
@@ -125,11 +146,5 @@ public class LobCreatorBuilder {
 		}
 
 		return false;
-	}
-
-	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
-		return useContextualLobCreation
-				? new ContextualLobCreator( lobCreationContext )
-				: NonContextualLobCreator.INSTANCE;
 	}
 }

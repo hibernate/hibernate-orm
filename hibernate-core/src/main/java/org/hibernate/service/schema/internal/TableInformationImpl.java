@@ -25,12 +25,11 @@ package org.hibernate.service.schema.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.schema.spi.ExistingColumnMetadata;
-import org.hibernate.service.schema.spi.ExistingForeignKeyMetadata;
-import org.hibernate.service.schema.spi.ExistingTableMetadata;
+import org.hibernate.service.schema.spi.ColumnInformation;
+import org.hibernate.service.schema.spi.ForeignKeyInformation;
+import org.hibernate.service.schema.spi.TableInformation;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 
 /**
@@ -40,14 +39,14 @@ import org.hibernate.tool.hbm2ddl.IndexMetadata;
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
-public class ExistingTableMetadataImpl implements ExistingTableMetadata {
-	private final ExistingDatabaseMetaDataImpl database;
+public class TableInformationImpl implements TableInformation {
+	private final DatabaseInformationImpl database;
 	private final ObjectName tableName;
-	private final Map<Identifier, ExistingColumnMetadata> columns;
+	private final Map<Identifier, ColumnInformation> columns;
 
-	private Map<Identifier, ExistingForeignKeyMetadataImpl> foreignKeys;
+	private Map<Identifier, ForeignKeyInformationImpl> foreignKeys;
 
-	public ExistingTableMetadataImpl(ExistingDatabaseMetaDataImpl database, ObjectName tableName) {
+	public TableInformationImpl(DatabaseInformationImpl database, ObjectName tableName) {
 		this.database = database;
 		this.tableName = tableName;
 		this.columns = database.getColumnMetadata( this );
@@ -59,12 +58,12 @@ public class ExistingTableMetadataImpl implements ExistingTableMetadata {
 	}
 
 	@Override
-	public ExistingColumnMetadata getColumnMetadata(Identifier columnIdentifier) {
+	public ColumnInformation getColumnInformation(Identifier columnIdentifier) {
 		return columns.get( columnIdentifier );
 	}
 
 	@Override
-	public ExistingForeignKeyMetadata getForeignKeyMetadata(Identifier fkIdentifier) {
+	public ForeignKeyInformation getForeignKeyInformation(Identifier fkIdentifier) {
 		if ( foreignKeys == null ) {
 			foreignKeys = database.getForeignKeyMetadata( this );
 		}
@@ -72,20 +71,14 @@ public class ExistingTableMetadataImpl implements ExistingTableMetadata {
 	}
 
 	@Override
-	public ExistingForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
-//		Iterator it = foreignKeys.values().iterator();
-//		while ( it.hasNext() ) {
-//			ForeignKeyMetadata existingFk = ( ForeignKeyMetadata ) it.next();
-//			if ( existingFk.matches( fk ) ) {
-//				return existingFk;
-//			}
-//		}
-		return null;
+	@SuppressWarnings("unchecked")
+	public Iterable getForeignKeyInformations() {
+		return foreignKeys.values();
 	}
 
 	@Override
 	public String toString() {
-		return "ExistingTableMetadataImpl(" + tableName.toString() + ')';
+		return "TableInformationImpl(" + tableName.toString() + ')';
 	}
 
 	@Override

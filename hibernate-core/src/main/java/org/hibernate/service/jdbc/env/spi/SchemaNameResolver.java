@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,25 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.internal;
+package org.hibernate.service.jdbc.env.spi;
 
-import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadata;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * For now we only collect sequence name.  If all databases support it, would really like to see INCREMENT here as well.
+ * Contract for resolving the schema of a {@link Connection}.
  *
  * @author Steve Ebersole
  */
-public class ExistingSequenceMetadataImpl implements ExistingSequenceMetadata {
-	private ObjectName sequenceName;
-
-	public ExistingSequenceMetadataImpl(ObjectName sequenceName) {
-		this.sequenceName = sequenceName;
-	}
-
-	@Override
-	public ObjectName getSequenceName() {
-		return sequenceName;
-	}
+public interface SchemaNameResolver {
+	/**
+	 * Given a JDBC {@link Connection}, resolve the name of the schema (if one) to which it connects.
+	 *
+	 * @param connection The JDBC connection
+	 *
+	 * @return The name of the schema (may be null).
+	 */
+	public String resolveSchemaName(Connection connection) throws SQLException;
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,49 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.spi;
+package org.hibernate.service.jdbc.env.internal;
 
-import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.hibernate.service.jdbc.env.spi.SchemaNameResolver;
 
 /**
- * Provides centralized access to JDBC connections.  Centralized to hide the complexity of accounting for contextual
- * (multi-tenant) versus non-contextual access.
+ * Temporary implementation that works for H2.
  *
  * @author Steve Ebersole
  */
-public interface JdbcConnectionAccess extends Serializable {
-	public Connection obtainConnection() throws SQLException;
-	public void releaseConnection(Connection connection) throws SQLException;
+public class TemporarySchemaNameResolver implements SchemaNameResolver {
+	public static final TemporarySchemaNameResolver INSTANCE = new TemporarySchemaNameResolver();
+
+	@Override
+	public String resolveSchemaName(Connection connection) throws SQLException {
+		// the H2 variant...
+		Statement statement = connection.createStatement();
+		try {
+			ResultSet resultSet = statement.executeQuery( "call schema()" );
+			try {
+				if ( ! resultSet.next() ) {
+					return null;
+				}
+				return resultSet.getString( 1 );
+			}
+			finally {
+				try {
+					resultSet.close();
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+		finally {
+			try {
+				statement.close();
+			}
+			catch (SQLException ignore) {
+			}
+		}
+	}
 }

@@ -25,15 +25,17 @@ package org.hibernate.service.schema.internal;
 
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.service.schema.spi.ExistingColumnMetadata;
-import org.hibernate.service.schema.spi.ExistingTableMetadata;
+import org.hibernate.service.schema.spi.ColumnInformation;
+import org.hibernate.service.schema.spi.TableInformation;
 
 /**
  * JDBC column metadata
+ *
  * @author Christoph Sturm
+ * @author Steve Ebersole
  */
-public class ExistingColumnMetadataImpl implements ExistingColumnMetadata {
-	private final ExistingTableMetadata containingTableMetadata;
+public class ColumnInformationImpl implements ColumnInformation {
+	private final TableInformation containingTableInformation;
 	private final Identifier columnIdentifier;
 
 	private final int typeCode;
@@ -42,15 +44,15 @@ public class ExistingColumnMetadataImpl implements ExistingColumnMetadata {
 	private final int decimalDigits;
 	private final TruthValue nullable;
 
-	public ExistingColumnMetadataImpl(
-			ExistingTableMetadata containingTableMetadata,
+	public ColumnInformationImpl(
+			TableInformation containingTableInformation,
 			Identifier columnIdentifier,
 			int typeCode,
 			String typeName,
 			int columnSize,
 			int decimalDigits,
 			TruthValue nullable) {
-		this.containingTableMetadata = containingTableMetadata;
+		this.containingTableInformation = containingTableInformation;
 		this.columnIdentifier = columnIdentifier;
 		this.typeCode = typeCode;
 		this.typeName = typeName;
@@ -60,8 +62,8 @@ public class ExistingColumnMetadataImpl implements ExistingColumnMetadata {
 	}
 
 	@Override
-	public ExistingTableMetadata getContainingTableMetadata() {
-		return containingTableMetadata;
+	public TableInformation getContainingTableInformation() {
+		return containingTableInformation;
 	}
 
 	@Override
@@ -95,7 +97,7 @@ public class ExistingColumnMetadataImpl implements ExistingColumnMetadata {
 	}
 
 	public String toString() {
-		return "ExistingColumnMetadata(" + columnIdentifier + ')';
+		return "ColumnInformation(" + columnIdentifier + ')';
 	}
 
 }

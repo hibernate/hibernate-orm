@@ -26,10 +26,28 @@ package org.hibernate.service.schema.spi;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Access to information about existing sequences
+ * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
  *
+ * @author Christoph Sturm
+ * @author Teodor Danciu
  * @author Steve Ebersole
  */
-public interface ExistingSequenceMetadata {
-	public ObjectName getSequenceName();
+public interface DatabaseInformation {
+	/**
+	 * Obtain reference to the named TableInformation
+	 *
+	 * @param tableName The qualified table name
+	 *
+	 * @return The table information.  May return {@code null} if not found.
+	 */
+	public TableInformation getTableInformation(ObjectName tableName);
+
+	/**
+	 * Obtain reference to the named SequenceInformation
+	 *
+	 * @param sequenceName The qualified sequence name
+	 *
+	 * @return The sequence information.  May return {@code null} if not found.
+	 */
+	public SequenceInformation getSequenceInformation(ObjectName sequenceName);
 }

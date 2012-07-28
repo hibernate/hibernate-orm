@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.internal;
+package org.hibernate.service.schema.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -31,24 +31,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.schema.internal.ExistingSequenceMetadataImpl;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadata;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadataExtractor;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.schema.spi.SequenceInformation;
+import org.hibernate.service.schema.spi.SequenceInformationExtractor;
 
 /**
  * Temporary implementation that works for H2.
  *
  * @author Steve Ebersole
  */
-public class TemporaryExistingSequenceMetadataExtractor implements ExistingSequenceMetadataExtractor {
-	private final JdbcEnvironmentImpl jdbcEnvironment;
+public class TemporarySequenceInformationExtractor implements SequenceInformationExtractor {
+	private final JdbcEnvironment jdbcEnvironment;
 
-	public TemporaryExistingSequenceMetadataExtractor(JdbcEnvironmentImpl jdbcEnvironment) {
+	public TemporarySequenceInformationExtractor(JdbcEnvironment jdbcEnvironment) {
 		this.jdbcEnvironment = jdbcEnvironment;
 	}
 
 	@Override
-	public Iterable<ExistingSequenceMetadata> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException {
+	public Iterable<SequenceInformation> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException {
 		Statement statement = databaseMetaData.getConnection().createStatement();
 		try {
 			ResultSet resultSet = statement.executeQuery(
@@ -56,10 +56,10 @@ public class TemporaryExistingSequenceMetadataExtractor implements ExistingSeque
 							"from information_schema.sequences"
 			);
 			try {
-				final List<ExistingSequenceMetadata> sequenceMetadataList = new ArrayList<ExistingSequenceMetadata>();
+				final List<SequenceInformation> sequenceInformationList = new ArrayList<SequenceInformation>();
 				while ( resultSet.next() ) {
-					sequenceMetadataList.add(
-							new ExistingSequenceMetadataImpl(
+					sequenceInformationList.add(
+							new SequenceInformationImpl(
 									new ObjectName(
 											jdbcEnvironment.getIdentifierHelper().fromMetaDataCatalogName(
 													resultSet.getString(
@@ -80,7 +80,7 @@ public class TemporaryExistingSequenceMetadataExtractor implements ExistingSeque
 							)
 					);
 				}
-				return sequenceMetadataList;
+				return sequenceInformationList;
 			}
 			finally {
 				try {

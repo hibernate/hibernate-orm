@@ -23,13 +23,21 @@
  */
 package org.hibernate.service.schema.spi;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have a notion of
+ * Access to information about existing sequences.
+ *
+ * For now we only support retrieving the names (for existence checking from validation).  However,
+ * at least INCREMENT would be valuable as well.  Just need to make sure all dbs support that.
+ *
  * @author Steve Ebersole
  */
-public interface ExistingSequenceMetadataExtractor {
-	public Iterable<ExistingSequenceMetadata> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException;
+public interface SequenceInformation {
+	/**
+	 * The qualified sequence name.
+	 *
+	 * @return The sequence name
+	 */
+	public ObjectName getSequenceName();
 }

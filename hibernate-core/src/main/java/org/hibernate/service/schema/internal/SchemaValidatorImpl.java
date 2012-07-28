@@ -27,9 +27,9 @@ import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadata;
-import org.hibernate.service.schema.spi.ExistingTableMetadata;
+import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.schema.spi.SequenceInformation;
+import org.hibernate.service.schema.spi.TableInformation;
 import org.hibernate.service.schema.spi.SchemaValidator;
 
 /**
@@ -37,31 +37,31 @@ import org.hibernate.service.schema.spi.SchemaValidator;
  */
 public class SchemaValidatorImpl implements SchemaValidator {
 	@Override
-	public void doValidation(Database database, ExistingDatabaseMetaData existingDatabaseMetaData) {
+	public void doValidation(Database database, DatabaseInformation databaseInformation) {
 		for ( Schema schema : database.getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
-				final ExistingTableMetadata existingTableMetadata = existingDatabaseMetaData.getTableMetadata(
+				final TableInformation tableInformation = databaseInformation.getTableInformation(
 						table.getTableName()
 				);
-				validateTable( table, existingTableMetadata );
+				validateTable( table, tableInformation );
 			}
 		}
 
 		for ( Schema schema : database.getSchemas() ) {
 			for ( Sequence sequence : schema.getSequences() ) {
-				final ExistingSequenceMetadata existingSequenceMetadata = existingDatabaseMetaData.getSequenceMetadata(
+				final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
 						sequence.getName()
 				);
-				validateSequence( sequence, existingSequenceMetadata );
+				validateSequence( sequence, sequenceInformation );
 			}
 		}
 	}
 
-	private void validateTable(Table table, ExistingTableMetadata existingTableMetadata) {
+	private void validateTable(Table table, TableInformation tableInformation) {
 		//To change body of created methods use File | Settings | File Templates.
 	}
 
-	private void validateSequence(Sequence sequence, ExistingSequenceMetadata existingSequenceMetadata) {
+	private void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {
 		//To change body of created methods use File | Settings | File Templates.
 	}
 }

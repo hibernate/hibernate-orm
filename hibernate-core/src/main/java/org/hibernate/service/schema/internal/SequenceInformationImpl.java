@@ -21,49 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.internal;
+package org.hibernate.service.schema.internal;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.service.schema.spi.SequenceInformation;
 
 /**
- * Temporary implementation that works for H2.
+ * For now we only collect sequence name.  If all databases support it, would really like to see INCREMENT here as well.
  *
  * @author Steve Ebersole
  */
-public class TemporarySchemaNameResolver implements SchemaNameResolver {
-	public static final TemporarySchemaNameResolver INSTANCE = new TemporarySchemaNameResolver();
+public class SequenceInformationImpl implements SequenceInformation {
+	private ObjectName sequenceName;
+
+	public SequenceInformationImpl(ObjectName sequenceName) {
+		this.sequenceName = sequenceName;
+	}
 
 	@Override
-	public String resolveSchemaName(Connection connection) throws SQLException {
-		// the H2 variant...
-		Statement statement = connection.createStatement();
-		try {
-			ResultSet resultSet = statement.executeQuery( "call schema()" );
-			try {
-				if ( ! resultSet.next() ) {
-					return null;
-				}
-				return resultSet.getString( 1 );
-			}
-			finally {
-				try {
-					resultSet.close();
-				}
-				catch (SQLException ignore) {
-				}
-			}
-		}
-		finally {
-			try {
-				statement.close();
-			}
-			catch (SQLException ignore) {
-			}
-		}
+	public ObjectName getSequenceName() {
+		return sequenceName;
 	}
 }

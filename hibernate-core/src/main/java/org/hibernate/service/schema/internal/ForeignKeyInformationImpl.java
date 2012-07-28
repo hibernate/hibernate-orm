@@ -27,18 +27,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.service.schema.spi.ExistingColumnMetadata;
-import org.hibernate.service.schema.spi.ExistingForeignKeyMetadata;
+import org.hibernate.service.schema.spi.ColumnInformation;
+import org.hibernate.service.schema.spi.ForeignKeyInformation;
 import org.hibernate.service.schema.spi.SchemaManagementException;
 
 /**
  * @author Steve Ebersole
  */
-public class ExistingForeignKeyMetadataImpl implements ExistingForeignKeyMetadata {
+public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	private final Identifier fkIdentifier;
 	private final List<ColumnReferenceMapping> columnMappingList;
 
-	public ExistingForeignKeyMetadataImpl(
+	public ForeignKeyInformationImpl(
 			Identifier fkIdentifier,
 			List<ColumnReferenceMapping> columnMappingList) {
 		this.fkIdentifier = fkIdentifier;
@@ -67,38 +67,38 @@ public class ExistingForeignKeyMetadataImpl implements ExistingForeignKeyMetadat
 			this.fkIdentifier = fkIdentifier;
 		}
 		
-		public Builder addColumnMapping(ExistingColumnMetadata referencing, ExistingColumnMetadata referenced) {
+		public Builder addColumnMapping(ColumnInformation referencing, ColumnInformation referenced) {
 			columnMappingList.add( new ColumnReferenceMappingImpl( referencing, referenced ) );
 			return this;
 		}
 
-		public ExistingForeignKeyMetadataImpl build() {
+		public ForeignKeyInformationImpl build() {
 			if ( columnMappingList.isEmpty() ) {
 				throw new SchemaManagementException(
 						"Attempt to resolve foreign key metadata from JDBC metadata failed to find " +
 								"column mappings for foreign key named [" + fkIdentifier.getText() + "]"
 				);
 			}
-			return new ExistingForeignKeyMetadataImpl( fkIdentifier, columnMappingList );
+			return new ForeignKeyInformationImpl( fkIdentifier, columnMappingList );
 		}
 	}
 	
 	public static class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
-		private final ExistingColumnMetadata referencing;
-		private final ExistingColumnMetadata referenced;
+		private final ColumnInformation referencing;
+		private final ColumnInformation referenced;
 
-		public ColumnReferenceMappingImpl(ExistingColumnMetadata referencing, ExistingColumnMetadata referenced) {
+		public ColumnReferenceMappingImpl(ColumnInformation referencing, ColumnInformation referenced) {
 			this.referencing = referencing;
 			this.referenced = referenced;
 		}
 
 		@Override
-		public ExistingColumnMetadata getReferencingColumnMetadata() {
+		public ColumnInformation getReferencingColumnMetadata() {
 			return referencing;
 		}
 
 		@Override
-		public ExistingColumnMetadata getReferencedColumnMetadata() {
+		public ColumnInformation getReferencedColumnMetadata() {
 			return referenced;
 		}
 	}

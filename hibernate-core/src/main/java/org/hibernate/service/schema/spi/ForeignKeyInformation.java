@@ -21,35 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.spi;
+package org.hibernate.service.schema.spi;
 
-import java.util.Set;
+import java.util.List;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadataExtractor;
 
 /**
- * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
- * and {@link org.hibernate.dialect.Dialect}
- *
  * @author Steve Ebersole
  */
-public interface JdbcEnvironment {
-	public Dialect getDialect();
+public interface ForeignKeyInformation {
+	/**
+	 * Obtain the identifier for this FK.
+	 *
+	 * @return The FK identifier.
+	 */
+	public Identifier getForeignKeyIdentifier();
 
-	public Identifier getCurrentCatalog();
+	/**
+	 * Get the list of column mappings that define the reference.
+	 *
+	 * @return The mapping list
+	 */
+	public List<ColumnReferenceMapping> getColumnReferenceMappingList();
 
-	public Identifier getCurrentSchema();
+	public static interface ColumnReferenceMapping {
+		/**
+		 * Obtain the information about the referencing column (the source column, which points to
+		 * the referenced column).
+		 *
+		 * @return The referencing column.
+		 */
+		public ColumnInformation getReferencingColumnMetadata();
 
-	public SchemaCatalogSupport getSchemaCatalogSupport();
-
-	public IdentifierHelper getIdentifierHelper();
-
-	public Set<String> getReservedWords();
-
-	public SqlExceptionHelper getSqlExceptionHelper();
-
-	public ExistingSequenceMetadataExtractor getExistingSequenceMetadataExtractor();
+		/**
+		 * Obtain the information about the referenced column (the target side).
+		 *
+		 * @return The referenced column
+		 */
+		public ColumnInformation getReferencedColumnMetadata();
+	}
 }

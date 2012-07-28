@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,23 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.spi;
+package org.hibernate.service.schema.spi;
 
-import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 /**
- * Contract for resolving the schema of a {@link Connection}.
+ * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have support for obtaining information
+ * about sequences from DatabaseMetaData.
  *
  * @author Steve Ebersole
  */
-public interface SchemaNameResolver {
+public interface SequenceInformationExtractor {
 	/**
-	 * Given a JDBC {@link Connection}, resolve the name of the schema (if one) to which it connects.
+	 * Get the information about sequences.
 	 *
-	 * @param connection The JDBC connection
+	 * @param databaseMetaData The JDBC DatabaseMetadata
 	 *
-	 * @return The name of the schema (may be null).
+	 * @return The extracted information about existing sequences.
+	 *
+	 * @throws SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
+	 * caller.
 	 */
-	public String resolveSchemaName(Connection connection) throws SQLException;
+	public Iterable<SequenceInformation> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException;
 }

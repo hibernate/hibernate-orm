@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.spi;
+package org.hibernate.service.jdbc.env.spi;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -37,12 +37,12 @@ import org.hibernate.engine.jdbc.internal.TypeInfo;
  */
 @SuppressWarnings( {"UnusedDeclaration"})
 public interface ExtractedDatabaseMetaData {
-
-	public enum SQLStateType {
-		XOpen,
-		SQL99,
-		UNKOWN
-	}
+	/**
+	 * Obtain the JDBC Environment from which this metadata came.
+	 *
+	 * @return The JDBC environment
+	 */
+	public JdbcEnvironment getJdbcEnvironment();
 
 	/**
 	 * Does the driver report supporting named parameters?
@@ -108,15 +108,6 @@ public interface ExtractedDatabaseMetaData {
 	public boolean doesDataDefinitionCauseTransactionCommit();
 
 	/**
-	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
-	 *
-	 * @return The extra keywords used by this database.
-	 *
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 */
-	public Set<String> getExtraKeywords();
-
-	/**
 	 * Retrieve the type of codes the driver says it uses for {@code SQLState}.  They might follow either
 	 * the X/Open standard or the SQL92 standard.
 	 *
@@ -134,36 +125,4 @@ public interface ExtractedDatabaseMetaData {
 	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
 	 */
 	public boolean doesLobLocatorUpdateCopy();
-
-	/**
-	 * Retrieve the name of the schema in effect when we connected to the database.
-	 *
-	 * @return The schema name
-	 */
-	public String getConnectionSchemaName();
-
-	/**
-	 * Retrieve the name of the catalog in effect when we connected to the database.
-	 *
-	 * @return The catalog name
-	 */
-	public String getConnectionCatalogName();
-
-	/**
-	 * Set of type info reported by the driver.
-	 *
-	 * @return The type information obtained from the driver.
-	 *
-	 * @see java.sql.DatabaseMetaData#getTypeInfo()
-	 */
-	public LinkedHashSet<TypeInfo> getTypeInfoSet();
-
-	/**
-	 * Set of type info reported by the driver.
-	 *
-	 * @return The type information obtained from the driver.
-	 *
-	 * @see java.sql.DatabaseMetaData#getTypeInfo()
-	 */
-	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
 }

@@ -24,22 +24,28 @@
 package org.hibernate.test.common;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
 import org.hibernate.engine.jdbc.internal.TypeInfo;
-import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.env.internal.ExtractedDatabaseMetaDataImpl;
+import org.hibernate.service.jdbc.env.internal.LobCreatorBuilderImpl;
+import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.jdbc.env.spi.LobCreatorBuilder;
+import org.hibernate.service.jdbc.env.spi.QualifiedObjectNameSupport;
 import org.hibernate.service.spi.Stoppable;
+
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 
@@ -50,11 +56,9 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
  * @author Steve Ebersole
  */
 public class BasicTestingJdbcServiceImpl implements JdbcServices {
-	private ConnectionProvider connectionProvider;
-	private Dialect dialect;
-	private SqlStatementLogger sqlStatementLogger;
-	private SqlExceptionHelper exceptionHelper;
-	private final ExtractedDatabaseMetaData metaDataSupport = new MetaDataSupportImpl();
+	private TestingJdbcEnvironmentImpl jdbcEnvironment;
+
+	private final SqlStatementLogger sqlStatementLogger = new SqlStatementLogger( true, false );
 	private final ResultSetWrapper resultSetWrapper = ResultSetWrapperImpl.INSTANCE;
 
 	public void start() {
@@ -65,38 +69,34 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public void prepare(boolean allowAggressiveRelease) {
-		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
-		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
-		sqlStatementLogger = new SqlStatementLogger( true, false );
-		exceptionHelper = new SqlExceptionHelper();
-
+		jdbcEnvironment = new TestingJdbcEnvironmentImpl( allowAggressiveRelease );
 	}
 
 	public void release() {
-		if ( connectionProvider instanceof Stoppable ) {
-			( (Stoppable) connectionProvider ).stop();
+		if ( jdbcEnvironment.connectionProvider instanceof Stoppable ) {
+			( (Stoppable) jdbcEnvironment.connectionProvider ).stop();
 		}
 	}
 
 	public ConnectionProvider getConnectionProvider() {
-		return connectionProvider;
+		return jdbcEnvironment.connectionProvider;
 	}
 
 	public Dialect getDialect() {
-		return dialect;
+		return jdbcEnvironment.dialect;
 	}
 
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
-		return null;
+		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
 	public ResultSetWrapper getResultSetWrapper() {
-		return null;
+		return resultSetWrapper;
 	}
 
 	@Override
 	public JdbcEnvironment getJdbcEnvironment() {
-		return null;
+		return jdbcEnvironment;
 	}
 
 	public SqlStatementLogger getSqlStatementLogger() {
@@ -104,68 +104,72 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public SqlExceptionHelper getSqlExceptionHelper() {
-		return exceptionHelper;
+		return jdbcEnvironment.exceptionHelper;
 	}
 
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
-		return metaDataSupport;
+		return jdbcEnvironment.extractedDatabaseMetaData;
 	}
 
-	private static class MetaDataSupportImpl implements ExtractedDatabaseMetaData {
-		@Override
-		public boolean supportsRefCursors() {
-			return false;
+	private static class TestingJdbcEnvironmentImpl implements JdbcEnvironment {
+		private final ExtractedDatabaseMetaData extractedDatabaseMetaData = new ExtractedDatabaseMetaDataImpl( this );
+		private final SqlExceptionHelper exceptionHelper = new SqlExceptionHelper();
+		private final LobCreatorBuilder lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+
+		private ConnectionProvider connectionProvider;
+		private Dialect dialect;
+
+		private TestingJdbcEnvironmentImpl(boolean allowAggressiveRelease) {
+			connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
+			dialect = ConnectionProviderBuilder.getCorrespondingDialect();
 		}
 
 		@Override
-		public boolean supportsNamedParameters() {
-			return false;
+		public Dialect getDialect() {
+			return dialect;
 		}
 
-		public boolean supportsScrollableResults() {
-			return false;
+		@Override
+		public ExtractedDatabaseMetaData getExtractedDatabaseMetaData() {
+			return extractedDatabaseMetaData;
 		}
 
-		public boolean supportsGetGeneratedKeys() {
-			return false;
+		@Override
+		public Identifier getCurrentCatalog() {
+			return null;
 		}
 
-		public boolean supportsBatchUpdates() {
-			return false;
+		@Override
+		public Identifier getCurrentSchema() {
+			return null;
 		}
 
-		public boolean supportsDataDefinitionInTransaction() {
-			return false;
+		@Override
+		public QualifiedObjectNameSupport getQualifiedObjectNameSupport() {
+			return null;
 		}
 
-		public boolean doesDataDefinitionCauseTransactionCommit() {
-			return false;
+		@Override
+		public IdentifierHelper getIdentifierHelper() {
+			return null;
 		}
 
-		public Set<String> getExtraKeywords() {
+		@Override
+		public Set<String> getReservedWords() {
 			return Collections.emptySet();
 		}
 
-		public SQLStateType getSqlStateType() {
-			return SQLStateType.UNKOWN;
+		@Override
+		public SqlExceptionHelper getSqlExceptionHelper() {
+			return exceptionHelper;
 		}
 
-		public boolean doesLobLocatorUpdateCopy() {
-			return false;
+		@Override
+		public LobCreatorBuilder getLobCreatorBuilder() {
+			return lobCreatorBuilder;
 		}
 
-		public String getConnectionSchemaName() {
-			return null;
-		}
-
-		public String getConnectionCatalogName() {
-			return null;
-		}
-
-		public LinkedHashSet<TypeInfo> getTypeInfoSet() {
-			return null;
-		}
-
+		@Override
 		public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
 			return null;
 		}

@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.engine.jdbc.env;
 
-import org.hibernate.engine.jdbc.env.spi.StandardSchemaCatalogSupportImpl;
+import org.hibernate.service.jdbc.env.spi.StandardQualifiedObjectNameSupportImpl;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 
 import org.junit.Test;
@@ -37,8 +37,8 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 public class StandardSchemaCatalogSupportImplTest extends BaseUnitTestCase {
-	private final StandardSchemaCatalogSupportImpl basic = new StandardSchemaCatalogSupportImpl();
-	private final StandardSchemaCatalogSupportImpl oracle = new StandardSchemaCatalogSupportImpl( "@", true );
+	private final StandardQualifiedObjectNameSupportImpl basic = new StandardQualifiedObjectNameSupportImpl();
+	private final StandardQualifiedObjectNameSupportImpl oracle = new StandardQualifiedObjectNameSupportImpl( "@", true );
 
 	@Test
 	public void testFormatName() throws Exception {

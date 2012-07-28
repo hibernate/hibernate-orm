@@ -42,5 +42,5 @@ public interface SchemaMigrator {
 	 *
 	 * @throws SchemaManagementException
 	 */
-	public void doMigration(Database database, ExistingDatabaseMetaData existingDatabase, List<Target> targets) throws SchemaManagementException;
+	public void doMigration(Database database, DatabaseInformation existingDatabase, List<Target> targets) throws SchemaManagementException;
 }

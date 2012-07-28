@@ -21,18 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.spi;
+package org.hibernate.service.jdbc.env.spi;
 
-import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
 
 /**
-* @author Steve Ebersole
-*/
-public interface IdentifierHelper {
-	public String toMetaDataCatalogName(Identifier identifier);
-	public String toMetaDataSchemaName(Identifier identifier);
-	public String toMetaDataObjectName(Identifier identifier);
-	public Identifier fromMetaDataCatalogName(String catalogName);
-	public Identifier fromMetaDataSchemaName(String schemaName);
-	public Identifier fromMetaDataObjectName(String objectName);
+ * @author Steve Ebersole
+ */
+public interface LobCreatorBuilder {
+	LobCreator buildLobCreator(LobCreationContext lobCreationContext);
 }

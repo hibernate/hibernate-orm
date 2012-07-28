@@ -31,25 +31,25 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.TruthValue;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.service.schema.spi.ExistingColumnMetadata;
-import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
-import org.hibernate.service.schema.spi.ExistingSequenceMetadata;
-import org.hibernate.service.schema.spi.ExistingTableMetadata;
+import org.hibernate.service.schema.spi.ColumnInformation;
+import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.schema.spi.SequenceInformation;
+import org.hibernate.service.schema.spi.TableInformation;
 
 /**
  * @author Steve Ebersole
  */
-public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
+public class DatabaseInformationImpl implements DatabaseInformation {
 	private final JdbcEnvironment jdbcEnvironment;
 	private final DatabaseMetaData databaseMetaData;
 
-	private final Map<ObjectName,ExistingTableMetadataImpl> tables = new HashMap<ObjectName, ExistingTableMetadataImpl>();
-	private final Map<ObjectName,ExistingSequenceMetadata> sequences;
+	private final Map<ObjectName,TableInformationImpl> tables = new HashMap<ObjectName, TableInformationImpl>();
+	private final Map<ObjectName,SequenceInformation> sequences;
 
 	public static Builder builder(JdbcEnvironment jdbcEnvironment, DatabaseMetaData databaseMetaData) {
 		try {
@@ -60,7 +60,7 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		}
 	}
 
-	private ExistingDatabaseMetaDataImpl(JdbcEnvironment jdbcEnvironment, DatabaseMetaData databaseMetaData) throws SQLException {
+	private DatabaseInformationImpl(JdbcEnvironment jdbcEnvironment, DatabaseMetaData databaseMetaData) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.databaseMetaData = databaseMetaData;
 		this.sequences = loadSequenceMetadataMap();
@@ -91,30 +91,31 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 			);
 			final ObjectName tableName = new ObjectName( catalogIdentifier, schemaIdentifier, tableIdentifier );
 			// make sure it does not already exist...
-			ExistingTableMetadataImpl tableMetadata = tables.get( tableName );
+			TableInformationImpl tableMetadata = tables.get( tableName );
 			if ( tableMetadata != null ) {
 				throw new IllegalStateException( "Table already found on parsing database metadata [" + tableName + "]" );
 			}
 
-			tableMetadata = new ExistingTableMetadataImpl( this, tableName );
+			tableMetadata = new TableInformationImpl( this, tableName );
 			tables.put( toMapKey( tableName ), tableMetadata );
 		}
 	}
 
-	private Map<ObjectName,ExistingSequenceMetadata> loadSequenceMetadataMap() throws SQLException {
-		Map<ObjectName,ExistingSequenceMetadata> sequences = new HashMap<ObjectName, ExistingSequenceMetadata>();
-		final Iterable<ExistingSequenceMetadata> sequenceMetadatas =
-				jdbcEnvironment.getExistingSequenceMetadataExtractor().extractMetadata( databaseMetaData );
+	private Map<ObjectName,SequenceInformation> loadSequenceMetadataMap() throws SQLException {
+		Map<ObjectName,SequenceInformation> sequences = new HashMap<ObjectName, SequenceInformation>();
+		// todo : temporary impl!
+		final Iterable<SequenceInformation> sequenceMetadatas =
+				new TemporarySequenceInformationExtractor( jdbcEnvironment ).extractMetadata( databaseMetaData );
 		if ( sequenceMetadatas != null ) {
-			for ( ExistingSequenceMetadata sequenceMetadata :sequenceMetadatas ) {
-				sequences.put( toMapKey( sequenceMetadata.getSequenceName() ), sequenceMetadata );
+			for ( SequenceInformation sequenceInformation :sequenceMetadatas ) {
+				sequences.put( toMapKey( sequenceInformation.getSequenceName() ), sequenceInformation );
 			}
 		}
 		return sequences;
 	}
 
 	@Override
-	public ExistingTableMetadata getTableMetadata(ObjectName tableName) {
+	public TableInformation getTableInformation(ObjectName tableName) {
 		return tables.get( toMapKey( tableName ) );
 	}
 
@@ -144,18 +145,18 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 	}
 
 	@Override
-	public ExistingSequenceMetadata getSequenceMetadata(ObjectName sequenceName) {
+	public SequenceInformation getSequenceInformation(ObjectName sequenceName) {
 		return sequences.get( toMapKey( sequenceName ) );
 	}
 
-	public Map<Identifier, ExistingColumnMetadata> getColumnMetadata(ExistingTableMetadata tableMetadata) {
-		final Map<Identifier, ExistingColumnMetadata> results = new HashMap<Identifier, ExistingColumnMetadata>();
+	public Map<Identifier, ColumnInformation> getColumnMetadata(TableInformation tableInformation) {
+		final Map<Identifier, ColumnInformation> results = new HashMap<Identifier, ColumnInformation>();
 
 		try {
 			ResultSet resultSet = databaseMetaData.getColumns(
-					identifierHelper().toMetaDataCatalogName( tableMetadata.getName().getCatalog() ),
-					identifierHelper().toMetaDataSchemaName( tableMetadata.getName().getSchema() ),
-					identifierHelper().toMetaDataObjectName( tableMetadata.getName().getName() ),
+					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalog() ),
+					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchema() ),
+					identifierHelper().toMetaDataObjectName( tableInformation.getName().getName() ),
 					"%"
 			);
 
@@ -171,8 +172,8 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 						continue;
 					}
 
-					final ExistingColumnMetadataImpl meta = new ExistingColumnMetadataImpl(
-							tableMetadata,
+					final ColumnInformationImpl meta = new ColumnInformationImpl(
+							tableInformation,
 							columnIdentifier,
 							resultSet.getInt( "DATA_TYPE" ),
 							new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
@@ -190,16 +191,16 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		catch (SQLException e) {
 			throw jdbcEnvironment.getSqlExceptionHelper().convert(
 					e,
-					"Error accessing column metadata: " + tableMetadata.getName().toString()
+					"Error accessing column metadata: " + tableInformation.getName().toString()
 			);
 		}
 
 		return results;
 	}
 
-	public Map<Identifier, ExistingForeignKeyMetadataImpl> getForeignKeyMetadata(ExistingTableMetadataImpl tableMetadata) {
-		final Map<Identifier, ExistingForeignKeyMetadataImpl.Builder> fkBuilders
-				= new HashMap<Identifier, ExistingForeignKeyMetadataImpl.Builder>();
+	public Map<Identifier, ForeignKeyInformationImpl> getForeignKeyMetadata(TableInformationImpl tableMetadata) {
+		final Map<Identifier, ForeignKeyInformationImpl.Builder> fkBuilders
+				= new HashMap<Identifier, ForeignKeyInformationImpl.Builder>();
 
 		try {
 			ResultSet resultSet = databaseMetaData.getImportedKeys(
@@ -214,15 +215,15 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 				while ( resultSet.next() ) {
 					// IMPL NOTE : intentionally build the builder early!
 					final Identifier fkIdentifier = Identifier.toIdentifier( resultSet.getString( "FK_NAME" ) );
-					ExistingForeignKeyMetadataImpl.Builder fkBuilder = fkBuilders.get( fkIdentifier );
+					ForeignKeyInformationImpl.Builder fkBuilder = fkBuilders.get( fkIdentifier );
 					if ( fkBuilder == null ) {
-						fkBuilder = ExistingForeignKeyMetadataImpl.builder( fkIdentifier );
+						fkBuilder = ForeignKeyInformationImpl.builder( fkIdentifier );
 						fkBuilders.put( fkIdentifier, fkBuilder );
 					}
 
 					final ObjectName incomingPkTableName = extractKeyTableName( resultSet, "PK" );
 
-					final ExistingTableMetadataImpl pkTableMetadata = tables.get( incomingPkTableName );
+					final TableInformationImpl pkTableMetadata = tables.get( incomingPkTableName );
 					if ( pkTableMetadata == null ) {
 						// the assumption here is that we have not seen this table already based on fully-qualified name
 						// during previous step of building all table metadata so most likely this is
@@ -235,8 +236,8 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 					final Identifier pkColumnIdentifier = Identifier.toIdentifier( resultSet.getString( "PKCOLUMN_NAME" ) );
 
 					fkBuilder.addColumnMapping(
-							tableMetadata.getColumnMetadata( fkColumnIdentifier ),
-							pkTableMetadata.getColumnMetadata( pkColumnIdentifier )
+							tableMetadata.getColumnInformation( fkColumnIdentifier ),
+							pkTableMetadata.getColumnInformation( pkColumnIdentifier )
 					);
 				}
 			}
@@ -251,9 +252,9 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 			);
 		}
 
-		final Map<Identifier, ExistingForeignKeyMetadataImpl> fks = new HashMap<Identifier, ExistingForeignKeyMetadataImpl>();
-		for ( ExistingForeignKeyMetadataImpl.Builder fkBuilder : fkBuilders.values() ) {
-			ExistingForeignKeyMetadataImpl fk = fkBuilder.build();
+		final Map<Identifier, ForeignKeyInformationImpl> fks = new HashMap<Identifier, ForeignKeyInformationImpl>();
+		for ( ForeignKeyInformationImpl.Builder fkBuilder : fkBuilders.values() ) {
+			ForeignKeyInformationImpl fk = fkBuilder.build();
 			fks.put( fk.getForeignKeyIdentifier(), fk );
 		}
 		return fks;
@@ -285,14 +286,14 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		public Builder prepareCatalogAndSchema(Schema.Name schemaName);
 		public Builder prepareCatalog(Identifier catalog);
 		public Builder prepareSchema(Identifier schema);
-		public ExistingDatabaseMetaData build();
+		public DatabaseInformation build();
 	}
 
 	private static class BuilderImpl implements Builder {
-		private final ExistingDatabaseMetaDataImpl it;
+		private final DatabaseInformationImpl it;
 
 		public BuilderImpl(JdbcEnvironment jdbcEnvironment, DatabaseMetaData databaseMetaData) throws SQLException {
-			it = new ExistingDatabaseMetaDataImpl( jdbcEnvironment, databaseMetaData );
+			it = new DatabaseInformationImpl( jdbcEnvironment, databaseMetaData );
 		}
 
 		@Override
@@ -355,7 +356,7 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		}
 
 		@Override
-		public ExistingDatabaseMetaData build() {
+		public DatabaseInformation build() {
 			return it;
 		}
 	}

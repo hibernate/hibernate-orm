@@ -21,18 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.spi;
+package org.hibernate.service.jdbc.connections.internal;
 
-import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.HibernateException;
 
 /**
- * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
- *
- * @author Christoph Sturm
- * @author Teodor Danciu
  * @author Steve Ebersole
  */
-public interface ExistingDatabaseMetaData {
-	public ExistingTableMetadata getTableMetadata(ObjectName tableName);
-	public ExistingSequenceMetadata getSequenceMetadata(ObjectName sequenceName);
+public class UserSuppliedConnectionException extends HibernateException {
+	public UserSuppliedConnectionException() {
+		super( "The application must supply JDBC connections" );
+	}
 }

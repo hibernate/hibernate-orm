@@ -21,44 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.spi;
-
-import java.util.List;
-
-import org.hibernate.metamodel.spi.relational.Identifier;
+package org.hibernate.service.jdbc.env.spi;
 
 /**
+ * Enum interpretation of the valid values from {@link java.sql.DatabaseMetaData#getSQLStateType()}
+ *
  * @author Steve Ebersole
  */
-public interface ExistingForeignKeyMetadata {
-	/**
-	 * Obtain the identifier for this FK.
-	 *
-	 * @return The FK identifier.
-	 */
-	public Identifier getForeignKeyIdentifier();
-
-	/**
-	 * Get the list of column mappings that define the reference.
-	 *
-	 * @return The mapping list
-	 */
-	public List<ColumnReferenceMapping> getColumnReferenceMappingList();
-
-	public static interface ColumnReferenceMapping {
-		/**
-		 * Obtain the information about the referencing column (the source column, which points to
-		 * the referenced column).
-		 *
-		 * @return The referencing column.
-		 */
-		public ExistingColumnMetadata getReferencingColumnMetadata();
-
-		/**
-		 * Obtain the information about the referenced column (the target side).
-		 *
-		 * @return The referenced column
-		 */
-		public ExistingColumnMetadata getReferencedColumnMetadata();
-	}
+public enum SQLStateType {
+	XOpen,
+	SQL99,
+	UNKNOWN
 }

@@ -35,9 +35,9 @@ public interface SchemaValidator {
 	 * Handle schema validation requests
 	 *
 	 * @param database The current Hibernate relational model
-	 * @param existingDatabaseMetaData Access to the existing database information.
+	 * @param databaseInformation Access to the existing database information.
 	 *
 	 * @throws SchemaManagementException
 	 */
-	public void doValidation(Database database, ExistingDatabaseMetaData existingDatabaseMetaData) throws SchemaManagementException;
+	public void doValidation(Database database, DatabaseInformation databaseInformation) throws SchemaManagementException;
 }

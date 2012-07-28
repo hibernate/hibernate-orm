@@ -30,11 +30,13 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.schema.internal.ExistingDatabaseMetaDataImpl;
-import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
+import org.hibernate.service.schema.internal.DatabaseInformationImpl;
+import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,12 +50,14 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
+	private ServiceRegistryImplementor serviceRegistry;
 	private JdbcEnvironment jdbcEnvironment;
 	private Connection connection;
 
 	@Before
 	public void prepare() throws SQLException {
 		Properties props = Environment.getProperties();
+		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder().applySettings( props ).buildServiceRegistry();
 		connection = DriverManager.getConnection(
 				props.getProperty( Environment.URL ),
 				props.getProperty( Environment.USER ),
@@ -67,7 +71,7 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 		connection.createStatement().execute( "CREATE SEQUENCE seq1" );
 		connection.createStatement().execute( "CREATE SEQUENCE db1.another_schema.seq2" );
 
-		jdbcEnvironment = new JdbcEnvironmentImpl( connection.getMetaData(), Dialect.getDialect( props ), props );
+		jdbcEnvironment = new JdbcEnvironmentImpl( serviceRegistry, Dialect.getDialect( props ), connection.getMetaData() );
 	}
 
 	@After
@@ -79,27 +83,30 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 			catch (SQLException ignore) {
 			}
 		}
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 	}
 
 	@Test
 	public void testGetTableMetadata() throws Exception {
-		ExistingDatabaseMetaData databaseMetaData =
-				ExistingDatabaseMetaDataImpl.builder( jdbcEnvironment, connection.getMetaData() ).prepareAll().build();
+		DatabaseInformation databaseMetaData =
+				DatabaseInformationImpl.builder( jdbcEnvironment, connection.getMetaData() ).prepareAll().build();
 
 		ObjectName name = new ObjectName( null, null, "t1" );
-		assertNotNull( databaseMetaData.getTableMetadata( name ) );
+		assertNotNull( databaseMetaData.getTableInformation( name ) );
 
 		name = new ObjectName( null, "another_schema", "t2" );
-		assertNotNull( databaseMetaData.getTableMetadata( name ) );
+		assertNotNull( databaseMetaData.getTableInformation( name ) );
 
 		name = new ObjectName( null, null, "seq1" );
-		assertNotNull( databaseMetaData.getSequenceMetadata( name ) );
+		assertNotNull( databaseMetaData.getSequenceInformation( name ) );
 
 		name = new ObjectName( null, "another_schema", "seq2" );
-		assertNotNull( databaseMetaData.getSequenceMetadata( name ) );
+		assertNotNull( databaseMetaData.getSequenceInformation( name ) );
 
 		// knowing if identifiers coming back from the database are quoted is all dicked up...
-		// see org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl
+		// see org.hibernate.service.jdbc.env.internal.NormalizingIdentifierHelperImpl
 		//
 		// surely JDBC has a better way to determine this right?
 	}

@@ -41,9 +41,11 @@ import org.hibernate.service.jdbc.connections.internal.MultiTenantConnectionProv
 import org.hibernate.service.jdbc.cursor.internal.RefCursorSupportInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
+import org.hibernate.service.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.service.jmx.internal.JmxServiceInitiator;
 import org.hibernate.service.jndi.internal.JndiServiceInitiator;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.service.schema.internal.SchemaManagementToolInitiator;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
 
@@ -72,8 +74,11 @@ public class StandardServiceInitiators {
 		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
+		serviceInitiators.add( JdbcEnvironmentInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );
+
+		serviceInitiators.add( SchemaManagementToolInitiator.INSTANCE );
 
 		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 

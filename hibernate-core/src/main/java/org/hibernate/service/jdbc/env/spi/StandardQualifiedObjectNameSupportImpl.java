@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.env.spi;
+package org.hibernate.service.jdbc.env.spi;
 
 import java.util.regex.Pattern;
 
@@ -33,7 +33,7 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 /**
  * @author Steve Ebersole
  */
-public class StandardSchemaCatalogSupportImpl implements SchemaCatalogSupport {
+public class StandardQualifiedObjectNameSupportImpl implements QualifiedObjectNameSupport {
 	public static final char DEFAULT_QUOTE_START = '\'';
 	public static final char DEFAULT_QUOTE_END = '\'';
 	public static final String DEFAULT_CATALOG_SEPARATOR = ".";
@@ -45,7 +45,7 @@ public class StandardSchemaCatalogSupportImpl implements SchemaCatalogSupport {
 
 	private final Pattern splitPattern;
 
-	public StandardSchemaCatalogSupportImpl(
+	public StandardQualifiedObjectNameSupportImpl(
 			String catalogSeparator,
 			boolean catalogAfterName,
 			char quotedStart,
@@ -60,19 +60,19 @@ public class StandardSchemaCatalogSupportImpl implements SchemaCatalogSupport {
 				: Pattern.compile( "[\\." + catalogSeparator + "]" );
 	}
 
-	public StandardSchemaCatalogSupportImpl() {
+	public StandardQualifiedObjectNameSupportImpl() {
 		this( DEFAULT_CATALOG_SEPARATOR, false, DEFAULT_QUOTE_START, DEFAULT_QUOTE_END );
 	}
 
-	public StandardSchemaCatalogSupportImpl(String catalogSeparator, boolean catalogAfterName, Dialect dialect) {
+	public StandardQualifiedObjectNameSupportImpl(String catalogSeparator, boolean catalogAfterName, Dialect dialect) {
 		this( catalogSeparator, catalogAfterName, dialect.openQuote(), dialect.closeQuote() );
 	}
 
-	public StandardSchemaCatalogSupportImpl(Dialect dialect) {
+	public StandardQualifiedObjectNameSupportImpl(Dialect dialect) {
 		this( DEFAULT_CATALOG_SEPARATOR, false, dialect );
 	}
 
-	public StandardSchemaCatalogSupportImpl(String catalogSeparator, boolean catalogAfterName) {
+	public StandardQualifiedObjectNameSupportImpl(String catalogSeparator, boolean catalogAfterName) {
 		this( catalogSeparator, catalogAfterName, DEFAULT_QUOTE_START, DEFAULT_QUOTE_END );
 	}
 

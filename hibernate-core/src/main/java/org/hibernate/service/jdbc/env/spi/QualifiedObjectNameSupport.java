@@ -21,29 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.spi;
+package org.hibernate.service.jdbc.env.spi;
 
-import org.hibernate.metamodel.spi.relational.ForeignKey;
-import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.tool.hbm2ddl.ForeignKeyMetadata;
-import org.hibernate.tool.hbm2ddl.IndexMetadata;
 
 /**
- * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
+ * Defines support for reading and writing qualified object names to and from the database.  Generally speaking
+ * Hibernate itself only uses {@link #formatName}.  Most times when it is "parsing" object names it is coming from
+ * mappings, in which case we expect simple dot-separated syntax and apply {@link ObjectName#parse}
  *
- * @author Christoph Sturm
- * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
-public interface ExistingTableMetadata {
-	public ObjectName getName();
+public interface QualifiedObjectNameSupport {
+	/**
+	 * Performs formatting of an ObjectName to its String representation
+	 *
+	 * @param objectName The object name to be formatted.
+	 *
+	 * @return The dialect specific string form of the name.
+	 */
+	public String formatName(ObjectName objectName);
 
-	public ExistingColumnMetadata getColumnMetadata(Identifier columnIdentifier);
-
-	public ExistingForeignKeyMetadata getForeignKeyMetadata(Identifier keyName);
-
-	public ExistingForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk);
-
-	public IndexMetadata getIndexMetadata(Identifier indexName);
+	/**
+	 * Parse a String representation of an Object name to its ObjectName.  Note that this specifically
+	 * attempts to parse the text as if coming from the database.  Mapping forms always use
+	 * the form {@code <schema>.<catalog>.<name>}, parsing such names should just use {@link ObjectName#parse}
+	 *
+	 * @param text The object name text
+	 *
+	 * @return The parsed ObjectName
+	 */
+	public ObjectName parseName(String text);
 }

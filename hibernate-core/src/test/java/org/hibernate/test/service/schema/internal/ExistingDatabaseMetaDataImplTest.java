@@ -30,8 +30,9 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.env.spi.StandardJdbcEnvironmentBuilder;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.schema.internal.ExistingDatabaseMetaDataImpl;
 import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
 
@@ -40,6 +41,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
@@ -56,18 +59,15 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 				props.getProperty( Environment.USER ),
 				props.getProperty( Environment.PASS )
 		);
-		connection.createStatement().execute( "CREATE SCHEMA \"another_schema\"" );
+		connection.createStatement().execute( "CREATE SCHEMA another_schema" );
 
 		connection.createStatement().execute( "CREATE TABLE t1 (name varchar)" );
-		connection.createStatement().execute( "CREATE TABLE db1.\"another_schema\".t2 (name varchar)" );
+		connection.createStatement().execute( "CREATE TABLE another_schema.t2 (name varchar)" );
 
 		connection.createStatement().execute( "CREATE SEQUENCE seq1" );
-		connection.createStatement().execute( "CREATE SEQUENCE db1.\"another_schema\".seq1" );
+		connection.createStatement().execute( "CREATE SEQUENCE db1.another_schema.seq2" );
 
-		jdbcEnvironment = StandardJdbcEnvironmentBuilder.INSTANCE.buildJdbcEnvironment(
-				connection.getMetaData(),
-				Dialect.getDialect( props )
-		);
+		jdbcEnvironment = new JdbcEnvironmentImpl( connection.getMetaData(), Dialect.getDialect( props ), props );
 	}
 
 	@After
@@ -81,10 +81,26 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 		}
 	}
 
-//	@Test
+	@Test
 	public void testGetTableMetadata() throws Exception {
 		ExistingDatabaseMetaData databaseMetaData =
 				ExistingDatabaseMetaDataImpl.builder( jdbcEnvironment, connection.getMetaData() ).prepareAll().build();
-		databaseMetaData.toString();
+
+		ObjectName name = new ObjectName( null, null, "t1" );
+		assertNotNull( databaseMetaData.getTableMetadata( name ) );
+
+		name = new ObjectName( null, "another_schema", "t2" );
+		assertNotNull( databaseMetaData.getTableMetadata( name ) );
+
+		name = new ObjectName( null, null, "seq1" );
+		assertNotNull( databaseMetaData.getSequenceMetadata( name ) );
+
+		name = new ObjectName( null, "another_schema", "seq2" );
+		assertNotNull( databaseMetaData.getSequenceMetadata( name ) );
+
+		// knowing if identifiers coming back from the database are quoted is all dicked up...
+		// see org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl
+		//
+		// surely JDBC has a better way to determine this right?
 	}
 }

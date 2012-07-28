@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.spi;
+package org.hibernate.engine.jdbc.env.spi;
 
-import org.hibernate.metamodel.spi.relational.Identifier;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
-* @author Steve Ebersole
-*/
-public interface IdentifierHelper {
-	public String toMetaDataCatalogName(Identifier identifier);
-	public String toMetaDataSchemaName(Identifier identifier);
-	public String toMetaDataObjectName(Identifier identifier);
-	public Identifier fromMetaDataCatalogName(String catalogName);
-	public Identifier fromMetaDataSchemaName(String schemaName);
-	public Identifier fromMetaDataObjectName(String objectName);
+ * Contract for resolving the schema of a {@link Connection}.
+ *
+ * @author Steve Ebersole
+ */
+public interface SchemaNameResolver {
+	/**
+	 * Given a JDBC {@link Connection}, resolve the name of the schema (if one) to which it connects.
+	 *
+	 * @param connection The JDBC connection
+	 *
+	 * @return The name of the schema (may be null).
+	 */
+	public String resolveSchemaName(Connection connection) throws SQLException;
 }

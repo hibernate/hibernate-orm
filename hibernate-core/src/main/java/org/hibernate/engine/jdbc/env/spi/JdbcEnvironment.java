@@ -26,8 +26,8 @@ package org.hibernate.engine.jdbc.env.spi;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.schema.spi.ExistingSequenceMetadataExtractor;
 
 /**
@@ -39,9 +39,13 @@ import org.hibernate.service.schema.spi.ExistingSequenceMetadataExtractor;
 public interface JdbcEnvironment {
 	public Dialect getDialect();
 
+	public Identifier getCurrentCatalog();
+
+	public Identifier getCurrentSchema();
+
 	public SchemaCatalogSupport getSchemaCatalogSupport();
 
-	public SchemaNameResolver getSchemaNameResolver();
+	public IdentifierHelper getIdentifierHelper();
 
 	public Set<String> getReservedWords();
 

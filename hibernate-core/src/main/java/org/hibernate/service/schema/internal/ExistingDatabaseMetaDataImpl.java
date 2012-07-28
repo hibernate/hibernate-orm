@@ -30,11 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.TruthValue;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
@@ -42,18 +40,13 @@ import org.hibernate.service.schema.spi.ExistingColumnMetadata;
 import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
 import org.hibernate.service.schema.spi.ExistingSequenceMetadata;
 import org.hibernate.service.schema.spi.ExistingTableMetadata;
-import org.hibernate.service.schema.spi.IdentifierHelper;
 
 /**
  * @author Steve Ebersole
  */
 public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
-	private static final Logger log = Logger.getLogger( ExistingDatabaseMetaDataImpl.class );
-
 	private final JdbcEnvironment jdbcEnvironment;
 	private final DatabaseMetaData databaseMetaData;
-
-	private final IdentifierHelperImpl identifierHelper;
 
 	private final Map<ObjectName,ExistingTableMetadataImpl> tables = new HashMap<ObjectName, ExistingTableMetadataImpl>();
 	private final Map<ObjectName,ExistingSequenceMetadata> sequences;
@@ -70,34 +63,28 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 	private ExistingDatabaseMetaDataImpl(JdbcEnvironment jdbcEnvironment, DatabaseMetaData databaseMetaData) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.databaseMetaData = databaseMetaData;
-		this.identifierHelper = new IdentifierHelperImpl(
-				databaseMetaData.getConnection().getCatalog(),
-				jdbcEnvironment.getSchemaNameResolver().resolveSchemaName( databaseMetaData.getConnection() ),
-				databaseMetaData.storesMixedCaseQuotedIdentifiers(),
-				databaseMetaData.storesLowerCaseQuotedIdentifiers(),
-				databaseMetaData.storesUpperCaseQuotedIdentifiers(),
-				databaseMetaData.storesUpperCaseIdentifiers(),
-				databaseMetaData.storesLowerCaseIdentifiers()
-		);
+		this.sequences = loadSequenceMetadataMap();
+	}
 
-		sequences = loadSequenceMetadataMap();
+	public IdentifierHelper identifierHelper() {
+		return jdbcEnvironment.getIdentifierHelper();
 	}
 
 	private static final String[] TABLE_TYPES = new String[] { "TABLE", "VIEW" };
 
 	private void loadTableMetadata(ResultSet resultSet) throws SQLException {
 		while ( resultSet.next() ) {
-			final Identifier catalogIdentifier = identifierHelper.fromMetaDataCatalogName(
+			final Identifier catalogIdentifier = identifierHelper().fromMetaDataCatalogName(
 					resultSet.getString(
 							"TABLE_CAT"
 					)
 			);
-			final Identifier schemaIdentifier = identifierHelper.fromMetaDataSchemaName(
+			final Identifier schemaIdentifier = identifierHelper().fromMetaDataSchemaName(
 					resultSet.getString(
 							"TABLE_SCHEM"
 					)
 			);
-			final Identifier tableIdentifier = identifierHelper.fromMetaDataObjectName(
+			final Identifier tableIdentifier = identifierHelper().fromMetaDataObjectName(
 					resultSet.getString(
 							"TABLE_NAME"
 					)
@@ -110,20 +97,17 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 			}
 
 			tableMetadata = new ExistingTableMetadataImpl( this, tableName );
-			tables.put( tableName, tableMetadata );
+			tables.put( toMapKey( tableName ), tableMetadata );
 		}
 	}
 
 	private Map<ObjectName,ExistingSequenceMetadata> loadSequenceMetadataMap() throws SQLException {
 		Map<ObjectName,ExistingSequenceMetadata> sequences = new HashMap<ObjectName, ExistingSequenceMetadata>();
 		final Iterable<ExistingSequenceMetadata> sequenceMetadatas =
-				jdbcEnvironment.getExistingSequenceMetadataExtractor().extractMetadata(
-						databaseMetaData,
-						identifierHelper
-				);
+				jdbcEnvironment.getExistingSequenceMetadataExtractor().extractMetadata( databaseMetaData );
 		if ( sequenceMetadatas != null ) {
 			for ( ExistingSequenceMetadata sequenceMetadata :sequenceMetadatas ) {
-				sequences.put( sequenceMetadata.getSequenceName(), sequenceMetadata );
+				sequences.put( toMapKey( sequenceMetadata.getSequenceName() ), sequenceMetadata );
 			}
 		}
 		return sequences;
@@ -131,12 +115,37 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 
 	@Override
 	public ExistingTableMetadata getTableMetadata(ObjectName tableName) {
-		return tables.get( tableName );
+		return tables.get( toMapKey( tableName ) );
+	}
+
+	public static ObjectName toMapKey(ObjectName qualifiedName) {
+		Identifier catalog = qualifiedName.getCatalog();
+		if ( catalog != null ) {
+			if ( ! catalog.isQuoted() ) {
+				catalog = Identifier.toIdentifier( catalog.getText().toUpperCase() );
+			}
+		}
+
+		Identifier schema = qualifiedName.getSchema();
+		if ( schema != null ) {
+			if ( ! schema.isQuoted() ) {
+				schema = Identifier.toIdentifier( schema.getText().toUpperCase() );
+			}
+		}
+
+		Identifier name = qualifiedName.getName();
+		if ( name != null ) {
+			if ( ! name.isQuoted() ) {
+				name = Identifier.toIdentifier( name.getText().toUpperCase() );
+			}
+		}
+
+		return new ObjectName( catalog, schema, name );
 	}
 
 	@Override
 	public ExistingSequenceMetadata getSequenceMetadata(ObjectName sequenceName) {
-		return sequences.get(  sequenceName );
+		return sequences.get( toMapKey( sequenceName ) );
 	}
 
 	public Map<Identifier, ExistingColumnMetadata> getColumnMetadata(ExistingTableMetadata tableMetadata) {
@@ -144,9 +153,9 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 
 		try {
 			ResultSet resultSet = databaseMetaData.getColumns(
-					identifierHelper.toMetaDataCatalogName( tableMetadata.getName().getCatalog() ),
-					identifierHelper.toMetaDataSchemaName( tableMetadata.getName().getSchema() ),
-					identifierHelper.toMetaDataObjectName( tableMetadata.getName().getName() ),
+					identifierHelper().toMetaDataCatalogName( tableMetadata.getName().getCatalog() ),
+					identifierHelper().toMetaDataSchemaName( tableMetadata.getName().getSchema() ),
+					identifierHelper().toMetaDataObjectName( tableMetadata.getName().getName() ),
 					"%"
 			);
 
@@ -194,9 +203,9 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 
 		try {
 			ResultSet resultSet = databaseMetaData.getImportedKeys(
-					identifierHelper.toMetaDataCatalogName( tableMetadata.getName().getCatalog() ),
-					identifierHelper.toMetaDataSchemaName( tableMetadata.getName().getSchema() ),
-					identifierHelper.toMetaDataObjectName( tableMetadata.getName().getName() )
+					identifierHelper().toMetaDataCatalogName( tableMetadata.getName().getCatalog() ),
+					identifierHelper().toMetaDataSchemaName( tableMetadata.getName().getSchema() ),
+					identifierHelper().toMetaDataObjectName( tableMetadata.getName().getName() )
 			);
 
 			// todo : need to account for getCrossReference() as well...
@@ -271,172 +280,6 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		return TruthValue.UNKNOWN;
 	}
 
-	public class IdentifierHelperImpl implements IdentifierHelper {
-		private final String currentCatalog;
-		private final String currentSchema;
-		private final boolean storesMixedCaseQuotedIdentifiers;
-		private final boolean storesLowerCaseQuotedIdentifiers;
-		private final boolean storesUpperCaseQuotedIdentifiers;
-		private final boolean storesUpperCaseIdentifiers;
-		private final boolean storesLowerCaseIdentifiers;
-
-		public IdentifierHelperImpl(
-				String currentCatalog,
-				String currentSchema,
-				boolean storesMixedCaseQuotedIdentifiers,
-				boolean storesLowerCaseQuotedIdentifiers,
-				boolean storesUpperCaseQuotedIdentifiers,
-				boolean storesUpperCaseIdentifiers,
-				boolean storesLowerCaseIdentifiers) {
-			this.currentCatalog = currentCatalog;
-			this.currentSchema = currentSchema;
-			this.storesMixedCaseQuotedIdentifiers = storesMixedCaseQuotedIdentifiers;
-			this.storesLowerCaseQuotedIdentifiers = storesLowerCaseQuotedIdentifiers;
-			this.storesUpperCaseQuotedIdentifiers = storesUpperCaseQuotedIdentifiers;
-			this.storesUpperCaseIdentifiers = storesUpperCaseIdentifiers;
-			this.storesLowerCaseIdentifiers = storesLowerCaseIdentifiers;
-
-			if ( storesMixedCaseQuotedIdentifiers && storesLowerCaseQuotedIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores quoted identifiers in mixed, upper and lower case" );
-			}
-			else if ( storesMixedCaseQuotedIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores quoted identifiers in both mixed and upper case" );
-			}
-			else if ( storesMixedCaseQuotedIdentifiers && storesLowerCaseQuotedIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores quoted identifiers in both mixed and lower case" );
-			}
-
-			if ( storesUpperCaseIdentifiers && storesLowerCaseIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores non-quoted identifiers in both upper and lower case" );
-			}
-
-			if ( storesUpperCaseIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores both quoted and non-quoted identifiers in upper case" );
-			}
-
-			if ( storesLowerCaseIdentifiers && storesLowerCaseQuotedIdentifiers ) {
-				log.warn( "JDBC Driver reports it stores both quoted and non-quoted identifiers in lower case" );
-			}
-		}
-
-		// In the DatabaseMetaData method params for catalog and schema name have the following meaning:
-		//		1) <""> means to match things "without a catalog/schema"
-		//		2) <null> means to not limit results based on this field
-		//
-		// todo : not sure how "without a catalog/schema" is interpreted.  Current?
-
-		@Override
-		public String toMetaDataCatalogName(Identifier identifier) {
-			if ( identifier == null ) {
-				// todo : not sure if this is interpreted as <""> or <currentCatalog>
-				return currentCatalog;
-			}
-
-			return toText( identifier );
-		}
-
-		private String toText(Identifier identifier) {
-			if ( identifier == null ) {
-				throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
-			}
-
-			if ( identifier.isQuoted() && storesMixedCaseQuotedIdentifiers ) {
-				return identifier.getText();
-			}
-			else if ( ( identifier.isQuoted() && storesUpperCaseQuotedIdentifiers )
-					|| ( !identifier.isQuoted() && storesUpperCaseIdentifiers ) ) {
-				return StringHelper.toUpperCase( identifier.getText() );
-			}
-			else if ( ( identifier.isQuoted() && storesLowerCaseQuotedIdentifiers )
-					|| ( !identifier.isQuoted() && storesLowerCaseIdentifiers ) ) {
-				return StringHelper.toLowerCase( identifier.getText() );
-			}
-			return identifier.getText();
-		}
-
-		@Override
-		public String toMetaDataSchemaName(Identifier identifier) {
-			if ( identifier == null ) {
-				// todo : not sure if this is interpreted as <""> or <currentSchema>
-				return currentSchema;
-			}
-
-			return toText( identifier );
-		}
-
-		@Override
-		public String toMetaDataObjectName(Identifier identifier) {
-			if ( identifier == null ) {
-				// if this method was called, the value is needed
-				throw new IllegalArgumentException(  );
-			}
-			return toText( identifier );
-		}
-
-		@Override
-		public Identifier fromMetaDataCatalogName(String catalogName) {
-			if ( catalogName == null ) {
-				return null;
-			}
-
-			if ( catalogName.equals( currentCatalog ) ) {
-				return null;
-			}
-
-			return toIdentifier( catalogName );
-			// note really sure the best way to know (can you?) whether the identifier is quoted
-
-		}
-
-		private Identifier toIdentifier(String incomingName) {
-			// lovely decipher of whether the incoming value represents a quoted identifier...
-			final boolean isUpperCase = incomingName.toUpperCase().equals( incomingName );
-			final boolean isLowerCase = incomingName.toLowerCase().equals( incomingName );
-			final boolean isMixedCase = ! isLowerCase && ! isUpperCase;
-
-			if ( jdbcEnvironment.getReservedWords().contains( incomingName ) ) {
-				// unequivocally it needs to be quoted...
-				return Identifier.toIdentifier( incomingName, true );
-			}
-
-			if ( storesMixedCaseQuotedIdentifiers && isMixedCase ) {
-				return Identifier.toIdentifier( incomingName, true );
-			}
-
-			if ( storesLowerCaseQuotedIdentifiers && isLowerCase ) {
-				return Identifier.toIdentifier( incomingName, true );
-			}
-
-			if ( storesUpperCaseQuotedIdentifiers && isUpperCase ) {
-				return Identifier.toIdentifier( incomingName, true );
-			}
-
-			return Identifier.toIdentifier( incomingName );
-		}
-
-		@Override
-		public Identifier fromMetaDataSchemaName(String schemaName) {
-			if ( schemaName == null ) {
-				return null;
-			}
-
-			if ( schemaName.equals( currentSchema ) ) {
-				return null;
-			}
-
-			return toIdentifier( schemaName );
-		}
-
-		@Override
-		public Identifier fromMetaDataObjectName(String objectName) {
-			if ( objectName == null ) {
-				return null;
-			}
-
-			return toIdentifier( objectName );
-		}
-	}
-
 	public static interface Builder {
 		public Builder prepareAll();
 		public Builder prepareCatalogAndSchema(Schema.Name schemaName);
@@ -487,8 +330,8 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		@Override
 		public Builder prepareCatalogAndSchema(Schema.Name schemaName) {
 			prepare(
-					it.identifierHelper.toMetaDataCatalogName( schemaName.getCatalog() ),
-					it.identifierHelper.toMetaDataSchemaName( schemaName.getSchema() )
+					it.identifierHelper().toMetaDataCatalogName( schemaName.getCatalog() ),
+					it.identifierHelper().toMetaDataSchemaName( schemaName.getSchema() )
 			);
 			return this;
 		}
@@ -496,7 +339,7 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		@Override
 		public Builder prepareCatalog(Identifier catalog) {
 			prepare(
-					it.identifierHelper.toMetaDataCatalogName( catalog ),
+					it.identifierHelper().toMetaDataCatalogName( catalog ),
 					null
 			);
 			return this;
@@ -506,7 +349,7 @@ public class ExistingDatabaseMetaDataImpl implements ExistingDatabaseMetaData {
 		public Builder prepareSchema(Identifier schema) {
 			prepare(
 					null,
-					it.identifierHelper.toMetaDataSchemaName( schema )
+					it.identifierHelper().toMetaDataSchemaName( schema )
 			);
 			return this;
 		}

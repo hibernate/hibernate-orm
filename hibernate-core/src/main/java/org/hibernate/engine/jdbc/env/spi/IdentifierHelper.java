@@ -21,15 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.schema.spi;
+package org.hibernate.engine.jdbc.env.spi;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
+import org.hibernate.metamodel.spi.relational.Identifier;
 
 /**
- * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have a notion of
- * @author Steve Ebersole
- */
-public interface ExistingSequenceMetadataExtractor {
-	public Iterable<ExistingSequenceMetadata> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException;
+* @author Steve Ebersole
+*/
+public interface IdentifierHelper {
+	public String toMetaDataCatalogName(Identifier identifier);
+	public String toMetaDataSchemaName(Identifier identifier);
+	public String toMetaDataObjectName(Identifier identifier);
+	public Identifier fromMetaDataCatalogName(String catalogName);
+	public Identifier fromMetaDataSchemaName(String schemaName);
+	public Identifier fromMetaDataObjectName(String objectName);
 }

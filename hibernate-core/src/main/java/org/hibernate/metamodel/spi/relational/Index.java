@@ -43,7 +43,7 @@ public class Index extends AbstractConstraint implements Constraint {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
 		sb.append( ".IDX" );
 		for ( Column column : getColumns() ) {
-			sb.append( '_' ).append( column.getColumnName().getName() );
+			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
 	}
@@ -83,7 +83,7 @@ public class Index extends AbstractConstraint implements Constraint {
 			else {
 				buf.append( ", " );
 			}
-			buf.append( ( column.getColumnName().encloseInQuotesIfQuoted( dialect ) ) );
+			buf.append( ( column.getColumnName().getText( dialect ) ) );
 		}
 		buf.append( ")" );
 		return buf.toString();
@@ -104,7 +104,7 @@ public class Index extends AbstractConstraint implements Constraint {
 			else {
 				buf.append( ", " );
 			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append( ')' ).toString();
 	}

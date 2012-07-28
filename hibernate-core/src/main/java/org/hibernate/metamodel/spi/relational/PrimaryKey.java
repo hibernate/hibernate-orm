@@ -46,7 +46,7 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 	protected String generateName() {
 		return new StringBuilder()
 				.append( GENERATED_NAME_PREFIX )
-				.append( getTable().getLogicalName().getName().toUpperCase() )
+				.append( getTable().getLogicalName().getText().toUpperCase() )
 				.toString();
 	}
 
@@ -70,7 +70,7 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 			else {
 				buf.append(", ");
 			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append(')').toString();
 	}
@@ -87,7 +87,7 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 			else {
 				buf.append(", ");
 			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append(')').toString();
 	}

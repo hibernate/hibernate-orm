@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
+
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Contract for resolving the schema of a {@link Connection}.
@@ -37,5 +39,5 @@ public interface SchemaNameResolver {
 	 *
 	 * @return The name of the schema (may be null).
 	 */
-	public String resolveSchemaName(Connection connection);
+	public String resolveSchemaName(Connection connection) throws SQLException;
 }

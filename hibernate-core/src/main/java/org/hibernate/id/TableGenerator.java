@@ -45,6 +45,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.type.Type;
 
 /**
@@ -71,7 +72,11 @@ import org.hibernate.type.Type;
  *
  * @see TableHiLoGenerator
  * @author Gavin King
+ *
+ * @deprecated Going away in 5.0, use {@link org.hibernate.id.enhanced.SequenceStyleGenerator} or
+ * {@link org.hibernate.id.enhanced.TableGenerator} instead
  */
+@Deprecated
 public class TableGenerator implements PersistentIdentifierGenerator, Configurable {
 	/* COLUMN and TABLE should be renamed but it would break the public API */
 	/** The column parameter */
@@ -197,6 +202,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				},
 				true
 		);
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		// not doing anything here as I expect this to go away
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {

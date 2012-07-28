@@ -817,7 +817,7 @@ public abstract class AbstractEntityPersister
 
 		int i = 0;
 		for ( org.hibernate.metamodel.spi.relational.Column col : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
-			rootTableKeyColumnNames[i] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			rootTableKeyColumnNames[i] = col.getColumnName().getText( factory.getDialect() );
 			if ( col.getReadFragment() == null ) {
 				rootTableKeyColumnReaders[i] = rootTableKeyColumnNames[i];
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromColumn( col, factory );
@@ -849,7 +849,7 @@ public abstract class AbstractEntityPersister
 				);
 			}
 			org.hibernate.metamodel.spi.relational.Column versionColumn = org.hibernate.metamodel.spi.relational.Column.class.cast( versioningValue );
-			versionColumnName = versionColumn.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			versionColumnName = versionColumn.getColumnName().getText( factory.getDialect() );
 		}
 		else {
 			versionColumnName = null;
@@ -926,7 +926,7 @@ public abstract class AbstractEntityPersister
 					}
 					else {
 						org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getValue();
-						colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+						colNames[k] = col.getColumnName().getText( factory.getDialect() );
 						colReaderTemplates[k] = getTemplateFromColumn( col, factory );
 						colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 					}
@@ -1039,7 +1039,7 @@ public abstract class AbstractEntityPersister
 					}
 					else {
 						org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
-						String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+						String colName = col.getColumnName().getText( factory.getDialect() );
 						colnos[l] = columns.size(); //before add :-)
 						formnos[l] = -1;
 						columns.add( colName );
@@ -1055,7 +1055,7 @@ public abstract class AbstractEntityPersister
 
 						readers[l] =
 								col.getReadFragment() == null ?
-										col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+										col.getColumnName().getText( factory.getDialect() ) :
 										col.getReadFragment();
 						String readerTemplate = getTemplateFromColumn( col, factory );
 						readerTemplates[l] = readerTemplate;
@@ -1145,7 +1145,7 @@ public abstract class AbstractEntityPersister
 			templateString = getTemplateFromString( column.getReadFragment(), factory );
 		}
 		else {
-			String columnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			String columnName = column.getColumnName().getText( factory.getDialect() );
 			templateString = Template.TEMPLATE + '.' + columnName;
 		}
 		return templateString;
@@ -2280,7 +2280,7 @@ public abstract class AbstractEntityPersister
 					else {
 						cols[l] =
 								( (org.hibernate.metamodel.spi.relational.Column) relationalValueBinding.getValue() )
-										.getColumnName().encloseInQuotesIfQuoted( getFactory().getDialect() );
+										.getColumnName().getText( getFactory().getDialect() );
 					}
 					l++;
 				}

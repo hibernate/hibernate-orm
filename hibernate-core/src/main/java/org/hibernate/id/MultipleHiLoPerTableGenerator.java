@@ -48,7 +48,12 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.type.Type;
 
 /**
@@ -98,9 +103,14 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private static final String DEFAULT_PK_COLUMN = "sequence_name";
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
 
+	private ObjectName qualifiedTableName;
+	private Identifier qualifiedPkColumnName;
+	private Identifier qualifiedValueColumnName;
+
 	private String tableName;
 	private String pkColumnName;
 	private String valueColumnName;
+
 	private String query;
 	private String insert;
 	private String update;
@@ -113,37 +123,6 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	private Class returnClass;
 	private int keySize;
-
-
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-			new StringBuilder( dialect.getCreateTableString() )
-					.append( ' ' )
-					.append( tableName )
-					.append( " ( " )
-					.append( pkColumnName )
-					.append( ' ' )
-					.append( dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) )
-					.append( ",  " )
-					.append( valueColumnName )
-					.append( ' ' )
-					.append( dialect.getTypeName( Types.INTEGER ) )
-					.append( " ) " )
-					.toString()
-		};
-	}
-
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuilder sqlDropString = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			sqlDropString.append( "if exists " );
-		}
-		sqlDropString.append( tableName ).append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			sqlDropString.append( " if exists" );
-		}
-		return new String[] { sqlDropString.toString() };
-	}
 
 	public Object generatorKey() {
 		return tableName;
@@ -234,30 +213,36 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 		tableName = normalizer.normalizeIdentifierQuoting( ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ) );
 		if ( tableName.indexOf( '.' ) < 0 ) {
-			tableName = dialect.quote( tableName );
-			final String schemaName = dialect.quote(
-					normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
+			String normalizedTableName = tableName;
+			String normalizedSchemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			String normalizedCatalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+
+			tableName = org.hibernate.mapping.Table.qualify(
+					dialect.quote( normalizedCatalogName ),
+					dialect.quote( normalizedSchemaName ),
+					dialect.quote( tableName )
 			);
-			final String catalogName = dialect.quote(
-					normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) )
-			);
-			tableName = Table.qualify( catalogName, schemaName, tableName );
+
+			qualifiedTableName = new ObjectName( normalizedCatalogName, normalizedSchemaName, normalizedTableName );
 		}
 		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
+			qualifiedTableName = ObjectName.parse( tableName );
 		}
 
-		pkColumnName = dialect.quote(
+		qualifiedPkColumnName = Identifier.toIdentifier(
 				normalizer.normalizeIdentifierQuoting(
 						ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
 				)
 		);
-		valueColumnName = dialect.quote(
+		pkColumnName = qualifiedPkColumnName.getText( dialect );
+
+		qualifiedValueColumnName = Identifier.toIdentifier(
 				normalizer.normalizeIdentifierQuoting(
 						ConfigurationHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
 				)
 		);
+		valueColumnName = qualifiedValueColumnName.getText( dialect );
+
 		keySize = ConfigurationHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
 		String keyValue = ConfigurationHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
 
@@ -292,5 +277,51 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+
+		final Schema schema = database.getSchemaFor( qualifiedTableName );
+		final Table table = schema.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
+
+		final Column pkColumn = table.createColumn( qualifiedPkColumnName );
+		table.getPrimaryKey().addColumn( pkColumn );
+		// todo : leverage TypeInfo-like info from JdbcEnvironment
+		pkColumn.setSqlType( dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) );
+
+		final Column valueColumn = table.createColumn( qualifiedValueColumnName );
+		valueColumn.setSqlType( dialect.getTypeName( Types.INTEGER ) );
+	}
+
+	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
+		return new String[] {
+				new StringBuilder( dialect.getCreateTableString() )
+						.append( ' ' )
+						.append( tableName )
+						.append( " ( " )
+						.append( pkColumnName )
+						.append( ' ' )
+						.append( dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) )
+						.append( ",  " )
+						.append( valueColumnName )
+						.append( ' ' )
+						.append( dialect.getTypeName( Types.INTEGER ) )
+						.append( " ) " )
+						.toString()
+		};
+	}
+
+	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
+		StringBuilder sqlDropString = new StringBuilder( "drop table " );
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			sqlDropString.append( "if exists " );
+		}
+		sqlDropString.append( tableName ).append( dialect.getCascadeConstraintsString() );
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			sqlDropString.append( " if exists" );
+		}
+		return new String[] { sqlDropString.toString() };
 	}
 }

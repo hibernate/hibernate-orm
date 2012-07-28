@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 
@@ -32,35 +33,29 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class Sequence implements Exportable {
-	private final Schema schema;
-	private final String name;
-	private final String qualifiedName;
+	private final ObjectName name;
+	private final String nameText;
 	private int initialValue = 1;
 	private int incrementSize = 1;
 
-	public Sequence(Schema schema, String name) {
-		this.schema = schema;
+	public Sequence(ObjectName name) {
 		this.name = name;
-		this.qualifiedName = new ObjectName( schema, name ).toText();
+		this.nameText = name.toText();
 	}
 
-	public Sequence(Schema schema, String name, int initialValue, int incrementSize) {
-		this( schema, name );
+	public Sequence(ObjectName name, int initialValue, int incrementSize) {
+		this( name );
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 	}
 
-	public Schema getSchema() {
-		return schema;
-	}
-
-	public String getName() {
+	public ObjectName getName() {
 		return name;
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		return qualifiedName;
+		return nameText;
 	}
 
 	public int getInitialValue() {
@@ -73,11 +68,36 @@ public class Sequence implements Exportable {
 
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws MappingException {
-		return dialect.getCreateSequenceStrings( name, initialValue,incrementSize );
+		return dialect.getCreateSequenceStrings( name.toText( dialect ), initialValue,incrementSize );
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws MappingException {
-		return dialect.getDropSequenceStrings( name );
+		return dialect.getDropSequenceStrings( name.toText( dialect ) );
+	}
+
+	public void validate(int initialValue, int incrementSize) {
+		if ( this.initialValue != initialValue ) {
+			throw new HibernateException(
+					String.format(
+							"Multiple references to database sequence [%s] were encountered attempting to" +
+									"set conflicting values for 'initial value'.  Found [%s] and [%s]",
+							nameText,
+							this.initialValue,
+							initialValue
+					)
+			);
+		}
+		if ( this.incrementSize != incrementSize ) {
+			throw new HibernateException(
+					String.format(
+							"Multiple references to database sequence [%s] were encountered attempting to" +
+									"set conflicting values for 'increment size'.  Found [%s] and [%s]",
+							nameText,
+							this.incrementSize,
+							incrementSize
+					)
+			);
+		}
 	}
 }

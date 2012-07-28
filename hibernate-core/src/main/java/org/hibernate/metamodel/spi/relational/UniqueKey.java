@@ -43,7 +43,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
 		sb.append( ".UK" );
 		for ( Column column : getColumns() ) {
-			sb.append( '_' ).append( column.getColumnName().getName() );
+			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
 	}
@@ -81,7 +81,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 			if ( !hadNullableColumn && column.isNullable() ) {
 				hadNullableColumn = true;
 			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		//do not add unique constraint on DB not supporting unique and nullable columns
 		return !hadNullableColumn || dialect.supportsNotNullUnique() ?
@@ -106,7 +106,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 			if ( !nullable && column.isNullable() ) {
 				nullable = true;
 			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return !nullable || dialect.supportsNotNullUnique() ? buf.append( ')' ).toString() : null;
 	}

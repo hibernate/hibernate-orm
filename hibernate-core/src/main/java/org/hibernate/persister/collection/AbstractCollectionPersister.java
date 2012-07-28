@@ -768,7 +768,7 @@ public abstract class AbstractCollectionPersister
 		int k = 0;
 		for ( Column keyColumn : keyBinding.getForeignKey().getSourceColumns() ) {
 			// NativeSQL: collect key column and auto-aliases
-			keyColumnNames[k] = keyColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+			keyColumnNames[k] = keyColumn.getColumnName().getText( dialect );
 			// TODO: does the owner root table need to be in alias?
 			keyColumnAliases[k] = keyColumn.getAlias(
 					dialect,
@@ -824,10 +824,10 @@ public abstract class AbstractCollectionPersister
 				}
 				else {
 					Column col = (Column) value;
-					elementColumnNames[j] = col.getColumnName().encloseInQuotesIfQuoted( dialect );
+					elementColumnNames[j] = col.getColumnName().getText( dialect );
 					elementColumnWriters[j] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 					elementColumnReaders[j] = col.getReadFragment() == null ?
-							col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+							col.getColumnName().getText( factory.getDialect() ) :
 							col.getReadFragment();
 					elementColumnReaderTemplates[j] = getTemplateFromColumn( col, factory );
 					elementColumnIsSettable[j] = true;
@@ -872,7 +872,7 @@ public abstract class AbstractCollectionPersister
 			if ( value instanceof Column ) {
 				indexColumnIsSettable[ 0 ] = true;
 				Column column = ( Column ) value;
-				indexColumnNames[ 0 ] = column.getColumnName().encloseInQuotesIfQuoted( dialect );
+				indexColumnNames[ 0 ] = column.getColumnName().getText( dialect );
 			} else {
 				DerivedValue derivedValue = ( DerivedValue ) value;
 				indexFormulaTemplates[ 0 ] = getTemplateFromString( derivedValue.getExpression(), factory);
@@ -1050,7 +1050,7 @@ public abstract class AbstractCollectionPersister
 			templateString = getTemplateFromString( column.getReadFragment(), factory );
 		}
 		else {
-			String columnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			String columnName = column.getColumnName().getText( factory.getDialect() );
 			templateString = Template.TEMPLATE + '.' + columnName;
 		}
 		return templateString;

@@ -30,11 +30,9 @@ import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Table;
 
@@ -66,7 +64,7 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 	public void testSecondaryTableExists() {
 		EntityBinding binding = getEntityBinding( EntityWithSecondaryTable.class );
 		Table table = (Table) binding.locateTable( "SECOND_TABLE" );
-		assertEquals( "The secondary table should exist", "SECOND_TABLE", table.getTableName().getName() );
+		assertEquals( "The secondary table should exist", "SECOND_TABLE", table.getPhysicalName().getText() );
 
 		assertEquals( 2, table.values().size() );
 		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 0 );
@@ -74,7 +72,7 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 		//assertSame( "First column is not the primary key", table.getPrimaryKey().getColumns().get( 0 ), column );
 		// the second column should be the column for the attribute
 		column = (org.hibernate.metamodel.spi.relational.Column) table.values().get( 1 );
-		assertEquals( "Wrong column name", "name", column.getColumnName().getName() );
+		assertEquals( "Wrong column name", "name", column.getColumnName().getText() );
 
 		Iterator<ForeignKey> fkIterator = table.getForeignKeys().iterator();
 		assertTrue( fkIterator.hasNext() );

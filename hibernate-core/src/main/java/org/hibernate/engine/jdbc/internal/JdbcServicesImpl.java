@@ -41,6 +41,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -430,6 +431,16 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		public LinkedHashSet<TypeInfo> getTypeInfoSet() {
 			return typeInfoSet;
 		}
+
+		@Override
+		public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
+			for ( TypeInfo typeInfo : typeInfoSet ) {
+				if ( typeInfo.getJdbcTypeCode() == jdbcTypeCode ) {
+					return typeInfo;
+				}
+			}
+			return null;
+		}
 	}
 
 	@Override
@@ -465,5 +476,10 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public ResultSetWrapper getResultSetWrapper() {
 		return ResultSetWrapperImpl.INSTANCE;
+	}
+
+	@Override
+	public JdbcEnvironment getJdbcEnvironment() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

@@ -801,9 +801,9 @@ public class Binder {
 			throw bindingContext().makeMappingException(
 					String.format(
 							"Non-matching number columns in foreign key source columns [%s : %s] and target columns [%s : %s]",
-							sourceColumns.get( 0 ).getTable().getLogicalName().getName(),
+							sourceColumns.get( 0 ).getTable().getLogicalName().getText(),
 							sourceColumns.size(),
-							targetColumns.get( 0 ).getTable().getLogicalName().getName(),
+							targetColumns.get( 0 ).getTable().getLogicalName().getText(),
 							targetColumns.size()
 					)
 			);
@@ -1354,8 +1354,8 @@ public class Binder {
 				for ( Column joinedColumn : joinedColumns ) {
 					Column joinColumn = table.locateOrCreateColumn(
 							bindingContext().getNamingStrategy().joinKeyColumnName(
-									joinedColumn.getColumnName().getName(),
-									entityBinding.getPrimaryTable().getLogicalName().getName()
+									joinedColumn.getColumnName().getText(),
+									entityBinding.getPrimaryTable().getLogicalName().getText()
 							)
 					);
 					joinColumns.add( joinColumn );
@@ -1615,7 +1615,7 @@ public class Binder {
 				final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
 				final String ownerTableLogicalName =
 						Table.class.isInstance( owner.getPrimaryTable() )
-								? ( ( Table ) owner.getPrimaryTable() ).getTableName().getName()
+								? ( ( Table ) owner.getPrimaryTable() ).getPhysicalName().getText()
 								: null;
 				return bindingContexts.peek().getNamingStrategy().collectionTableName(
 						owner.getEntity().getName(),

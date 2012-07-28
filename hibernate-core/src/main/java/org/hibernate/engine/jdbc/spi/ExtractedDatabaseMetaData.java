@@ -157,4 +157,13 @@ public interface ExtractedDatabaseMetaData {
 	 * @see java.sql.DatabaseMetaData#getTypeInfo()
 	 */
 	public LinkedHashSet<TypeInfo> getTypeInfoSet();
+
+	/**
+	 * Set of type info reported by the driver.
+	 *
+	 * @return The type information obtained from the driver.
+	 *
+	 * @see java.sql.DatabaseMetaData#getTypeInfo()
+	 */
+	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
 }

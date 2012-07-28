@@ -24,11 +24,9 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -79,8 +77,13 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public Column createColumn(String name) {
+		return createColumn( Identifier.toIdentifier( name ) );
+	}
+
+	@Override
+	public Column createColumn(Identifier name) {
 		final Column column = new Column( this, valueList.size(), name );
-		valueMap.put( name, column );
+		valueMap.put( name.getText(), column );
 		valueList.add( column );
 		return column;
 	}

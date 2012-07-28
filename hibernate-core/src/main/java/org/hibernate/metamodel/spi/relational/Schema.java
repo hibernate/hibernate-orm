@@ -26,15 +26,26 @@ package org.hibernate.metamodel.spi.relational;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreMessageLogger;
+
 /**
  * Represents a named schema/catalog pair and manages objects defined within.
  *
  * @author Steve Ebersole
  */
 public class Schema {
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			Schema.class.getName()
+	);
+
 	private final Name name;
 	private Map<Identifier, InLineView> inLineViews = new HashMap<Identifier, InLineView>();
 	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
+	private Map<Identifier, Sequence> sequences = new HashMap<Identifier, Sequence>();
 
 	public Schema(Name name) {
 		this.name = name;
@@ -89,6 +100,24 @@ public class Schema {
 		return inLineView;
 	}
 
+	public Sequence locateSequence(Identifier name) {
+		return sequences.get( name );
+	}
+
+	public Sequence createSequence(Identifier name, int initialValue, int increment) {
+		if ( sequences.containsKey( name ) ) {
+			throw new HibernateException( "Sequence was already registered with that name [" + name.toString() + "]" );
+		}
+
+		Sequence sequence = new Sequence(
+				new ObjectName( this.name.catalog, this.name.schema, name ),
+				initialValue,
+				increment
+		);
+		sequences.put( name, sequence );
+		return sequence;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
@@ -119,6 +148,10 @@ public class Schema {
 	@Override
 	public int hashCode() {
 		return name != null ? name.hashCode() : 0;
+	}
+
+	public Iterable<Sequence> getSequences() {
+		return sequences.values();
 	}
 
 	public static class Name {

@@ -112,7 +112,7 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.config.StrategyInstanceResolver;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.jpa.metamodel.internal.builder.MetamodelBuilder;
 import org.hibernate.mapping.Collection;
@@ -231,9 +231,8 @@ public final class SessionFactoryImpl
 			private final EntityNotFoundDelegate entityNotFoundDelegate;
 
 			{
-				final StrategyInstanceResolver strategyInstanceResolver = new StrategyInstanceResolver(
-						serviceRegistry.getService( ClassLoaderService.class )
-				);
+				final StrategyInstanceResolver strategyInstanceResolver
+						= serviceRegistry.getService( ClassLoaderService.class ).getStrategyInstanceResolver();
 
 				interceptor = cfg.getInterceptor();
 

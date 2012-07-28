@@ -30,6 +30,7 @@ import java.util.Set;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
 import org.hibernate.engine.jdbc.internal.TypeInfo;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
@@ -90,6 +91,11 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public ResultSetWrapper getResultSetWrapper() {
+		return null;
+	}
+
+	@Override
+	public JdbcEnvironment getJdbcEnvironment() {
 		return null;
 	}
 
@@ -157,6 +163,10 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 		}
 
 		public LinkedHashSet<TypeInfo> getTypeInfoSet() {
+			return null;
+		}
+
+		public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
 			return null;
 		}
 	}

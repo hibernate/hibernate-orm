@@ -257,7 +257,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	public void addSecondaryTable(SecondaryTable secondaryTable) {
-		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getName(), secondaryTable );
+		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getText(), secondaryTable );
 	}
 
 	public boolean isVersioned() {

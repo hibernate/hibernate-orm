@@ -33,58 +33,76 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class Identifier {
-	private final String name;
+	private final String text;
 	private final boolean isQuoted;
 
 	/**
 	 * Means to generate an {@link Identifier} instance from its simple name
 	 *
-	 * @param name The name
+	 * @param text The text
 	 *
 	 * @return The identifier form of the name.
 	 */
-	public static Identifier toIdentifier(String name) {
-		if ( StringHelper.isEmpty( name ) ) {
+	public static Identifier toIdentifier(String text) {
+		if ( StringHelper.isEmpty( text ) ) {
 			return null;
 		}
-		final String trimmedName = name.trim();
-		if ( isQuoted( trimmedName ) ) {
-			final String bareName = trimmedName.substring( 1, trimmedName.length() - 1 );
+		final String trimmed = text.trim();
+		if ( isQuoted( trimmed ) ) {
+			final String bareName = trimmed.substring( 1, trimmed.length() - 1 );
 			return new Identifier( bareName, true );
 		}
 		else {
-			return new Identifier( trimmedName, false );
+			return new Identifier( trimmed, false );
 		}
 	}
 
-	public static boolean isQuoted(String name) {
-		return name.startsWith( "`" ) && name.endsWith( "`" );
+	/**
+	 * Means to generate an {@link Identifier} instance from its simple name
+	 *
+	 * @param text The name
+	 *
+	 * @return The identifier form of the name.
+	 */
+	public static Identifier toIdentifier(String text, boolean quote) {
+		if ( StringHelper.isEmpty( text ) ) {
+			return null;
+		}
+		final String trimmed = text.trim();
+		if ( isQuoted( trimmed ) ) {
+			final String bareName = trimmed.substring( 1, trimmed.length() - 1 );
+			return new Identifier( bareName, true );
+		}
+		else {
+			return new Identifier( trimmed, quote );
+		}
+	}
+
+	public static boolean isQuoted(String text) {
+		return text.startsWith( "`" ) && text.endsWith( "`" );
 	}
 
 	/**
 	 * Constructs an identifier instance.
 	 *
-	 * @param name The identifier text.
+	 * private access.  Use one of the static {@link #toIdentifier} forms instead to get a reference.
+	 *
+	 * @param text The identifier text.
 	 * @param quoted Is this a quoted identifier?
 	 */
-	public Identifier(String name, boolean quoted) {
-		if ( StringHelper.isEmpty( name ) ) {
+	private Identifier(String text, boolean quoted) {
+		if ( StringHelper.isEmpty( text ) ) {
 			throw new IllegalIdentifierException( "Identifier text cannot be null" );
 		}
-		if ( isQuoted( name ) ) {
+		if ( isQuoted( text ) ) {
 			throw new IllegalIdentifierException( "Identifier text should not contain quote markers (`)" );
 		}
-		this.name = name;
+		this.text = text;
 		this.isQuoted = quoted;
 	}
 
-	/**
-	 * Get the identifiers name (text)
-	 *
-	 * @return The name
-	 */
-	public String getName() {
-		return name;
+	public boolean isEmpty() {
+		return text.equals( "" );
 	}
 
 	/**
@@ -97,6 +115,23 @@ public class Identifier {
 	}
 
 	/**
+	 * Get the identifier text
+	 *
+	 * @return The text
+	 */
+	public String getText() {
+		return text;
+	}
+
+	/**
+	 * @deprecated Use {@link #getText} instead
+	 */
+	@Deprecated
+	public String getName() {
+		return text;
+	}
+
+	/**
 	 * If this is a quoted identifier, then return the identifier name
 	 * enclosed in dialect-specific open- and end-quotes; otherwise,
 	 * simply return the identifier name.
@@ -105,21 +140,31 @@ public class Identifier {
 	 * @return if quoted, identifier name enclosed in dialect-specific open- and end-quotes; otherwise, the
 	 * identifier name.
 	 */
-	public String encloseInQuotesIfQuoted(Dialect dialect) {
+	public String getText(Dialect dialect) {
+		return getText( dialect.openQuote(), dialect.closeQuote() );
+	}
+
+	/**
+	 * If this is a quoted identifier, then return the identifier name
+	 * enclosed in dialect-specific open- and end-quotes; otherwise,
+	 * simply return the identifier name.
+	 *
+	 * @param openQuote The character to use as start quote
+	 * @param closeQuote The character to use as end quote
+	 * @return if quoted, identifier name enclosed in dialect-specific open- and end-quotes; otherwise, the
+	 * identifier name.
+	 */
+	public String getText(char openQuote, char closeQuote) {
 		return isQuoted ?
-				new StringBuilder( name.length() + 2 )
-						.append( dialect.openQuote() )
-						.append( name )
-						.append( dialect.closeQuote() )
-						.toString() :
-				name;
+				String.valueOf( openQuote ) + text + closeQuote :
+				text;
 	}
 
 	@Override
 	public String toString() {
 		return isQuoted
-				? '`' + getName() + '`'
-				: getName();
+				? '`' + getText() + '`'
+				: getText();
 	}
 
 	@Override
@@ -134,11 +179,11 @@ public class Identifier {
 		Identifier that = (Identifier) o;
 
 		return isQuoted == that.isQuoted
-				&& name.equals( that.name );
+				&& text.equals( that.text );
 	}
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return text.hashCode();
 	}
 }

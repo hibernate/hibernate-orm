@@ -40,14 +40,14 @@ public class ObjectNameTests extends BaseUnitTestCase {
 	@Test
 	public void testMissingName() {
 		try {
-			new ObjectName( (String)null, null, null );
+			new ObjectName( null, (String)null, null );
 			fail();
 		}
 		catch ( IllegalIdentifierException ignore ) {
 		}
 
 		try {
-			new ObjectName( "schema", "catalog", null );
+			new ObjectName( "catalog", "schema", null );
 			fail();
 		}
 		catch ( IllegalIdentifierException ignore ) {
@@ -57,15 +57,15 @@ public class ObjectNameTests extends BaseUnitTestCase {
 	@Test
 	public void testIdentifierBuilding() {
 		Dialect dialect = new H2Dialect();
-		ObjectName on = new ObjectName( "schema", "catalog", "name" );
+		ObjectName on = new ObjectName( "catalog", "schema", "name" );
 		assertEquals( "schema.catalog.name", on.toText() );
-		on = new ObjectName( "schema", null, "name" );
+		on = new ObjectName( null, "schema", "name" );
 		assertEquals( "schema.name", on.toText() );
 		assertEquals( "schema.name", on.toText( dialect ) );
-		on = new ObjectName( "`schema`", "`catalog`", "`name`" );
+		on = new ObjectName( "`catalog`", "`schema`", "`name`" );
 		assertEquals( "`schema`.`catalog`.`name`", on.toText() );
 		assertEquals( "\"schema\".\"catalog\".\"name\"", on.toText( dialect ) );
-		on = new ObjectName( "`schema`", null, "`name`" );
+		on = new ObjectName( null, "`schema`", "`name`" );
 		assertEquals( "`schema`.`name`", on.toText() );
 		assertEquals( "\"schema\".\"name\"", on.toText( dialect ) );
 	}

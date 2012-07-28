@@ -51,7 +51,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), Identifier.toIdentifier( "my_table" ) );
 		assertNull( table.getSchema().getName().getSchema() );
 		assertNull( table.getSchema().getName().getCatalog() );
-		assertEquals( "my_table", table.getTableName().toString() );
+		assertEquals( "my_table", table.getPhysicalName().toString() );
 		assertEquals( "my_table", table.getExportIdentifier() );
 		assertNull( table.getPrimaryKey().getName() );
 		assertFalse( table.values().iterator().hasNext() );
@@ -71,7 +71,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		for ( Value value : table.values() ) {
 			assertTrue( Column.class.isInstance( value ) );
 			Column column = ( Column ) value;
-			if ( column.getColumnName().getName().equals( "id" ) ) {
+			if ( column.getColumnName().getText().equals( "id" ) ) {
 				assertEquals( INTEGER, column.getJdbcDataType() );
 				assertEquals( 18, column.getSize().getPrecision() );
 				assertEquals( 0, column.getSize().getScale() );
@@ -79,7 +79,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 				assertNull( column.getSize().getLobMultiplier() );
 			}
 			else {
-				assertEquals( "col_1", column.getColumnName().getName() );
+				assertEquals( "col_1", column.getColumnName().getText() );
 				assertEquals( VARCHAR, column.getJdbcDataType() );
 				assertEquals( -1, column.getSize().getPrecision() );
 				assertEquals( -1, column.getSize().getScale() );
@@ -146,13 +146,13 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Dialect dialect = new H2Dialect();
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
 		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), Identifier.toIdentifier( "my_table" ) );
-		assertEquals( "my_table", table.getTableName().getName() );
-		assertEquals( "my_table", table.getTableName().toString() );
+		assertEquals( "my_table", table.getPhysicalName().getText() );
+		assertEquals( "my_table", table.getPhysicalName().toString() );
 		assertEquals( "schema.\"catalog\".my_table", table.getQualifiedName( dialect ) );
 
 		table = schema.createTable( Identifier.toIdentifier( "`my_table`" ), Identifier.toIdentifier( "`my_table`" ) );
-		assertEquals( "my_table", table.getTableName().getName() );
-		assertEquals( "`my_table`", table.getTableName().toString() );
+		assertEquals( "my_table", table.getPhysicalName().getText() );
+		assertEquals( "`my_table`", table.getPhysicalName().toString() );
 		assertEquals( "schema.\"catalog\".\"my_table\"", table.getQualifiedName( dialect ) );
 
 		InLineView inLineView = schema.createInLineView( Identifier.toIdentifier( "my_inlineview" ), "select ..." );
@@ -162,23 +162,23 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	@Test
 	public void testTableIdentifier() {
 		Identifier tableIdentifier = Identifier.toIdentifier( "my_table" );
-		assertEquals( "my_table", tableIdentifier.getName() );
+		assertEquals( "my_table", tableIdentifier.getText() );
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
 		Table table = schema.createTable( tableIdentifier, tableIdentifier );
-		assertSame( tableIdentifier, table.getTableName() );
+		assertSame( tableIdentifier, table.getPhysicalName() );
 		assertSame( table, schema.locateTable( Identifier.toIdentifier( "my_table"  ) ) );
-		assertEquals( "my_table", table.getLogicalName().getName() );
+		assertEquals( "my_table", table.getLogicalName().getText() );
 	}
 
 	@Test
 	public void testQuotedTableIdentifier() {
 		Identifier tableIdentifier = Identifier.toIdentifier( "`my_table`" );
-		assertEquals( "my_table", tableIdentifier.getName() );
+		assertEquals( "my_table", tableIdentifier.getText() );
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
 		Table table = schema.createTable( tableIdentifier, tableIdentifier );
-		assertSame( tableIdentifier, table.getTableName() );
+		assertSame( tableIdentifier, table.getPhysicalName() );
 		assertSame( table, schema.locateTable( Identifier.toIdentifier( "`my_table`" ) ) );
-		assertEquals( "my_table", table.getLogicalName().getName() );
+		assertEquals( "my_table", table.getLogicalName().getText() );
 		assertTrue( table.getLogicalName().isQuoted() );
 		assertNull( schema.locateTable( Identifier.toIdentifier( "my_table" ) ) );
 	}
@@ -187,7 +187,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	public void testInLineViewLogicalName() {
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
 		InLineView view = schema.createInLineView( Identifier.toIdentifier( "my_view" ), "select" );
-		assertEquals( "my_view", view.getLogicalName().getName() );
+		assertEquals( "my_view", view.getLogicalName().getText() );
 		assertEquals( "select", view.getSelect() );
 		assertSame(  view, schema.getInLineView( view.getLogicalName() ) );
 	}

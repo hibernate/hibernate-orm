@@ -24,6 +24,7 @@
 package org.hibernate.id;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.spi.relational.ExportableProducer;
 
 /**
  * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
@@ -35,7 +36,7 @@ import org.hibernate.dialect.Dialect;
  * @see Configurable
  * @author Gavin King
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator {
+public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
 
 	/**
 	 * The configuration parameter holding the schema name

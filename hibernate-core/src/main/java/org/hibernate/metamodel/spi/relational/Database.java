@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.Metadata;
@@ -45,19 +47,30 @@ import org.hibernate.metamodel.Metadata;
  */
 public class Database {
 	private final Schema.Name implicitSchemaName;
+	private final JdbcEnvironment jdbcEnvironment;
 
 	private final Map<Schema.Name,Schema> schemaMap = new HashMap<Schema.Name, Schema>();
 	private final List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
+	private final List<InitCommand> initCommands = new ArrayList<InitCommand>();
 
-	public Database(Metadata.Options options) {
+	public Database(Metadata.Options options, JdbcEnvironment jdbcEnvironment) {
 		String schemaName = options.getDefaultSchemaName();
 		String catalogName = options.getDefaultCatalogName();
 		if ( options.isGloballyQuotedIdentifiers() ) {
 			schemaName = StringHelper.quote( schemaName );
 			catalogName = StringHelper.quote( catalogName );
 		}
-		implicitSchemaName = new Schema.Name( schemaName, catalogName );
+		this.implicitSchemaName = new Schema.Name( schemaName, catalogName );
 		makeSchema( implicitSchemaName );
+		this.jdbcEnvironment = jdbcEnvironment;
+	}
+
+	public JdbcEnvironment getJdbcEnvironment() {
+		return jdbcEnvironment;
+	}
+
+	public Iterable<Schema> getSchemas() {
+		return schemaMap.values();
 	}
 
 	public Schema getDefaultSchema() {
@@ -73,6 +86,10 @@ public class Database {
 			schema = makeSchema( name );
 		}
 		return schema;
+	}
+
+	public Schema getSchemaFor(ObjectName objectName) {
+		return getSchema( objectName.getSchema(), objectName.getCatalog() );
 	}
 
 	private Schema makeSchema(Schema.Name name) {
@@ -99,6 +116,14 @@ public class Database {
 
 	public Iterable<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
 		return auxiliaryDatabaseObjects;
+	}
+
+	public void addInitCommand(InitCommand initCommand) {
+		initCommands.add( initCommand );
+	}
+
+	public Iterable<InitCommand> getInitCommands() {
+		return initCommands;
 	}
 
 	public String[] generateSchemaCreationScript(Dialect dialect) {
@@ -137,12 +162,14 @@ public class Database {
 			}
 		}
 
-		// TODO: add sql create strings from PersistentIdentifierGenerator.sqlCreateStrings()
-
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjects ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				addSqlCreateStrings( dialect, exportIdentifiers, script, auxiliaryDatabaseObject );
 			}
+		}
+
+		for ( InitCommand initCommand : initCommands ) {
+			Collections.addAll( script, initCommand.getInitCommands() );
 		}
 
 		return ArrayHelper.toStringArray( script );
@@ -179,8 +206,6 @@ public class Database {
 				addSqlDropStrings( dialect, exportIdentifiers, script, table );
 			}
 		}
-
-		// TODO: add sql drop strings from PersistentIdentifierGenerator.sqlCreateStrings()
 
 		// TODO: drop schemas/catalogs???
 

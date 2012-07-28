@@ -41,7 +41,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
 	private Identifier physicalName;
 	private Identifier logicalName;
-	private ObjectName objectName;
+	private ObjectName qualifiedName;
 	private String exportIdentifier;
 
 	private final Set<Index> indexes = new LinkedHashSet<Index>();
@@ -60,8 +60,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		this.database = database;
 		this.logicalName = logicalName;
 		this.physicalName = physicalName;
-		this.objectName = new ObjectName( database, physicalName );
-		this.exportIdentifier = objectName.toText();
+		this.qualifiedName = new ObjectName( database, physicalName );
+		this.exportIdentifier = qualifiedName.toText();
 	}
 
 	@Override
@@ -80,11 +80,23 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	/**
-	 * Gets the table name.
-	 * @return the table name.
+	 * Returns the simple physical name.
+	 *
+	 * @return The simple (non-qualfied) table name.  For the qualified name, see {@link #getTableName()}
+	 *
+	 * @see {@link #getTableName()}
 	 */
-	public Identifier getTableName() {
+	public Identifier getPhysicalName() {
 		return physicalName;
+	}
+
+	/**
+	 * Gets the qualified table name.
+	 *
+	 * @return the qualified table name.
+	 */
+	public ObjectName getTableName() {
+		return qualifiedName;
 	}
 
 	@Override
@@ -162,7 +174,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public String getQualifiedName(Dialect dialect) {
-		return objectName.toText( dialect );
+		return qualifiedName.toText( dialect );
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) {
@@ -171,7 +183,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 				new StringBuilder(
 						hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
-				.append( objectName.toText( dialect ) )
+				.append( qualifiedName.toText( dialect ) )
 				.append( " (" );
 
 
@@ -184,7 +196,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		String pkColName = null;
 		if ( hasPrimaryKey && isPrimaryKeyIdentity ) {
 			Column pkColumn = getPrimaryKey().getColumns().iterator().next();
-			pkColName = pkColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+			pkColName = pkColumn.getColumnName().getText( dialect );
 		}
 
 		boolean isFirst = true;
@@ -199,7 +211,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 				buf.append( ", " );
 			}
 			Column col = ( Column ) simpleValue;
-			String colName = col.getColumnName().encloseInQuotesIfQuoted( dialect );
+			String colName = col.getColumnName().getText( dialect );
 
 			buf.append( colName ).append( ' ' );
 
@@ -235,7 +247,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 					buf.append( " unique" );
 				}
 				else {
-					UniqueKey uk = getOrCreateUniqueKey( col.getColumnName().encloseInQuotesIfQuoted( dialect ) + '_' );
+					UniqueKey uk = getOrCreateUniqueKey( col.getColumnName().getText( dialect ) + '_' );
 					uk.addColumn( col );
 				}
 			}

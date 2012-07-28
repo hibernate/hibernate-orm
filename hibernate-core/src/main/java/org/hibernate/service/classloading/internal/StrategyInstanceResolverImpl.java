@@ -21,65 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.util.config;
+package org.hibernate.service.classloading.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 
 /**
  * A helper to deal with the common idiom of loading a named strategy implementer.
  *
  * @author Steve Ebersole
  */
-public class StrategyInstanceResolver {
+public class StrategyInstanceResolverImpl implements StrategyInstanceResolver {
 
 	// todo : maybe even allow passing in a "construction handler" to deal with non-no-arg cases
 
 	private final ClassLoaderService classLoaderService;
 
-	public StrategyInstanceResolver(ClassLoaderService classLoaderService) {
+	public StrategyInstanceResolverImpl(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
 	}
 
-	/**
-	 * Resolve strategy instances.  See discussion on {@link #resolveDefaultableStrategyInstance}.
-	 * Only difference is that here, the implied default value is {@code null}.
-	 *
-	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
-	 * @param type The type (interface) of the strategy to be resolved.
-	 * @param <T> The parameterized java type type.
-	 *
-	 * @return The strategy instance
-	 */
+	@Override
 	public <T> T resolveStrategyInstance(Object strategyReference, Class<T> type) {
 		return resolveDefaultableStrategyInstance( strategyReference, type, null );
 	}
 
-	/**
-	 * Resolve strategy instances.  The incoming reference might be:<ul>
-	 *     <li>
-	 *         {@code null} - in which case defaultValue is returned.
-	 *     </li>
-	 *     <li>
-	 *         An actual instance of the strategy type - it is returned, as is
-	 *     </li>
-	 *     <li>
-	 *         A reference to the implementation {@link Class} - an instance is created by calling
-	 *         {@link Class#newInstance()} (aka, the class's no-arg ctor).
-	 *     </li>
-	 *     <li>
-	 *         The name of the implementation class - First the implementation's {@link Class} reference
-	 *         is resolved, and then  an instance is created by calling {@link Class#newInstance()}
-	 *     </li>
-	 * </ul>
-	 *
-	 * @param strategyReference  The reference to the strategy for which we need to resolve an instance.
-	 * @param type The type (interface) of the strategy to be resolved.
-	 * @param defaultValue THe default value to use if strategyReference is null
-	 * @param <T> The parameterized java type type.
-	 *
-	 * @return The strategy instance
-	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T resolveDefaultableStrategyInstance(Object strategyReference, Class<T> type, T defaultValue) {
 		if ( strategyReference == null ) {
@@ -90,9 +58,13 @@ public class StrategyInstanceResolver {
 			return type.cast( strategyReference );
 		}
 
-		final Class<T> implementationClass = Class.class.isInstance( strategyReference )
-				? (Class<T>) strategyReference
-				: (Class<T>) classLoaderService.classForName( strategyReference.toString() );
+		final Class<T> implementationClass;
+		if ( Class.class.isInstance( strategyReference ) ) {
+			implementationClass = (Class<T>) strategyReference;
+		}
+		else {
+			implementationClass = (Class<T>) classLoaderService.classForName( strategyReference.toString() );
+		}
 
 		try {
 			return implementationClass.newInstance();

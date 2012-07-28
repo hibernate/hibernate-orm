@@ -178,8 +178,8 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 			if ( ! itTargetColumn.hasNext() ) {
 				throw new MappingException( "More constraint columns that foreign key target columns." );
 			}
-			columnNames[i] = column.getColumnName().encloseInQuotesIfQuoted( dialect );
-			targetColumnNames[i] = ( itTargetColumn.next() ).getColumnName().encloseInQuotesIfQuoted( dialect );
+			columnNames[i] = column.getColumnName().getText( dialect );
+			targetColumnNames[i] = ( itTargetColumn.next() ).getColumnName().getText( dialect );
 			i++;
 		}
 		if ( itTargetColumn.hasNext() ) {

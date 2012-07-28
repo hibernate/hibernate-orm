@@ -60,7 +60,7 @@ public class InLineView extends AbstractTableSpecification {
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return logicalName.getName();
+		return logicalName.getText();
 	}
 
 	@Override

@@ -557,10 +557,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			else {
 				org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) discriminatorRelationalValue;
-				discriminatorColumnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+				discriminatorColumnName = column.getColumnName().getText( factory.getDialect() );
 				discriminatorColumnReaders =
 						column.getReadFragment() == null ?
-								column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+								column.getColumnName().getText( factory.getDialect() ) :
 								column.getReadFragment();
 				discriminatorColumnReaderTemplate = getTemplateFromColumn( column, factory );
 				discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getPrimaryTable() );

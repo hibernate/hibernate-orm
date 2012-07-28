@@ -38,6 +38,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.type.Type;
 
 /**
@@ -51,11 +54,18 @@ import org.hibernate.type.Type;
  * @see SequenceHiLoGenerator
  * @see TableHiLoGenerator
  * @author Gavin King
+ *
+ * @deprecated Going away in 5.0, use {@link org.hibernate.id.enhanced.SequenceStyleGenerator} instead
  */
+@Deprecated
 public class SequenceGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
 
     private static final Logger LOG = Logger.getLogger( SequenceGenerator.class.getName() );
+
+	public SequenceGenerator() {
+		LOG.warn( "Encountered use of deprecated " + getClass().getName() + " class" );
+	}
 
 	/**
 	 * The sequence parameter
@@ -67,6 +77,8 @@ public class SequenceGenerator
 	 * For example (Oracle): <tt>INCREMENT BY 1 START WITH 1 MAXVALUE 100 NOCACHE</tt>.
 	 */
 	public static final String PARAMETERS = "parameters";
+
+	private ObjectName qualifiedSequenceName;
 
 	private String sequenceName;
 	private String parameters;
@@ -91,8 +103,6 @@ public class SequenceGenerator
 		sequenceName = normalizer.normalizeIdentifierQuoting(
 				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" )
 		);
-		parameters = params.getProperty( PARAMETERS );
-
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
 			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
@@ -101,14 +111,16 @@ public class SequenceGenerator
 					dialect.quote( schemaName ),
 					dialect.quote( sequenceName )
 			);
+
+			this.qualifiedSequenceName = new ObjectName( catalogName, schemaName, sequenceName );
 		}
 		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
+			this.qualifiedSequenceName = ObjectName.parse( sequenceName );
 		}
 
+		this.parameters = params.getProperty( PARAMETERS );
 		this.identifierType = type;
-		sql = dialect.getSequenceNextValString( sequenceName );
+		this.sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
 	@Override
@@ -148,6 +160,14 @@ public class SequenceGenerator
 
 	protected IntegralDataTypeHolder buildHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final Schema schema = database.getSchemaFor( qualifiedSequenceName );
+		if ( schema.locateSequence( qualifiedSequenceName.getName() ) == null ) {
+			schema.createSequence( qualifiedSequenceName.getName(), 1, 1 );
+		}
 	}
 
 	@Override

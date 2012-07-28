@@ -89,7 +89,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 		UniqueKey uniqueKey = uniqueKeys.iterator().next();
 		assertEquals( 2, uniqueKey.getColumns().size() );
 		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getName();
+			String name = c.getColumnName().getText();
 			assertTrue( "age".equals( name ) || "name".equals( name ) );
 		}
 	}
@@ -138,7 +138,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 		UniqueKey uniqueKey = uniqueKeys.iterator().next();
 		assertEquals( 2, uniqueKey.getColumns().size() );
 		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getName();
+			String name = c.getColumnName().getText();
 			assertTrue( "age".equals( name ) || "name".equals( name ) );
 		}
 	}
@@ -195,7 +195,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 		UniqueKey uniqueKey = uniqueKeys.iterator().next();
 		assertEquals( 2, uniqueKey.getColumns().size() );
 		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getName();
+			String name = c.getColumnName().getText();
 			assertTrue( "name".equals( name ) || "simpleEntity".equals( name ) );
 		}
 

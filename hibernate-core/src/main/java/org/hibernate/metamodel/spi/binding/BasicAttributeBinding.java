@@ -129,10 +129,10 @@ public class BasicAttributeBinding
 		Schema schema = table.getSchema();
 		if ( schema != null ) {
 			if ( schema.getName().getSchema() != null ) {
-				params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getName() );
+				params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getText() );
 			}
 			if ( schema.getName().getCatalog() != null ) {
-				params.setProperty( PersistentIdentifierGenerator.CATALOG, schema.getName().getCatalog().getName() );
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, schema.getName().getCatalog().getText() );
 			}
 		}
 
@@ -146,7 +146,7 @@ public class BasicAttributeBinding
 
 		params.setProperty(
 				PersistentIdentifierGenerator.PK,
-				( (Column) relationalValueBinding.getValue() ).getColumnName().encloseInQuotesIfQuoted(
+				( (Column) relationalValueBinding.getValue() ).getColumnName().getText(
 						identifierGeneratorFactory.getDialect()
 				)
 		);

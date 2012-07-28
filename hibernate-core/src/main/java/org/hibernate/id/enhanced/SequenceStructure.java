@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.enhanced;
 import java.sql.PreparedStatement;
@@ -35,6 +34,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Sequence;
 
 /**
  * Describes a sequence.
@@ -42,9 +45,9 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class SequenceStructure implements DatabaseStructure {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SequenceStructure.class.getName());
 
+	private ObjectName qualifiedSequenceName;
 	private final String sequenceName;
 	private final int initialValue;
 	private final int incrementSize;
@@ -55,11 +58,12 @@ public class SequenceStructure implements DatabaseStructure {
 
 	public SequenceStructure(
 			Dialect dialect,
-			String sequenceName,
+			ObjectName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		this.sequenceName = sequenceName;
+		this.qualifiedSequenceName = qualifiedSequenceName;
+		this.sequenceName = qualifiedSequenceName.toText( dialect );
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
@@ -133,6 +137,19 @@ public class SequenceStructure implements DatabaseStructure {
 	@Override
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
+		final Schema schema = database.getSchemaFor( qualifiedSequenceName );
+		Sequence sequence = schema.locateSequence( qualifiedSequenceName.getName() );
+		if ( sequence != null ) {
+			sequence.validate( initialValue, sourceIncrementSize );
+		}
+		else {
+			schema.createSequence( qualifiedSequenceName.getName(), initialValue, sourceIncrementSize );
+		}
 	}
 
 	@Override

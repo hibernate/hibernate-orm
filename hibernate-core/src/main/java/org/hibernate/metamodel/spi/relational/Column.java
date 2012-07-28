@@ -183,7 +183,7 @@ public class Column extends AbstractValue {
 	// suffix. That might cause unreadable aliases to be generated more often though...
 	@Override
 	public String getAlias(Dialect dialect, TableSpecification tableSpecification) {
-		final int lastLetter = StringHelper.lastIndexOfLetter( columnName.getName() );
+		final int lastLetter = StringHelper.lastIndexOfLetter( columnName.getText() );
 		final String colPositionSuffix = String.valueOf( getPosition() ) + '_';
 		final String tableNumberSuffix =
 				tableSpecification == null ?
@@ -196,14 +196,14 @@ public class Column extends AbstractValue {
 		if ( lastLetter == -1 ) {
 			alias = "column" ;
 		}
-		else if ( columnName.getName().length() > lastLetter + 1 ) {
-			alias = columnName.getName().substring( 0, lastLetter + 1 );
+		else if ( columnName.getText().length() > lastLetter + 1 ) {
+			alias = columnName.getText().substring( 0, lastLetter + 1 );
 		}
 		else {
-			alias = columnName.getName();
-			if (columnName.getName().length() + tableNumberSuffix.length() <= dialect.getMaxAliasLength() &&
+			alias = columnName.getText();
+			if (columnName.getText().length() + tableNumberSuffix.length() <= dialect.getMaxAliasLength() &&
 							! columnName.isQuoted() &&
-							! columnName.getName().toLowerCase().equals( "rowid" ) ) {
+							! columnName.getText().toLowerCase().equals( "rowid" ) ) {
 				useRawName = true;
 				suffix = tableNumberSuffix;
 			}

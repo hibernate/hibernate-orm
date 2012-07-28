@@ -40,6 +40,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -51,6 +52,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private final ClassLoader classClassLoader;
 	private final ClassLoader resourcesClassLoader;
+
+	private final StrategyInstanceResolverImpl strategyInstanceResolver = new StrategyInstanceResolverImpl( this );
 
 	public ClassLoaderServiceImpl() {
 		this( ClassLoaderServiceImpl.class.getClassLoader() );
@@ -283,5 +286,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		return services;
+	}
+
+	@Override
+	public StrategyInstanceResolver getStrategyInstanceResolver() {
+		return strategyInstanceResolver;
 	}
 }

@@ -86,4 +86,11 @@ public interface ClassLoaderService extends Service {
 	 * @return The ordered set of discovered services.
 	 */
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract);
+
+	/**
+	 * Retrieve a StrategyInstanceResolver instance.  See StrategyInstanceResolver docs for details.
+	 *
+	 * @return The StrategyInstanceResolver instance.
+	 */
+	public StrategyInstanceResolver getStrategyInstanceResolver();
 }

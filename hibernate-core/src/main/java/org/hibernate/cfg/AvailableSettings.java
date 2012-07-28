@@ -633,4 +633,11 @@ public interface AvailableSettings {
 	 */
 	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
 
+	/**
+	 * Used to specify the {@link org.hibernate.service.schema.spi.SchemaManagementTool} to use for performing
+	 * schema management.  The default is to use {@link org.hibernate.service.schema.internal.HibernateSchemaManagementTool}
+	 *
+	 * @since 5.0
+	 */
+	public static final String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
 }

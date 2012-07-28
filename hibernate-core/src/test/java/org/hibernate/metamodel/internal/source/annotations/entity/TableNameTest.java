@@ -59,7 +59,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 
 		binding = getEntityBinding( B.class );
@@ -67,7 +67,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 	}
 
@@ -92,7 +92,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"FOO",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 
 		binding = getEntityBinding( JoinedB.class );
@@ -100,7 +100,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$JoinedB",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 	}
 
@@ -125,7 +125,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassA",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 
 		binding = getEntityBinding( TablePerClassB.class );
@@ -133,7 +133,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassB",
-				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.spi.relational.Table) binding.getPrimaryTable() ).getPhysicalName().getText()
 		);
 	}
 }

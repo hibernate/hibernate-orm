@@ -79,7 +79,7 @@ public class TableProcessor {
 
 	private static void bind(MetadataImplementor metadata, AnnotationInstance tableAnnotation) {
 		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
-		ObjectName objectName = new ObjectName( tableName );
+		ObjectName objectName = ObjectName.parse( tableName );
 		Schema schema = metadata.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
 		Table table = schema.locateTable( objectName.getName() );
 		if ( table != null ) {
@@ -123,7 +123,7 @@ public class TableProcessor {
 		for ( Value value : table.values() ) {
 			if ( Column.class.isInstance( value ) && Column.class.cast( value )
 					.getColumnName()
-					.getName()
+					.getText()
 					.equals( columnName ) ) {
 				column = (Column) value;
 				break;

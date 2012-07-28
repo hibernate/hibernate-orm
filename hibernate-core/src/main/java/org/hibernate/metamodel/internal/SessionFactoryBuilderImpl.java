@@ -40,7 +40,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.util.config.StrategyInstanceResolver;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -111,9 +111,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 
 		public SessionFactoryOptionsImpl(ServiceRegistry serviceRegistry) {
-			final StrategyInstanceResolver strategyInstanceResolver = new StrategyInstanceResolver(
-					serviceRegistry.getService( ClassLoaderService.class )
-			);
+			final StrategyInstanceResolver strategyInstanceResolver
+					= serviceRegistry.getService( ClassLoaderService.class ).getStrategyInstanceResolver();
 
 			final Map configurationSettings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 

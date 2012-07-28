@@ -55,6 +55,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.type.Type;
 
 /**
@@ -161,6 +165,10 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 
 	private Type identifierType;
+
+	private ObjectName qualifiedTableName;
+	private Identifier qualifiedSegmentColumnName;
+	private Identifier qualifiedValueColumnName;
 
 	private String tableName;
 
@@ -330,24 +338,28 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @return The table name to use.
 	 */
 	protected String determineGeneratorTableName(Properties params, Dialect dialect) {
-		String name = ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE );
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		String name = normalizer.normalizeIdentifierQuoting(
+				ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE )
+		);
 		boolean isGivenNameUnqualified = name.indexOf( '.' ) < 0;
 		if ( isGivenNameUnqualified ) {
-			ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-			name = normalizer.normalizeIdentifierQuoting( name );
-			// if the given name is un-qualified we may neen to qualify it
+			// if the given name is un-qualified we may need to qualify it
 			String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+
+			qualifiedTableName = new ObjectName( catalogName, schemaName, name );
+
 			name = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( name)
+					qualifiedTableName.getCatalog().getText( dialect ),
+					qualifiedTableName.getSchema().getText( dialect ),
+					qualifiedTableName.getName().getText( dialect )
 			);
 		}
 		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
+			qualifiedTableName = ObjectName.parse( name );
 		}
+
 		return name;
 	}
 
@@ -365,7 +377,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	protected String determineSegmentColumnName(Properties params, Dialect dialect) {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		String name = ConfigurationHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
-		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
+		qualifiedSegmentColumnName = Identifier.toIdentifier( normalizer.normalizeIdentifierQuoting( name ) );
+		return qualifiedSegmentColumnName.getText( dialect );
 	}
 
 	/**
@@ -381,7 +394,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	protected String determineValueColumnName(Properties params, Dialect dialect) {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
-		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
+		qualifiedValueColumnName = Identifier.toIdentifier( normalizer.normalizeIdentifierQuoting( name ) );
+		return qualifiedValueColumnName.getText( dialect );
 	}
 
 	/**
@@ -409,9 +423,13 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 * @return The default segment value to use.
 	 */
 	protected String determineDefaultSegmentValue(Properties params) {
-		boolean preferSegmentPerEntity = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params, false );
+		boolean preferSegmentPerEntity = ConfigurationHelper.getBoolean(
+				CONFIG_PREFER_SEGMENT_PER_ENTITY,
+				params,
+				false
+		);
 		String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
-        LOG.usingDefaultIdGeneratorSegmentValue(tableName, segmentColumnName, defaultToUse);
+        LOG.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.toString(), segmentColumnName, defaultToUse );
 		return defaultToUse;
 	}
 
@@ -439,7 +457,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	protected String buildSelectQuery(Dialect dialect) {
 		final String alias = "tbl";
 		String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
-				" from " + tableName + ' ' + alias +
+				" from " + qualifiedTableName.toText( dialect ) + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
@@ -448,7 +466,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	protected String buildUpdateQuery() {
-		return "update " + tableName +
+		return "update " + qualifiedTableName.toText(  ) +
 				" set " + valueColumnName + "=? " +
 				" where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
@@ -544,6 +562,24 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					}
 				}
 		);
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+
+		org.hibernate.metamodel.spi.relational.Table table = database.getSchemaFor( qualifiedTableName )
+				.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
+
+		Column segmentColumn = table.createColumn( qualifiedSegmentColumnName );
+		table.getPrimaryKey().addColumn( segmentColumn );
+		// todo : leverage TypeInfo-like info from JdbcEnvironment
+		segmentColumn.setSqlType( dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) );
+		segmentColumn.setNullable( false );
+
+		Column valueColumn = table.createColumn( qualifiedValueColumnName );
+		valueColumn.setSqlType( dialect.getTypeName( Types.BIGINT ) );
+		valueColumn.setNullable( false );
 	}
 
 	@Override

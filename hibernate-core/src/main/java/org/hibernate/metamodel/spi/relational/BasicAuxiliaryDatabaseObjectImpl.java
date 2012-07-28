@@ -63,8 +63,8 @@ public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseO
 	}
 
 	private static String injectCatalogAndSchema(String ddlString, Schema schema) {
-		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, schema.getName().getCatalog().getName() );
-		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schema.getName().getSchema().getName() );
+		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, schema.getName().getCatalog().getText() );
+		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schema.getName().getSchema().getText() );
 		return rtn;
 	}
 }

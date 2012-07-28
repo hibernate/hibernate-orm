@@ -36,7 +36,7 @@ public class PrimaryKeyConstraintNameTests extends AbstractConstraintNameTests {
 		assertEquals(
 				constraint.getGeneratedNamePrefix() + constraint.getTable()
 						.getLogicalName()
-						.getName()
+						.getText()
 						.toUpperCase(),
 				constraint.generateName()
 		);

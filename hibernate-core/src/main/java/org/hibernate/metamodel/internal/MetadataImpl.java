@@ -37,6 +37,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -129,7 +130,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.serviceRegistry =  metadataSources.getServiceRegistry();
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
-		this.database = new Database( options );
+		this.database = new Database( options, serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment() );
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 		this.nameNormalizer = new ObjectNameNormalizer() {

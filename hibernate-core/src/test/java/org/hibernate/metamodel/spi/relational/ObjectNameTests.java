@@ -58,13 +58,13 @@ public class ObjectNameTests extends BaseUnitTestCase {
 	public void testIdentifierBuilding() {
 		Dialect dialect = new H2Dialect();
 		ObjectName on = new ObjectName( "catalog", "schema", "name" );
-		assertEquals( "schema.catalog.name", on.toText() );
+		assertEquals( "catalog.schema.name", on.toText() );
 		on = new ObjectName( null, "schema", "name" );
 		assertEquals( "schema.name", on.toText() );
 		assertEquals( "schema.name", on.toText( dialect ) );
 		on = new ObjectName( "`catalog`", "`schema`", "`name`" );
-		assertEquals( "`schema`.`catalog`.`name`", on.toText() );
-		assertEquals( "\"schema\".\"catalog\".\"name\"", on.toText( dialect ) );
+		assertEquals( "`catalog`.`schema`.`name`", on.toText() );
+		assertEquals( "\"catalog\".\"schema\".\"name\"", on.toText( dialect ) );
 		on = new ObjectName( null, "`schema`", "`name`" );
 		assertEquals( "`schema`.`name`", on.toText() );
 		assertEquals( "\"schema\".\"name\"", on.toText( dialect ) );

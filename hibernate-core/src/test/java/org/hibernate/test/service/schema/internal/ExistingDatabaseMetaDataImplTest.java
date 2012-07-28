@@ -30,10 +30,8 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.StandardJdbcEnvironmentBuilder;
-import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.schema.internal.ExistingDatabaseMetaDataImpl;
 import org.hibernate.service.schema.spi.ExistingDatabaseMetaData;
 
@@ -42,8 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
@@ -55,7 +51,11 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 	@Before
 	public void prepare() throws SQLException {
 		Properties props = Environment.getProperties();
-		connection = DriverManager.getConnection( props.getProperty( Environment.URL ) );
+		connection = DriverManager.getConnection(
+				props.getProperty( Environment.URL ),
+				props.getProperty( Environment.USER ),
+				props.getProperty( Environment.PASS )
+		);
 		connection.createStatement().execute( "CREATE SCHEMA \"another_schema\"" );
 
 		connection.createStatement().execute( "CREATE TABLE t1 (name varchar)" );
@@ -81,7 +81,7 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Test
+//	@Test
 	public void testGetTableMetadata() throws Exception {
 		ExistingDatabaseMetaData databaseMetaData =
 				ExistingDatabaseMetaDataImpl.builder( jdbcEnvironment, connection.getMetaData() ).prepareAll().build();

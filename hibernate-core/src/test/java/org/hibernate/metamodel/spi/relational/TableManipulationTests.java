@@ -148,12 +148,12 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), Identifier.toIdentifier( "my_table" ) );
 		assertEquals( "my_table", table.getPhysicalName().getText() );
 		assertEquals( "my_table", table.getPhysicalName().toString() );
-		assertEquals( "schema.\"catalog\".my_table", table.getQualifiedName( dialect ) );
+		assertEquals( "\"catalog\".schema.my_table", table.getQualifiedName( dialect ) );
 
 		table = schema.createTable( Identifier.toIdentifier( "`my_table`" ), Identifier.toIdentifier( "`my_table`" ) );
 		assertEquals( "my_table", table.getPhysicalName().getText() );
 		assertEquals( "`my_table`", table.getPhysicalName().toString() );
-		assertEquals( "schema.\"catalog\".\"my_table\"", table.getQualifiedName( dialect ) );
+		assertEquals( "\"catalog\".schema.\"my_table\"", table.getQualifiedName( dialect ) );
 
 		InLineView inLineView = schema.createInLineView( Identifier.toIdentifier( "my_inlineview" ), "select ..." );
 		assertEquals( "( select ... )", inLineView.getQualifiedName( dialect ) );

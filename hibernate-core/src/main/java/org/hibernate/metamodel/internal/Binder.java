@@ -1642,7 +1642,7 @@ public class Binder {
 					bindingContexts.peek().getOrigin() );
 		}
 		final String name;
-		if ( columnSource.getName() != null ) {
+		if ( StringHelper.isNotEmpty( columnSource.getName() ) ) {
 			name = bindingContexts.peek().getNamingStrategy().columnName( columnSource.getName() );
 		} else if ( isDefaultAttributeName ) {
 			name = bindingContexts.peek().getNamingStrategy().propertyToColumnName( defaultName );

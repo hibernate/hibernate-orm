@@ -945,6 +945,9 @@ public class Binder {
 			}
 			rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 ).setIdentity( true );
 		}
+		if ( PersistentIdentifierGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
+			( (PersistentIdentifierGenerator) entityIdentifier.getIdentifierGenerator() ).registerExportables( metadata.getDatabase() );
+		}
 	}
 
 	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {

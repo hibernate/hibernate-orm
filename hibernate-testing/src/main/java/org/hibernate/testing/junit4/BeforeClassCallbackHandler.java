@@ -39,7 +39,14 @@ public class BeforeClassCallbackHandler extends Statement {
 
 	@Override
 	public void evaluate() throws Throwable {
-		runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
+		try {
+			runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
+		}
+		catch (CallbackException e) {
+			// be nice to see the exception. but junit seems to be eating it...
+			System.out.println( "Before class callback errror : " + e.getLocalizedMessage() );
+			e.printStackTrace();
+		}
 		wrappedStatement.evaluate();
 	}
 }

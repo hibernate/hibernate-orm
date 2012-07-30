@@ -32,6 +32,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 
 /**
  * @author Hardy Ferentschik
@@ -56,6 +57,11 @@ public class NotNullSchemaConstraint implements SchemaConstraint {
 		}
 
 		return true;
+	}
+
+	@Override
+	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 //	private static boolean applyNotNull(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor) {

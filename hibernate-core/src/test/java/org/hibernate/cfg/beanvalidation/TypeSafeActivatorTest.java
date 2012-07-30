@@ -21,30 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg.beanvalidation.ddl;
+package org.hibernate.cfg.beanvalidation;
 
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.Validation;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.junit.Test;
+
+import org.hibernate.HibernateException;
 
 /**
- * Interface for modification of schema related meta information based on Bean Validation constraints
- *
  * @author Hardy Ferentschik
  */
-public interface SchemaConstraint {
-	boolean applyConstraint(Property property,
-							ConstraintDescriptor<?> descriptor,
-							PropertyDescriptor propertyDescriptor,
-							Dialect dialect);
 
-	boolean applyConstraint(AttributeBinding attributeBinding,
-							ConstraintDescriptor<?> descriptor,
-							PropertyDescriptor propertyDescriptor,
-							Dialect dialect);
+public class TypeSafeActivatorTest {
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNullValidatorFactoryThrowsException() throws Exception {
+		TypeSafeActivator.assertObjectIsValidatorFactoryInstance( null );
+	}
+
+	@Test(expected = HibernateException.class)
+	public void testNonValidatorFactoryInstanceThrowsException() throws Exception {
+		TypeSafeActivator.assertObjectIsValidatorFactoryInstance( new Object() );
+	}
+
+	@Test
+	public void testValidValidatorFactoryInstance() throws Exception {
+		TypeSafeActivator.assertObjectIsValidatorFactoryInstance( Validation.buildDefaultValidatorFactory() );
+	}
 }
-
-

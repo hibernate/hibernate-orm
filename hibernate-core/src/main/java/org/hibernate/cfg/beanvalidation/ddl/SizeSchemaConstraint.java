@@ -30,6 +30,7 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 
 /**
  * @author Hardy Ferentschik
@@ -53,6 +54,11 @@ public class SizeSchemaConstraint implements SchemaConstraint {
 			col.setLength( max );
 		}
 		return true;
+	}
+
+	@Override
+	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }
 

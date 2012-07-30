@@ -26,7 +26,6 @@ package org.hibernate.cfg.beanvalidation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -62,7 +61,7 @@ public class BeanValidationIntegrator implements Integrator {
 	private static final String ACTIVATOR_CLASS = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
 	private static final String DDL_METHOD = "applyDDL";
 	private static final String ACTIVATE_METHOD = "activateBeanValidation";
-	private static final String VALIDATE_METHOD = "validateFactory";
+	private static final String ASSERT_VALIDATOR_FACTORY_INSTANCE_METHOD = "assertObjectIsValidatorFactoryInstance";
 
 	@Override
 	// TODO Can be removed once the switch to the new metamodel is complete. See also HHH-7470 (HF)
@@ -97,13 +96,23 @@ public class BeanValidationIntegrator implements Integrator {
 	public void integrate(MetadataImplementor metadata,
 						  SessionFactoryImplementor sessionFactory,
 						  SessionFactoryServiceRegistry serviceRegistry) {
-		final Set<ValidationMode> modes = ValidationMode.getModes(sessionFactory.getProperties().get( MODE_PROPERTY ));
+		final Set<ValidationMode> modes = ValidationMode.getModes(
+				sessionFactory.getProperties()
+						.get( MODE_PROPERTY )
+		);
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 		final boolean isBeanValidationAvailable = isBeanValidationOnClasspath( classLoaderService );
 		final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( serviceRegistry );
 
-		// TODO apply relational constraints. Depends on HHH-7472 (HF)
-//		applyRelationalConstraints( modes, isBeanValidationAvailable, typeSafeActivatorClass, props, metadata );
+		applyRelationalConstraints(
+				modes,
+				isBeanValidationAvailable,
+				typeSafeActivatorClass,
+				sessionFactory.getProperties(),
+				metadata,
+				dialect
+		);
 		applyHibernateListeners(
 				modes,
 				isBeanValidationAvailable,
@@ -158,7 +167,10 @@ public class BeanValidationIntegrator implements Integrator {
 	}
 
 	private static Method getValidateMethod(Class activatorClass) throws NoSuchMethodException {
-		final Method validateMethod = activatorClass.getMethod( VALIDATE_METHOD, Object.class );
+		final Method validateMethod = activatorClass.getMethod(
+				ASSERT_VALIDATOR_FACTORY_INSTANCE_METHOD,
+				Object.class
+		);
 		if ( !validateMethod.isAccessible() ) {
 			validateMethod.setAccessible( true );
 		}
@@ -253,7 +265,8 @@ public class BeanValidationIntegrator implements Integrator {
 											boolean beanValidationAvailable,
 											Class typeSafeActivatorClass,
 											Properties properties,
-											MetadataImplementor metadata) {
+											MetadataImplementor metadata,
+											Dialect dialect) {
 		if ( !ConfigurationHelper.getBoolean( APPLY_CONSTRAINTS, properties, true ) ) {
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
@@ -274,12 +287,16 @@ public class BeanValidationIntegrator implements Integrator {
 					DDL_METHOD,
 					Iterable.class,
 					Properties.class,
-					ClassLoaderService.class
+					ClassLoaderService.class,
+					Dialect.class
 			);
 			try {
 				applyDDLMethod.invoke(
-						null, metadata.getEntityBindings(), properties,
-						metadata.getServiceRegistry().getService( ClassLoaderService.class )
+						null,
+						metadata.getEntityBindings(),
+						properties,
+						metadata.getServiceRegistry().getService( ClassLoaderService.class ),
+						dialect
 				);
 			}
 			catch ( HibernateException error ) {
@@ -343,49 +360,6 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 		catch ( Exception e ) {
 			throw new HibernateException( "Unable to locate TypeSafeActivator#applyDDL method", e );
-		}
-	}
-
-	// Because the javax validation classes might not be on the runtime classpath
-	private static enum ValidationMode {
-		AUTO,
-		CALLBACK,
-		NONE,
-		DDL;
-
-		public static Set<ValidationMode> getModes(Object modeProperty) {
-			Set<ValidationMode> modes = new HashSet<ValidationMode>( 3 );
-			if ( modeProperty == null ) {
-				modes.add( ValidationMode.AUTO );
-			}
-			else {
-				final String[] modesInString = modeProperty.toString().split( "," );
-				for ( String modeInString : modesInString ) {
-					modes.add( getMode( modeInString ) );
-				}
-			}
-			if ( modes.size() > 1 && ( modes.contains( ValidationMode.AUTO ) || modes.contains( ValidationMode.NONE ) ) ) {
-				StringBuilder message = new StringBuilder( "Incompatible validation modes mixed: " );
-				for ( ValidationMode mode : modes ) {
-					message.append( mode ).append( ", " );
-				}
-				throw new HibernateException( message.substring( 0, message.length() - 2 ) );
-			}
-			return modes;
-		}
-
-		private static ValidationMode getMode(String modeProperty) {
-			if ( modeProperty == null || modeProperty.length() == 0 ) {
-				return AUTO;
-			}
-			else {
-				try {
-					return valueOf( modeProperty.trim().toUpperCase() );
-				}
-				catch ( IllegalArgumentException e ) {
-					throw new HibernateException( "Unknown validation mode in " + MODE_PROPERTY + ": " + modeProperty );
-				}
-			}
 		}
 	}
 }

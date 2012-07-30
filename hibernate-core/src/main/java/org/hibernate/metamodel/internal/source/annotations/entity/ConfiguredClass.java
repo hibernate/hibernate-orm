@@ -479,6 +479,7 @@ public class ConfiguredClass {
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
 				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
+						classInfo,
 						attributeName,
 						attributeType,
 						attributeNature,

@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -47,6 +48,7 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
@@ -55,6 +57,11 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.Caching;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
@@ -68,6 +75,7 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.fail;
 
@@ -136,7 +144,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				false
 		);
 		if ( isMetadataUsed ) {
-			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
+			MetadataImplementor metadataImplementor = buildMetadata( serviceRegistry );
+			afterConstructAndConfigureMetadata( metadataImplementor );
+			applyCacheSettings(metadataImplementor);
+			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
+
+
 		}
 		else {
 			// this is done here because Configuration does not currently support 4.0 xsd
@@ -144,6 +157,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
 		}
 		afterSessionFactoryBuilt();
+	}
+
+	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+
 	}
 
 	private MetadataImplementor buildMetadata(ServiceRegistry serviceRegistry) {
@@ -270,6 +287,50 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected String[] getXmlFiles() {
 		// todo : rename to getOrmXmlFiles()
 		return NO_MAPPINGS;
+	}
+
+	protected void applyCacheSettings(MetadataImplementor metadataImplementor){
+		if( StringHelper.isEmpty(getCacheConcurrencyStrategy())){
+			return;
+		}
+		for( EntityBinding entityBinding : metadataImplementor.getEntityBindings()){
+			boolean hasLob = false;
+			for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure()){
+				if ( attributeBinding.getAttribute().isSingular() ) {
+					Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+					String typeName = type.getName();
+					if ( "blob".equals( typeName ) || "clob".equals( typeName ) ) {
+						hasLob = true;
+					}
+					if ( Blob.class.getName().equals( typeName ) || Clob.class.getName().equals( typeName ) ) {
+						hasLob = true;
+					}
+				}
+			}
+			if ( !hasLob && !entityBinding.getHierarchyDetails().isExplicitPolymorphism() && overrideCacheStrategy() ) {
+				Caching caching = entityBinding.getHierarchyDetails().getCaching();
+				if ( caching == null ) {
+					caching = new Caching();
+				}
+				caching.setRegion( entityBinding.getEntity().getName() );
+				caching.setCacheLazyProperties( true );
+				caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+				entityBinding.getHierarchyDetails().setCaching( caching );
+			}
+			for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure()){
+				if ( !attributeBinding.getAttribute().isSingular() ) {
+					AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
+					Caching caching = binding.getCaching();
+					if(caching == null){
+						caching = new Caching(  );
+					}
+					caching.setRegion( StringHelper.qualify( entityBinding.getEntity().getName() , attributeBinding.getAttribute().getName() ) );
+					caching.setCacheLazyProperties( true );
+					caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+					binding.setCaching( caching );
+				}
+			}
+		}
 	}
 
 	protected void applyCacheSettings(Configuration configuration) {

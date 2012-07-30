@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
@@ -53,18 +54,21 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final CustomSQL customInsert;
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
+	private final ClassInfo entityClassInfo;
 
 
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
 
-	public static PluralAssociationAttribute createPluralAssociationAttribute(String name,
+	public static PluralAssociationAttribute createPluralAssociationAttribute(ClassInfo entityClassInfo,
+																			  String name,
 																			  Class<?> attributeType,
 																			  AttributeNature attributeNature,
 																			  String accessType,
 																			  Map<DotName, List<AnnotationInstance>> annotations,
 																			  EntityBindingContext context) {
 		return new PluralAssociationAttribute(
+				entityClassInfo,
 				name,
 				attributeType,
 				attributeNature,
@@ -106,13 +110,15 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return customDelete;
 	}
 
-	private PluralAssociationAttribute(String name,
+	private PluralAssociationAttribute(ClassInfo entityClassInfo,
+									   String name,
 									   Class<?> javaType,
 									   AttributeNature associationType,
 									   String accessType,
 									   Map<DotName, List<AnnotationInstance>> annotations,
 									   EntityBindingContext context) {
 		super( name, javaType, associationType, accessType, annotations, context );
+		this.entityClassInfo = entityClassInfo;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
 		this.inverseForeignKeyName = determineInverseForeignKeyName();
@@ -220,7 +226,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 			return new Caching(
 					hibernateCacheAnnotation.value( "region" ) == null
-							? getName()
+							? StringHelper.qualify( entityClassInfo.name().toString(), getName() )
 							: hibernateCacheAnnotation.value( "region" ).asString(),
 					accessType,
 					hibernateCacheAnnotation.value( "include" ) != null

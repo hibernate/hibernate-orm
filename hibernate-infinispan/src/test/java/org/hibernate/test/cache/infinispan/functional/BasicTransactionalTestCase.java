@@ -33,6 +33,8 @@ import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.criterion.Restrictions;
+
+import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Test;
 
@@ -56,11 +58,6 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-	}
 
    @Override
    protected Class<?>[] getAnnotatedClasses() {
@@ -263,8 +260,8 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s = openSession();
 			t = s.beginTransaction();
 			i = (Item) s.get( Item.class, i.getId() );
-			assertEquals( slcs.getHitCount(), 1 );
-			assertEquals( slcs.getMissCount(), 0 );
+			assertEquals( 1, slcs.getHitCount() );
+			assertEquals( 0, slcs.getMissCount() );
 			i.setDescription( "A bog standard item" );
 			t.commit();
 			s.close();
@@ -276,12 +273,12 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			commitOrRollbackTx();
 		}
 
-		assertEquals( slcs.getPutCount(), 2 );
+		assertEquals( 2, slcs.getPutCount() );
 
 		CacheEntry entry = (CacheEntry) slcs.getEntries().get( i.getId() );
 		Serializable[] ser = entry.getDisassembledState();
-		assertTrue( ser[0].equals( "widget" ) );
-		assertTrue( ser[1].equals( "A bog standard item" ) );
+		Assert.assertEquals( "widget", ser[0] );
+		assertEquals( "A bog standard item", ser[1] );
 
 		beginTx();
 		try {

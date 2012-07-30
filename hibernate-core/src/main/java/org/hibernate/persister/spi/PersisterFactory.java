@@ -89,6 +89,7 @@ public interface PersisterFactory extends Service {
 	public EntityPersister createEntityPersister(
 			EntityBinding model,
 			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy,
 			SessionFactoryImplementor factory,
 			Mapping cfg) throws HibernateException;
 

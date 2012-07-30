@@ -277,8 +277,17 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
 		CacheEntry entry = (CacheEntry) slcs.getEntries().get( i.getId() );
 		Serializable[] ser = entry.getDisassembledState();
-		Assert.assertEquals( "widget", ser[0] );
-		assertEquals( "A bog standard item", ser[1] );
+		boolean foundFirstOne = false;
+		boolean foundSecondOne = false;
+		for(Serializable serializable : ser){
+			if("widget".equals( serializable )){
+				foundFirstOne = true;
+			}
+			if("A bog standard item".equals( serializable )){
+				foundSecondOne = true;
+			}
+		}
+		Assert.assertTrue(foundFirstOne && foundSecondOne);
 
 		beginTx();
 		try {

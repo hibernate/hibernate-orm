@@ -35,6 +35,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -63,14 +65,7 @@ public class EnversIntegrator implements Integrator {
 
 		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
 
-        if (enversConfiguration.getEntCfg().hasAuditedEntities()) {
-		    listenerRegistry.appendListeners( EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_INSERT, new EnversPostInsertEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_UPDATE, new EnversPostUpdateEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_COLLECTION_RECREATE, new EnversPostCollectionRecreateEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_REMOVE, new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration ) );
-        }
+		appendListeners( listenerRegistry, enversConfiguration );
 	}
 
 	@Override
@@ -87,6 +82,29 @@ public class EnversIntegrator implements Integrator {
 	public void integrate( MetadataImplementor metadata,
 	                       SessionFactoryImplementor sessionFactory,
 	                       SessionFactoryServiceRegistry serviceRegistry ) {
-	    // TODO: implement
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		final boolean autoRegister = configurationService.getSetting( AUTO_REGISTER, StandardConverters.BOOLEAN, true );
+		if ( !autoRegister ) {
+			LOG.debug( "Skipping Envers listener auto registration" );
+			return;
+		}
+
+		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
+
+//		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
+//
+//		appendListeners( listenerRegistry, enversConfiguration );
+	}
+
+	private void appendListeners(EventListenerRegistry listenerRegistry, AuditConfiguration enversConfiguration) {
+		if (enversConfiguration.getEntCfg().hasAuditedEntities()) {
+			listenerRegistry.appendListeners( EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl( enversConfiguration ) );
+			listenerRegistry.appendListeners( EventType.POST_INSERT, new EnversPostInsertEventListenerImpl( enversConfiguration ) );
+			listenerRegistry.appendListeners( EventType.POST_UPDATE, new EnversPostUpdateEventListenerImpl( enversConfiguration ) );
+			listenerRegistry.appendListeners( EventType.POST_COLLECTION_RECREATE, new EnversPostCollectionRecreateEventListenerImpl( enversConfiguration ) );
+			listenerRegistry.appendListeners( EventType.PRE_COLLECTION_REMOVE, new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration ) );
+			listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration ) );
+		}
 	}
 }

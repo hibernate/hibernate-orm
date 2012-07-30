@@ -837,7 +837,7 @@ public final class SessionFactoryImpl
 				}
 			}
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
-					model, accessStrategy, this, metadata
+					model, accessStrategy,naturalIdAccessStrategy, this, metadata
 			);
 			entityPersisters.put( model.getEntity().getName(), cp );
 			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );

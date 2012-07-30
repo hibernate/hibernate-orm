@@ -75,11 +75,6 @@ public class SequenceIdentityGenerator
 		return new Delegate( persister, dialect, getSequenceName() );
 	}
 
-	@Override
-    public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
-		super.configure( type, params, dialect );
-	}
-
 	public static class Delegate extends AbstractReturningDelegate {
 		private final Dialect dialect;
 		private final String sequenceNextValFragment;

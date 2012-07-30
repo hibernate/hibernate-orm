@@ -58,6 +58,7 @@ public interface EntityElement extends MetaAttributeContainer {
 	public List<JaxbQueryElement> getQuery();
 
 	public List<JaxbPropertyElement> getProperty();
+	public List<JaxbPropertiesElement> getProperties();
 	public List<JaxbManyToOneElement> getManyToOne();
 	public List<JaxbOneToOneElement> getOneToOne();
 	public List<JaxbComponentElement> getComponent();

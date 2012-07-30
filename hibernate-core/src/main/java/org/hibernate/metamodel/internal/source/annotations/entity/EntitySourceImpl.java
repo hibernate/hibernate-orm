@@ -222,6 +222,7 @@ public class EntitySourceImpl implements EntitySource {
 					attributeList.add( new PluralAttributeSourceImpl( (PluralAssociationAttribute) associationAttribute ) );
 					break;
 				}
+				case ONE_TO_MANY:
 				default: {
 					throw new NotYetImplementedException();
 				}

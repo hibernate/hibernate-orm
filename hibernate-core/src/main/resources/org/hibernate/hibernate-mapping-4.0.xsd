@@ -1527,6 +1527,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             <xs:element name="one-to-one" type="one-to-one-element"/>
             <xs:element name="component" type="component-element"/>
             <xs:element name="dynamic-component" type="dynamic-component-element"/>
+            <xs:element name="properties" type="properties-element"/>
             <xs:element name="any" type="any-element"/>
             <xs:element name="map" type="map-element"/>
             <xs:element name="set" type="set-element"/>

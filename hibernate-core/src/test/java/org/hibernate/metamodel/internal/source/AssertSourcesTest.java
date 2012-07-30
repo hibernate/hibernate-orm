@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import org.hibernate.EntityMode;
 import org.hibernate.id.EntityIdentifierNature;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
@@ -91,7 +92,12 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertEquals( User.class.getName(), entitySource.getClassName() );
 		assertEquals( User.class.getName(), entitySource.getEntityName() );
-		assertNull( User.class.getName(), entitySource.getJpaEntityName() );
+		if ( HbmMetadataSourceProcessorImpl.class.isInstance( processor ) ) {
+			assertNull( entitySource.getJpaEntityName() );
+		}
+		else {
+			assertEquals( StringHelper.unqualify( User.class.getName() ), entitySource.getJpaEntityName() );
+		}
 
 		assertEquals( EntityMode.POJO, entitySource.getEntityMode() );
 		assertNull( entitySource.getCaching() );
@@ -189,7 +195,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertEquals( Order.class.getName(), entitySource.getClassName() );
 		assertEquals( Order.class.getName(), entitySource.getEntityName() );
-		assertNull( Order.class.getName(), entitySource.getJpaEntityName() );
+		assertEquals( StringHelper.unqualify( Order.class.getName() ), entitySource.getJpaEntityName() );
 	}
 
 	@Test
@@ -214,6 +220,6 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertEquals( Order.class.getName(), entitySource.getClassName() );
 		assertEquals( Order.class.getName(), entitySource.getEntityName() );
-		assertNull( Order.class.getName(), entitySource.getJpaEntityName() );
+		assertEquals( StringHelper.unqualify( Order.class.getName() ), entitySource.getJpaEntityName() );
 	}
 }

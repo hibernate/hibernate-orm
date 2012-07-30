@@ -556,7 +556,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		collectionBindingMap.put( collectionRole, pluralAttributeBinding );
 	}
-
+	@Override
 	public void addImport(String importName, String entityName) {
 		if ( importName == null || entityName == null ) {
 			throw new IllegalArgumentException( "Import name or entity name is null" );
@@ -569,8 +569,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Iterable<Map.Entry<String, String>> getImports() {
-		return imports.entrySet();
+	public Map<String,String> getImports() {
+		return imports;
 	}
 
 	@Override

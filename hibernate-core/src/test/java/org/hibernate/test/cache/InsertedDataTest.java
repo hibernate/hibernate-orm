@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -57,8 +58,13 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
+	protected void prepareBasicRegistryBuilder(ServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_PREFIX, "" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+	}
+
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInsert() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -98,7 +104,6 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInsertThenUpdate() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -123,7 +128,6 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInsertThenUpdateThenRollback() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -148,7 +152,6 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInsertWithRefresh() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();
@@ -199,7 +202,6 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInsertWithClear() {
 		sessionFactory().getCache().evictEntityRegions();
 		sessionFactory().getStatistics().clear();

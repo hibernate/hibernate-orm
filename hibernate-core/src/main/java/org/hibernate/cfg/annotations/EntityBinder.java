@@ -393,8 +393,8 @@ public class EntityBinder {
 		}
 		LOG.debugf( "Import with entity name %s", name );
 		try {
-			mappings.addImport( persistentClass.getEntityName(), name );
-			String entityName = persistentClass.getEntityName();
+			final String entityName = persistentClass.getEntityName();
+			mappings.addImport( entityName, name );
 			if ( !entityName.equals( name ) ) {
 				mappings.addImport( entityName, entityName );
 			}

@@ -109,7 +109,7 @@ public interface Metadata {
 
 	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
 
-	public Iterable<Map.Entry<String, String>> getImports();
+	public Map<String,String> getImports();
 
 	public Iterable<FetchProfile> getFetchProfiles();
 

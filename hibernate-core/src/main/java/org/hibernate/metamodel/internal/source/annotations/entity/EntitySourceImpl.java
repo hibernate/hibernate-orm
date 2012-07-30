@@ -29,8 +29,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
@@ -44,6 +47,7 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -54,10 +58,28 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 public class EntitySourceImpl implements EntitySource {
 	private final EntityClass entityClass;
 	private final Set<SubclassEntitySource> subclassEntitySources;
+	private final String jpaEntityName;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
 		this.subclassEntitySources = new HashSet<SubclassEntitySource>();
+		this.jpaEntityName = StringHelper.isNotEmpty( entityClass.getExplicitEntityName() ) ? entityClass.getExplicitEntityName() : StringHelper
+				.unqualify( entityClass.getName() );
+		addImports();
+	}
+
+	private void addImports() {
+		try {
+			final MetadataImplementor metadataImplementor = entityClass.getLocalBindingContext()
+					.getMetadataImplementor();
+			metadataImplementor.addImport( getJpaEntityName(), getEntityName() );
+			if ( !getEntityName().equals( getJpaEntityName() ) ) {
+				metadataImplementor.addImport( getEntityName(), getEntityName() );
+			}
+		}
+		catch ( MappingException e ) {
+			throw new AnnotationException( "Use of the same entity name twice: " + getJpaEntityName(), e );
+		}
 	}
 
 	public EntityClass getEntityClass() {
@@ -76,7 +98,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public String getEntityName() {
-		return entityClass.getName();
+		return getClassName();
 	}
 
 	@Override
@@ -86,7 +108,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public String getJpaEntityName() {
-		return entityClass.getExplicitEntityName();
+		return jpaEntityName;
 	}
 
 	@Override

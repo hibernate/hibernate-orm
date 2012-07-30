@@ -923,10 +923,7 @@ public final class SessionFactoryImpl
 			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
 		}
 		sqlResultSetMappings = Collections.unmodifiableMap( new HashMap<String, ResultSetMappingDefinition>( metadata.getResultSetMappingDefinitions() ) );
-		imports = new HashMap<String,String>();
-		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
-			imports.put( importEntry.getKey(), importEntry.getValue() );
-		}
+		imports = new HashMap<String,String>(metadata.getImports());
 
 		// after *all* persisters and named queries are registered
 		Iterator iter = entityPersisters.values().iterator();

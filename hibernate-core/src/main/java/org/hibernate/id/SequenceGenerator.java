@@ -106,12 +106,7 @@ public class SequenceGenerator
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
 			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
-			sequenceName = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( sequenceName )
-			);
-
+			sequenceName = new ObjectName( catalogName, schemaName, sequenceName ).toText( dialect );
 			this.qualifiedSequenceName = new ObjectName( catalogName, schemaName, sequenceName );
 		}
 		else {

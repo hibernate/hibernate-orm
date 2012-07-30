@@ -37,7 +37,7 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
  */
 @Deprecated
 public class HibernatePersistence extends HibernatePersistenceProvider implements PersistenceProvider, AvailableSettings {
-	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
+//	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 //	/**
 //	 * Get an entity manager factory by its entity manager name, using the specified

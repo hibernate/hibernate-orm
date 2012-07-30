@@ -216,14 +216,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			String normalizedTableName = tableName;
 			String normalizedSchemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			String normalizedCatalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
-
-			tableName = org.hibernate.mapping.Table.qualify(
-					dialect.quote( normalizedCatalogName ),
-					dialect.quote( normalizedSchemaName ),
-					dialect.quote( tableName )
-			);
-
 			qualifiedTableName = new ObjectName( normalizedCatalogName, normalizedSchemaName, normalizedTableName );
+			tableName = qualifiedTableName.toText( dialect );
 		}
 		else {
 			qualifiedTableName = ObjectName.parse( tableName );

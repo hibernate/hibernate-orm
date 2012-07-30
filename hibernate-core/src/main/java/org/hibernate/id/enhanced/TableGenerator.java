@@ -350,11 +350,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 			qualifiedTableName = new ObjectName( catalogName, schemaName, name );
 
-			name = Table.qualify(
-					qualifiedTableName.getCatalog().getText( dialect ),
-					qualifiedTableName.getSchema().getText( dialect ),
-					qualifiedTableName.getName().getText( dialect )
-			);
+			name = qualifiedTableName.toText( dialect );
 		}
 		else {
 			qualifiedTableName = ObjectName.parse( name );

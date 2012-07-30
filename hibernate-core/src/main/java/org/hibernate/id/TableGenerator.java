@@ -46,6 +46,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.type.Type;
 
 /**
@@ -108,11 +109,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		if ( tableName.indexOf( '.' ) < 0 ) {
 			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
-			tableName = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( tableName )
-			);
+			tableName = new ObjectName(catalogName, schemaName, tableName).toText( dialect );
 		}
 		else {
 			// if already qualified there is not much we can do in a portable manner so we pass it

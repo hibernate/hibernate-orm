@@ -122,6 +122,21 @@ public class EntityClass extends ConfiguredClass {
 
 	private final List<JpaCallbackSource> jpaCallbacks;
 
+	private List<ConfiguredClass> mappedSuperclasses;
+
+	public EntityClass(
+			ClassInfo classInfo,
+			List<ClassInfo> mappedSuperclasses,
+			AccessType hierarchyAccessType,
+			InheritanceType inheritanceType,
+			AnnotationBindingContext context) {
+		this( classInfo, ( EntityClass ) null, hierarchyAccessType, inheritanceType, context );
+		for(ClassInfo mappedSuperclassInfo : mappedSuperclasses) {
+			ConfiguredClass configuredClass = new ConfiguredClass( mappedSuperclassInfo, hierarchyAccessType, null, context );
+			this.mappedSuperclasses.add( configuredClass );
+		}
+	}
+
 	public EntityClass(
 			ClassInfo classInfo,
 			EntityClass parent,
@@ -157,6 +172,8 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.SQL_DELETE,
 				getClassInfo().annotations()
 		);
+
+		this.mappedSuperclasses = new ArrayList<ConfiguredClass>(  );
 
 		processHibernateEntitySpecificAnnotations();
 		processProxyGeneration();
@@ -203,13 +220,13 @@ public class EntityClass extends ConfiguredClass {
 		return caching;
 	}
 
-	public Caching getNaturalIdCaching(){
+	public Caching getNaturalIdCaching() {
 		return naturalIdCaching;
 	}
 
 	public TableSpecificationSource getPrimaryTableSource() {
 		// todo : this is different from hbm which returns null if "!definesItsOwnTable()"
-		return definesItsOwnTable() ? primaryTableSource : ( (EntityClass) getParent() ).getPrimaryTableSource();
+		return definesItsOwnTable() ? primaryTableSource : ( ( EntityClass ) getParent() ).getPrimaryTableSource();
 	}
 
 	public Set<SecondaryTableSource> getSecondaryTableSources() {
@@ -294,6 +311,10 @@ public class EntityClass extends ConfiguredClass {
 
 	public List<JpaCallbackSource> getJpaCallbacks() {
 		return jpaCallbacks;
+	}
+
+	public List<ConfiguredClass> getMappedSuperclasses() {
+		return mappedSuperclasses;
 	}
 
 	private String determineExplicitEntityName() {
@@ -482,7 +503,7 @@ public class EntityClass extends ConfiguredClass {
 
 		caching = determineCachingSettings();
 
-		naturalIdCaching = determineNaturalIdCachingSettings(caching);
+		naturalIdCaching = determineNaturalIdCachingSettings( caching );
 
 		// see HHH-6397
 		isDynamicInsert =
@@ -738,7 +759,7 @@ public class EntityClass extends ConfiguredClass {
 		return keys;
 	}
 
-	public boolean hasMutliTenancySourceInformation() {
+	public boolean hasMultiTenancySourceInformation() {
 		return JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.MULTI_TENANT ) != null
 				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_COLUMN ) != null
 				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_FORMULA ) != null;
@@ -818,7 +839,7 @@ public class EntityClass extends ConfiguredClass {
 					|| hibernateProxyAnnotation.value( "lazy" ).asBoolean();
 			if ( isLazy ) {
 				final AnnotationValue proxyClassValue = hibernateProxyAnnotation.value( "proxyClass" );
-				proxy = proxyClassValue == null? getName() : proxyClassValue.asString();
+				proxy = proxyClassValue == null ? getName() : proxyClassValue.asString();
 			}
 			else {
 				proxy = null;
@@ -959,7 +980,7 @@ public class EntityClass extends ConfiguredClass {
 									   String callbackClassName,
 									   Map<Class<?>, String> callbacksByClass) {
 		for ( AnnotationInstance callback : getLocalBindingContext().getIndex().getAnnotations( callbackTypeName ) ) {
-			MethodInfo methodInfo = (MethodInfo) callback.target();
+			MethodInfo methodInfo = ( MethodInfo ) callback.target();
 			validateMethod( methodInfo, callbackTypeClass, callbacksByClass, true );
 			if ( methodInfo.declaringClass().name().toString().equals( callbackClassName ) ) {
 				if ( methodInfo.args().length != 1 ) {
@@ -987,7 +1008,7 @@ public class EntityClass extends ConfiguredClass {
 			return;
 		}
 		for ( AnnotationInstance callbackAnnotation : annotationInstances ) {
-			MethodInfo methodInfo = (MethodInfo) callbackAnnotation.target();
+			MethodInfo methodInfo = ( MethodInfo ) callbackAnnotation.target();
 			validateMethod( methodInfo, callbackTypeClass, callbacksByClass, isListener );
 			callbacksByClass.put( callbackTypeClass, methodInfo.name() );
 		}

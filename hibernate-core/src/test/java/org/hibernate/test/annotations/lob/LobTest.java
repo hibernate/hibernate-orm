@@ -55,7 +55,9 @@ public class LobTest extends AbstractLobTest<Book, CompiledCode> {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Book.class,
-				CompiledCode.class
+				CompiledCode.class,
+				AbstractBook.class,
+				AbstractCompiledCode.class
 		};
 	}
 }

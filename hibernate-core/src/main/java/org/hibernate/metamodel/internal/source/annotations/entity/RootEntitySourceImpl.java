@@ -106,7 +106,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 	@Override
 	public MultiTenancySource getMultiTenancySource() {
-		return getEntityClass().hasMutliTenancySourceInformation()
+		return getEntityClass().hasMultiTenancySourceInformation()
 				? new MutliTenancySourceImpl( getEntityClass() )
 				: null;
 	}

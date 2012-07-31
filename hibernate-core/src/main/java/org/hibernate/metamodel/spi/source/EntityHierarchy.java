@@ -43,7 +43,7 @@ public interface EntityHierarchy {
 	/**
 	 * Obtain the hierarchy's root entity.
 	 *
-	 * @return THe root entity.
+	 * @return The root entity.
 	 */
 	public RootEntitySource getRootEntitySource();
 }

@@ -202,6 +202,12 @@ public class EntitySourceImpl implements EntitySource {
 		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
+		List<ConfiguredClass> mappedSuperclasses = entityClass.getMappedSuperclasses();
+		for(ConfiguredClass mappedSuperclass : mappedSuperclasses) {
+			for(BasicAttribute attribute : mappedSuperclass.getSimpleAttributes()) {
+				attributeList.add( new SingularAttributeSourceImpl( attribute ) );
+			}
+		}
 		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
 			attributeList.add(
 					new ComponentAttributeSourceImpl(

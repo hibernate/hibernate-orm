@@ -73,20 +73,22 @@ public class EntityHierarchyBuilder {
 		List<DotName> processedEntities = new ArrayList<DotName>();
 		Map<DotName, List<ClassInfo>> classToDirectSubClassMap = new HashMap<DotName, List<ClassInfo>>();
 		Index index = bindingContext.getIndex();
-		for ( ClassInfo info : index.getKnownClasses() ) {
-			if ( !isEntityClass( info ) ) {
+		for ( ClassInfo classInfo : index.getKnownClasses() ) {
+			if ( !isEntityClass( classInfo ) ) {
 				continue;
 			}
 
-			if ( processedEntities.contains( info.name() ) ) {
+			if ( processedEntities.contains( classInfo.name() ) ) {
 				continue;
 			}
 
-			ClassInfo rootClassInfo = findRootEntityClassInfo( index, info );
+			ClassInfo rootClassInfo = findRootEntityClassInfo( index, classInfo );
 			List<ClassInfo> rootClassWithAllSubclasses = new ArrayList<ClassInfo>();
+			List<ClassInfo> mappedSuperclasses =  findMappedSuperclasses( index, rootClassInfo );
+
 			// the root entity might have some mapped super classes which we have to take into consideration
 			// for inheritance type and default access
-			addMappedSuperclasses( index, rootClassInfo, rootClassWithAllSubclasses );
+			rootClassWithAllSubclasses.addAll( mappedSuperclasses );
 
 			// collect the current root entity and all its subclasses
 			processHierarchy(
@@ -106,7 +108,7 @@ public class EntityHierarchyBuilder {
 			// create the root entity source
 			EntityClass rootEntityClass = new EntityClass(
 					rootClassInfo,
-					null,
+					mappedSuperclasses,
 					defaultAccessType,
 					hierarchyInheritanceType,
 					bindingContext
@@ -184,17 +186,19 @@ public class EntityHierarchyBuilder {
 		return rootEntity;
 	}
 
-	private static void addMappedSuperclasses(Index index, ClassInfo info, List<ClassInfo> classInfoList) {
+	private static List<ClassInfo> findMappedSuperclasses(Index index, ClassInfo info) {
+		List<ClassInfo> mappedSuperclasses = new ArrayList<ClassInfo>(  );
 		DotName superName = info.superName();
 		ClassInfo tmpInfo;
 		// walk up the hierarchy until java.lang.Object
 		while ( !OBJECT.equals( superName ) ) {
 			tmpInfo = index.getClassByName( superName );
 			if ( isMappedSuperclass( tmpInfo ) ) {
-				classInfoList.add( tmpInfo );
+				mappedSuperclasses.add( tmpInfo );
 			}
 			superName = tmpInfo.superName();
 		}
+		return  mappedSuperclasses;
 	}
 
 	/**

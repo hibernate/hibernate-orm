@@ -50,7 +50,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.stat.Statistics;
 
 import static org.junit.Assert.assertEquals;
@@ -83,7 +83,10 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	protected Class<? extends RegionFactory> getCacheRegionFactory() {
 		return JndiInfinispanRegionFactory.class;
 	}
-
+	@Override
+	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+		  afterConfigurationBuilt( null, null );
+	}
 	@Override
 	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 		if ( bindToJndi ) {
@@ -118,22 +121,22 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testRedeployment() throws Exception {
-		addEntityCheckCache( sessionFactory() );
+		addEntityCheckCache(  );
 		sessionFactory().close();
 		bindToJndi = false;
 
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) configuration().buildSessionFactory( serviceRegistry() );
-		addEntityCheckCache( sessionFactory );
-		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory.getSettings().getRegionFactory();
+		rebuildSessionFactory();
+		addEntityCheckCache(  );
+		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getSettings().getRegionFactory();
 		Cache cache = regionFactory.getCacheManager().getCache( "org.hibernate.test.cache.infinispan.functional.Item" );
 		assertEquals( ComponentStatus.RUNNING, cache.getStatus() );
 	}
 
-	private void addEntityCheckCache(SessionFactoryImplementor sessionFactory) throws Exception {
+	private void addEntityCheckCache() throws Exception {
 		Item item = new Item( "chris", "Chris's Item" );
 		beginTx();
 		try {
-			Session s = sessionFactory.openSession();
+			Session s = sessionFactory().openSession();
 			s.getTransaction().begin();
 			s.persist( item );
 			s.getTransaction().commit();
@@ -148,9 +151,9 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 
 		beginTx();
 		try {
-			Session s =	sessionFactory.openSession();
+			Session s =	sessionFactory().openSession();
 			Item found = (Item) s.load( Item.class, item.getId() );
-			Statistics stats = sessionFactory.getStatistics();
+			Statistics stats = sessionFactory().getStatistics();
 			log.info( stats.toString() );
 			assertEquals( item.getDescription(), found.getDescription() );
 			assertEquals( 0, stats.getSecondLevelCacheMissCount() );

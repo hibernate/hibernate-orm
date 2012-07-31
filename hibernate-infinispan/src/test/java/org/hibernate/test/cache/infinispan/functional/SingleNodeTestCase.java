@@ -50,8 +50,8 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 	private static final Log log = LogFactory.getLog( SingleNodeTestCase.class );
 	protected TransactionManager tm;
 
-	@Before
-	public void prepare() {
+	@Override
+	protected void prepareTest() throws Exception {
 		tm = getTransactionManager();
 	}
 

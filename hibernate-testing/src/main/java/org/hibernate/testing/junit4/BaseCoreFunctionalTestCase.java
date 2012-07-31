@@ -450,7 +450,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		serviceRegistry = buildServiceRegistry( configuration );
 		if ( isMetadataUsed ) {
 			// need to rebuild metadata because serviceRegistry was recreated
-			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
+			MetadataImplementor metadataImplementor = buildMetadata( serviceRegistry );
+			afterConstructAndConfigureMetadata( metadataImplementor );
+			applyCacheSettings(metadataImplementor);
+			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
 		}
 		else {
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );

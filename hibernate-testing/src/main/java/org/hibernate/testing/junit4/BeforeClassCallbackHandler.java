@@ -44,7 +44,7 @@ public class BeforeClassCallbackHandler extends Statement {
 		}
 		catch (CallbackException e) {
 			// be nice to see the exception. but junit seems to be eating it...
-			System.out.println( "Before class callback errror : " + e.getLocalizedMessage() );
+			System.out.println( "Before class callback error : " + e.getLocalizedMessage() );
 			e.printStackTrace();
 		}
 		wrappedStatement.evaluate();

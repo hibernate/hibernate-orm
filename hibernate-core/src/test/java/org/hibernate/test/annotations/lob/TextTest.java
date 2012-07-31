@@ -43,7 +43,7 @@ import static org.junit.Assert.assertNull;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect({SybaseASE15Dialect.class,SQLServerDialect.class,SybaseDialect.class,Sybase11Dialect.class})
+@RequiresDialect({ SybaseASE15Dialect.class, SQLServerDialect.class, SybaseDialect.class, Sybase11Dialect.class })
 public class TextTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -55,33 +55,37 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBoundedLongStringAccess() {
-		String original = buildRecursively(LONG_STRING_SIZE, 'x');
-		String changed = buildRecursively(LONG_STRING_SIZE, 'y');
+		String original = buildRecursively( LONG_STRING_SIZE, 'x' );
+		String changed = buildRecursively( LONG_STRING_SIZE, 'y' );
 
 		Session s = openSession();
 		s.beginTransaction();
 		LongStringHolder entity = new LongStringHolder();
-		s.save(entity);
+		s.save( entity );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		assertNull(entity.getLongString());
-		assertNull(entity.getName());
-		assertNull(entity.getWhatEver());
-		entity.setLongString(original);
-		entity.setName(original.toCharArray());
-		entity.setWhatEver(wrapPrimitive(original.toCharArray()));
+		entity = ( LongStringHolder ) s.get(
+				LongStringHolder.class, entity
+				.getId()
+		);
+		assertNull( entity.getLongString() );
+		assertNull( entity.getName() );
+		assertNull( entity.getWhatEver() );
+		entity.setLongString( original );
+		entity.setName( original.toCharArray() );
+		entity.setWhatEver( wrapPrimitive( original.toCharArray() ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
+		entity = ( LongStringHolder ) s.get(
+				LongStringHolder.class, entity
+				.getId()
+		);
 		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
 		Assert.assertEquals( original, entity.getLongString() );
 		Assert.assertNotNull( entity.getName() );
@@ -90,16 +94,18 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 		Assert.assertNotNull( entity.getWhatEver() );
 		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
 		assertEquals( original.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
-		entity.setLongString(changed);
-		entity.setName(changed.toCharArray());
-		entity.setWhatEver(wrapPrimitive(changed.toCharArray()));
+		entity.setLongString( changed );
+		entity.setName( changed.toCharArray() );
+		entity.setWhatEver( wrapPrimitive( changed.toCharArray() ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
+		entity = ( LongStringHolder ) s.get(
+				LongStringHolder.class, entity
+				.getId()
+		);
 		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
 		Assert.assertEquals( changed, entity.getLongString() );
 		Assert.assertNotNull( entity.getName() );
@@ -108,34 +114,36 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 		Assert.assertNotNull( entity.getWhatEver() );
 		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
 		assertEquals( changed.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
-		entity.setLongString(null);
-		entity.setName(null);
-		entity.setWhatEver(null);
+		entity.setLongString( null );
+		entity.setName( null );
+		entity.setWhatEver( null );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		assertNull(entity.getLongString());
-		assertNull(entity.getName());
-		assertNull(entity.getWhatEver());
-		s.delete(entity);
+		entity = ( LongStringHolder ) s.get(
+				LongStringHolder.class, entity
+				.getId()
+		);
+		assertNull( entity.getLongString() );
+		assertNull( entity.getName() );
+		assertNull( entity.getWhatEver() );
+		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();
 	}
 
 	public static void assertEquals(char[] val1, char[] val2) {
-		if (!ArrayHelper.isEquals( val1, val2 )) {
-			throw new AssertionFailedError("byte arrays did not match");
+		if ( !ArrayHelper.isEquals( val1, val2 ) ) {
+			throw new AssertionFailedError( "byte arrays did not match" );
 		}
 	}
 
 	private String buildRecursively(int size, char baseChar) {
 		StringBuilder buff = new StringBuilder();
-		for (int i = 0; i < size; i++) {
-			buff.append(baseChar);
+		for ( int i = 0; i < size; i++ ) {
+			buff.append( baseChar );
 		}
 		return buff.toString();
 	}
@@ -143,8 +151,8 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 	private Character[] wrapPrimitive(char[] bytes) {
 		int length = bytes.length;
 		Character[] result = new Character[length];
-		for (int index = 0; index < length; index++) {
-			result[index] = Character.valueOf(bytes[index]);
+		for ( int index = 0; index < length; index++ ) {
+			result[index] = Character.valueOf( bytes[index] );
 		}
 		return result;
 	}
@@ -152,7 +160,7 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 	private char[] unwrapNonPrimitive(Character[] bytes) {
 		int length = bytes.length;
 		char[] result = new char[length];
-		for (int i = 0; i < length; i++) {
+		for ( int i = 0; i < length; i++ ) {
 			result[i] = bytes[i].charValue();
 		}
 		return result;

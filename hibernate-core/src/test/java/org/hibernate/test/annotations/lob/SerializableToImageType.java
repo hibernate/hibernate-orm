@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import java.io.Serializable;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -32,14 +33,17 @@ import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
  * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@link Serializable}.
  * </p>
  * TODO : this should really have access to the actual Serializable class so we have access to the proper classloader
- * 
+ *
  * @author Strong Liu
  */
 public class SerializableToImageType extends AbstractSingleColumnStandardBasicType<Serializable> {
 	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
 
 	public SerializableToImageType() {
-		super( LongVarbinaryTypeDescriptor.INSTANCE, new SerializableTypeDescriptor<Serializable>( Serializable.class ) );
+		super(
+				LongVarbinaryTypeDescriptor.INSTANCE,
+				new SerializableTypeDescriptor<Serializable>( Serializable.class )
+		);
 	}
 
 	public String getName() {

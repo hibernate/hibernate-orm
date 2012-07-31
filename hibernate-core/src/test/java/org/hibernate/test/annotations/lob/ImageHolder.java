@@ -1,4 +1,3 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,6 +23,7 @@
  *
  */
 package org.hibernate.test.annotations.lob;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -31,8 +31,8 @@ import javax.persistence.Id;
 /**
  * An entity containing data that is materialized into a byte array immediately.
  * The hibernate type mapped for {@link #longByteArray} determines the SQL type
- * asctually used.
- * 
+ * actually used.
+ *
  * @author Gail Badner
  */
 @Entity
@@ -51,8 +51,8 @@ public class ImageHolder {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	@org.hibernate.annotations.Type(type="image")
+
+	@org.hibernate.annotations.Type(type = "image")
 	public byte[] getLongByteArray() {
 		return longByteArray;
 	}
@@ -60,7 +60,8 @@ public class ImageHolder {
 	public void setLongByteArray(byte[] longByteArray) {
 		this.longByteArray = longByteArray;
 	}
-	@org.hibernate.annotations.Type(type="serializable_image")
+
+	@org.hibernate.annotations.Type(type = "serializable_image")
 	public Dog getDog() {
 		return dog;
 	}
@@ -68,7 +69,8 @@ public class ImageHolder {
 	public void setDog(Dog dog) {
 		this.dog = dog;
 	}
-	@org.hibernate.annotations.Type(type="wrapped_image")
+
+	@org.hibernate.annotations.Type(type = "wrapped_image")
 	public Byte[] getPicByteArray() {
 		return picByteArray;
 	}

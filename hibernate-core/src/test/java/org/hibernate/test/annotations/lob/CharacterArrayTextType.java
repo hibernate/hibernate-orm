@@ -1,4 +1,3 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,13 +23,14 @@
  *
  */
 package org.hibernate.test.annotations.lob;
+
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@code Character[]}.
- * 
+ *
  * @author Strong Liu
  */
 public class CharacterArrayTextType extends AbstractSingleColumnStandardBasicType<Character[]> {

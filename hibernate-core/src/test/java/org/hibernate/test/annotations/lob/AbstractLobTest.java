@@ -45,7 +45,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		try {
 			return getBookClass().newInstance();
 		}
-		catch (Exception ex) {
+		catch ( Exception ex ) {
 			throw new RuntimeException( "Could not create an instance of type " + getBookClass().getName(), ex );
 		}
 	}
@@ -58,8 +58,11 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		try {
 			return getCompiledCodeClass().newInstance();
 		}
-		catch (Exception ex) {
-			throw new RuntimeException( "Could not create an instance of type " + getCompiledCodeClass().getName(), ex );
+		catch ( Exception ex ) {
+			throw new RuntimeException(
+					"Could not create an instance of type " + getCompiledCodeClass().getName(),
+					ex
+			);
 		}
 	}
 

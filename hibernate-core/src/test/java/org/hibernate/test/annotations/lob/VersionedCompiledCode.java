@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,7 +35,7 @@ import javax.persistence.Version;
  * @author Gail Badner
  */
 @Entity
-public class VersionedCompiledCode extends AbstractCompiledCode{
+public class VersionedCompiledCode extends AbstractCompiledCode {
 	private Integer id;
 	private Integer version;
 

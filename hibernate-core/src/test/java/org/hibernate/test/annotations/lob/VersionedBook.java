@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,10 +35,10 @@ import javax.persistence.Version;
  */
 @Entity
 @Table(name = "ver_lob_book")
-public class VersionedBook extends AbstractBook{
+public class VersionedBook extends AbstractBook {
 	private Integer id;
 	private Integer version;
-	
+
 	@Id
 	@GeneratedValue
 	public Integer getId() {
@@ -56,5 +57,5 @@ public class VersionedBook extends AbstractBook{
 
 	public void setVersion(Integer i) {
 		version = i;
-	}	
+	}
 }

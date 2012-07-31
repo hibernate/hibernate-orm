@@ -42,74 +42,74 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  *
  * @author Gail Badner
  */
-@RequiresDialect( { SybaseASE15Dialect.class, SQLServerDialect.class, SybaseDialect.class, Sybase11Dialect.class })
+@RequiresDialect({ SybaseASE15Dialect.class, SQLServerDialect.class, SybaseDialect.class, Sybase11Dialect.class })
 public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 
 	@Test
 	public void testBoundedLongByteArrayAccess() {
-		byte[] original = buildRecursively(ARRAY_SIZE, true);
-		byte[] changed = buildRecursively(ARRAY_SIZE, false);
+		byte[] original = buildRecursively( ARRAY_SIZE, true );
+		byte[] changed = buildRecursively( ARRAY_SIZE, false );
 
 		Session s = openSession();
 		s.beginTransaction();
 		ImageHolder entity = new ImageHolder();
-		s.save(entity);
+		s.save( entity );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = ( ImageHolder ) s.get( ImageHolder.class, entity.getId() );
 		Assert.assertNull( entity.getLongByteArray() );
 		Assert.assertNull( entity.getDog() );
 		Assert.assertNull( entity.getPicByteArray() );
-		entity.setLongByteArray(original);
+		entity.setLongByteArray( original );
 		Dog dog = new Dog();
-		dog.setName("rabbit");
-		entity.setDog(dog);
-		entity.setPicByteArray(wrapPrimitive(original));
+		dog.setName( "rabbit" );
+		entity.setDog( dog );
+		entity.setPicByteArray( wrapPrimitive( original ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = ( ImageHolder ) s.get( ImageHolder.class, entity.getId() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-		assertEquals(original, entity.getLongByteArray());
+		assertEquals( original, entity.getLongByteArray() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
-		assertEquals(original, unwrapNonPrimitive(entity.getPicByteArray()));
+		assertEquals( original, unwrapNonPrimitive( entity.getPicByteArray() ) );
 		Assert.assertNotNull( entity.getDog() );
 		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
-		entity.setLongByteArray(changed);
-		entity.setPicByteArray(wrapPrimitive(changed));
-		dog.setName("papa");
-		entity.setDog(dog);
+		entity.setLongByteArray( changed );
+		entity.setPicByteArray( wrapPrimitive( changed ) );
+		dog.setName( "papa" );
+		entity.setDog( dog );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = ( ImageHolder ) s.get( ImageHolder.class, entity.getId() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-		assertEquals(changed, entity.getLongByteArray());
+		assertEquals( changed, entity.getLongByteArray() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
-		assertEquals(changed, unwrapNonPrimitive(entity.getPicByteArray()));
+		assertEquals( changed, unwrapNonPrimitive( entity.getPicByteArray() ) );
 		Assert.assertNotNull( entity.getDog() );
 		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
-		entity.setLongByteArray(null);
-		entity.setPicByteArray(null);
-		entity.setDog(null);
+		entity.setLongByteArray( null );
+		entity.setPicByteArray( null );
+		entity.setDog( null );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = ( ImageHolder ) s.get( ImageHolder.class, entity.getId() );
 		Assert.assertNull( entity.getLongByteArray() );
 		Assert.assertNull( entity.getDog() );
 		Assert.assertNull( entity.getPicByteArray() );
-		s.delete(entity);
+		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -117,7 +117,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	private Byte[] wrapPrimitive(byte[] bytes) {
 		int length = bytes.length;
 		Byte[] result = new Byte[length];
-		for (int index = 0; index < length; index++) {
+		for ( int index = 0; index < length; index++ ) {
 			result[index] = Byte.valueOf( bytes[index] );
 		}
 		return result;
@@ -126,7 +126,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	private byte[] unwrapNonPrimitive(Byte[] bytes) {
 		int length = bytes.length;
 		byte[] result = new byte[length];
-		for (int i = 0; i < length; i++) {
+		for ( int i = 0; i < length; i++ ) {
 			result[i] = bytes[i].byteValue();
 		}
 		return result;
@@ -134,21 +134,21 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 
 	private byte[] buildRecursively(int size, boolean on) {
 		byte[] data = new byte[size];
-		data[0] = mask(on);
-		for (int i = 0; i < size; i++) {
-			data[i] = mask(on);
+		data[0] = mask( on );
+		for ( int i = 0; i < size; i++ ) {
+			data[i] = mask( on );
 			on = !on;
 		}
 		return data;
 	}
 
 	private byte mask(boolean on) {
-		return on ? (byte) 1 : (byte) 0;
+		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
 	public static void assertEquals(byte[] val1, byte[] val2) {
-		if (!ArrayHelper.isEquals( val1, val2 )) {
-			throw new AssertionFailedError("byte arrays did not match");
+		if ( !ArrayHelper.isEquals( val1, val2 ) ) {
+			throw new AssertionFailedError( "byte arrays did not match" );
 		}
 	}
 
@@ -158,7 +158,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    public Class<?>[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ImageHolder.class };
 	}
 

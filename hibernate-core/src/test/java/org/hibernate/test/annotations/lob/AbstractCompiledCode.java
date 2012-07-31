@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 

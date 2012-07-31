@@ -1,4 +1,3 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,6 +23,7 @@
  *
  */
 package org.hibernate.test.annotations.lob;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -34,7 +34,7 @@ import org.hibernate.annotations.Type;
  * An entity containing data that is materialized into a String immediately.
  * The hibernate type mapped for {@link #LONGVARCHAR} determines the SQL type
  * asctually used.
- * 
+ *
  * @author Gail Badner
  */
 @Entity
@@ -62,6 +62,7 @@ public class LongStringHolder {
 	public void setLongString(String longString) {
 		this.longString = longString;
 	}
+
 	@Type(type = "char_text")
 	public char[] getName() {
 		return name;
@@ -70,6 +71,7 @@ public class LongStringHolder {
 	public void setName(char[] name) {
 		this.name = name;
 	}
+
 	@Type(type = "wrapped_char_text")
 	public Character[] getWhatEver() {
 		return whatEver;

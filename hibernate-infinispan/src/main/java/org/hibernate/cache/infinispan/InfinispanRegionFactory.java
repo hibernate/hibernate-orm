@@ -45,6 +45,10 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -54,7 +58,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class InfinispanRegionFactory implements RegionFactory {
+public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAwareService {
 
    private static final Log log = LogFactory.getLog(InfinispanRegionFactory.class);
 
@@ -167,6 +171,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    public static final boolean DEF_USE_SYNCHRONIZATION = true;
 
    private EmbeddedCacheManager manager;
+
+	protected ServiceRegistryImplementor serviceRegistry;
 
    private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
 
@@ -297,12 +303,13 @@ public class InfinispanRegionFactory implements RegionFactory {
    /**
     * {@inheritDoc}
     */
+   @Override
    public void start(Settings settings, Properties properties) throws CacheException {
       log.debug("Starting Infinispan region factory");
       try {
          transactionManagerlookup = createTransactionManagerLookup(settings, properties);
          transactionManager = transactionManagerlookup.getTransactionManager();
-         manager = createCacheManager(properties);
+         manager = createCacheManager();
          initGenericDataTypeOverrides();
          Enumeration keys = properties.propertyNames();
          while (keys.hasMoreElements()) {
@@ -325,9 +332,16 @@ public class InfinispanRegionFactory implements RegionFactory {
       return new HibernateTransactionManagerLookup(settings, properties);
    }
 
-   /**
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
+	/**
     * {@inheritDoc}
     */
+   @Override
    public void stop() {
       log.debug("Stop region factory");
       stopCacheRegions();
@@ -359,19 +373,28 @@ public class InfinispanRegionFactory implements RegionFactory {
       return Collections.unmodifiableSet(definedConfigurations);
    }
 
-   protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
-      try {
-         String configLoc = ConfigurationHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         EmbeddedCacheManager manager = new DefaultCacheManager(configLoc, false);
-         String globalStats = extractProperty(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
-         if (globalStats != null) {
-            manager.getGlobalConfiguration().setExposeGlobalJmxStatistics(Boolean.parseBoolean(globalStats));
-         }
-         manager.start();
-         return manager;
-      } catch (IOException e) {
-         throw new CacheException("Unable to create default cache manager", e);
-      }
+   protected EmbeddedCacheManager createCacheManager() throws CacheException {
+	   try {
+		   ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		   String configLoc = configurationService.getSetting(
+				   INFINISPAN_CONFIG_RESOURCE_PROP,
+				   StandardConverters.STRING, DEF_INFINISPAN_CONFIG_RESOURCE
+		   );
+		   EmbeddedCacheManager manager = new DefaultCacheManager( configLoc, false );
+		   Boolean globalStats = configurationService.getSetting(
+				   INFINISPAN_GLOBAL_STATISTICS_PROP,
+				   StandardConverters.BOOLEAN,
+				   false
+		   );
+		   if ( globalStats ) {
+			   manager.getGlobalConfiguration().fluent().globalJmxStatistics();
+		   }
+		   manager.start();
+		   return manager;
+	   }
+	   catch ( IOException e ) {
+		   throw new CacheException( "Unable to create default cache manager", e );
+	   }
    }
 
    private void startRegion(BaseRegion region, String regionName) {

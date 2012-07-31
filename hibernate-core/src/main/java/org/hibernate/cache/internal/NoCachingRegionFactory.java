@@ -43,6 +43,7 @@ import org.hibernate.cfg.Settings;
  * @author Steve Ebersole
  */
 public class NoCachingRegionFactory implements RegionFactory {
+	public static RegionFactory INSTANCE = new NoCachingRegionFactory();
 	public NoCachingRegionFactory() {
 	}
 

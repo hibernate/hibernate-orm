@@ -85,10 +85,14 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	}
 	@Override
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-		  afterConfigurationBuilt( null, null );
+		 bindToJndi();
 	}
 	@Override
 	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
+		bindToJndi();
+	}
+
+	private void bindToJndi(){
 		if ( bindToJndi ) {
 			try {
 				// Create an in-memory jndi

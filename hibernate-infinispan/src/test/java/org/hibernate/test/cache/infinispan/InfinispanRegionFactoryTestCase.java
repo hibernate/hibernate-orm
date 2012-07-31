@@ -548,11 +548,11 @@ public class InfinispanRegionFactoryTestCase  {
          }
 
          @Override
-         protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
+         protected EmbeddedCacheManager createCacheManager() throws CacheException {
             if (manager != null)
                return manager;
             else
-               return super.createCacheManager(properties);
+               return super.createCacheManager();
          }
       };
       factory.start(null, p);

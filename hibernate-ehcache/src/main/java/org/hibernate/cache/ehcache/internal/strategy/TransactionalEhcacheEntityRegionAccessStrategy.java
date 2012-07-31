@@ -50,10 +50,9 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	 *
 	 * @param region the Hibernate region.
 	 * @param ehcache the cache.
-	 * @param settings the Hibernate settings.
 	 */
-	public TransactionalEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Ehcache ehcache, Settings settings) {
-		super( region, settings );
+	public TransactionalEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Ehcache ehcache) {
+		super( region );
 		this.ehcache = ehcache;
 	}
 

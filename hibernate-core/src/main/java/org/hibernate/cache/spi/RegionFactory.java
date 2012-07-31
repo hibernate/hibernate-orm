@@ -29,6 +29,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.hibernate.service.Service;
+import org.hibernate.service.spi.Startable;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * Contract for building second level cache regions.
@@ -42,7 +44,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
-public interface RegionFactory extends Service {
+public interface RegionFactory extends Service, Startable, Stoppable {
 
 	/**
 	 * Lifecycle callback to perform any necessary initialization of the
@@ -55,15 +57,10 @@ public interface RegionFactory extends Service {
 	 * @throws org.hibernate.cache.CacheException Indicates problems starting the L2 cache impl;
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
+	 * @deprecated use {@code start} to in favor of {@link org.hibernate.service.ServiceRegistry}.
 	 */
+	@Deprecated
 	public void start(Settings settings, Properties properties) throws CacheException;
-
-	/**
-	 * Lifecycle callback to perform any necessary cleanup of the underlying
-	 * cache implementation(s).  Called exactly once during
-	 * {@link org.hibernate.SessionFactory#close}.
-	 */
-	public void stop();
 
 	/**
 	 * By default should we perform "minimal puts" when using this second
@@ -73,6 +70,15 @@ public interface RegionFactory extends Service {
 	 *         otherwise.
 	 */
 	public boolean isMinimalPutsEnabledByDefault();
+
+	/**
+	 * Should we perform "minimal puts" when using this second
+	 * level cache implementation?
+	 *
+	 * @return True if "minimal puts" should be performed; false
+	 *         otherwise.
+	 */
+	public boolean isMinimalPutsEnabled();
 
 	/**
 	 * Get the default access type for {@link EntityRegion entity} and

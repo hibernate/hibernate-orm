@@ -33,17 +33,21 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.service.Service;
+import org.hibernate.service.spi.Startable;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * Define internal contact of <tt>Cache API</tt>
  *
  * @author Strong Liu <stliu@hibernate.org>
  */
-public interface CacheImplementor extends Service, Cache, Serializable {
+public interface CacheImplementor extends Service, Cache,Startable, Stoppable, Serializable {
 
 	/**
 	 * Close all cache regions.
+	 * @deprecated use @{code Stoppable#stop}.
 	 */
+	@Deprecated
 	public void close();
 
 	/**

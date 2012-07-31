@@ -13,8 +13,8 @@ public class ItemValueExtractor extends AbstractReadWriteEhcacheAccessStrategy {
 	/**
 	 * Creates a read/write cache access strategy around the given cache region.
 	 */
-	public ItemValueExtractor(EhcacheTransactionalDataRegion region, Settings settings) {
-		super(region, settings);
+	public ItemValueExtractor(EhcacheTransactionalDataRegion region) {
+		super(region);
 	}
 
 

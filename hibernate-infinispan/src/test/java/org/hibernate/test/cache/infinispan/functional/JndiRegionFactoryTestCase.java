@@ -131,7 +131,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 
 		rebuildSessionFactory();
 		addEntityCheckCache(  );
-		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getSettings().getRegionFactory();
+		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getServiceRegistry().getService( RegionFactory.class );
 		Cache cache = regionFactory.getCacheManager().getCache( "org.hibernate.test.cache.infinispan.functional.Item" );
 		assertEquals( ComponentStatus.RUNNING, cache.getStatus() );
 	}

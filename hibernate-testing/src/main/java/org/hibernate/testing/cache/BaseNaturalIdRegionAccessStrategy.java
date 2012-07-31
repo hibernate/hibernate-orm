@@ -41,7 +41,7 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 
 	@Override

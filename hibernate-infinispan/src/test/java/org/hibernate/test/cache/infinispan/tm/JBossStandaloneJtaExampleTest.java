@@ -25,8 +25,10 @@ package org.hibernate.test.cache.infinispan.tm;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
@@ -81,6 +83,7 @@ public class JBossStandaloneJtaExampleTest {
    Context ctx;
    Main jndiServer;
    private ServiceRegistry serviceRegistry;
+
 
    @Before
    public void setUp() throws Exception {
@@ -206,6 +209,10 @@ public class JBossStandaloneJtaExampleTest {
       public boolean isWrapperFor(Class<?> iface) throws SQLException {
          return false;  // JDK6 stuff
       }
+
+	   public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		   return null;
+	   }
    }
 
    private Main startJndiServer() throws Exception {
@@ -296,6 +303,7 @@ public class JBossStandaloneJtaExampleTest {
 
       Properties envProps = Environment.getProperties();
       envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());
+	   envProps.putAll( cfg.getProperties() );
       serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
 
       String[] mappings = new String[]{"org/hibernate/test/cache/infinispan/functional/Item.hbm.xml"};

@@ -52,25 +52,16 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
     * There is no default value -- the user must specify the property.
     */
    public static final String CACHE_MANAGER_RESOURCE_PROP = "hibernate.cache.infinispan.cachemanager";
-
-   public JndiInfinispanRegionFactory() {
-      super();
-   }
-
-   public JndiInfinispanRegionFactory(Properties props) {
-      super(props);
-   }
-
 	@Override
 	protected EmbeddedCacheManager createCacheManager() throws CacheException {
-		String name = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		String name = getServiceRegistry().getService( ConfigurationService.class ).getSetting(
 				CACHE_MANAGER_RESOURCE_PROP,
 				StandardConverters.STRING
 		);
 		if ( name == null ) {
 			throw new CacheException( "Configuration property " + CACHE_MANAGER_RESOURCE_PROP + " not set" );
 		}
-		JndiService jndiService = serviceRegistry.getService( JndiService.class );
+		JndiService jndiService = getServiceRegistry().getService( JndiService.class );
 		return (EmbeddedCacheManager) jndiService.locate( name );
 	}
 

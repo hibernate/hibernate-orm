@@ -38,10 +38,15 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -64,26 +69,28 @@ public class StandardQueryCache implements QueryCache {
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;
 
-	public void clear() throws CacheException {
-		cacheRegion.evictAll();
-	}
-
-	public StandardQueryCache(
-			final Settings settings,
-			final Properties props,
-			final UpdateTimestampsCache updateTimestampsCache,
-			String regionName) throws HibernateException {
+	public StandardQueryCache(SessionFactoryImplementor sessionFactoryImplementor, UpdateTimestampsCache updateTimestampsCache, String regionName) {
 		if ( regionName == null ) {
 			regionName = StandardQueryCache.class.getName();
 		}
-		String prefix = settings.getCacheRegionPrefix();
+		String prefix = sessionFactoryImplementor.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSetting(
+						AvailableSettings.CACHE_REGION_PREFIX, StandardConverters.STRING, null
+				);
 		if ( prefix != null ) {
 			regionName = prefix + '.' + regionName;
 		}
 		LOG.startingQueryCache( regionName );
 
-		this.cacheRegion = settings.getRegionFactory().buildQueryResultsRegion( regionName, props );
+		this.cacheRegion = sessionFactoryImplementor.getServiceRegistry()
+				.getService( RegionFactory.class )
+				.buildQueryResultsRegion( regionName, sessionFactoryImplementor.getProperties() );
 		this.updateTimestampsCache = updateTimestampsCache;
+	}
+
+	public void clear() throws CacheException {
+		cacheRegion.evictAll();
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })

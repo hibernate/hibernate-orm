@@ -41,8 +41,8 @@ public class ReadWriteEhcacheCollectionRegionAccessStrategy
 	/**
 	 * Create a read/write access strategy accessing the given collection region.
 	 */
-	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
-		super( region, settings );
+	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region) {
+		super( region );
 	}
 
 	/**

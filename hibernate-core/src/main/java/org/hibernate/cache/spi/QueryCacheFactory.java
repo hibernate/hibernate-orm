@@ -23,10 +23,8 @@
  */
 package org.hibernate.cache.spi;
 
-import java.util.Properties;
-
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Settings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Defines a factory for query cache instances.  These factories are responsible for
@@ -36,8 +34,7 @@ import org.hibernate.cfg.Settings;
  */
 public interface QueryCacheFactory {
 	public QueryCache getQueryCache(
-	        String regionName,
-	        UpdateTimestampsCache updateTimestampsCache,
-			Settings settings,
-	        Properties props) throws HibernateException;
+			String regionName,
+			UpdateTimestampsCache updateTimestampsCache,
+			SessionFactoryImplementor sessionFactoryImplementor) throws HibernateException;
 }

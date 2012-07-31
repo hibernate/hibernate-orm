@@ -51,10 +51,9 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	 *
 	 * @param region the Hibernate region.
 	 * @param ehcache the cache.
-	 * @param settings the Hibernate settings.
 	 */
-	public TransactionalEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Ehcache ehcache, Settings settings) {
-		super( region, settings );
+	public TransactionalEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Ehcache ehcache) {
+		super( region );
 		this.ehcache = ehcache;
 	}
 

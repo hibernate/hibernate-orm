@@ -43,8 +43,8 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	/**
 	 * Create a read/write access strategy accessing the given entity region.
 	 */
-	public ReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
-		super( region, settings );
+	public ReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region) {
+		super( region );
 	}
 
 	/**

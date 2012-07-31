@@ -87,7 +87,6 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
-		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

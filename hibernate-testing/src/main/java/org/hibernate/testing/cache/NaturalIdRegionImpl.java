@@ -40,14 +40,14 @@ class NaturalIdRegionImpl extends BaseTransactionalDataRegion implements Natural
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, NaturalIdRegionImpl.class.getName()
 	);
-	private final Settings settings;
-	NaturalIdRegionImpl(String name, CacheDataDescription metadata, Settings settings) {
+	private final boolean isMinimalPutsEnabled;
+	NaturalIdRegionImpl(String name, CacheDataDescription metadata, boolean isMinimalPutsEnabled) {
 		super( name, metadata );
-		this.settings=settings;
+		this.isMinimalPutsEnabled=isMinimalPutsEnabled;
 	}
 
-	public Settings getSettings() {
-		return settings;
+	public boolean isMinimalPutsEnabled() {
+		return isMinimalPutsEnabled;
 	}
 
 	@Override

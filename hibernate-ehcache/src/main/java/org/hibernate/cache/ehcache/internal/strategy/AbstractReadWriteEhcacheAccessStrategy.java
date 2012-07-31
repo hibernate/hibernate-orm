@@ -59,8 +59,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
     /**
      * Creates a read/write cache access strategy around the given cache region.
      */
-    public AbstractReadWriteEhcacheAccessStrategy(T region, Settings settings) {
-        super( region, settings );
+    public AbstractReadWriteEhcacheAccessStrategy(T region) {
+        super( region );
         this.versionComparator = region.getCacheDataDescription().getVersionComparator();
     }
 

@@ -23,14 +23,18 @@
  */
 package org.hibernate.test.cache.infinispan.util;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.Cache;
 import org.jboss.logging.Logger;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Support class for tracking and cleaning up objects used in tests.
@@ -43,7 +47,7 @@ public class CacheTestSupport {
 	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 
     private Set<Cache> caches = new HashSet();
-    private Set<RegionFactory> factories = new HashSet();
+    private Map<InfinispanRegionFactory, SessionFactoryImplementor> factories = new HashMap();
     private Exception exception;
     private String preferIPv4Stack;
 
@@ -51,16 +55,16 @@ public class CacheTestSupport {
         caches.add(cache);
     }
 
-    public void registerFactory(RegionFactory factory) {
-        factories.add(factory);
+    public void registerFactory(InfinispanRegionFactory regionFactory, SessionFactoryImplementor factory) {
+        factories.put( regionFactory, factory );
     }
 
     public void unregisterCache(Cache cache) {
         caches.remove( cache );
     }
 
-    public void unregisterFactory(RegionFactory factory) {
-        factories.remove( factory );
+    public SessionFactoryImplementor unregisterFactory(InfinispanRegionFactory regionFactory) {
+        return factories.remove( regionFactory );
     }
 
     public void setUp() throws Exception {
@@ -100,9 +104,9 @@ public class CacheTestSupport {
     }
 
     private void cleanUp() {
-        for (Iterator it = factories.iterator(); it.hasNext(); ) {
+        for (Iterator it = factories.values().iterator(); it.hasNext(); ) {
             try {
-                ((RegionFactory) it.next()).stop();
+                ((SessionFactoryImplementor) it.next()).close();
             }
             catch (Exception e) {
                 storeException(e);

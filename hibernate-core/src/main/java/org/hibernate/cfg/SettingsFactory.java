@@ -246,18 +246,6 @@ public class SettingsFactory implements Serializable {
 			settings.setQueryCacheFactory( createQueryCacheFactory( properties, serviceRegistry ) );
 		}
 
-		// The cache provider is needed when we either have second-level cache enabled
-		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		settings.setRegionFactory( serviceRegistry.getService( RegionFactory.class ) );
-
-		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
-				Environment.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
-		);
-		if ( debugEnabled ) {
-			LOG.debugf( "Optimize cache for minimal puts: %s", enabledDisabled(useMinimalPuts) );
-		}
-		settings.setMinimalPutsEnabled( useMinimalPuts );
-
 		String prefix = properties.getProperty( Environment.CACHE_REGION_PREFIX );
 		if ( StringHelper.isEmpty(prefix) ) {
 			prefix=null;
@@ -272,15 +260,6 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "Structured second-level cache entries: %s", enabledDisabled(useStructuredCacheEntries) );
 		}
 		settings.setStructuredCacheEntriesEnabled( useStructuredCacheEntries );
-
-
-		//Statistics and logging:
-
-		boolean useStatistics = ConfigurationHelper.getBoolean( Environment.GENERATE_STATISTICS, properties );
-		if ( debugEnabled ) {
-			LOG.debugf( "Statistics: %s", enabledDisabled(useStatistics) );
-		}
-		settings.setStatisticsEnabled( useStatistics );
 
 		boolean useIdentifierRollback = ConfigurationHelper.getBoolean( Environment.USE_IDENTIFIER_ROLLBACK, properties );
 		if ( debugEnabled ) {
@@ -352,7 +331,7 @@ public class SettingsFactory implements Serializable {
 //		}
 //	}
 
-	private static String enabledDisabled(boolean value) {
+	public static String enabledDisabled(boolean value) {
 		return value ? "enabled" : "disabled";
 	}
 

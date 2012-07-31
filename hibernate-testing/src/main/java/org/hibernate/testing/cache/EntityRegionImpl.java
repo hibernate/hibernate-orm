@@ -40,17 +40,16 @@ class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegi
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, EntityRegionImpl.class.getName()
 	);
-	private final Settings settings;
+	private final boolean isMinimalPutsEnabled;
 
-
-	EntityRegionImpl(String name, CacheDataDescription metadata, Settings settings) {
+	EntityRegionImpl(String name, CacheDataDescription metadata, boolean isMinimalPutsEnabled) {
 		super( name, metadata );
-		this.settings = settings;
+		this.isMinimalPutsEnabled = isMinimalPutsEnabled;
 
 	}
 
-	public Settings getSettings() {
-		return settings;
+	public boolean isMinimalPutsEnabled() {
+		return isMinimalPutsEnabled;
 	}
 
 	@Override

@@ -43,8 +43,8 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	/**
 	 * Create a non-strict read/write access strategy accessing the given collection region.
 	 */
-	public NonStrictReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
-		super( region, settings );
+	public NonStrictReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region) {
+		super( region );
 	}
 
 	/**

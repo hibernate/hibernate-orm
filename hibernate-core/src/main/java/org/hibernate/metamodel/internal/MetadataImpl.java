@@ -710,21 +710,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			return true;
 		}
 
-		private final ValueHolder<AccessType> regionFactorySpecifiedDefaultAccessType = new ValueHolder<AccessType>(
-				new ValueHolder.DeferredInitializer<AccessType>() {
-					@Override
-					public AccessType initialize() {
-						final RegionFactory regionFactory = getServiceRegistry().getService( RegionFactory.class );
-						return regionFactory.getDefaultAccessType();
-					}
-				}
-		);
-
 		@Override
 		public AccessType getCacheAccessType() {
-			return options.getDefaultAccessType() != null
-					? options.getDefaultAccessType()
-					: regionFactorySpecifiedDefaultAccessType.getValue();
+			return options.getDefaultAccessType();
 		}
 	}
 }

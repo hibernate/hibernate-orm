@@ -41,7 +41,7 @@ class BaseCollectionRegionAccessStrategy extends BaseRegionAccessStrategy implem
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 
 	@Override

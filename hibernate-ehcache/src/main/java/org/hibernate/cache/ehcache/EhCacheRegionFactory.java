@@ -35,6 +35,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 
 /**
  * A non-singleton EhCacheRegionFactory implementation.
@@ -52,65 +54,53 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
             EhCacheRegionFactory.class.getName()
     );
 
+	@Override
+	public void start() {
+		if ( manager != null ) {
+			LOG.attemptToRestartAlreadyStartedEhCacheProvider();
+			return;
+		}
 
-    public EhCacheRegionFactory() {
-    }
-
-    /**
-     * Creates a non-singleton EhCacheRegionFactory
-     */
-    public EhCacheRegionFactory(Properties prop) {
-        super();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void start(Settings settings, Properties properties) throws CacheException {
-        this.settings = settings;
-        if ( manager != null ) {
-            LOG.attemptToRestartAlreadyStartedEhCacheProvider();
-            return;
-        }
-
-        try {
-            String configurationResourceName = null;
-            if ( properties != null ) {
-                configurationResourceName = (String) properties.get( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME );
-            }
-            if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
-                Configuration configuration = ConfigurationFactory.parseConfiguration();
-                manager = new CacheManager( configuration );
-            }
-            else {
-                URL url;
-                try {
-                    url = new URL( configurationResourceName );
-                }
-                catch ( MalformedURLException e ) {
-                    url = loadResource( configurationResourceName );
-                }
-                Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
-                manager = new CacheManager( configuration );
-            }
-            mbeanRegistrationHelper.registerMBean( manager, properties );
-        }
-        catch ( net.sf.ehcache.CacheException e ) {
-            if ( e.getMessage().startsWith(
-                    "Cannot parseConfiguration CacheManager. Attempt to create a new instance of " +
-                            "CacheManager using the diskStorePath"
-            ) ) {
-                throw new CacheException(
-                        "Attempt to restart an already started EhCacheRegionFactory. " +
-                                "Use sessionFactory.close() between repeated calls to buildSessionFactory. " +
-                                "Consider using SingletonEhCacheRegionFactory. Error from ehcache was: " + e.getMessage()
-                );
-            }
-            else {
-                throw new CacheException( e );
-            }
-        }
-    }
+		try {
+			ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
+			String configurationResourceName = configurationService.getSetting( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME,
+					StandardConverters.STRING, null
+			);
+			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
+				Configuration configuration = ConfigurationFactory.parseConfiguration();
+				manager = new CacheManager( configuration );
+			}
+			else {
+				URL url;
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch ( MalformedURLException e ) {
+					url = loadResource( configurationResourceName );
+				}
+				Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
+				manager = new CacheManager( configuration );
+			}
+			Properties properties = new Properties(  );
+			properties.putAll( configurationService.getSettings() );
+			mbeanRegistrationHelper.registerMBean( manager, properties );
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			if ( e.getMessage().startsWith(
+					"Cannot parseConfiguration CacheManager. Attempt to create a new instance of " +
+							"CacheManager using the diskStorePath"
+			) ) {
+				throw new CacheException(
+						"Attempt to restart an already started EhCacheRegionFactory. " +
+								"Use sessionFactory.close() between repeated calls to buildSessionFactory. " +
+								"Consider using SingletonEhCacheRegionFactory. Error from ehcache was: " + e.getMessage()
+				);
+			}
+			else {
+				throw new CacheException( e );
+			}
+		}
+	}
 
     /**
      * {@inheritDoc}

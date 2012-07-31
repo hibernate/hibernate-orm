@@ -310,7 +310,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		@SuppressWarnings("unchecked")
 		public <T> T unwrap(Class<T> cls) {
 			if ( RegionFactory.class.isAssignableFrom( cls ) ) {
-				return (T) sessionFactory.getSettings().getRegionFactory();
+				return (T) sessionFactory.getServiceRegistry().getService( RegionFactory.class );
 			}
 			if ( org.hibernate.Cache.class.isAssignableFrom( cls ) ) {
 				return (T) sessionFactory.getCache();

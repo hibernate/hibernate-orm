@@ -40,14 +40,14 @@ class CollectionRegionImpl extends BaseTransactionalDataRegion implements Collec
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, CollectionRegionImpl.class.getName()
 	);
-	private final Settings settings;
-	CollectionRegionImpl(String name, CacheDataDescription metadata, Settings settings) {
+	private final boolean isMinimalPutsEnabled;
+	CollectionRegionImpl(String name, CacheDataDescription metadata, boolean isMinimalPutsEnabled) {
 		super( name, metadata );
-		this.settings=settings;
+		this.isMinimalPutsEnabled=isMinimalPutsEnabled;
 	}
 
-	public Settings getSettings() {
-		return settings;
+	public boolean isMinimalPutsEnabled() {
+		return isMinimalPutsEnabled;
 	}
 
 	@Override

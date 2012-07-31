@@ -111,7 +111,7 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 
 	@Override

@@ -159,6 +159,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterSessionFactoryBuilt();
 	}
 
+	protected void rebuildSessionFactory() {
+		if ( sessionFactory == null ) {
+			return;
+		}
+		buildSessionFactory();
+	}
+
+
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
 
 	}
@@ -439,28 +447,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			rebuildSessionFactory();
 		}
 	}
-
-	protected void rebuildSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
-		}
-		sessionFactory.close();
-		serviceRegistry.destroy();
-
-		serviceRegistry = buildServiceRegistry( configuration );
-		if ( isMetadataUsed ) {
-			// need to rebuild metadata because serviceRegistry was recreated
-			MetadataImplementor metadataImplementor = buildMetadata( serviceRegistry );
-			afterConstructAndConfigureMetadata( metadataImplementor );
-			applyCacheSettings(metadataImplementor);
-			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
-		}
-		else {
-			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
-		}
-		afterSessionFactoryBuilt();
-	}
-
 
 	// before/after each test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

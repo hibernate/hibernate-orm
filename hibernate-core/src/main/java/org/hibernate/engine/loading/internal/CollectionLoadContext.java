@@ -37,6 +37,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -335,7 +336,7 @@ public class CollectionLoadContext {
 				persister.getCacheEntryStructure().structure(entry),
 				session.getTimestamp(),
 				version,
-				factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+				factory.getServiceRegistry().getService( RegionFactory.class ).isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
 		);
 
 		if ( put && factory.getStatistics().isStatisticsEnabled() ) {

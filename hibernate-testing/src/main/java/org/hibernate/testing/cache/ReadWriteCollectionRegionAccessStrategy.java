@@ -52,7 +52,7 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 
 	@Override

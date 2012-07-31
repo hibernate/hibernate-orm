@@ -26,12 +26,15 @@ package org.hibernate.stat.internal;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.spi.StatisticsFactory;
@@ -105,7 +108,9 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 
 		StatisticsImplementor statistics = statisticsFactory.buildStatistics( sessionFactory );
-		final boolean enabled = sessionFactory.getSettings().isStatisticsEnabled();
+		final boolean enabled = registry.getService( ConfigurationService.class ).getSetting( AvailableSettings.GENERATE_STATISTICS,
+				StandardConverters.BOOLEAN, false
+		);
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;

@@ -51,10 +51,9 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	 *
 	 * @param region the Hibernate region.
 	 * @param ehcache the cache.
-	 * @param settings the Hibernate settings.
 	 */
-	public TransactionalEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Ehcache ehcache, Settings settings) {
-		super( region, settings );
+	public TransactionalEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Ehcache ehcache) {
+		super( region );
 		this.ehcache = ehcache;
 	}
 

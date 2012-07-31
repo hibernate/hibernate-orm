@@ -28,6 +28,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.AbstractRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -36,17 +37,20 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.service.spi.InjectService;
 
 /**
  * @author Strong Liu
  */
-public class CachingRegionFactory implements RegionFactory {
+public class CachingRegionFactory extends AbstractRegionFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, CachingRegionFactory.class.getName()
 	);
-	private Settings settings;
 	public CachingRegionFactory() {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
 	}
@@ -56,9 +60,10 @@ public class CachingRegionFactory implements RegionFactory {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
 	}
 
+
+
 	@Override
-	public void start(Settings settings, Properties properties) throws CacheException {
-		this.settings=settings;
+	public void start() {
 	}
 
 	@Override
@@ -83,19 +88,19 @@ public class CachingRegionFactory implements RegionFactory {
 	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		return new EntityRegionImpl( regionName, metadata, settings );
+		return new EntityRegionImpl( regionName, metadata, isMinimalPutsEnabled() );
 	}
 	
 	@Override
     public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
             throws CacheException {
-        return new NaturalIdRegionImpl( regionName, metadata, settings );
+        return new NaturalIdRegionImpl( regionName, metadata, isMinimalPutsEnabled() );
     }
 
     @Override
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		return new CollectionRegionImpl( regionName, metadata, settings );
+		return new CollectionRegionImpl( regionName, metadata, isMinimalPutsEnabled() );
 	}
 
 	@Override

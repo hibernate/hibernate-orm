@@ -54,9 +54,9 @@ public class EhcacheNaturalIdRegion extends EhcacheTransactionalDataRegion imple
      *
      * @param accessStrategyFactory
      */
-    public EhcacheNaturalIdRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Settings settings,
+    public EhcacheNaturalIdRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, boolean isMinimalPutsEnabled,
                                    CacheDataDescription metadata, Properties properties) {
-        super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+        super( accessStrategyFactory, underlyingCache, isMinimalPutsEnabled, metadata, properties );
     }
 
 	@Override

@@ -108,7 +108,7 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 
 	@Override

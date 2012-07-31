@@ -32,11 +32,14 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -73,32 +76,21 @@ public class CacheTestUtil {
       return cfg;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(
-		   ServiceRegistry serviceRegistry,
-		   Configuration cfg) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
-      Settings settings = cfg.buildSettings( serviceRegistry );
-      Properties properties = cfg.getProperties();
-
-      String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
-      Class factoryClass = Thread.currentThread().getContextClassLoader().loadClass(factoryType);
-      InfinispanRegionFactory regionFactory = (InfinispanRegionFactory) factoryClass.newInstance();
-      regionFactory.start(settings, properties);
-      return regionFactory;
-   }
 
    public static InfinispanRegionFactory startRegionFactory(
 		   ServiceRegistry serviceRegistry,
 		   Configuration cfg,
 		   CacheTestSupport testSupport) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-      InfinispanRegionFactory factory = startRegionFactory( serviceRegistry, cfg );
-      testSupport.registerFactory(factory);
+
+	   SessionFactoryImplementor sessionFactory =(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+	   InfinispanRegionFactory factory =  (InfinispanRegionFactory) sessionFactory.getServiceRegistry().getService( RegionFactory.class );
+      testSupport.registerFactory(factory, sessionFactory);
       return factory;
    }
 
    public static void stopRegionFactory(InfinispanRegionFactory factory, CacheTestSupport testSupport) {
-      factory.stop();
-      testSupport.unregisterFactory(factory);
+      testSupport.unregisterFactory(factory).close();
    }
 
    /**

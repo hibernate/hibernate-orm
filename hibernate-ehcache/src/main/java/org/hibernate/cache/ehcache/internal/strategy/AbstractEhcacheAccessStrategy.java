@@ -42,17 +42,12 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * The wrapped Hibernate cache region.
 	 */
 	protected final T region;
-	/**
-	 * The settings for this persistence unit.
-	 */
-	protected final Settings settings;
 
 	/**
 	 * Create an access strategy wrapping the given region.
 	 */
-	AbstractEhcacheAccessStrategy(T region, Settings settings) {
+	AbstractEhcacheAccessStrategy(T region) {
 		this.region = region;
-		this.settings = settings;
 	}
 
 	/**
@@ -63,7 +58,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)
 	 */
 	public final boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return putFromLoad( key, value, txTimestamp, version, settings.isMinimalPutsEnabled() );
+		return putFromLoad( key, value, txTimestamp, version, region.isMinimalPutsEnabled() );
 	}
 
 	/**

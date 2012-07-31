@@ -46,8 +46,8 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	/**
 	 * Create a read-only access strategy accessing the given entity region.
 	 */
-	public ReadOnlyEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
-		super( region, settings );
+	public ReadOnlyEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region) {
+		super( region );
 	}
 
 	/**

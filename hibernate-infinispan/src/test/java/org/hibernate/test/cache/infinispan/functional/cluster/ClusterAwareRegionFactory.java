@@ -30,6 +30,7 @@ import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.AbstractRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -39,6 +40,11 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.service.spi.InjectService;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * ClusterAwareRegionFactory.
@@ -46,7 +52,7 @@ import org.hibernate.cfg.Settings;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class ClusterAwareRegionFactory implements RegionFactory {
+public class ClusterAwareRegionFactory extends AbstractRegionFactory {
    
    private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
    private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
@@ -54,10 +60,7 @@ public class ClusterAwareRegionFactory implements RegionFactory {
    private final InfinispanRegionFactory delegate = new InfinispanRegionFactory();
    private String cacheManagerName;
    private boolean locallyAdded;
-   
-   public ClusterAwareRegionFactory(Properties props) {
-   }
-   
+
    public static EmbeddedCacheManager getCacheManager(String name) {
       return cacheManagers.get(name);
    }
@@ -77,18 +80,35 @@ public class ClusterAwareRegionFactory implements RegionFactory {
       cacheManagers.clear();      
    }
 
-   public void start(Settings settings, Properties properties) throws CacheException {
-      cacheManagerName = properties.getProperty(DualNodeTestCase.NODE_ID_PROP);
-      
-      EmbeddedCacheManager existing = getCacheManager(cacheManagerName);
-      locallyAdded = (existing == null);
-      
-      if (locallyAdded) {
-         delegate.start(settings, properties);
-         cacheManagers.put(cacheManagerName, delegate.getCacheManager());
-      } else {
-         delegate.setCacheManager(existing);
-      }      
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		super.injectServices( serviceRegistry );
+		delegate.injectServices( serviceRegistry );
+
+	}
+
+	@InjectService
+	public void setConfigurationService(ConfigurationService configurationService){
+		cacheManagerName = configurationService.getSetting( DualNodeTestCase.NODE_ID_PROP, StandardConverters.STRING );
+	}
+
+	@Override
+	public void start() {
+
+		EmbeddedCacheManager existing = getCacheManager(cacheManagerName);
+		locallyAdded = (existing == null);
+
+		if (locallyAdded) {
+			delegate.start();
+			cacheManagers.put(cacheManagerName, delegate.getCacheManager());
+		} else {
+			delegate.initGenericDataTypeOverrides();
+			delegate.setCacheManager(existing);
+		}
+	}
+
+	public void start(Settings settings, Properties properties) throws CacheException {
+        start();
    }
 
    public void stop() {

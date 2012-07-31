@@ -148,9 +148,6 @@ public class ConfigurationTest extends BaseUnitTestCase {
 	}
 
 	public static class CustomRegionFactory extends NoCachingRegionFactory {
-		public CustomRegionFactory() {
-		}
-
 		@Override
 		public AccessType getDefaultAccessType() {
 			return AccessType.READ_WRITE;

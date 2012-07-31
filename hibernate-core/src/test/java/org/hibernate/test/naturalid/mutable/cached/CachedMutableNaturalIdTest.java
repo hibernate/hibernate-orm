@@ -56,6 +56,11 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
+	protected void cleanupTest() throws Exception {
+		sessionFactory().getStatistics().clear();
+	}
+
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdChangedWhileAttached() {

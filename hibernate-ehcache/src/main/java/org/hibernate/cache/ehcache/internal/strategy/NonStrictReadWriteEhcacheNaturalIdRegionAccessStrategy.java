@@ -43,8 +43,8 @@ public class NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy
 	/**
 	 * Create a non-strict read/write access strategy accessing the given NaturalId region.
 	 */
-	public NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Settings settings) {
-		super( region, settings );
+	public NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region) {
+		super( region );
 	}
 
 	/**

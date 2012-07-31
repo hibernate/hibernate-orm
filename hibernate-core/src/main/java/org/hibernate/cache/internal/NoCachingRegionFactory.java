@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.NoCacheRegionFactoryAvailableException;
+import org.hibernate.cache.spi.AbstractRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -42,48 +43,48 @@ import org.hibernate.cfg.Settings;
  *
  * @author Steve Ebersole
  */
-public class NoCachingRegionFactory implements RegionFactory {
+public class NoCachingRegionFactory extends AbstractRegionFactory {
 	public static RegionFactory INSTANCE = new NoCachingRegionFactory();
-	public NoCachingRegionFactory() {
+
+	@Override
+	public void start() {
 	}
 
-	public void start(Settings settings, Properties properties) throws CacheException {
-	}
-
+	@Override
 	public void stop() {
 	}
-
+	@Override
 	public boolean isMinimalPutsEnabledByDefault() {
 		return false;
 	}
-
+	@Override
 	public AccessType getDefaultAccessType() {
 		return null;
 	}
-
+	@Override
 	public long nextTimestamp() {
 		return System.currentTimeMillis() / 100;
 	}
-
+	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
-	
+	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
-
+	@Override
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
-
+	@Override
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
-
+	@Override
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}

@@ -25,6 +25,7 @@ import java.util.Properties;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
@@ -39,6 +40,15 @@ public class HibernateTransactionManagerLookup implements org.infinispan.transac
 	public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
 		if ( settings != null ) {
 			jtaPlatform = settings.getJtaPlatform();
+		}
+		else {
+			jtaPlatform = null;
+		}
+	}
+
+	public HibernateTransactionManagerLookup(ServiceRegistry serviceRegistry) {
+		if ( serviceRegistry != null ) {
+			jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
 		}
 		else {
 			jtaPlatform = null;

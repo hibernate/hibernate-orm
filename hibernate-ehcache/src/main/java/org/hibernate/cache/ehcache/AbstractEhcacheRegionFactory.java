@@ -42,6 +42,7 @@ import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactor
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactoryImpl;
 import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
 import org.hibernate.cache.ehcache.management.impl.ProviderMBeanRegistrationHelper;
+import org.hibernate.cache.spi.AbstractRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -51,8 +52,11 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.InjectService;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Abstract implementation of an Ehcache specific RegionFactory.
@@ -63,7 +67,7 @@ import org.hibernate.service.spi.InjectService;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-abstract class AbstractEhcacheRegionFactory implements RegionFactory {
+abstract class AbstractEhcacheRegionFactory extends AbstractRegionFactory {
 
     /**
      * The Hibernate system property specifying the location of the ehcache configuration file name.
@@ -129,13 +133,13 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
      */
     public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
             throws CacheException {
-        return new EhcacheEntityRegion( accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
+        return new EhcacheEntityRegion( accessStrategyFactory, getCache( regionName ), isMinimalPutsEnabled(), metadata, properties );
     }
     
     @Override
     public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
             throws CacheException {
-        return new EhcacheNaturalIdRegion( accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
+        return new EhcacheNaturalIdRegion( accessStrategyFactory, getCache( regionName ), isMinimalPutsEnabled(), metadata, properties );
     }
 
     /**
@@ -146,7 +150,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
         return new EhcacheCollectionRegion(
                 accessStrategyFactory,
                 getCache( regionName ),
-                settings,
+                isMinimalPutsEnabled(),
                 metadata,
                 properties
         );
@@ -158,14 +162,6 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
     public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
         return new EhcacheQueryResultsRegion( accessStrategyFactory, getCache( regionName ), properties );
     }
-
-    @InjectService
-    public void setClassLoaderService(ClassLoaderService classLoaderService) {
-        this.classLoaderService = classLoaderService;
-    }
-
-    private ClassLoaderService classLoaderService;
-
     /**
      * {@inheritDoc}
      */
@@ -195,10 +191,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
      * Load a resource from the classpath.
      */
     protected URL loadResource(String configurationResourceName) {
-        URL url = null;
-        if ( classLoaderService != null ) {
-            url = classLoaderService.locateResource( configurationResourceName );
-        }
+         URL   url = getServiceRegistry().getService( ClassLoaderService.class ).locateResource( configurationResourceName );
         if ( url == null ) {
             ClassLoader standardClassloader = ClassLoaderUtil.getStandardClassLoader();
             if ( standardClassloader != null ) {
@@ -222,7 +215,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
         return url;
     }
 
-    /**
+	/**
      * Default access-type used when the configured using JPA 2.0 config.  JPA 2.0 allows <code>@Cacheable(true)</code> to be attached to an
      * entity without any access type or usage qualification.
      * <p/>

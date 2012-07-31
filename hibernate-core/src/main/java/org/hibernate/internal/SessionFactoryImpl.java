@@ -770,7 +770,7 @@ public final class SessionFactoryImpl
 					.append( '.' );
 		}
 		final String cacheRegionPrefix = stringBuilder.toString();
-
+		RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		entityPersisters = new HashMap<String,EntityPersister>();
 		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
@@ -782,16 +782,18 @@ public final class SessionFactoryImpl
 			EntityRegionAccessStrategy accessStrategy = null;
 			if ( settings.isSecondLevelCacheEnabled() &&
 					rootEntityBinding.getHierarchyDetails().getCaching() != null &&
-					model.getHierarchyDetails().getCaching() != null &&
-					model.getHierarchyDetails().getCaching().getAccessType() != null ) {
+					model.getHierarchyDetails().getCaching() != null  ) {
 				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails().getCaching().getRegion();
 				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
-					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
+					AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
+					if ( accessType == null ) {
+						accessType = regionFactory.getDefaultAccessType();
+					}
 					if ( LOG.isTraceEnabled() ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
 					}
-					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion(
+					EntityRegion entityRegion = serviceRegistry.getService( RegionFactory.class ).buildEntityRegion(
 							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
 					);
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
@@ -814,7 +816,7 @@ public final class SessionFactoryImpl
 					final CacheDataDescriptionImpl naturaIdCacheDataDescription = CacheDataDescriptionImpl.decode( model );
 					NaturalIdRegion naturalIdRegion = null;
 					try {
-						naturalIdRegion = settings.getRegionFactory()
+						naturalIdRegion = serviceRegistry.getService( RegionFactory.class )
 								.buildNaturalIdRegion(
 										naturalIdCacheRegionName,
 										properties,
@@ -825,12 +827,12 @@ public final class SessionFactoryImpl
 						LOG.warnf(
 								"Shared cache region factory [%s] does not support natural id caching; " +
 										"shared NaturalId caching will be disabled for not be enabled for %s",
-								settings.getRegionFactory().getClass().getName(),
+								serviceRegistry.getService( RegionFactory.class ).getClass().getName(),
 								model.getEntity().getName()
 						);
 					}
 					if ( naturalIdRegion != null ) {
-						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
+						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( serviceRegistry.getService( RegionFactory.class ).getDefaultAccessType() );
 						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
 						cacheAccess.addCacheRegion( naturalIdCacheRegionName, naturalIdRegion );
 					}
@@ -859,22 +861,24 @@ public final class SessionFactoryImpl
 			}
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( settings.isSecondLevelCacheEnabled() &&
-					model.getCaching() != null &&
-					model.getCaching().getAccessType() != null ) {
+					model.getCaching() != null ) {
 				final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
-				final AccessType accessType = model.getCaching().getAccessType();
+				AccessType accessType = model.getCaching().getAccessType();
+				if(accessType == null){
+					accessType = regionFactory.getDefaultAccessType();
+				}
 				if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
 					if ( LOG.isTraceEnabled() ) {
 						LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
 					}
-					CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+					CollectionRegion collectionRegion = serviceRegistry.getService( RegionFactory.class ).buildCollectionRegion(
 							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
 					);
 					accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
 					cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 				}
-				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+				CollectionRegion collectionRegion = serviceRegistry.getService( RegionFactory.class ).buildCollectionRegion(
 						cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
 				);
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
@@ -1479,7 +1483,7 @@ public final class SessionFactoryImpl
 			}
 		}
 
-		cacheAccess.close();
+//		cacheAccess.stop();
 
 		queryPlanCache.cleanup();
 
@@ -1703,7 +1707,7 @@ public final class SessionFactoryImpl
 					sessionOwner,
 					getTransactionCoordinator(),
 					autoJoinTransactions,
-					sessionFactory.settings.getRegionFactory().nextTimestamp(),
+					sessionFactory.getServiceRegistry().getService( RegionFactory.class ).nextTimestamp(),
 					interceptor,
 					flushBeforeCompletion,
 					autoClose,

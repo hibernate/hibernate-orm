@@ -54,10 +54,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	private static final int LOCAL_LOCK_PROVIDER_CONCURRENCY = 128;
 
-	/**
-	 * Hibernate settings associated with the persistence unit.
-	 */
-	protected final Settings settings;
+	protected final boolean isMinimalPutsEnabled;
 
 	/**
 	 * Metadata associated with the objects stored in the region.
@@ -69,10 +66,10 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	/**
 	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
 	 */
-	EhcacheTransactionalDataRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, Settings settings,
+	EhcacheTransactionalDataRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, boolean isMinimalPutsEnabled,
 								   CacheDataDescription metadata, Properties properties) {
 		super( accessStrategyFactory, cache, properties );
-		this.settings = settings;
+		this.isMinimalPutsEnabled = isMinimalPutsEnabled;
 		this.metadata = metadata;
 
 		Object context = cache.getInternalContext();
@@ -84,13 +81,8 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 		}
 	}
 
-	/**
-	 * Return the hibernate settings
-	 *
-	 * @return settings
-	 */
-	public Settings getSettings() {
-		return settings;
+	public boolean isMinimalPutsEnabled(){
+		return isMinimalPutsEnabled;
 	}
 
 	/**

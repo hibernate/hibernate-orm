@@ -77,21 +77,6 @@ public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testin
          System.setProperty(JGROUPS_CFG_FILE, jgroupsCfgFile);
    }
 
-   protected void registerCache(Cache cache) {
-      testSupport.registerCache(cache);
-   }
-
-   protected void unregisterCache(Cache cache) {
-      testSupport.unregisterCache(cache);
-   }
-
-   protected void registerFactory(RegionFactory factory) {
-      testSupport.registerFactory(factory);
-   }
-
-   protected void unregisterFactory(RegionFactory factory) {
-      testSupport.unregisterFactory(factory);
-   }
 
    protected CacheTestSupport getCacheTestSupport() {
       return testSupport;

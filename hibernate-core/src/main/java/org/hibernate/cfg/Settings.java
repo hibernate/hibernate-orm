@@ -29,7 +29,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.spi.QueryCacheFactory;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -60,15 +59,12 @@ public final class Settings {
 	private boolean structuredCacheEntriesEnabled;
 	private boolean secondLevelCacheEnabled;
 	private String cacheRegionPrefix;
-	private boolean minimalPutsEnabled;
 	private boolean commentsEnabled;
-	private boolean statisticsEnabled;
 	private boolean jdbcBatchVersionedData;
 	private boolean identifierRollbackEnabled;
 	private boolean flushBeforeCompletionEnabled;
 	private boolean autoCloseSessionEnabled;
 	private ConnectionReleaseMode connectionReleaseMode;
-	private RegionFactory regionFactory;
 	private QueryCacheFactory queryCacheFactory;
 	private QueryTranslatorFactory queryTranslatorFactory;
 	private boolean wrapResultSetsEnabled;
@@ -136,10 +132,6 @@ public final class Settings {
 		return getGeneratedKeysEnabled;
 	}
 
-	public boolean isMinimalPutsEnabled() {
-		return minimalPutsEnabled;
-	}
-
 	public Integer getJdbcFetchSize() {
 		return jdbcFetchSize;
 	}
@@ -168,10 +160,6 @@ public final class Settings {
 		return maximumFetchDepth;
 	}
 
-	public RegionFactory getRegionFactory() {
-		return regionFactory;
-	}
-
 	public boolean isQueryCacheEnabled() {
 		return queryCacheEnabled;
 	}
@@ -190,10 +178,6 @@ public final class Settings {
 
 	public QueryCacheFactory getQueryCacheFactory() {
 		return queryCacheFactory;
-	}
-
-	public boolean isStatisticsEnabled() {
-		return statisticsEnabled;
 	}
 
 	public boolean isJdbcBatchVersionedData() {
@@ -260,10 +244,6 @@ public final class Settings {
 		return entityTuplizerFactory;
 	}
 
-//	public ComponentTuplizerFactory getComponentTuplizerFactory() {
-//		return componentTuplizerFactory;
-//	}
-
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	void setDefaultSchemaName(String string) {
@@ -289,11 +269,6 @@ public final class Settings {
 	void setIdentifierRollbackEnabled(boolean b) {
 		identifierRollbackEnabled = b;
 	}
-
-	void setMinimalPutsEnabled(boolean b) {
-		minimalPutsEnabled = b;
-	}
-
 	void setScrollableResultSetsEnabled(boolean b) {
 		scrollableResultSetsEnabled = b;
 	}
@@ -329,11 +304,6 @@ public final class Settings {
 	void setMaximumFetchDepth(Integer i) {
 		maximumFetchDepth = i;
 	}
-
-	void setRegionFactory(RegionFactory regionFactory) {
-		this.regionFactory = regionFactory;
-	}
-
 	void setQueryCacheEnabled(boolean b) {
 		queryCacheEnabled = b;
 	}
@@ -352,10 +322,6 @@ public final class Settings {
 
 	void setQueryCacheFactory(QueryCacheFactory queryCacheFactory) {
 		this.queryCacheFactory = queryCacheFactory;
-	}
-
-	void setStatisticsEnabled(boolean statisticsEnabled) {
-		this.statisticsEnabled = statisticsEnabled;
 	}
 
 	void setJdbcBatchVersionedData(boolean jdbcBatchVersionedData) {
@@ -429,19 +395,6 @@ public final class Settings {
 	public void setCheckNullability(boolean checkNullability) {
 		this.checkNullability = checkNullability;
 	}
-
-	//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
-//		this.componentTuplizerFactory = componentTuplizerFactory;
-//	}
-
-	//	public BytecodeProvider getBytecodeProvider() {
-//		return bytecodeProvider;
-//	}
-//
-//	void setBytecodeProvider(BytecodeProvider bytecodeProvider) {
-//		this.bytecodeProvider = bytecodeProvider;
-//	}
-
 
 	public JtaPlatform getJtaPlatform() {
 		return jtaPlatform;

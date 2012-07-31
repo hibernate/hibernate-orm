@@ -43,8 +43,8 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	/**
 	 * Create a read/write access strategy accessing the given NaturalId region.
 	 */
-	public ReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Settings settings) {
-		super( region, settings );
+	public ReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region) {
+		super( region );
 	}
 
 	/**

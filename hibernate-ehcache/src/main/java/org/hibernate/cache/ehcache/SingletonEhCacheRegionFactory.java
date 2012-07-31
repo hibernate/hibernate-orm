@@ -35,6 +35,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.service.config.spi.StandardConverters;
 
 /**
  * A singleton EhCacheRegionFactory implementation.
@@ -52,56 +54,49 @@ public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory 
     );
     private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger();
 
-    /**
-     * Returns a representation of the singleton EhCacheRegionFactory
-     */
-    public SingletonEhCacheRegionFactory(Properties prop) {
-        super();
-    }
+	@Override
+	public void start() {
+		try {
+			ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
+			String configurationResourceName = configurationService.getSetting( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME,
+					StandardConverters.STRING, null
+			);
+			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
+				manager = CacheManager.create();
+				REFERENCE_COUNT.incrementAndGet();
+			}
+			else {
+				URL url;
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch ( MalformedURLException e ) {
+					if ( !configurationResourceName.startsWith( "/" ) ) {
+						configurationResourceName = "/" + configurationResourceName;
+						LOG.debugf(
+								"prepending / to %s. It should be placed in the root of the classpath rather than in a package.",
+								configurationResourceName
+						);
+					}
+					url = loadResource( configurationResourceName );
+				}
+				Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
+				manager = CacheManager.create( configuration );
+				REFERENCE_COUNT.incrementAndGet();
+			}
+			Properties properties = new Properties(  );
+			properties.putAll( configurationService.getSettings() );
+			mbeanRegistrationHelper.registerMBean( manager, properties );
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
+	}
 
     /**
      * {@inheritDoc}
      */
-    public void start(Settings settings, Properties properties) throws CacheException {
-        this.settings = settings;
-        try {
-            String configurationResourceName = null;
-            if ( properties != null ) {
-                configurationResourceName = (String) properties.get( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME );
-            }
-            if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
-                manager = CacheManager.create();
-                REFERENCE_COUNT.incrementAndGet();
-            }
-            else {
-                URL url;
-                try {
-                    url = new URL( configurationResourceName );
-                }
-                catch ( MalformedURLException e ) {
-                    if ( !configurationResourceName.startsWith( "/" ) ) {
-                        configurationResourceName = "/" + configurationResourceName;
-                        LOG.debugf(
-                                "prepending / to %s. It should be placed in the root of the classpath rather than in a package.",
-                                configurationResourceName
-                        );
-                    }
-                    url = loadResource( configurationResourceName );
-                }
-                Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
-                manager = CacheManager.create( configuration );
-                REFERENCE_COUNT.incrementAndGet();
-            }
-            mbeanRegistrationHelper.registerMBean( manager, properties );
-        }
-        catch ( net.sf.ehcache.CacheException e ) {
-            throw new CacheException( e );
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+	@Override
     public void stop() {
         try {
             if ( manager != null ) {

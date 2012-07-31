@@ -60,7 +60,7 @@ public class UpdateTimestampsCache {
 		String prefix = settings.getCacheRegionPrefix();
 		String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
 		LOG.startingUpdateTimestampsCache( regionName );
-		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
+		this.region = factory.getServiceRegistry().getService( RegionFactory.class ).buildTimestampsRegion( regionName, props );
 	}
     @SuppressWarnings({"UnusedDeclaration"})
     public UpdateTimestampsCache(Settings settings, Properties props)

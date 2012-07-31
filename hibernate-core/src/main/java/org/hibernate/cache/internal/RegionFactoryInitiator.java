@@ -29,24 +29,28 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
 /**
  * Initiator for the {@link RegionFactory} service.
  *
  * @author Hardy Ferentschik
  */
-public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFactory> {
+public class RegionFactoryInitiator implements SessionFactoryServiceInitiator<RegionFactory> {
 	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
-	public static final String DEF_CACHE_REG_FACTORY = NoCachingRegionFactory.class.getName();
+	private static final String DEFAULT_IMPL = NoCachingRegionFactory.class.getName();
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			RegionFactoryInitiator.class.getName()
@@ -63,43 +67,60 @@ public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFacto
 	}
 
 	@Override
-	@SuppressWarnings( { "unchecked" })
-	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final Object impl = configurationValues.get( IMPL_NAME );
-		boolean isCacheEnabled = isCacheEnabled(registry);
-		if(!isCacheEnabled){
-			LOG.debugf( "Second level cache has been disabled, so using % as cache region factory", NoCachingRegionFactory.class.getName() );
-			return NoCachingRegionFactory.INSTANCE;
+	public RegionFactory initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry) {
+		return initiateService(sessionFactory, registry);
+	}
+
+	@Override
+	public RegionFactory initiateService(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata, ServiceRegistryImplementor registry) {
+		return initiateService(sessionFactory, registry);
+	}
+
+	private RegionFactory initiateService(SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor registry){
+		final Object impl = registry.getService( ConfigurationService.class ).getSettings().get( IMPL_NAME );
+		boolean isCacheEnabled = isCacheEnabled( registry );
+		RegionFactory factory;
+		if ( !isCacheEnabled ) {
+			LOG.debugf(
+					"Second level cache has been disabled, so using % as cache region factory",
+					NoCachingRegionFactory.class.getName()
+			);
+			factory = NoCachingRegionFactory.INSTANCE;
 		}
-		if ( impl == null ) {
+		else if ( impl == null ) {
 			LOG.debugf(
 					"No 'hibernate.cache.region.factory_class' is provided, so using %s as default",
 					NoCachingRegionFactory.class.getName()
 			);
-			return NoCachingRegionFactory.INSTANCE;
-		}
-		LOG.debugf( "Cache region factory : %s", impl.toString() );
-		if ( getServiceInitiated().isInstance( impl ) ) {
-			return (RegionFactory) impl;
-		}
-
-		Class<? extends RegionFactory> customImplClass = null;
-		if ( Class.class.isInstance( impl ) ) {
-			customImplClass = (Class<? extends RegionFactory>) impl;
+			factory = NoCachingRegionFactory.INSTANCE;
 		}
 		else {
-			customImplClass = registry.getService( ClassLoaderService.class )
-					.classForName( mapLegacyNames( impl.toString() ) );
+			LOG.debugf( "Cache region factory : %s", impl.toString() );
+			if ( getServiceInitiated().isInstance( impl ) ) {
+				factory = (RegionFactory) impl;
+			}
+			else {
+				Class<? extends RegionFactory> customImplClass = null;
+				if ( Class.class.isInstance( impl ) ) {
+					customImplClass = (Class<? extends RegionFactory>) impl;
+				}
+				else {
+					customImplClass = registry.getService( ClassLoaderService.class )
+							.classForName( mapLegacyNames( impl.toString() ) );
+				}
+
+				try {
+					factory = customImplClass.newInstance();
+				}
+				catch ( Exception e ) {
+					throw new ServiceException(
+							"Could not initialize custom RegionFactory impl [" + customImplClass.getName() + "]", e
+					);
+				}
+			}
 		}
 
-		try {
-			return customImplClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new ServiceException(
-					"Could not initialize custom RegionFactory impl [" + customImplClass.getName() + "]", e
-			);
-		}
+		return  factory;
 	}
 
 	private static boolean isCacheEnabled(ServiceRegistryImplementor serviceRegistry) {
@@ -111,7 +132,8 @@ public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFacto
 		);
 		final boolean useQueryCache = configurationService.getSetting(
 				AvailableSettings.USE_QUERY_CACHE,
-				StandardConverters.BOOLEAN
+				StandardConverters.BOOLEAN,
+				false
 		);
 		return useSecondLevelCache || useQueryCache;
 	}

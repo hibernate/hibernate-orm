@@ -56,21 +56,19 @@ public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFa
                 if ( entityRegion.getCacheDataDescription().isMutable() ) {
                     LOG.readOnlyCacheConfiguredForMutableEntity( entityRegion.getName() );
                 }
-                return new ReadOnlyEhcacheEntityRegionAccessStrategy( entityRegion, entityRegion.getSettings() );
+                return new ReadOnlyEhcacheEntityRegionAccessStrategy( entityRegion );
             case READ_WRITE:
-                return new ReadWriteEhcacheEntityRegionAccessStrategy( entityRegion, entityRegion.getSettings() );
+                return new ReadWriteEhcacheEntityRegionAccessStrategy( entityRegion );
 
             case NONSTRICT_READ_WRITE:
                 return new NonStrictReadWriteEhcacheEntityRegionAccessStrategy(
-                        entityRegion,
-                        entityRegion.getSettings()
+                        entityRegion
                 );
 
             case TRANSACTIONAL:
                 return new TransactionalEhcacheEntityRegionAccessStrategy(
                         entityRegion,
-                        entityRegion.getEhcache(),
-                        entityRegion.getSettings()
+                        entityRegion.getEhcache()
                 );
             default:
                 throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
@@ -90,23 +88,19 @@ public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFa
                     LOG.readOnlyCacheConfiguredForMutableEntity( collectionRegion.getName() );
                 }
                 return new ReadOnlyEhcacheCollectionRegionAccessStrategy(
-                        collectionRegion,
-                        collectionRegion.getSettings()
+                        collectionRegion
                 );
             case READ_WRITE:
                 return new ReadWriteEhcacheCollectionRegionAccessStrategy(
-                        collectionRegion,
-                        collectionRegion.getSettings()
+                        collectionRegion
                 );
             case NONSTRICT_READ_WRITE:
                 return new NonStrictReadWriteEhcacheCollectionRegionAccessStrategy(
-                        collectionRegion,
-                        collectionRegion.getSettings()
+                        collectionRegion
                 );
             case TRANSACTIONAL:
                 return new TransactionalEhcacheCollectionRegionAccessStrategy(
-                        collectionRegion, collectionRegion.getEhcache(), collectionRegion
-                        .getSettings()
+                        collectionRegion, collectionRegion.getEhcache()
                 );
             default:
                 throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
@@ -122,23 +116,19 @@ public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFa
                 LOG.readOnlyCacheConfiguredForMutableEntity( naturalIdRegion.getName() );
             }
             return new ReadOnlyEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion,
-                    naturalIdRegion.getSettings()
+                    naturalIdRegion
             );
         case READ_WRITE:
             return new ReadWriteEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion,
-                    naturalIdRegion.getSettings()
+                    naturalIdRegion
             );
         case NONSTRICT_READ_WRITE:
             return new NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion,
-                    naturalIdRegion.getSettings()
+                    naturalIdRegion
             );
         case TRANSACTIONAL:
             return new TransactionalEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion, naturalIdRegion.getEhcache(), naturalIdRegion
-                    .getSettings()
+                    naturalIdRegion, naturalIdRegion.getEhcache()
             );
         default:
             throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );

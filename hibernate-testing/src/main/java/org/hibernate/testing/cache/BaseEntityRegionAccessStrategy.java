@@ -79,6 +79,6 @@ class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements
 
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
-		return region.getSettings().isMinimalPutsEnabled();
+		return region.isMinimalPutsEnabled();
 	}
 }

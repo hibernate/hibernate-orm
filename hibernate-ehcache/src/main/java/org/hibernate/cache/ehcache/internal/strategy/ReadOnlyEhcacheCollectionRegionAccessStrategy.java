@@ -43,8 +43,8 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	/**
 	 * Create a read-only access strategy accessing the given collection region.
 	 */
-	public ReadOnlyEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
-		super( region, settings );
+	public ReadOnlyEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region) {
+		super( region );
 	}
 
 	/**

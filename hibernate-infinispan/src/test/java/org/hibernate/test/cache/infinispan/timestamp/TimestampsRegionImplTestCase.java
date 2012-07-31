@@ -127,18 +127,6 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
 
    public static class MockInfinispanRegionFactory extends InfinispanRegionFactory {
 
-      public MockInfinispanRegionFactory() {
-      }
-
-      public MockInfinispanRegionFactory(Properties props) {
-         super(props);
-      }
-
-//      @Override
-//      protected TimestampsRegionImpl createTimestampsRegion(CacheAdapter cacheAdapter, String regionName) {
-//         return new MockTimestampsRegionImpl(cacheAdapter, regionName, getTransactionManager(), this);
-//      }
-
       @Override
       protected AdvancedCache createCacheWrapper(AdvancedCache cache) {
          return new ClassLoaderAwareCache(cache, Thread.currentThread().getContextClassLoader()) {

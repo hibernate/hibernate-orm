@@ -3,7 +3,6 @@ package org.hibernate.cache.infinispan;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.infinispan.util.logging.LogFactory;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
+import org.hibernate.cache.spi.AbstractRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -45,10 +45,9 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
-import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -58,7 +57,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAwareService {
+public class InfinispanRegionFactory extends AbstractRegionFactory {
 
    private static final Log log = LogFactory.getLog(InfinispanRegionFactory.class);
 
@@ -172,8 +171,6 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
 
    private EmbeddedCacheManager manager;
 
-	protected ServiceRegistryImplementor serviceRegistry;
-
    private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
 
    private final Set<String> definedConfigurations = new HashSet<String>();
@@ -184,21 +181,6 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
 
    private List<String> regionNames = new ArrayList<String>();
    
-   /**
-    * Create a new instance using the default configuration.
-    */
-   public InfinispanRegionFactory() {
-   }
-
-   /**
-    * Create a new instance using conifguration properties in <code>props</code>.
-    * 
-    * @param props
-    *           Environmental properties; currently unused.
-    */
-   public InfinispanRegionFactory(Properties props) {
-   }
-
    /** {@inheritDoc} */
    public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building collection cache region [" + regionName + "]");
@@ -300,43 +282,43 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       return manager;
    }
 
-   /**
+	@Override
+	public void start() {
+		log.debug("Starting Infinispan region factory");
+		try {
+			transactionManagerlookup = createTransactionManagerLookup( getServiceRegistry() );
+			transactionManager = transactionManagerlookup.getTransactionManager();
+			manager = createCacheManager();
+			initGenericDataTypeOverrides();
+			ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
+			Map settings = configurationService.getSettings();
+			for(Object key : settings.keySet()){
+				int prefixLoc;
+				if ((prefixLoc = key.toString().indexOf( PREFIX )) != -1) {
+					dissectProperty(prefixLoc, key.toString(), settings);
+				}
+			}
+			defineGenericDataTypeCacheConfigurations( settings);
+		} catch (CacheException ce) {
+			throw ce;
+		} catch (Throwable t) {
+			throw new CacheException("Unable to start region factory", t);
+		}
+	}
+
+	/**
     * {@inheritDoc}
     */
    @Override
    public void start(Settings settings, Properties properties) throws CacheException {
-      log.debug("Starting Infinispan region factory");
-      try {
-         transactionManagerlookup = createTransactionManagerLookup(settings, properties);
-         transactionManager = transactionManagerlookup.getTransactionManager();
-         manager = createCacheManager();
-         initGenericDataTypeOverrides();
-         Enumeration keys = properties.propertyNames();
-         while (keys.hasMoreElements()) {
-            String key = (String) keys.nextElement();
-            int prefixLoc;
-            if ((prefixLoc = key.indexOf(PREFIX)) != -1) {
-               dissectProperty(prefixLoc, key, properties);
-            }
-         }
-         defineGenericDataTypeCacheConfigurations(settings, properties);
-      } catch (CacheException ce) {
-         throw ce;
-      } catch (Throwable t) {
-          throw new CacheException("Unable to start region factory", t);
-      }
+     	start();
    }
 
    protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(
-            Settings settings, Properties properties) {
-      return new HibernateTransactionManagerLookup(settings, properties);
+            ServiceRegistry sr) {
+      return new HibernateTransactionManagerLookup(sr);
    }
 
-
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
 
 	/**
     * {@inheritDoc}
@@ -375,7 +357,7 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
 
    protected EmbeddedCacheManager createCacheManager() throws CacheException {
 	   try {
-		   ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		   ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
 		   String configLoc = configurationService.getSetting(
 				   INFINISPAN_CONFIG_RESOURCE_PROP,
 				   StandardConverters.STRING, DEF_INFINISPAN_CONFIG_RESOURCE
@@ -403,7 +385,7 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
             .addRegion(regionName, region);
    }
 
-   private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
+   public void initGenericDataTypeOverrides() {
       TypeOverrides entityOverrides = new TypeOverrides();
       entityOverrides.setCacheName(DEF_ENTITY_RESOURCE);
       typeOverrides.put(ENTITY_KEY, entityOverrides);
@@ -419,10 +401,9 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       TypeOverrides queryOverrides = new TypeOverrides();
       queryOverrides.setCacheName(DEF_QUERY_RESOURCE);
       typeOverrides.put(QUERY_KEY, queryOverrides);
-      return typeOverrides;
    }
 
-   private void dissectProperty(int prefixLoc, String key, Properties properties) {
+   private void dissectProperty(int prefixLoc, String key, Map properties) {
       TypeOverrides cfgOverride;
       int suffixLoc;
       if (!key.equals(INFINISPAN_CONFIG_RESOURCE_PROP) && (suffixLoc = key.indexOf(CONFIG_SUFFIX)) != -1) {
@@ -446,8 +427,8 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       }
    }
 
-   private String extractProperty(String key, Properties properties) {
-      String value = ConfigurationHelper.extractPropertyValue(key, properties);
+   private String extractProperty(String key, Map properties) {
+      String value = ConfigurationHelper.getString( key, properties );
       log.debugf("Configuration override via property %s: %s", key, value);
       return value;
    }
@@ -462,7 +443,7 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       return cfgOverride;
    }
 
-   private void defineGenericDataTypeCacheConfigurations(Settings settings, Properties properties) throws CacheException {
+   private void defineGenericDataTypeCacheConfigurations(Map properties) throws CacheException {
       String[] defaultGenericDataTypes = new String[]{ENTITY_KEY, COLLECTION_KEY, TIMESTAMPS_KEY, QUERY_KEY};
       for (String type : defaultGenericDataTypes) {
          TypeOverrides override = overrideStatisticsIfPresent(typeOverrides.get(type), properties);
@@ -529,7 +510,7 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       return new ClassLoaderAwareCache(cache, Thread.currentThread().getContextClassLoader());
    }
 
-   private Configuration configureTransactionManager(Configuration regionOverrides, String templateCacheName, Properties properties) {
+   private Configuration configureTransactionManager(Configuration regionOverrides, String templateCacheName, Map properties) {
       // Get existing configuration to verify whether a tm was configured or not.
       Configuration templateConfig = manager.defineConfiguration(templateCacheName, new Configuration());
       if (templateConfig.isTransactionalCache()) {
@@ -539,7 +520,7 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
             log.debug("Infinispan is configured [" + ispnTmLookupClassName + "] with a different transaction manager lookup " +
                             "class than Hibernate [" + hbTmLookupClassName + "]");
          } else {
-            regionOverrides.setTransactionManagerLookup(transactionManagerlookup);
+            regionOverrides.fluent().transactionManagerLookup( transactionManagerlookup );
          }
 
          String useSyncProp = extractProperty(INFINISPAN_USE_SYNCHRONIZATION_PROP, properties);
@@ -550,11 +531,12 @@ public class InfinispanRegionFactory implements RegionFactory, ServiceRegistryAw
       return regionOverrides;
    }
 
-   private TypeOverrides overrideStatisticsIfPresent(TypeOverrides override, Properties properties) {
+   private TypeOverrides overrideStatisticsIfPresent(TypeOverrides override, Map properties) {
       String globalStats = extractProperty(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
       if (globalStats != null) {
          override.setExposeStatistics(Boolean.parseBoolean(globalStats));
       }
       return override;
    }
+
 }

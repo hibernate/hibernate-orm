@@ -259,18 +259,6 @@ public class NaturalIdInvalidationTestCase extends DualNodeTestCase {
          if ( !event.isPre() ) {
             NaturalIdCacheKey cacheKey = (NaturalIdCacheKey) event.getKey();
             visited.add(cacheKey.toString());
-//            Integer primKey = (Integer) cacheKey.getKey();
-//            String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
-//            log.debug( "MyListener[" + name + "] - Visiting key " + key );
-//            // String name = fqn.toString();
-//            String token = ".functional.";
-//            int index = key.indexOf( token );
-//            if ( index > -1 ) {
-//               index += token.length();
-//               key = key.substring( index );
-//               log.debug( "MyListener[" + name + "] - recording visit to " + key );
-//               visited.add( key );
-//            }
          }
       }
    }

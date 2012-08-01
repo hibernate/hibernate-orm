@@ -6,12 +6,10 @@ import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Alex Snaps
  */
-@FailureExpectedWithNewMetamodel
 public class EhCacheRegionTest extends EhCacheTest {
 	@Override
 	protected void configCache(final Configuration cfg) {

@@ -30,7 +30,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.id.entities.Planet;
 import org.hibernate.test.annotations.id.entities.PlanetCheatSheet;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -49,7 +48,6 @@ public class EnumIdTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( EnumIdTest.class );
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEnumAsId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

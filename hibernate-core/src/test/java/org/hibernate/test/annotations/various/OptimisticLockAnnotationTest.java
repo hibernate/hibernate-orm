@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.various;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 public class OptimisticLockAnnotationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOptimisticLockExcludeOnNameProperty() throws Exception {
 		Conductor c = new Conductor();
 		c.setName( "Bob" );

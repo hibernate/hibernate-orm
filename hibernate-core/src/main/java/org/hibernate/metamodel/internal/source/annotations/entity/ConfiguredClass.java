@@ -28,6 +28,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -54,6 +55,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeNature;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -61,11 +67,6 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.ReflectionHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeNature;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -177,7 +178,7 @@ public class ConfiguredClass {
 		return localBindingContext;
 	}
 
-	public Iterable<BasicAttribute> getSimpleAttributes() {
+	public Collection<BasicAttribute> getSimpleAttributes() {
 		return simpleAttributeMap.values();
 	}
 

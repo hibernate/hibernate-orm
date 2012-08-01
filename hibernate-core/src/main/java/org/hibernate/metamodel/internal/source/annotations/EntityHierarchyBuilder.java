@@ -84,11 +84,6 @@ public class EntityHierarchyBuilder {
 
 			ClassInfo rootClassInfo = findRootEntityClassInfo( index, classInfo );
 			List<ClassInfo> rootClassWithAllSubclasses = new ArrayList<ClassInfo>();
-			List<ClassInfo> mappedSuperclasses =  findMappedSuperclasses( index, rootClassInfo );
-
-			// the root entity might have some mapped super classes which we have to take into consideration
-			// for inheritance type and default access
-			rootClassWithAllSubclasses.addAll( mappedSuperclasses );
 
 			// collect the current root entity and all its subclasses
 			processHierarchy(
@@ -98,6 +93,13 @@ public class EntityHierarchyBuilder {
 					processedEntities,
 					classToDirectSubClassMap
 			);
+			boolean hasSubclasses = rootClassWithAllSubclasses.size() > 1;
+
+			List<ClassInfo> mappedSuperclasses =  findMappedSuperclasses( index, rootClassInfo );
+
+			// the root entity might have some mapped super classes which we have to take into consideration
+			// for inheritance type and default access
+			rootClassWithAllSubclasses.addAll( mappedSuperclasses );
 
 			AccessType defaultAccessType = determineDefaultAccessType( rootClassWithAllSubclasses );
 			InheritanceType hierarchyInheritanceType = determineInheritanceType(
@@ -111,6 +113,7 @@ public class EntityHierarchyBuilder {
 					mappedSuperclasses,
 					defaultAccessType,
 					hierarchyInheritanceType,
+					hasSubclasses,
 					bindingContext
 			);
 			RootEntitySourceImpl rootSource = new RootEntitySourceImpl( rootEntityClass );

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
 		DiscriminatorSource discriminatorSource = null;
-		if ( getEntityClass().getDiscriminatorColumnValues() != null ) {
+		if ( getEntityClass().needsDiscriminatorColumn() ) {
 			discriminatorSource = new DiscriminatorSourceImpl( getEntityClass() );
 		}
 		return discriminatorSource;
@@ -277,7 +278,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		@Override
 		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			// not relevant for annotations
+			return Collections.emptySet();
 		}
 	}
 }

@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,6 +60,7 @@ import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
@@ -113,30 +115,64 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
+	// discriminator related fields
 	private Column discriminatorColumnValues;
 	private FormulaValue discriminatorFormula;
 	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
-	private boolean isDiscriminatorForced = true;
+	private boolean isDiscriminatorForced = false;
 	private boolean isDiscriminatorIncludedInSql = true;
+	private boolean needsDiscriminatorColumn = false;
 
 	private final List<JpaCallbackSource> jpaCallbacks;
 
-	private List<ConfiguredClass> mappedSuperclasses;
+	private List<MappedSuperclass> mappedSuperclasses;
 
+	/**
+	 * Constructor used for entity roots
+	 *
+	 * @param classInfo the jandex class info this this entity
+	 * @param mappedSuperclasses a list of class info instances representing the mapped super classes for this root entity
+	 * @param hierarchyAccessType the default access type
+	 * @param inheritanceType the inheritance type this entity
+	 * @param hasSubclasses flag indicating whether this root entity has sub classes
+	 * @param context the binding context
+	 */
 	public EntityClass(
 			ClassInfo classInfo,
 			List<ClassInfo> mappedSuperclasses,
 			AccessType hierarchyAccessType,
 			InheritanceType inheritanceType,
+			boolean hasSubclasses,
 			AnnotationBindingContext context) {
-		this( classInfo, ( EntityClass ) null, hierarchyAccessType, inheritanceType, context );
-		for(ClassInfo mappedSuperclassInfo : mappedSuperclasses) {
-			ConfiguredClass configuredClass = new ConfiguredClass( mappedSuperclassInfo, hierarchyAccessType, null, context );
+		this( classInfo, null, hierarchyAccessType, inheritanceType, context );
+		for ( ClassInfo mappedSuperclassInfo : mappedSuperclasses ) {
+			MappedSuperclass configuredClass = new MappedSuperclass(
+					mappedSuperclassInfo,
+					null,
+					hierarchyAccessType,
+					context
+			);
 			this.mappedSuperclasses.add( configuredClass );
+		}
+
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			processDiscriminator();
+			if ( hasSubclasses || isDiscriminatorForced ) {
+				needsDiscriminatorColumn = true;
+			}
 		}
 	}
 
+	/**
+	 * Constructor used for entities within a hierarchy (non entity roots)
+	 *
+	 * @param classInfo the jandex class info this this entity
+	 * @param parent the parent entity
+	 * @param hierarchyAccessType the default access type
+	 * @param inheritanceType the inheritance type this entity
+	 * @param context the binding context
+	 */
 	public EntityClass(
 			ClassInfo classInfo,
 			EntityClass parent,
@@ -173,11 +209,15 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo().annotations()
 		);
 
-		this.mappedSuperclasses = new ArrayList<ConfiguredClass>(  );
+		this.mappedSuperclasses = new ArrayList<MappedSuperclass>();
 
 		processHibernateEntitySpecificAnnotations();
 		processProxyGeneration();
-		processDiscriminator();
+		processDiscriminatorValue();
+	}
+
+	public boolean needsDiscriminatorColumn() {
+		return needsDiscriminatorColumn;
 	}
 
 	public Column getDiscriminatorColumnValues() {
@@ -313,8 +353,20 @@ public class EntityClass extends ConfiguredClass {
 		return jpaCallbacks;
 	}
 
-	public List<ConfiguredClass> getMappedSuperclasses() {
-		return mappedSuperclasses;
+	@Override
+	public Collection<BasicAttribute> getSimpleAttributes() {
+		List<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
+
+		// add the attributes defined on this entity directly
+		attributes.addAll( super.getSimpleAttributes() );
+
+		// now the attributes of the mapped superclasses
+		// TODO - take care of overrides (HF)
+		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
+			attributes.addAll( mappedSuperclass.getSimpleAttributes() );
+		}
+
+		return attributes;
 	}
 
 	private String determineExplicitEntityName() {
@@ -369,18 +421,16 @@ public class EntityClass extends ConfiguredClass {
 		return idAnnotationList;
 	}
 
-	private void processDiscriminator() {
-		if ( !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			return;
-		}
-
+	private void processDiscriminatorValue() {
 		final AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.DISCRIMINATOR_VALUE
 		);
 		if ( discriminatorValueAnnotation != null ) {
 			this.discriminatorMatchValue = discriminatorValueAnnotation.value().asString();
 		}
+	}
 
+	private void processDiscriminator() {
 		final AnnotationInstance discriminatorColumnAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.DISCRIMINATOR_COLUMN
 		);
@@ -942,7 +992,7 @@ public class EntityClass extends ConfiguredClass {
 				PostUpdate.class, PseudoJpaDotNames.DEFAULT_POST_UPDATE, callbackClassName, callbacksByType
 		);
 		if ( !callbacksByType.isEmpty() ) {
-			jpaCallbackClassList.add( new JpaCallbackClassImpl( instanceCallbackClassName, callbacksByType, true ) );
+			jpaCallbackClassList.add( new JpaCallbackSourceImpl( instanceCallbackClassName, callbacksByType, true ) );
 		}
 	}
 
@@ -971,7 +1021,13 @@ public class EntityClass extends ConfiguredClass {
 		createCallback( PostRemove.class, JPADotNames.POST_REMOVE, callbacksByType, callbackClassInfo, isListener );
 		createCallback( PostUpdate.class, JPADotNames.POST_UPDATE, callbacksByType, callbackClassInfo, isListener );
 		if ( !callbacksByType.isEmpty() ) {
-			callbackClassList.add( new JpaCallbackClassImpl( instanceCallbackClassName, callbacksByType, isListener ) );
+			callbackClassList.add(
+					new JpaCallbackSourceImpl(
+							instanceCallbackClassName,
+							callbacksByType,
+							isListener
+					)
+			);
 		}
 	}
 
@@ -1045,38 +1101,6 @@ public class EntityClass extends ConfiguredClass {
 					"Only one method may be annotated as a " + callbackTypeClass.getSimpleName() +
 							" callback method in "
 			);
-		}
-	}
-
-	// Process JPA callbacks, in superclass-first order (unless superclasses are excluded), using default listeners first
-	// (unless default listeners are excluded), then entity listeners, and finally the entity/mapped superclass itself
-	private class JpaCallbackClassImpl implements JpaCallbackSource {
-
-		private final Map<Class<?>, String> callbacksByType;
-		private final String name;
-		private final boolean isListener;
-
-		private JpaCallbackClassImpl(String name,
-									 Map<Class<?>, String> callbacksByType,
-									 boolean isListener) {
-			this.name = name;
-			this.callbacksByType = callbacksByType;
-			this.isListener = isListener;
-		}
-
-		@Override
-		public String getCallbackMethod(Class<?> callbackType) {
-			return callbacksByType.get( callbackType );
-		}
-
-		@Override
-		public String getName() {
-			return name;
-		}
-
-		@Override
-		public boolean isListener() {
-			return isListener;
 		}
 	}
 }

@@ -23,14 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * @author Hardy Ferentschik
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	private final MappedAttribute attribute;
-	private final String name;
 
 	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride, Column columnValues) {
 		super( columnValues );
@@ -38,28 +35,12 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 			setOverrideColumnValues( attributeOverride.getColumnValues() );
 		}
 		this.attribute = attribute;
-		this.name = resolveColumnName();
-	}
-
-	protected String resolveColumnName() {
-		if ( StringHelper.isEmpty( super.getName() ) ) {
-			//no @Column defined.
-			return  null;
-		}
-		else {
-			return super.getName();
-		}
-	}
-
-	@Override
-	public String getName() {
-		return name;
 	}
 
 	@Override
 	public String getReadFragment() {
 		if ( attribute instanceof BasicAttribute ) {
-			return ( (BasicAttribute) attribute ).getCustomReadFragment();
+			return ( ( BasicAttribute ) attribute ).getCustomReadFragment();
 		}
 		else {
 			return null;
@@ -69,7 +50,7 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	@Override
 	public String getWriteFragment() {
 		if ( attribute instanceof BasicAttribute ) {
-			return ( (BasicAttribute) attribute ).getCustomWriteFragment();
+			return ( ( BasicAttribute ) attribute ).getCustomWriteFragment();
 		}
 		else {
 			return null;
@@ -79,7 +60,7 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	@Override
 	public String getCheckCondition() {
 		if ( attribute instanceof BasicAttribute ) {
-			return ( (BasicAttribute) attribute ).getCheckCondition();
+			return attribute.getCheckCondition();
 		}
 		else {
 			return null;

@@ -63,23 +63,15 @@ public class EntitySourceImpl implements EntitySource {
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
 		this.subclassEntitySources = new HashSet<SubclassEntitySource>();
-		this.jpaEntityName = StringHelper.isNotEmpty( entityClass.getExplicitEntityName() ) ? entityClass.getExplicitEntityName() : StringHelper
-				.unqualify( entityClass.getName() );
-		addImports();
-	}
 
-	private void addImports() {
-		try {
-			final MetadataImplementor metadataImplementor = entityClass.getLocalBindingContext()
-					.getMetadataImplementor();
-			metadataImplementor.addImport( getJpaEntityName(), getEntityName() );
-			if ( !getEntityName().equals( getJpaEntityName() ) ) {
-				metadataImplementor.addImport( getEntityName(), getEntityName() );
-			}
+		if ( StringHelper.isNotEmpty( entityClass.getExplicitEntityName() ) ) {
+			this.jpaEntityName = entityClass.getExplicitEntityName();
 		}
-		catch ( MappingException e ) {
-			throw new AnnotationException( "Use of the same entity name twice: " + getJpaEntityName(), e );
+		else {
+			this.jpaEntityName = StringHelper.unqualify( entityClass.getName() );
 		}
+
+		addImports();
 	}
 
 	public EntityClass getEntityClass() {
@@ -188,6 +180,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+		// not relevant for annotations
 		return Collections.emptySet();
 	}
 
@@ -202,12 +195,7 @@ public class EntitySourceImpl implements EntitySource {
 		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
-		List<ConfiguredClass> mappedSuperclasses = entityClass.getMappedSuperclasses();
-		for(ConfiguredClass mappedSuperclass : mappedSuperclasses) {
-			for(BasicAttribute attribute : mappedSuperclass.getSimpleAttributes()) {
-				attributeList.add( new SingularAttributeSourceImpl( attribute ) );
-			}
-		}
+
 		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
 			attributeList.add(
 					new ComponentAttributeSourceImpl(
@@ -217,6 +205,7 @@ public class EntitySourceImpl implements EntitySource {
 					)
 			);
 		}
+
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
 			switch ( associationAttribute.getAttributeNature() ) {
 				case ONE_TO_ONE:
@@ -225,7 +214,7 @@ public class EntitySourceImpl implements EntitySource {
 					break;
 				}
 				case MANY_TO_MANY: {
-					attributeList.add( new PluralAttributeSourceImpl( (PluralAssociationAttribute) associationAttribute ) );
+					attributeList.add( new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute ) );
 					break;
 				}
 				case ONE_TO_MANY:
@@ -274,11 +263,25 @@ public class EntitySourceImpl implements EntitySource {
 		sb.append( "{entityClass=" ).append( entityClass.getName() );
 
 		sb.append( ", subclassEntitySources={" );
-		for(SubclassEntitySource subClass : subclassEntitySources) {
+		for ( SubclassEntitySource subClass : subclassEntitySources ) {
 			sb.append( subClass.getClassName() ).append( "," );
 		}
 		sb.append( "}}" );
 		return sb.toString();
+	}
+
+	private void addImports() {
+		try {
+			final MetadataImplementor metadataImplementor = entityClass.getLocalBindingContext()
+					.getMetadataImplementor();
+			metadataImplementor.addImport( getJpaEntityName(), getEntityName() );
+			if ( !getEntityName().equals( getJpaEntityName() ) ) {
+				metadataImplementor.addImport( getEntityName(), getEntityName() );
+			}
+		}
+		catch ( MappingException e ) {
+			throw new AnnotationException( "Use of the same entity name twice: " + getJpaEntityName(), e );
+		}
 	}
 }
 

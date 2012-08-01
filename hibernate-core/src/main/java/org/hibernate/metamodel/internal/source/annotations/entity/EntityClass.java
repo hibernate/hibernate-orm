@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AccessType;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
@@ -52,17 +50,12 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 import org.jboss.jandex.Type.Kind;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
-import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -84,7 +77,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  */
 public class EntityClass extends ConfiguredClass {
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
-	private final IdType idType;
+
 	private final InheritanceType inheritanceType;
 
 	private final String explicitEntityName;
@@ -115,54 +108,9 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
-	// discriminator related fields
-	private Column discriminatorColumnValues;
-	private FormulaValue discriminatorFormula;
-	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
-	private boolean isDiscriminatorForced = false;
-	private boolean isDiscriminatorIncludedInSql = true;
-	private boolean needsDiscriminatorColumn = false;
 
 	private final List<JpaCallbackSource> jpaCallbacks;
-
-	private List<MappedSuperclass> mappedSuperclasses;
-
-	/**
-	 * Constructor used for entity roots
-	 *
-	 * @param classInfo the jandex class info this this entity
-	 * @param mappedSuperclasses a list of class info instances representing the mapped super classes for this root entity
-	 * @param hierarchyAccessType the default access type
-	 * @param inheritanceType the inheritance type this entity
-	 * @param hasSubclasses flag indicating whether this root entity has sub classes
-	 * @param context the binding context
-	 */
-	public EntityClass(
-			ClassInfo classInfo,
-			List<ClassInfo> mappedSuperclasses,
-			AccessType hierarchyAccessType,
-			InheritanceType inheritanceType,
-			boolean hasSubclasses,
-			AnnotationBindingContext context) {
-		this( classInfo, null, hierarchyAccessType, inheritanceType, context );
-		for ( ClassInfo mappedSuperclassInfo : mappedSuperclasses ) {
-			MappedSuperclass configuredClass = new MappedSuperclass(
-					mappedSuperclassInfo,
-					null,
-					hierarchyAccessType,
-					context
-			);
-			this.mappedSuperclasses.add( configuredClass );
-		}
-
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			processDiscriminator();
-			if ( hasSubclasses || isDiscriminatorForced ) {
-				needsDiscriminatorColumn = true;
-			}
-		}
-	}
 
 	/**
 	 * Constructor used for entities within a hierarchy (non entity roots)
@@ -181,7 +129,6 @@ public class EntityClass extends ConfiguredClass {
 			AnnotationBindingContext context) {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.inheritanceType = inheritanceType;
-		this.idType = determineIdType();
 
 		final boolean hasOwnTable = definesItsOwnTable();
 
@@ -209,31 +156,9 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo().annotations()
 		);
 
-		this.mappedSuperclasses = new ArrayList<MappedSuperclass>();
-
 		processHibernateEntitySpecificAnnotations();
 		processProxyGeneration();
 		processDiscriminatorValue();
-	}
-
-	public boolean needsDiscriminatorColumn() {
-		return needsDiscriminatorColumn;
-	}
-
-	public Column getDiscriminatorColumnValues() {
-		return discriminatorColumnValues;
-	}
-
-	public FormulaValue getDiscriminatorFormula() {
-		return discriminatorFormula;
-	}
-
-	public Class<?> getDiscriminatorType() {
-		return discriminatorType;
-	}
-
-	public IdType getIdType() {
-		return idType;
 	}
 
 	public boolean isExplicitPolymorphism() {
@@ -337,36 +262,12 @@ public class EntityClass extends ConfiguredClass {
 		return getParent() == null;
 	}
 
-	public boolean isDiscriminatorForced() {
-		return isDiscriminatorForced;
-	}
-
-	public boolean isDiscriminatorIncludedInSql() {
-		return isDiscriminatorIncludedInSql;
-	}
-
 	public String getDiscriminatorMatchValue() {
 		return discriminatorMatchValue;
 	}
 
 	public List<JpaCallbackSource> getJpaCallbacks() {
 		return jpaCallbacks;
-	}
-
-	@Override
-	public Collection<BasicAttribute> getSimpleAttributes() {
-		List<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
-
-		// add the attributes defined on this entity directly
-		attributes.addAll( super.getSimpleAttributes() );
-
-		// now the attributes of the mapped superclasses
-		// TODO - take care of overrides (HF)
-		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
-			attributes.addAll( mappedSuperclass.getSimpleAttributes() );
-		}
-
-		return attributes;
 	}
 
 	private String determineExplicitEntityName() {
@@ -381,130 +282,12 @@ public class EntityClass extends ConfiguredClass {
 		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
 	}
 
-	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = findIdAnnotations( JPADotNames.ID );
-		List<AnnotationInstance> embeddedIdAnnotations = findIdAnnotations( JPADotNames.EMBEDDED_ID );
-
-		if ( !idAnnotations.isEmpty() && !embeddedIdAnnotations.isEmpty() ) {
-			throw new MappingException(
-					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + getName() + "."
-			);
-		}
-
-		if ( !embeddedIdAnnotations.isEmpty() ) {
-			if ( embeddedIdAnnotations.size() == 1 ) {
-				return IdType.EMBEDDED;
-			}
-			else {
-				throw new AnnotationException( "Multiple @EmbeddedId annotations are not allowed" );
-			}
-		}
-
-		if ( !idAnnotations.isEmpty() ) {
-			return idAnnotations.size() == 1 ? IdType.SIMPLE : IdType.COMPOSED;
-		}
-		return IdType.NONE;
-	}
-
-	private List<AnnotationInstance> findIdAnnotations(DotName idAnnotationType) {
-		List<AnnotationInstance> idAnnotationList = new ArrayList<AnnotationInstance>();
-		if ( getClassInfo().annotations().containsKey( idAnnotationType ) ) {
-			idAnnotationList.addAll( getClassInfo().annotations().get( idAnnotationType ) );
-		}
-		ConfiguredClass parent = getParent();
-		while ( parent != null ) {
-			if ( parent.getClassInfo().annotations().containsKey( idAnnotationType ) ) {
-				idAnnotationList.addAll( parent.getClassInfo().annotations().get( idAnnotationType ) );
-			}
-			parent = parent.getParent();
-		}
-		return idAnnotationList;
-	}
-
 	private void processDiscriminatorValue() {
 		final AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.DISCRIMINATOR_VALUE
 		);
 		if ( discriminatorValueAnnotation != null ) {
 			this.discriminatorMatchValue = discriminatorValueAnnotation.value().asString();
-		}
-	}
-
-	private void processDiscriminator() {
-		final AnnotationInstance discriminatorColumnAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), JPADotNames.DISCRIMINATOR_COLUMN
-		);
-
-		final AnnotationInstance discriminatorFormulaAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(),
-				HibernateDotNames.DISCRIMINATOR_FORMULA
-		);
-
-
-		Class<?> type = String.class; // string is the discriminator default
-		if ( discriminatorFormulaAnnotation != null ) {
-			String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class );
-			discriminatorFormula = new FormulaValue( null, expression );
-		}
-		discriminatorColumnValues = new Column( null ); //(stliu) give null here, will populate values below
-		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
-		if ( discriminatorColumnAnnotation != null ) {
-
-			DiscriminatorType discriminatorType = Enum.valueOf(
-					DiscriminatorType.class, discriminatorColumnAnnotation.value( "discriminatorType" ).asEnum()
-			);
-			switch ( discriminatorType ) {
-				case STRING: {
-					type = String.class;
-					break;
-				}
-				case CHAR: {
-					type = Character.class;
-					break;
-				}
-				case INTEGER: {
-					type = Integer.class;
-					break;
-				}
-				default: {
-					throw new AnnotationException( "Unsupported discriminator type: " + discriminatorType );
-				}
-			}
-
-			discriminatorColumnValues.setName(
-					JandexHelper.getValue(
-							discriminatorColumnAnnotation,
-							"name",
-							String.class
-					)
-			);
-			discriminatorColumnValues.setLength(
-					JandexHelper.getValue(
-							discriminatorColumnAnnotation,
-							"length",
-							Integer.class
-					)
-			);
-			discriminatorColumnValues.setColumnDefinition(
-					JandexHelper.getValue(
-							discriminatorColumnAnnotation,
-							"columnDefinition",
-							String.class
-					)
-			);
-		}
-		discriminatorType = type;
-
-		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.DISCRIMINATOR_OPTIONS
-		);
-		if ( discriminatorOptionsAnnotation != null ) {
-			isDiscriminatorForced = discriminatorOptionsAnnotation.value( "force" ).asBoolean();
-			isDiscriminatorIncludedInSql = discriminatorOptionsAnnotation.value( "insert" ).asBoolean();
-		}
-		else {
-			isDiscriminatorForced = false;
-			isDiscriminatorIncludedInSql = true;
 		}
 	}
 

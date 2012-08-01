@@ -35,37 +35,34 @@ import org.junit.Test;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 
-import org.hibernate.testing.FailureExpected;
-
 import static junit.framework.Assert.assertTrue;
 
 /**
  * @author Strong Liu
  */
-@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 public class EmbeddedIdTest extends BaseAnnotationBindingTestCase {
-    @Test
-//	@Resources(annotatedClasses = { User.class, Address.class })
-    public void testEmbeddable() {
-        EntityBinding binding = getEntityBinding( User.class );
-        EntityIdentifier identifier = binding.getHierarchyDetails().getEntityIdentifier();
-        assertTrue( identifier.isEmbedded() );
-    }
+	@Test
+	@Resources(annotatedClasses = { User.class, Address.class })
+	public void testEmbeddable() {
+		EntityBinding binding = getEntityBinding( User.class );
+		EntityIdentifier identifier = binding.getHierarchyDetails().getEntityIdentifier();
+		assertTrue( identifier.isEmbedded() );
+	}
 
-    @Entity
-    @Access( AccessType.FIELD )
-    class User {
-        private String name;
-        @EmbeddedId
-        private Address address;
-    }
+	@Entity
+	@Access(AccessType.FIELD)
+	class User {
+		private String name;
+		@EmbeddedId
+		private Address address;
+	}
 
-    @Embeddable
-    class Address {
-        String street;
-        String city;
-        String postCode;
-    }
+	@Embeddable
+	class Address {
+		String street;
+		String city;
+		String postCode;
+	}
 }
 
 

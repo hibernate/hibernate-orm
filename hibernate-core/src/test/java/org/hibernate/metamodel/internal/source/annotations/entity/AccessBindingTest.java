@@ -72,7 +72,6 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals( "Wrong access type", "property", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
 	}
 
-
 	@Entity
 	class NoAccess {
 		private int id;

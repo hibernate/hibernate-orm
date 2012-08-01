@@ -61,13 +61,16 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
  * @author Hardy Ferentschik
  */
 public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntitySource {
-	public RootEntitySourceImpl(EntityClass entityClass) {
+	private final RootEntityClass rootEntityClass;
+
+	public RootEntitySourceImpl(RootEntityClass entityClass) {
 		super( entityClass );
+		rootEntityClass = entityClass;
 	}
 
 	@Override
 	public IdentifierSource getIdentifierSource() {
-		IdType idType = getEntityClass().getIdType();
+		IdType idType = rootEntityClass.getIdType();
 		switch ( idType ) {
 			case SIMPLE: {
 				BasicAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
@@ -99,8 +102,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
 		DiscriminatorSource discriminatorSource = null;
-		if ( getEntityClass().needsDiscriminatorColumn() ) {
-			discriminatorSource = new DiscriminatorSourceImpl( getEntityClass() );
+		if ( rootEntityClass.needsDiscriminatorColumn() ) {
+			discriminatorSource = new DiscriminatorSourceImpl( rootEntityClass );
 		}
 		return discriminatorSource;
 	}
@@ -219,7 +222,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		@Override
 		public Iterable<MetaAttributeSource> getMetaAttributeSources() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			// not relevant for annotations
+			return Collections.emptySet();
 		}
 	}
 

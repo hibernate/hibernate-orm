@@ -40,12 +40,13 @@ import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntitySourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.entity.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.RootEntitySourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.entity.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -108,7 +109,7 @@ public class EntityHierarchyBuilder {
 			);
 
 			// create the root entity source
-			EntityClass rootEntityClass = new EntityClass(
+			RootEntityClass rootEntityClass = new RootEntityClass(
 					rootClassInfo,
 					mappedSuperclasses,
 					defaultAccessType,

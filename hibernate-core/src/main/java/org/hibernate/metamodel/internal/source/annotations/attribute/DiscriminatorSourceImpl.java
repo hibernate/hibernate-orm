@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -31,9 +31,9 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Hardy Ferentschik
  */
 public class DiscriminatorSourceImpl implements DiscriminatorSource {
-	private final EntityClass entityClass;
+	private final RootEntityClass entityClass;
 
-	public DiscriminatorSourceImpl(EntityClass entityClass) {
+	public DiscriminatorSourceImpl(RootEntityClass entityClass) {
 		this.entityClass = entityClass;
 	}
 
@@ -47,12 +47,12 @@ public class DiscriminatorSourceImpl implements DiscriminatorSource {
 		return entityClass.isDiscriminatorIncludedInSql();
 	}
 
-    @Override
-    public RelationalValueSource getDiscriminatorRelationalValueSource() {
-        return entityClass.getDiscriminatorFormula() != null ?
-                new DerivedValueSourceImpl( entityClass.getDiscriminatorFormula() )
-                : new ColumnValuesSourceImpl( entityClass.getDiscriminatorColumnValues() );
-    }
+	@Override
+	public RelationalValueSource getDiscriminatorRelationalValueSource() {
+		return entityClass.getDiscriminatorFormula() != null ?
+				new DerivedValueSourceImpl( entityClass.getDiscriminatorFormula() )
+				: new ColumnValuesSourceImpl( entityClass.getDiscriminatorColumnValues() );
+	}
 
 	@Override
 	public String getExplicitHibernateTypeName() {

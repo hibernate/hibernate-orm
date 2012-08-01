@@ -47,7 +47,7 @@ public class Column {
 	private int precision = 0;
 	private int scale = 0;
 
-	private String columnDefinition = ""; // used for DDL creation
+	private String columnDefinition; // used for DDL creation
 
 	private String referencedColumnName; // from @JoinColumn
 

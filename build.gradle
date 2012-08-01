@@ -104,7 +104,8 @@ libraries = [
         shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
         shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
         validator:       'org.hibernate:hibernate-validator:4.2.0.Final',
-        h2:              "com.h2database:h2:${h2Version}"
+        h2:              "com.h2database:h2:${h2Version}",
+        mockito:         'org.mockito:mockito-core:1.9.0'
 ]
 
 

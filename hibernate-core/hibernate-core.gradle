@@ -21,6 +21,9 @@ dependencies {
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
+    testCompile( libraries.jandex )
+    testCompile( libraries.classmate )
+    testCompile( libraries.mockito )
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true

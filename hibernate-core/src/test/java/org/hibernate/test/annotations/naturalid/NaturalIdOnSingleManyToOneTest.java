@@ -68,7 +68,6 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMappingProperties() {
         log.warn("Commented out test");
 

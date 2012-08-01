@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 public class UnresolvedTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAcceptsUnresolvedPropertyTypesIfATargetEntityIsExplicitlySet() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -50,7 +48,6 @@ public class UnresolvedTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAcceptsUnresolvedPropertyTypesIfATypeExplicitlySet() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

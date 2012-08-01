@@ -36,7 +36,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -65,7 +64,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMappingProperties() {
 		ClassMetadata metaData = sessionFactory().getClassMetadata(
 				Citizen.class
@@ -79,7 +77,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
 
@@ -119,7 +116,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdLoaderNotCached() {
 		saveSomeCitizens();
 
@@ -153,7 +149,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdLoaderCached() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
@@ -244,7 +239,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdUncached() {
 		saveSomeCitizens();
 

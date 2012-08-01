@@ -34,7 +34,6 @@ import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.async.Executable;
@@ -137,7 +136,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		Session s1 = sessionFactory().openSession();
@@ -160,7 +158,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueryUsingLockOptions() {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		Session s1 = sessionFactory().openSession();

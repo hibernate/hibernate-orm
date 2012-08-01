@@ -49,11 +49,11 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ImmutableTest.class );
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImmutableEntity() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -85,6 +85,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImmutableCollection() {
 		Country country = new Country();
 		country.setName("Germany");

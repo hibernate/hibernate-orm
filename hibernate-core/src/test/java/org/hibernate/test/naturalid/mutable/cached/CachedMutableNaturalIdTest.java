@@ -129,7 +129,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@FailureExpectedWithNewMetamodel
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess() {
 
 		Session session = openSession();

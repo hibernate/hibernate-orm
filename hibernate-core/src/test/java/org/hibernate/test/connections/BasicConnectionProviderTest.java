@@ -27,14 +27,12 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Implementation of BasicConnectionProviderTest.
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() {

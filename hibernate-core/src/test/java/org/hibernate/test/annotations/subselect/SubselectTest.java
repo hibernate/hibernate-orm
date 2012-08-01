@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.StringType;
 
@@ -42,7 +41,6 @@ import org.hibernate.type.StringType;
 public class SubselectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSubselectWithSynchronize() {
 
 		Session s = openSession();

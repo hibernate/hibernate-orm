@@ -36,7 +36,6 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testInterface() throws Exception {
@@ -61,6 +60,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEnums() throws Exception {
 		Session s;
 		Transaction tx;

@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {
@@ -64,6 +63,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	// Some additional tests specifically for the aggressive-release functionality...
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSerializationOnAfterStatementAggressiveRelease() throws Throwable {
 		prepare();
 		try {
@@ -88,6 +88,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSerializationFailsOnAfterStatementAggressiveReleaseWithOpenResources() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -128,6 +129,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryIteration() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -160,6 +162,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryScrolling() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -192,6 +195,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSuppliedConnection() throws Throwable {
 		prepare();
 
@@ -216,6 +220,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testConnectionMaintanenceDuringFlush() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();

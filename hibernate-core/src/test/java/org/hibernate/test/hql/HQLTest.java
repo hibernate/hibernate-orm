@@ -88,7 +88,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	public boolean createSchema() {
@@ -123,11 +122,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testModulo() {
 		assertTranslation( "from Animal a where a.bodyWeight % 2 = 0" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInvalidCollectionDereferencesFail() {
 		// should fail with the same exceptions (because of the DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER injection)
 		assertTranslation( "from Animal a where a.offspring.description = 'xyz'" );
@@ -142,6 +143,7 @@ public class HQLTest extends QueryTranslatorTestCase {
     }
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SkipForDialect( Oracle8iDialect.class )
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
@@ -159,6 +161,7 @@ public class HQLTest extends QueryTranslatorTestCase {
     }
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@RequiresDialectFeature( DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck.class )
     public void testRowValueConstructorSyntaxInInList() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
@@ -184,6 +187,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubComponentReferences() {
 		assertTranslation( "select c.address.zip.code from ComponentContainer c" );
 		assertTranslation( "select c.address.zip from ComponentContainer c" );
@@ -191,17 +195,20 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToAnyReferences() {
 		assertTranslation( "from PropertySet p where p.someSpecificProperty.id is not null" );
 		assertTranslation( "from PropertySet p join p.generalProperties gp where gp.id is not null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinFetchCollectionOfValues() {
 		assertTranslation( "select h from Human as h join fetch h.nickNames" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionMemberDeclarations2() {
 		assertTranslation( "from Customer c, in(c.orders) o" );
 		assertTranslation( "from Customer c, in(c.orders) as o" );
@@ -219,6 +226,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionJoinsInSubselect() {
 		// caused by some goofiness in FromElementFactory that tries to
 		// handle correlated subqueries (but fails miserably) even though this
@@ -253,6 +261,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDateTimeArithmeticReturnTypesAndParameterGuessing() {
 		QueryTranslatorImpl translator = createNewQueryTranslator( "select o.orderDate - o.orderDate from Order o" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
@@ -275,6 +284,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testReturnMetadata() {
 		HQLQueryPlan plan = createQueryPlan( "from Animal a" );
 		check( plan.getReturnMetadata(), false, true );
@@ -312,6 +322,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinsAlongWithCartesianProduct() {
 		DotNode.useThetaStyleImplicitJoins = true;
 		assertTranslation( "select foo.foo from Foo foo, Foo foo2" );
@@ -320,6 +331,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubselectBetween() {
 		assertTranslation("from Animal x where (select max(a.bodyWeight) from Animal a) between :min and :max");
 		assertTranslation("from Animal x where (select max(a.description) from Animal a) like 'big%'");
@@ -329,11 +341,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchOrderBy() {
 		assertTranslation("from Animal a left outer join fetch a.offspring where a.mother.id = :mid order by a.description");
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionOrderBy() {
 		assertTranslation("from Animal a join a.offspring o order by a.description");
 		assertTranslation("from Animal a join fetch a.offspring order by a.description");
@@ -342,6 +356,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExpressionWithParamInFunction() {
 		assertTranslation("from Animal a where abs(a.bodyWeight-:param) < 2.0");
 		assertTranslation("from Animal a where abs(:param - a.bodyWeight) < 2.0");
@@ -364,6 +379,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCompositeKeysWithPropertyNamedId() {
 		assertTranslation( "select e.id.id from EntityWithCrazyCompositeKey e" );
 		assertTranslation( "select max(e.id.id) from EntityWithCrazyCompositeKey e" );
@@ -407,6 +423,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIndexWithExplicitJoin() throws Exception {
 		//TODO: broken on dialects with theta-style outerjoins:
 		//      steve (2005.10.06) - this works perfectly for me on Oracle8i
@@ -416,6 +433,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToManyMapIndex() throws Exception {
 		//TODO: this breaks on dialects with theta-style outerjoins:
 		//      steve (2005.10.06) - this works perfectly for me on Oracle8i
@@ -426,6 +444,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitJoinMapIndex() throws Exception {
 		//TODO: this breaks on dialects with theta-style outerjoins:
 		//      steve (2005.10.06) - this works perfectly for me on Oracle8i
@@ -434,6 +453,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIndexFunction() throws Exception {
 		// Instead of doing the pre-processor trick like the existing QueryTranslator, this
 		// is handled by MethodNode.
@@ -444,6 +464,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectCollectionOfValues() throws Exception {
 		//TODO: broken on dialects with theta-style joins
 		///old parser had a bug where the collection element was not included in return types!
@@ -452,6 +473,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionOfValues() throws Exception {
 		//old parser had a bug where the collection element was not returned!
 		//TODO: broken on dialects with theta-style joins
@@ -460,6 +482,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-719" )
     public void testHHH719() throws Exception {
         assertTranslation("from Baz b order by org.bazco.SpecialFunction(b.id)");
@@ -467,22 +490,26 @@ public class HQLTest extends QueryTranslatorTestCase {
     }
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testParameterListExpansion() {
 		assertTranslation( "from Animal as animal where animal.id in (:idList_1, :idList_2)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponentManyToOneDereferenceShortcut() {
 		assertTranslation( "from Zoo z where z.address.stateProvince.id is null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-770" )
 	public void testNestedCollectionImplicitJoins() {
 		assertTranslation( "select h.friends.offspring from Human h" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-557" )
 	public void testExplicitJoinsInSubquery() {
 		assertTranslation(
@@ -496,6 +523,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinsInGroupBy() {
 		assertTranslation(
 		        "select o.mother.bodyWeight, count(distinct o) " +
@@ -506,6 +534,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCrazyIdFieldNames() {
 		DotNode.useThetaStyleImplicitJoins = true;
 		// only regress against non-scalar forms as there appears to be a bug in the classic translator
@@ -522,6 +551,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSizeFunctionAndProperty() {
 		assertTranslation("from Animal a where a.offspring.size > 0");
 		assertTranslation("from Animal a join a.offspring where a.offspring.size > 1");
@@ -537,6 +567,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFromOnly() throws Exception {
 		// 2004-06-21 [jsd] This test now works with the new AST based QueryTranslatorImpl.
 		assertTranslation( "from Animal" );
@@ -544,17 +575,20 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinPathEndingInValueCollection() {
 		assertTranslation( "select h from Human as h join h.nickNames as nn where h.nickName=:nn1 and (nn=:nn2 or nn=:nn3)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-242" )
 	public void testSerialJoinPathEndingInValueCollection() {
 		assertTranslation( "select h from Human as h join h.friends as f join f.nickNames as nn where h.nickName=:nn1 and (nn=:nn2 or nn=:nn3)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-281" )
 	public void testImplicitJoinContainedByCollectionFunction() {
 		assertTranslation( "from Human as h where 'shipping' in indices(h.father.addresses)" );
@@ -564,24 +598,28 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-276" )
 	public void testImpliedJoinInSubselectFrom() {
 		assertTranslation( "from Animal a where exists( from a.mother.offspring )" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-276" )
 	public void testSubselectImplicitJoins() {
 		assertTranslation( "from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count )" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionOfValuesSize() throws Exception {
 		//SQL *was* missing a comma
 		assertTranslation( "select size(baz.stringDateMap) from org.hibernate.test.legacy.Baz baz" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionFunctions() throws Exception {
 		//these are both broken, a join that belongs in the subselect finds its way into the main query
 		assertTranslation( "from Zoo zoo where size(zoo.animals) > 100" );
@@ -589,6 +627,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinInExplicitJoin() throws Exception {
 		assertTranslation( "from Animal an inner join an.mother.mother gm" );
 		assertTranslation( "from Animal an inner join an.mother.mother.mother ggm" );
@@ -596,79 +635,93 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImpliedManyToManyProperty() throws Exception {
 		//missing a table join (SQL correct for a one-to-many, not for a many-to-many)
 		assertTranslation( "select c from ContainerX c where c.manyToMany[0].name = 's'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionSize() throws Exception {
 		assertTranslation( "select size(zoo.animals) from Zoo zoo" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchCollectionOfValues() throws Exception {
 		assertTranslation( "from Baz baz left join fetch baz.stringSet" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchList() throws Exception {
 		assertTranslation( "from User u join fetch u.permissions" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchWithExplicitThetaJoin() {
 		assertTranslation( "select m from Master m1, Master m left join fetch m.details where m.name=m1.name" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListElementFunctionInWhere() throws Exception {
 		assertTranslation( "from User u where 'read' in elements(u.permissions)" );
 		assertTranslation( "from User u where 'write' <> all elements(u.permissions)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyMaxElementFunctionInWhere() throws Exception {
 		assertTranslation( "from Human human where 5 = maxelement(human.friends)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionIndexFunctionsInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 4 = maxindex(zoo.animals)" );
 		assertTranslation( "from Zoo zoo where 2 = minindex(zoo.animals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionIndicesInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 4 > some indices(zoo.animals)" );
 		assertTranslation( "from Zoo zoo where 4 > all indices(zoo.animals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIndicesInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 4 in indices(zoo.animals)" );
 		assertTranslation( "from Zoo zoo where exists indices(zoo.animals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionElementInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 4 > some elements(zoo.animals)" );
 		assertTranslation( "from Zoo zoo where 4 > all elements(zoo.animals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testElementsInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 4 in elements(zoo.animals)" );
 		assertTranslation( "from Zoo zoo where exists elements(zoo.animals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNull() throws Exception {
 		assertTranslation( "from Human h where h.nickName is null" );
 		assertTranslation( "from Human h where h.nickName is not null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	public void testSubstitutions() throws Exception {
 		Map replacements = buildTrueFalseReplacementMapForDialect();
@@ -679,6 +732,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWhere() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight > 10" );
 		// 2004-06-26 [jsd] This one requires NOT GT => LE transform.
@@ -691,11 +745,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEscapedQuote() throws Exception {
 		assertTranslation( "from Human h where h.nickName='1 ov''tha''few'");
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCaseWhenElse() {
 		assertTranslation(
 				"from Human h where case when h.nickName='1ovthafew' then 'Gavin' when h.nickName='turin' then 'Christian' else h.nickName end = h.name.first"
@@ -703,11 +759,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCaseExprWhenElse() {
 		assertTranslation( "from Human h where case h.nickName when '1ovthafew' then 'Gavin' when 'turin' then 'Christian' else h.nickName end = h.name.first" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	public void testInvalidHql() throws Exception {
 		Exception newException = compileBadHql( "from Animal foo where an.bodyWeight > 10", false );
@@ -736,11 +794,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWhereBetween() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight between 1 and 10" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testConcatenation() {
 		if ( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect
 				|| getDialect() instanceof Sybase11Dialect
@@ -761,6 +821,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWhereLike() throws Exception {
 		assertTranslation( "from Animal a where a.description like '%black%'" );
 		assertTranslation( "from Animal an where an.description like '%fat%'" );
@@ -768,11 +829,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWhereIn() throws Exception {
 		assertTranslation( "from Animal an where an.description in ('fat', 'skinny')" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLiteralInFunction() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(-5)" );
@@ -780,6 +843,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExpressionInFunction() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3-5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3/5)" );
@@ -796,6 +860,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNotOrWhereClause() {
 		assertTranslation( "from Simple s where 'foo'='bar' or not 'foo'='foo'" );
 		assertTranslation( "from Simple s where 'foo'='bar' or not ('foo'='foo')" );
@@ -813,11 +878,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComplexExpressionInFunction() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight > abs((3-5)/4)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testStandardFunctions() throws Exception {
 		assertTranslation( "from Animal where current_date = current_time" );
 		assertTranslation( "from Animal a where upper(a.description) = 'FAT'" );
@@ -825,6 +892,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBy() throws Exception {
 		assertTranslation( "from Animal an order by an.bodyWeight" );
 		assertTranslation( "from Animal an order by an.bodyWeight asc" );
@@ -839,6 +907,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGroupByFunction() {
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) return;
@@ -851,6 +920,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPolymorphism() throws Exception {
 		Map replacements = buildTrueFalseReplacementMapForDialect();
 		assertTranslation( "from Mammal" );
@@ -875,12 +945,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTokenReplacement() throws Exception {
 		Map replacements = buildTrueFalseReplacementMapForDialect();
 		assertTranslation( "from Mammal m where m.pregnant = false and m.bodyWeight > 10", replacements );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testProduct() throws Exception {
 		Map replacements = buildTrueFalseReplacementMapForDialect();
 		assertTranslation( "from Animal, Animal" );
@@ -890,17 +962,20 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinedSubclassProduct() throws Exception {
 		assertTranslation( "from PettingZoo, PettingZoo" ); //product of two subclasses
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testProjectProduct() throws Exception {
 		assertTranslation( "select x from Human x, Human y where x.nickName = y.nickName" );
 		assertTranslation( "select x, y from Human x, Human y where x.nickName = y.nickName" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitEntityJoins() throws Exception {
 		assertTranslation( "from Animal an inner join an.mother mo" );
 		assertTranslation( "from Animal an left outer join an.mother mo" );
@@ -908,6 +983,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultipleExplicitEntityJoins() throws Exception {
 		assertTranslation( "from Animal an inner join an.mother mo inner join mo.mother gm" );
 		assertTranslation( "from Animal an left outer join an.mother mo left outer join mo.mother gm" );
@@ -916,22 +992,26 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultipleExplicitJoins() throws Exception {
 		assertTranslation( "from Animal an inner join an.mother mo inner join an.offspring os" );
 		assertTranslation( "from Animal an left outer join an.mother mo left outer join an.offspring os" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitEntityJoinsWithRestriction() throws Exception {
 		assertTranslation( "from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIdProperty() throws Exception {
 		assertTranslation( "from Animal a where a.mother.id = 12" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassAssociation() throws Exception {
 		assertTranslation( "from DomesticAnimal da join da.owner o where o.nickName = 'Gavin'" );
 		assertTranslation( "from DomesticAnimal da left join fetch da.owner" );
@@ -941,22 +1021,26 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitCollectionJoins() throws Exception {
 		assertTranslation( "from Animal an inner join an.offspring os" );
 		assertTranslation( "from Animal an left outer join an.offspring os" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitOuterJoinFetch() throws Exception {
 		assertTranslation( "from Animal an left outer join fetch an.offspring" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitOuterJoinFetchWithSelect() throws Exception {
 		assertTranslation( "select an from Animal an left outer join fetch an.offspring" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplicitJoins() throws Exception {
 		Map replacements = buildTrueFalseReplacementMapForDialect();
 		assertTranslation( "from Zoo zoo join zoo.mammals mam where mam.pregnant = true and mam.description like '%white%'", replacements );
@@ -964,12 +1048,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@TestForIssue( jiraKey = "HHH-559" )
     public void testMultibyteCharacterConstant() throws Exception {
         assertTranslation( "from Zoo zoo join zoo.animals an where an.description like '%\u4e2d%'" );
     }
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoins() throws Exception {
 		// Two dots...
 		assertTranslation( "from Animal an where an.mother.bodyWeight > ?" );
@@ -986,6 +1072,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinInSelect() {
 		assertTranslation( "select foo, foo.long from Foo foo" );
 		DotNode.useThetaStyleImplicitJoins = true;
@@ -996,6 +1083,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectExpressions() {
 		DotNode.useThetaStyleImplicitJoins = true;
 		assertTranslation( "select an.mother.mother from Animal an" );
@@ -1011,43 +1099,51 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectStandardFunctionsNoParens() throws Exception {
 		assertTranslation( "select current_date, current_time, current_timestamp from Animal" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapIndex() throws Exception {
 		assertTranslation( "from User u where u.permissions['hibernate']='read'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNamedParameters() throws Exception {
 		assertTranslation( "from Animal an where an.mother.bodyWeight > :weight" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SkipForDialect( Oracle8iDialect.class )
 	public void testClassProperty() throws Exception {
 		assertTranslation( "from Animal a where a.mother.class = Reptile" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponent() throws Exception {
 		assertTranslation( "from Human h where h.name.first = 'Gavin'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectEntity() throws Exception {
 		assertTranslation( "select an from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 		assertTranslation( "select mo, an from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testValueAggregate() {
 		assertTranslation( "select max(p), min(p) from User u join u.permissions p" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAggregation() throws Exception {
 		assertTranslation( "select count(an) from Animal an" );
 		assertTranslation( "select count(*) from Animal an" );
@@ -1057,11 +1153,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectProperty() throws Exception {
 		assertTranslation( "select an.bodyWeight, mo.bodyWeight from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectEntityProperty() throws Exception {
 		DotNode.useThetaStyleImplicitJoins = true;
 		assertTranslation( "select an.mother from Animal an" );
@@ -1070,51 +1168,60 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectDistinctAll() throws Exception {
 		assertTranslation( "select distinct an.description, an.bodyWeight from Animal an" );
 		assertTranslation( "select all an from Animal an" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectAssociatedEntityId() throws Exception {
 		assertTranslation( "select an.mother.id from Animal an" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGroupBy() throws Exception {
 		assertTranslation( "select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id" );
 		assertTranslation( "select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id having max(an.bodyWeight)>1.0" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGroupByMultiple() throws Exception {
 		assertTranslation( "select s.id, s.count, count(t), max(t.date) from org.hibernate.test.legacy.Simple s, org.hibernate.test.legacy.Simple t where s.count = t.count group by s.id, s.count order by s.count" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToMany() throws Exception {
 		assertTranslation( "from Human h join h.friends f where f.nickName = 'Gavin'" );
 		assertTranslation( "from Human h join h.friends f where f.bodyWeight > 100" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyElementFunctionInWhere() throws Exception {
 		assertTranslation( "from Human human where human in elements(human.friends)" );
 		assertTranslation( "from Human human where human = some elements(human.friends)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyElementFunctionInWhere2() throws Exception {
 		assertTranslation( "from Human h1, Human h2 where h2 in elements(h1.family)" );
 		assertTranslation( "from Human h1, Human h2 where 'father' in indices(h1.family)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyFetch() throws Exception {
 		assertTranslation( "from Human h left join fetch h.friends" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyIndexAccessor() throws Exception {
 		assertTranslation( "select c from ContainerX c, Simple s where c.manyToMany[2] = s" );
 		assertTranslation( "select s from ContainerX c, Simple s where c.manyToMany[2] = s" );
@@ -1122,46 +1229,54 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectNew() throws Exception {
 		assertTranslation( "select new Animal(an.description, an.bodyWeight) from Animal an" );
 		assertTranslation( "select new org.hibernate.test.hql.Animal(an.description, an.bodyWeight) from Animal an" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSimpleCorrelatedSubselect() throws Exception {
 		assertTranslation( "from Animal a where a.bodyWeight = (select o.bodyWeight from a.offspring o)" );
 		assertTranslation( "from Animal a where a = (from a.offspring o)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSimpleUncorrelatedSubselect() throws Exception {
 		assertTranslation( "from Animal a where a.bodyWeight = (select an.bodyWeight from Animal an)" );
 		assertTranslation( "from Animal a where a = (from Animal an)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSimpleCorrelatedSubselect2() throws Exception {
 		assertTranslation( "from Animal a where a = (select o from a.offspring o)" );
 		assertTranslation( "from Animal a where a in (select o from a.offspring o)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSimpleUncorrelatedSubselect2() throws Exception {
 		assertTranslation( "from Animal a where a = (select an from Animal an)" );
 		assertTranslation( "from Animal a where a in (select an from Animal an)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUncorrelatedSubselect2() throws Exception {
 		assertTranslation( "from Animal a where a.bodyWeight = (select max(an.bodyWeight) from Animal an)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCorrelatedSubselect2() throws Exception {
 		assertTranslation( "from Animal a where a.bodyWeight > (select max(o.bodyWeight) from a.offspring o)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyJoinInSubselect() throws Exception {
 		DotNode.useThetaStyleImplicitJoins = true;
 		assertTranslation( "select foo from Foo foo where foo in (select elt from Baz baz join baz.fooArray elt)" );
@@ -1169,29 +1284,34 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinInSubselect() throws Exception {
 		assertTranslation( "from Animal a where a = (select an.mother from Animal an)" );
 		assertTranslation( "from Animal a where a.id = (select an.mother.id from Animal an)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOneSubselect() {
 		//TODO: the join in the subselect also shows up in the outer query!
 		assertTranslation( "from Animal a where 'foo' in (select m.description from a.mother m)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPositionalParameters() throws Exception {
 		assertTranslation( "from Animal an where an.bodyWeight > ?" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testKeywordPropertyName() throws Exception {
 		assertTranslation( "from Glarch g order by g.order asc" );
 		assertTranslation( "select g.order from Glarch g where g.order = 3" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJavaConstant() throws Exception {
 		assertTranslation( "from org.hibernate.test.legacy.Category c where c.name = org.hibernate.test.legacy.Category.ROOT_CATEGORY" );
 		assertTranslation( "from org.hibernate.test.legacy.Category c where c.id = org.hibernate.test.legacy.Category.ROOT_ID" );
@@ -1201,6 +1321,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testClassName() throws Exception {
 		// The Zoo reference is OK; Zoo is discriminator-based;
 		// the old parser could handle these correctly
@@ -1218,6 +1339,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectDialectFunction() throws Exception {
 		// From SQLFunctionsTest.testDialectSQLFunctions...
 		if ( getDialect() instanceof HSQLDialect ) {
@@ -1231,6 +1353,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTwoJoins() throws Exception {
 		assertTranslation( "from Human human join human.friends, Human h join h.mother" );
 		assertTranslation( "from Human human join human.friends f, Animal an join an.mother m where f=m" );
@@ -1238,11 +1361,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testToOneToManyManyJoinSequence() throws Exception {
 		assertTranslation( "from Dog d join d.owner h join h.friends f where f.name.first like 'joe%'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testToOneToManyJoinSequence() throws Exception {
 		assertTranslation( "from Animal a join a.mother m join m.offspring" );
 		assertTranslation( "from Dog d join d.owner m join m.offspring" );
@@ -1250,62 +1375,73 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassExplicitJoin() throws Exception {
 		assertTranslation( "from DomesticAnimal da join da.owner o where o.nickName = 'gavin'" );
 		assertTranslation( "from DomesticAnimal da join da.owner o where o.bodyWeight > 0" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultipleExplicitCollectionJoins() throws Exception {
 		assertTranslation( "from Animal an inner join an.offspring os join os.offspring gc" );
 		assertTranslation( "from Animal an left outer join an.offspring os left outer join os.offspring gc" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectDistinctComposite() throws Exception {
 		// This is from CompositeElementTest.testHandSQL.
 		assertTranslation( "select distinct p from org.hibernate.test.compositeelement.Parent p join p.children c where c.name like 'Child%'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDotComponent() throws Exception {
 		// from FumTest.testListIdentifiers()
 		assertTranslation( "select fum.id from org.hibernate.test.legacy.Fum as fum where not fum.fum='FRIEND'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderByCount() throws Exception {
 		assertTranslation( "from Animal an group by an.zoo.id order by an.zoo.id, count(*)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testHavingCount() throws Exception {
 		assertTranslation( "from Animal an group by an.zoo.id having count(an.zoo.id) > 1" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void selectWhereElements() throws Exception {
 		assertTranslation( "select foo from Foo foo, Baz baz where foo in elements(baz.fooArray)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionOfComponents() throws Exception {
 		assertTranslation( "from Baz baz inner join baz.components comp where comp.name='foo'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNestedComponentIsNull() {
 		// From MapTest...
 		assertTranslation( "from Commento c where c.marelo.commento.mcompr is null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOneJoinedFetch() throws Exception {
 		// From OneToOneTest.testOneToOneOnSubclass
 		assertTranslation( "from org.hibernate.test.onetoone.joined.Person p join fetch p.address left join fetch p.mailingAddress" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassImplicitJoin() throws Exception {
 		assertTranslation( "from DomesticAnimal da where da.owner.nickName like 'Gavin%'" );
 		assertTranslation( "from DomesticAnimal da where da.owner.nickName = 'gavin'" );
@@ -1313,17 +1449,20 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponent2() throws Exception {
 		assertTranslation( "from Dog dog where dog.owner.name.first = 'Gavin'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOne() throws Exception {
 		assertTranslation( "from User u where u.human.nickName='Steve'" );
 		assertTranslation( "from User u where u.human.name.first='Steve'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectClauseImplicitJoin() throws Exception {
 		//assertTranslation( "select d.owner.mother from Dog d" ); //bug in old qt
 		assertTranslation( "select d.owner.mother.description from Dog d" );
@@ -1331,21 +1470,25 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFromClauseImplicitJoin() throws Exception {
 		assertTranslation( "from DomesticAnimal da join da.owner.mother m where m.bodyWeight > 10" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinedSubclassWithOrCondition() {
 		assertTranslation( "from Animal an where (an.bodyWeight > 10 and an.bodyWeight < 100) or an.bodyWeight is null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImplicitJoinInFrom() {
 		assertTranslation( "from Human h join h.mother.mother.offspring o" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SkipForDialect( Oracle8iDialect.class )
 	public void testDuplicateImplicitJoinInSelect() {
 		// This test causes failures on theta-join dialects because the SQL is different.  The old parser
@@ -1389,12 +1532,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSelectProperty2() throws Exception {
 		assertTranslation( "select an, mo.bodyWeight from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 		assertTranslation( "select an, mo, an.bodyWeight, mo.bodyWeight from Animal an inner join an.mother mo where an.bodyWeight < mo.bodyWeight" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassWhere() throws Exception {
 		// TODO: The classic QT generates lots of extra parens, etc.
 		assertTranslation( "from PettingZoo pz1, PettingZoo pz2 where pz1.id = pz2.id" );
@@ -1403,6 +1548,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNestedImplicitJoinsInSelect() throws Exception {
 		// NOTE: This test is not likely to generate the exact SQL because of the where clause.  The synthetic
 		// theta style joins come out differently in the new QT.
@@ -1413,6 +1559,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNestedComponent() throws Exception {
 		// From FooBarTest.testQuery()
 		//an extra set of parens in new SQL
@@ -1420,6 +1567,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNull2() throws Exception {
 		//old parser generates useless extra parens
 		assertTranslation( "from Human h where not( h.nickName is null )" );
@@ -1427,11 +1575,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUnknownFailureFromMultiTableTest() {
 		assertTranslation( "from Lower s where s.yetanother.name='name'" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinInSubselect() throws Exception {
 		//new parser uses ANSI-style inner join syntax
 		DotNode.useThetaStyleImplicitJoins = true;
@@ -1441,6 +1591,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinedSubclassImplicitJoin() throws Exception {
 		// From MultiTableTest.testQueries()
 		// TODO: This produces the proper from clause now, but the parens in the where clause are different.
@@ -1448,6 +1599,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testProjectProductJoinedSubclass() throws Exception {
 		// TODO: The old QT generates the discriminator and the theta join in a strange order, and with two extra sets of parens, this is okay, right?
 		assertTranslation( "select zoo from Zoo zoo, PettingZoo pz where zoo=pz" );
@@ -1455,6 +1607,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCorrelatedSubselect1() throws Exception {
 		// The old translator generates the theta join before the condition in the sub query.
 		// TODO: Decide if we want to bother generating the theta join in the same order (non simple).
@@ -1462,40 +1615,47 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOuterAliasInSubselect() {
 		assertTranslation( "from Human h where h = (from Animal an where an = h)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetch() throws Exception {
 		assertTranslation( "from Zoo zoo left join zoo.mammals" );
 		assertTranslation( "from Zoo zoo left join fetch zoo.mammals" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToManyElementFunctionInWhere() throws Exception {
 		assertTranslation( "from Zoo zoo where 'dog' in indices(zoo.mammals)" );
 		assertTranslation( "from Zoo zoo, Dog dog where dog in elements(zoo.mammals)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyInJoin() throws Exception {
 		assertTranslation( "select x.id from Human h1 join h1.family x" );
 		//assertTranslation("select index(h2) from Human h1 join h1.family h2");
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyInSubselect() throws Exception {
 		assertTranslation( "from Human h1, Human h2 where h2 in (select x.id from h1.family x)" );
 		assertTranslation( "from Human h1, Human h2 where 'father' in indices(h1.family)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToManyIndexAccess() throws Exception {
 		assertTranslation( "from Zoo zoo where zoo.mammals['dog'] is not null" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImpliedSelect() throws Exception {
 		assertTranslation( "select zoo from Zoo zoo" );
 		assertTranslation( "from Zoo zoo" );
@@ -1505,23 +1665,27 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testVectorSubselect() {
 		assertTranslation( "from Animal a where ('foo', 'bar') in (select m.description, m.bodyWeight from a.mother m)" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWierdSubselectImplicitJoinStuff() {
 		//note that the new qt used to eliminate unnecessary join, but no more
 		assertTranslation("from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0");
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionsInSelect2() throws Exception {
 		// This one looks okay now, it just generates extra parens in the where clause.
 		assertTranslation( "select foo.string from Bar bar left join bar.baz.fooArray foo where bar.string = foo.string" );
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAssociationPropertyWithoutAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
 		compileWithAstQueryTranslator("from Animal where zoo is null", false);
@@ -1536,6 +1700,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponentNoAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
 		compileWithAstQueryTranslator( "from Human where name.first = 'Gavin'", false);

@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +41,6 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDistinctId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -72,7 +70,6 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testRollingBack() throws Throwable {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -106,7 +103,6 @@ public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAllParams() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

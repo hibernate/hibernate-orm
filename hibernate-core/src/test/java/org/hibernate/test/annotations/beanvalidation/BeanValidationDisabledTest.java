@@ -45,7 +45,6 @@ import static org.junit.Assert.fail;
 public class BeanValidationDisabledTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );

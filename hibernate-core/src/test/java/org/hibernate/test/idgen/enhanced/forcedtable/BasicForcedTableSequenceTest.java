@@ -31,7 +31,6 @@ import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,7 +47,6 @@ public class BasicForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNormalBoundary() {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertTrue(

@@ -29,7 +29,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.MaterializedBlobType;
@@ -61,7 +60,6 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSaving() {
 		byte[] testData = "test data".getBytes();
 

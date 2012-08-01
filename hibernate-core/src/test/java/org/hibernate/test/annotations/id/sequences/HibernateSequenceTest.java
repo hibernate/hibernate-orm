@@ -54,7 +54,6 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testHibernateSequenceNextVal() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();

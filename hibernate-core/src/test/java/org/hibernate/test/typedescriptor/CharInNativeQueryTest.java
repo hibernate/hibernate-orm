@@ -26,7 +26,6 @@
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -46,7 +45,6 @@ public class CharInNativeQueryTest extends BaseCoreFunctionalTestCase {
     }
     @Test
     @TestForIssue(jiraKey = "HHH-2304")
-    @FailureExpectedWithNewMetamodel
     public void testNativeQuery() {
         Issue issue = new Issue();
         issue.setIssueNumber( "HHH-2304" );

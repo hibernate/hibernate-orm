@@ -31,7 +31,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -62,7 +61,6 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testImmutableNaturalIdLifecycle() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );

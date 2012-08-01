@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {
@@ -87,6 +86,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTransactionProtection() {
 		Session session = sessionFactory().getCurrentSession();
 		try {
@@ -99,6 +99,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testContextCleanup() {
 		Session session = sessionFactory().getCurrentSession();
 		session.beginTransaction();

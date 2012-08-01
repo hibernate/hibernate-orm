@@ -99,7 +99,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@FailureExpectedWithNewMetamodel
 public class FooBarTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( FooBarTest.class );
 
@@ -128,6 +127,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSaveOrUpdateCopyAny() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -154,6 +154,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRefreshProxy() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -171,6 +172,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@RequiresDialectFeature(
 			value = DialectChecks.SupportsCircularCascadeDeleteCheck.class,
 			comment = "db/dialect does not support circular cascade delete constraints"
@@ -197,6 +199,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemoveFromIdbag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -219,6 +222,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -249,6 +253,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoin() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -277,6 +282,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDereferenceLazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -324,6 +330,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMoveLazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -380,6 +387,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCriteriaCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -401,6 +409,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -844,6 +853,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadeDeleteDetached() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -902,6 +912,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testForeignKeys() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -924,6 +935,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNonlazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -948,6 +960,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testReuseDeletedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -983,6 +996,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPropertyRef() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1016,6 +1030,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryCollectionOfValues() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1059,6 +1074,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBatchLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1116,6 +1132,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchInitializedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1146,6 +1163,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLateCollectionAdd() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1170,6 +1188,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUpdate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1218,6 +1237,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListRemove() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1255,6 +1275,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchInitializedCollectionDupe() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1288,6 +1309,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSortables() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1339,6 +1361,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchList() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1365,6 +1388,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBagOneToMany() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1386,6 +1410,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueryLockMode() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1440,6 +1465,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyBag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1467,6 +1493,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIdBag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1533,6 +1560,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testForceOuterJoin() throws Exception {
 		if ( isOuterJoinFetchingDisabled() ) {
 			return;
@@ -1569,6 +1597,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEmptyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1592,6 +1621,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOneGenerator() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1642,6 +1672,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLimit() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -1683,6 +1714,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCustom() throws Exception {
 		GlarchProxy g = new Glarch();
 		Multiplicity m = new Multiplicity();
@@ -1724,6 +1756,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSaveAddDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1740,6 +1773,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNamedParams() throws Exception {
 		Bar bar = new Bar();
 		Bar bar2 = new Bar();
@@ -1808,6 +1842,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@RequiresDialectFeature(
 			value = DialectChecks.SupportsEmptyInListCheck.class,
 			comment = "Dialect does not support SQL empty in list [x in ()]"
@@ -1825,6 +1860,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testParameterCheck() throws HibernateException {
 		Session s = openSession();
 		try {
@@ -1894,6 +1930,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDyna() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1931,6 +1968,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFindByCriteria() throws Exception {
 		if ( getDialect() instanceof DB2Dialect ) {
 			return;
@@ -2059,6 +2097,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAfterDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2073,6 +2112,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionWhere() throws Exception {
 		Foo foo1 = new Foo();
 		Foo foo2 = new Foo();
@@ -2116,6 +2156,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponentParent() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2140,6 +2181,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionCache() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2232,6 +2274,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadeSave() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2255,6 +2298,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionsInSelect() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2417,6 +2461,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNewFlushing() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2474,6 +2519,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
@@ -2696,6 +2742,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSaveFlush() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2715,6 +2762,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCreateUpdate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2755,6 +2803,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	public void testUpdateCollections() throws Exception {
 		Session s = openSession();
@@ -2821,6 +2870,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCreate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2841,6 +2891,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCallback() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2874,6 +2925,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2895,6 +2947,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemoveContains() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2913,6 +2966,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	public void testCollectionOfSelf() throws Exception {
 		Session s = openSession();
@@ -2943,6 +2997,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFind() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3004,6 +3059,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDeleteRecursive() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3021,6 +3077,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testReachability() throws Exception {
 		//first for unkeyed collections
 		Session s = openSession();
@@ -3143,6 +3200,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPersistentLifecycle() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3171,6 +3229,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIterators() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3211,6 +3270,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3261,6 +3321,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testVersionedCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3336,6 +3397,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRecursiveLoad() throws Exception {
 		//Non polymorphic class (there is an implementation optimization
 		//being tested here)
@@ -3510,6 +3572,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiColumnQueries() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3573,6 +3636,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDeleteTransient() throws Exception {
 		Fee fee = new Fee();
 		Fee fee2 = new Fee();
@@ -3600,6 +3664,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDeleteUpdatedTransient() throws Exception {
 		Fee fee = new Fee();
 		Fee fee2 = new Fee();
@@ -3629,6 +3694,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUpdateOrder() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3670,6 +3736,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUpdateFromTransient() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3798,6 +3865,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testArraysOfTimes() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3823,6 +3891,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComponents() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3874,6 +3943,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNoForeignKeyViolations() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3896,6 +3966,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLazyCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3938,6 +4009,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3988,6 +4060,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBy() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4063,6 +4136,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4093,6 +4167,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSaveDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4109,6 +4184,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testProxyArray() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4150,6 +4226,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCache() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4187,6 +4264,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFindLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4214,6 +4292,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRefresh() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4242,6 +4321,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAutoFlush() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4274,6 +4354,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testVeto() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4293,6 +4374,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSerializableType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4314,6 +4396,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAutoFlushCollections() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -4381,7 +4464,8 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
-    @RequiresDialect(value = H2Dialect.class, comment = "this is more like a unit test")
+	@FailureExpectedWithNewMetamodel
+	@RequiresDialect(value = H2Dialect.class, comment = "this is more like a unit test")
 	public void testUserProvidedConnection() throws Exception {
 		ConnectionProvider dcp = ConnectionProviderBuilder.buildConnectionProvider();
 		Session s = sessionFactory().withOptions().connection( dcp.getConnection() ).openSession();
@@ -4399,6 +4483,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCachedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4425,6 +4510,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testComplicatedQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4446,6 +4532,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLoadAfterDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4497,6 +4584,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testObjectType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4519,6 +4607,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAny() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4554,6 +4643,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEmbeddedCompositeID() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4605,6 +4695,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAutosaveChildren() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4637,6 +4728,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrphanDelete() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4675,6 +4767,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTransientOrphanDelete() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4722,6 +4815,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testProxiesInCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4770,6 +4864,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPSCache() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4801,6 +4896,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testForCertain() throws Exception {
 		Glarch g = new Glarch();
 		Glarch g2 = new Glarch();
@@ -4828,6 +4924,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBagMultipleElements() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4873,6 +4970,7 @@ public class FooBarTest extends LegacyTestCase {
  	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWierdSession() throws Exception {
  		Session s = openSession();
  		Transaction t = s.beginTransaction();

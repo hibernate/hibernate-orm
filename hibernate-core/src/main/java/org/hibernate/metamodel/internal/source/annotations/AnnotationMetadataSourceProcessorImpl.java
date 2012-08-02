@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
@@ -36,6 +38,8 @@ import org.jboss.jandex.Indexer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.JaxbRoot;
+import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.internal.jaxb.SourceType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
@@ -52,9 +56,11 @@ import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -76,18 +82,26 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
 
 		// create a jandex index from the annotated classes
+		Set<String> processedNames = new HashSet<String>();
 		Indexer indexer = new Indexer();
 		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
-			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
+			indexClass( indexer, clazz, processedNames );
 		}
 
 		for ( String className : metadataSources.getAnnotatedClassNames() ) {
-			indexClass( indexer, className.replace( '.', '/' ) + ".class" );
+			Class<?> clazz;
+			try {
+				clazz = metadata.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
+			}
+			catch ( ClassLoadingException e ) {
+				throw new MappingException( "Unable to load a configured class", new Origin( SourceType.FILE, null ) );
+			}
+			indexClass( indexer, clazz, processedNames );
 		}
 
 		// add package-info from the configured packages
 		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
-			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
+			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class", processedNames );
 		}
 
 		Index index = indexer.complete();
@@ -95,7 +109,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		List<JaxbRoot<JaxbEntityMappings>> mappings = new ArrayList<JaxbRoot<JaxbEntityMappings>>();
 		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
 			if ( root.getRoot() instanceof JaxbEntityMappings ) {
-				mappings.add( (JaxbRoot<JaxbEntityMappings>) root );
+				mappings.add( ( JaxbRoot<JaxbEntityMappings> ) root );
 			}
 		}
 		if ( !mappings.isEmpty() ) {
@@ -198,7 +212,25 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		return new EntityMappingsMocker( list, annotationIndex, metadata.getServiceRegistry() ).mockNewIndex();
 	}
 
-	private void indexClass(Indexer indexer, String className) {
+
+	private void indexClass(Indexer indexer, Class<?> clazz, Set<String> processedNames) {
+		indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class", processedNames );
+
+		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
+		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
+		// discovered while processing the annotations. To keep this behavior we index all classes in the
+		// hierarchy (see also HHH-7484)
+		clazz = clazz.getSuperclass();
+		while ( clazz != null && !Object.class.equals( clazz ) ) {
+			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class", processedNames );
+			clazz = clazz.getSuperclass();
+		}
+	}
+
+	private void indexClass(Indexer indexer, String className, Set<String> processedNames) {
+		if ( processedNames.contains( className ) ) {
+			return;
+		}
 		InputStream stream = metadata.getServiceRegistry().getService( ClassLoaderService.class ).locateResourceStream(
 				className
 		);
@@ -233,7 +265,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 			annotations.addAll( bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR ) );
 
-			for ( AnnotationInstance generatorsAnnotation : bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
+			for ( AnnotationInstance generatorsAnnotation : bindingContext.getIndex()
+					.getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
 				Collections.addAll(
 						annotations,
 						JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )

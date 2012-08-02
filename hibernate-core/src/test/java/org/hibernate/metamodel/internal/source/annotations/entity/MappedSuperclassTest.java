@@ -37,6 +37,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 
 /**
  * Tests for {@link javax.persistence.MappedSuperclass} {@link javax.persistence.AttributeOverrides}
@@ -49,34 +50,33 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testSimpleAttributeOverrideInMappedSuperclass() {
 		EntityBinding binding = getEntityBinding( MyEntity.class );
-		SingularAttributeBinding nameBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "name" );
+		SingularAttributeBinding nameBinding = ( SingularAttributeBinding ) binding.locateAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
 
 		assertEquals( 1, nameBinding.getRelationalValueBindings().size() );
-		Column column = (Column) nameBinding.getRelationalValueBindings().get( 0 ).getValue();
+		Column column = ( Column ) nameBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertEquals( "Wrong column name", "MY_NAME", column.getColumnName().toString() );
 	}
 
-//	@Test
-//	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
-//	public void testLastAttributeOverrideWins() {
-//		EntityBinding binding = getEntityBinding( MyEntity.class );
-//		SingularAttributeBinding fooBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "foo" );
-//		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
-//
-//		assertEquals( 1, fooBinding.getRelationalValueBindings().size() );
-//		Column column = (Column) fooBinding.getRelationalValueBindings().get( 0 ).getValue();
-//		assertEquals( "Wrong column name", "MY_FOO", column.getColumnName().toString() );
-//	}
-//
-//	@Test
-//	@Resources(annotatedClasses = { SubclassOfNoEntity.class, NoEntity.class })
-//	public void testNonEntityBaseClass() {
-//		EntityBinding binding = getEntityBinding( SubclassOfNoEntity.class );
-//		assertEquals( "Wrong entity name", SubclassOfNoEntity.class.getName(), binding.getEntity().getName() );
-//		assertEquals( "Wrong entity name", NoEntity.class.getName(), binding.getEntity().getSuperType().getName() );
-//		assertTrue( binding.getEntity().getSuperType() instanceof NonEntity );
-//	}
+	@Test
+	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
+	public void testLastAttributeOverrideWins() {
+		EntityBinding binding = getEntityBinding( MyEntity.class );
+		SingularAttributeBinding fooBinding = ( SingularAttributeBinding ) binding.locateAttributeBinding( "foo" );
+		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
+
+		assertEquals( 1, fooBinding.getRelationalValueBindings().size() );
+		Column column = ( Column ) fooBinding.getRelationalValueBindings().get( 0 ).getValue();
+		assertEquals( "Wrong column name", "MY_FOO", column.getColumnName().toString() );
+	}
+
+	@Test
+	@Resources(annotatedClasses = { SubclassOfNoEntity.class, NoEntity.class })
+	public void testNonEntityBaseClass() {
+		EntityBinding binding = getEntityBinding( SubclassOfNoEntity.class );
+		assertEquals( "Wrong entity name", SubclassOfNoEntity.class.getName(), binding.getEntity().getName() );
+		assertNull( "Supertype should not be mapped", binding.getEntity().getSuperType() );
+	}
 
 	@MappedSuperclass
 	class MyMappedSuperClassBase {
@@ -92,7 +92,7 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Entity
-	@AttributeOverrides( {
+	@AttributeOverrides({
 			@AttributeOverride(name = "name", column = @javax.persistence.Column(name = "MY_NAME")),
 			@AttributeOverride(name = "foo", column = @javax.persistence.Column(name = "MY_FOO"))
 	})

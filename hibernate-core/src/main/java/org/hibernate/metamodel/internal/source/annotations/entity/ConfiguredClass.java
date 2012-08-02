@@ -192,7 +192,7 @@ public class ConfiguredClass {
 		return simpleAttributeMap.values();
 	}
 
-	public Iterable<BasicAttribute> getIdAttributes() {
+	public Collection<BasicAttribute> getIdAttributes() {
 		return idAttributeMap.values();
 	}
 

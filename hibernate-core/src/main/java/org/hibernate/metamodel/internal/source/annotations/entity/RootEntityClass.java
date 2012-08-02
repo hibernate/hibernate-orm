@@ -139,9 +139,22 @@ public class RootEntityClass extends EntityClass {
 		attributes.addAll( super.getSimpleAttributes() );
 
 		// now the attributes of the mapped superclasses
-		// TODO - take care of overrides (HF)
 		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
 			attributes.addAll( mappedSuperclass.getSimpleAttributes() );
+		}
+
+		return attributes;
+	}
+
+	public Collection<BasicAttribute> getIdAttributes() {
+		List<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
+
+		// get all id attributes defined on this entity
+		attributes.addAll( super.getIdAttributes() );
+
+		// now mapped super classes
+		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
+			attributes.addAll( mappedSuperclass.getIdAttributes() );
 		}
 
 		return attributes;
@@ -174,16 +187,19 @@ public class RootEntityClass extends EntityClass {
 
 	private List<AnnotationInstance> findIdAnnotations(DotName idAnnotationType) {
 		List<AnnotationInstance> idAnnotationList = new ArrayList<AnnotationInstance>();
+
+		// check the class itself
 		if ( getClassInfo().annotations().containsKey( idAnnotationType ) ) {
 			idAnnotationList.addAll( getClassInfo().annotations().get( idAnnotationType ) );
 		}
-		ConfiguredClass parent = getParent();
-		while ( parent != null ) {
-			if ( parent.getClassInfo().annotations().containsKey( idAnnotationType ) ) {
-				idAnnotationList.addAll( parent.getClassInfo().annotations().get( idAnnotationType ) );
+
+		// check mapped super classes
+		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
+			if ( mappedSuperclass.getClassInfo().annotations().containsKey( idAnnotationType ) ) {
+				idAnnotationList.addAll( mappedSuperclass.getClassInfo().annotations().get( idAnnotationType ) );
 			}
-			parent = parent.getParent();
 		}
+
 		return idAnnotationList;
 	}
 

@@ -39,6 +39,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
@@ -213,7 +214,8 @@ public class EntitySourceImpl implements EntitySource {
 	public List<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
 		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
-			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
+			AttributeOverride override = getEntityClass().getAttributeOverrideMap().get( attribute.getName() );
+			attributeList.add( new SingularAttributeSourceImpl( attribute , override ));
 		}
 
 		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {

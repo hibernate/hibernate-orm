@@ -6,6 +6,7 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name="ZOOLOGY_MAMMAL")
@@ -14,6 +15,7 @@ import org.hibernate.annotations.FilterDef;
 public class Mammal extends Animal{
 	
 	@Column(name="IS_PREGNANT")
+	@Type( type="numeric_boolean" )
 	private boolean isPregnant;
 
 	public boolean isPregnant() {

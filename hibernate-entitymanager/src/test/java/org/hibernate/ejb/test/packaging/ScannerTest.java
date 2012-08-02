@@ -36,11 +36,13 @@ import javax.persistence.Persistence;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.Scanner;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
+import org.hibernate.testing.RequiresDialect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -50,6 +52,7 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@RequiresDialect(H2Dialect.class)
 public class ScannerTest extends PackagingTestCase {
 	@Test
 	public void testNativeScanner() throws Exception {

@@ -11,14 +11,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * @author Emmanuel Bernard
  */
+@RequiresDialect(H2Dialect.class)
 public class ProgrammaticConfTest {
     @Test
 	public void testProgrammaticAPI() throws Exception {

@@ -24,12 +24,15 @@
 package org.hibernate.test.connections;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Implementation of CurrentSessionConnectionTest.
  *
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)
 public class CurrentSessionConnectionTest extends AggressiveReleaseTest {
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {

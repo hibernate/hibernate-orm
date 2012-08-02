@@ -43,6 +43,9 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityIdentifier;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -53,6 +56,7 @@ import static junit.framework.Assert.fail;
 /**
  * @author Hardy Ferentschik
  */
+@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
 public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	class NoGenerationEntity {

@@ -34,6 +34,7 @@ import javax.persistence.PersistenceException;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.Distributor;
@@ -62,6 +63,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.RequiresDialect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,6 +81,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@RequiresDialect(H2Dialect.class)
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testDefaultPar() throws Exception {

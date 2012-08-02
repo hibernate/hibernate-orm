@@ -36,6 +36,7 @@ import javax.persistence.MappedSuperclass;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.packaging.ClassFilter;
 import org.hibernate.ejb.packaging.Entry;
 import org.hibernate.ejb.packaging.ExplodedJarVisitor;
@@ -49,6 +50,7 @@ import org.hibernate.ejb.packaging.JarVisitorFactory;
 import org.hibernate.ejb.packaging.PackageFilter;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -61,6 +63,7 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@RequiresDialect(H2Dialect.class)
 public class JarVisitorTest extends PackagingTestCase {
 	@Test
 	public void testHttp() throws Exception {

@@ -34,6 +34,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
@@ -43,12 +44,14 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
  * @author Chris Pheby
  */
+@RequiresDialect(H2Dialect.class)
 public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 	/**

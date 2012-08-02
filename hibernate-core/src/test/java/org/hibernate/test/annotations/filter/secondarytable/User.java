@@ -13,11 +13,11 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SqlFragmentAlias;
 
 @Entity
-@Table(name="USER")
+@Table(name="T_USER")
 @SecondaryTable(name="SECURITY_USER")
 @FilterDef(name="ageFilter", parameters=@ParamDef(name="age", type="integer"))
 @Filter(name="ageFilter", condition="{u}.AGE < :age AND {s}.LOCKED_OUT <> 1", 
-				aliases={@SqlFragmentAlias(alias="u", table="USER"), @SqlFragmentAlias(alias="s", table="SECURITY_USER")})
+				aliases={@SqlFragmentAlias(alias="u", table="T_USER"), @SqlFragmentAlias(alias="s", table="SECURITY_USER")})
 public class User {
 	
 	@Id
@@ -31,10 +31,10 @@ public class User {
 	@Column(name="AGE")
 	private int age;
 	
-	@Column(name="USERNAME", table="SECURITY_USER")
+	@Column(name="SECURITY_USERNAME", table="SECURITY_USER")
 	private String username;
 	
-	@Column(name="PASSWORD", table="SECURITY_USER")
+	@Column(name="SECURITY_PASSWORD", table="SECURITY_USER")
 	private String password;
 	
 	@Column(name="LOCKED_OUT", table="SECURITY_USER")

@@ -112,6 +112,18 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 		);
 	}
 
+	@Test
+	@Resources(annotatedClasses = { MixedAccess.class })
+	public void test() {
+		EntityBinding binding = getEntityBinding( MixedAccess.class );
+		assertEquals( "Wrong access type", "field", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
+		assertEquals(
+				"Wrong access type",
+				"property",
+				binding.locateAttributeBinding( "name" ).getPropertyAccessorName()
+		);
+	}
+
 	@Entity
 	class Base {
 		@Id

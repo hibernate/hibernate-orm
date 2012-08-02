@@ -47,6 +47,7 @@ import org.hibernate.metamodel.internal.source.annotations.global.FetchProfilePr
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.SqlResultSetProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
+import org.hibernate.metamodel.internal.source.annotations.util.EntityHierarchyBuilder;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;

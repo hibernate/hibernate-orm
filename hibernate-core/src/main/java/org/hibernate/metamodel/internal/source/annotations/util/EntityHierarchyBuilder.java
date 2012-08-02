@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations;
+package org.hibernate.metamodel.internal.source.annotations.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,10 +40,12 @@ import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
+import org.hibernate.metamodel.internal.source.annotations.RootEntitySourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;

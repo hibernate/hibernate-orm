@@ -35,6 +35,8 @@ import org.jboss.jandex.AnnotationInstance;
  */
 public interface IdentifierGeneratorSourceContainer {
 	public List<AnnotationInstance> getSequenceGeneratorSources();
+
 	public List<AnnotationInstance> getTableGeneratorSources();
+
 	public List<AnnotationInstance> getGenericGeneratorSources();
 }

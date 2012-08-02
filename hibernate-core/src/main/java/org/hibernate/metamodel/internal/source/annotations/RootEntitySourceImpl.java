@@ -73,7 +73,10 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		switch ( idType ) {
 			case SIMPLE: {
 				BasicAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
-				return new SimpleIdentifierSourceImpl( attribute, getEntityClass().getAttributeOverrideMap() );
+				return new SimpleIdentifierSourceImpl(
+						attribute,
+						getEntityClass().getAttributeOverrideMap().get(attribute.getName())
+				);
 			}
 			case COMPOSED: {
 				return new NonAggregatedCompositeIdentifierSourceImpl( this );

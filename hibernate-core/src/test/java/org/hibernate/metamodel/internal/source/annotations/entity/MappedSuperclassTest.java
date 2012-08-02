@@ -78,6 +78,20 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 		assertNull( "Supertype should not be mapped", binding.getEntity().getSuperType() );
 	}
 
+	@Test
+	@Resources(annotatedClasses = { Foo.class, SuperFoo.class })
+	public void testOverrideOfIdAttribute() {
+		EntityBinding binding = getEntityBinding( Foo.class );
+
+		SingularAttributeBinding idAttributeBinding = ( SingularAttributeBinding ) binding.locateAttributeBinding( "id" );
+		assertNotNull( "the id attribute should be bound to Foo", idAttributeBinding );
+
+		assertEquals( 1, idAttributeBinding.getRelationalValueBindings().size() );
+		Column column = ( Column ) idAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+		assertEquals( "Wrong column name", "FOO_ID", column.getColumnName().toString() );
+		assertEquals( "Wrong column name", 1, column.getSize().getLength() );
+	}
+
 	@MappedSuperclass
 	class MyMappedSuperClassBase {
 		@Id
@@ -110,6 +124,18 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 	class SubclassOfNoEntity extends NoEntity {
 		@Id
 		private int id;
+	}
+
+
+	@MappedSuperclass
+	class SuperFoo {
+		@Id
+		private int id;
+	}
+
+	@Entity
+	@AttributeOverride(name = "id", column = @javax.persistence.Column(name = "FOO_ID", length = 1))
+	class Foo extends SuperFoo {
 	}
 }
 

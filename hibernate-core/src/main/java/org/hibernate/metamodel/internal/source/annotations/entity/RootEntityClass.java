@@ -52,6 +52,7 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
 public class RootEntityClass extends EntityClass {
 
 	private final IdType idType;
+	private final List<MappedSuperclass> mappedSuperclasses;
 
 	// discriminator related fields
 	private Column discriminatorColumnValues;
@@ -62,8 +63,6 @@ public class RootEntityClass extends EntityClass {
 	private boolean isDiscriminatorIncludedInSql = true;
 	private boolean needsDiscriminatorColumn = false;
 
-
-	private List<MappedSuperclass> mappedSuperclasses;
 
 	/**
 	 * Constructor used for entity roots
@@ -83,6 +82,7 @@ public class RootEntityClass extends EntityClass {
 			boolean hasSubclasses,
 			AnnotationBindingContext context) {
 		super( classInfo, null, hierarchyAccessType, inheritanceType, context );
+		this.mappedSuperclasses = new ArrayList<MappedSuperclass>();
 		for ( ClassInfo mappedSuperclassInfo : mappedSuperclasses ) {
 			MappedSuperclass configuredClass = new MappedSuperclass(
 					mappedSuperclassInfo,

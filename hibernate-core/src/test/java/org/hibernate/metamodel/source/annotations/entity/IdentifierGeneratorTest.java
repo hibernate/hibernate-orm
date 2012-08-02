@@ -32,6 +32,7 @@ import javax.persistence.Id;
 import org.junit.Test;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 
 import static junit.framework.Assert.assertEquals;
@@ -56,7 +58,7 @@ import static junit.framework.Assert.fail;
 /**
  * @author Hardy Ferentschik
  */
-@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
+@RequiresDialect(H2Dialect.class)
 public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	class NoGenerationEntity {

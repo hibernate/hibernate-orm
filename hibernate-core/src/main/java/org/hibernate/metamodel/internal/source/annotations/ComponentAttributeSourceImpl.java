@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,13 +32,12 @@ import java.util.Map;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.ToOneAttributeSourceImpl;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;

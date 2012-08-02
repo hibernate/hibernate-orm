@@ -21,33 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.SubclassEntitySource;
+import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
+import org.hibernate.metamodel.spi.source.DerivedValueSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
- * @author Hardy Ferentschik
+ * @author Strong Liu
  */
-public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
+public class DerivedValueSourceImpl implements DerivedValueSource {
+    private final FormulaValue formulaValue;
 
-    private final EntitySource container;
+    DerivedValueSourceImpl(FormulaValue formulaValue) {
+        this.formulaValue = formulaValue;
+    }
 
-    public SubclassEntitySourceImpl( EntityClass entityClass,
-                                     EntitySource container ) {
-		super( entityClass );
-		this.container = container;
+	@Override
+	public Nature getNature() {
+		return Nature.DERIVED;
 	}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.hibernate.metamodel.spi.source.SubclassEntitySource#superclassEntitySource()
-     */
+	@Override
+    public String getExpression() {
+        return formulaValue.getExpression();
+    }
+
     @Override
-    public EntitySource superclassEntitySource() {
-        return container;
+    public String getContainingTableName() {
+        return formulaValue.getContainingTableName();
     }
 }
-
-

@@ -113,8 +113,6 @@ import javax.persistence.Version;
 
 import org.jboss.jandex.DotName;
 
-import org.hibernate.annotations.Subselect;
-
 /**
  * Defines the dot names for the JPA annotations
  *
@@ -201,7 +199,6 @@ public interface JPADotNames {
 	DotName SEQUENCE_GENERATOR = DotName.createSimple( SequenceGenerator.class.getName() );
 	DotName SQL_RESULT_SET_MAPPING = DotName.createSimple( SqlResultSetMapping.class.getName() );
 	DotName SQL_RESULT_SET_MAPPINGS = DotName.createSimple( SqlResultSetMappings.class.getName() );
-	DotName SUBSELECT = DotName.createSimple( Subselect.class.getName() );
 	DotName TABLE = DotName.createSimple( Table.class.getName() );
 	DotName TABLE_GENERATOR = DotName.createSimple( TableGenerator.class.getName() );
 	DotName TEMPORAL = DotName.createSimple( Temporal.class.getName() );

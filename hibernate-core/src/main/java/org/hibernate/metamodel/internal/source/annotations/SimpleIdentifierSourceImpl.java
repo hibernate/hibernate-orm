@@ -21,12 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.id.EntityIdentifierNature;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;

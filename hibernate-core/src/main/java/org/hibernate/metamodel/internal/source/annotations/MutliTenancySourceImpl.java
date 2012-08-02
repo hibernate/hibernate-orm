@@ -21,10 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;

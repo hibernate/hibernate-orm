@@ -28,10 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.persistence.AccessType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PostLoad;
@@ -56,6 +54,7 @@ import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.JpaCallbackSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -64,11 +63,7 @@ import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
-import org.hibernate.metamodel.spi.source.SecondaryTableSource;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/orm-xml.
@@ -84,10 +79,6 @@ public class EntityClass extends ConfiguredClass {
 	private final String customLoaderQueryName;
 	private final List<String> synchronizedTableNames;
 	private final int batchSize;
-
-	private final TableSpecificationSource primaryTableSource;
-	private final Set<SecondaryTableSource> secondaryTableSources;
-	private final Set<ConstraintSource> constraintSources;
 
 	private boolean isMutable;
 	private boolean isExplicitPolymorphism;
@@ -130,14 +121,7 @@ public class EntityClass extends ConfiguredClass {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.inheritanceType = inheritanceType;
 
-		final boolean hasOwnTable = definesItsOwnTable();
-
 		this.explicitEntityName = determineExplicitEntityName();
-
-		this.constraintSources = new HashSet<ConstraintSource>();
-		this.primaryTableSource = hasOwnTable ? createPrimaryTableSource() : null;
-		this.secondaryTableSources = createSecondaryTableSources();
-
 		this.customLoaderQueryName = determineCustomLoader();
 		this.synchronizedTableNames = determineSynchronizedTableNames();
 		this.batchSize = determineBatchSize();
@@ -187,19 +171,6 @@ public class EntityClass extends ConfiguredClass {
 
 	public Caching getNaturalIdCaching() {
 		return naturalIdCaching;
-	}
-
-	public TableSpecificationSource getPrimaryTableSource() {
-		// todo : this is different from hbm which returns null if "!definesItsOwnTable()"
-		return definesItsOwnTable() ? primaryTableSource : ( ( EntityClass ) getParent() ).getPrimaryTableSource();
-	}
-
-	public Set<SecondaryTableSource> getSecondaryTableSources() {
-		return secondaryTableSources;
-	}
-
-	public Set<ConstraintSource> getConstraintSources() {
-		return constraintSources;
 	}
 
 	public String getExplicitEntityName() {
@@ -270,6 +241,10 @@ public class EntityClass extends ConfiguredClass {
 		return jpaCallbacks;
 	}
 
+	public boolean definesItsOwnTable() {
+		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
+	}
+
 	private String determineExplicitEntityName() {
 		final AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.ENTITY
@@ -277,10 +252,6 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
-
-	private boolean definesItsOwnTable() {
-		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
-	}
 
 	private void processDiscriminatorValue() {
 		final AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
@@ -458,183 +429,10 @@ public class EntityClass extends ConfiguredClass {
 		);
 	}
 
-	private TableSpecificationSource createPrimaryTableSource() {
-		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(),
-				JPADotNames.TABLE
-		);
-		AnnotationInstance subselectAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(),
-				JPADotNames.SUBSELECT
-		);
-
-		if ( tableAnnotation != null ) {
-			return createPrimaryTableSourceAsTable( tableAnnotation );
-		}
-		else if ( subselectAnnotation != null ) {
-			return createPrimaryTableSourceAsInLineView( subselectAnnotation );
-		}
-		else {
-			return new TableSourceImpl( null, null, null );
-		}
-	}
-
-	private TableSpecificationSource createPrimaryTableSourceAsTable(AnnotationInstance tableAnnotation) {
-		final String schemaName = determineSchemaName( tableAnnotation );
-		final String catalogName = determineCatalogName( tableAnnotation );
-
-		final String explicitTableName = tableAnnotation == null
-				? null
-				: JandexHelper.getValue( tableAnnotation, "name", String.class );
-
-		if ( tableAnnotation != null ) {
-			createUniqueConstraints( tableAnnotation, null );
-		}
-
-		return new TableSourceImpl( schemaName, catalogName, explicitTableName );
-	}
-
-	private TableSpecificationSource createPrimaryTableSourceAsInLineView(AnnotationInstance subselectAnnotation) {
-		return new InLineViewSourceImpl(
-				JandexHelper.getValue( subselectAnnotation, "value", String.class ),
-				getEntityName()
-		);
-	}
-
-	private String determineSchemaName(AnnotationInstance tableAnnotation) {
-		return tableAnnotation == null
-				? null
-				: JandexHelper.getValue( tableAnnotation, "schema", String.class );
-	}
-
-	private String determineCatalogName(AnnotationInstance tableAnnotation) {
-		return tableAnnotation == null
-				? null
-				: JandexHelper.getValue( tableAnnotation, "catalog", String.class );
-	}
-
-	private void createUniqueConstraints(AnnotationInstance tableAnnotation, String tableName) {
-		final AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
-		if ( value == null ) {
-			return;
-		}
-
-		final AnnotationInstance[] uniqueConstraints = value.asNestedArray();
-		for ( final AnnotationInstance unique : uniqueConstraints ) {
-			final String name = unique.value( "name" ) == null ? null : unique.value( "name" ).asString();
-			final String[] columnNames = unique.value( "columnNames" ).asStringArray();
-			final UniqueConstraintSourceImpl uniqueConstraintSource =
-					new UniqueConstraintSourceImpl(
-							name, tableName, Arrays.asList( columnNames )
-					);
-			constraintSources.add( uniqueConstraintSource );
-		}
-	}
-
-	private Set<SecondaryTableSource> createSecondaryTableSources() {
-		final Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
-
-		//	process a singular @SecondaryTable annotation
-		{
-			AnnotationInstance secondaryTable = JandexHelper.getSingleAnnotation(
-					getClassInfo(),
-					JPADotNames.SECONDARY_TABLE
-			);
-			if ( secondaryTable != null ) {
-				secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
-			}
-		}
-		// process any @SecondaryTables grouping
-		{
-			AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
-					getClassInfo(),
-					JPADotNames.SECONDARY_TABLES
-			);
-			if ( secondaryTables != null ) {
-				for ( AnnotationInstance secondaryTable : JandexHelper.getValue(
-						secondaryTables,
-						"value",
-						AnnotationInstance[].class
-				) ) {
-					secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
-				}
-			}
-		}
-
-		return secondaryTableSources;
-	}
-
-	private SecondaryTableSource createSecondaryTableSource(AnnotationInstance tableAnnotation) {
-		final String schemaName = determineSchemaName( tableAnnotation );
-		final String catalogName = determineCatalogName( tableAnnotation );
-		final String tableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
-
-		createUniqueConstraints( tableAnnotation, tableName );
-
-		final List<PrimaryKeyJoinColumnSource> keys = collectionSecondaryTableKeys( tableAnnotation );
-		return new SecondaryTableSourceImpl( new TableSourceImpl( schemaName, catalogName, tableName ), keys );
-	}
-
-	private List<PrimaryKeyJoinColumnSource> collectionSecondaryTableKeys(final AnnotationInstance tableAnnotation) {
-		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
-				tableAnnotation,
-				"pkJoinColumns",
-				AnnotationInstance[].class
-		);
-
-		if ( joinColumnAnnotations == null ) {
-			return Collections.emptyList();
-		}
-		final List<PrimaryKeyJoinColumnSource> keys = new ArrayList<PrimaryKeyJoinColumnSource>();
-		for ( final AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
-			keys.add( new PrimaryKeyJoinColumnSourceImpl( joinColumnAnnotation ) );
-		}
-		return keys;
-	}
-
 	public boolean hasMultiTenancySourceInformation() {
 		return JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.MULTI_TENANT ) != null
 				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_COLUMN ) != null
 				|| JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.TENANT_FORMULA ) != null;
-	}
-
-
-	private static class PrimaryKeyJoinColumnSourceImpl implements PrimaryKeyJoinColumnSource {
-		private final String columnName;
-		private final String referencedColumnName;
-		private final String columnDefinition;
-
-		private PrimaryKeyJoinColumnSourceImpl(AnnotationInstance joinColumnAnnotation) {
-			this(
-					JandexHelper.getValue( joinColumnAnnotation, "name", String.class ),
-					JandexHelper.getValue( joinColumnAnnotation, "referencedColumnName", String.class ),
-					JandexHelper.getValue( joinColumnAnnotation, "columnDefinition", String.class )
-			);
-		}
-
-		private PrimaryKeyJoinColumnSourceImpl(
-				String columnName,
-				String referencedColumnName,
-				String columnDefinition) {
-			this.columnName = columnName;
-			this.referencedColumnName = referencedColumnName;
-			this.columnDefinition = columnDefinition;
-		}
-
-		@Override
-		public String getColumnName() {
-			return columnName;
-		}
-
-		@Override
-		public String getReferencedColumnName() {
-			return referencedColumnName;
-		}
-
-		@Override
-		public String getColumnDefinition() {
-			return columnDefinition;
-		}
 	}
 
 	private String determineCustomLoader() {

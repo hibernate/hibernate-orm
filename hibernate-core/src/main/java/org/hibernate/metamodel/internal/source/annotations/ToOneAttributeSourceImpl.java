@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +33,11 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeNature;

@@ -42,8 +42,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.RootEntitySourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.entity.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;

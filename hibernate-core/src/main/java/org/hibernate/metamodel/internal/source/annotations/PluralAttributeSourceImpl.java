@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +32,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;

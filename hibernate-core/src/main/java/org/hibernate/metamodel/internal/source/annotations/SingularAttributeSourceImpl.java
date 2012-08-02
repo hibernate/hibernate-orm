@@ -21,13 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.ExplicitHibernateTypeSourceImpl;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;

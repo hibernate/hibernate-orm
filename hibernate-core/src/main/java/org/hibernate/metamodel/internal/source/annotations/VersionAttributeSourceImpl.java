@@ -21,53 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.Map;
-
-import org.hibernate.metamodel.spi.source.JpaCallbackSource;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public class JpaCallbackSourceImpl implements JpaCallbackSource {
+public class VersionAttributeSourceImpl
+		extends SingularAttributeSourceImpl
+		implements VersionAttributeSource {
 
-	private final Map<Class<?>, String> callbacksByType;
-	private final String name;
-	private final boolean isListener;
+	public VersionAttributeSourceImpl(MappedAttribute attribute) {
+		super( attribute );
+	}
 
-	JpaCallbackSourceImpl(String name,
-						  Map<Class<?>, String> callbacksByType,
-						  boolean isListener) {
-		this.name = name;
-		this.callbacksByType = callbacksByType;
-		this.isListener = isListener;
+	public VersionAttributeSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
+		super( attribute, attributeOverride );
 	}
 
 	@Override
-	public String getCallbackMethod(Class<?> callbackType) {
-		return callbacksByType.get( callbackType );
+	public String getUnsavedValue() {
+		return null;
 	}
 
 	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public boolean isListener() {
-		return isListener;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "JpaCallbackSourceImpl" );
-		sb.append( "{name='" ).append( name ).append( '\'' );
-		sb.append( ", isListener=" ).append( isListener );
-		sb.append( '}' );
-		return sb.toString();
+	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 	}
 }
-
-

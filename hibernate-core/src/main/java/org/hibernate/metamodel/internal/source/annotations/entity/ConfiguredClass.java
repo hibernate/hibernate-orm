@@ -178,6 +178,16 @@ public class ConfiguredClass {
 		return localBindingContext;
 	}
 
+	public boolean hostsAnnotation(DotName annotationName) {
+		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
+		if ( annotationList == null ) {
+			return false;
+		}
+		else {
+			return annotationList.size() > 0;
+		}
+	}
+
 	public Collection<BasicAttribute> getSimpleAttributes() {
 		return simpleAttributeMap.values();
 	}
@@ -328,12 +338,12 @@ public class ConfiguredClass {
 			if ( annotationTarget instanceof MethodInfo ) {
 				Method m;
 				try {
-					m = clazz.getMethod( ( (MethodInfo) annotationTarget ).name() );
+					m = clazz.getMethod( ( ( MethodInfo ) annotationTarget ).name() );
 				}
 				catch ( NoSuchMethodException e ) {
 					throw new HibernateException(
 							"Unable to load method "
-									+ ( (MethodInfo) annotationTarget ).name()
+									+ ( ( MethodInfo ) annotationTarget ).name()
 									+ " of class " + clazz.getName()
 					);
 				}
@@ -343,12 +353,12 @@ public class ConfiguredClass {
 			else {
 				Field f;
 				try {
-					f = clazz.getField( ( (FieldInfo) annotationTarget ).name() );
+					f = clazz.getField( ( ( FieldInfo ) annotationTarget ).name() );
 				}
 				catch ( NoSuchFieldException e ) {
 					throw new HibernateException(
 							"Unable to load field "
-									+ ( (FieldInfo) annotationTarget ).name()
+									+ ( ( FieldInfo ) annotationTarget ).name()
 									+ " of class " + clazz.getName()
 					);
 				}
@@ -412,8 +422,9 @@ public class ConfiguredClass {
 
 	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
 		final String attributeName = ReflectionHelper.getPropertyName( member );
-		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType.getMemberMethods();
-		Class<?> attributeType = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
+		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
+				.getMemberMethods();
+		Class<?> attributeType = ( Class<?> ) findResolvedType( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
@@ -423,7 +434,12 @@ public class ConfiguredClass {
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
-						attributeName, attributeType, attributeNature, annotations, accessTypeString, getLocalBindingContext()
+						attributeName,
+						attributeType,
+						attributeNature,
+						annotations,
+						accessTypeString,
+						getLocalBindingContext()
 				);
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
@@ -446,7 +462,12 @@ public class ConfiguredClass {
 			}
 			case EMBEDDED_ID: {
 				final BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
-						attributeName, attributeType, attributeNature, annotations, accessTypeString, getLocalBindingContext()
+						attributeName,
+						attributeType,
+						attributeNature,
+						annotations,
+						accessTypeString,
+						getLocalBindingContext()
 				);
 				idAttributeMap.put( attributeName, attribute );
 			}
@@ -584,7 +605,7 @@ public class ConfiguredClass {
 		}
 
 		int size = discoveredAttributeTypes.size();
-		switch ( size ){
+		switch ( size ) {
 			case 0:
 				return AttributeNature.BASIC;
 			case 1:
@@ -621,10 +642,10 @@ public class ConfiguredClass {
 		for ( AnnotationInstance transientMember : transientMembers ) {
 			AnnotationTarget target = transientMember.target();
 			if ( target instanceof FieldInfo ) {
-				transientFieldNames.add( ( (FieldInfo) target ).name() );
+				transientFieldNames.add( ( ( FieldInfo ) target ).name() );
 			}
 			else {
-				transientMethodNames.add( ( (MethodInfo) target ).name() );
+				transientMethodNames.add( ( ( MethodInfo ) target ).name() );
 			}
 		}
 	}

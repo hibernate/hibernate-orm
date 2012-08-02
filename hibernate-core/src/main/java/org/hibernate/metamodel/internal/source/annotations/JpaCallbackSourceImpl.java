@@ -21,33 +21,53 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.VersionAttributeSource;
+import java.util.Map;
+
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 
 /**
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public class VersionAttributeSourceImpl
-		extends SingularAttributeSourceImpl
-		implements VersionAttributeSource {
+public class JpaCallbackSourceImpl implements JpaCallbackSource {
 
-	public VersionAttributeSourceImpl(MappedAttribute attribute) {
-		super( attribute );
-	}
+	private final Map<Class<?>, String> callbacksByType;
+	private final String name;
+	private final boolean isListener;
 
-	public VersionAttributeSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
-		super( attribute, attributeOverride );
-	}
-
-	@Override
-	public String getUnsavedValue() {
-		return null;
+	public JpaCallbackSourceImpl(String name,
+						  Map<Class<?>, String> callbacksByType,
+						  boolean isListener) {
+		this.name = name;
+		this.callbacksByType = callbacksByType;
+		this.isListener = isListener;
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
-		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+	public String getCallbackMethod(Class<?> callbackType) {
+		return callbacksByType.get( callbackType );
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public boolean isListener() {
+		return isListener;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "JpaCallbackSourceImpl" );
+		sb.append( "{name='" ).append( name ).append( '\'' );
+		sb.append( ", isListener=" ).append( isListener );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }
+
+

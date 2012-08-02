@@ -21,7 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
+
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 
 /**
  * @author Hardy Ferentschik

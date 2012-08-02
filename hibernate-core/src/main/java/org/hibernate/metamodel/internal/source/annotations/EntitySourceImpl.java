@@ -21,13 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
@@ -37,9 +41,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAttributeSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.ToOneAttributeSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
@@ -48,6 +54,7 @@ import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -105,7 +112,20 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public TableSpecificationSource getPrimaryTable() {
-		return entityClass.getPrimaryTableSource();
+		if ( !entityClass.definesItsOwnTable() ) {
+			return null;
+		}
+
+		if ( entityClass.hostsAnnotation( HibernateDotNames.SUB_SELECT ) ) {
+			return new InLineViewSourceImpl( entityClass );
+		}
+		else {
+			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.TABLE
+			);
+			return new TableSourceImpl( tableAnnotation );
+		}
 	}
 
 	@Override
@@ -243,7 +263,46 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
-		return entityClass.getConstraintSources();
+		Set<ConstraintSource> constraintSources = new HashSet<ConstraintSource>();
+
+		// primary table
+		if ( entityClass.hostsAnnotation( JPADotNames.TABLE ) ) {
+			AnnotationInstance table = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.TABLE
+			);
+			addUniqueConstraints( constraintSources, table, null );
+		}
+
+		// secondary table(s)
+		if ( entityClass.hostsAnnotation( JPADotNames.SECONDARY_TABLE ) ) {
+			AnnotationInstance secondaryTable = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.SECONDARY_TABLE
+			);
+			String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
+			addUniqueConstraints( constraintSources, secondaryTable, tableName );
+
+		}
+
+		if ( entityClass.hostsAnnotation( JPADotNames.SECONDARY_TABLES ) ) {
+			AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.SECONDARY_TABLES
+			);
+			if ( secondaryTables != null ) {
+				for ( AnnotationInstance secondaryTable : JandexHelper.getValue(
+						secondaryTables,
+						"value",
+						AnnotationInstance[].class
+				) ) {
+					String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
+					addUniqueConstraints( constraintSources, secondaryTable, tableName );
+				}
+			}
+		}
+
+		return constraintSources;
 	}
 
 	@Override
@@ -253,7 +312,38 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public Set<SecondaryTableSource> getSecondaryTables() {
-		return entityClass.getSecondaryTableSources();
+		Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
+
+		//	process a singular @SecondaryTable annotation
+		if ( entityClass.hostsAnnotation( JPADotNames.SECONDARY_TABLE ) ) {
+			AnnotationInstance secondaryTable = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.SECONDARY_TABLE
+			);
+			if ( secondaryTable != null ) {
+				secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
+			}
+		}
+
+		// process any @SecondaryTables grouping
+		if ( entityClass.hostsAnnotation( JPADotNames.SECONDARY_TABLES ) ) {
+			AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.SECONDARY_TABLES
+			);
+			if ( secondaryTables != null ) {
+				AnnotationInstance[] tableAnnotations = JandexHelper.getValue(
+						secondaryTables,
+						"value",
+						AnnotationInstance[].class
+				);
+				for ( AnnotationInstance secondaryTable : tableAnnotations ) {
+					secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
+				}
+			}
+		}
+
+		return secondaryTableSources;
 	}
 
 	@Override
@@ -282,6 +372,46 @@ public class EntitySourceImpl implements EntitySource {
 		catch ( MappingException e ) {
 			throw new AnnotationException( "Use of the same entity name twice: " + getJpaEntityName(), e );
 		}
+	}
+
+	private void addUniqueConstraints(Set<ConstraintSource> constraintSources, AnnotationInstance tableAnnotation, String tableName) {
+		final AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
+		if ( value == null ) {
+			return;
+		}
+
+		final AnnotationInstance[] uniqueConstraints = value.asNestedArray();
+		for ( final AnnotationInstance unique : uniqueConstraints ) {
+			final String name = unique.value( "name" ) == null ? null : unique.value( "name" ).asString();
+			final String[] columnNames = unique.value( "columnNames" ).asStringArray();
+			final UniqueConstraintSourceImpl uniqueConstraintSource =
+					new UniqueConstraintSourceImpl(
+							name, tableName, Arrays.asList( columnNames )
+					);
+			constraintSources.add( uniqueConstraintSource );
+		}
+	}
+
+	private SecondaryTableSource createSecondaryTableSource(AnnotationInstance tableAnnotation) {
+		final List<PrimaryKeyJoinColumnSource> keys = collectionSecondaryTableKeys( tableAnnotation );
+		return new SecondaryTableSourceImpl( new TableSourceImpl( tableAnnotation ), keys );
+	}
+
+	private List<PrimaryKeyJoinColumnSource> collectionSecondaryTableKeys(final AnnotationInstance tableAnnotation) {
+		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
+				tableAnnotation,
+				"pkJoinColumns",
+				AnnotationInstance[].class
+		);
+
+		if ( joinColumnAnnotations == null ) {
+			return Collections.emptyList();
+		}
+		final List<PrimaryKeyJoinColumnSource> keys = new ArrayList<PrimaryKeyJoinColumnSource>();
+		for ( final AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
+			keys.add( new PrimaryKeyJoinColumnSourceImpl( joinColumnAnnotation ) );
+		}
+		return keys;
 	}
 }
 

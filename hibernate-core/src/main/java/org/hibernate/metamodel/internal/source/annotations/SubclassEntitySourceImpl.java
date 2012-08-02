@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,39 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.metamodel.spi.source.InLineViewSource;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public class InLineViewSourceImpl implements InLineViewSource {
-	private final String selectStatement;
-	private final String logicalName;
+public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
 
-	public InLineViewSourceImpl(String selectStatement, String logicalName) {
-		this.selectStatement = selectStatement;
-		this.logicalName = logicalName;
+    private final EntitySource container;
+
+    public SubclassEntitySourceImpl( EntityClass entityClass,
+                                     EntitySource container ) {
+		super( entityClass );
+		this.container = container;
 	}
 
-	@Override
-	public String getSelectStatement() {
-		return selectStatement;
-	}
-
-	@Override
-	public String getExplicitSchemaName() {
-		return null;
-	}
-
-	@Override
-	public String getExplicitCatalogName() {
-		return null;
-	}
-
-	@Override
-	public String getLogicalName() {
-		return logicalName;
-	}
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.hibernate.metamodel.spi.source.SubclassEntitySource#superclassEntitySource()
+     */
+    @Override
+    public EntitySource superclassEntitySource() {
+        return container;
+    }
 }
+
+

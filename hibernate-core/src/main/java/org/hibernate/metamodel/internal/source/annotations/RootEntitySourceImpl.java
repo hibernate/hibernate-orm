@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,11 +37,10 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.DiscriminatorSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.MutliTenancySourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.SimpleIdentifierSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAttributeSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.attribute.VersionAttributeSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.IdType;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;

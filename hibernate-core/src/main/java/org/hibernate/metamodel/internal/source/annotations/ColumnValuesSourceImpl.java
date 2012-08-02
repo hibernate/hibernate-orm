@@ -21,9 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.attribute;
+package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.TruthValue;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;

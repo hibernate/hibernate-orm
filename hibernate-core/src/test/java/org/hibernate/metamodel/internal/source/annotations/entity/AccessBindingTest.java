@@ -25,6 +25,8 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -69,7 +71,11 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { PropertyAccess.class })
 	public void testDefaultPropertyAccess() {
 		EntityBinding binding = getEntityBinding( PropertyAccess.class );
-		assertEquals( "Wrong access type", "property", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
+		assertEquals(
+				"Wrong access type",
+				"property",
+				binding.locateAttributeBinding( "id" ).getPropertyAccessorName()
+		);
 	}
 
 	@Entity
@@ -159,6 +165,32 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 		);
 	}
 
+
+	@Entity
+	class EntityWithEmbeddedId {
+		EmbeddableId id;
+
+		@EmbeddedId
+		public EmbeddableId getId() {
+			return id;
+		}
+	}
+
+	@Embeddable
+	public class EmbeddableId {
+		String ssn;
+	}
+
+	@Test
+	@Resources(annotatedClasses = { EntityWithEmbeddedId.class, EmbeddableId.class })
+	public void testEmbeddedIdWithPropertyAccess() {
+		EntityBinding binding = getEntityBinding( EntityWithEmbeddedId.class );
+		assertEquals(
+				"Wrong access type",
+				"property",
+				binding.locateAttributeBinding( "id" ).getPropertyAccessorName()
+		);
+	}
 }
 
 

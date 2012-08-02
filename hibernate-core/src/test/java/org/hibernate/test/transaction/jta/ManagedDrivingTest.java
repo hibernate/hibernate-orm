@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
@@ -48,6 +49,7 @@ import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -61,6 +63,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)
 public class ManagedDrivingTest extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
 

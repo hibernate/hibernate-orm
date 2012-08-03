@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
@@ -54,6 +55,7 @@ import org.junit.After;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.junit4.Helper;
 
 /**
  * @author Strong Liu (stliu@hibernate.org)
@@ -93,6 +95,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		log.trace( "Building session factory" );
 		ejb3Configuration = buildConfiguration();
 		ejb3Configuration.configure( getConfig() );
+		preConfigure( ejb3Configuration );
 		configure(ejb3Configuration);
 
 		afterConfigurationBuilt( ejb3Configuration );
@@ -106,6 +109,19 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 		afterEntityManagerFactoryBuilt();
 	}
+
+	private void preConfigure(Ejb3Configuration ejb3Configuration) {
+		if ( createSchema() ) {
+			final String secondSchemaName = createSecondSchema();
+			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
+				if ( !( getDialect() instanceof H2Dialect ) ) {
+					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
+				}
+				Helper.createH2Schema( secondSchemaName, ejb3Configuration.getHibernateConfiguration() );
+			}
+		}
+	}
+
 	public void configure(Ejb3Configuration cfg) {
 	}
 
@@ -219,6 +235,15 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	protected boolean createSchema() {
 		return true;
 	}
+
+	/**
+	 * Feature supported only by H2 dialect.
+	 * @return Provide not empty name to create second schema.
+	 */
+	protected String createSecondSchema() {
+		return null;
+	}
+
 	protected boolean isAudit() {
 		return true;
 	}

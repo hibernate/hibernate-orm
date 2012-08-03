@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.sql.hand.custom.oracle;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 import org.hibernate.testing.RequiresDialect;

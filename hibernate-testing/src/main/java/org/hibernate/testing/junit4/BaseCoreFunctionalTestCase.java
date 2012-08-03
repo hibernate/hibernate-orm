@@ -45,8 +45,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
@@ -178,6 +180,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+			final String secondSchemaName = createSecondSchema();
+			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
+				if ( !( getDialect() instanceof H2Dialect ) ) {
+					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
+				}
+				Helper.createH2Schema( secondSchemaName, configuration );
+			}
 		}
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
 		return configuration;
@@ -348,6 +357,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected boolean createSchema() {
 		return true;
+	}
+
+	/**
+	 * Feature supported only by H2 dialect.
+	 * @return Provide not empty name to create second schema.
+	 */
+	protected String createSecondSchema() {
+		return null;
 	}
 
 	protected boolean rebuildSessionFactoryOnError() {

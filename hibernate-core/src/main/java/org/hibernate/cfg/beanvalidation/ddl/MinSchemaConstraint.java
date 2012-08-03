@@ -39,24 +39,38 @@ public class MinSchemaConstraint implements SchemaConstraint {
 	@Override
 	public boolean applyConstraint(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
 		if ( !Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-		  return false;
+			return false;
 		}
 
-		@SuppressWarnings("unchecked")
-		ConstraintDescriptor<Min> minConstraint = ( ConstraintDescriptor<Min> ) descriptor;
-		long min = minConstraint.getAnnotation().value();
+		long min = SchemaModificationHelper.getValue( descriptor, "min", Long.class );
 
 		Column col = ( Column ) property.getColumnIterator().next();
 		String checkConstraint = col.getQuotedName( dialect ) + ">=" + min;
-		SchemaModificationHelper.applySQLCheck( col, checkConstraint );
+
+		String checkCondition = SchemaModificationHelper.buildSQLCheck( col.getCheckConstraint(), checkConstraint );
+		col.setCheckConstraint( checkCondition );
+
 		return true;
-
-
 	}
 
 	@Override
 	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( !Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
+
+		long min = SchemaModificationHelper.getValue( descriptor, "value", Long.class );
+
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn( attributeBinding );
+		if ( column == null ) {
+			return false;
+		}
+
+		String minConstraint = column.getColumnName().getText( dialect ) + ">=" + min;
+		String checkCondition = SchemaModificationHelper.buildSQLCheck( column.getCheckCondition(), minConstraint );
+		column.setCheckCondition( checkCondition );
+
+		return true;
 	}
 }
 

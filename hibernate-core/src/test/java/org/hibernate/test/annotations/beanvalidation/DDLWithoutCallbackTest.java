@@ -49,7 +49,6 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	@FailureExpectedWithNewMetamodel
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -58,7 +57,6 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	@FailureExpectedWithNewMetamodel
 	public void testMinAndMaxChecksGetApplied() {
 		MinMax minMax = new MinMax( 1 );
 		assertDatabaseConstraintViolationThrown( minMax );

@@ -297,6 +297,8 @@ class TypeSafeActivator {
 			for ( SchemaConstraint schemaConstraint : schemaConstraints ) {
 				schemaConstraint.applyConstraint( attributeBinding, constraintDescriptor, propertyDescriptor, dialect );
 			}
+
+			notNullSchemaConstraint.applyConstraint( attributeBinding, constraintDescriptor, propertyDescriptor, dialect );
 		}
 	}
 

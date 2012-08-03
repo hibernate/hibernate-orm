@@ -61,25 +61,18 @@ public class NotNullSchemaConstraint implements SchemaConstraint {
 
 	@Override
 	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
+		if ( !NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
 
-//	private static boolean applyNotNull(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor) {
-//		boolean hasNotNull = false;
-//		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-//			if ( !( attributeBinding.getPersistentClass() instanceof SingleTableSubclass ) ) {
-//				//single table should not be forced to null
-//				if ( !property.isComposite() ) { //composite should not add not-null on all columns
-//					@SuppressWarnings("unchecked")
-//					Iterator<Column> iter = property.getColumnIterator();
-//					while ( iter.hasNext() ) {
-//						iter.next().setNullable( false );
-//						hasNotNull = true;
-//					}
-//				}
-//			}
-//			hasNotNull = true;
-//		}
-//		return hasNotNull;
-//	}
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn( attributeBinding );
+		if ( column == null ) {
+			return false;
+		}
+
+		// TODO check with components as in the old configuration approach. see above (HF)
+		column.setNullable( false );
+
+		return true;
+	}
 }

@@ -26,6 +26,10 @@ package org.hibernate.cfg.beanvalidation;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +40,7 @@ import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistry;
@@ -50,7 +55,6 @@ import static junit.framework.Assert.assertEquals;
 /**
  * @author Hardy Ferentschik
  */
-
 public class ApplySchemaConstraintTest {
 	private StandardServiceRegistryImpl serviceRegistry;
 
@@ -61,17 +65,59 @@ public class ApplySchemaConstraintTest {
 
 	@Test
 	public void testLengthConstraintApplied() throws Exception {
-		MetadataImplementor metadata = buildMetadata( serviceRegistry );
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Foo.class );
 		metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Foo.class.getName() ), "s" );
 		assertEquals( "@Length constraint should have been applied", 10, column.getSize().getLength() );
 	}
 
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Foo.class,
-		};
+	@Test
+	public void testDigitsConstraintApplied() throws Exception {
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Fubar.class );
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( Fubar.class.getName() ), "f" );
+		Size size = column.getSize();
+		assertEquals( "@Digits should have been applied", 1, size.getScale() );
+		assertEquals( "@Digits should have been applied", 2, size.getPrecision() );
+	}
+
+	@Test
+	public void testMinConstraintApplied() throws Exception {
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Foobar.class );
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( Foobar.class.getName() ), "i" );
+		assertEquals( "@Min constraint should have been applied", "i>=42", column.getCheckCondition() );
+	}
+
+	@Test
+	public void testMaxConstraintApplied() throws Exception {
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Snafu.class );
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( Snafu.class.getName() ), "i" );
+		assertEquals( "@Max constraint should have been applied", "i<=42", column.getCheckCondition() );
+	}
+
+	@Test
+	public void testSizeConstraintApplied() throws Exception {
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Tarfu.class );
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( Tarfu.class.getName() ), "s" );
+		Size size = column.getSize();
+		assertEquals( "@Size constraint should have been applied", 42, size.getLength() );
+	}
+
+	@Test
+	public void testNotNullConstraintApplied() throws Exception {
+		MetadataImplementor metadata = buildMetadata( serviceRegistry, Bohica.class );
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( Bohica.class.getName() ), "s" );
+		assertEquals( "@NotNull constraint should have been applied", false, column.isNullable() );
 	}
 
 	private Column getColumnForAttribute(EntityBinding entityBinding, String propertyName) {
@@ -89,13 +135,12 @@ public class ApplySchemaConstraintTest {
 		return ( StandardServiceRegistryImpl ) registryBuilder.buildServiceRegistry();
 	}
 
-	private MetadataImplementor buildMetadata(ServiceRegistry serviceRegistry) {
+	private MetadataImplementor buildMetadata(ServiceRegistry serviceRegistry, Class<?>... classes) {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				sources.addAnnotatedClass( annotatedClass );
-			}
+
+		for ( Class<?> annotatedClass : classes ) {
+			sources.addAnnotatedClass( annotatedClass );
+
 		}
 		return ( MetadataImplementor ) sources.buildMetadata();
 	}
@@ -108,6 +153,55 @@ public class ApplySchemaConstraintTest {
 
 		@Length(max = 10)
 		private String s;
+	}
 
+	@Entity
+	public static class Fubar {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@Digits(integer = 1, fraction = 1)
+		private float f;
+	}
+
+	@Entity
+	public static class Foobar {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@Min(42)
+		private int i;
+	}
+
+	@Entity
+	public static class Snafu {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@Max(42)
+		private int i;
+	}
+
+	@Entity
+	public static class Tarfu {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@javax.validation.constraints.Size(max = 42)
+		private String s;
+	}
+
+	@Entity
+	public static class Bohica {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@NotNull
+		private String s;
 	}
 }

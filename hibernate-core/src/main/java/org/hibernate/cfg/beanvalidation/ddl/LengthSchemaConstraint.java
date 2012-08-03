@@ -30,9 +30,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * @author Hardy Ferentschik
@@ -49,7 +46,7 @@ public class LengthSchemaConstraint implements SchemaConstraint {
 			return false;
 		}
 
-		int max = getMaxValue( descriptor );
+		int max = SchemaModificationHelper.getValue( descriptor, "max", Integer.class );
 		Column col = ( Column ) property.getColumnIterator().next();
 		if ( max < Integer.MAX_VALUE ) {
 			col.setLength( max );
@@ -63,29 +60,18 @@ public class LengthSchemaConstraint implements SchemaConstraint {
 			return false;
 		}
 
-		int max = getMaxValue( descriptor );
-		if ( !( attributeBinding instanceof BasicAttributeBinding ) ) {
-			// TODO verify that's correct (HF)
+		int max = SchemaModificationHelper.getValue( descriptor, "max", Integer.class );
+
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn(  attributeBinding );
+		if ( column == null ) {
 			return false;
 		}
 
-		BasicAttributeBinding basicAttributeBinding = ( BasicAttributeBinding ) attributeBinding;
-		RelationalValueBinding valueBinding = basicAttributeBinding.getRelationalValueBindings().get( 0 );
-		Value value = valueBinding.getValue();
-
-		if ( !( value instanceof org.hibernate.metamodel.spi.relational.Column ) ) {
-			return false;
-		}
-
-		org.hibernate.metamodel.spi.relational.Column column = ( org.hibernate.metamodel.spi.relational.Column ) value;
 		column.getSize().setLength( max );
 
 		return true;
 	}
 
-	private int getMaxValue(ConstraintDescriptor<?> descriptor) {
-		return ( Integer ) descriptor.getAttributes().get( "max" );
-	}
 
 	private boolean shouldConstraintBeApplied(ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( !LENGTH_CONSTRAINT.equals( descriptor.getAnnotation().annotationType().getName() ) ) {

@@ -46,13 +46,30 @@ public class MaxSchemaConstraint implements SchemaConstraint {
 		ConstraintDescriptor<Max> maxConstraint = ( ConstraintDescriptor<Max> ) descriptor;
 		long max = maxConstraint.getAnnotation().value();
 		Column col = ( Column ) property.getColumnIterator().next();
+
 		String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
-		SchemaModificationHelper.applySQLCheck( col, checkConstraint );
+		String checkCondition = SchemaModificationHelper.buildSQLCheck( col.getCheckConstraint(), checkConstraint );
+		col.setCheckConstraint( checkCondition );
 		return true;
 	}
 
 	@Override
 	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( !Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
+
+		long max = SchemaModificationHelper.getValue( descriptor, "value", Long.class );
+
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn(  attributeBinding );
+		if ( column == null ) {
+			return false;
+		}
+
+		String minConstraint = column.getColumnName().getText( dialect ) + "<=" + max;
+		String checkCondition = SchemaModificationHelper.buildSQLCheck( column.getCheckCondition(), minConstraint );
+		column.setCheckCondition( checkCondition );
+
+		return true;
 	}
 }

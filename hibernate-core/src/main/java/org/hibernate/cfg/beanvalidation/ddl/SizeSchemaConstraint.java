@@ -38,6 +38,41 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 public class SizeSchemaConstraint implements SchemaConstraint {
 	@Override
 	public boolean applyConstraint(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
+		if ( !shouldConstraintBeApplied( descriptor, propertyDescriptor ) ) {
+			return false;
+		}
+
+		int max = SchemaModificationHelper.getValue( descriptor, "max", Integer.class );
+
+		Column col = ( Column ) property.getColumnIterator().next();
+		if ( max < Integer.MAX_VALUE ) {
+			col.setLength( max );
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
+		if ( !shouldConstraintBeApplied( descriptor, propertyDescriptor ) ) {
+			return false;
+		}
+
+		int max = SchemaModificationHelper.getValue( descriptor, "max", Integer.class );
+
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn(  attributeBinding );
+		if ( column == null ) {
+			return false;
+		}
+
+		if ( max < Integer.MAX_VALUE ) {
+			column.getSize().setLength( max );
+			return true;
+		}
+		return false;
+	}
+
+	private boolean shouldConstraintBeApplied(ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( !Size.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			return false;
 		}
@@ -46,19 +81,7 @@ public class SizeSchemaConstraint implements SchemaConstraint {
 			return false;
 		}
 
-		@SuppressWarnings("unchecked")
-		ConstraintDescriptor<Size> sizeConstraint = ( ConstraintDescriptor<Size> ) descriptor;
-		int max = sizeConstraint.getAnnotation().max();
-		Column col = ( Column ) property.getColumnIterator().next();
-		if ( max < Integer.MAX_VALUE ) {
-			col.setLength( max );
-		}
 		return true;
-	}
-
-	@Override
-	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }
 

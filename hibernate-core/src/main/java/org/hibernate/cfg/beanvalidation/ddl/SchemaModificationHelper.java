@@ -23,8 +23,14 @@
  */
 package org.hibernate.cfg.beanvalidation.ddl;
 
+import javax.validation.metadata.ConstraintDescriptor;
+
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * @author Hardy Ferentschik
@@ -33,14 +39,40 @@ public class SchemaModificationHelper {
 	private SchemaModificationHelper() {
 	}
 
-	public static void applySQLCheck(Column col, String checkConstraint) {
-		String existingCheck = col.getCheckConstraint();
+	public static String buildSQLCheck(String existingCheckCondition, String checkConstraint) {
+		String newCondition;
+
 		// need to check whether the new check is already part of the existing check, because applyDDL can be called
 		// multiple times
-		if ( StringHelper.isNotEmpty( existingCheck ) && !existingCheck.contains( checkConstraint ) ) {
-			checkConstraint = col.getCheckConstraint() + " AND " + checkConstraint;
+		if ( StringHelper.isNotEmpty( existingCheckCondition ) && !existingCheckCondition.contains( checkConstraint ) ) {
+			newCondition = existingCheckCondition + " AND " + checkConstraint;
 		}
-		col.setCheckConstraint( checkConstraint );
+		else {
+			newCondition = checkConstraint;
+		}
+
+		return newCondition;
+	}
+
+	public static Column getSingleColumn(AttributeBinding attributeBinding) {
+		if ( !( attributeBinding instanceof BasicAttributeBinding ) ) {
+			// TODO verify that's correct (HF)
+			return null;
+		}
+
+		BasicAttributeBinding basicAttributeBinding = ( BasicAttributeBinding ) attributeBinding;
+		RelationalValueBinding valueBinding = basicAttributeBinding.getRelationalValueBindings().get( 0 );
+		Value value = valueBinding.getValue();
+
+		if ( !( value instanceof Column ) ) {
+			return null;
+		}
+
+		return ( Column ) value;
+	}
+
+	public static <T> T getValue(ConstraintDescriptor<?> descriptor, String parameterName, Class<T> type) {
+		return ( T ) descriptor.getAttributes().get( parameterName );
 	}
 }
 

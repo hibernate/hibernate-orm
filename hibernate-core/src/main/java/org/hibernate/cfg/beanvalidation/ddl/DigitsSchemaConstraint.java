@@ -31,21 +31,22 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.relational.Size;
 
 /**
  * @author Hardy Ferentschik
  */
-public class DigitsSchemaConstraint implements SchemaConstraint {
+public class
+		DigitsSchemaConstraint implements SchemaConstraint {
 	@Override
 	public boolean applyConstraint(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
 		if ( !Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			return false;
 		}
 
-		@SuppressWarnings("unchecked")
-		ConstraintDescriptor<Digits> digitsConstraint = ( ConstraintDescriptor<Digits> ) descriptor;
-		int integerDigits = digitsConstraint.getAnnotation().integer();
-		int fractionalDigits = digitsConstraint.getAnnotation().fraction();
+		int integerDigits = SchemaModificationHelper.getValue( descriptor, "integer", Integer.class );
+		int fractionalDigits = SchemaModificationHelper.getValue( descriptor, "fraction", Integer.class );
+
 		Column col = ( Column ) property.getColumnIterator().next();
 		col.setPrecision( integerDigits + fractionalDigits );
 		col.setScale( fractionalDigits );
@@ -54,7 +55,23 @@ public class DigitsSchemaConstraint implements SchemaConstraint {
 
 	@Override
 	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( !Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
+
+		int integerDigits = SchemaModificationHelper.getValue( descriptor, "integer", Integer.class );
+		int fractionalDigits = SchemaModificationHelper.getValue( descriptor, "fraction", Integer.class );
+
+		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn(  attributeBinding );
+		if ( column == null ) {
+			return false;
+		}
+
+		Size size = column.getSize();
+		size.setPrecision( integerDigits + fractionalDigits );
+		size.setScale( fractionalDigits );
+
+		return true;
 	}
 }
 

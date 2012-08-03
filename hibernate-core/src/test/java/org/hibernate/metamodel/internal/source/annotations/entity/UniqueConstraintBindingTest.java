@@ -32,9 +32,10 @@ import javax.persistence.UniqueConstraint;
 import org.junit.Test;
 
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;

@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import org.hibernate.annotations.Proxy;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

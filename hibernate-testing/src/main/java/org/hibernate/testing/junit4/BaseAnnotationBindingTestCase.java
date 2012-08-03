@@ -21,7 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.testing.junit4;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Rule;
@@ -31,10 +34,9 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Hardy Ferentschik
@@ -42,6 +44,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 	protected MetadataSources sources;
 	protected MetadataImpl meta;
+	protected List<Class<?>> annotatedClasses = new ArrayList<Class<?>>();
 
 	@Rule
 	public MethodRule buildMetaData = new MethodRule() {
@@ -63,6 +66,10 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 
 	public EntityBinding getRootEntityBinding(Class<?> clazz) {
 		return meta.getRootEntityBinding( clazz.getName() );
+	}
+
+	public List<Class<?>> getAnnotatedClasses() {
+		return annotatedClasses;
 	}
 
 	class KeepSetupFailureStatement extends Statement {
@@ -105,13 +112,14 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 					sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
 
 					for ( Class<?> annotatedClass : resourcesAnnotation.annotatedClasses() ) {
+						annotatedClasses.add( annotatedClass );
 						sources.addAnnotatedClass( annotatedClass );
 					}
 					if ( !resourcesAnnotation.ormXmlPath().isEmpty() ) {
 						sources.addResource( resourcesAnnotation.ormXmlPath() );
 					}
 				}
-				meta = (MetadataImpl) sources.buildMetadata();
+				meta = ( MetadataImpl ) sources.buildMetadata();
 			}
 			catch ( final Throwable t ) {
 				setupError = t;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.annotations.entity;
+package org.hibernate.testing.junit4;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

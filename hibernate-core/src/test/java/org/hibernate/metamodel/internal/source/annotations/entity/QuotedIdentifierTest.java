@@ -32,6 +32,8 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 
 import static org.junit.Assert.assertEquals;
 

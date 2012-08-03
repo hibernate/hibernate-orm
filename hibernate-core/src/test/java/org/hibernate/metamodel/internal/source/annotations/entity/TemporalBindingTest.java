@@ -35,6 +35,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 import org.hibernate.type.TimestampType;
 
 import static org.junit.Assert.assertEquals;

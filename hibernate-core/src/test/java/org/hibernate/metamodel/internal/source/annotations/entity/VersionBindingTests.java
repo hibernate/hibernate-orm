@@ -26,21 +26,18 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
 import org.junit.Test;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.LongType;
-import org.hibernate.type.TimestampType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

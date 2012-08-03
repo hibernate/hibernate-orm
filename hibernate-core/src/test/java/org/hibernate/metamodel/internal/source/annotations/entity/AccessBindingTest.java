@@ -34,6 +34,8 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
 
 import static junit.framework.Assert.assertEquals;
 

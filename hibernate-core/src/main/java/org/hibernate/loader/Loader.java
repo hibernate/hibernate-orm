@@ -28,6 +28,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -829,7 +830,7 @@ public abstract class Loader {
 
 		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
 		final ResultSet rs = executeQueryStatement( queryParameters, false, session );
-		final PreparedStatement st = (PreparedStatement) rs.getStatement();
+		final Statement st =  rs.getStatement();
 
 // would be great to move all this below here into another method that could also be used
 // from the new scrolling stuff.

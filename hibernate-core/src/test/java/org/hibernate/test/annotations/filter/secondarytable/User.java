@@ -11,6 +11,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name="T_USER")
@@ -38,6 +39,7 @@ public class User {
 	private String password;
 	
 	@Column(name="LOCKED_OUT", table="SECURITY_USER")
+	@Type( type = "numeric_boolean")
 	private boolean lockedOut;
 
 	public int getId() {

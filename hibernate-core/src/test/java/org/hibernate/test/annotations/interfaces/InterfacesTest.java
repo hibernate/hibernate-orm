@@ -26,20 +26,21 @@ package org.hibernate.test.annotations.interfaces;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
 @FailureExpectedWithNewMetamodel
-public class InterfacesTest extends BaseCoreFunctionalTestCase {
+public class InterfacesTest extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = { ContactImpl.class, UserImpl.class })
 	public void testInterface() {
-		// test via SessionFactory building
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { ContactImpl.class, UserImpl.class };
+		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
+			assertNotNull( "The Binding for A should exist", getEntityBinding( annotatedClass ) );
+		}
 	}
 }

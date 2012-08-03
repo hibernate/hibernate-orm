@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
  * @author Gail Badner
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-@FailureExpectedWithNewMetamodel
 public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCompiledCode> {
 	@Override
 	protected Class<VersionedBook> getBookClass() {

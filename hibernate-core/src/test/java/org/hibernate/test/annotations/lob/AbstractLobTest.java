@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -69,6 +70,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 	protected abstract Integer getId(C compiledCode);
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSerializableToBlob() throws Exception {
 		B book = createBook();
 		Editor editor = new Editor();

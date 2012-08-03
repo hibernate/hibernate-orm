@@ -32,7 +32,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class GenericsInheritanceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testMapping() throws Exception {

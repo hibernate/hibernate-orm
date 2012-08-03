@@ -166,8 +166,12 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
         // Now process that full list of test methods and build our custom result
         final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
-		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
-		final boolean useNewMetamodel = Boolean.getBoolean( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS );
+		final boolean doValidation = Boolean.valueOf(
+				System.getProperty( Helper.VALIDATE_FAILURE_EXPECTED, "true" )
+		);
+		final boolean useNewMetamodel = Boolean.valueOf(
+				System.getProperty( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS, "true" )
+		);
 		int testCount = 0;
 
 		Ignore virtualIgnore;

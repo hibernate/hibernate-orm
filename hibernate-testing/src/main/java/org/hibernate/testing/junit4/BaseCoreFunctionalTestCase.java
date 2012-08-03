@@ -141,7 +141,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 						return Boolean.parseBoolean( ( String ) value );
 					}
 				},
-				false
+				true
 		);
 		if ( isMetadataUsed ) {
 			MetadataImplementor metadataImplementor = buildMetadata( serviceRegistry );

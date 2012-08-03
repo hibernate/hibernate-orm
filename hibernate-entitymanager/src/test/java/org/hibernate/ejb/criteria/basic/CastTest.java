@@ -34,11 +34,14 @@ import javax.persistence.criteria.Root;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.dialect.SybaseASE157Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-
+@SkipForDialect( value = SybaseASE15Dialect.class)
 public class CastTest extends AbstractMetamodelSpecificTest {
 	private static final int QUANTITY = 2;
 

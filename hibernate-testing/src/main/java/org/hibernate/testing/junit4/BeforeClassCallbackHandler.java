@@ -23,12 +23,15 @@
  */
 package org.hibernate.testing.junit4;
 
+import org.jboss.logging.Logger;
 import org.junit.runners.model.Statement;
 
 /**
  * @author Steve Ebersole
  */
 public class BeforeClassCallbackHandler extends Statement {
+	private static final Logger log = Logger.getLogger( BeforeClassCallbackHandler.class );
+
 	private final CustomRunner runner;
 	private final Statement wrappedStatement;
 
@@ -44,8 +47,7 @@ public class BeforeClassCallbackHandler extends Statement {
 		}
 		catch (CallbackException e) {
 			// be nice to see the exception. but junit seems to be eating it...
-			System.out.println( "Before class callback error : " + e.getLocalizedMessage() );
-			e.printStackTrace();
+			log.error( "Before class callback error : " + e.getLocalizedMessage(), e );
 		}
 		wrappedStatement.evaluate();
 	}

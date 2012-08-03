@@ -61,7 +61,6 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;

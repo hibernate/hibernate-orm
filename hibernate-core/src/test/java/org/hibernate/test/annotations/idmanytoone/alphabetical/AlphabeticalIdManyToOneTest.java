@@ -26,20 +26,21 @@ package org.hibernate.test.annotations.idmanytoone.alphabetical;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
 @FailureExpectedWithNewMetamodel
-public class AlphabeticalIdManyToOneTest extends BaseCoreFunctionalTestCase {
+public class AlphabeticalIdManyToOneTest extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = { B.class, C.class, A.class })
 	public void testAlphabeticalTest() throws Exception {
-		//test through deployment
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { B.class, C.class, A.class };
+		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
+			assertNotNull( "The Binding for A should exist", getEntityBinding( annotatedClass ) );
+		}
 	}
 }

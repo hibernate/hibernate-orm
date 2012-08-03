@@ -25,24 +25,20 @@ package org.hibernate.test.annotations.idmanytoone.alphabetical;
 
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AlphabeticalManyToOneTest extends BaseCoreFunctionalTestCase {
+public class AlphabeticalManyToOneTest extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = { Acces.class, Droitacces.class, Benefserv.class, Service.class })
 	public void testAlphabeticalTest() throws Exception {
-		//test through deployment
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Acces.class,
-				Droitacces.class,
-				Benefserv.class,
-				Service.class
-		};
+		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
+			assertNotNull( "The Binding for A should exist", getEntityBinding( annotatedClass ) );
+		}
 	}
 }

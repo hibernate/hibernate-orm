@@ -40,7 +40,7 @@ import org.junit.Test;
 public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-5281" )
+	@TestForIssue( jiraKey = "HHH-7446" )
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
 		Configuration configuration = new Configuration();
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

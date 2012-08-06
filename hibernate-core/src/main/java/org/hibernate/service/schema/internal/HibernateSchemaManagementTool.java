@@ -39,21 +39,21 @@ import org.hibernate.service.schema.spi.SchemaValidator;
 public class HibernateSchemaManagementTool implements SchemaManagementTool {
 	@Override
 	public SchemaCreator getSchemaCreator(Map options) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new SchemaCreatorImpl();
 	}
 
 	@Override
 	public SchemaDropper getSchemaDropper(Map options) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new SchemaDropperImpl();
 	}
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new SchemaMigratorImpl();
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new SchemaValidatorImpl();
 	}
 }

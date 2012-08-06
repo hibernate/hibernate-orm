@@ -38,6 +38,7 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.schema.spi.SchemaManagementException;
 import org.hibernate.service.schema.spi.SequenceInformation;
 import org.hibernate.service.schema.spi.TableInformation;
 
@@ -196,6 +197,60 @@ public class DatabaseInformationImpl implements DatabaseInformation {
 		}
 
 		return results;
+	}
+
+	public Map<Identifier, IndexInformationImpl> getIndexInformation(TableInformationImpl tableInformation) {
+		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<Identifier, IndexInformationImpl.Builder>();
+
+		try {
+			ResultSet resultSet = databaseMetaData.getIndexInfo(
+					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalog() ),
+					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchema() ),
+					identifierHelper().toMetaDataObjectName( tableInformation.getName().getName() ),
+					false,		// don't limit to just unique
+					true		// do require up-to-date results
+			);
+
+			try {
+				while ( resultSet.next() ) {
+					if ( resultSet.getShort("TYPE") == DatabaseMetaData.tableIndexStatistic ) {
+						continue;
+					}
+
+					final Identifier indexIdentifier = Identifier.toIdentifier( resultSet.getString( "INDEX_NAME" ) );
+					IndexInformationImpl.Builder builder = builders.get( indexIdentifier );
+					if ( builder == null ) {
+						builder = IndexInformationImpl.builder( indexIdentifier );
+						builders.put( indexIdentifier, builder );
+					}
+
+					final Identifier columnIdentifier = Identifier.toIdentifier( resultSet.getString( "COLUMN_NAME" ) );
+					final ColumnInformation columnInformation = tableInformation.getColumnInformation( columnIdentifier );
+					if ( columnInformation == null ) {
+						throw new SchemaManagementException(
+								"Could not locate column information using identifier [" + columnIdentifier.getText() + "]"
+						);
+					}
+					builder.addColumn( columnInformation );
+				}
+			}
+			finally {
+				resultSet.close();
+			}
+		}
+		catch (SQLException e) {
+			throw jdbcEnvironment.getSqlExceptionHelper().convert(
+					e,
+					"Error accessing index information: " + tableInformation.getName().toString()
+			);
+		}
+
+		final Map<Identifier, IndexInformationImpl> indexes = new HashMap<Identifier, IndexInformationImpl>();
+		for ( IndexInformationImpl.Builder builder : builders.values() ) {
+			IndexInformationImpl index = builder.build();
+			indexes.put( index.getIndexIdentifier(), index );
+		}
+		return indexes;
 	}
 
 	public Map<Identifier, ForeignKeyInformationImpl> getForeignKeyMetadata(TableInformationImpl tableMetadata) {

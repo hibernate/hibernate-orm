@@ -1815,8 +1815,9 @@ public class Binder {
 		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
 		final Schema.Name schemaName =
 				new Schema.Name(
-						createIdentifier( tableSpecSource.getExplicitSchemaName(), mappingDefaults.getSchemaName() ),
-						createIdentifier( tableSpecSource.getExplicitCatalogName(), mappingDefaults.getCatalogName() ) );
+						createIdentifier( tableSpecSource.getExplicitCatalogName(), mappingDefaults.getCatalogName() ),
+						createIdentifier( tableSpecSource.getExplicitSchemaName(), mappingDefaults.getSchemaName() )
+				);
 		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
 		if ( tableSpecSource instanceof TableSource ) {
 			final TableSource tableSource = ( TableSource ) tableSpecSource;
@@ -2215,11 +2216,11 @@ public class Binder {
 				String logicalSchemaName,
 				String logicalCatalogName ) {
 			Identifier tableIdentifier = Identifier.toIdentifier(logicalTableName);
-			if(tableIdentifier == null) {
+			if (tableIdentifier == null) {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}
 
-			Schema schema = metadata.getDatabase().getSchema( logicalSchemaName, logicalCatalogName );
+			Schema schema = metadata.getDatabase().getSchema( logicalCatalogName, logicalSchemaName );
 			Table table = schema.locateTable(tableIdentifier );
 
 			if(bindingContexts.peek().isGloballyQuotedIdentifiers() && !StringHelper.isQuoted(logicalColumnName)) {

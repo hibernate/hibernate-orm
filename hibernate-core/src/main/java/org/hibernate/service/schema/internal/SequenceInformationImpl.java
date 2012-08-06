@@ -32,14 +32,21 @@ import org.hibernate.service.schema.spi.SequenceInformation;
  * @author Steve Ebersole
  */
 public class SequenceInformationImpl implements SequenceInformation {
-	private ObjectName sequenceName;
+	private final ObjectName sequenceName;
+	private final int incrementSize;
 
-	public SequenceInformationImpl(ObjectName sequenceName) {
+	public SequenceInformationImpl(ObjectName sequenceName, int incrementSize) {
 		this.sequenceName = sequenceName;
+		this.incrementSize = incrementSize;
 	}
 
 	@Override
 	public ObjectName getSequenceName() {
 		return sequenceName;
+	}
+
+	@Override
+	public int getIncrementSize() {
+		return incrementSize;
 	}
 }

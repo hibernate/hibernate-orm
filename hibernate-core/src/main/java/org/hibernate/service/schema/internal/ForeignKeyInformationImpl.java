@@ -38,7 +38,7 @@ public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	private final Identifier fkIdentifier;
 	private final List<ColumnReferenceMapping> columnMappingList;
 
-	public ForeignKeyInformationImpl(
+	private ForeignKeyInformationImpl(
 			Identifier fkIdentifier,
 			List<ColumnReferenceMapping> columnMappingList) {
 		this.fkIdentifier = fkIdentifier;

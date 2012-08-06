@@ -42,7 +42,6 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbLockModeAttribute;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbNaturalIdCacheElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlDmlElement;
@@ -277,13 +276,12 @@ public class Helper {
 			LocalBindingContext bindingContext) {
 		return new Schema.Name(
 				resolveIdentifier(
-						explicitSchemaName,
-						bindingContext.getMappingDefaults().getSchemaName(),
-						bindingContext.isGloballyQuotedIdentifiers()
-				),
-				resolveIdentifier(
 						explicitCatalogName,
 						bindingContext.getMappingDefaults().getCatalogName(),
+						bindingContext.isGloballyQuotedIdentifiers()
+				), resolveIdentifier(
+						explicitSchemaName,
+						bindingContext.getMappingDefaults().getSchemaName(),
 						bindingContext.isGloballyQuotedIdentifiers()
 				)
 		);

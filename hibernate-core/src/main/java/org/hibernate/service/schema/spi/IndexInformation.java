@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.relational.state;
+package org.hibernate.service.schema.spi;
 
 import java.util.List;
 
+import org.hibernate.metamodel.spi.relational.Identifier;
+
 /**
- * @author Gail Badner
+ * Provides access to information about existing index in the database
+ *
+ * @author Christoph Sturm
+ * @author Steve Ebersole
  */
-public interface TupleRelationalState extends ValueRelationalState {
-	List<SimpleValueRelationalState> getRelationalStates();
+public interface IndexInformation {
+	/**
+	 * Obtain the identifier for this index.
+	 *
+	 * @return The index identifier.
+	 */
+	public Identifier getIndexIdentifier();
+
+	/**
+	 * Obtain the columns indexed under this index.
+	 *
+	 * @return The columns
+	 */
+	public List<ColumnInformation> getIndexedColumns();
 }

@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.relational;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.relational.state.ColumnRelationalState;
 
 /**
  * Models a physical column
@@ -59,26 +58,6 @@ public class Column extends AbstractValue {
 	protected Column(TableSpecification table, int position, Identifier name) {
 		super( table, position );
 		this.columnName = name;
-	}
-
-	public void initialize(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
-		size.initialize( state.getSize() );
-		nullable = ! forceNonNullable &&  state.isNullable();
-		unique = ! forceUnique && state.isUnique();
-		checkCondition = state.getCheckCondition();
-		defaultValue = state.getDefault();
-		sqlType = state.getSqlType();
-
-		// TODO: this should go into binding instead (I think???)
-		writeFragment = state.getCustomWriteFragment();
-		readFragment = state.getCustomReadFragment();
-		comment = state.getComment();
-		for ( String uniqueKey : state.getUniqueKeys() ) {
-			getTable().getOrCreateUniqueKey( uniqueKey ).addColumn( this );
-		}
-		for ( String index : state.getIndexes() ) {
-			getTable().getOrCreateIndex( index ).addColumn( this );
-		}
 	}
 
 	public Identifier getColumnName() {

@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.schema.spi.ColumnInformation;
+import org.hibernate.service.schema.spi.TableInformation;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
@@ -335,5 +338,72 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	@Override
 	public String toString() {
 		return "Table{name=" + exportIdentifier + '}';
+	}
+
+	public String[] sqlAlterStrings(TableInformation tableInformation, JdbcEnvironment jdbcEnvironment) {
+		final Dialect dialect = jdbcEnvironment.getDialect();
+		final String baseAlterCommand = new StringBuilder( "alter table " )
+				.append( jdbcEnvironment.getQualifiedObjectNameSupport().formatName( getTableName() ) )
+				.append( ' ' )
+				.append( dialect.getAddColumnString() )
+				.toString();
+
+		final List<String> commands = new ArrayList<String>();
+
+		for ( Value value : values() ) {
+			if ( ! Column.class.isInstance( value ) ) {
+				continue;
+			}
+
+			final Column column = (Column) value;
+			final ColumnInformation columnInformation = tableInformation.getColumnInformation( column.getColumnName() );
+
+			if ( columnInformation != null ) {
+				continue;
+			}
+
+			StringBuilder alter = new StringBuilder( baseAlterCommand )
+					.append( ' ' )
+					.append( column.getColumnName().getText( dialect ) )
+					.append( ' ' )
+					.append( column.getSqlType() );
+
+
+			final String defaultValue = column.getDefaultValue();
+			if ( defaultValue != null ) {
+				alter.append( " default " )
+						.append( defaultValue );
+			}
+
+			if ( column.isNullable() ) {
+				alter.append( dialect.getNullColumnString() );
+			}
+			else {
+				alter.append( " not null" );
+			}
+
+			boolean useUniqueConstraint = column.isUnique()
+					&& dialect.supportsUnique()
+					&& ( !column.isNullable() || dialect.supportsNotNullUnique() );
+			if ( useUniqueConstraint ) {
+				alter.append( " unique" );
+			}
+
+			final String checkCondition = column.getCheckCondition();
+			if ( checkCondition != null && dialect.supportsColumnCheck() ) {
+				alter.append( " check(" )
+						.append( checkCondition )
+						.append( ")" );
+			}
+
+			final String columnComment = column.getComment();
+			if ( columnComment != null ) {
+				alter.append( dialect.getColumnComment( columnComment ) );
+			}
+
+			commands.add( alter.toString() );
+		}
+
+		return commands.toArray( new String[ commands.size() ] );
 	}
 }

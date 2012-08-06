@@ -38,6 +38,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final JdbcEnvironment jdbcEnvironment;
 
+	private final boolean globallyQuoteIdentifiers;
+
 	private final boolean storesMixedCaseQuotedIdentifiers;
 	private final boolean storesLowerCaseQuotedIdentifiers;
 	private final boolean storesUpperCaseQuotedIdentifiers;
@@ -45,12 +47,15 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean storesLowerCaseIdentifiers;
 
 	public NormalizingIdentifierHelperImpl(
-			JdbcEnvironment jdbcEnvironment, boolean storesMixedCaseQuotedIdentifiers,
+			JdbcEnvironment jdbcEnvironment,
+			boolean globallyQuoteIdentifiers,
+			boolean storesMixedCaseQuotedIdentifiers,
 			boolean storesLowerCaseQuotedIdentifiers,
 			boolean storesUpperCaseQuotedIdentifiers,
 			boolean storesUpperCaseIdentifiers,
 			boolean storesLowerCaseIdentifiers) {
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.storesMixedCaseQuotedIdentifiers = storesMixedCaseQuotedIdentifiers;
 		this.storesLowerCaseQuotedIdentifiers = storesLowerCaseQuotedIdentifiers;
 		this.storesUpperCaseQuotedIdentifiers = storesUpperCaseQuotedIdentifiers;
@@ -149,30 +154,41 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	}
 
-	private Identifier toIdentifier(String incomingName) {
+	public Identifier toIdentifier(String text) {
+		if ( globallyQuoteIdentifiers ) {
+			return Identifier.toIdentifier( text, true );
+		}
+
 		// lovely decipher of whether the incoming value represents a quoted identifier...
-		final boolean isUpperCase = incomingName.toUpperCase().equals( incomingName );
-		final boolean isLowerCase = incomingName.toLowerCase().equals( incomingName );
+		final boolean isUpperCase = text.toUpperCase().equals( text );
+		final boolean isLowerCase = text.toLowerCase().equals( text );
 		final boolean isMixedCase = ! isLowerCase && ! isUpperCase;
 
-		if ( jdbcEnvironment.getReservedWords().contains( incomingName ) ) {
+		if ( jdbcEnvironment.getReservedWords().contains( text ) ) {
 			// unequivocally it needs to be quoted...
-			return Identifier.toIdentifier( incomingName, true );
+			return Identifier.toIdentifier( text, true );
 		}
 
 		if ( storesMixedCaseQuotedIdentifiers && isMixedCase ) {
-			return Identifier.toIdentifier( incomingName, true );
+			return Identifier.toIdentifier( text, true );
 		}
 
 		if ( storesLowerCaseQuotedIdentifiers && isLowerCase ) {
-			return Identifier.toIdentifier( incomingName, true );
+			return Identifier.toIdentifier( text, true );
 		}
 
 		if ( storesUpperCaseQuotedIdentifiers && isUpperCase ) {
-			return Identifier.toIdentifier( incomingName, true );
+			return Identifier.toIdentifier( text, true );
 		}
 
-		return Identifier.toIdentifier( incomingName );
+		return Identifier.toIdentifier( text );
+	}
+
+	@Override
+	public Identifier toIdentifier(String text, boolean quoted) {
+		return globallyQuoteIdentifiers
+				? Identifier.toIdentifier( text, true )
+				: Identifier.toIdentifier( text, quoted );
 	}
 
 	@Override

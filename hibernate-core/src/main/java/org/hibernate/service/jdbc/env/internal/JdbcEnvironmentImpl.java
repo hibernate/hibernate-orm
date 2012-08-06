@@ -96,9 +96,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 						.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
 		);
 
+		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
+				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
+
 		// a simple temporary impl that works on H2
 		this.identifierHelper = new NormalizingIdentifierHelperImpl(
 				this,
+				globallyQuoteIdentifiers,
 				true,	// storesMixedCaseQuotedIdentifiers
 				false,	// storesLowerCaseQuotedIdentifiers
 				false, 	// storesUpperCaseQuotedIdentifiers
@@ -139,8 +143,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		// make sure reserved-words happen before the identifier-helper!
 		this.reservedWords = buildMergedReservedWords( dialect, dbmd );
 
+		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
+				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
+
 		this.identifierHelper = new NormalizingIdentifierHelperImpl(
 				this,
+				globallyQuoteIdentifiers,
 				dbmd.storesMixedCaseQuotedIdentifiers(),
 				dbmd.storesLowerCaseQuotedIdentifiers(),
 				dbmd.storesUpperCaseQuotedIdentifiers(),

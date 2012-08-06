@@ -23,11 +23,15 @@
  */
 package org.hibernate.service.schema.internal;
 
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.schema.spi.SchemaManagementException;
 import org.hibernate.service.schema.spi.SequenceInformation;
 import org.hibernate.service.schema.spi.TableInformation;
 import org.hibernate.service.schema.spi.SchemaValidator;
@@ -57,11 +61,75 @@ public class SchemaValidatorImpl implements SchemaValidator {
 		}
 	}
 
-	private void validateTable(Table table, TableInformation tableInformation) {
-		//To change body of created methods use File | Settings | File Templates.
+	protected void validateTable(Table table, TableInformation tableInformation) {
+		if ( tableInformation == null ) {
+			throw new SchemaManagementException(
+					String.format(
+							"Schema-validation: missing table [%s]",
+							table.getTableName().toText()
+					)
+			);
+		}
+
+		for ( Value value : table.values() ) {
+			if ( Column.class.isInstance( value ) ) {
+				final Column column = (Column) value;
+				final ColumnInformation columnInformation = tableInformation.getColumnInformation( column.getColumnName() );
+				if ( columnInformation == null ) {
+					throw new SchemaManagementException(
+							String.format(
+									"Schema-validation: missing column [%s] in table [%s]",
+									column.getColumnName().getText(),
+									table.getTableName().toText()
+							)
+					);
+				}
+
+				validateColumnType( column, columnInformation );
+			}
+		}
 	}
 
-	private void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {
-		//To change body of created methods use File | Settings | File Templates.
+	protected void validateColumnType(Column column, ColumnInformation columnInformation) {
+		// this is the old Hibernate check...
+		final boolean typesMatch = column.getJdbcDataType().getTypeCode() == columnInformation.getTypeCode()
+				|| column.getSqlType().toLowerCase().startsWith( columnInformation.getTypeName().toLowerCase() );
+		if ( !typesMatch ) {
+			throw new SchemaManagementException(
+					String.format(
+							"Schema-validation: wrong column type encountered in column [%s] in table [%s]; found [%s], but expecting [%s]",
+							column.getColumnName().getText(),
+							((Table) column.getTable()).getTableName().toText(),
+							columnInformation.getTypeName().toLowerCase(),
+							column.getSqlType().toLowerCase()
+					)
+			);
+		}
+
+		// but I think a better check involves checks against type code and then the type code family, not
+		// just the type name.
+		//
+		// See org.hibernate.type.descriptor.sql.JdbcTypeFamilyInformation
+
+	}
+
+	protected void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {
+		if ( sequenceInformation == null ) {
+			throw new SchemaManagementException(
+					String.format( "Schema-validation: missing sequence [%s]", sequence.getName().toText() )
+			);
+		}
+
+		if ( sequenceInformation.getIncrementSize() > 0
+				&& sequence.getIncrementSize() != sequenceInformation.getIncrementSize() ) {
+			throw new SchemaManagementException(
+					String.format(
+							"Schema-validation: sequence [%s] defined inconsistent increment-size; found [%s] but expecting [%s]",
+							sequence.getName().toText(),
+							sequenceInformation.getIncrementSize(),
+							sequence.getIncrementSize()
+					)
+			);
+		}
 	}
 }

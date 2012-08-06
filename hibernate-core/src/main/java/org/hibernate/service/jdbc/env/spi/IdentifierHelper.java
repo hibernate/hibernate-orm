@@ -26,9 +26,32 @@ package org.hibernate.service.jdbc.env.spi;
 import org.hibernate.metamodel.spi.relational.Identifier;
 
 /**
-* @author Steve Ebersole
-*/
+ * Helper for handling {@link Identifier} instances.
+ *
+ * @author Steve Ebersole
+ */
 public interface IdentifierHelper {
+	/**
+	 * Generate an {@link Identifier} instance from its simple name
+	 *
+	 * @param text The text
+	 *
+	 * @return The identifier form of the name.
+	 */
+	public Identifier toIdentifier(String text);
+
+	/**
+	 * Generate an {@link Identifier} instance from its simple name and explicitly whether it is quoted or not
+	 * (although note that 'globally quoted identifiers' setting can still cause returned Identifiers to be quoted
+	 * even if {@code false} is passed in here).
+	 *
+	 * @param text The name
+	 * @param quoted Is the identifier to be quoted explicitly.
+	 *
+	 * @return The identifier form of the name.
+	 */
+	public Identifier toIdentifier(String text, boolean quoted);
+
 	public String toMetaDataCatalogName(Identifier identifier);
 	public String toMetaDataSchemaName(Identifier identifier);
 	public String toMetaDataObjectName(Identifier identifier);

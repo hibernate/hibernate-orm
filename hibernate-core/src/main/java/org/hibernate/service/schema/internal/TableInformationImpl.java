@@ -29,6 +29,7 @@ import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.ForeignKeyInformation;
+import org.hibernate.service.schema.spi.IndexInformation;
 import org.hibernate.service.schema.spi.TableInformation;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 
@@ -45,6 +46,7 @@ public class TableInformationImpl implements TableInformation {
 	private final Map<Identifier, ColumnInformation> columns;
 
 	private Map<Identifier, ForeignKeyInformationImpl> foreignKeys;
+	private Map<Identifier, IndexInformationImpl> indexes;
 
 	public TableInformationImpl(DatabaseInformationImpl database, ObjectName tableName) {
 		this.database = database;
@@ -62,18 +64,22 @@ public class TableInformationImpl implements TableInformation {
 		return columns.get( columnIdentifier );
 	}
 
-	@Override
-	public ForeignKeyInformation getForeignKeyInformation(Identifier fkIdentifier) {
+	protected Map<Identifier, ForeignKeyInformationImpl> foreignKeys() {
 		if ( foreignKeys == null ) {
 			foreignKeys = database.getForeignKeyMetadata( this );
 		}
-		return foreignKeys.get( fkIdentifier );
+		return foreignKeys;
+	}
+
+	@Override
+	public ForeignKeyInformation getForeignKeyInformation(Identifier fkIdentifier) {
+		return foreignKeys().get( fkIdentifier );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable getForeignKeyInformations() {
-		return foreignKeys.values();
+		return foreignKeys().values();
 	}
 
 	@Override
@@ -81,8 +87,15 @@ public class TableInformationImpl implements TableInformation {
 		return "TableInformationImpl(" + tableName.toString() + ')';
 	}
 
+	protected Map<Identifier, IndexInformationImpl> indexes() {
+		if ( indexes == null ) {
+			indexes = database.getIndexInformation( this );
+		}
+		return indexes;
+	}
+
 	@Override
-	public IndexMetadata getIndexMetadata(Identifier indexName) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public IndexInformation getIndexInformation(Identifier indexName) {
+		return indexes().get( indexName );
 	}
 }

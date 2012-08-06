@@ -52,7 +52,7 @@ public class TemporarySequenceInformationExtractor implements SequenceInformatio
 		Statement statement = databaseMetaData.getConnection().createStatement();
 		try {
 			ResultSet resultSet = statement.executeQuery(
-					"select SEQUENCE_CATALOG, SEQUENCE_SCHEMA, SEQUENCE_NAME " +
+					"select SEQUENCE_CATALOG, SEQUENCE_SCHEMA, SEQUENCE_NAME, INCREMENT " +
 							"from information_schema.sequences"
 			);
 			try {
@@ -76,7 +76,8 @@ public class TemporarySequenceInformationExtractor implements SequenceInformatio
 															"SEQUENCE_NAME"
 													)
 											)
-									)
+									),
+									resultSet.getInt( "INCREMENT" )
 							)
 					);
 				}

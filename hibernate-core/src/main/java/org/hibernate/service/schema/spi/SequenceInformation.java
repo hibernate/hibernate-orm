@@ -28,9 +28,6 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 /**
  * Access to information about existing sequences.
  *
- * For now we only support retrieving the names (for existence checking from validation).  However,
- * at least INCREMENT would be valuable as well.  Just need to make sure all dbs support that.
- *
  * @author Steve Ebersole
  */
 public interface SequenceInformation {
@@ -40,4 +37,11 @@ public interface SequenceInformation {
 	 * @return The sequence name
 	 */
 	public ObjectName getSequenceName();
+
+	/**
+	 * Retrieve the extracted increment-size defined for the sequence.
+	 *
+	 * @return The extracted increment size; use a negative number to indicate the increment could not be extracted.
+	 */
+	public int getIncrementSize();
 }

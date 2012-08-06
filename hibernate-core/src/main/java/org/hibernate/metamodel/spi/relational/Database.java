@@ -60,7 +60,7 @@ public class Database {
 			schemaName = StringHelper.quote( schemaName );
 			catalogName = StringHelper.quote( catalogName );
 		}
-		this.implicitSchemaName = new Schema.Name( schemaName, catalogName );
+		this.implicitSchemaName = new Schema.Name( catalogName, schemaName );
 		makeSchema( implicitSchemaName );
 		this.jdbcEnvironment = jdbcEnvironment;
 	}
@@ -89,7 +89,7 @@ public class Database {
 	}
 
 	public Schema getSchemaFor(ObjectName objectName) {
-		return getSchema( objectName.getSchema(), objectName.getCatalog() );
+		return getSchema( objectName.getCatalog(), objectName.getSchema() );
 	}
 
 	private Schema makeSchema(Schema.Name name) {
@@ -99,12 +99,12 @@ public class Database {
 		return schema;
 	}
 
-	public Schema getSchema(Identifier schema, Identifier catalog) {
-		return locateSchema( new Schema.Name( schema, catalog ) );
+	public Schema getSchema(Identifier catalog, Identifier schema) {
+		return locateSchema( new Schema.Name( catalog, schema ) );
 	}
 
-	public Schema getSchema(String schema, String catalog) {
-		return locateSchema( new Schema.Name( Identifier.toIdentifier( schema ), Identifier.toIdentifier( catalog ) ) );
+	public Schema getSchema(String catalog, String schema) {
+		return locateSchema( new Schema.Name( Identifier.toIdentifier( catalog ), Identifier.toIdentifier( schema ) ) );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {

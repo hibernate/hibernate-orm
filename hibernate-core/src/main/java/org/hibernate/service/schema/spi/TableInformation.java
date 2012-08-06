@@ -71,5 +71,5 @@ public interface TableInformation {
 	/**
 	 * todo : create an IndexInformation...
 	 */
-	public IndexMetadata getIndexMetadata(Identifier indexName);
+	public IndexInformation getIndexInformation(Identifier indexName);
 }

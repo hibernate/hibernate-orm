@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Represents a named schema/catalog pair and manages objects defined within.
@@ -43,6 +44,7 @@ public class Schema {
 	);
 
 	private final Name name;
+
 	private Map<Identifier, InLineView> inLineViews = new HashMap<Identifier, InLineView>();
 	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
 	private Map<Identifier, Sequence> sequences = new HashMap<Identifier, Sequence>();
@@ -51,8 +53,8 @@ public class Schema {
 		this.name = name;
 	}
 
-	public Schema(Identifier schema, Identifier catalog) {
-		this( new Name( schema, catalog ) );
+	public Schema(Identifier catalog, Identifier schema) {
+		this( new Name( catalog, schema ) );
 	}
 
 	public Name getName() {
@@ -136,13 +138,8 @@ public class Schema {
 			return false;
 		}
 
-		Schema schema = (Schema) o;
-
-		if ( name != null ? !name.equals( schema.name ) : schema.name != null ) {
-			return false;
-		}
-
-		return true;
+		final Schema that = (Schema) o;
+		return EqualsHelper.equals( this.name, that.name );
 	}
 
 	@Override
@@ -155,32 +152,32 @@ public class Schema {
 	}
 
 	public static class Name {
-		private final Identifier schema;
 		private final Identifier catalog;
+		private final Identifier schema;
 
-		public Name(Identifier schema, Identifier catalog) {
+		public Name(Identifier catalog, Identifier schema) {
 			this.schema = schema;
 			this.catalog = catalog;
 		}
 
-		public Name(String schema, String catalog) {
-			this( Identifier.toIdentifier( schema ), Identifier.toIdentifier( catalog ) );
-		}
-
-		public Identifier getSchema() {
-			return schema;
+		public Name(String catalog, String schema) {
+			this( Identifier.toIdentifier( catalog ), Identifier.toIdentifier( schema ) );
 		}
 
 		public Identifier getCatalog() {
 			return catalog;
 		}
 
+		public Identifier getSchema() {
+			return schema;
+		}
+
 		@Override
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
 			sb.append( "Name" );
-			sb.append( "{schema=" ).append( schema );
-			sb.append( ", catalog=" ).append( catalog );
+			sb.append( "{catalog=" ).append( catalog );
+			sb.append( ", schema=" ).append( schema );
 			sb.append( '}' );
 			return sb.toString();
 		}
@@ -194,22 +191,16 @@ public class Schema {
 				return false;
 			}
 
-			Name name = (Name) o;
+			final Name that = (Name) o;
 
-			if ( catalog != null ? !catalog.equals( name.catalog ) : name.catalog != null ) {
-				return false;
-			}
-			if ( schema != null ? !schema.equals( name.schema ) : name.schema != null ) {
-				return false;
-			}
-
-			return true;
+			return EqualsHelper.equals( this.catalog, that.catalog )
+					&& EqualsHelper.equals( this.schema, that.schema );
 		}
 
 		@Override
 		public int hashCode() {
-			int result = schema != null ? schema.hashCode() : 0;
-			result = 31 * result + ( catalog != null ? catalog.hashCode() : 0 );
+			int result = catalog != null ? catalog.hashCode() : 0;
+			result = 31 * result + (schema != null ? schema.hashCode() : 0);
 			return result;
 		}
 	}

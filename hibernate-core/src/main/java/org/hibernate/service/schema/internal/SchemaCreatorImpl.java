@@ -122,6 +122,13 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		applySqlStrings( exportable.sqlCreateStrings( dialect ), targets );
 	}
 
+	/*package*/ static void applySqlStrings(
+			Exportable exportable,
+			List<Target> targets,
+			Dialect dialect) {
+		applySqlStrings( exportable.sqlCreateStrings( dialect ), targets );
+	}
+
 	private static void applySqlStrings(String[] sqlStrings, List<Target> targets) {
 		if ( sqlStrings == null ) {
 			return;

@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -38,6 +39,7 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
@@ -79,6 +81,15 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 
 	public ConnectionProvider getConnectionProvider() {
 		return connectionProvider;
+	}
+	
+	public MultiTenantConnectionProvider getMultiTenantConnectionProvider() {
+		return null;
+	}
+	
+	@Override
+	public MultiTenancyStrategy getMultiTenancyStrategy() {
+		return MultiTenancyStrategy.NONE;
 	}
 
 	public Dialect getDialect() {

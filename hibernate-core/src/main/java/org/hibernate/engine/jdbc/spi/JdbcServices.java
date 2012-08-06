@@ -26,11 +26,13 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.Connection;
 import java.sql.ResultSet;
 
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.service.Service;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 /**
  * Contract for services around JDBC operations.  These represent shared resources, aka not varied by session/use.
@@ -44,6 +46,20 @@ public interface JdbcServices extends Service {
 	 * @return The connection provider.
 	 */
 	public ConnectionProvider getConnectionProvider();
+
+	/**
+	 * Obtain service for providing JDBC multi-tenant connections.
+	 *
+	 * @return The multi-tenant connection provider.
+	 */
+	public MultiTenantConnectionProvider getMultiTenantConnectionProvider();
+	
+	/**
+	 * Obtain the multi-tenancy strategy configured to decide which connection provider to use.
+	 *
+	 * @return The multi-tenant strategy.
+	 */
+	public MultiTenancyStrategy getMultiTenancyStrategy();
 
 	/**
 	 * Obtain the dialect of the database to which {@link Connection connections} from

@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -49,6 +47,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Reads configuration properties and builds a {@link Settings} instance.
@@ -162,10 +161,14 @@ public class SettingsFactory implements Serializable {
 		}
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
-			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
-				LOG.unsupportedAfterStatement();
-				releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
+			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
+				if ( ( ( jdbcServices.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE 
+						&& ! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) )
+					|| ( ( ( jdbcServices.getMultiTenancyStrategy() != MultiTenancyStrategy.NONE 
+						&& ! jdbcServices.getMultiTenantConnectionProvider().supportsAggressiveRelease() ) ) ) ) {
+					LOG.unsupportedAfterStatement();
+					releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
+				}
 			}
 		}
 		settings.setConnectionReleaseMode( releaseMode );

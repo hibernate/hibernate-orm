@@ -34,8 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -61,6 +59,7 @@ import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -74,6 +73,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	private Dialect dialect;
 	private ConnectionProvider connectionProvider;
+	private MultiTenantConnectionProvider multiTenantConnectionProvider;
+	private MultiTenancyStrategy multiTenancyStrategy;
 	private SqlStatementLogger sqlStatementLogger;
 	private SqlExceptionHelper sqlExceptionHelper;
 	private ExtractedDatabaseMetaData extractedMetaDataSupport;
@@ -217,15 +218,16 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues) {
-		final MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configValues );
+		multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configValues );
 
 		if ( MultiTenancyStrategy.NONE == multiTenancyStrategy ) {
 			connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
+			multiTenantConnectionProvider = null;
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 		else {
 			connectionProvider = null;
-			final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
+			multiTenantConnectionProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -412,6 +414,16 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public ConnectionProvider getConnectionProvider() {
 		return connectionProvider;
+	}
+
+	@Override
+	public MultiTenantConnectionProvider getMultiTenantConnectionProvider() {
+		return multiTenantConnectionProvider;
+	}
+	
+	@Override
+	public MultiTenancyStrategy getMultiTenancyStrategy() {
+		return multiTenancyStrategy;
 	}
 
 	@Override

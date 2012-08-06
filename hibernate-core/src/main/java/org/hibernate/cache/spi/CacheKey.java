@@ -30,11 +30,11 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
 
 /**
- * Allows multiple entity classes / collection roles to be
- * stored in the same cache region. Also allows for composite
+ * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite
  * keys which do not properly implement equals()/hashCode().
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class CacheKey implements Serializable {
 	private final Serializable key;
@@ -64,13 +64,25 @@ public class CacheKey implements Serializable {
 		this.type = type;
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = type.getHashCode( key, factory );
+		this.hashCode = calculateHashCode( type, factory );
 	}
 
-	@Override
-	public String toString() {
-		// Mainly for OSCache
-		return entityOrRoleName + '#' + key.toString();//"CacheKey#" + type.toString(key, sf);
+	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
+		int result = type.getHashCode( key, factory );
+		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
+		return result;
+	}
+
+	public Serializable getKey() {
+		return key;
+	}
+
+	public String getEntityOrRoleName() {
+		return entityOrRoleName;
+	}
+
+	public String getTenantId() {
+		return tenantId;
 	}
 
 	@Override
@@ -93,12 +105,9 @@ public class CacheKey implements Serializable {
 		return hashCode;
 	}
 
-	public Serializable getKey() {
-		return key;
+	@Override
+	public String toString() {
+		// Mainly for OSCache
+		return entityOrRoleName + '#' + key.toString();//"CacheKey#" + type.toString(key, sf);
 	}
-
-	public String getEntityOrRoleName() {
-		return entityOrRoleName;
-	}
-
 }

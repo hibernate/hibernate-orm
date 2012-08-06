@@ -74,7 +74,7 @@ public class Column {
 
 		AnnotationValue uniqueValue = columnAnnotation.value( "unique" );
 		if ( uniqueValue != null ) {
-			this.unique = nameValue.asBoolean();
+			this.unique = uniqueValue.asBoolean();
 		}
 
 		AnnotationValue nullableValue = columnAnnotation.value( "nullable" );

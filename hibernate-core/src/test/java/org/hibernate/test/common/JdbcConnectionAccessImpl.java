@@ -58,4 +58,9 @@ public class JdbcConnectionAccessImpl implements JdbcConnectionAccess {
 	public void releaseConnection(Connection connection) throws SQLException {
 		connectionProvider.closeConnection( connection );
 	}
+
+	@Override
+	public boolean supportsAggressiveRelease() {
+		return connectionProvider.supportsAggressiveRelease();
+	}
 }

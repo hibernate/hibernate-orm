@@ -47,6 +47,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -152,6 +154,12 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setJdbcFetchSize(statementFetchSize);
 
+		MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( properties );
+		if ( debugEnabled ) {
+			LOG.debugf( "multi-tenancy strategy : %s", multiTenancyStrategy );
+		}
+		settings.setMultiTenancyStrategy( multiTenancyStrategy );
+
 		String releaseModeName = ConfigurationHelper.getString( Environment.RELEASE_CONNECTIONS, properties, "auto" );
 		if ( debugEnabled ) {
 			LOG.debugf( "Connection release mode: %s", releaseModeName );
@@ -162,10 +170,15 @@ public class SettingsFactory implements Serializable {
 		}
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
-			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
-				LOG.unsupportedAfterStatement();
-				releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
+			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
+				// we need to make sure the underlying JDBC connection access supports aggressive release...
+				boolean supportsAgrressiveRelease = multiTenancyStrategy.requiresMultiTenantConnectionProvider()
+						? serviceRegistry.getService( MultiTenantConnectionProvider.class ).supportsAggressiveRelease()
+						: serviceRegistry.getService( ConnectionProvider.class ).supportsAggressiveRelease();
+				if ( ! supportsAgrressiveRelease ) {
+					LOG.unsupportedAfterStatement();
+					releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
+				}
 			}
 		}
 		settings.setConnectionReleaseMode( releaseMode );
@@ -323,12 +336,6 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled(checkNullability) );
 		}
 		settings.setCheckNullability(checkNullability);
-
-		MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( properties );
-		if ( debugEnabled ) {
-			LOG.debugf( "multi-tenancy strategy : %s", multiTenancyStrategy );
-		}
-		settings.setMultiTenancyStrategy( multiTenancyStrategy );
 
 		// TODO: Does EntityTuplizerFactory really need to be configurable? revisit for HHH-6383
 		settings.setEntityTuplizerFactory( new EntityTuplizerFactory() );

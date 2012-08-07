@@ -23,23 +23,23 @@
  */
 package org.hibernate.engine.transaction.internal.jta;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * An isolation delegate for JTA environments.
@@ -63,11 +63,8 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 				.retrieveTransactionManager();
 	}
 
-	protected ConnectionProvider connectionProvider() {
-		return transactionCoordinator.getTransactionContext()
-				.getTransactionEnvironment()
-				.getJdbcServices()
-				.getConnectionProvider();
+	protected JdbcConnectionAccess jdbcConnectionAccess() {
+		return transactionCoordinator.getTransactionContext().getJdbcConnectionAccess();
 	}
 
 	protected SqlExceptionHelper sqlExceptionHelper() {
@@ -120,15 +117,15 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	private <T> T doTheWorkInNewTransaction(WorkExecutorVisitable<T> work, TransactionManager transactionManager) {
-		T result = null;
 		try {
 			// start the new isolated transaction
 			transactionManager.begin();
 
 			try {
-				result = doTheWork( work );
+				T result = doTheWork( work );
 				// if everything went ok, commit the isolated transaction
 				transactionManager.commit();
+				return result;
 			}
 			catch ( Exception e ) {
 				try {
@@ -146,7 +143,6 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		catch ( NotSupportedException e ) {
 			throw new HibernateException( "Unable to start isolated transaction", e );
 		}
-		return result;
 	}
 
 	private <T> T doTheWorkInNoTransaction(WorkExecutorVisitable<T> work) {
@@ -156,7 +152,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	private <T> T doTheWork(WorkExecutorVisitable<T> work) {
 		try {
 			// obtain our isolated connection
-			Connection connection = connectionProvider().getConnection();
+			Connection connection = jdbcConnectionAccess().obtainConnection();
 			try {
 				// do the actual work
 				return work.accept( new WorkExecutor<T>(), connection );
@@ -170,7 +166,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			finally {
 				try {
 					// no matter what, release the connection (handle)
-					connectionProvider().closeConnection( connection );
+					jdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( Throwable ignore ) {
 					LOG.unableToReleaseIsolatedConnection( ignore );

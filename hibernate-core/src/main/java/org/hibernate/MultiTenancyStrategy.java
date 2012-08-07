@@ -36,7 +36,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public enum MultiTenancyStrategy {
-
 	/**
 	 * Multi-tenancy implemented by use of discriminator columns.
 	 */
@@ -53,10 +52,16 @@ public enum MultiTenancyStrategy {
 	 * No multi-tenancy
 	 */
 	NONE;
+
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			MultiTenancyStrategy.class.getName()
 	);
+
+	public boolean requiresMultiTenantConnectionProvider() {
+		return this == DATABASE || this == SCHEMA;
+	}
+
 	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
 		final Object strategy = properties.get( Environment.MULTI_TENANT );
 		if ( strategy == null ) {

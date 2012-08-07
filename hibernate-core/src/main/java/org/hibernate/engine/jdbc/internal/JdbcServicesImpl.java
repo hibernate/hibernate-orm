@@ -253,6 +253,11 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		public void releaseConnection(Connection connection) throws SQLException {
 			connectionProvider.closeConnection( connection );
 		}
+
+		@Override
+		public boolean supportsAggressiveRelease() {
+			return connectionProvider.supportsAggressiveRelease();
+		}
 	}
 
 	private static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
@@ -270,6 +275,11 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		@Override
 		public void releaseConnection(Connection connection) throws SQLException {
 			connectionProvider.releaseAnyConnection( connection );
+		}
+
+		@Override
+		public boolean supportsAggressiveRelease() {
+			return connectionProvider.supportsAggressiveRelease();
 		}
 	}
 

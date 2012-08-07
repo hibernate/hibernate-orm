@@ -29,13 +29,13 @@ import java.sql.SQLException;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * The isolation delegate for JDBC {@link Connection} based transactions
@@ -52,8 +52,8 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		this.transactionCoordinator = transactionCoordinator;
 	}
 
-	protected ConnectionProvider connectionProvider() {
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getJdbcServices().getConnectionProvider();
+	protected JdbcConnectionAccess jdbcConnectionAccess() {
+		return transactionCoordinator.getTransactionContext().getJdbcConnectionAccess();
 	}
 
 	protected SqlExceptionHelper sqlExceptionHelper() {
@@ -65,7 +65,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		boolean wasAutoCommit = false;
 		try {
 			// todo : should we use a connection proxy here?
-			Connection connection = connectionProvider().getConnection();
+			Connection connection = jdbcConnectionAccess().obtainConnection();
 			try {
 				if ( transacted ) {
 					if ( connection.getAutoCommit() ) {
@@ -112,7 +112,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				try {
-					connectionProvider().closeConnection( connection );
+					jdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( Exception ignore ) {
 					LOG.unableToReleaseIsolatedConnection( ignore );

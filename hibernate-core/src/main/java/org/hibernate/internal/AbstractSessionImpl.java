@@ -333,6 +333,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		public void releaseConnection(Connection connection) throws SQLException {
 			connectionProvider.closeConnection( connection );
 		}
+
+		@Override
+		public boolean supportsAggressiveRelease() {
+			return connectionProvider.supportsAggressiveRelease();
+		}
 	}
 
 	private class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
@@ -356,6 +361,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 				throw new HibernateException( "Tenant identifier required!" );
 			}
 			connectionProvider.releaseConnection( tenantIdentifier, connection );
+		}
+
+		@Override
+		public boolean supportsAggressiveRelease() {
+			return connectionProvider.supportsAggressiveRelease();
 		}
 	}
 }

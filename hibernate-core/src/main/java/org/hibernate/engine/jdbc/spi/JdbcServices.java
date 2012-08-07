@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 
 import org.hibernate.dialect.Dialect;
@@ -42,12 +41,15 @@ public interface JdbcServices extends Service {
 	 * Obtain service for providing JDBC connections.
 	 *
 	 * @return The connection provider.
+	 *
+	 * @deprecated See deprecation notice on {@link org.hibernate.engine.spi.SessionFactoryImplementor#getConnectionProvider()}
+	 * for details
 	 */
+	@Deprecated
 	public ConnectionProvider getConnectionProvider();
 
 	/**
-	 * Obtain the dialect of the database to which {@link Connection connections} from
-	 * {@link #getConnectionProvider()} point.
+	 * Obtain the dialect of the database.
 	 *
 	 * @return The database dialect.
 	 */

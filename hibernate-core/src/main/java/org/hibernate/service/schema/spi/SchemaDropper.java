@@ -37,10 +37,21 @@ public interface SchemaDropper {
 	 * Perform the drop to the specified targets
 	 *
 	 * @param database The Hibernate relational model to drop
-	 * @param targets The targets for drop
 	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param targets The targets for drop
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doDrop(Database database, List<Target> targets, boolean dropSchemas) throws SchemaManagementException;
+	public void doDrop(Database database, boolean dropSchemas, Target... targets) throws SchemaManagementException;
+
+	/**
+	 * Perform the drop to the specified targets
+	 *
+	 * @param database The Hibernate relational model to drop
+	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param targets The targets for drop
+	 *
+	 * @throws SchemaManagementException Indicates a problem processing the creation
+	 */
+	public void doDrop(Database database, boolean dropSchemas, List<Target> targets) throws SchemaManagementException;
 }

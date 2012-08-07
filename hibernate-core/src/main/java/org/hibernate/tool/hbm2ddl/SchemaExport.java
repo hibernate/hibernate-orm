@@ -37,6 +37,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.logging.Logger;
@@ -63,6 +64,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.schema.spi.SchemaManagementTool;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -138,15 +140,45 @@ public class SchemaExport {
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
+		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
+
 		this.importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				settings,
 				DEFAULT_IMPORT_FILE
 		);
 
-		final Dialect dialect = jdbcServices.getDialect();
-		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( dialect );
-		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( dialect );
+		// uses the schema management tool service to generate the create/drop scripts
+		// longer term this class should instead just leverage the tool for its execution phase...
+
+		SchemaManagementTool schemaManagementTool = serviceRegistry.getService( SchemaManagementTool.class );
+		final List<String> commands = new ArrayList<String>();
+		final org.hibernate.service.schema.spi.Target target = new org.hibernate.service.schema.spi.Target() {
+			@Override
+			public boolean acceptsImportScriptActions() {
+				return false;
+			}
+
+			@Override
+			public void prepare() {
+				commands.clear();
+			}
+
+			@Override
+			public void accept(String command) {
+				commands.add( command );
+			}
+
+			@Override
+			public void release() {
+			}
+		};
+
+		schemaManagementTool.getSchemaDropper( settings ).doDrop( metadata.getDatabase(), false, target );
+		this.dropSQL = commands.toArray( new String[ commands.size() ] );
+
+		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata.getDatabase(), false, target );
+		this.createSQL = commands.toArray( new String[commands.size()] );
 	}
 
 	/**

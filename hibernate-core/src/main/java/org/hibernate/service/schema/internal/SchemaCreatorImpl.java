@@ -48,8 +48,15 @@ import org.hibernate.service.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class SchemaCreatorImpl implements SchemaCreator {
+
 	@Override
-	public void doCreation(Database database, List<Target> targets, boolean createSchemas) throws SchemaManagementException {
+	public void doCreation(Database database, boolean createSchemas, List<Target> targets) throws SchemaManagementException {
+		doCreation( database, createSchemas, targets.toArray( new Target[ targets.size() ] ) );
+	}
+
+	@Override
+	public void doCreation(Database database, boolean createSchemas, Target... targets)
+			throws SchemaManagementException {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
 		for ( Target target : targets ) {
@@ -110,7 +117,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 	private static void applySqlStrings(
 			Exportable exportable,
-			List<Target> targets,
+			Target[] targets,
 			Dialect dialect,
 			Set<String> exportIdentifiers) {
 		final String exportIdentifier = exportable.getExportIdentifier();
@@ -122,14 +129,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		applySqlStrings( exportable.sqlCreateStrings( dialect ), targets );
 	}
 
-	/*package*/ static void applySqlStrings(
-			Exportable exportable,
-			List<Target> targets,
-			Dialect dialect) {
-		applySqlStrings( exportable.sqlCreateStrings( dialect ), targets );
-	}
-
-	private static void applySqlStrings(String[] sqlStrings, List<Target> targets) {
+	private static void applySqlStrings(String[] sqlStrings, Target[] targets) {
 		if ( sqlStrings == null ) {
 			return;
 		}

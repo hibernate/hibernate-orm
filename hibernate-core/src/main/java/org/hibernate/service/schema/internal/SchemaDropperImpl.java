@@ -47,8 +47,14 @@ import org.hibernate.service.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class SchemaDropperImpl implements SchemaDropper {
+
 	@Override
-	public void doDrop(Database database, List<Target> targets, boolean dropSchemas) throws SchemaManagementException {
+	public void doDrop(Database database, boolean dropSchemas, List<Target> targets) throws SchemaManagementException {
+		doDrop( database, dropSchemas, targets.toArray( new Target[ targets.size() ] ) );
+	}
+
+	@Override
+	public void doDrop(Database database, boolean dropSchemas, Target... targets) throws SchemaManagementException {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
 		for ( Target target : targets ) {
@@ -107,7 +113,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private static void applySqlStrings(
 			Exportable exportable,
-			List<Target> targets,
+			Target[] targets,
 			Dialect dialect,
 			Set<String> exportIdentifiers) {
 		final String exportIdentifier = exportable.getExportIdentifier();
@@ -119,7 +125,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		applySqlStrings( exportable.sqlDropStrings( dialect ), targets );
 	}
 
-	private static void applySqlStrings(String[] sqlStrings, List<Target> targets) {
+	private static void applySqlStrings(String[] sqlStrings, Target[] targets) {
 		if ( sqlStrings == null ) {
 			return;
 		}

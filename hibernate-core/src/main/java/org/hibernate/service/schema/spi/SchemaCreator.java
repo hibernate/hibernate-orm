@@ -37,10 +37,22 @@ public interface SchemaCreator {
 	 * Perform the creation to the specified targets
 	 *
 	 * @param database The Hibernate relational model to create
-	 * @param targets The targets for creation
 	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param targets The targets for creation
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doCreation(Database database, List<Target> targets, boolean createSchemas) throws SchemaManagementException;
+	public void doCreation(Database database, boolean createSchemas, Target... targets) throws SchemaManagementException;
+
+	/**
+	 * Perform the creation to the specified targets
+	 *
+	 *
+	 * @param database The Hibernate relational model to create
+	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 *
+	 * @param targets The targets for creation
+	 * @throws SchemaManagementException Indicates a problem processing the creation
+	 */
+	public void doCreation(Database database, boolean createSchemas, List<Target> targets) throws SchemaManagementException;
 }

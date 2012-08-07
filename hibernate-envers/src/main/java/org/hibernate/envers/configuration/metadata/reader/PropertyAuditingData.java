@@ -47,6 +47,7 @@ public class PropertyAuditingData {
     private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<AuditOverride>(0);
 	private RelationTargetAuditMode relationTargetAuditMode;
     private String auditMappedBy;
+    private String relationMappedBy;
     private String positionMappedBy;
     private boolean forceInsertable;
 	private boolean usingModifiedFlag;
@@ -132,6 +133,14 @@ public class PropertyAuditingData {
 
     public void setAuditMappedBy(String auditMappedBy) {
         this.auditMappedBy = auditMappedBy;
+    }
+
+    public String getRelationMappedBy() {
+        return relationMappedBy;
+    }
+
+    public void setRelationMappedBy(String relationMappedBy) {
+        this.relationMappedBy = relationMappedBy;
     }
 
     public String getPositionMappedBy() {

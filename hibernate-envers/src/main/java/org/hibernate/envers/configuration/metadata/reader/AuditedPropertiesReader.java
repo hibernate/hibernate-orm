@@ -410,8 +410,9 @@ public class AuditedPropertiesReader {
 		if (!processPropertyAuditingOverrides(property, propertyData)) {
 			return false; // not audited due to AuditOverride annotation
 		}
-		addPropertyMapKey(property, propertyData);
+        addPropertyMapKey(property, propertyData);
         setPropertyAuditMappedBy(property, propertyData);
+        setPropertyRelationMappedBy(property, propertyData);
 
 		return true;
 	}
@@ -441,11 +442,14 @@ public class AuditedPropertiesReader {
 				globalCfg.isGlobalWithModifiedFlag() : aud.withModifiedFlag();
 	}
 
-	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
+    private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
         OneToMany oneToMany = property.getAnnotation(OneToMany.class);
         if (oneToMany != null && !"".equals(oneToMany.mappedBy())) {
-            propertyData.setAuditMappedBy(oneToMany.mappedBy());
+            propertyData.setRelationMappedBy(oneToMany.mappedBy());
         }
+    }
+
+	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);
         if (auditMappedBy != null) {
 		    propertyData.setAuditMappedBy(auditMappedBy.mappedBy());

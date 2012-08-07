@@ -22,19 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
-/**
- * @author Steve Ebersole
- */
-public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Address.class, Alias.class, Country.class, CreditCard.class, Customer.class, Employee.class,
-				Info.class, LineItem.class, Order.class, Phone.class, Product.class,
-				ShelfLife.class, Spouse.class, Thing.class, ThingWithQuantity.class,
-				VersionedEntity.class
-		};
-	}
+import java.util.Map;
+import javax.persistence.*;
+
+@Entity
+public class Employee implements java.io.Serializable {
+  
+  @Id
+  private Long id;
+
+  @ElementCollection
+  private Map<String, String> phoneNumbers;
 }

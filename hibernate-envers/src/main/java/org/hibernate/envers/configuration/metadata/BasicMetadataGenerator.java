@@ -64,12 +64,17 @@ public final class BasicMetadataGenerator {
                     Element type_mapping = prop_mapping.addElement("type");
                     type_mapping.addAttribute("name", typeName);
 
-                    for (java.util.Map.Entry paramKeyValue : typeParameters.entrySet()) {
-                        Element type_param = type_mapping.addElement("param");
-                        type_param.addAttribute("name", (String) paramKeyValue.getKey());
-                        type_param.setText((String) paramKeyValue.getValue());
-                    }
-                }
+					for ( Object object : typeParameters.keySet() ) {
+						String keyType = (String) object;
+						String property = typeParameters.getProperty( keyType );
+
+						if ( property != null ) {
+							Element type_param = type_mapping.addElement( "param" );
+							type_param.addAttribute( "name", keyType );
+							type_param.setText( property );
+						}
+					}
+				}
             }
 
             // A null mapper means that we only want to add xml mappings

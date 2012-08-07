@@ -24,20 +24,22 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.jboss.logging.Logger;
-
+import javax.persistence.Enumerated;
+import javax.persistence.MapKeyEnumerated;
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.ParameterizedType;
+import org.jboss.logging.Logger;
 
 /**
  * Enum type mapper
@@ -49,7 +51,7 @@ import org.hibernate.usertype.ParameterizedType;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
+public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EnumType.class.getName());
 
@@ -168,17 +170,37 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	}
 
 	public void setParameterValues(Properties parameters) {
-		String enumClassName = parameters.getProperty( ENUM );
-		try {
-			enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
-		}
-		catch ( ClassNotFoundException exception ) {
-			throw new HibernateException( "Enum class not found", exception );
-		}
+		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 
-		String type = parameters.getProperty( TYPE );
-		if ( type != null ) {
-			sqlType = Integer.decode( type );
+		if ( reader != null ) {
+			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
+
+			javax.persistence.EnumType enumType = getEnumType( reader );
+			if ( enumType != null ) {
+				if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
+					sqlType = Types.INTEGER;
+				}
+				else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
+					sqlType = Types.VARCHAR;
+				}
+				else {
+					throw new AssertionFailure( "Unknown EnumType: " + enumType );
+				}
+			}
+		}
+		else {
+			String enumClassName = (String) parameters.get( ENUM );
+			try {
+				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
+			}
+			catch ( ClassNotFoundException exception ) {
+				throw new HibernateException( "Enum class not found", exception );
+			}
+
+			String type = (String) parameters.get( TYPE );
+			if ( type != null ) {
+				sqlType = Integer.decode( type );
+			}
 		}
 	}
 
@@ -233,5 +255,31 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 				throw new IllegalArgumentException( "Unknown name value for enum " + enumClass + ": " + xmlValue, iae );
 			}
 		}
+	}
+
+	private javax.persistence.EnumType getEnumType(ParameterType reader) {
+		javax.persistence.EnumType enumType = null;
+		if ( reader.isPrimaryKey() ) {
+			MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
+			if ( enumAnn != null ) {
+				enumType = enumAnn.value();
+			}
+		}
+		else {
+			Enumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), Enumerated.class );
+			if ( enumAnn != null ) {
+				enumType = enumAnn.value();
+			}
+		}
+		return enumType;
+	}
+
+	private <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> anClass) {
+		for ( Annotation annotation : annotations ) {
+			if ( anClass.isInstance( annotation ) ) {
+				return (T) annotation;
+			}
+		}
+		return null;
 	}
 }

@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -206,6 +207,68 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	public void testManyToOneInsideComponentReferencedColumn() {
+		HousePlaces house = new HousePlaces();
+		house.places = new Places();
+
+		house.places.livingRoom = new Place();
+		house.places.livingRoom.name = "First";
+		house.places.livingRoom.owner = "mine";
+
+		house.places.kitchen = new Place();
+		house.places.kitchen.name = "Kitchen 1";
+
+		house.neighbourPlaces = new Places();
+		house.neighbourPlaces.livingRoom = new Place();
+		house.neighbourPlaces.livingRoom.name = "Neighbour";
+		house.neighbourPlaces.livingRoom.owner = "his";
+
+		house.neighbourPlaces.kitchen = new Place();
+		house.neighbourPlaces.kitchen.name = "His Kitchen";
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.save( house );
+		s.flush();
+
+		HousePlaces get = (HousePlaces) s.get( HousePlaces.class, house.id );
+		assertEquals( house.id, get.id );
+
+		HousePlaces uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.places.livingRoom.name='First'" )
+				.uniqueResult();
+		assertNotNull( uniqueResult );
+		assertEquals( uniqueResult.places.livingRoom.name, "First" );
+		assertEquals( uniqueResult.places.livingRoom.owner, "mine" );
+
+		uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.places.livingRoom.owner=:owner" )
+				.setParameter( "owner", "mine" ).uniqueResult();
+		assertNotNull( uniqueResult );
+		assertEquals( uniqueResult.places.livingRoom.name, "First" );
+		assertEquals( uniqueResult.places.livingRoom.owner, "mine" );
+
+		assertNotNull( s.createCriteria( HousePlaces.class ).add( Restrictions.eq( "places.livingRoom.owner", "mine" ) )
+				.uniqueResult() );
+
+		// override
+		uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.neighbourPlaces.livingRoom.owner='his'" )
+				.uniqueResult();
+		assertNotNull( uniqueResult );
+		assertEquals( uniqueResult.neighbourPlaces.livingRoom.name, "Neighbour" );
+		assertEquals( uniqueResult.neighbourPlaces.livingRoom.owner, "his" );
+
+		uniqueResult = (HousePlaces) s.createQuery( "from HousePlaces h where h.neighbourPlaces.livingRoom.name=:name" )
+				.setParameter( "name", "Neighbour" ).uniqueResult();
+		assertNotNull( uniqueResult );
+		assertEquals( uniqueResult.neighbourPlaces.livingRoom.name, "Neighbour" );
+		assertEquals( uniqueResult.neighbourPlaces.livingRoom.owner, "his" );
+
+		assertNotNull( s.createCriteria( HousePlaces.class )
+				.add( Restrictions.eq( "neighbourPlaces.livingRoom.owner", "his" ) ).uniqueResult() );
+
+		tx.rollback();
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
@@ -219,7 +282,9 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 				Item.class,
 				ItemCost.class,
 				Vendor.class,
-				WarehouseItem.class
+				WarehouseItem.class,
+				Place.class,
+				HousePlaces.class
 		};
 	}
 }

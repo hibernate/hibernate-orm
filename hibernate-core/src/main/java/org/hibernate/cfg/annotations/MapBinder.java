@@ -210,26 +210,25 @@ public class MapBinder extends CollectionBinder {
 					}
 				}
 
+				PersistentClass owner = mapValue.getOwner();
+				AccessType accessType;
+				// FIXME support @Access for collection of elements
+				// String accessType = access != null ? access.value() : null;
+				if ( owner.getIdentifierProperty() != null ) {
+					accessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" ) ? AccessType.PROPERTY
+							: AccessType.FIELD;
+				}
+				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
+					Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
+					accessType = prop.getPropertyAccessorName().equals( "property" ) ? AccessType.PROPERTY
+							: AccessType.FIELD;
+				}
+				else {
+					throw new AssertionFailure( "Unable to guess collection property accessor name" );
+				}
+
 				if ( AnnotatedClassType.EMBEDDABLE.equals( classType ) ) {
 					EntityBinder entityBinder = new EntityBinder();
-					PersistentClass owner = mapValue.getOwner();
-					boolean isPropertyAnnotated;
-					//FIXME support @Access for collection of elements
-					//String accessType = access != null ? access.value() : null;
-					if ( owner.getIdentifierProperty() != null ) {
-						isPropertyAnnotated = owner.getIdentifierProperty()
-								.getPropertyAccessorName()
-								.equals( "property" );
-					}
-					else
-					if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-						Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
-						isPropertyAnnotated = prop.getPropertyAccessorName().equals( "property" );
-					}
-					else {
-						throw new AssertionFailure( "Unable to guess collection property accessor name" );
-					}
-
 
 					PropertyData inferredData;
 					if ( isHibernateExtensionMapping() ) {
@@ -242,7 +241,7 @@ public class MapBinder extends CollectionBinder {
 
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
-							holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,
+							holder, inferredData, accessType, true,
 							entityBinder, false, false,
 							true, mappings, inheritanceStatePerClass
 					);
@@ -285,6 +284,8 @@ public class MapBinder extends CollectionBinder {
 					else {
 						elementBinder.setType( property, elementClass );
 					}
+					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
+					elementBinder.setAccessType( accessType );
 					mapValue.setIndex( elementBinder.make() );
 				}
 			}

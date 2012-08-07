@@ -268,15 +268,15 @@ public class BinderHelper {
 			 */
 			StringBuilder propertyNameBuffer = new StringBuilder( "_" );
 			propertyNameBuffer.append( associatedClass.getEntityName().replace( '.', '_' ) );
-			propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName() );
+			propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName().replace( '.', '_' ) );
 			String syntheticPropertyName = propertyNameBuffer.toString();
 			//find properties associated to a certain column
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), mappings );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, mappings );
 			//create an embeddable component
-			Property synthProp = null;
+                        Property synthProp = null;
 			if ( properties != null ) {
-				//todo how about properties.size() == 1, this should be much simpler
+                        //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
 						new Component( mappings, (PersistentClass) columnOwner ) :
 						new Component( mappings, (Join) columnOwner );
@@ -290,8 +290,8 @@ public class BinderHelper {
 					clone.setNaturalIdentifier( false );
 					clone.setGeneration( property.getGeneration() );
 					embeddedComp.addProperty( clone );
-				}
-				synthProp = new SyntheticProperty();
+                                }
+                                    synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setNodeName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
@@ -300,9 +300,9 @@ public class BinderHelper {
 				synthProp.setValue( embeddedComp );
 				synthProp.setPropertyAccessorName( "embedded" );
 				ownerEntity.addProperty( synthProp );
-				//make it unique
+                                //make it unique
 				TableBinder.createUniqueConstraint( embeddedComp );
-			}
+                            }
 			else {
 				//TODO use a ToOne type doing a second select
 				StringBuilder columnsList = new StringBuilder();
@@ -830,7 +830,7 @@ public class BinderHelper {
 		for (int i = 0; i < aliases.length; i++){
 			if (StringHelper.isNotEmpty(aliases[i].table())){
 				ret.put(aliases[i].alias(), aliases[i].table());
-			}
+}
 		}
 		return ret;
 	}

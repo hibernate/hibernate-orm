@@ -65,7 +65,6 @@
     <xi:include href="content/query_criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/query_sql.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/filters.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/xml.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/performance.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 

@@ -37,8 +37,10 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.MapJoinImplementor;
 import org.hibernate.ejb.criteria.PathImplementor;
+import org.hibernate.ejb.criteria.PathSource;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -74,7 +76,7 @@ public class MapKeyHelpers {
 		public MapKeySource getPathSource() {
 			return (MapKeySource) super.getPathSource();
 		}
-
+		@Override
 		public MapKeyAttribute<K> getAttribute() {
 			return mapKeyAttribute;
 		}
@@ -90,6 +92,20 @@ public class MapKeyHelpers {
 		}
 
 		@Override
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			PathSource<?> source = getPathSource();
+			String name;
+			if ( source != null ) {
+				source.prepareAlias( renderingContext );
+				name = source.getPathIdentifier();
+			}
+			else {
+				name = getAttribute().getName();
+			}
+			return "key(" + name + ")";
+		}
+
+		@Override
 		protected Attribute locateAttributeInternal(String attributeName) {
 			if ( ! canBeDereferenced() ) {
 				throw new IllegalArgumentException(
@@ -98,7 +114,7 @@ public class MapKeyHelpers {
 			}
 			throw new UnsupportedOperationException( "Not yet supported!" );
 		}
-
+		@Override
 		public Bindable<K> getModel() {
 			return mapKeyAttribute;
 		}
@@ -127,12 +143,13 @@ public class MapKeyHelpers {
 			this.mapJoin = mapJoin;
 			this.mapAttribute = attribute;
 		}
-
+		@Override
 		public MapAttribute<?,K,V> getAttribute() {
 			return mapAttribute;
 		}
 
 		@SuppressWarnings({ "unchecked" })
+		@Override
 		public Bindable<Map<K, V>> getModel() {
 			// TODO : ok???  the attribute is in fact bindable, but its type signature is different
 			return (Bindable<Map<K, V>>) mapAttribute;
@@ -141,6 +158,11 @@ public class MapKeyHelpers {
 		@Override
 		public PathImplementor<?> getParentPath() {
 			return (PathImplementor<?>) mapJoin.getParentPath();
+		}
+
+		@Override
+		public String getPathIdentifier() {
+			return mapJoin.getPathIdentifier();
 		}
 
 		@Override
@@ -186,8 +208,7 @@ public class MapKeyHelpers {
 					: BindableType.SINGULAR_ATTRIBUTE;
 
 			String guessedRoleName = determineRole( attribute );
-			SessionFactoryImplementor sfi = (SessionFactoryImplementor)
-					criteriaBuilder.getEntityManagerFactory().getSessionFactory();
+			SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory().getSessionFactory();
 			mapPersister = sfi.getCollectionPersister( guessedRoleName );
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
@@ -212,6 +233,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public String getName() {
 			// TODO : ???
 			return "map-key";
@@ -220,6 +242,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public PersistentAttributeType getPersistentAttributeType() {
 			return persistentAttributeType;
 		}
@@ -227,6 +250,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public ManagedType<Map<K, ?>> getDeclaringType() {
 			// TODO : ???
 			return null;
@@ -235,6 +259,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public Class<K> getJavaType() {
 			return attribute.getKeyJavaType();
 		}
@@ -242,6 +267,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public Member getJavaMember() {
 			// TODO : ???
 			return null;
@@ -250,6 +276,7 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public boolean isAssociation() {
 			return mapKeyType.isEntityType();
 		}
@@ -257,30 +284,31 @@ public class MapKeyHelpers {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public boolean isCollection() {
 			return false;
 		}
-
+		@Override
 		public boolean isId() {
 			return false;
 		}
-
+		@Override
 		public boolean isVersion() {
 			return false;
 		}
-
+		@Override
 		public boolean isOptional() {
 			return false;
 		}
-
+		@Override
 		public Type<K> getType() {
 			return jpaType;
 		}
-
+		@Override
 		public BindableType getBindableType() {
 			return jpaBindableType;
 		}
-
+		@Override
 		public Class<K> getBindableJavaType() {
 			return jpaBinableJavaType;
 		}

@@ -5,6 +5,30 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.6 (2012.08.08)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-2808] - CLONE -Impossible to define caching for a subclass's collection in hibernate.cgf.xml
+    * [HHH-6103] - Criteria API based on MapKeyColumn is not working
+    * [HHH-6204] - JoinColumn on non key field fails to populate collection
+    * [HHH-6608] - @JoinColumns doesn't work inside an @Embedded member
+    * [HHH-7108] - @TypeDef doesn't work for enums
+    * [HHH-7157] - Bi-directional Many-to-One and One-to-Many mapping with EmbeddedId fails
+    * [HHH-7305] - NPE in LogicalConnectionImpl when multi tenancy is used without providing a release mode manually
+    * [HHH-7446] - ConcurrentModificationException during schema creation
+    * [HHH-7468] - NaturalIdCacheKey.toString throws NPE after serialization
+    * [HHH-7493] - Documentation still refers to dom4j as an entity mode
+    * [HHH-7498] - some tests were targeting to the H2 only but now runs on db matrix
+    * [HHH-7501] - java.lang.ClassCastException: oracle.jdbc.driver.T4CStatement cannot be cast to java.sql.PreparedStatement
+    * [HHH-7508] - Debug logging throws MissingFormatArgumentException when using non standard Optimizer
+** Improvement
+    * [HHH-7502] - Problems with multi-tenancy and 2nd level cache
+** New Feature
+    * [HHH-7457] - Enable loading of collections thats been detached from session
+** Task
+    * [HHH-7385] - upgrade to Gradle 1.0
+
 Changes in version 4.1.5.SP1 (2012.07.12)
 ------------------------------------------------------------------------------------------------------------------------
 

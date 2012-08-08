@@ -1,24 +1,18 @@
-apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( project( ':hibernate-entitymanager' ) )
-    compile( libraries.commons_annotations )
-    compile( libraries.dom4j )
     provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
     provided( libraries.ant )
-    testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )
     testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
-    testCompile( libraries.jpa )
-    testRuntime( libraries.h2 )
     testRuntime( libraries.javassist )
 }
 
 sourceSets {
     main {
-        generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+        ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
         java {
             srcDir generatedJpaMetamodelSrcDir
         }

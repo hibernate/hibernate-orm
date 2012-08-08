@@ -2,18 +2,18 @@ buildscript {
   repositories {
       mavenCentral()
       mavenLocal()
-	  mavenRepo name: 'jboss-nexus', url: "https://repository.jboss.org/nexus/content/groups/public/"
+	  mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
   }
   dependencies {
-      classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.0"
+      classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.1"
   }
 }
 
 apply plugin: "java"
 apply plugin: "jdocbook"
-
+ext.pressgangVersion = '3.0.0'
 dependencies {
-    pressgangVersion = '3.0.0'
+    
     jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
     jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
     jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"

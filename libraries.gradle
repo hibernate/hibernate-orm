@@ -1,0 +1,84 @@
+
+// build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
+// use.  In that respect it serves a role similar to <dependencyManagement> in Maven
+ext {
+slf4jVersion = '1.6.1'
+junitVersion = '4.10'
+h2Version = '1.2.145'
+bytemanVersion = '1.5.2'
+infinispanVersion = '5.1.5.FINAL'
+jnpVersion = '5.0.6.CR1'
+
+libraries = [
+        // Ant
+        ant:            'org.apache.ant:ant:1.8.2',
+
+        // Antlr
+        antlr:          'antlr:antlr:2.7.7',
+
+        // Annotations
+        commons_annotations:
+                        'org.hibernate.common:hibernate-commons-annotations:4.0.1.Final@jar',
+        jandex:         'org.jboss:jandex:1.0.3.Final',
+        classmate:      'com.fasterxml:classmate:0.5.4',
+
+        // Dom4J
+        dom4j:          'dom4j:dom4j:1.6.1@jar',
+
+        // Javassist
+        javassist:      'org.javassist:javassist:3.15.0-GA',
+
+        // javax
+        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-7plus',
+        jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
+        validation:     'javax.validation:validation-api:1.0.0.GA',
+        jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
+
+        // logging
+        logging:        'org.jboss.logging:jboss-logging:3.1.0.GA',
+        logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.Final',
+
+        // jaxb task
+        jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
+        jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
+        jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
+
+        // logging for testing
+        slf4j_api:      "org.slf4j:slf4j-api:${slf4jVersion}",
+        slf4j_log4j12:  "org.slf4j:slf4j-log4j12:${slf4jVersion}",
+        jcl_slf4j:      "org.slf4j:jcl-over-slf4j:${slf4jVersion}",
+        jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
+        jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
+
+
+        junit:           "junit:junit:${junitVersion}",
+        byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
+        byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
+        byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
+        jpa_modelgen:    'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
+        shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
+        shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
+        validator:       'org.hibernate:hibernate-validator:4.2.0.Final',
+        h2:              "com.h2database:h2:${h2Version}",
+        jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
+        xapool:          "com.experlog:xapool:1.5.0",
+        mockito:         'org.mockito:mockito-core:1.9.0',
+        
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinsipan
+        infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinispan test
+        infinispan_test: "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar",
+        rhq:             "org.rhq.helpers:rhq-pluginAnnotations:3.0.4",
+        jboss_common_core: "org.jboss:jboss-common-core:2.2.16.GA@jar",
+        jnp_client:      "org.jboss.naming:jnp-client:${jnpVersion}",
+        jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~ c3p0
+		c3p0:            "c3p0:c3p0:0.9.1",
+		ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
+		proxool:         "proxool:proxool:0.8.3",
+
+
+	]
+}

@@ -1,6 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
@@ -11,7 +10,6 @@ dependencies {
     compile( libraries.jta )
     compile( libraries.javassist )
     testCompile( project(':hibernate-testing') )
-    testCompile( libraries.junit )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
@@ -25,7 +23,7 @@ aptDumpDir = file( "${buildDir}/tmp/apt" )
 
 sourceSets.test {
     originalJavaSrcDirs = java.srcDirs
-    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+    ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
 task generateTestJpaMetamodelClasses(type: Compile) {
@@ -53,8 +51,8 @@ compileTestJava.options.define(compilerArgs: ["-proc:none"])
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Process 'bundle resources' for the packaging tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-bundlesTargetDir = file( "${buildDir}/bundles" )
 task copyBundleResources (type: Copy) {
+	ext.bundlesTargetDir = file( "${buildDir}/bundles" )
     from file('src/test/bundles') 
     into bundlesTargetDir
     filter(ReplaceTokens, tokens: [
@@ -74,7 +72,7 @@ processTestResources.dependsOn copyBundleResources
 // create an artifact configuration composed of the test classes so that envers can access hem test classes
 task testJar(type: Jar, dependsOn: testClasses) {
     classifier = 'test'
-    from sourceSets.test.classes
+    from sourceSets.test.output
 }
 
 configurations {

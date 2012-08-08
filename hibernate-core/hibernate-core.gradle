@@ -1,4 +1,3 @@
-apply plugin: 'java'
 apply plugin: 'antlr'
 apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
@@ -39,7 +38,7 @@ manifest.mainAttributes(
 )
 
 sourceSets.main {
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+    ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
 	originalJavaSrcDirs = java.srcDirs
 }
@@ -56,6 +55,7 @@ idea {
 }
 
 task jaxb {
+	ext {
     // output directory
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
 
@@ -68,7 +68,7 @@ task jaxb {
     cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
     hbmXjb = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
     ormXjb = file( 'src/main/xjb/orm-bindings.xjb' )
-
+}
     // configure Gradle up-to-date checking
     inputs.files( [cfgXsd, hbmXsd, ormXsd, cfgXjb, hbmXjb, ormXjb] )
     outputs.dir( jaxbTargetDir )

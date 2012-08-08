@@ -10,7 +10,7 @@ idea.module {
 
 // Javadocs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-javadocBuildDir = mkdir(  "${buildDir}/documentation/javadocs" )
+ext.javadocBuildDir = mkdir(  "${buildDir}/documentation/javadocs" )
 
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
@@ -107,11 +107,11 @@ aggregateJavadocs.doLast {
 
 // release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-releaseBuildDir = mkdir( buildDir )
+ext.releaseBuildDir = mkdir( buildDir )
 task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
 
 
-releaseCopySpec = copySpec {
+ext.releaseCopySpec = copySpec {
     into( "hibernate-release-$project.version" ) {
         from new File( parent.projectDir, 'lgpl.txt' )
         from new File( parent.projectDir, 'changelog.txt' )

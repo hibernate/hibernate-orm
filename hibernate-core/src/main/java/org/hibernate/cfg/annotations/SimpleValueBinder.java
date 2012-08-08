@@ -143,8 +143,6 @@ public class SimpleValueBinder {
 			isArray = true;
 		}
 		this.xproperty = property;
-		Properties typeParameters = this.typeParameters;
-		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
 
 		Type annType = property.getAnnotation( Type.class );
@@ -217,11 +215,6 @@ public class SimpleValueBinder {
 					.toXClass( Serializable.class )
 					.isAssignableFrom( returnedClassOrElement ) ) {
 				type = SerializableToBlobType.class.getName();
-				//typeParameters = new Properties();
-				typeParameters.setProperty(
-						SerializableToBlobType.CLASS_NAME,
-						returnedClassOrElement.getName()
-				);
 			}
 			else {
 				type = "blob";
@@ -257,7 +250,6 @@ public class SimpleValueBinder {
 		}
 
 		defaultType = BinderHelper.isEmptyAnnotationValue( type ) ? returnedClassName : type;
-		this.typeParameters = typeParameters;
 	}
 
 	private TemporalType getTemporalType(XProperty property) {

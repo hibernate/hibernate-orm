@@ -6,7 +6,7 @@ slf4jVersion = '1.6.1'
 junitVersion = '4.10'
 h2Version = '1.2.145'
 bytemanVersion = '1.5.2'
-infinispanVersion = '5.1.5.FINAL'
+infinispanVersion = '5.1.4.FINAL'
 jnpVersion = '5.0.6.CR1'
 
 libraries = [

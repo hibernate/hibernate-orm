@@ -4,7 +4,7 @@
          xmlns:xl="http://www.w3.org/1999/xlink">
 
   <title>Configuration properties</title>
-  <section>
+  <section revision="1">
     <title>General Configuration</title>
     <informaltable>
       <tgroup cols="3">
@@ -67,10 +67,9 @@
           </row>
           <row>
             <entry>hibernate.default_entity_mode</entry>
-            <entry><para>One of <literal>dynamic-map</literal>, <literal>dom4j</literal>,
-            <literal>pojo</literal></para></entry>
+            <entry><para><literal>dynamic-map</literal> or <literal>pojo</literal></para></entry>
             <entry>Default mode for entity representation for all sessions opened from this
-            <classname>SessionFactory</classname></entry>
+            <classname>SessionFactory</classname>, defaults to <literal>pojo</literal>.</entry>
           </row>
           <row>
             <entry>hibernate.order_updates</entry>

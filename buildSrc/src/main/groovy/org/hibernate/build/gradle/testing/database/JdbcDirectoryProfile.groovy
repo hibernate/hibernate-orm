@@ -26,7 +26,6 @@ package org.hibernate.build.gradle.testing.database;
 
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency;
 /**
  * Database profile as defined by a directory named {@code jdbc} containing JDBC drivers.
  *
@@ -34,22 +33,16 @@ import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDepend
  * @author Strong Liu
  */
 public class JdbcDirectoryProfile extends AbstractDatabaseProfileImpl {
-	private final Configuration jdbcDependencies;
+    private final Configuration jdbcDependencies;
 
-	public JdbcDirectoryProfile(File jdbcDirectory, Project project) {
-		super( jdbcDirectory.getParentFile(), project );
-		jdbcDependencies = prepareConfiguration( getName() );
-		DefaultSelfResolvingDependency dependency =
-                new DefaultSelfResolvingDependency( project.files( jdbcDirectory.listFiles() ) );
-/*        File [] jdbcDriverJars = jdbcDirectory.listFiles();*/
-        jdbcDependencies.addDependency( dependency );
-/*        project.dependencies {
-            jdbcDependency files(jdbcDriverJars)
-        }*/
-	}
+    public JdbcDirectoryProfile(File jdbcDirectory, Project project) {
+        super( jdbcDirectory.getParentFile(), project );
+        jdbcDependencies = prepareConfiguration( getName() );
+        project.dependencies.add(getName(), project.files(jdbcDirectory.listFiles()))
+    }
 
-	@Override
-	public Configuration getTestingRuntimeConfiguration() {
-		return jdbcDependencies;
-	}
+    @Override
+    public Configuration getTestingRuntimeConfiguration() {
+        return jdbcDependencies;
+    }
 }

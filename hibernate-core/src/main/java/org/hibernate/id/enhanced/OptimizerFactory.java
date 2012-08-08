@@ -99,7 +99,7 @@ public class OptimizerFactory {
 				return POOLED_LO;
 			}
 			else {
-				LOG.debugf( "Unknown optimizer key [%s]; returning null assuming Optimizer impl class name" );
+				LOG.debugf( "Unknown optimizer key [%s]; returning null assuming Optimizer impl class name", externalName );
 				return null;
 			}
 		}

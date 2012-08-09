@@ -87,15 +87,18 @@ public class CacheKey implements Serializable {
 
 	@Override
 	public boolean equals(Object other) {
+		if ( other == null ) {
+			return false;
+		}
 		if ( this == other ) {
 			return true;
 		}
-		if ( !(other instanceof CacheKey) || hashCode != other.hashCode()) {
+		if ( hashCode != other.hashCode() || !( other instanceof CacheKey ) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 		CacheKey that = (CacheKey) other;
-		return entityOrRoleName.equals( that.entityOrRoleName ) &&
+		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName ) &&
 				type.isEqual( key, that.key ) &&
 				EqualsHelper.equals( tenantId, that.tenantId );
 	}

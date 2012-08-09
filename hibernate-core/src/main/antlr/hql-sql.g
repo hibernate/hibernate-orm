@@ -2,6 +2,8 @@ header
 {
 package org.hibernate.hql.internal.antlr;
 
+import java.util.Stack;
+
 import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 }
@@ -75,6 +77,7 @@ tokens
 	private int currentClauseType;
 	private int currentTopLevelClauseType;
 	private int currentStatementType;
+	private Stack<Integer> parentClauses = new Stack<Integer>();
 
 	public final boolean isSubQuery() {
 		return level > 1;
@@ -153,10 +156,15 @@ tokens
 	}
 
 	private void handleClauseStart(int clauseType) {
+		parentClauses.push(currentClauseType);
 		currentClauseType = clauseType;
 		if ( level == 1 ) {
 			currentTopLevelClauseType = clauseType;
 		}
+	}
+
+	private void handleClauseEnd() {
+		currentClauseType = parentClauses.pop();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -300,6 +308,7 @@ intoClause! {
 	}
 	: #( INTO { handleClauseStart( INTO ); } (p=path) ps:insertablePropertySpec ) {
 		#intoClause = createIntoClause(p, ps);
+		handleClauseEnd();
 	}
 	;
 
@@ -308,7 +317,9 @@ insertablePropertySpec
 	;
 
 setClause
-	: #( SET { handleClauseStart( SET ); } (assignment)* )
+	: #( SET { handleClauseStart( SET ); } (assignment)* ) {
+		handleClauseEnd();
+	}
 	;
 
 assignment
@@ -346,7 +357,9 @@ query!
 	;
 
 orderClause
-	: #(ORDER { handleClauseStart( ORDER ); } orderExprs)
+	: #(ORDER { handleClauseStart( ORDER ); } orderExprs) {
+		handleClauseEnd();
+	}
 	;
 
 orderExprs
@@ -376,12 +389,15 @@ resultVariableRef!
 	;
 
 groupClause
-	: #(GROUP { handleClauseStart( GROUP ); } (expr)+ ( #(HAVING logicalExpr) )? )
+	: #(GROUP { handleClauseStart( GROUP ); } (expr)+ ( #(HAVING logicalExpr) )? ) {
+		handleClauseEnd();
+	}
 	;
 
 selectClause!
 	: #(SELECT { handleClauseStart( SELECT ); beforeSelectClause(); } (d:DISTINCT)? x:selectExprList ) {
 		#selectClause = #([SELECT_CLAUSE,"{select clause}"], #d, #x);
+		handleClauseEnd();
 	}
 	;
 
@@ -439,7 +455,9 @@ fromClause {
 		// the ouput AST (#fromClause) has not been built yet.
 		prepareFromClauseInputTree(#fromClause_in);
 	}
-	: #(f:FROM { pushFromClause(#fromClause,f); handleClauseStart( FROM ); } fromElementList )
+	: #(f:FROM { pushFromClause(#fromClause,f); handleClauseStart( FROM ); } fromElementList ) {
+		handleClauseEnd();
+	}
 	;
 
 fromElementList {
@@ -530,6 +548,7 @@ withClause
 	// rule during recognition...
 	: #(w:WITH { handleClauseStart( WITH ); } b:logicalExpr ) {
 		#withClause = #(w , #b);
+		handleClauseEnd();
 	}
 	;
 
@@ -537,6 +556,7 @@ whereClause
 	: #(w:WHERE { handleClauseStart( WHERE ); } b:logicalExpr ) {
 		// Use the *output* AST for the boolean expression!
 		#whereClause = #(w , #b);
+		handleClauseEnd();
 	}
 	;
 

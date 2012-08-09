@@ -27,9 +27,16 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface SubclassEntitySource extends EntitySource {
-
     /**
      * @return the entity source for the entity that is a superclass of the entity for which this is a source
      */
     EntitySource superclassEntitySource();
+
+	/**
+	 * Not sure the best way to model this.  We need access to the underlying <key/> mapping for the joined-subclass
+	 * mapping.  Not sure what capabilities jpa/annotations exposes for this.
+	 *
+	 * @return The configured FK name.
+	 */
+	public String getJoinedForeignKeyName();
 }

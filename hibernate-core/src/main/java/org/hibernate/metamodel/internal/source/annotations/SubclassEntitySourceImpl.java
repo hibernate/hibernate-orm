@@ -40,15 +40,15 @@ public class SubclassEntitySourceImpl extends EntitySourceImpl implements Subcla
 		this.container = container;
 	}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.hibernate.metamodel.spi.source.SubclassEntitySource#superclassEntitySource()
-     */
     @Override
     public EntitySource superclassEntitySource() {
         return container;
     }
+
+	@Override
+	public String getJoinedForeignKeyName() {
+		return null;
+	}
 }
 
 

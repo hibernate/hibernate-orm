@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
@@ -65,5 +66,13 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 	@Override
 	public EntitySource superclassEntitySource() {
 	    return container;
+	}
+
+	@Override
+	public String getJoinedForeignKeyName() {
+		if ( JaxbJoinedSubclassElement.class.isInstance( entityElement() ) ) {
+			return ( (JaxbJoinedSubclassElement) entityElement() ).getKey().getForeignKey();
+		}
+		return null;
 	}
 }

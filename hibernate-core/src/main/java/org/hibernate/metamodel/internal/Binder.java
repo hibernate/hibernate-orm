@@ -47,6 +47,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -1703,9 +1704,22 @@ public class Binder {
 			if ( discriminatorValue != null ) {
 				entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 			}
-		} else {
+		}
+		else {
 			bindPrimaryTable( entityBinding, entitySource );
 		}
+
+		if ( inheritanceType == InheritanceType.JOINED && superEntityBinding != null ) {
+			ForeignKey fk = entityBinding.getPrimaryTable().createForeignKey(
+					superEntityBinding.getPrimaryTable(),
+					( (SubclassEntitySource) entitySource ).getJoinedForeignKeyName()
+			);
+			// explicitly maps to target table pk
+			for ( Column column : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
+				fk.addColumn( column );
+			}
+		}
+
 		// todo: deal with joined and unioned subclass bindings
 		// todo: bind fetch profiles
 		// Configure rest of binding

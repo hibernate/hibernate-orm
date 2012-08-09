@@ -141,7 +141,7 @@ public class NaturalIdCacheKey implements Serializable {
 			return true;
 		}
 		
-		if ( hashCode != o.hashCode() || !(o instanceof NaturalIdCacheKey) ) {
+		if ( !(o instanceof NaturalIdCacheKey) || hashCode != o.hashCode() ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}

@@ -149,7 +149,7 @@ public class ProviderMBeanRegistrationHelper {
                     throw new RuntimeException( "Expected 'sessionFactoryMap' field on " + SessionFactoryRegistry.class.getName() );
                 }
                 instancesField.setAccessible( true );
-                Map map = (Map) instancesField.get( null );
+                Map map = (Map) instancesField.get( SessionFactoryRegistry.INSTANCE );
                 if ( map == null ) {
                     return null;
                 }

@@ -35,6 +35,7 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.InitCommand;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.service.schema.spi.SchemaCreator;
@@ -72,6 +73,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			for ( Table table : schema.getTables() ) {
 				applySqlStrings( table, targets, dialect, exportIdentifiers );
+			}
+			for ( Sequence sequence : schema.getSequences() ) {
+				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
 			}
 
 			// todo : allow stuff like user datatypes.

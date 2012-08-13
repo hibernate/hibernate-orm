@@ -34,6 +34,7 @@ import org.hibernate.metamodel.spi.relational.Exportable;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.service.schema.spi.SchemaDropper;
@@ -64,17 +65,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		for ( Schema schema : database.getSchemas() ) {
-			if ( dropSchemas ) {
-				// todo : add dialect method for getting a DROP SCHEMA command and use it here
-			}
+			// NOTE : init commands are irrelevant for dropping...
 
-			for ( Table table : schema.getTables() ) {
-				applySqlStrings( table, targets, dialect, exportIdentifiers );
+			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+				if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+					applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
+				}
 			}
-
-			// todo : allow stuff like user datatypes.
-			//		maybe reusing AuxiliaryDatabaseObject as the general vehicle, but adding a notion of where
-			// it needs to be in terms of creation?
 
 			for ( Table table : schema.getTables() ) {
 				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
@@ -95,15 +92,18 @@ public class SchemaDropperImpl implements SchemaDropper {
 						}
 					}
 				}
+
+				applySqlStrings( table, targets, dialect, exportIdentifiers );
 			}
 
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-				if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-					applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
-				}
+			for ( Sequence sequence : schema.getSequences() ) {
+				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
 			}
 
-			// NOT : init commands are irrelevant for dropping...
+			if ( dropSchemas ) {
+				// todo : add dialect method for getting a DROP SCHEMA command and use it here
+			}
+
 		}
 
 		for ( Target target : targets ) {

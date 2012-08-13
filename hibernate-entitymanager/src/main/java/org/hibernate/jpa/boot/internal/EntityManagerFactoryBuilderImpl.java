@@ -100,6 +100,7 @@ import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ConfigLoader;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -919,25 +920,37 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	public EntityManagerFactory buildEntityManagerFactory() {
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
+
 		final ServiceRegistry serviceRegistry = buildServiceRegistry();
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+		return ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
+				new ClassLoaderServiceImpl.Work<EntityManagerFactoryImpl>() {
+					@Override
+					public EntityManagerFactoryImpl perform() {
+						hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
 
-		SessionFactoryImplementor sessionFactory;
-		try {
-			sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory( serviceRegistry );
-		}
-		catch (MappingException e) {
-			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
-		}
+						SessionFactoryImplementor sessionFactory;
+						try {
+							sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory( serviceRegistry );
+						}
+						catch (MappingException e) {
+							throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+						}
 
-		if ( suppliedSessionFactoryObserver != null ) {
-			sessionFactory.addObserver( suppliedSessionFactoryObserver );
-		}
-		sessionFactory.addObserver( new ServiceRegistryCloser() );
+						if ( suppliedSessionFactoryObserver != null ) {
+							sessionFactory.addObserver( suppliedSessionFactoryObserver );
+						}
+						sessionFactory.addObserver( new ServiceRegistryCloser() );
 
-		// NOTE : passing cfg is temporary until
-		return new EntityManagerFactoryImpl( persistenceUnit.getName(), sessionFactory, settings, configurationValues, hibernateConfiguration );
+						// NOTE : passing cfg is temporary until
+						return new EntityManagerFactoryImpl( persistenceUnit.getName(), sessionFactory, settings, configurationValues, hibernateConfiguration );
+					}
+				}
+		);
 	}
 
 	public ServiceRegistry buildServiceRegistry() {

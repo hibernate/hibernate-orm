@@ -51,6 +51,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private final ClassLoader classClassLoader;
 	private final ClassLoader resourcesClassLoader;
+	private final ClassLoader serviceLoaderClassLoader;
 
 	public ClassLoaderServiceImpl() {
 		this( ClassLoaderServiceImpl.class.getClassLoader() );
@@ -105,6 +106,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		};
 
 		this.resourcesClassLoader = resourcesClassLoader;
+
+		this.serviceLoaderClassLoader = buildServiceLoaderClassLoader();
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -133,6 +136,68 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		catch ( Exception e ) {
 			return null;
 		}
+	}
+
+	private ClassLoader buildServiceLoaderClassLoader() {
+		return new ClassLoader(null) {
+			final ClassLoader[] classLoaderArray = new ClassLoader[] {
+					// first look on the hibernate class loader
+					getClass().getClassLoader(),
+					// next look on the resource class loader
+					resourcesClassLoader,
+					// finally look on the combined class class loader
+					classClassLoader
+			};
+
+			@Override
+			public Enumeration<URL> getResources(String name) throws IOException {
+				final HashSet<URL> resourceUrls = new HashSet<URL>();
+
+				for ( ClassLoader classLoader : classLoaderArray ) {
+					final Enumeration<URL> urls = classLoader.getResources( name );
+					while ( urls.hasMoreElements() ) {
+						resourceUrls.add( urls.nextElement() );
+					}
+				}
+
+				return new Enumeration<URL>() {
+					final Iterator<URL> resourceUrlIterator = resourceUrls.iterator();
+					@Override
+					public boolean hasMoreElements() {
+						return resourceUrlIterator.hasNext();
+					}
+
+					@Override
+					public URL nextElement() {
+						return resourceUrlIterator.next();
+					}
+				};
+			}
+
+			@Override
+			protected URL findResource(String name) {
+				for ( ClassLoader classLoader : classLoaderArray ) {
+					final URL resource = classLoader.getResource( name );
+					if ( resource != null ) {
+						return resource;
+					}
+				}
+				return super.findResource( name );
+			}
+
+			@Override
+			protected Class<?> findClass(String name) throws ClassNotFoundException {
+				for ( ClassLoader classLoader : classLoaderArray ) {
+					try {
+						return classLoader.loadClass( name );
+					}
+					catch (Exception ignore) {
+					}
+				}
+
+				throw new ClassNotFoundException( "Could not load requested class : " + name );
+			}
+		};
 	}
 
 	@Override
@@ -227,55 +292,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		final ClassLoader serviceLoaderClassLoader = new ClassLoader(null) {
-			final ClassLoader[] classLoaderArray = new ClassLoader[] {
-					// first look on the hibernate class loader
-					getClass().getClassLoader(),
-					// next look on the resource class loader
-					resourcesClassLoader,
-					// finally look on the combined class class loader
-					classClassLoader
-			};
-
-			@Override
-			public Enumeration<URL> getResources(String name) throws IOException {
-				final HashSet<URL> resourceUrls = new HashSet<URL>();
-
-				for ( ClassLoader classLoader : classLoaderArray ) {
-					final Enumeration<URL> urls = classLoader.getResources( name );
-					while ( urls.hasMoreElements() ) {
-						resourceUrls.add( urls.nextElement() );
-					}
-				}
-
-				return new Enumeration<URL>() {
-					final Iterator<URL> resourceUrlIterator = resourceUrls.iterator();
-					@Override
-					public boolean hasMoreElements() {
-						return resourceUrlIterator.hasNext();
-					}
-
-					@Override
-					public URL nextElement() {
-						return resourceUrlIterator.next();
-					}
-				};
-			}
-
-			@Override
-			protected Class<?> findClass(String name) throws ClassNotFoundException {
-				for ( ClassLoader classLoader : classLoaderArray ) {
-					try {
-						return classLoader.loadClass( name );
-					}
-					catch (Exception ignore) {
-					}
-				}
-
-				throw new ClassNotFoundException( "Could not load requested class : " + name );
-			}
-		};
-
 		final ServiceLoader<S> loader = ServiceLoader.load( serviceContract, serviceLoaderClassLoader );
 		final LinkedHashSet<S> services = new LinkedHashSet<S>();
 		for ( S service : loader ) {
@@ -284,4 +300,36 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		return services;
 	}
+
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	public static interface Work<T> {
+		public T perform();
+	}
+
+	public <T> T withTccl(Work<T> work) {
+		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+
+		boolean set = false;
+
+		try {
+			Thread.currentThread().setContextClassLoader( serviceLoaderClassLoader);
+			set = true;
+		}
+		catch (Exception ignore) {
+		}
+
+		try {
+			return work.perform();
+		}
+		finally {
+			if ( set ) {
+				Thread.currentThread().setContextClassLoader( tccl );
+			}
+		}
+
+	}
+
 }

@@ -66,21 +66,29 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
+		// first, create each schema
 		for ( Schema schema : database.getSchemas() ) {
 			if ( createSchemas ) {
-				// todo : add dialect method for getting a CREATE SCHEMA command and use it here
+				applySqlStrings( targets, dialect.getCreateSchemaCommand( schema.getName().getSchema().getText( dialect ) ) );
 			}
+		}
 
+		// next, create all "before table" auxiliary objects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
+			}
+		}
+
+		// then, create all schema objects: tables, sequences, constraints, etc
+		for ( Schema schema : database.getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
 				applySqlStrings( table, targets, dialect, exportIdentifiers );
 			}
+
 			for ( Sequence sequence : schema.getSequences() ) {
 				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
 			}
-
-			// todo : allow stuff like user datatypes.
-			//		maybe reusing AuxiliaryDatabaseObject as the general vehicle, but adding a notion of where
-			// it needs to be in terms of creation?
 
 			for ( Table table : schema.getTables() ) {
 				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
@@ -102,16 +110,18 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 				}
 			}
+		}
 
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-				if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-					applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
-				}
+		// next, create all "after table" auxiliary objects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
 			}
+		}
 
-			for ( InitCommand initCommand : database.getInitCommands() ) {
-				applySqlStrings( initCommand.getInitCommands(), targets );
-			}
+		// and finally add all init commands
+		for ( InitCommand initCommand : database.getInitCommands() ) {
+			applySqlStrings( targets, initCommand.getInitCommands() );
 		}
 
 		for ( Target target : targets ) {
@@ -130,10 +140,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 		exportIdentifiers.add( exportIdentifier );
 
-		applySqlStrings( exportable.sqlCreateStrings( dialect ), targets );
+		applySqlStrings( targets, exportable.sqlCreateStrings( dialect ) );
 	}
 
-	private static void applySqlStrings(String[] sqlStrings, Target[] targets) {
+	private static void applySqlStrings(Target[] targets, String... sqlStrings) {
 		if ( sqlStrings == null ) {
 			return;
 		}

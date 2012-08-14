@@ -46,9 +46,15 @@ public abstract class AbstractAuxiliaryDatabaseObject implements AuxiliaryDataba
 	private static final AtomicInteger counter = new AtomicInteger( 0 );
 	private final String exportIdentifier;
 	private final Set<String> dialectScopes;
+	private boolean beforeTablesOnCreation;
 
 	protected AbstractAuxiliaryDatabaseObject(Set<String> dialectScopes) {
+		this( dialectScopes, false );
+	}
+
+	protected AbstractAuxiliaryDatabaseObject(Set<String> dialectScopes, boolean beforeTablesOnCreation) {
 		this.dialectScopes =  dialectScopes == null ? new HashSet<String>() : dialectScopes;
+		this.beforeTablesOnCreation = beforeTablesOnCreation;
 		this.exportIdentifier =
 				new StringBuilder( EXPORT_IDENTIFIER_PREFIX )
 						.append( '.' )
@@ -72,5 +78,10 @@ public abstract class AbstractAuxiliaryDatabaseObject implements AuxiliaryDataba
 	@Override
 	public String getExportIdentifier() {
 		return exportIdentifier;
+	}
+
+	@Override
+	public boolean beforeTablesOnCreation() {
+		return beforeTablesOnCreation;
 	}
 }

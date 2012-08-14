@@ -35,6 +35,7 @@ import org.hibernate.internal.util.StringHelper;
 public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseObject {
 	private static final String CATALOG_NAME_PLACEHOLDER = "${catalog}";
 	private static final String SCHEMA_NAME_PLACEHOLDER = "${schema}";
+
 	private final Schema defaultSchema;
 	private final String createString;
 	private final String dropString;

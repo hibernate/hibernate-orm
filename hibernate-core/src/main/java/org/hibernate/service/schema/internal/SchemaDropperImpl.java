@@ -64,15 +64,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
-		for ( Schema schema : database.getSchemas() ) {
-			// NOTE : init commands are irrelevant for dropping...
+		// NOTE : init commands are irrelevant for dropping...
 
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-				if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-					applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
-				}
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && ! auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
 			}
+		}
 
+		for ( Schema schema : database.getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
 				if ( dialect.dropConstraints() ) {
 					// we need to drop constraints prior to dropping table
@@ -99,11 +99,18 @@ public class SchemaDropperImpl implements SchemaDropper {
 			for ( Sequence sequence : schema.getSequences() ) {
 				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
 			}
+		}
 
-			if ( dropSchemas ) {
-				// todo : add dialect method for getting a DROP SCHEMA command and use it here
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && ! auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
 			}
+		}
 
+		for ( Schema schema : database.getSchemas() ) {
+			if ( dropSchemas ) {
+				applySqlStrings( targets, dialect.getDropSchemaCommand( schema.getName().getSchema().getText( dialect ) ) );
+			}
 		}
 
 		for ( Target target : targets ) {
@@ -122,10 +129,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 		exportIdentifiers.add( exportIdentifier );
 
-		applySqlStrings( exportable.sqlDropStrings( dialect ), targets );
+		applySqlStrings( targets, exportable.sqlDropStrings( dialect ) );
 	}
 
-	private static void applySqlStrings(String[] sqlStrings, Target[] targets) {
+	private static void applySqlStrings(Target[] targets, String... sqlStrings) {
 		if ( sqlStrings == null ) {
 			return;
 		}

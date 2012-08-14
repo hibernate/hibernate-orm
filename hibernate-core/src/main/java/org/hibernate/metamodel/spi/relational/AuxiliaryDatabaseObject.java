@@ -41,5 +41,18 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @param dialect The dialect to check against.
 	 * @return True if this database object does apply to the given dialect.
 	 */
-	boolean appliesToDialect(Dialect dialect);
+	public boolean appliesToDialect(Dialect dialect);
+
+	/**
+	 * Defines a simple precedence.  Should creation of this auxiliary object happen before creation of
+	 * tables?  If {@code true}, the auxiliary object creation will happen after any explicit schema creations
+	 * but before table/sequence creations; if {@code false}, the auxiliary object creation will happen after
+	 * explicit schema creations and after table/sequence creations.
+	 *
+	 * This precedence is automatically inverted for dropping.
+	 *
+	 * @return {@code true} indicates this object should be created before tables; {@code false} indicates
+	 * it should be created after.
+	 */
+	public boolean beforeTablesOnCreation();
 }

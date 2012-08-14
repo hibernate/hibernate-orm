@@ -1845,6 +1845,28 @@ public abstract class Dialect implements ConversionContext {
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Get the SQL command used to create the named schema
+	 *
+	 * @param schemaName The name of the schema to be created.
+	 *
+	 * @return The creation command
+	 */
+	public String getCreateSchemaCommand(String schemaName) {
+		return "create schema " + schemaName;
+	}
+
+	/**
+	 * Get the SQL command used to drop the named schema
+	 *
+	 * @param schemaName The name of the schema to be dropped.
+	 *
+	 * @return The drop command
+	 */
+	public String getDropSchemaCommand(String schemaName) {
+		return "drop schema " + schemaName;
+	}
+
+	/**
 	 * Does this dialect support the <tt>ALTER TABLE</tt> syntax?
 	 *
 	 * @return True if we support altering of tables; false otherwise.

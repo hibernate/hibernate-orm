@@ -37,7 +37,6 @@ public class Index extends AbstractConstraint implements Constraint {
 		super( table, name );
 	}
 
-
 	@Override
 	public String getExportIdentifier() {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
@@ -46,47 +45,6 @@ public class Index extends AbstractConstraint implements Constraint {
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
-	}
-
-	public String[] sqlCreateStrings(Dialect dialect) {
-		return new String[] {
-				buildSqlCreateIndexString(
-						dialect, getOrGenerateName(), getTable(), getColumns(), false
-				)
-		};
-	}
-
-	public static String buildSqlCreateIndexString(
-			Dialect dialect,
-			String name,
-			TableSpecification table,
-			Iterable<Column> columns,
-			boolean unique
-	) {
-		//TODO handle supportsNotNullUnique=false, but such a case does not exist in the wild so far
-		StringBuilder buf = new StringBuilder( "create" )
-				.append( unique ?
-						" unique" :
-						"" )
-				.append( " index " )
-				.append( dialect.qualifyIndexName() ?
-						name :
-						StringHelper.unqualify( name ) )
-				.append( " on " )
-				.append( table.getQualifiedName( dialect ) )
-				.append( " (" );
-		boolean first = true;
-		for ( Column column : columns ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( ( column.getColumnName().getText( dialect ) ) );
-		}
-		buf.append( ")" );
-		return buf.toString();
 	}
 
 	@Override
@@ -107,17 +65,5 @@ public class Index extends AbstractConstraint implements Constraint {
 			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append( ')' ).toString();
-	}
-
-	public String[] sqlDropStrings(Dialect dialect) {
-		return new String[] {
-				new StringBuilder( "drop index " )
-				.append(
-						StringHelper.qualify(
-								getTable().getQualifiedName( dialect ),
-								getOrGenerateName()
-						)
-				).toString()
-		};
 	}
 }

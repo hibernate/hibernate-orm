@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import org.hibernate.dialect.Dialect;
-
 /**
  * Contract for entities (in the ERD sense) which can be exported via {@code CREATE}, {@code ALTER}, etc
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.service.schema.spi.Exporter
  */
 public interface Exportable {
 	/**
@@ -37,23 +37,4 @@ public interface Exportable {
 	 * @return The exporting identifier.
 	 */
 	public String getExportIdentifier();
-
-	/**
-	 * Gets the SQL strings for creating the database object.
-	 *
-	 * @param dialect The dialect for which to generate the SQL creation strings
-	 *
-	 * @return the SQL strings for creating the database object.
-	 */
-	public String[] sqlCreateStrings(Dialect dialect);
-
-	/**
-	 * Gets the SQL strings for dropping the database object.
-	 *
-	 * @param dialect The dialect for which to generate the SQL drop strings
-	 *
-	 * @return the SQL strings for dropping the database object.
-	 */
-	public String[] sqlDropStrings(Dialect dialect);
-
 }

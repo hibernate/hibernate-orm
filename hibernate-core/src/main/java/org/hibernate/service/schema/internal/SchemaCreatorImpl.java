@@ -38,6 +38,7 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.schema.spi.SchemaCreator;
 import org.hibernate.service.schema.spi.SchemaManagementException;
 import org.hibernate.service.schema.spi.Target;
@@ -58,7 +59,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	@Override
 	public void doCreation(Database database, boolean createSchemas, Target... targets)
 			throws SchemaManagementException {
-		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		for ( Target target : targets ) {
 			target.prepare();
@@ -76,37 +78,43 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// next, create all "before table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
-				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+				applySqlStrings(
+						targets,
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, jdbcEnvironment )
+				);
 			}
 		}
 
 		// then, create all schema objects: tables, sequences, constraints, etc
 		for ( Schema schema : database.getSchemas() ) {
-			for ( Table table : schema.getTables() ) {
-				applySqlStrings( table, targets, dialect, exportIdentifiers );
-			}
-
 			for ( Sequence sequence : schema.getSequences() ) {
-				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( sequence, exportIdentifiers );
+				applySqlStrings( targets, dialect.getSequenceExporter().getSqlCreateStrings( sequence, jdbcEnvironment ) );
 			}
 
 			for ( Table table : schema.getTables() ) {
-				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						applySqlStrings( uniqueKey, targets, dialect, exportIdentifiers );
-					}
-				}
+				checkExportIdentifier( table, exportIdentifiers );
+				applySqlStrings( targets, dialect.getTableExporter().getSqlCreateStrings( table, jdbcEnvironment ) );
 
 				for ( Index index : table.getIndexes() ) {
-					applySqlStrings( index, targets, dialect, exportIdentifiers );
+					checkExportIdentifier( index, exportIdentifiers );
+					applySqlStrings( targets, dialect.getIndexExporter().getSqlCreateStrings( index, jdbcEnvironment ) );
 				}
 
-				if ( dialect.hasAlterTable() ) {
-					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
-						// only add the foreign key if its target is a physical table
-						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
-							applySqlStrings( foreignKey, targets, dialect, exportIdentifiers );
-						}
+				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
+					checkExportIdentifier( uniqueKey, exportIdentifiers );
+					applySqlStrings( targets, dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, jdbcEnvironment ) );
+				}
+
+			}
+
+			for ( Table table : schema.getTables() ) {
+				for ( ForeignKey foreignKey : table.getForeignKeys() ) {
+					// only add the foreign key if its target is a physical table
+					if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
+						checkExportIdentifier( foreignKey, exportIdentifiers );
+						applySqlStrings( targets, dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, jdbcEnvironment ) );
 					}
 				}
 			}
@@ -115,7 +123,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// next, create all "after table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
-				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+				applySqlStrings(
+						targets,
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, jdbcEnvironment )
+				);
 			}
 		}
 
@@ -129,18 +141,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 	}
 
-	private static void applySqlStrings(
-			Exportable exportable,
-			Target[] targets,
-			Dialect dialect,
-			Set<String> exportIdentifiers) {
+	private static void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {
 		final String exportIdentifier = exportable.getExportIdentifier();
 		if ( exportIdentifiers.contains( exportIdentifier ) ) {
 			throw new SchemaManagementException( "SQL strings added more than once for: " + exportIdentifier );
 		}
 		exportIdentifiers.add( exportIdentifier );
-
-		applySqlStrings( targets, exportable.sqlCreateStrings( dialect ) );
 	}
 
 	private static void applySqlStrings(Target[] targets, String... sqlStrings) {

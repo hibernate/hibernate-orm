@@ -226,4 +226,37 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 			return actionString;
 		}
 	}
+
+	public class ColumnMapping {
+		private final int position;
+
+		public ColumnMapping(int position) {
+			this.position = position;
+		}
+
+		public Column getSourceColumn() {
+			return getColumns().get(  position );
+		}
+
+		public Column getTargetColumn() {
+			return getTargetColumns().get( position );
+		}
+	}
+
+	public boolean referencesPrimaryKey() {
+		return targetColumns == null
+				|| targetColumns.equals( targetTable.getPrimaryKey().getColumns() );
+	}
+
+	public Iterable<ColumnMapping> getColumnMappings() {
+		final List<Column> targetColumns = getTargetColumns();
+		if ( getColumns().size() != targetColumns.size() ) {
+			// todo : this needs to be an error, though not sure the best type yet
+		}
+		final List<ColumnMapping> columnMappingList = new ArrayList<ColumnMapping>();
+		for ( int i = 0; i < getColumns().size(); i++ ) {
+			columnMappingList.add( new ColumnMapping( i ) );
+		}
+		return columnMappingList;
+	}
 }

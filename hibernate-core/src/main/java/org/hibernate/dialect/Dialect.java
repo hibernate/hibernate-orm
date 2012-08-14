@@ -76,7 +76,20 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.Sequence;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.service.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
+import org.hibernate.service.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.service.schema.internal.StandardIndexExporter;
+import org.hibernate.service.schema.internal.StandardSequenceExporter;
+import org.hibernate.service.schema.internal.StandardTableExporter;
+import org.hibernate.service.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.service.schema.spi.Exporter;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
@@ -1843,6 +1856,37 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
+	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
+	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
+	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
+	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
+
+	public Exporter<Table> getTableExporter() {
+		return tableExporter;
+	}
+
+	public Exporter<Sequence> getSequenceExporter() {
+		return sequenceExporter;
+	}
+
+	public Exporter<Index> getIndexExporter() {
+		return indexExporter;
+	}
+
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
+	}
+
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		return foreignKeyExporter;
+	}
+
+	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
+		return auxiliaryObjectExporter;
+	}
 
 	/**
 	 * Get the SQL command used to create the named schema

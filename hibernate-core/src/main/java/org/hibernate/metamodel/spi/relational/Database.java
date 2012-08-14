@@ -24,20 +24,13 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Represents a database and manages the named schema/catalog pairs defined within.
@@ -124,134 +117,5 @@ public class Database {
 
 	public Iterable<InitCommand> getInitCommands() {
 		return initCommands;
-	}
-
-	public String[] generateSchemaCreationScript(Dialect dialect) {
-		Set<String> exportIdentifiers = new HashSet<String>( 50 );
-		List<String> script = new ArrayList<String>( 50 );
-
-		for ( Schema schema : schemaMap.values() ) {
-			// TODO: create schema/catalog???
-			for ( Table table : schema.getTables() ) {
-				addSqlCreateStrings( dialect, exportIdentifiers, script, table );
-			}
-			for ( Sequence sequence : schema.getSequences() ) {
-				addSqlCreateStrings( dialect, exportIdentifiers, script, sequence );
-			}
-		}
-
-		for ( Schema schema : schemaMap.values() ) {
-			for ( Table table : schema.getTables() ) {
-
-				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						addSqlCreateStrings( dialect, exportIdentifiers, script, uniqueKey );
-					}
-				}
-
-				for ( Index index : table.getIndexes() ) {
-					addSqlCreateStrings( dialect, exportIdentifiers, script, index );
-				}
-
-				if ( dialect.hasAlterTable() ) {
-					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
-						// only add the foreign key if its target is a physical table
-						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
-							addSqlCreateStrings( dialect, exportIdentifiers, script, foreignKey );
-						}
-					}
-				}
-
-			}
-		}
-
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjects ) {
-			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				addSqlCreateStrings( dialect, exportIdentifiers, script, auxiliaryDatabaseObject );
-			}
-		}
-
-		for ( InitCommand initCommand : initCommands ) {
-			Collections.addAll( script, initCommand.getInitCommands() );
-		}
-
-		return ArrayHelper.toStringArray( script );
-	}
-
-	public String[] generateDropSchemaScript(Dialect dialect) {
-		Set<String> exportIdentifiers = new HashSet<String>( 50 );
-		List<String> script = new ArrayList<String>( 50 );
-
-
-		// drop them in reverse order in case db needs it done that way...
-		for ( int i = auxiliaryDatabaseObjects.size() - 1 ; i >= 0 ; i-- ) {
-			AuxiliaryDatabaseObject object = auxiliaryDatabaseObjects.get( i );
-			if ( object.appliesToDialect( dialect ) ) {
-				addSqlDropStrings( dialect, exportIdentifiers, script, object );
-			}
-		}
-
-		if ( dialect.dropConstraints() ) {
-			for ( Schema schema : schemaMap.values() ) {
-				for ( Table table : schema.getTables() ) {
-					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
-						// only include foreign key if the target table is physical
-						if ( foreignKey.getTargetTable() instanceof Table ) {
-							addSqlDropStrings( dialect, exportIdentifiers, script, foreignKey );
-						}
-					}
-				}
-			}
-		}
-
-		for ( Schema schema : schemaMap.values() ) {
-			for ( Table table : schema.getTables() ) {
-				addSqlDropStrings( dialect, exportIdentifiers, script, table );
-			}
-			for ( Sequence sequence : schema.getSequences() ) {
-				addSqlDropStrings( dialect, exportIdentifiers, script, sequence );
-			}
-		}
-
-		// TODO: drop schemas/catalogs???
-
-		return ArrayHelper.toStringArray( script );
-	}
-
-	private static void addSqlDropStrings(
-			Dialect dialect,
-			Set<String> exportIdentifiers,
-			List<String> script,
-			Exportable exportable) {
-		addSqlStrings(
-				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlDropStrings( dialect )
-		);
-	}
-
-	private static void addSqlCreateStrings(
-			Dialect dialect,
-			Set<String> exportIdentifiers,
-			List<String> script,
-			Exportable exportable) {
-		addSqlStrings(
-				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlCreateStrings( dialect )
-		);
-	}
-
-	private static void addSqlStrings(
-			Set<String> exportIdentifiers,
-			List<String> script,
-			String exportIdentifier,
-			String[] sqlStrings) {
-		if ( sqlStrings == null ) {
-			return;
-		}
-		if ( exportIdentifiers.contains( exportIdentifier ) ) {
-			throw new MappingException(
-					"SQL strings added more than once for: " + exportIdentifier
-			);
-		}
-		exportIdentifiers.add( exportIdentifier );
-		script.addAll( Arrays.asList( sqlStrings ) );
 	}
 }

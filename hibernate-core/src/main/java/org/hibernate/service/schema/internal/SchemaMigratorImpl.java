@@ -124,7 +124,10 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 
 				applySqlStrings(
-						sequence.sqlCreateStrings( database.getJdbcEnvironment().getDialect() ),
+						database.getJdbcEnvironment().getDialect().getSequenceExporter().getSqlCreateStrings(
+								sequence,
+								database.getJdbcEnvironment()
+						),
 						targets
 				);
 			}
@@ -150,7 +153,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 	private void createTable(Table table, JdbcEnvironment jdbcEnvironment, List<Target> targets) {
 		applySqlStrings(
-				table.sqlCreateStrings( jdbcEnvironment.getDialect() ),
+				jdbcEnvironment.getDialect().getTableExporter().getSqlCreateStrings( table, jdbcEnvironment ),
 				targets
 		);
 	}

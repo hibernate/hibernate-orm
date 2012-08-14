@@ -89,9 +89,14 @@ public abstract class AbstractConstraint implements Constraint {
 
 	protected abstract String getGeneratedNamePrefix();
 
-	protected String getOrGenerateName() {
-		// TODO: if name is null, should it be set to the generated name when the relational model is "complete"?
+
+	public String getExportedName() {
+		// should really generate names (if not supplied) after metamodel is complete rather than waiting like this.
 		return name != null ? name : generateName();
+	}
+
+	protected String getOrGenerateName() {
+		return getExportedName();
 	}
 
 	protected String generateName() {

@@ -37,6 +37,7 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.schema.spi.SchemaDropper;
 import org.hibernate.service.schema.spi.SchemaManagementException;
 import org.hibernate.service.schema.spi.Target;
@@ -56,7 +57,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	@Override
 	public void doDrop(Database database, boolean dropSchemas, Target... targets) throws SchemaManagementException {
-		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		for ( Target target : targets ) {
 			target.prepare();
@@ -68,7 +70,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && ! auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
-				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+				applySqlStrings(
+						targets,
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, jdbcEnvironment )
+				);
 			}
 		}
 
@@ -80,31 +86,45 @@ public class SchemaDropperImpl implements SchemaDropper {
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 						// only add the foreign key if its target is a physical table
 						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
-							applySqlStrings( foreignKey, targets, dialect, exportIdentifiers );
+							checkExportIdentifier( foreignKey, exportIdentifiers );
+							applySqlStrings(
+									targets,
+									dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, jdbcEnvironment )
+							);
 						}
 					}
 
 					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						applySqlStrings( uniqueKey, targets, dialect, exportIdentifiers );
+						checkExportIdentifier( uniqueKey, exportIdentifiers );
+						applySqlStrings(
+								targets,
+								dialect.getUniqueKeyExporter().getSqlDropStrings( uniqueKey, jdbcEnvironment )
+						);
 					}
 
 					for ( Index index : table.getIndexes() ) {
-						applySqlStrings( index, targets, dialect, exportIdentifiers );
+						checkExportIdentifier( index, exportIdentifiers );
+						applySqlStrings( targets, dialect.getIndexExporter().getSqlDropStrings( index, jdbcEnvironment ) );
 					}
 				}
 
-				applySqlStrings( table, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( table, exportIdentifiers );
+				applySqlStrings( targets, dialect.getTableExporter().getSqlDropStrings( table, jdbcEnvironment ) );
 			}
 
 			for ( Sequence sequence : schema.getSequences() ) {
-				applySqlStrings( sequence, targets, dialect, exportIdentifiers );
+				checkExportIdentifier( sequence, exportIdentifiers );
+				applySqlStrings( targets, dialect.getSequenceExporter().getSqlDropStrings( sequence, jdbcEnvironment ) );
 			}
 		}
 
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) && ! auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
-				applySqlStrings( auxiliaryDatabaseObject, targets, dialect, exportIdentifiers );
-			}
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
+				applySqlStrings(
+						targets,
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, jdbcEnvironment )
+				);			}
 		}
 
 		for ( Schema schema : database.getSchemas() ) {
@@ -118,18 +138,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private static void applySqlStrings(
-			Exportable exportable,
-			Target[] targets,
-			Dialect dialect,
-			Set<String> exportIdentifiers) {
+	private static void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {
 		final String exportIdentifier = exportable.getExportIdentifier();
 		if ( exportIdentifiers.contains( exportIdentifier ) ) {
 			throw new SchemaManagementException( "SQL strings added more than once for: " + exportIdentifier );
 		}
 		exportIdentifiers.add( exportIdentifier );
-
-		applySqlStrings( targets, exportable.sqlDropStrings( dialect ) );
 	}
 
 	private static void applySqlStrings(Target[] targets, String... sqlStrings) {

@@ -24,8 +24,6 @@
 package org.hibernate.metamodel.spi.relational;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
 
 /**
  * Models a database {@code SEQUENCE}.
@@ -64,16 +62,6 @@ public class Sequence implements Exportable {
 
 	public int getIncrementSize() {
 		return incrementSize;
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws MappingException {
-		return dialect.getCreateSequenceStrings( name.toText( dialect ), initialValue,incrementSize );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws MappingException {
-		return dialect.getDropSequenceStrings( name.toText( dialect ) );
 	}
 
 	public void validate(int initialValue, int incrementSize) {

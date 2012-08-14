@@ -55,4 +55,22 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * it should be created after.
 	 */
 	public boolean beforeTablesOnCreation();
+
+	/**
+	 * Gets the SQL strings for creating the database object.
+	 *
+	 * @param dialect The dialect for which to generate the SQL creation strings
+	 *
+	 * @return the SQL strings for creating the database object.
+	 */
+	public String[] sqlCreateStrings(Dialect dialect);
+
+	/**
+	 * Gets the SQL strings for dropping the database object.
+	 *
+	 * @param dialect The dialect for which to generate the SQL drop strings
+	 *
+	 * @return the SQL strings for dropping the database object.
+	 */
+	public String[] sqlDropStrings(Dialect dialect);
 }

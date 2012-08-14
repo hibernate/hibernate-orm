@@ -74,22 +74,22 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			for ( Table table : schema.getTables() ) {
-				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						applySqlStrings( uniqueKey, targets, dialect, exportIdentifiers );
-					}
-				}
+				if ( dialect.dropConstraints() ) {
+					// we need to drop constraints prior to dropping table
 
-				for ( Index index : table.getIndexes() ) {
-					applySqlStrings( index, targets, dialect, exportIdentifiers );
-				}
-
-				if ( dialect.hasAlterTable() ) {
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 						// only add the foreign key if its target is a physical table
 						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
 							applySqlStrings( foreignKey, targets, dialect, exportIdentifiers );
 						}
+					}
+
+					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
+						applySqlStrings( uniqueKey, targets, dialect, exportIdentifiers );
+					}
+
+					for ( Index index : table.getIndexes() ) {
+						applySqlStrings( index, targets, dialect, exportIdentifiers );
 					}
 				}
 

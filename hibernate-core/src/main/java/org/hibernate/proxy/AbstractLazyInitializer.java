@@ -26,8 +26,11 @@ package org.hibernate.proxy;
 import javax.naming.NamingException;
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.AvailableSettings;
@@ -45,6 +48,8 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
+	private static final Logger log = Logger.getLogger( AbstractLazyInitializer.class );
+
 	private String entityName;
 	private Serializable id;
 	private Object target;
@@ -185,18 +190,26 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			try {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				session = (SessionImplementor) sf.openSession();
+				SessionImplementor session = (SessionImplementor) sf.openSession();
 
-				target = session.immediateLoad( entityName, id );
+				try {
+					target = session.immediateLoad( entityName, id );
+				}
+				finally {
+					// make sure the just opened temp session gets closed!
+					try {
+						( (Session) session ).close();
+					}
+					catch (Exception e) {
+						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
+					}
+				}
 				initialized = true;
 				checkTargetState();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 				throw new LazyInitializationException( e.getMessage() );
-			}
-			finally {
-				session = null;
 			}
 		}
 		else if ( session.isOpen() && session.isConnected() ) {

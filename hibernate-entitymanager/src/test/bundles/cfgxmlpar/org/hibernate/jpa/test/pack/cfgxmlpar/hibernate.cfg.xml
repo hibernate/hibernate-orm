@@ -16,6 +16,7 @@
         <property name="hibernate.max_fetch_depth">3</property>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.generate_statistics">true</property>
+        <property name="test-assertable-setting">value</property>
         <property name="hibernate.cache.region.factory_class">org.hibernate.testing.cache.CachingRegionFactory</property>
         <mapping class="org.hibernate.jpa.test.Item"/>
         <mapping class="org.hibernate.jpa.test.Cat"/>

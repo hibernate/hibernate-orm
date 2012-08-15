@@ -40,6 +40,8 @@ import org.hibernate.service.jta.platform.spi.JtaPlatform;
  * @author Les Hazlewood
  */
 public class JtaTransactionFactory implements TransactionFactory<JtaTransaction> {
+	public static final String SHORT_NAME = "jta";
+
 	@Override
 	public JtaTransaction createTransaction(TransactionCoordinator transactionCoordinator) {
 		return new JtaTransaction( transactionCoordinator );

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
 
-<chapter xml:id="transactions" revision="2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+<chapter xml:id="transactions" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Transactions and Concurrency</title>
 
     <para>

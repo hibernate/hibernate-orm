@@ -33,9 +33,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -60,6 +63,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class AbstractPersistentCollection implements Serializable, PersistentCollection {
+	private static final Logger log = Logger.getLogger( AbstractPersistentCollection.class );
 
 	private transient SessionImplementor session;
 	private boolean initialized;
@@ -131,105 +135,195 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				return true;
 			}
 			else {
-				try {
-					if ( specjLazyLoad ) {
-						specialSpecjInitialization( false );
-					}
-					else {
-						throwLazyInitializationExceptionIfNotConnected();
-					}
-					CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( this );
-					CollectionPersister persister = entry.getLoadedPersister();
-					if ( persister.isExtraLazy() ) {
-						if ( hasQueuedOperations() ) {
-							session.flush();
+				boolean isExtraLazy = withTemporarySessionIfNeeded(
+						new LazyInitializationWork<Boolean>() {
+							@Override
+							public Boolean doWork() {
+								CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+								CollectionPersister persister = entry.getLoadedPersister();
+								if ( persister.isExtraLazy() ) {
+									if ( hasQueuedOperations() ) {
+										session.flush();
+									}
+									cachedSize = persister.getSize( entry.getLoadedKey(), session );
+									return true;
+								}
+								else {
+									read();
+								}
+								return false;
+							}
 						}
-						cachedSize = persister.getSize( entry.getLoadedKey(), session );
-						return true;
-					}
-				}
-				finally {
-					if ( specjLazyLoad ) {
-						session = null;
-					}
+				);
+				if ( isExtraLazy ) {
+					return true;
 				}
 			}
 		}
-		read();
 		return false;
 	}
 
-	protected Boolean readIndexExistence(Object index) {
-		if ( !initialized ) {
-			try {
-				if ( specjLazyLoad ) {
-					specialSpecjInitialization( false );
-				}
-				else {
-					throwLazyInitializationExceptionIfNotConnected();
-				}
-				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( this );
-				CollectionPersister persister = entry.getLoadedPersister();
-				if ( persister.isExtraLazy() ) {
-					if ( hasQueuedOperations() ) {
-						session.flush();
-					}
-					return persister.indexExists( entry.getLoadedKey(), index, session );
-				}
+	public static interface LazyInitializationWork<T> {
+		public T doWork();
+	}
+
+	private <T> T withTemporarySessionIfNeeded(LazyInitializationWork<T> lazyInitializationWork) {
+		SessionImplementor originalSession = null;
+		boolean isTempSession = false;
+
+		if ( session == null ) {
+			if ( specjLazyLoad ) {
+				session = openTemporarySessionForLoading();
+				isTempSession = true;
 			}
-			finally {
-				if ( specjLazyLoad ) {
-					session = null;
-				}
+			else {
+				throw new LazyInitializationException( "could not initialize proxy - no Session" );
 			}
 		}
-		read();
+		else if ( !session.isOpen() ) {
+			if ( specjLazyLoad ) {
+				originalSession = session;
+				session = openTemporarySessionForLoading();
+				isTempSession = true;
+			}
+			else {
+				throw new LazyInitializationException( "could not initialize proxy - the owning Session was closed" );
+			}
+		}
+		else if ( !session.isConnected() ) {
+			if ( specjLazyLoad ) {
+				originalSession = session;
+				session = openTemporarySessionForLoading();
+				isTempSession = true;
+			}
+			else {
+				throw new LazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
+			}
+		}
+
+		if ( isTempSession ) {
+			session.getPersistenceContext().addUninitializedDetachedCollection(
+					session.getFactory().getCollectionPersister( getRole() ),
+					this
+			);
+		}
+
+		try {
+			return lazyInitializationWork.doWork();
+		}
+		finally {
+			if ( isTempSession ) {
+				// make sure the just opened temp session gets closed!
+				try {
+					( (Session) session ).close();
+				}
+				catch (Exception e) {
+					log.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+				}
+				session = originalSession;
+			}
+		}
+	}
+
+	private SessionImplementor openTemporarySessionForLoading() {
+		if ( sessionFactoryUuid == null ) {
+			throwLazyInitializationException( "SessionFactory UUID not known to create temporary Session for loading" );
+		}
+
+		SessionFactoryImplementor sf = (SessionFactoryImplementor)
+				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
+		return (SessionImplementor) sf.openSession();
+	}
+
+	protected Boolean readIndexExistence(final Object index) {
+		if ( !initialized ) {
+			Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
+					new LazyInitializationWork<Boolean>() {
+						@Override
+						public Boolean doWork() {
+							CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+							CollectionPersister persister = entry.getLoadedPersister();
+							if ( persister.isExtraLazy() ) {
+								if ( hasQueuedOperations() ) {
+									session.flush();
+								}
+								return persister.indexExists( entry.getLoadedKey(), index, session );
+							}
+							else {
+								read();
+							}
+							return null;
+						}
+					}
+			);
+			if ( extraLazyExistenceCheck != null ) {
+				return extraLazyExistenceCheck;
+			}
+		}
 		return null;
 	}
 
-	protected Boolean readElementExistence(Object element) {
+	protected Boolean readElementExistence(final Object element) {
 		if ( !initialized ) {
-			try {
-				if ( specjLazyLoad ) {
-					specialSpecjInitialization( false );
-				}
-				else {
-					throwLazyInitializationExceptionIfNotConnected();
-				}
-				CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( this );
-				CollectionPersister persister = entry.getLoadedPersister();
-				if ( persister.isExtraLazy() ) {
-					if ( hasQueuedOperations() ) {
-						session.flush();
+			Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
+					new LazyInitializationWork<Boolean>() {
+						@Override
+						public Boolean doWork() {
+							CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+							CollectionPersister persister = entry.getLoadedPersister();
+							if ( persister.isExtraLazy() ) {
+								if ( hasQueuedOperations() ) {
+									session.flush();
+								}
+								return persister.elementExists( entry.getLoadedKey(), element, session );
+							}
+							else {
+								read();
+							}
+							return null;
+						}
 					}
-					return persister.elementExists( entry.getLoadedKey(), element, session );
-				}
-			}
-			finally {
-				if ( specjLazyLoad ) {
-					session = null;
-				}
+			);
+			if ( extraLazyExistenceCheck != null ) {
+				return extraLazyExistenceCheck;
 			}
 		}
-		read();
 		return null;
 	}
 
 	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
 
-	protected Object readElementByIndex(Object index) {
+	protected Object readElementByIndex(final Object index) {
 		if ( !initialized ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( this );
-			CollectionPersister persister = entry.getLoadedPersister();
-			if ( persister.isExtraLazy() ) {
-				if ( hasQueuedOperations() ) {
-					session.flush();
+			class ExtraLazyElementByIndexReader implements LazyInitializationWork {
+				private boolean isExtraLazy;
+				private Object element;
+
+				@Override
+				public Object doWork() {
+					CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+					CollectionPersister persister = entry.getLoadedPersister();
+					isExtraLazy = persister.isExtraLazy();
+					if ( isExtraLazy ) {
+						if ( hasQueuedOperations() ) {
+							session.flush();
+						}
+						element = persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+					}
+					else {
+						read();
+					}
+					return null;
 				}
-				return persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+			}
+
+			ExtraLazyElementByIndexReader reader = new ExtraLazyElementByIndexReader();
+			//noinspection unchecked
+			withTemporarySessionIfNeeded( reader );
+			if ( reader.isExtraLazy ) {
+				return reader.element;
 			}
 		}
-		read();
 		return UNKNOWN;
 
 	}
@@ -423,9 +517,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( initializing ) {
 				throw new LazyInitializationException( "illegal access to loading collection" );
 			}
-			else if ( specjLazyLoad ) {
-				specialSpecjInitialization( writing );
-			}
 			else if ( session == null ) {
 				throw new LazyInitializationException( "could not initialize proxy - no Session" );
 			}
@@ -450,40 +541,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			throwLazyInitializationException( "session is disconnected" );
 		}
 	}
-
-	protected void specialSpecjInitialization(boolean writing) {
-		if ( session == null ) {
-			//we have a detached collection thats set to null, reattach
-			if ( sessionFactoryUuid == null ) {
-				throwLazyInitializationExceptionIfNotConnected();
-			}
-			try {
-				SessionFactoryImplementor sf = (SessionFactoryImplementor)
-						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				session = (SessionImplementor) sf.openSession();
-				CollectionPersister collectionPersister =
-						session.getFactory().getCollectionPersister( this.getRole() );
-				session.getPersistenceContext()
-						.addUninitializedDetachedCollection( collectionPersister, this );
-
-				session.initializeCollection( this, writing );
-
-				//CollectionEntry entry = session.getPersistenceContext().getCollectionEntry(this);
-				//CollectionPersister persister = entry.getLoadedPersister();
-				//cachedSize = persister.getSize( entry.getLoadedKey(), session);
-
-				//session = null;
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				throw new LazyInitializationException( e.getMessage() );
-			}
-		}
-		else {
-			session.initializeCollection( this, writing );
-		}
-	}
-
 
 	private void throwLazyInitializationException(String message) {
 		throw new LazyInitializationException(

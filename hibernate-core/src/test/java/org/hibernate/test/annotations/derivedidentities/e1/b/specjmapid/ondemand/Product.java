@@ -22,45 +22,70 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.ondemand;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Version;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
+@Entity
+public class Product implements Serializable {
+	private String id;
+	private String name;
+	private String description;
+	private BigDecimal msrp;
+	private int version;
 
-public class CustomerInventoryDemandPK implements Serializable {
-
-	private Integer id;
-	private int custId;
-
-	public CustomerInventoryDemandPK() {
+	private Product() {
 	}
 
-	public CustomerInventoryDemandPK(Integer id, int custId) {
+	public Product(String id) {
 		this.id = id;
-		this.custId = custId;
 	}
 
-	public boolean equals(Object other) {
-		if ( other == this ) {
-			return true;
-		}
-		if ( other == null || getClass() != other.getClass() ) {
-			return false;
-		}
-		CustomerInventoryDemandPK cip = ( CustomerInventoryDemandPK ) other;
-		return ( custId == cip.custId && ( id == cip.id ||
-				( id != null && id.equals( cip.id ) ) ) );
-	}
-
-	public int hashCode() {
-		return ( id == null ? 0 : id.hashCode() ) ^ custId;
-	}
-
-	public Integer getId() {
+	@Id
+	public String getId() {
 		return id;
 	}
 
-	public int getCustId() {
-		return custId;
+	private void setId(String id) {
+		this.id = id;
 	}
 
+	public String getName() {
+		return name;
+	}
 
+	public Product setName(String name) {
+		this.name = name;
+		return this;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public Product setDescription(String description) {
+		this.description = description;
+		return this;
+	}
+
+	public BigDecimal getMsrp() {
+		return msrp;
+	}
+
+	public Product setMsrp(BigDecimal msrp) {
+		this.msrp = msrp;
+		return this;
+	}
+
+	@Version
+	public int getVersion() {
+		return version;
+	}
+
+	private void setVersion(int version) {
+		this.version = version;
+	}
 }

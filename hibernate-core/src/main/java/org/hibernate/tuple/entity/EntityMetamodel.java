@@ -42,6 +42,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.CoreMessageLogger;
@@ -231,7 +232,7 @@ public class EntityMetamodel implements Serializable {
 				hasLazy = true;
 			}
 
-			if ( properties[i].getCascadeStyle() != CascadeStyle.NONE ) {
+			if ( properties[i].getCascadeStyle() != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
 
@@ -478,7 +479,7 @@ public class EntityMetamodel implements Serializable {
 				hasLazy = true;
 			}
 
-			if ( properties[i].getCascadeStyle() != CascadeStyle.NONE ) {
+			if ( properties[i].getCascadeStyle() != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
 

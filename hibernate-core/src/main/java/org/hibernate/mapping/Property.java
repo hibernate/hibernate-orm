@@ -31,6 +31,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.Getter;
@@ -124,8 +125,8 @@ public class Property implements Serializable, MetaAttributable {
 		}
 		int length = compositeType.getSubtypes().length;
 		for ( int i=0; i<length; i++ ) {
-			if ( compositeType.getCascadeStyle(i) != CascadeStyle.NONE ) {
-				return CascadeStyle.ALL;
+			if ( compositeType.getCascadeStyle(i) != CascadeStyles.NONE ) {
+				return CascadeStyles.ALL;
 			}
 		}
 		return getCascadeStyle( cascade );
@@ -142,16 +143,16 @@ public class Property implements Serializable, MetaAttributable {
 	
 	private static CascadeStyle getCascadeStyle(String cascade) {
 		if ( cascade==null || cascade.equals("none") ) {
-			return CascadeStyle.NONE;
+			return CascadeStyles.NONE;
 		}
 		else {
 			StringTokenizer tokens = new StringTokenizer(cascade, ", ");
 			CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
 			int i=0;
 			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyle.getCascadeStyle( tokens.nextToken() );
+				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
-			return new CascadeStyle.MultipleCascadeStyle(styles);
+			return new CascadeStyles.MultipleCascadeStyle(styles);
 		}		
 	}
 	

@@ -32,6 +32,7 @@ import javax.persistence.GenerationType;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -67,22 +68,22 @@ public class EnumConversionHelper {
 	public static CascadeStyle cascadeTypeToCascadeStyle(CascadeType cascadeType) {
 		switch ( cascadeType ) {
 			case ALL: {
-				return CascadeStyle.ALL;
+				return CascadeStyles.ALL;
 			}
 			case PERSIST: {
-				return CascadeStyle.PERSIST;
+				return CascadeStyles.PERSIST;
 			}
 			case MERGE: {
-				return CascadeStyle.MERGE;
+				return CascadeStyles.MERGE;
 			}
 			case REMOVE: {
-				return CascadeStyle.DELETE;
+				return CascadeStyles.DELETE;
 			}
 			case REFRESH: {
-				return CascadeStyle.REFRESH;
+				return CascadeStyles.REFRESH;
 			}
 			case DETACH: {
-				return CascadeStyle.EVICT;
+				return CascadeStyles.EVICT;
 			}
 			default: {
 				throw new AssertionFailure( "Unknown cascade type" );

@@ -31,13 +31,16 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -89,6 +92,24 @@ public class JpaIntegrator implements Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
+		// first, register the JPA-specific persist cascade style
+		CascadeStyles.registerCascadeStyle(
+				"persist",
+				new CascadeStyles.BaseCascadeStyle() {
+					@Override
+					public boolean doCascade(CascadingAction action) {
+						return action == JpaPersistEventListener.PERSIST_SKIPLAZY
+								|| action == CascadingActions.PERSIST_ON_FLUSH;
+					}
+
+					@Override
+					public String toString() {
+						return "STYLE_PERSIST_SKIPLAZY";
+					}
+				}
+		);
+
+		// then prepare listeners
 		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
 		boolean isSecurityEnabled = configuration.getProperties().containsKey( AvailableSettings.JACC_ENABLED );
@@ -233,7 +254,8 @@ public class JpaIntegrator implements Integrator {
             }
             try {
                 callbackHandler.add(classLoaderSvc.classForName(name), classLoaderSvc, binding);
-            } catch (ClassLoadingException error) {
+            }
+			catch (ClassLoadingException error) {
                 throw new MappingException( "entity class not found: " + name, error );
             }
         }

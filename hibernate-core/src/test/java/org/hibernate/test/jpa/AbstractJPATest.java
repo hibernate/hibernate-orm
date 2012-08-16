@@ -30,6 +30,7 @@ import javax.persistence.EntityNotFoundException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.event.internal.DefaultFlushEntityEventListener;
@@ -151,7 +152,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	public static class JPAPersistOnFlushEventListener extends JPAPersistEventListener {
 		@Override
         protected CascadingAction getCascadeAction() {
-			return CascadingAction.PERSIST_ON_FLUSH;
+			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 	}
 
@@ -161,7 +162,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 
 		@Override
         protected CascadingAction getCascadingAction() {
-			return CascadingAction.PERSIST_ON_FLUSH;
+			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override
@@ -176,7 +177,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 
 		@Override
         protected CascadingAction getCascadingAction() {
-			return CascadingAction.PERSIST_ON_FLUSH;
+			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override

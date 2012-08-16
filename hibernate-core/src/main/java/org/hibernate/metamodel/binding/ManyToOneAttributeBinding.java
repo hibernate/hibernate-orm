@@ -31,6 +31,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.metamodel.domain.SingularAttribute;
 
 /**
@@ -94,18 +95,18 @@ public class ManyToOneAttributeBinding extends BasicAttributeBinding implements 
 	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles) {
 		List<CascadeStyle> cascadeStyleList = new ArrayList<CascadeStyle>();
 		for ( CascadeStyle style : cascadeStyles ) {
-			if ( style != CascadeStyle.NONE ) {
+			if ( style != CascadeStyles.NONE ) {
 				cascadeStyleList.add( style );
 			}
 		}
 		if ( cascadeStyleList.isEmpty() ) {
-			cascadeStyle = CascadeStyle.NONE;
+			cascadeStyle = CascadeStyles.NONE;
 		}
 		else if ( cascadeStyleList.size() == 1 ) {
 			cascadeStyle = cascadeStyleList.get( 0 );
 		}
 		else {
-			cascadeStyle = new CascadeStyle.MultipleCascadeStyle(
+			cascadeStyle = new CascadeStyles.MultipleCascadeStyle(
 					cascadeStyleList.toArray( new CascadeStyle[ cascadeStyleList.size() ] )
 			);
 		}

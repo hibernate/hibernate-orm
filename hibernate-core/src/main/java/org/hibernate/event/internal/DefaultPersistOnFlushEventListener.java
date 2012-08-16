@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 
 /**
  * When persist is used as the cascade action, persistOnFlush should be used
@@ -31,6 +32,6 @@ import org.hibernate.engine.spi.CascadingAction;
  */
 public class DefaultPersistOnFlushEventListener extends DefaultPersistEventListener {
 	protected CascadingAction getCascadeAction() {
-		return CascadingAction.PERSIST_ON_FLUSH;
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 }

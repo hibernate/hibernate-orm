@@ -26,6 +26,7 @@ package org.hibernate.jpa.internal.event;
 import java.util.IdentityHashMap;
 
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.spi.FlushEventListener;
 
@@ -40,7 +41,7 @@ public class JpaFlushEventListener extends DefaultFlushEventListener implements 
 
 	@Override
 	protected CascadingAction getCascadingAction() {
-		return CascadingAction.PERSIST_ON_FLUSH;
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	@Override

@@ -24,12 +24,17 @@
 package org.hibernate.jpa.internal.event;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Map;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.JpaCascadeStyle;
-import org.hibernate.engine.spi.JpaCascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.type.CollectionType;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation
@@ -37,9 +42,7 @@ import org.hibernate.event.spi.EventSource;
  * @author Emmanuel Bernard
  */
 public class JpaPersistEventListener extends DefaultPersistEventListener implements CallbackHandlerConsumer {
-	static {
-		JpaCascadeStyle.PERSIST_JPA.hasOrphanDelete(); //triggers class loading to override persist with PERSIST_JPA
-	}
+	private static final Logger log = Logger.getLogger( JpaPersistEventListener.class );
 
 	private EntityCallbackHandler callbackHandler;
 
@@ -81,6 +84,32 @@ public class JpaPersistEventListener extends DefaultPersistEventListener impleme
 
 	@Override
 	protected CascadingAction getCascadeAction() {
-		return JpaCascadingAction.PERSIST_SKIPLAZY;
+		return PERSIST_SKIPLAZY;
 	}
+
+	public static final CascadingAction PERSIST_SKIPLAZY = new CascadingActions.BaseCascadingAction() {
+		@Override
+		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+				throws HibernateException {
+			log.trace( "Cascading persist to : " + entityName );
+			session.persist( entityName, child, (Map) anything );
+		}
+		@Override
+		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+			// persists don't cascade to uninitialized collections
+			return CascadingActions.getLoadedElementsIterator( session, collectionType, collection );
+		}
+		@Override
+		public boolean deleteOrphans() {
+			return false;
+		}
+		@Override
+		public boolean performOnLazyProperty() {
+			return false;
+		}
+		@Override
+		public String toString() {
+			return "ACTION_PERSIST_SKIPLAZY";
+		}
+	};
 }

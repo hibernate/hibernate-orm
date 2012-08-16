@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 
 
 /**
@@ -125,18 +126,18 @@ public enum CascadeType {
 
 	private static final Map<CascadeType, CascadeStyle> cascadeTypeToCascadeStyle = new HashMap<CascadeType, CascadeStyle>();
 	static {
-		cascadeTypeToCascadeStyle.put( ALL, CascadeStyle.ALL );
-		cascadeTypeToCascadeStyle.put( ALL_DELETE_ORPHAN, CascadeStyle.ALL_DELETE_ORPHAN );
-		cascadeTypeToCascadeStyle.put( UPDATE, CascadeStyle.UPDATE );
-		cascadeTypeToCascadeStyle.put( PERSIST, CascadeStyle.PERSIST );
-		cascadeTypeToCascadeStyle.put( MERGE, CascadeStyle.MERGE );
-		cascadeTypeToCascadeStyle.put( LOCK, CascadeStyle.LOCK );
-		cascadeTypeToCascadeStyle.put( REFRESH, CascadeStyle.REFRESH );
-		cascadeTypeToCascadeStyle.put( REPLICATE, CascadeStyle.REPLICATE );
-		cascadeTypeToCascadeStyle.put( EVICT, CascadeStyle.EVICT );
-		cascadeTypeToCascadeStyle.put( DELETE, CascadeStyle.DELETE );
-		cascadeTypeToCascadeStyle.put( DELETE_ORPHAN, CascadeStyle.DELETE_ORPHAN );
-		cascadeTypeToCascadeStyle.put( NONE, CascadeStyle.NONE );
+		cascadeTypeToCascadeStyle.put( ALL, CascadeStyles.ALL );
+		cascadeTypeToCascadeStyle.put( ALL_DELETE_ORPHAN, CascadeStyles.ALL_DELETE_ORPHAN );
+		cascadeTypeToCascadeStyle.put( UPDATE, CascadeStyles.UPDATE );
+		cascadeTypeToCascadeStyle.put( PERSIST, CascadeStyles.PERSIST );
+		cascadeTypeToCascadeStyle.put( MERGE, CascadeStyles.MERGE );
+		cascadeTypeToCascadeStyle.put( LOCK, CascadeStyles.LOCK );
+		cascadeTypeToCascadeStyle.put( REFRESH, CascadeStyles.REFRESH );
+		cascadeTypeToCascadeStyle.put( REPLICATE, CascadeStyles.REPLICATE );
+		cascadeTypeToCascadeStyle.put( EVICT, CascadeStyles.EVICT );
+		cascadeTypeToCascadeStyle.put( DELETE, CascadeStyles.DELETE );
+		cascadeTypeToCascadeStyle.put( DELETE_ORPHAN, CascadeStyles.DELETE_ORPHAN );
+		cascadeTypeToCascadeStyle.put( NONE, CascadeStyles.NONE );
 	}
 
 	/**

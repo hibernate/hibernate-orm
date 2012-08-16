@@ -24,6 +24,7 @@
 package org.hibernate.jpa.internal.event;
 
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 
 /**
  * @author Emmanuel Bernard
@@ -31,6 +32,6 @@ import org.hibernate.engine.spi.CascadingAction;
 public class JpaPersistOnFlushEventListener extends JpaPersistEventListener {
 	@Override
 	protected CascadingAction getCascadeAction() {
-		return CascadingAction.PERSIST_ON_FLUSH;
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 }

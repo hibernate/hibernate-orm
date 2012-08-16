@@ -53,8 +53,6 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
     protected abstract Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
                                                        Serializable primaryKey, Number revision);
 
-
-
     @Override
     public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
     }

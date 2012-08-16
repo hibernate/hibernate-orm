@@ -186,15 +186,29 @@ public class JpaIntegrator implements Integrator {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.source.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
-	 */
 	@Override
-	public void integrate( MetadataImplementor metadata,
-	                       SessionFactoryImplementor sessionFactory,
-	                       SessionFactoryServiceRegistry serviceRegistry ) {
+	public void integrate(
+			MetadataImplementor metadata,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry ) {
+		// first, register the JPA-specific persist cascade style
+		CascadeStyles.registerCascadeStyle(
+				"persist",
+				new CascadeStyles.BaseCascadeStyle() {
+					@Override
+					public boolean doCascade(CascadingAction action) {
+						return action == JpaPersistEventListener.PERSIST_SKIPLAZY
+								|| action == CascadingActions.PERSIST_ON_FLUSH;
+					}
+
+					@Override
+					public String toString() {
+						return "STYLE_PERSIST_SKIPLAZY";
+					}
+				}
+		);
+
+		// then prepare listeners
         final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
         boolean isSecurityEnabled = sessionFactory.getProperties().containsKey( AvailableSettings.JACC_ENABLED );

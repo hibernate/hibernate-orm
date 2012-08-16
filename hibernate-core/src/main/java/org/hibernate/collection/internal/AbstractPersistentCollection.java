@@ -512,25 +512,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 *
 	 * @throws LazyInitializationException if we cannot initialize
 	 */
-	protected final void initialize(boolean writing) {
-		if ( !initialized ) {
-			if ( initializing ) {
-				throw new LazyInitializationException( "illegal access to loading collection" );
-			}
-			else if ( session == null ) {
-				throw new LazyInitializationException( "could not initialize proxy - no Session" );
-			}
-			else if ( !session.isOpen() ) {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session was closed" );
-			}
-			else if ( !session.isConnected() ) {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
-			}
-			else {
-				throwLazyInitializationExceptionIfNotConnected();
-				session.initializeCollection( this, writing );
-			}
+	protected final void initialize(final boolean writing) {
+		if ( initialized ) {
+			return;
 		}
+
+		withTemporarySessionIfNeeded(
+				new LazyInitializationWork<Object>() {
+					@Override
+					public Object doWork() {
+						session.initializeCollection( AbstractPersistentCollection.this, writing );
+						return null;
+					}
+				}
+		);
 	}
 
 	private void throwLazyInitializationExceptionIfNotConnected() {

@@ -1,4 +1,4 @@
- /*
+/*
   * JBoss, Home of Professional Open Source
   * Copyright 2012, JBoss Inc., and individual contributors as indicated
   * by the @authors tag. See the copyright.txt in the distribution for a
@@ -20,85 +20,99 @@
   * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   */
 
-package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.ondemand;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+package org.hibernate.test.ondemandload;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 
-	 @Before
-	 public void setUpData() {
-		 Session s = openSession();
-		 s.beginTransaction();
-		 Store store = new Store( 1 )
-				 .setName( "Acme Super Outlet" );
-		 s.persist( store );
+	@Before
+	public void setUpData() {
+		Session s = openSession();
+		s.beginTransaction();
+		Store store = new Store( 1 )
+				.setName( "Acme Super Outlet" );
+		s.persist( store );
 
-		 Product product = new Product( "007" )
-				 .setName( "widget" )
-				 .setDescription( "FooBar" );
-		 s.persist( product );
+		Product product = new Product( "007" )
+				.setName( "widget" )
+				.setDescription( "FooBar" );
+		s.persist( product );
 
-		 store.addInventoryProduct( product )
-				 .setQuantity( 10L )
-				 .setStorePrice( new BigDecimal( 500 ) );
+		store.addInventoryProduct( product )
+				.setQuantity( 10L )
+				.setStorePrice( new BigDecimal( 500 ) );
 
-		 s.getTransaction().commit();
-		 s.close();
-	 }
+		s.getTransaction().commit();
+		s.close();
+	}
 
-	 @After
-	 public void cleanUpData() {
-		 Session s = openSession();
-		 s.beginTransaction();
-		 s.delete( s.get( Store.class, 1 ) );
-		 s.delete( s.get( Product.class, "007" ) );
-		 s.getTransaction().commit();
-		 s.close();
-	 }
+	@After
+	public void cleanUpData() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.delete( s.get( Store.class, 1 ) );
+		s.delete( s.get( Product.class, "007" ) );
+		s.getTransaction().commit();
+		s.close();
+	}
 
-	 @Test
-	 public void testLazyCollectionLoadingWithClearedSession() {
-		 sessionFactory().getStatistics().clear();
+	@Test
+	public void testLazyCollectionLoadingWithClearedSession() {
+		sessionFactory().getStatistics().clear();
 
-		 Session s = openSession();
-		 s.beginTransaction();
-		 // first load the store, making sure collection is not initialized
-		 Store store = (Store)s.get( Store.class, 1 );
-		 assertNotNull( store );
-		 assertFalse( Hibernate.isInitialized( store.getInventories() ) );
+		Session s = openSession();
+		s.beginTransaction();
+		// first load the store, making sure collection is not initialized
+		Store store = (Store) s.get( Store.class, 1 );
+		assertNotNull( store );
+		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
 
-		 assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-		 assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
 
-		 // then clear session and try to initialize collection
-		 s.clear();
-		 store.getInventories().size();
-		 assertTrue( Hibernate.isInitialized( store.getInventories() ) );
+		// then clear session and try to initialize collection
+		s.clear();
+		store.getInventories().size();
+		assertTrue( Hibernate.isInitialized( store.getInventories() ) );
 
-		 assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-		 assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
 
-		 s.getTransaction().commit();
-		 s.close();
-	 }
+		s.clear();
+		store = (Store) s.get( Store.class, 1 );
+		assertNotNull( store );
+		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
+
+		assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+
+		s.clear();
+		store.getInventories().iterator();
+		assertTrue( Hibernate.isInitialized( store.getInventories() ) );
+
+		assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+
+		s.getTransaction().commit();
+		s.close();
+	}
 
 	@Test
 	public void testLazyCollectionLoadingWithClosedSession() {
@@ -107,7 +121,7 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		// first load the store, making sure collection is not initialized
-		Store store = (Store)s.get( Store.class, 1 );
+		Store store = (Store) s.get( Store.class, 1 );
 		assertNotNull( store );
 		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
 
@@ -156,19 +170,20 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
 	}
 
-	public LazyLoadingTest() {
-		System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
+	@Override
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
-	 @Override
-	 protected void configure(Configuration cfg) {
-		 super.configure( cfg );
-		 cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		 cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-	 }
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Store.class,
+				Inventory.class,
+				Product.class
+		};
+	}
 
-	 @Override
-	 protected Class[] getAnnotatedClasses() {
-		 return new Class[] { Store.class, Inventory.class, Product.class };
-	 }
- }
+}

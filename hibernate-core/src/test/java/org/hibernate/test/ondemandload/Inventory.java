@@ -21,22 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.ondemand;
+package org.hibernate.test.ondemandload;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 import java.math.BigDecimal;
 
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
-@Table(name = "O_CUSTINVENTORY")
 public class Inventory {
 	private int id = -1;
 	private Store store;

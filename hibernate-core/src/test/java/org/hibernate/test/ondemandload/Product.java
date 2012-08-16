@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.ondemand;
+package org.hibernate.test.ondemandload;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

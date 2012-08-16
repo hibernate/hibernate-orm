@@ -22,16 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.id.MultipleIdMapper;
+import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -70,6 +76,11 @@ public class EntityInstantiator {
         IdMapper idMapper = verCfg.getEntCfg().get(entityName).getIdMapper();
         Map originalId = (Map) versionsEntity.get(verCfg.getAuditEntCfg().getOriginalIdPropName());
 
+        // Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
+        // Note that identifiers are always audited
+        // Replace identifier proxies if do not point to audit tables
+        replaceNonAuditIdProxies(originalId, revision);
+
         Object primaryKey = idMapper.mapToIdFromMap(originalId);
 
         // Checking if the entity is in cache
@@ -104,6 +115,25 @@ public class EntityInstantiator {
         versionsReader.getFirstLevelCache().putOnEntityNameCache(primaryKey, revision, ret, entityName);
         
         return ret;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private void replaceNonAuditIdProxies(Map originalId, Number revision) {
+        for (Object key : originalId.keySet()) {
+            Object value = originalId.get(key);
+            if (value instanceof HibernateProxy) {
+                HibernateProxy hibernateProxy = (HibernateProxy) value;
+                LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
+                final String entityName = initializer.getEntityName();
+                final Serializable entityId = initializer.getIdentifier();
+                if (verCfg.getEntCfg().isVersioned(entityName)) {
+                    final String entityClassName = verCfg.getEntCfg().get(entityName).getEntityClassName();
+                    final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(versionsReader, ReflectionTools.loadClass(entityClassName), entityId, revision, verCfg);
+                    originalId.put(key,
+                            versionsReader.getSessionImplementor().getFactory().getEntityPersister(entityName).createProxy(entityId, delegate));
+                }
+            }
+        }
     }
 
     @SuppressWarnings({"unchecked"})

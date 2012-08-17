@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;

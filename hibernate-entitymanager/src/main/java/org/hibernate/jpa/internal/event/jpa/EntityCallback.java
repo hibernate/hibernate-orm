@@ -21,35 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.jpa;
 
-import java.util.IdentityHashMap;
-
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.event.internal.DefaultAutoFlushEventListener;
-import org.hibernate.event.spi.AutoFlushEventListener;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
- * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the save-update
- * operation in Hibernate).
+ * Represents a JPA callback on the entity itself
  *
- * @author Gavin King
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class JpaAutoFlushEventListener
-		extends DefaultAutoFlushEventListener
-		implements HibernateEntityManagerEventListener {
+public class EntityCallback implements Callback {
+	private Method callbackMethod;
 
-	public static final AutoFlushEventListener INSTANCE = new JpaAutoFlushEventListener();
-
-	@Override
-	protected CascadingAction getCascadingAction() {
-		return CascadingActions.PERSIST_ON_FLUSH;
+	public EntityCallback(Method callbackMethod) {
+		this.callbackMethod = callbackMethod;
 	}
 
 	@Override
-	protected Object getAnything() {
-		return new IdentityHashMap( 10 );
+	public void performCallback(Object entity) {
+		try {
+			callbackMethod.invoke( entity );
+		}
+		catch (InvocationTargetException e) {
+			//keep runtime exceptions as is
+			if ( e.getTargetException() instanceof RuntimeException ) {
+				throw (RuntimeException) e.getTargetException();
+			}
+			else {
+				throw new RuntimeException( e.getTargetException() );
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException( e );
+		}
 	}
+
 
 }

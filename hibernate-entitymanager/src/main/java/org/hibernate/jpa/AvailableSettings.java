@@ -187,6 +187,11 @@ public interface AvailableSettings {
 	 */
 	public static final String REMOVE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-remove";
 
+	/**
+	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 */
+	public static final String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hibernate specific settings

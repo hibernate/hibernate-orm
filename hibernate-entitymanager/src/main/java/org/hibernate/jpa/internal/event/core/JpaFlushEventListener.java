@@ -21,32 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
-import org.hibernate.event.spi.PostDeleteEvent;
-import org.hibernate.event.spi.PostDeleteEventListener;
+import java.util.IdentityHashMap;
+
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.event.internal.DefaultFlushEventListener;
+import org.hibernate.event.spi.FlushEventListener;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the
+ * save-update operation in Hibernate).
+ *
+ * @author Gavin King
  */
-public class JpaPostDeleteEventListener implements PostDeleteEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
+public class JpaFlushEventListener extends DefaultFlushEventListener implements HibernateEntityManagerEventListener {
+	public static final FlushEventListener INSTANCE = new JpaFlushEventListener();
 
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	@Override
+	protected CascadingAction getCascadingAction() {
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
-	public JpaPostDeleteEventListener() {
-		super();
-	}
-
-	public JpaPostDeleteEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	public void onPostDelete(PostDeleteEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postRemove( entity );
+	@Override
+	protected Object getAnything() {
+		return new IdentityHashMap( 10 );
 	}
 
 }

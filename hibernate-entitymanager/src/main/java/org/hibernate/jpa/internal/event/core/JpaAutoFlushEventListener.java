@@ -21,33 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
-import org.hibernate.event.spi.PostInsertEvent;
-import org.hibernate.event.spi.PostInsertEventListener;
+import java.util.IdentityHashMap;
+
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.event.internal.DefaultAutoFlushEventListener;
+import org.hibernate.event.spi.AutoFlushEventListener;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the save-update
+ * operation in Hibernate).
+ *
+ * @author Gavin King
  */
-public class JpaPostInsertEventListener implements PostInsertEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
+public class JpaAutoFlushEventListener
+		extends DefaultAutoFlushEventListener
+		implements HibernateEntityManagerEventListener {
+
+	public static final AutoFlushEventListener INSTANCE = new JpaAutoFlushEventListener();
 
 	@Override
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	public JpaPostInsertEventListener() {
-		super();
-	}
-
-	public JpaPostInsertEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	protected CascadingAction getCascadingAction() {
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	@Override
-	public void onPostInsert(PostInsertEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postCreate( entity );
+	protected Object getAnything() {
+		return new IdentityHashMap( 10 );
 	}
+
 }

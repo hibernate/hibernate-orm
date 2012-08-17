@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,7 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.jpa;
+
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.ExcludeDefaultListeners;
+import javax.persistence.ExcludeSuperclassListeners;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
+import javax.persistence.PrePersist;
+import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -29,48 +43,46 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.binder.JpaCallbackClass;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public final class CallbackResolver {
+public class LegacyCallbackProcessor implements CallbackProcessor {
+	private static final Logger log = Logger.getLogger( LegacyCallbackProcessor.class );
 
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                           CallbackResolver.class.getName());
+	private final ListenerFactory jpaListenerFactory;
+	private final ReflectionManager reflectionManager;
 
-	private static boolean useAnnotationAnnotatedByListener;
+	public LegacyCallbackProcessor(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
+		this.jpaListenerFactory = jpaListenerFactory;
+		this.reflectionManager = reflectionManager;
+	}
 
-	static {
-		//check whether reading annotations of annotations is useful or not
-		useAnnotationAnnotatedByListener = false;
-		Target target = EntityListeners.class.getAnnotation( Target.class );
-		if ( target != null ) {
-			for ( ElementType type : target.value() ) {
-				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) useAnnotationAnnotatedByListener = true;
+	@Override
+	public void processCallbacksForEntity(Object entityObject, CallbackRegistry callbackRegistry) {
+		final String entityClassName = (String) entityObject;
+		try {
+			final XClass entityXClass = reflectionManager.classForName( entityClassName, this.getClass() );
+			final Class entityClass = reflectionManager.toClass( entityXClass );
+			for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
+				final Callback[] callbacks = resolveCallbacks( entityXClass, annotationClass, reflectionManager );
+				callbackRegistry.addEntityCallbacks( entityClass, annotationClass, callbacks );
 			}
+		}
+		catch (ClassNotFoundException e) {
+			throw new MappingException( "entity class not found: " + entityClassName, e );
 		}
 	}
 
-	private CallbackResolver() {
-	}
-
-	public static Callback[] resolveCallback(XClass beanClass, Class annotation, ReflectionManager reflectionManager) {
+	public Callback[] resolveCallbacks(XClass beanClass, Class annotation, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<Callback>();
 		List<String> callbacksMethodNames = new ArrayList<String>(); //used to track overridden methods
 		List<Class> orderedListeners = new ArrayList<Class>();
@@ -89,7 +101,7 @@ public final class CallbackResolver {
 					if ( ! callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
 						if ( callback == null ) {
-							callback = new BeanCallback( method );
+							callback = new EntityCallback( method );
 							Class returnType = method.getReturnType();
 							Class[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
@@ -98,11 +110,11 @@ public final class CallbackResolver {
 												.getName() + " - " + xMethod
 								);
 							}
-                            if (!method.isAccessible()) method.setAccessible(true);
-                            LOG.debugf("Adding %s as %s callback for entity %s",
-                                       methodName,
-                                       annotation.getSimpleName(),
-                                       beanClass.getName());
+							if (!method.isAccessible()) method.setAccessible(true);
+							log.debugf("Adding %s as %s callback for entity %s",
+									   methodName,
+									   annotation.getSimpleName(),
+									   beanClass.getName());
 							callbacks.add( 0, callback ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
@@ -158,21 +170,8 @@ public final class CallbackResolver {
 						if ( ! callbacksMethodNames.contains( methodName ) ) {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
-								try {
-									callback = new ListenerCallback( method, listener.newInstance() );
-								}
-								catch (IllegalAccessException e) {
-									throw new PersistenceException(
-											"Unable to create instance of " + listener.getName()
-													+ " as a listener of beanClass", e
-									);
-								}
-								catch (InstantiationException e) {
-									throw new PersistenceException(
-											"Unable to create instance of " + listener.getName()
-													+ " as a listener of beanClass", e
-									);
-								}
+								callback = new ListenerCallback( jpaListenerFactory.buildListener( listener ), method );
+
 								Class returnType = method.getReturnType();
 								Class[] args = method.getParameterTypes();
 								if ( returnType != Void.TYPE || args.length != 1 ) {
@@ -181,11 +180,11 @@ public final class CallbackResolver {
 													.getName() + " - " + method
 									);
 								}
-                                if (!method.isAccessible()) method.setAccessible(true);
-                                LOG.debugf("Adding %s as %s callback for entity %s",
-                                           methodName,
-                                           annotation.getSimpleName(),
-                                           beanClass.getName());
+								if (!method.isAccessible()) method.setAccessible(true);
+								log.debugf("Adding %s as %s callback for entity %s",
+										   methodName,
+										   annotation.getSimpleName(),
+										   beanClass.getName());
 								callbacks.add( 0, callback ); // listeners first
 							}
 							else {
@@ -203,61 +202,18 @@ public final class CallbackResolver {
 		return callbacks.toArray( new Callback[ callbacks.size() ] );
 	}
 
-    public static Callback[] resolveCallbacks( Class<?> entityClass,
-                                               Class<?> callbackClass,
-                                               ClassLoaderService classLoaderService,
-                                               EntityBinding binding ) {
-        List<Callback> callbacks = new ArrayList<Callback>();
-        for (JpaCallbackClass jpaCallbackClass : binding.getJpaCallbackClasses()) {
-            Object listener = classLoaderService.classForName(jpaCallbackClass.getName());
-            String methodName = jpaCallbackClass.getCallbackMethod( callbackClass );
-            Callback callback = jpaCallbackClass.isListener() ?
-                                createListenerCallback(entityClass, callbackClass, listener, methodName) :
-                                createBeanCallback(callbackClass, methodName);
-            LOG.debugf("Adding %s as %s callback for entity %s", methodName, callbackClass.getName(),
-                       entityClass.getName());
-            assert callback != null;
-            callbacks.add(callback);
-        }
-        return callbacks.toArray(new Callback[callbacks.size()]);
-    }
+	private static boolean useAnnotationAnnotatedByListener;
 
-    private static Callback createListenerCallback( Class<?> entityClass,
-                                                    Class<?> callbackClass,
-                                                    Object listener,
-                                                    String methodName ) {
-        Class<?> callbackSuperclass = callbackClass.getSuperclass();
-        if (callbackSuperclass != null) {
-            Callback callback = createListenerCallback(entityClass, callbackSuperclass, listener, methodName);
-            if (callback != null) return callback;
-        }
-        for (Method method : callbackClass.getDeclaredMethods()) {
-            if (!method.getName().equals(methodName)) continue;
-            Class<?>[] argTypes = method.getParameterTypes();
-            if (argTypes.length != 1) continue;
-            Class<?> argType = argTypes[0];
-            if (argType != Object.class && argType != entityClass) continue;
-            if (!method.isAccessible()) method.setAccessible(true);
-            return new ListenerCallback(method, listener);
-        }
-        return null;
-    }
-
-    private static Callback createBeanCallback( Class<?> callbackClass,
-                                                String methodName ) {
-        Class<?> callbackSuperclass = callbackClass.getSuperclass();
-        if (callbackSuperclass != null) {
-            Callback callback = createBeanCallback(callbackSuperclass, methodName);
-            if (callback != null) return callback;
-        }
-        for (Method method : callbackClass.getDeclaredMethods()) {
-            if (!method.getName().equals(methodName)) continue;
-            if (method.getParameterTypes().length != 0) continue;
-            if (!method.isAccessible()) method.setAccessible(true);
-            return new BeanCallback(method);
-        }
-        return null;
-    }
+	static {
+		//check whether reading annotations of annotations is useful or not
+		useAnnotationAnnotatedByListener = false;
+		Target target = EntityListeners.class.getAnnotation( Target.class );
+		if ( target != null ) {
+			for ( ElementType type : target.value() ) {
+				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) useAnnotationAnnotatedByListener = true;
+			}
+		}
+	}
 
 	private static void getListeners(XClass currentClazz, List<Class> orderedListeners) {
 		EntityListeners entityListeners = currentClazz.getAnnotation( EntityListeners.class );
@@ -281,5 +237,10 @@ public final class CallbackResolver {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void release() {
+		// nothing to do here
 	}
 }

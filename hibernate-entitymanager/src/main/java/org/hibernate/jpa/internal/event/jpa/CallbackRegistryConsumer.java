@@ -21,36 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.jpa;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import org.hibernate.jpa.internal.event.core.HibernateEntityManagerEventListener;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * Contract for injecting the registry of Callbacks into event listeners.
+ *
+ * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class BeanCallback extends Callback {
-	public BeanCallback(Method callbackMethod) {
-		super( callbackMethod );
-	}
-
-	public void invoke(Object bean) {
-		try {
-			callbackMethod.invoke( bean, new Object[0] );
-		}
-		catch (InvocationTargetException e) {
-			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
-			}
-			else {
-				throw new RuntimeException( e.getTargetException() );
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException( e );
-		}
-	}
-
-
+public interface CallbackRegistryConsumer extends HibernateEntityManagerEventListener {
+	/**
+	 * Injection of the CallbackRegistry
+	 *
+	 * @param callbackRegistry The CallbackRegistry
+	 */
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry);
 }

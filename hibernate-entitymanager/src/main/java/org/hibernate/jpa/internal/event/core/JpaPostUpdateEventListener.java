@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
@@ -34,6 +34,8 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 
 /**
  * Implementation of the post update listeners.
@@ -43,23 +45,23 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 @SuppressWarnings("serial")
 public class JpaPostUpdateEventListener
 		implements PostUpdateEventListener,
-				   CallbackHandlerConsumer,
+				   CallbackRegistryConsumer,
 				   PostCollectionRecreateEventListener,
 				   PostCollectionRemoveEventListener,
 				   PostCollectionUpdateEventListener {
-	EntityCallbackHandler callbackHandler;
+	CallbackRegistry callbackRegistry;
 
 	@Override
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	public JpaPostUpdateEventListener() {
 		super();
 	}
 
-	public JpaPostUpdateEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public JpaPostUpdateEventListener(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	@Override
@@ -74,7 +76,7 @@ public class JpaPostUpdateEventListener
 				.getEntityEntries().get(entity);
 		// mimic the preUpdate filter
 		if ( Status.DELETED != entry.getStatus()) {
-			callbackHandler.postUpdate(entity);
+			callbackRegistry.postUpdate(entity);
 		}
 	}
 

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
-
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
+package org.hibernate.jpa.internal.event.jpa;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * Classes for integrating with JPA event callbacks
  */
-public class JpaPostLoadEventListener implements PostLoadEventListener, CallbackHandlerConsumer {
-	EntityCallbackHandler callbackHandler;
-
-	@Override
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	public JpaPostLoadEventListener() {
-		super();
-	}
-
-	public JpaPostLoadEventListener(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
-	}
-
-	@Override
-	public void onPostLoad(PostLoadEvent event) {
-		Object entity = event.getEntity();
-		callbackHandler.postLoad( entity );
-	}
-
-}

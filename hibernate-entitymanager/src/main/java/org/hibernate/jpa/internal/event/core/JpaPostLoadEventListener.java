@@ -21,11 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
+
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 
 /**
- * @author Emmanuel Bernard
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
-public interface CallbackHandlerConsumer extends HibernateEntityManagerEventListener {
-	void setCallbackHandler(EntityCallbackHandler callbackHandler);
+public class JpaPostLoadEventListener implements PostLoadEventListener, CallbackRegistryConsumer {
+	CallbackRegistry callbackRegistry;
+
+	@Override
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
+
+	public JpaPostLoadEventListener() {
+		super();
+	}
+
+	public JpaPostLoadEventListener(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
+
+	@Override
+	public void onPostLoad(PostLoadEvent event) {
+		Object entity = event.getEntity();
+		callbackRegistry.postLoad( entity );
+	}
+
 }

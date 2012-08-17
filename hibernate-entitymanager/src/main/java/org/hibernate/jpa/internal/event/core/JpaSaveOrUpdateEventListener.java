@@ -21,32 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 import java.io.Serializable;
 
 import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation
  *
  * @author Emmanuel Bernard
  */
-public class JpaSaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListener implements CallbackHandlerConsumer {
-	private EntityCallbackHandler callbackHandler;
+public class JpaSaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListener implements CallbackRegistryConsumer {
+	private CallbackRegistry callbackRegistry;
 
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	public JpaSaveOrUpdateEventListener() {
 		super();
 	}
 
-	public JpaSaveOrUpdateEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaSaveOrUpdateEventListener(CallbackRegistry callbackRegistry) {
 		super();
-		this.callbackHandler = callbackHandler;
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	@Override
@@ -56,7 +58,7 @@ public class JpaSaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListen
 			String entityName,
 			Object anything,
 			EventSource source) {
-		callbackHandler.preCreate( entity );
+		callbackRegistry.preCreate( entity );
 		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
 	}
 
@@ -67,7 +69,7 @@ public class JpaSaveOrUpdateEventListener extends DefaultSaveOrUpdateEventListen
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-		callbackHandler.preCreate( entity );
+		callbackRegistry.preCreate( entity );
 		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
 	}
 }

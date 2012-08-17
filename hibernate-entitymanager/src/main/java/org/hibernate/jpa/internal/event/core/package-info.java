@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 /**
- * Marker interface for handling listener duplication checking (to avoid multiple registrations).
- *
- * @author Steve Ebersole
+ * Hibernate EntityManager specific implementations of Hibernate event listeners.  Generally the listeners
+ * here either:<ul>
+ *     <li>provide tweaks to internal processing to conform with JPA spec</li>
+ *     <li>bridge to JPA event callbacks</li>
+ * </ul>
  */
-public interface HibernateEntityManagerEventListener {
-}

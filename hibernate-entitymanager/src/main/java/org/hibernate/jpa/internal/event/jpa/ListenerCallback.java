@@ -21,31 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.jpa;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.hibernate.internal.util.ReflectHelper;
-
 /**
+ * Represents a JPA callback using a dedicated listener
+ *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class ListenerCallback extends Callback {
-	protected transient Object listener;
+public class ListenerCallback implements Callback {
+	private final Method callbackMethod;
+	private final Object listenerInstance;
 
-	public ListenerCallback(Method callbackMethod, Object listener) {
-		super( callbackMethod );
-		this.listener = listener;
+	public ListenerCallback(Object listenerInstance, Method callbackMethod) {
+		this.listenerInstance = listenerInstance;
+		this.callbackMethod = callbackMethod;
 	}
 
 	@Override
-    public void invoke(Object bean) {
+    public void performCallback(Object entity) {
 		try {
-			callbackMethod.invoke( listener, new Object[]{bean} );
+			callbackMethod.invoke( listenerInstance, entity );
 		}
 		catch (InvocationTargetException e) {
 			//keep runtime exceptions as is
@@ -58,25 +57,6 @@ public class ListenerCallback extends Callback {
 		}
 		catch (Exception e) {
 			throw new RuntimeException( e );
-		}
-	}
-
-	private void writeObject(ObjectOutputStream oos) throws IOException {
-		oos.defaultWriteObject();
-		oos.writeObject( listener.getClass().getName() );
-	}
-
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
-		String listenerClass = (String) ois.readObject();
-		try {
-			listener = ReflectHelper.classForName( listenerClass, this.getClass() ).newInstance();
-		}
-		catch (InstantiationException e) {
-			throw new ClassNotFoundException( "Unable to load class:" + listenerClass, e );
-		}
-		catch (IllegalAccessException e) {
-			throw new ClassNotFoundException( "Unable to load class:" + listenerClass, e );
 		}
 	}
 }

@@ -21,10 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.jpa;
 
-import java.io.Serializable;
-import java.util.HashMap;
+import javax.persistence.PersistenceException;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
@@ -32,19 +31,17 @@ import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
-
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import java.io.Serializable;
+import java.util.HashMap;
 
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
 @SuppressWarnings({"unchecked", "serial"})
-public class EntityCallbackHandler implements Serializable {
+public class CallbackRegistry implements Serializable {
 	private HashMap<Class, Callback[]> preCreates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> postCreates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> preRemoves = new HashMap<Class, Callback[]>();
@@ -52,28 +49,6 @@ public class EntityCallbackHandler implements Serializable {
 	private HashMap<Class, Callback[]> preUpdates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> postUpdates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> postLoads = new HashMap<Class, Callback[]>();
-
-	public void add(XClass entity, ReflectionManager reflectionManager) {
-		addCallback( entity, preCreates, PrePersist.class, reflectionManager );
-		addCallback( entity, postCreates, PostPersist.class, reflectionManager );
-		addCallback( entity, preRemoves, PreRemove.class, reflectionManager );
-		addCallback( entity, postRemoves, PostRemove.class, reflectionManager );
-		addCallback( entity, preUpdates, PreUpdate.class, reflectionManager );
-		addCallback( entity, postUpdates, PostUpdate.class, reflectionManager );
-		addCallback( entity, postLoads, PostLoad.class, reflectionManager );
-	}
-
-	public void add( Class entity,
-	                 ClassLoaderService classLoaderService,
-	                 EntityBinding binding ) {
-        addCallback( entity, preCreates, PrePersist.class, classLoaderService, binding );
-        addCallback( entity, postCreates, PostPersist.class, classLoaderService, binding );
-        addCallback( entity, preRemoves, PreRemove.class, classLoaderService, binding );
-        addCallback( entity, postRemoves, PostRemove.class, classLoaderService, binding );
-        addCallback( entity, preUpdates, PreUpdate.class, classLoaderService, binding );
-        addCallback( entity, postUpdates, PostUpdate.class, classLoaderService, binding );
-        addCallback( entity, postLoads, PostLoad.class, classLoaderService, binding );
-	}
 
 	public boolean preCreate(Object bean) {
 		return callback( preCreates.get( bean.getClass() ), bean );
@@ -103,11 +78,10 @@ public class EntityCallbackHandler implements Serializable {
 		return callback( postLoads.get( bean.getClass() ), bean );
 	}
 
-
 	private boolean callback(Callback[] callbacks, Object bean) {
 		if ( callbacks != null && callbacks.length != 0 ) {
 			for ( Callback callback : callbacks ) {
-				callback.invoke( bean );
+				callback.performCallback( bean );
 			}
 			return true;
 		}
@@ -116,19 +90,56 @@ public class EntityCallbackHandler implements Serializable {
 		}
 	}
 
-	private void addCallback(
-			XClass entity, HashMap<Class, Callback[]> map, Class annotation, ReflectionManager reflectionManager
-	) {
-		Callback[] callbacks = null;
-		callbacks = CallbackResolver.resolveCallback( entity, annotation, reflectionManager );
-		map.put( reflectionManager.toClass( entity ), callbacks );
+	/* package */ void addEntityCallbacks(Class entityClass, Class annotationClass, Callback[] callbacks) {
+		final HashMap<Class, Callback[]> map = determineAppropriateCallbackMap( annotationClass );
+		if ( map.containsKey( entityClass ) ) {
+			throw new PersistenceException( "Error build callback listeners; entity [" + entityClass.getName() + " was already processed" );
+		}
+		map.put( entityClass, callbacks );
 	}
 
-    private void addCallback( Class<?> entity,
-                              HashMap<Class, Callback[]> map,
-                              Class annotation,
-                              ClassLoaderService classLoaderService,
-                              EntityBinding binding ) {
-        map.put(entity, CallbackResolver.resolveCallbacks(entity, annotation, classLoaderService, binding));
-    }
+	private HashMap<Class, Callback[]> determineAppropriateCallbackMap(Class annotationClass) {
+		if ( PrePersist.class.equals( annotationClass ) ) {
+			return preCreates;
+		}
+
+		if ( PostPersist.class.equals( annotationClass ) ) {
+			return postCreates;
+		}
+
+		if ( PreRemove.class.equals( annotationClass ) ) {
+			return preRemoves;
+		}
+
+		if ( PostRemove.class.equals( annotationClass ) ) {
+			return postRemoves;
+		}
+
+		if ( PreUpdate.class.equals( annotationClass ) ) {
+			return preUpdates;
+		}
+
+		if ( PostUpdate.class.equals( annotationClass ) ) {
+			return postUpdates;
+		}
+
+		if ( PostLoad.class.equals( annotationClass ) ) {
+			return postLoads;
+		}
+
+		throw new PersistenceException( "Unrecognized JPA callback annotation [" + annotationClass.getName() + "]" );
+	}
+
+	public void release() {
+		preCreates.clear();
+		postCreates.clear();
+
+		preRemoves.clear();
+		postRemoves.clear();
+
+		preUpdates.clear();
+		postUpdates.clear();
+
+		postLoads.clear();
+	}
 }

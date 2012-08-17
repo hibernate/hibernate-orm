@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -34,6 +34,8 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -41,23 +43,23 @@ import org.hibernate.type.CollectionType;
  *
  * @author Emmanuel Bernard
  */
-public class JpaPersistEventListener extends DefaultPersistEventListener implements CallbackHandlerConsumer {
+public class JpaPersistEventListener extends DefaultPersistEventListener implements CallbackRegistryConsumer {
 	private static final Logger log = Logger.getLogger( JpaPersistEventListener.class );
 
-	private EntityCallbackHandler callbackHandler;
+	private CallbackRegistry callbackRegistry;
 
 	@Override
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	public JpaPersistEventListener() {
 		super();
 	}
 
-	public JpaPersistEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaPersistEventListener(CallbackRegistry callbackRegistry) {
 		super();
-		this.callbackHandler = callbackHandler;
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	@Override
@@ -67,7 +69,7 @@ public class JpaPersistEventListener extends DefaultPersistEventListener impleme
 			String entityName,
 			Object anything,
 			EventSource source) {
-		callbackHandler.preCreate( entity );
+		callbackRegistry.preCreate( entity );
 		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
 	}
 
@@ -78,7 +80,7 @@ public class JpaPersistEventListener extends DefaultPersistEventListener impleme
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-		callbackHandler.preCreate( entity );
+		callbackRegistry.preCreate( entity );
 		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
 	}
 

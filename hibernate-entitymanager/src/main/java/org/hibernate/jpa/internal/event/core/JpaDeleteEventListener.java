@@ -21,13 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 import java.io.Serializable;
 
 import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -35,25 +37,25 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Emmanuel Bernard
  */
-public class JpaDeleteEventListener extends DefaultDeleteEventListener implements CallbackHandlerConsumer {
-	private EntityCallbackHandler callbackHandler;
+public class JpaDeleteEventListener extends DefaultDeleteEventListener implements CallbackRegistryConsumer {
+	private CallbackRegistry callbackRegistry;
 
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	public JpaDeleteEventListener() {
 		super();
 	}
 
-	public JpaDeleteEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaDeleteEventListener(CallbackRegistry callbackRegistry) {
 		this();
-		this.callbackHandler = callbackHandler;
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	@Override
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
-		callbackHandler.preRemove( entity );
+		callbackRegistry.preRemove( entity );
 		return super.invokeDeleteLifecycle( session, entity, persister );
 	}
 

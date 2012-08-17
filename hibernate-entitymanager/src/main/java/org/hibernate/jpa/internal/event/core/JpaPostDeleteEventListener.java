@@ -21,17 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 
 /**
- * @author Emmanuel Bernard
+ * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
-public class JpaPersistOnFlushEventListener extends JpaPersistEventListener {
-	@Override
-	protected CascadingAction getCascadeAction() {
-		return CascadingActions.PERSIST_ON_FLUSH;
+public class JpaPostDeleteEventListener implements PostDeleteEventListener, CallbackRegistryConsumer {
+	CallbackRegistry callbackRegistry;
+
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
+
+	public JpaPostDeleteEventListener() {
+		super();
+	}
+
+	public JpaPostDeleteEventListener(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
+
+	public void onPostDelete(PostDeleteEvent event) {
+		Object entity = event.getEntity();
+		callbackRegistry.postRemove( entity );
+	}
+
 }

@@ -21,13 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.event;
+package org.hibernate.jpa.internal.event.core;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.internal.DefaultFlushEntityEventListener;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.internal.event.jpa.CallbackRegistry;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -37,20 +39,20 @@ import org.hibernate.type.Type;
  *
  * @author Emmanuel Bernard
  */
-public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener implements CallbackHandlerConsumer {
-	private EntityCallbackHandler callbackHandler;
+public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener implements CallbackRegistryConsumer {
+	private CallbackRegistry callbackRegistry;
 
-	public void setCallbackHandler(EntityCallbackHandler callbackHandler) {
-		this.callbackHandler = callbackHandler;
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	public JpaFlushEntityEventListener() {
 		super();
 	}
 
-	public JpaFlushEntityEventListener(EntityCallbackHandler callbackHandler) {
+	public JpaFlushEntityEventListener(CallbackRegistry callbackRegistry) {
 		super();
-		this.callbackHandler = callbackHandler;
+		this.callbackRegistry = callbackRegistry;
 	}
 
 	@Override
@@ -62,7 +64,7 @@ public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener
 			EntityPersister persister) {
 		boolean isDirty = false;
 		if ( entry.getStatus() != Status.DELETED ) {
-			if ( callbackHandler.preUpdate( entity ) ) {
+			if ( callbackRegistry.preUpdate( entity ) ) {
 				isDirty = copyState( entity, persister.getPropertyTypes(), values, session.getFactory() );
 			}
 		}

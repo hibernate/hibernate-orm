@@ -39,4 +39,6 @@ public interface SingularAssociationAttributeBinding extends SingularAttributeBi
 	public String getReferencedEntityName();
 
 	public EntityBinding getReferencedEntityBinding();
+
+	public SingularAttributeBinding getReferencedAttributeBinding();
 }

@@ -185,6 +185,11 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
+	public SingularAttributeBinding getReferencedAttributeBinding() {
+		return referencedAttributeBinding;
+	}
+
+	@Override
 	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
 		valueBindings.addAll( relationalValueBindings );
 	}

@@ -23,6 +23,15 @@
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='load-collection-element']">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='return-element']">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='return-join-element']">
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+        </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='subclass-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
@@ -51,6 +60,7 @@
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement</inheritance:implements>
         </jaxb:bindings>
 <!--
+
         <jaxb:bindings node="//xsd:complexType[@name='version-element']">
             <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>

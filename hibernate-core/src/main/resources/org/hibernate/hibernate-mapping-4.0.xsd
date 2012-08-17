@@ -1357,16 +1357,22 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 
     <!-- The sql-query element declares a named SQL query string -->
     <xs:complexType name="sql-query-element" mixed="true">
-        <xs:complexContent>
-            <xs:extension base="query-element">
-                <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:group ref="return-element-group"/>
-                    <xs:element name="synchronize" type="synchronize-element"/>
-                </xs:choice>
-                <xs:attribute name="callable" default="false" type="xs:boolean"/>
-                <xs:attribute name="resultset-ref" type="xs:string"/>
-            </xs:extension>
-        </xs:complexContent>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="query-param" type="query-param-element"/>
+            <xs:group ref="return-element-group"/>
+            <xs:element name="synchronize" type="synchronize-element"/>
+        </xs:choice>
+        <xs:attribute name="cache-mode" type="cache-mode-attribute"/>
+        <xs:attribute name="cache-region" type="xs:string"/>
+        <xs:attribute name="cacheable" default="false" type="xs:boolean"/>
+        <xs:attribute name="comment" type="xs:string"/>
+        <xs:attribute name="fetch-size" type="xs:int"/>
+        <xs:attribute name="flush-mode" type="flush-mode-attribute"/>
+        <xs:attribute name="name" use="required" type="xs:string"/>
+        <xs:attribute name="read-only" default="false" type="xs:boolean"/>
+        <xs:attribute name="timeout" type="xs:int"/>
+        <xs:attribute name="callable" default="false" type="xs:boolean"/>
+        <xs:attribute name="resultset-ref" type="xs:string"/>
     </xs:complexType>
     <!-- The query element declares a named Hibernate query string -->
     <xs:complexType name="query-element" mixed="true">
@@ -1419,13 +1425,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
           and takes the form "owningAlias.propertyName"
       -->
     <xs:complexType name="return-element">
-        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:sequence>
             <xs:element name="return-discriminator" minOccurs="0">
                 <xs:complexType>
                     <xs:attribute name="column" use="required" type="xs:string"/>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="return-property" type="return-property-element"/>
+            <xs:element name="return-property" type="return-property-element" minOccurs="0" maxOccurs="unbounded"/>
+
         </xs:sequence>
         <xs:attribute name="alias" type="xs:string"/>
         <xs:attribute name="class" type="xs:string"/>

@@ -147,8 +147,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			afterConstructAndConfigureMetadata( metadataImplementor );
 			applyCacheSettings(metadataImplementor);
 			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
-
-
 		}
 		else {
 			// this is done here because Configuration does not currently support 4.0 xsd

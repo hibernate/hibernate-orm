@@ -52,9 +52,11 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String orderBy;
 	private final Caching caching;
 	private final String customPersister;
+	private final String customLoaderName;
 	private final CustomSQL customInsert;
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
+	private final CustomSQL customDeleteAll;
 	private final ClassInfo entityClassInfo;
 	private final boolean isExtraLazy;
 	private LazyCollectionOption lazyOption;
@@ -101,6 +103,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return customPersister;
 	}
 
+	public String getCustomLoaderName() {
+		return customLoaderName;
+	}
+
 	public CustomSQL getCustomInsert() {
 		return customInsert;
 	}
@@ -111,6 +117,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 	public CustomSQL getCustomDelete() {
 		return customDelete;
+	}
+
+	public CustomSQL getCustomDeleteAll() {
+		return customDeleteAll;
 	}
 
 	private PluralAssociationAttribute(ClassInfo entityClassInfo,
@@ -128,6 +138,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.caching = determineCachingSettings();
 		this.isExtraLazy = lazyOption == LazyCollectionOption.EXTRA;
 		this.customPersister = determineCustomPersister();
+		this.customLoaderName = determinCustomLoaderName();
 		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_INSERT, annotations()
 		);
@@ -137,8 +148,20 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.customDelete = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_DELETE, annotations()
 		);
+		this.customDeleteAll = AnnotationParserHelper.processCustomSqlAnnotation(
+		        HibernateDotNames.SQL_DELETE_ALL, annotations()
+		);
 	}
-
+	private String determinCustomLoaderName(){
+		String loader = null;
+		final AnnotationInstance customLoaderAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(), HibernateDotNames.LOADER
+		);
+		if(customLoaderAnnotation != null){
+			loader = JandexHelper.getValue( customLoaderAnnotation, "namedQuery", String.class );
+		}
+		return loader;
+	}
 	private String determineCustomPersister() {
 		String entityPersisterClass = null;
 		final AnnotationInstance persisterAnnotation = JandexHelper.getSingleAnnotation(

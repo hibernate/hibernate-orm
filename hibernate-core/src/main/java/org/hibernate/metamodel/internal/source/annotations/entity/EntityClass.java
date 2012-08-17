@@ -441,7 +441,7 @@ public class EntityClass extends ConfiguredClass {
 		final AnnotationInstance sqlLoaderAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), HibernateDotNames.LOADER
 		);
-		if ( sqlLoaderAnnotation != null ) {
+		if ( sqlLoaderAnnotation != null && sqlLoaderAnnotation.target() instanceof ClassInfo) {
 			customLoader = sqlLoaderAnnotation.value( "namedQuery" ).asString();
 		}
 		return customLoader;

@@ -129,12 +129,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public boolean isInverse() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getMappedBy() == null;
 	}
 
 	@Override
 	public String getCustomLoaderName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getCustomLoaderName();
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public CustomSQL getCustomSqlDeleteAll() {
-		return null;
+		return attribute.getCustomDeleteAll();
 	}
 
 	@Override

@@ -51,14 +51,15 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  */
 public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
-	PluralAssociationAttribute attribute;
+	private final PluralAssociationAttribute attribute;
+	private final PluralAttributeNature nature;
 
 	public PluralAttributeSourceImpl(PluralAssociationAttribute attribute) {
 		this.attribute = attribute;
+		this.nature = resolveAttributeNature();
 	}
 
-	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
+	private PluralAttributeNature resolveAttributeNature(){
 		if ( Map.class.isAssignableFrom( attribute.getAttributeType() ) ) {
 			return PluralAttributeNature.MAP;
 		}
@@ -71,6 +72,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 		else {
 			return PluralAttributeNature.BAG;
 		}
+	}
+
+	@Override
+	public PluralAttributeNature getPluralAttributeNature() {
+		return nature;
 	}
 
 	@Override
@@ -148,12 +154,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public CustomSQL getCustomSqlDeleteAll() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public String getName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getName();
 	}
 
 	@Override
@@ -184,17 +190,23 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public FetchMode getFetchMode() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getFetchMode();
 	}
 
 	@Override
 	public FetchTiming getFetchTiming() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( attribute.isExtraLazy() ) {
+			return FetchTiming.EXTRA_DELAYED;
+		}
+		if ( attribute.isLazy() ) {
+			return FetchTiming.DELAYED;
+		}
+		return FetchTiming.IMMEDIATE;
 	}
 
 	@Override
 	public FetchStyle getFetchStyle() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getFetchStyle();
 	}
 
 	private class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {

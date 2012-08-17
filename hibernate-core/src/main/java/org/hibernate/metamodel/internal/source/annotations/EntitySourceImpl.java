@@ -240,6 +240,8 @@ public class EntitySourceImpl implements EntitySource {
 					break;
 				}
 				case ONE_TO_MANY:
+					attributeList.add( new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute ) );
+					break;
 				default: {
 					throw new NotYetImplementedException();
 				}

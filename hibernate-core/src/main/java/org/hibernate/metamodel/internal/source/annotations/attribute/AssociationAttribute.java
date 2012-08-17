@@ -107,7 +107,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.referencedEntityType = determineReferencedEntityType( associationAnnotation );
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
 		this.isOptional = determineOptionality( associationAnnotation );
-		this.isLazy = determineFetchType( associationAnnotation );
+		this.isLazy = determinIsLazy( associationAnnotation );
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 
@@ -226,7 +226,7 @@ public class AssociationAttribute extends MappedAttribute {
 		return orphanRemoval;
 	}
 
-	private boolean determineFetchType(AnnotationInstance associationAnnotation) {
+	protected boolean determinIsLazy(AnnotationInstance associationAnnotation) {
 		boolean lazy = false;
 		AnnotationValue fetchValue = associationAnnotation.value( "fetch" );
 		if ( fetchValue != null ) {

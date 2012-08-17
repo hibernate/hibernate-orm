@@ -32,6 +32,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
@@ -55,6 +56,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
 	private final ClassInfo entityClassInfo;
+	private final boolean isExtraLazy;
+	private LazyCollectionOption lazyOption;
 
 
 	// Used for the non-owning side of a ManyToMany relationship
@@ -123,6 +126,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.orderBy = determineOrderBy();
 		this.inverseForeignKeyName = determineInverseForeignKeyName();
 		this.caching = determineCachingSettings();
+		this.isExtraLazy = lazyOption == LazyCollectionOption.EXTRA;
 		this.customPersister = determineCustomPersister();
 		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_INSERT, annotations()
@@ -159,6 +163,29 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 
 		return foreignKeyName;
+	}
+
+	@Override
+	protected boolean determinIsLazy(AnnotationInstance associationAnnotation) {
+		boolean lazy =  super.determinIsLazy( associationAnnotation );
+		final AnnotationInstance lazyCollectionAnnotationInstance = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.LAZY_COLLECTION
+		);
+		if ( lazyCollectionAnnotationInstance != null ) {
+			LazyCollectionOption option = JandexHelper.getEnumValue(
+					lazyCollectionAnnotationInstance,
+					"value",
+					LazyCollectionOption.class
+			);
+			return option == LazyCollectionOption.TRUE;
+
+		}
+		return lazy;
+	}
+
+	public boolean isExtraLazy() {
+		return isExtraLazy;
 	}
 
 	private String determineWereClause() {

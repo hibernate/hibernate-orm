@@ -116,6 +116,7 @@ public class BasicCDITest extends BaseCDIIntegrationTest {
 				events = new ArrayList<Event>();
 			}
 			events.add( anEvent );
+			count++;
 		}
 	}
 
@@ -156,7 +157,6 @@ public class BasicCDITest extends BaseCDIIntegrationTest {
 			eventQueue.addEvent(
 					new Event( entity.toString(), "created", now() )
 			);
-			count++;
 		}
 
 		private String now() {

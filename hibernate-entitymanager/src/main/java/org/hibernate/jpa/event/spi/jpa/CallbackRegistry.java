@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.event.spi;
+package org.hibernate.jpa.event.spi.jpa;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.EntityPersister;
-
 /**
- * Called after updating the datastore
- * 
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface PostUpdateEventListener extends Serializable {
-	public void onPostUpdate(PostUpdateEvent event);
+public interface CallbackRegistry extends Serializable {
+	public void preCreate(Object entity);
+	public boolean hasPostCreateCallbacks(Class entityClass);
+	public void postCreate(Object entity);
 
-	public boolean requiresPostCommitHanding(EntityPersister persister);
+	public boolean preUpdate(Object entity);
+	public boolean hasPostUpdateCallbacks(Class entityClass);
+	public void postUpdate(Object entity);
+
+	public void preRemove(Object entity);
+	public boolean hasPostRemoveCallbacks(Class entityClass);
+	public void postRemove(Object entity);
+
+	public boolean postLoad(Object entity);
 }

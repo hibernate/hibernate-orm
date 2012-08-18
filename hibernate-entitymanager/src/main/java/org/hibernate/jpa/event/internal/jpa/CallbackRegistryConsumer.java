@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.event.spi;
+package org.hibernate.jpa.event.internal.jpa;
 
-import java.io.Serializable;
-
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.jpa.event.internal.core.HibernateEntityManagerEventListener;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 
 /**
- * Called after updating the datastore
- * 
- * @author Gavin King
+ * Contract for injecting the registry of Callbacks into event listeners.
+ *
+ * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public interface PostUpdateEventListener extends Serializable {
-	public void onPostUpdate(PostUpdateEvent event);
-
-	public boolean requiresPostCommitHanding(EntityPersister persister);
+public interface CallbackRegistryConsumer extends HibernateEntityManagerEventListener {
+	/**
+	 * Injection of the CallbackRegistry
+	 *
+	 * @param callbackRegistry The CallbackRegistry
+	 */
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry);
 }

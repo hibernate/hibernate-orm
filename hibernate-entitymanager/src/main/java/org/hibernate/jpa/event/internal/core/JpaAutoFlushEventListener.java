@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.event.spi;
+package org.hibernate.jpa.event.internal.core;
 
-import java.io.Serializable;
+import java.util.IdentityHashMap;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.event.internal.DefaultAutoFlushEventListener;
+import org.hibernate.event.spi.AutoFlushEventListener;
 
 /**
- * Called after updating the datastore
- * 
+ * In JPA, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the save-update
+ * operation in Hibernate).
+ *
  * @author Gavin King
  */
-public interface PostUpdateEventListener extends Serializable {
-	public void onPostUpdate(PostUpdateEvent event);
+public class JpaAutoFlushEventListener
+		extends DefaultAutoFlushEventListener
+		implements HibernateEntityManagerEventListener {
 
-	public boolean requiresPostCommitHanding(EntityPersister persister);
+	public static final AutoFlushEventListener INSTANCE = new JpaAutoFlushEventListener();
+
+	@Override
+	protected CascadingAction getCascadingAction() {
+		return CascadingActions.PERSIST_ON_FLUSH;
+	}
+
+	@Override
+	protected Object getAnything() {
+		return new IdentityHashMap( 10 );
+	}
+
 }

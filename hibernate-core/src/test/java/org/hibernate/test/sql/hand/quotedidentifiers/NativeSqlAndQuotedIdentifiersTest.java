@@ -39,7 +39,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature( value = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class )
-@FailureExpectedWithNewMetamodel
 public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -94,6 +93,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBasicEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -105,6 +105,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExpandedEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();

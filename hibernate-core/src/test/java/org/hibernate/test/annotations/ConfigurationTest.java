@@ -1,5 +1,28 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,17 +47,20 @@ import static org.junit.Assert.fail;
  */
 public class ConfigurationTest {
 	private ServiceRegistry serviceRegistry;
-    @Before
+
+	@Before
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
-     @After
+
+	@After
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
-     @Test
+
+	@Test
 	public void testDeclarativeMix() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
@@ -51,7 +77,8 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-     @Test
+
+	@Test
 	public void testIgnoringHbm() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
@@ -66,7 +93,7 @@ public class ConfigurationTest {
 			s.createQuery( "from Boat" ).list();
 			fail( "Boat should not be mapped" );
 		}
-		catch (HibernateException e) {
+		catch ( HibernateException e ) {
 			//all good
 		}
 		q = s.createQuery( "from Plane" );
@@ -75,7 +102,8 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-    @Test
+
+	@Test
 	public void testPrecedenceHbm() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
@@ -92,7 +120,7 @@ public class ConfigurationTest {
 		s.getTransaction().commit();
 		s.clear();
 		Transaction tx = s.beginTransaction();
-		boat = (Boat) s.get( Boat.class, boat.getId() );
+		boat = ( Boat ) s.get( Boat.class, boat.getId() );
 		assertTrue( "Annotation has precedence", 34 != boat.getWeight() );
 		s.delete( boat );
 		//s.getTransaction().commit();
@@ -100,7 +128,8 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-     @Test
+
+	@Test
 	public void testPrecedenceAnnotation() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
@@ -118,14 +147,15 @@ public class ConfigurationTest {
 		s.getTransaction().commit();
 		s.clear();
 		Transaction tx = s.beginTransaction();
-		boat = (Boat) s.get( Boat.class, boat.getId() );
+		boat = ( Boat ) s.get( Boat.class, boat.getId() );
 		assertTrue( "Annotation has precedence", 34 == boat.getWeight() );
 		s.delete( boat );
 		tx.commit();
 		s.close();
 		sf.close();
 	}
-     @Test
+
+	@Test
 	public void testHbmWithSubclassExtends() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
@@ -143,7 +173,8 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-      @Test
+
+	@Test
 	public void testAnnReferencesHbm() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );

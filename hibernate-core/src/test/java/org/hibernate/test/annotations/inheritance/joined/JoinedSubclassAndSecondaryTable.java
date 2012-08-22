@@ -55,7 +55,7 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 				rowCount
 		);
 
-		SwimmingPool sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
+		SwimmingPool sp2 = ( SwimmingPool ) s.get( SwimmingPool.class, sp.getId() );
 		assertEquals( sp.getAddress(), null );
 
 		PoolAddress address = new PoolAddress();
@@ -65,7 +65,7 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		s.flush();
 		s.clear();
 
-		sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
+		sp2 = ( SwimmingPool ) s.get( SwimmingPool.class, sp.getId() );
 		rowCount = getTableRowCount( s );
 		assertEquals(
 				"Now we should have a row in the pool address table ",

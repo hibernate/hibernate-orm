@@ -55,6 +55,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 	protected boolean isCleanupTestDataRequired() {
 		return true;
 	}
+
 	@Test
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();
@@ -76,7 +77,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( a320s );
 		assertEquals( 1, a320s.size() );
 		assertTrue( a320s.get( 0 ) instanceof A320 );
-		assertEquals( "5.0", ( (A320) a320s.get( 0 ) ).getJavaEmbeddedVersion() );
+		assertEquals( "5.0", ( ( A320 ) a320s.get( 0 ) ).getJavaEmbeddedVersion() );
 		q = s.createQuery( "from " + Plane.class.getName() );
 		List planes = q.list();
 		assertNotNull( planes );
@@ -123,7 +124,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Plane) s.get( Plane.class, p.getId() );
+		p = ( Plane ) s.get( Plane.class, p.getId() );
 		assertNotNull( p );
 		assertEquals( true, p.isAlive() );
 		assertEquals( 150, p.getNbrOfSeats() );
@@ -158,7 +159,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 		List result = s.createCriteria( Noise.class ).list();
 		assertNotNull( result );
 		assertEquals( 1, result.size() );
-		white = (Noise) result.get( 0 );
+		white = ( Noise ) result.get( 0 );
 		assertNull( white.getType() );
 		s.delete( white );
 		result = s.createCriteria( Rock.class ).list();
@@ -173,7 +174,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				A320b.class, //subclasses should be properly reordered
 				Plane.class,
 				A320.class,

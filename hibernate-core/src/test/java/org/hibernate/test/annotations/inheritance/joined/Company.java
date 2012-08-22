@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.inheritance.joined;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.SecondaryTable;
@@ -29,14 +30,13 @@ import javax.persistence.Table;
 
 /**
  * @author Sharath Reddy
- *
  */
 @Entity
 @Table(name = "Company")
 @SecondaryTable(name = "CompanyAddress")
 public class Company extends Customer {
 
-	private String companyName;	
+	private String companyName;
 	private String companyAddress;
 
 	@Column
@@ -57,10 +57,5 @@ public class Company extends Customer {
 		this.companyAddress = companyAddress;
 	}
 
-	
-	
-	
-	
-	
-	
+
 }

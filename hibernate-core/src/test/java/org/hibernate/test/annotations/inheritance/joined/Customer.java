@@ -24,8 +24,8 @@
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
   */
-
 package org.hibernate.test.annotations.inheritance.joined;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
@@ -35,7 +35,6 @@ import javax.persistence.Table;
 
 /**
  * @author Sharath Reddy
- *
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -55,7 +54,7 @@ public class Customer extends LegalEntity {
 		this.customerName = val;
 	}
 
-	@Column(table="CustomerDetails")
+	@Column(table = "CustomerDetails")
 	public String getCustomerCode() {
 		return customerCode;
 	}

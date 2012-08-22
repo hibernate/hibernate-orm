@@ -24,8 +24,8 @@
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
   */
-
 package org.hibernate.test.annotations.inheritance.joined;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,14 +45,14 @@ public class Account implements Serializable {
 	@GeneratedValue
 	private int id;
 
-	@Column(name="fld_number")
+	@Column(name = "fld_number")
 	private String number;
-	
-	@OneToMany(mappedBy="account")
+
+	@OneToMany(mappedBy = "account")
 	private Set<Client> clients;
-	
+
 	private double balance;
-	
+
 	public Account() {
 	}
 
@@ -82,14 +82,14 @@ public class Account implements Serializable {
 	}
 
 	public void addClient(Client c) {
-		if (clients == null) {
+		if ( clients == null ) {
 			clients = new HashSet<Client>();
 		}
-		clients.add(c);
-		c.setAccount(this);
+		clients.add( c );
+		c.setAccount( this );
 	}
-	
-	
+
+
 	public Set<Client> getClients() {
 		return clients;
 	}
@@ -98,8 +98,5 @@ public class Account implements Serializable {
 		this.clients = clients;
 	}
 
-	
-	
-	
 
 }

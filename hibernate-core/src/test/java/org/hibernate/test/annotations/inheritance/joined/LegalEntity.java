@@ -24,8 +24,8 @@
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
   */
-
 package org.hibernate.test.annotations.inheritance.joined;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,23 +33,21 @@ import javax.persistence.MappedSuperclass;
 
 /**
  * @author Sharath Reddy
- *
  */
 @MappedSuperclass
 public class LegalEntity {
-	
+
 	private Long id;
-	
+
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId() {
 		return this.id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	
-	
+
+
 }

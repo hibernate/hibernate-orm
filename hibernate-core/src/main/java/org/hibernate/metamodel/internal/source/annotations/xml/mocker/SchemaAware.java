@@ -23,11 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbCollectionTable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinTable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbSecondaryTable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
-
 /**
  * @author Strong Liu
  */

@@ -29,13 +29,13 @@ import java.util.Properties;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.JaxbProcessor;
+import org.hibernate.jaxb.internal.JaxbConfigurationProcessor;
 
 /**
  * Loads {@code cfg.xml} files.
@@ -47,11 +47,11 @@ public class ConfigLoader {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
-	private ValueHolder<JaxbProcessor> jaxbProcessorHolder = new ValueHolder<JaxbProcessor>(
-			new ValueHolder.DeferredInitializer<JaxbProcessor>() {
+	private ValueHolder<JaxbConfigurationProcessor> jaxbProcessorHolder = new ValueHolder<JaxbConfigurationProcessor>(
+			new ValueHolder.DeferredInitializer<JaxbConfigurationProcessor>() {
 				@Override
-				public JaxbProcessor initialize() {
-					return new JaxbProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
+				public JaxbConfigurationProcessor initialize() {
+					return new JaxbConfigurationProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
 				}
 			}
 	);

@@ -50,7 +50,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.stat.Statistics;
 
 import static org.junit.Assert.assertEquals;

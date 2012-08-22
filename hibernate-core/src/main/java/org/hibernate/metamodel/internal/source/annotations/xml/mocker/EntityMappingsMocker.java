@@ -31,17 +31,17 @@ import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitMetadata;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbEmbeddable;
+import org.hibernate.jaxb.spi.orm.JaxbEntity;
+import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
+import org.hibernate.jaxb.spi.orm.JaxbMappedSuperclass;
+import org.hibernate.jaxb.spi.orm.JaxbPersistenceUnitDefaults;
+import org.hibernate.jaxb.spi.orm.JaxbPersistenceUnitMetadata;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Parse all {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings} generated from orm.xml.
+ * Parse all {@link org.hibernate.jaxb.spi.orm.JaxbEntityMappings} generated from orm.xml.
  *
  * @author Strong Liu
  */
@@ -65,7 +65,7 @@ public class EntityMappingsMocker {
 	}
 
 	/**
-	 * Create new {@link Index} with mocking JPA annotations from {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings}
+	 * Create new {@link Index} with mocking JPA annotations from {@link org.hibernate.jaxb.spi.orm.JaxbEntityMappings}
 	 * and merge them with existing {@link Index}
 	 *
 	 * @return new {@link Index}

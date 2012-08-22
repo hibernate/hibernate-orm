@@ -37,8 +37,8 @@ import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**

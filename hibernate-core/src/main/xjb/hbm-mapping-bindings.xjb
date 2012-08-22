@@ -19,69 +19,69 @@
 
         <!-- Mix-ins -->
         <jaxb:bindings node="//xsd:complexType[@name='class-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.EntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.EntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.TableInformationSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='load-collection-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.ReturnElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='return-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.ReturnElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='return-join-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ReturnElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.ReturnElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='subclass-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='joined-subclass-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.TableInformationSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='union-subclass-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.TableInformationSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='join-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.TableInformationSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.TableInformationSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='property-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='id-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='composite-id-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.ComponentSourceElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='component-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.ComponentSourceElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.ComponentSourceElement</inheritance:implements>
         </jaxb:bindings>
 <!--
 
         <jaxb:bindings node="//xsd:complexType[@name='version-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='timestamp-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
 -->
         <jaxb:bindings node="//xsd:complexType[@name='bag-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='idbag-element']">
-            <inheritance:extends>org.hibernate.internal.jaxb.mapping.hbm.IdBagPluralAttributeElementAdapter</inheritance:extends>
+            <inheritance:extends>org.hibernate.jaxb.spi.hbm.IdBagPluralAttributeElementAdapter</inheritance:extends>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='list-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='map-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='set-element']">
-            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='meta-element']">
             <inheritance:implements>org.hibernate.metamodel.spi.source.MetaAttributeSource</inheritance:implements>

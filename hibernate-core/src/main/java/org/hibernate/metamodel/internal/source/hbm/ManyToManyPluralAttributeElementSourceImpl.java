@@ -28,9 +28,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
+import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
+import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;
+import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;

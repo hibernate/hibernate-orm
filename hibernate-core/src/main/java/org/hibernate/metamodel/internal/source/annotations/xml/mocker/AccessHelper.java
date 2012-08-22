@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;

@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.jaxb.spi.hbm;
 
 import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-public interface MetaAttributeContainer {
-	public List<JaxbMetaElement> getMeta();
+public interface JoinElementSource {
+	public List<JaxbJoinElement> getJoin();
 }

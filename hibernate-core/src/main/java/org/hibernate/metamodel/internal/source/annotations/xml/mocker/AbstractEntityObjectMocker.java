@@ -29,17 +29,17 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbIdClass;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbAttributes;
+import org.hibernate.jaxb.spi.orm.JaxbEntityListeners;
+import org.hibernate.jaxb.spi.orm.JaxbIdClass;
+import org.hibernate.jaxb.spi.orm.JaxbPostLoad;
+import org.hibernate.jaxb.spi.orm.JaxbPostPersist;
+import org.hibernate.jaxb.spi.orm.JaxbPostRemove;
+import org.hibernate.jaxb.spi.orm.JaxbPostUpdate;
+import org.hibernate.jaxb.spi.orm.JaxbPrePersist;
+import org.hibernate.jaxb.spi.orm.JaxbPreRemove;
+import org.hibernate.jaxb.spi.orm.JaxbPreUpdate;
 
 /**
  * @author Strong Liu

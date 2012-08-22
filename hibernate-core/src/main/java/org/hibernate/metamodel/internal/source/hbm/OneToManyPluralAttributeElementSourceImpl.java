@@ -24,10 +24,9 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
+import org.hibernate.jaxb.spi.hbm.JaxbOneToManyElement;
+import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 

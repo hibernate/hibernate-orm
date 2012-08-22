@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.spi;
 
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -36,7 +36,8 @@ import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.relational.Database;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.metamodel.spi.source.BindingContext;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.type.TypeResolver;
 
 /**

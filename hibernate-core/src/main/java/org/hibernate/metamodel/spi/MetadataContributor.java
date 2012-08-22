@@ -21,15 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.metamodel.spi;
+
+import org.jboss.jandex.IndexResult;
 
 /**
+ * Contract for contributing MetadataSources.  This hook occurs just after all processing of
+ * {@link org.hibernate.metamodel.MetadataSources} has completed (and just before {@link AdditionalJaxbRootProducer}).
+ *
  * @author Steve Ebersole
  */
-public interface TableInformationSource {
-	public String getSchema();
-	public String getCatalog();
-	public String getTable();
-	public String getSubselect();
-	public String getSubselectAttribute();
+public interface MetadataContributor {
+	/**
+	 * Perform the contributions.
+	 *
+	 * @param metadata The metadata
+	 * @param jandexIndex The Jandex index
+	 */
+	public void contribute(MetadataImplementor metadata, IndexResult jandexIndex);
 }

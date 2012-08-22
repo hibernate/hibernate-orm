@@ -33,7 +33,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
@@ -76,7 +76,7 @@ public class EnversIntegrator implements Integrator {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.spi.source.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
+	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.spi.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
 	 */
 	@Override
 	public void integrate( MetadataImplementor metadata,

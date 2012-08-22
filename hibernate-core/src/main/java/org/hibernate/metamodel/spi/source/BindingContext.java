@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 

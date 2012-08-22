@@ -98,7 +98,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import static org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
 import static org.hibernate.jpa.boot.spi.JpaBootstrapServiceRegistryBuilder.buildBootstrapServiceRegistry;
 
 /**
@@ -668,7 +668,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		else {
 			final String scannerClassName = value.toString();
 			try {
-				scannerClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( scannerClassName );
+				scannerClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName(
+						scannerClassName
+				);
 			}
 			catch ( ClassCastException e ) {
 				throw persistenceException( "Expecting Scanner implementation, but found " + scannerClassName );

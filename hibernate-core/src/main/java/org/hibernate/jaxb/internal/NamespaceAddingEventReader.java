@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.xml;
+package org.hibernate.jaxb.internal;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;

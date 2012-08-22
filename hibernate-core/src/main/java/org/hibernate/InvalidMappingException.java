@@ -23,7 +23,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.internal.util.xml.XmlDocument;
 
 /**

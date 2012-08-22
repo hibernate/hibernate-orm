@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
+import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
+import org.hibernate.jaxb.spi.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;

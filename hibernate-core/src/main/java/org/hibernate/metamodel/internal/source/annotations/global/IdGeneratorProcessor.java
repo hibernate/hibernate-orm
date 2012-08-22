@@ -47,8 +47,8 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 
 /**

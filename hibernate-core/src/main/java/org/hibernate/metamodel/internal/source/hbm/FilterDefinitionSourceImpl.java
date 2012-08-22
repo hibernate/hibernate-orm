@@ -26,10 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterDefElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterParamElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryParamElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
 

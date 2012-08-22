@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
+import org.hibernate.jaxb.spi.hbm.JaxbListElement;
+import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeNature;

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.jaxb.spi.Origin;
 
 /**
  * @author Steve Ebersole

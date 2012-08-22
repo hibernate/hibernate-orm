@@ -2,14 +2,14 @@ package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
 import java.util.List;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
+import org.hibernate.jaxb.spi.orm.JaxbBasic;
+import org.hibernate.jaxb.spi.orm.JaxbElementCollection;
+import org.hibernate.jaxb.spi.orm.JaxbEmbedded;
+import org.hibernate.jaxb.spi.orm.JaxbManyToMany;
+import org.hibernate.jaxb.spi.orm.JaxbManyToOne;
+import org.hibernate.jaxb.spi.orm.JaxbOneToMany;
+import org.hibernate.jaxb.spi.orm.JaxbOneToOne;
+import org.hibernate.jaxb.spi.orm.JaxbTransient;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

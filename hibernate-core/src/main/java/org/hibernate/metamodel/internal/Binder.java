@@ -47,13 +47,13 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.internal.source.hbm.ListAttributeSource;
 import org.hibernate.metamodel.internal.source.hbm.MapAttributeSource;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
@@ -123,7 +123,6 @@ import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
@@ -160,7 +159,7 @@ import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOS
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
  * <p/>
- * The API consists of {@link #Binder(MetadataImplementor, IdentifierGeneratorFactory)} and {@link #bindEntities(Iterable)}
+ * The API consists of {@link #Binder(org.hibernate.metamodel.spi.MetadataImplementor, IdentifierGeneratorFactory)} and {@link #bindEntities(Iterable)}
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik

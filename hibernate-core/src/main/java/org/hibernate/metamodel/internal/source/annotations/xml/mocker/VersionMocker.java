@@ -25,8 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
+import org.hibernate.jaxb.spi.orm.JaxbVersion;
 
 /**
  * @author Strong Liu

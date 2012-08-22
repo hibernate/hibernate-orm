@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,23 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.service.spi;
+
+import org.hibernate.service.ServiceRegistryBuilder;
 
 /**
- * Adaptive implementation of the {@link PluralAttributeElement} for {@code <idbag/>} mappings which
- * do not support all the configuration available on other collection mappings.
+ * Contract for contributing services.
  *
  * @author Steve Ebersole
  */
-public abstract class IdBagPluralAttributeElementAdapter implements PluralAttributeElement {
-	public JaxbOneToManyElement getOneToMany() {
-		// idbag collections cannot contain 1-m mappings.
-		return null;
-	}
-
-	@Override
-	public boolean isInverse() {
-		// idbag collections own the association, and are therefore non-inverse
-		return false;
-	}
+public interface ServiceContributor {
+	/**
+	 * Contribute services to the indicated registry builder.
+	 *
+	 * @param serviceRegistryBuilder The builder to which services (or initiators) should be contributed.
+	 */
+	public void contribute(ServiceRegistryBuilder serviceRegistryBuilder);
 }

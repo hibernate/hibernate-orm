@@ -26,14 +26,14 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 import static java.util.Collections.emptyList;
@@ -50,11 +50,15 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private List<EntityHierarchyImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, MetadataSources metadataSources) {
+		this( metadata, metadataSources.getJaxbRootList() );
+	}
+
+	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<JaxbRoot> jaxbRoots) {
 		this.metadata = metadata;
 
 		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder();
 
-		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
+		for ( JaxbRoot jaxbRoot : jaxbRoots ) {
 			if ( ! JaxbHibernateMapping.class.isInstance( jaxbRoot.getRoot() ) ) {
 				continue;
 			}

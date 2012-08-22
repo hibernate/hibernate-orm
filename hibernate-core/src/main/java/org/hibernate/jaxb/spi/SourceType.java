@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,24 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
 
-import java.io.Serializable;
-import java.util.List;
+package org.hibernate.jaxb.spi;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * From what type of source did we obtain the data
+ *
+ * @author Steve Ebersole
  */
-public interface QuerySourceElement {
-
-	public List<Serializable> getContent();
-	public JaxbCacheModeAttribute getCacheMode();
-	public String getCacheRegion();
-	public boolean isCacheable();
-	public String getComment();
-	public Integer getFetchSize();
-	public JaxbFlushModeAttribute getFlushMode();
-	public String getName();
-	public boolean isReadOnly();
-	public Integer getTimeout();
+public enum SourceType {
+	RESOURCE,
+	FILE,
+	INPUT_STREAM,
+	URL,
+	STRING,
+	DOM,
+	JAR,
+	ANNOTATION,
+	OTHER
 }

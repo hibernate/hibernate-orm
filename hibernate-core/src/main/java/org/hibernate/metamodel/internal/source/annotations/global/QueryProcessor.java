@@ -40,7 +40,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
@@ -51,7 +50,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 
 /**

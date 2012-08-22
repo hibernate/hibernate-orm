@@ -29,8 +29,7 @@ import java.util.List;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
+import org.hibernate.jaxb.spi.orm.JaxbManyToMany;
 
 /**
  * @author Strong Liu

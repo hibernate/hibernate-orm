@@ -21,38 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb;
+package org.hibernate.jaxb.spi.hbm;
 
 /**
- * Holds information about a JAXB-unmarshalled XML document.
+ * Adaptive implementation of the {@link PluralAttributeElement} for {@code <idbag/>} mappings which
+ * do not support all the configuration available on other collection mappings.
  *
- * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class JaxbRoot<T> {
-	private final T root;
-	private final Origin origin;
-
-	public JaxbRoot(T root, Origin origin) {
-		this.root = root;
-		this.origin = origin;
+public abstract class IdBagPluralAttributeElementAdapter implements PluralAttributeElement {
+	public JaxbOneToManyElement getOneToMany() {
+		// idbag collections cannot contain 1-m mappings.
+		return null;
 	}
 
-	/**
-	 * Obtain the root JAXB bound object
-	 *
-	 * @return The JAXB root object
-	 */
-	public T getRoot() {
-		return root;
-	}
-
-	/**
-	 * Obtain the metadata about the document's origin
-	 *
-	 * @return The origin
-	 */
-	public Origin getOrigin() {
-		return origin;
+	@Override
+	public boolean isInverse() {
+		// idbag collections own the association, and are therefore non-inverse
+		return false;
 	}
 }

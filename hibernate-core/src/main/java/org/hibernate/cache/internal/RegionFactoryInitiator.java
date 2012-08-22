@@ -23,22 +23,17 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Map;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;

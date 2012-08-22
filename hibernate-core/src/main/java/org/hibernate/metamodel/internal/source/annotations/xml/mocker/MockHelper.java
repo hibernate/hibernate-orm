@@ -42,7 +42,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
+import org.hibernate.jaxb.spi.orm.JaxbCascadeType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;

@@ -35,17 +35,17 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAssociationOverride;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributeOverride;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbCollectionTable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEnumType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinTable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbLob;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOrderColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPrimaryKeyJoinColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+import org.hibernate.jaxb.spi.orm.JaxbAssociationOverride;
+import org.hibernate.jaxb.spi.orm.JaxbAttributeOverride;
+import org.hibernate.jaxb.spi.orm.JaxbCollectionTable;
+import org.hibernate.jaxb.spi.orm.JaxbColumn;
+import org.hibernate.jaxb.spi.orm.JaxbEnumType;
+import org.hibernate.jaxb.spi.orm.JaxbJoinColumn;
+import org.hibernate.jaxb.spi.orm.JaxbJoinTable;
+import org.hibernate.jaxb.spi.orm.JaxbLob;
+import org.hibernate.jaxb.spi.orm.JaxbOrderColumn;
+import org.hibernate.jaxb.spi.orm.JaxbPrimaryKeyJoinColumn;
+import org.hibernate.jaxb.spi.orm.JaxbTemporalType;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
+import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.Orderable;

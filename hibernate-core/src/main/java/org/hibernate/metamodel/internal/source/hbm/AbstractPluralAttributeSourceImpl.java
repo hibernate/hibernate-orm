@@ -30,7 +30,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
+import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;

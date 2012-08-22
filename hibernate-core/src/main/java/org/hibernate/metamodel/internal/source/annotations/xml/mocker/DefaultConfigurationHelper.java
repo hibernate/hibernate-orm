@@ -33,10 +33,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
+import org.hibernate.jaxb.spi.orm.JaxbEntity;
+import org.hibernate.jaxb.spi.orm.JaxbTable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;

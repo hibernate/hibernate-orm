@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterAliasMappingType;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFilterElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterAliasMappingType;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.source.FilterSource;
 

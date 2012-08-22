@@ -33,15 +33,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.MappingException;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListener;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
+import org.hibernate.jaxb.spi.orm.JaxbEntityListener;
+import org.hibernate.jaxb.spi.orm.JaxbEntityListeners;
 
 /**
  * {@link javax.persistence.EntityListeners @EntityListeners} mocker

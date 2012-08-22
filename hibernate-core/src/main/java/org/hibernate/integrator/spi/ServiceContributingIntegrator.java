@@ -30,7 +30,11 @@ import org.hibernate.service.ServiceRegistryBuilder;
  * to the Hibernate {@link org.hibernate.service.ServiceRegistry}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.service.spi.ServiceContributor} instead.  To be removed after 5.0 (being used
+ * by Hibernate OGM).
  */
+@Deprecated
 public interface ServiceContributingIntegrator extends Integrator {
 	/**
 	 * Allow the integrator to alter the builder of {@link org.hibernate.service.ServiceRegistry}, presumably to

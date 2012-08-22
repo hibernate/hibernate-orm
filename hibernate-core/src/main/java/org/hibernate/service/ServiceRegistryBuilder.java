@@ -33,12 +33,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.ServiceContributor;
 
 /**
  * Builder for standard {@link ServiceRegistry} instances.
@@ -214,6 +216,10 @@ public class ServiceRegistryBuilder {
 			if ( ServiceContributingIntegrator.class.isInstance( integrator ) ) {
 				ServiceContributingIntegrator.class.cast( integrator ).prepareServices( this );
 			}
+		}
+
+		for ( ServiceContributor contributor : bootstrapServiceRegistry.getService( ClassLoaderService.class ).loadJavaServices(ServiceContributor.class) ) {
+			contributor.contribute( this );
 		}
 
 		return new StandardServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );

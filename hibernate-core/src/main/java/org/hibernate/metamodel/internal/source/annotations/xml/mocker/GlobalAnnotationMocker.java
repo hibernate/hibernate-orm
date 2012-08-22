@@ -31,15 +31,15 @@ import java.util.List;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbColumnResult;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityResult;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbFieldResult;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbNamedNativeQuery;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbNamedQuery;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbQueryHint;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbSequenceGenerator;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbSqlResultSetMapping;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
+import org.hibernate.jaxb.spi.orm.JaxbColumnResult;
+import org.hibernate.jaxb.spi.orm.JaxbEntityResult;
+import org.hibernate.jaxb.spi.orm.JaxbFieldResult;
+import org.hibernate.jaxb.spi.orm.JaxbNamedNativeQuery;
+import org.hibernate.jaxb.spi.orm.JaxbNamedQuery;
+import org.hibernate.jaxb.spi.orm.JaxbQueryHint;
+import org.hibernate.jaxb.spi.orm.JaxbSequenceGenerator;
+import org.hibernate.jaxb.spi.orm.JaxbSqlResultSetMapping;
+import org.hibernate.jaxb.spi.orm.JaxbTableGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**

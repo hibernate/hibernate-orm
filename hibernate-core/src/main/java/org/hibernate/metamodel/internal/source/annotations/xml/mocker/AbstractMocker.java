@@ -31,8 +31,8 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbUniqueConstraint;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 

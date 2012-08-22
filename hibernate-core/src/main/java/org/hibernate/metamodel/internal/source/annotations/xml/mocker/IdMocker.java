@@ -31,9 +31,8 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
+import org.hibernate.jaxb.spi.orm.JaxbGeneratedValue;
+import org.hibernate.jaxb.spi.orm.JaxbId;
 
 /**
  * @author Strong Liu

@@ -28,19 +28,11 @@ import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddableAttributes;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbEmbeddableAttributes;
+import org.hibernate.jaxb.spi.orm.JaxbEmbeddedId;
+import org.hibernate.jaxb.spi.orm.JaxbId;
+import org.hibernate.jaxb.spi.orm.JaxbVersion;
 
 /**
  * @author Strong Liu

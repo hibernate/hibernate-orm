@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.metamodel.spi;
 
 import java.util.List;
 
+import org.jboss.jandex.IndexResult;
+
+import org.hibernate.jaxb.spi.JaxbRoot;
+
 /**
+ * Contract for integrations that wish to provide additional mappings (in the form of {@link JaxbRoot}.  This hook
+ * is performed after all other mappings, annotations, etc have completed processing.
+ *
  * @author Steve Ebersole
  */
-public interface JoinElementSource {
-	public List<JaxbJoinElement> getJoin();
+public interface AdditionalJaxbRootProducer {
+	/**
+	 * Produce and return the list of additional mappings to be processed.
+	 *
+	 * @param metadata The metadata (for access to binding information).
+	 * @param jandexIndex The Jandex annotation index
+	 *
+	 * @return List of additional mappings
+	 */
+	public List<JaxbRoot> produceRoots(MetadataImplementor metadata, IndexResult jandexIndex);
 }

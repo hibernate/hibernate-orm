@@ -23,9 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.source.MappingException;
 

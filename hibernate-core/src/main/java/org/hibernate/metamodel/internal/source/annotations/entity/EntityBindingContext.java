@@ -36,8 +36,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -49,7 +49,7 @@ import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.service.ServiceRegistry;
 

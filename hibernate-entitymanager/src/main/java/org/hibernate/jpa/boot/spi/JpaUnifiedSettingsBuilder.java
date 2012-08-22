@@ -31,14 +31,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.boot.spi.JaccDefinition;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.ConfigLoader;
 
-import static org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
 
 /**
  * Helper class for handling building a unified map of "JPA settings".  Extracted to separate class so others can

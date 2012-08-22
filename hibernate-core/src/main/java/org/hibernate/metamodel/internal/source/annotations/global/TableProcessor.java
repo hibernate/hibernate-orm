@@ -40,7 +40,7 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.

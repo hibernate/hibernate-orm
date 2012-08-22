@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
+import org.hibernate.jaxb.spi.hbm.JaxbCompositeElementElement;
+import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;

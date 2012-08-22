@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.jaxb.spi.hbm;
+
+import java.util.List;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public interface SingularAttributeSource extends MetaAttributeContainer {
-	public String getName();
-
-	public String getTypeAttribute();
-
-    public JaxbTypeElement getType();
-
-	public String getAccess();
+public interface ReturnElement {
+	public String getAlias();
+	public JaxbLockModeAttribute getLockMode();
+	public List<JaxbReturnPropertyElement> getReturnProperty();
 }

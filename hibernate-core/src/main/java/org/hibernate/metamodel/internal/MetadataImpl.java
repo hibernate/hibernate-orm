@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -44,17 +44,19 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.integrator.spi.TypeContributingIntegrator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
+import org.hibernate.metamodel.spi.MetadataContributor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -76,7 +78,6 @@ import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.metamodel.spi.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -177,18 +178,33 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 //				}
 //		);
 
-		//check for typeContributingIntegrators integrators
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			if ( TypeContributingIntegrator.class.isInstance( integrator ) ) {
-				TypeContributingIntegrator.class.cast( integrator ).prepareTypes( this );
-			}
+		processTypeDefinitions( metadataSourceProcessors );
+
+		for ( TypeContributor contributor :
+				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( TypeContributor.class ) ) {
+			contributor.contribute( this );
 		}
 
-		processTypeDefinitions( metadataSourceProcessors );
 		processFilterDefinitions( metadataSourceProcessors );
 		processIdentifierGenerators( metadataSourceProcessors );
 		processMappings( metadataSourceProcessors );
 		bindMappingDependentMetadata( metadataSourceProcessors );
+
+		for ( MetadataContributor contributor :
+				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( MetadataContributor.class ) ) {
+			// todo : handle Jandex index here...
+			contributor.contribute( this, null );
+		}
+
+		final List<JaxbRoot> jaxbRoots = new ArrayList<JaxbRoot>();
+		for ( AdditionalJaxbRootProducer producer :
+				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
+			// todo : handle Jandex index here...
+			jaxbRoots.addAll( producer.produceRoots( this, null ) );
+		}
+		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
+		final Binder binder = new Binder( this, identifierGeneratorFactory );
+		binder.bindEntities( processor.extractEntityHierarchies() );
 	}
 
 
@@ -307,8 +323,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors )
-            binder.bindEntities( processor.extractEntityHierarchies() );
+		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
+			binder.bindEntities( processor.extractEntityHierarchies() );
+		}
 	}
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {

@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
 import org.hibernate.metamodel.spi.source.FetchProfileSource;
 
 /**

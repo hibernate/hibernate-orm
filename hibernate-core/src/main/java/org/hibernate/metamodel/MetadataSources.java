@@ -40,10 +40,10 @@ import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 
 import org.hibernate.boot.spi.CacheRegionDefinition;
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
-import org.hibernate.metamodel.internal.JaxbHelper;
+import org.hibernate.jaxb.internal.JaxbMappingProcessor;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
@@ -66,7 +66,7 @@ public class MetadataSources {
 
 	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 
-	private final JaxbHelper jaxbHelper;
+	private final JaxbMappingProcessor jaxbProcessor;
 
 	private final ServiceRegistry serviceRegistry;
 
@@ -80,7 +80,7 @@ public class MetadataSources {
 	public MetadataSources(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 
-		this.jaxbHelper = new JaxbHelper( this );
+		this.jaxbProcessor = new JaxbMappingProcessor( serviceRegistry );
 		this.metadataBuilder = new MetadataBuilderImpl( this );
 	}
 
@@ -196,7 +196,7 @@ public class MetadataSources {
 
 	private JaxbRoot add(InputStream inputStream, Origin origin, boolean close) {
 		try {
-			JaxbRoot jaxbRoot = jaxbHelper.unmarshal( inputStream, origin );
+			JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( inputStream, origin );
 			jaxbRootList.add( jaxbRoot );
 			return jaxbRoot;
 		}
@@ -335,7 +335,7 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, "<unknown>" );
-		JaxbRoot jaxbRoot = jaxbHelper.unmarshal( document, origin );
+		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
 		jaxbRootList.add( jaxbRoot );
 		return this;
 	}

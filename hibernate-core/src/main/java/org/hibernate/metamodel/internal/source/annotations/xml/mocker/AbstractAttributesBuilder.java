@@ -27,21 +27,21 @@ import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
+import org.hibernate.jaxb.spi.orm.JaxbBasic;
+import org.hibernate.jaxb.spi.orm.JaxbElementCollection;
+import org.hibernate.jaxb.spi.orm.JaxbEmbedded;
+import org.hibernate.jaxb.spi.orm.JaxbEmbeddedId;
+import org.hibernate.jaxb.spi.orm.JaxbId;
+import org.hibernate.jaxb.spi.orm.JaxbManyToMany;
+import org.hibernate.jaxb.spi.orm.JaxbManyToOne;
+import org.hibernate.jaxb.spi.orm.JaxbOneToMany;
+import org.hibernate.jaxb.spi.orm.JaxbOneToOne;
+import org.hibernate.jaxb.spi.orm.JaxbTransient;
+import org.hibernate.jaxb.spi.orm.JaxbVersion;
 
 /**
- * Abstract Parser to handle {@link org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes JaxbAttributes}
- * and {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddableAttributes JaxbEmbeddableAttributes}.
+ * Abstract Parser to handle {@link org.hibernate.jaxb.spi.orm.JaxbAttributes JaxbAttributes}
+ * and {@link org.hibernate.jaxb.spi.orm.JaxbEmbeddableAttributes JaxbEmbeddableAttributes}.
  *
  * It would be really helpful if these two classes can implement an interface with those abstract methods in this class.
  *

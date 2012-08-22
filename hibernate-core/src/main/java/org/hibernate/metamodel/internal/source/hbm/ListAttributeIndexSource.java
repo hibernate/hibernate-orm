@@ -27,9 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbIndexElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbListIndexElement;
+import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
+import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
+import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;

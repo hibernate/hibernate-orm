@@ -37,7 +37,9 @@ import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataSourcesContributor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 
@@ -50,6 +52,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this.sources = sources;
+		for ( MetadataSourcesContributor contributor :
+				sources.getServiceRegistry().getService( ClassLoaderService.class )
+						.loadJavaServices( MetadataSourcesContributor.class ) ) {
+			contributor.contribute( sources, null );
+		}
 		this.options = new OptionsImpl( sources.getServiceRegistry() );
 	}
 

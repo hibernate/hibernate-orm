@@ -33,13 +33,13 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEnumType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKey;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyClass;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyJoinColumn;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbEnumType;
+import org.hibernate.jaxb.spi.orm.JaxbMapKey;
+import org.hibernate.jaxb.spi.orm.JaxbMapKeyClass;
+import org.hibernate.jaxb.spi.orm.JaxbMapKeyColumn;
+import org.hibernate.jaxb.spi.orm.JaxbMapKeyJoinColumn;
+import org.hibernate.jaxb.spi.orm.JaxbTemporalType;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**

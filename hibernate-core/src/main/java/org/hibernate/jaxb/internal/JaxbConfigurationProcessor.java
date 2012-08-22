@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.internal;
+package org.hibernate.jaxb.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,8 +52,8 @@ import javax.xml.validation.SchemaFactory;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
@@ -62,14 +62,14 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 /**
  * @author Steve Ebersole
  */
-public class JaxbProcessor {
-	private static final Logger log = Logger.getLogger( JaxbProcessor.class );
+public class JaxbConfigurationProcessor {
+	private static final Logger log = Logger.getLogger( JaxbConfigurationProcessor.class );
 
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/hibernate-configuration";
 
 	private final ClassLoaderService classLoaderService;
 
-	public JaxbProcessor(ClassLoaderService classLoaderService) {
+	public JaxbConfigurationProcessor(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
 	}
 

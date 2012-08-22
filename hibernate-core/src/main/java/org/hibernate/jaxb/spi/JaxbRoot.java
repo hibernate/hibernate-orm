@@ -21,11 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.jaxb.mapping.hbm;
+package org.hibernate.jaxb.spi;
 
 /**
+ * Holds information about a JAXB-unmarshalled XML document.
+ *
+ * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public interface SubEntityElement extends EntityElement {
-    public String getExtends();
+public class JaxbRoot<T> {
+	private final T root;
+	private final Origin origin;
+
+	public JaxbRoot(T root, Origin origin) {
+		this.root = root;
+		this.origin = origin;
+	}
+
+	/**
+	 * Obtain the root JAXB bound object
+	 *
+	 * @return The JAXB root object
+	 */
+	public T getRoot() {
+		return root;
+	}
+
+	/**
+	 * Obtain the metadata about the document's origin
+	 *
+	 * @return The origin
+	 */
+	public Origin getOrigin() {
+		return origin;
+	}
 }

@@ -21,8 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-package org.hibernate.metamodel.internal;
+package org.hibernate.jaxb.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,40 +50,47 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
-import org.hibernate.internal.xml.NamespaceAddingEventReader;
-import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
+import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 
 /**
- * Helper class for unmarshalling xml configuration using StAX and JAXB.
+ * Loads {@code hbm.xml} and {@code orm.xml} files and processes them using StAX and JAXB.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public class JaxbHelper {
-	private static final Logger log = Logger.getLogger( JaxbHelper.class );
+public class JaxbMappingProcessor {
+	private static final Logger log = Logger.getLogger( JaxbMappingProcessor.class );
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 	public static final String VALIDATE_XML_SETTING = "hibernate.xml.validate";
 	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
 
-	private final MetadataSources metadataSources;
+	private final ServiceRegistry serviceRegistry;
 	private final boolean validateXml;
 
-	public JaxbHelper(MetadataSources metadataSources) {
-		this.metadataSources = metadataSources;
+	public JaxbMappingProcessor(ServiceRegistry serviceRegistry) {
+		this(
+				serviceRegistry,
+				serviceRegistry.getService( ConfigurationService.class ).getSetting(
+						VALIDATE_XML_SETTING,
+						StandardConverters.BOOLEAN,
+						true
+				)
+		);
+	}
 
-		this.validateXml = metadataSources.getServiceRegistry()
-				.getService( ConfigurationService.class )
-				.getSetting( VALIDATE_XML_SETTING, StandardConverters.BOOLEAN, true );
+	public JaxbMappingProcessor(ServiceRegistry serviceRegistry, Boolean validateXml) {
+		this.serviceRegistry = serviceRegistry;
+		this.validateXml = validateXml;
 	}
 
 	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
@@ -270,9 +276,7 @@ public class JaxbHelper {
 	}
 
 	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
-		URL url = metadataSources.getServiceRegistry()
-				.getService( ClassLoaderService.class )
-				.locateResource( schemaName );
+		URL url = serviceRegistry.getService( ClassLoaderService.class ).locateResource( schemaName );
 		if ( url == null ) {
 			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
 		}

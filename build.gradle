@@ -1,6 +1,7 @@
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
+
 allprojects {
     repositories {
 	mavenCentral()

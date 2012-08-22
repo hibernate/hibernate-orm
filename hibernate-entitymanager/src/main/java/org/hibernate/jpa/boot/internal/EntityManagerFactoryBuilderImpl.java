@@ -56,7 +56,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexResult;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 
 import org.jboss.logging.Logger;
@@ -183,7 +183,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		ScanResult scanResult = scan( bootstrapServiceRegistry );
 		//		2) building a Jandex index
 		Set<String> collectedManagedClassNames = collectManagedClassNames( scanResult );
-		IndexResult jandexIndex = locateOrBuildJandexIndex( collectedManagedClassNames, scanResult.getPackageNames(), bootstrapServiceRegistry );
+		IndexView jandexIndex = locateOrBuildJandexIndex( collectedManagedClassNames, scanResult.getPackageNames(), bootstrapServiceRegistry );
 		//		3) building "metadata sources" to keep for later to use in building the SessionFactory
 		metadataSources = prepareMetadataSources( jandexIndex, collectedManagedClassNames, scanResult, bootstrapServiceRegistry );
 
@@ -210,7 +210,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	private MetadataSources prepareMetadataSources(
-			IndexResult jandexIndex,
+			IndexView jandexIndex,
 			Set<String> collectedManagedClassNames,
 			ScanResult scanResult,
 			BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -270,7 +270,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return collectedNames;
 	}
 
-	private IndexResult locateOrBuildJandexIndex(
+	private IndexView locateOrBuildJandexIndex(
 			Set<String> collectedManagedClassNames,
 			List<String> packageNames,
 			BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -279,14 +279,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) pass that Index along to the metamodel code...
 		//
 		// (1) is mocked up here, but JBoss AS does not currently pass in any Index to use...
-		IndexResult jandexIndex = (IndexResult) configurationValues.get( JANDEX_INDEX );
+		IndexView jandexIndex = (IndexView) configurationValues.get( JANDEX_INDEX );
 		if ( jandexIndex == null ) {
 			jandexIndex = buildJandexIndex( collectedManagedClassNames, packageNames, bootstrapServiceRegistry );
 		}
 		return jandexIndex;
 	}
 
-	private IndexResult buildJandexIndex(Set<String> classNamesSource, List<String> packageNames, BootstrapServiceRegistry bootstrapServiceRegistry) {
+	private IndexView buildJandexIndex(Set<String> classNamesSource, List<String> packageNames, BootstrapServiceRegistry bootstrapServiceRegistry) {
 		Indexer indexer = new Indexer();
 
 		for ( String className : classNamesSource ) {

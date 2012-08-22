@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.BindingContext;
@@ -39,7 +39,7 @@ import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
  * @author Hardy Ferentschik
  */
 public interface AnnotationBindingContext extends BindingContext {
-	Index getIndex();
+	IndexView getIndex();
 
 	ClassInfo getClassInfo(String name);
 

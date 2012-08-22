@@ -23,13 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -43,13 +44,13 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 
 /**
  * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
@@ -74,7 +75,7 @@ public class IdGeneratorProcessor {
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		List<AnnotationInstance> annotations = bindingContext.getIndex()
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
 			bindSequenceGenerator( bindingContext.getMetadataImplementor(), generator );

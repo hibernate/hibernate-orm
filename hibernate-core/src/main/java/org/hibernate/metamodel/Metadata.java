@@ -26,6 +26,7 @@ package org.hibernate.metamodel;
 import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
+import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
 import org.hibernate.MultiTenancyStrategy;
@@ -60,6 +61,7 @@ public interface Metadata {
 		public String getDefaultSchemaName();
 		public String getDefaultCatalogName();
 		public MultiTenancyStrategy getMultiTenancyStrategy();
+		public IndexView getJandexView();
 	}
 
 	/**

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import javax.persistence.GenerationType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class IdentifierGeneratorExtractionDelegate {
 
 	private void processSequenceGenerators(
 			List<IdentifierGeneratorSource> identifierGeneratorSources,
-			List<AnnotationInstance> generatorAnnotations) {
+			Collection<AnnotationInstance> generatorAnnotations) {
 		for ( AnnotationInstance generatorAnnotation : generatorAnnotations ) {
 			final String generatorName = JandexHelper.getValue( generatorAnnotation, "name", String.class );
 
@@ -141,7 +142,7 @@ public class IdentifierGeneratorExtractionDelegate {
 
 	private void processTableGenerators(
 			List<IdentifierGeneratorSource> identifierGeneratorSources,
-			List<AnnotationInstance> annotations) {
+			Collection<AnnotationInstance> annotations) {
 		for ( AnnotationInstance generatorAnnotation : annotations ) {
 			final String generatorName = JandexHelper.getValue( generatorAnnotation, "name", String.class );
 
@@ -235,7 +236,7 @@ public class IdentifierGeneratorExtractionDelegate {
 
 	private void processGenericGenerators(
 			List<IdentifierGeneratorSource> identifierGeneratorSources,
-			List<AnnotationInstance> genericGeneratorSources) {
+			Collection<AnnotationInstance> genericGeneratorSources) {
 		for ( AnnotationInstance generatorAnnotation : genericGeneratorSources ) {
 			Map<String, String> parameterMap = new HashMap<String, String>();
 			AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(

@@ -29,6 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.IndexView;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
@@ -45,8 +49,8 @@ import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
@@ -82,7 +86,6 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
-import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -101,7 +104,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final ServiceRegistry serviceRegistry;
 	private final Options options;
 
-	private final ValueHolder<ClassLoaderService> classLoaderService;
+	private final ClassLoaderService classLoaderService;
 //	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
 
 	private TypeResolver typeResolver = new TypeResolver();
@@ -147,28 +150,26 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			}
 		};
 
+		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
+		final IndexView jandexView = options.getJandexView() != null
+				? metadataSources.wrapJandexView( options.getJandexView() )
+				: metadataSources.buildJandexView();
+
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
 					new HbmMetadataSourceProcessorImpl( this, metadataSources ),
-					new AnnotationMetadataSourceProcessorImpl( this, metadataSources )
+					new AnnotationMetadataSourceProcessorImpl( this, metadataSources, jandexView )
 			};
 		}
 		else {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new AnnotationMetadataSourceProcessorImpl( this, metadataSources ),
+					new AnnotationMetadataSourceProcessorImpl( this, metadataSources, jandexView ),
 					new HbmMetadataSourceProcessorImpl( this, metadataSources )
 			};
 		}
 
-		this.classLoaderService = new ValueHolder<ClassLoaderService>(
-				new ValueHolder.DeferredInitializer<ClassLoaderService>() {
-					@Override
-					public ClassLoaderService initialize() {
-						return serviceRegistry.getService( ClassLoaderService.class );
-					}
-				}
-		);
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 //		this.persisterClassResolverService = new ValueHolder<PersisterClassResolver>(
 //				new ValueHolder.DeferredInitializer<PersisterClassResolver>() {
 //					@Override
@@ -180,8 +181,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		processTypeDefinitions( metadataSourceProcessors );
 
-		for ( TypeContributor contributor :
-				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( TypeContributor.class ) ) {
+		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
 			contributor.contribute( this );
 		}
 
@@ -190,22 +190,20 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		processMappings( metadataSourceProcessors );
 		bindMappingDependentMetadata( metadataSourceProcessors );
 
-		for ( MetadataContributor contributor :
-				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( MetadataContributor.class ) ) {
-			// todo : handle Jandex index here...
-			contributor.contribute( this, null );
+		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
+			contributor.contribute( this, jandexView );
 		}
 
 		final List<JaxbRoot> jaxbRoots = new ArrayList<JaxbRoot>();
-		for ( AdditionalJaxbRootProducer producer :
-				serviceRegistry.getService( ClassLoaderService.class ).loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
+		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
 			// todo : handle Jandex index here...
-			jaxbRoots.addAll( producer.produceRoots( this, null ) );
+			jaxbRoots.addAll( producer.produceRoots( this, jandexView ) );
 		}
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		binder.bindEntities( processor.extractEntityHierarchies() );
 	}
+
 
 
 	// type definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,7 +214,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				addTypeDefinition(
 						new TypeDefinition(
 								typeDescriptorSource.getName(),
-								classLoaderService().classForName( typeDescriptorSource.getTypeImplementationClassName() ),
+								classLoaderService.classForName( typeDescriptorSource.getTypeImplementationClassName() ),
 								typeDescriptorSource.getRegistrationKeys(),
 								typeDescriptorSource.getParameters()
 						)
@@ -318,7 +316,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void registerIdentifierGenerator(String name, String generatorClassName) {
-		identifierGeneratorFactory.register( name, classLoaderService().classForName( generatorClassName ) );
+		identifierGeneratorFactory.register( name, classLoaderService.classForName( generatorClassName ) );
 	}
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
@@ -409,8 +407,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void addNamedNativeQuery(NamedSQLQueryDefinition def) {
-		if ( def == null || def.getName() == null ) {
-			throw new IllegalArgumentException( "Named native query definition object or name is null: " + def.getQueryString() );
+		if ( def == null ) {
+			throw new IllegalArgumentException( "Named native query definition object is null" );
+		}
+		if ( def.getName() == null ) {
+			throw new IllegalArgumentException( "Named native query definition name is null: " + def.getQueryString() );
 		}
 		namedNativeQueryDefs.put( def.getName(), def );
 	}
@@ -470,10 +471,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return resultSetMappings;
 	}
 
-	private ClassLoaderService classLoaderService() {
-		return classLoaderService.getValue();
-	}
-
 //	private PersisterClassResolver persisterClassResolverService() {
 //		return persisterClassResolverService.getValue();
 //	}
@@ -491,7 +488,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> Class<T> locateClassByName(String name) {
-		return classLoaderService().classForName( name );
+		return classLoaderService.classForName( name );
 	}
 
 	@Override
@@ -506,7 +503,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				new ValueHolder.DeferredInitializer<Class<?>>() {
 					@Override
 					public Class<?> initialize() {
-						return classLoaderService.getValue().classForName( className );
+						return classLoaderService.classForName( className );
 					}
 				}
 		);

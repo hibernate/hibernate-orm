@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
@@ -58,7 +60,7 @@ public class EntityMappingsMocker {
 	private final IndexBuilder indexBuilder;
 	private final GlobalAnnotations globalAnnotations;
 
-	public EntityMappingsMocker(List<JaxbEntityMappings> entityMappingsList, Index index, ServiceRegistry serviceRegistry) {
+	public EntityMappingsMocker(List<JaxbEntityMappings> entityMappingsList, IndexView index, ServiceRegistry serviceRegistry) {
 		this.entityMappingsList = entityMappingsList;
 		this.indexBuilder = new IndexBuilder( index, serviceRegistry );
 		this.globalAnnotations = new GlobalAnnotations();

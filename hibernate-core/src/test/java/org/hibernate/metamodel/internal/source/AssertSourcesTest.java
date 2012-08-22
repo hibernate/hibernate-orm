@@ -72,7 +72,11 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		MetadataSources ann = new MetadataSources( serviceRegistry );
 		ann.addAnnotatedClass( User.class );
-		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
+		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
+				buildMetadata( ann ),
+				ann,
+				ann.buildJandexView()
+		);
 		testUserEntitySources( annProcessor );
 	}
 
@@ -179,7 +183,11 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
-		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
+		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
+				buildMetadata( ann ),
+				ann,
+				ann.buildJandexView()
+		);
 		testOrderEntitySources( annProcessor );
 	}
 
@@ -204,7 +212,11 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
-		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl( buildMetadata( ann ), ann );
+		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
+				buildMetadata( ann ),
+				ann,
+				ann.buildJandexView()
+		);
 		testOrderNonAggregatedEntitySources( annProcessor );
 	}
 

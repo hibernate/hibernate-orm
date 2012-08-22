@@ -33,6 +33,7 @@ import com.fasterxml.classmate.TypeResolver;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
@@ -50,13 +51,13 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	private final MetadataImplementor metadata;
 	private final ValueHolder<ClassLoaderService> classLoaderService;
-	private final Index index;
+	private final IndexView index;
 	private final TypeResolver typeResolver = new TypeResolver();
 	private final Map<Class<?>, ResolvedType> resolvedTypeCache = new HashMap<Class<?>, ResolvedType>();
 
 	private final IdentifierGeneratorExtractionDelegate identifierGeneratorSourceCreationDelegate;
 
-	public AnnotationBindingContextImpl(MetadataImplementor metadata, Index index) {
+	public AnnotationBindingContextImpl(MetadataImplementor metadata, IndexView index) {
 		this.metadata = metadata;
 		this.classLoaderService = new ValueHolder<ClassLoaderService>(
 				new ValueHolder.DeferredInitializer<ClassLoaderService>() {
@@ -75,7 +76,7 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	}
 
 	@Override
-	public Index getIndex() {
+	public IndexView getIndex() {
 		return index;
 	}
 

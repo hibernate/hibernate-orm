@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal;
 
 import javax.persistence.SharedCacheMode;
 
+import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
 import org.hibernate.MultiTenancyStrategy;
@@ -91,6 +92,12 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	@Override
+	public MetadataBuilder with(IndexView jandexView) {
+		this.options.jandexView = jandexView;
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled) {
 		this.options.useNewIdentifierGenerators = enabled;
 		return this;
@@ -114,6 +121,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private String defaultSchemaName;
 		private String defaultCatalogName;
 		private MultiTenancyStrategy multiTenancyStrategy;
+		public IndexView jandexView;
 
 		public OptionsImpl(ServiceRegistry serviceRegistry) {
 			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -214,6 +222,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		@Override
 		public MultiTenancyStrategy getMultiTenancyStrategy() {
 			return multiTenancyStrategy;
+		}
+
+		@Override
+		public IndexView getJandexView() {
+			return jandexView;
 		}
 	}
 }

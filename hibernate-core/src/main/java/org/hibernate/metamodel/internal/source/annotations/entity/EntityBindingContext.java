@@ -34,6 +34,7 @@ import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.jaxb.spi.Origin;
@@ -183,7 +184,7 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	}
 
 	@Override
-	public Index getIndex() {
+	public IndexView getIndex() {
 		return contextDelegate.getIndex();
 	}
 

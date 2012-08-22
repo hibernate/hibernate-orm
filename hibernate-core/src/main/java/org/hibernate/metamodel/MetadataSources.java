@@ -31,20 +31,28 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import org.jboss.logging.Logger;
+
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
 import org.w3c.dom.Document;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.jaxb.internal.JaxbMappingProcessor;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
+import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
@@ -59,18 +67,17 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
 
+	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+	private final JaxbMappingProcessor jaxbProcessor;
+	private final ServiceRegistry serviceRegistry;
+	private final MetadataBuilderImpl metadataBuilder;
+
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
-	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-
-	private final JaxbMappingProcessor jaxbProcessor;
-
-	private final ServiceRegistry serviceRegistry;
-
-	private final MetadataBuilderImpl metadataBuilder;
+	private boolean hasOrmXmlJaxbRoots;
 
 	/**
 	 * Create a metadata sources using the specified service registry.
@@ -107,6 +114,11 @@ public class MetadataSources {
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
+
+	public boolean hasOrmXmlJaxbRoots() {
+		return hasOrmXmlJaxbRoots;
+	}
+
 
 	/**
 	 * Get a builder for metadata where non-default options can be specified.
@@ -197,7 +209,7 @@ public class MetadataSources {
 	private JaxbRoot add(InputStream inputStream, Origin origin, boolean close) {
 		try {
 			JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( inputStream, origin );
-			jaxbRootList.add( jaxbRoot );
+			addJaxbRoot( jaxbRoot );
 			return jaxbRoot;
 		}
 		finally {
@@ -336,8 +348,13 @@ public class MetadataSources {
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, "<unknown>" );
 		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
-		jaxbRootList.add( jaxbRoot );
+		addJaxbRoot( jaxbRoot );
 		return this;
+	}
+
+	private void addJaxbRoot(JaxbRoot jaxbRoot) {
+		hasOrmXmlJaxbRoots = hasOrmXmlJaxbRoots || JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() );
+		jaxbRootList.add( jaxbRoot );
 	}
 
 	/**
@@ -411,5 +428,72 @@ public class MetadataSources {
 	public MetadataSources addCacheRegionDefinitions(List<CacheRegionDefinition> cacheRegionDefinitions) {
 		externalCacheRegionDefinitions.addAll( cacheRegionDefinitions );
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public IndexView wrapJandexView(IndexView jandexView) {
+		if ( ! hasOrmXmlJaxbRoots ) {
+			// no need to wrap
+			return jandexView;
+		}
+
+		final List<JaxbEntityMappings> collectedOrmXmlMappings = new ArrayList<JaxbEntityMappings>();
+		for ( JaxbRoot jaxbRoot : getJaxbRootList() ) {
+			if ( JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() ) ) {
+				collectedOrmXmlMappings.add( ( (JaxbRoot<JaxbEntityMappings>) jaxbRoot ).getRoot() );
+			}
+		}
+
+		if ( collectedOrmXmlMappings.isEmpty() ) {
+			// log a warning or something
+		}
+
+		return new EntityMappingsMocker( collectedOrmXmlMappings, jandexView, serviceRegistry ).mockNewIndex();
+	}
+
+	public IndexView buildJandexView() {
+		// create a jandex index from the annotated classes
+
+		Indexer indexer = new Indexer();
+		Set<String> processedNames = new HashSet<String>();
+
+		for ( Class<?> clazz : getAnnotatedClasses() ) {
+			indexClass( clazz, indexer, processedNames );
+		}
+
+		for ( String className : getAnnotatedClassNames() ) {
+			indexResource( className.replace( '.', '/' ) + ".class", indexer, processedNames );
+		}
+
+		// add package-info from the configured packages
+		for ( String packageName : getAnnotatedPackages() ) {
+			indexResource( packageName.replace( '.', '/' ) + "/package-info.class", indexer, processedNames );
+		}
+
+		return wrapJandexView( indexer.complete() );
+	}
+
+	private void indexClass(Class clazz, Indexer indexer, Set<String> processedNames) {
+		if ( clazz == null ) {
+			return;
+		}
+
+		indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer, processedNames );
+
+		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
+		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
+		// discovered while processing the annotations. To keep this behavior we index all classes in the
+		// hierarchy (see also HHH-7484)
+		indexClass( clazz.getSuperclass(), indexer, processedNames );
+	}
+
+	private void indexResource(String resourceName, Indexer indexer, Set<String> processedNames) {
+		InputStream stream = serviceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+		try {
+			indexer.index( stream );
+		}
+		catch ( IOException e ) {
+			throw new HibernateException( "Unable to open input stream for resource " + resourceName, e );
+		}
 	}
 }

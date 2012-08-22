@@ -25,6 +25,7 @@ package org.hibernate.metamodel;
 
 import javax.persistence.SharedCacheMode;
 
+import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
 import org.hibernate.cache.spi.access.AccessType;
@@ -44,6 +45,8 @@ public interface MetadataBuilder {
 	public MetadataBuilder with(SharedCacheMode cacheMode);
 
 	public MetadataBuilder with(AccessType accessType);
+
+	public MetadataBuilder with(IndexView jandexView);
 
 	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
 

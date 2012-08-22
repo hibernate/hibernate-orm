@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +90,7 @@ class GlobalAnnotations implements JPADotNames {
 	}
 
 
-	void addIndexedAnnotationInstance(List<AnnotationInstance> annotationInstanceList) {
+	void addIndexedAnnotationInstance(Collection<AnnotationInstance> annotationInstanceList) {
 		if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
 			indexedAnnotationInstanceList.addAll( annotationInstanceList );
 		}

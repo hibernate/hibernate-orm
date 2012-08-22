@@ -25,14 +25,15 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import org.jboss.jandex.AnnotationInstance;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
@@ -40,7 +41,6 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -75,7 +75,7 @@ public class SqlResultSetProcessor {
 	}
 
 	public static void bind(final AnnotationBindingContext bindingContext) {
-		List<AnnotationInstance> annotations = bindingContext.getIndex()
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( JPADotNames.SQL_RESULT_SET_MAPPING );
 		for ( final AnnotationInstance sqlResultSetMappingAnnotationInstance : annotations ) {
 			bindSqlResultSetMapping( bindingContext, sqlResultSetMappingAnnotationInstance );

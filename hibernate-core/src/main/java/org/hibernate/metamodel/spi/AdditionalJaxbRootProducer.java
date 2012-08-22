@@ -25,7 +25,7 @@ package org.hibernate.metamodel.spi;
 
 import java.util.List;
 
-import org.jboss.jandex.IndexResult;
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.jaxb.spi.JaxbRoot;
 
@@ -44,5 +44,5 @@ public interface AdditionalJaxbRootProducer {
 	 *
 	 * @return List of additional mappings
 	 */
-	public List<JaxbRoot> produceRoots(MetadataImplementor metadata, IndexResult jandexIndex);
+	public List<JaxbRoot> produceRoots(MetadataImplementor metadata, IndexView jandexIndex);
 }

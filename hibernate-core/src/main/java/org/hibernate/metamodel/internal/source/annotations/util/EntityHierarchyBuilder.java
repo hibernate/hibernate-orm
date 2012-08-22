@@ -23,19 +23,20 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
+import javax.persistence.AccessType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
@@ -73,7 +74,7 @@ public class EntityHierarchyBuilder {
 
 		List<DotName> processedEntities = new ArrayList<DotName>();
 		Map<DotName, List<ClassInfo>> classToDirectSubClassMap = new HashMap<DotName, List<ClassInfo>>();
-		Index index = bindingContext.getIndex();
+		IndexView index = bindingContext.getIndex();
 		for ( ClassInfo classInfo : index.getKnownClasses() ) {
 			if ( !isEntityClass( classInfo ) ) {
 				continue;
@@ -174,7 +175,7 @@ public class EntityHierarchyBuilder {
 	 *
 	 * @return Finds the root entity starting at the entity given by {@code info}
 	 */
-	private static ClassInfo findRootEntityClassInfo(Index index, ClassInfo info) {
+	private static ClassInfo findRootEntityClassInfo(IndexView index, ClassInfo info) {
 		ClassInfo rootEntity = info;
 
 		DotName superName = info.superName();
@@ -190,7 +191,7 @@ public class EntityHierarchyBuilder {
 		return rootEntity;
 	}
 
-	private static List<ClassInfo> findMappedSuperclasses(Index index, ClassInfo info) {
+	private static List<ClassInfo> findMappedSuperclasses(IndexView index, ClassInfo info) {
 		List<ClassInfo> mappedSuperclasses = new ArrayList<ClassInfo>(  );
 		DotName superName = info.superName();
 		ClassInfo tmpInfo;
@@ -226,7 +227,7 @@ public class EntityHierarchyBuilder {
 										 Map<DotName, List<ClassInfo>> classToDirectSubclassMap) {
 		processedEntities.add( classInfo.name() );
 		rootClassWithAllSubclasses.add( classInfo );
-		List<ClassInfo> subClasses = bindingContext.getIndex().getKnownDirectSubclasses( classInfo.name() );
+		Collection<ClassInfo> subClasses = bindingContext.getIndex().getKnownDirectSubclasses( classInfo.name() );
 
 		// if there are no more subclasses we reached the leaf class. In order to properly resolve generics we
 		// need to resolve the type information using this leaf class

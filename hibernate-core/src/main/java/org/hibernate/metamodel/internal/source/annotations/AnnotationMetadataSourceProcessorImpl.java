@@ -23,24 +23,15 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.Indexer;
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.jaxb.spi.JaxbRoot;
-import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.SourceType;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
@@ -52,16 +43,12 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -73,57 +60,24 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private final MetadataImplementor metadata;
+	private final IndexView jandexView;
 
 	private AnnotationBindingContext bindingContext;
 
-	public AnnotationMetadataSourceProcessorImpl(MetadataImpl metadata, MetadataSources metadataSources) {
+	public AnnotationMetadataSourceProcessorImpl(
+			MetadataImpl metadata,
+			MetadataSources metadataSources,
+			IndexView jandexView) {
 		this.metadata = metadata;
+		this.jandexView = jandexView;
 
-		// todo : use the Jandex from JBoss/JPA if available...
-		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
-
-		// create a jandex index from the annotated classes
-		Set<String> processedNames = new HashSet<String>();
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
-			indexClass( indexer, clazz, processedNames );
-		}
-
-		for ( String className : metadataSources.getAnnotatedClassNames() ) {
-			Class<?> clazz;
-			try {
-				clazz = metadata.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-			}
-			catch ( ClassLoadingException e ) {
-				throw new MappingException( "Unable to load a configured class", new Origin( SourceType.FILE, null ) );
-			}
-			indexClass( indexer, clazz, processedNames );
-		}
-
-		// add package-info from the configured packages
-		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
-			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class", processedNames );
-		}
-
-		Index index = indexer.complete();
-
-		List<JaxbRoot<JaxbEntityMappings>> mappings = new ArrayList<JaxbRoot<JaxbEntityMappings>>();
-		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
-			if ( root.getRoot() instanceof JaxbEntityMappings ) {
-				mappings.add( ( JaxbRoot<JaxbEntityMappings> ) root );
-			}
-		}
-		if ( !mappings.isEmpty() ) {
-			index = parseAndUpdateIndex( mappings, index );
-		}
-
-		if ( !index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
+		if ( !jandexView.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
 			// todo : this needs to move to AnnotationBindingContext
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
 			metadata.setGloballyQuotedIdentifiers( true );
 		}
 
-		bindingContext = new AnnotationBindingContextImpl( metadata, index );
+		bindingContext = new AnnotationBindingContextImpl( metadata, jandexView );
 	}
 
 	@Override
@@ -131,7 +85,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		assertBindingContextExists();
 
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
-		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEF );
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEF );
 		for ( AnnotationInstance typeDef : annotations ) {
 			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
 		}
@@ -161,7 +115,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		assertBindingContextExists();
 
 		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
-		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEF );
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEF );
 		for ( AnnotationInstance filterDef : annotations ) {
 			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
 		}
@@ -205,44 +159,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	}
 
-	private Index parseAndUpdateIndex(List<JaxbRoot<JaxbEntityMappings>> mappings, Index annotationIndex) {
-		List<JaxbEntityMappings> list = new ArrayList<JaxbEntityMappings>( mappings.size() );
-		for ( JaxbRoot<JaxbEntityMappings> jaxbRoot : mappings ) {
-			list.add( jaxbRoot.getRoot() );
-		}
-		return new EntityMappingsMocker( list, annotationIndex, metadata.getServiceRegistry() ).mockNewIndex();
-	}
-
-
-	private void indexClass(Indexer indexer, Class<?> clazz, Set<String> processedNames) {
-		indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class", processedNames );
-
-		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
-		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
-		// discovered while processing the annotations. To keep this behavior we index all classes in the
-		// hierarchy (see also HHH-7484)
-		clazz = clazz.getSuperclass();
-		while ( clazz != null && !Object.class.equals( clazz ) ) {
-			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class", processedNames );
-			clazz = clazz.getSuperclass();
-		}
-	}
-
-	private void indexClass(Indexer indexer, String className, Set<String> processedNames) {
-		if ( processedNames.contains( className ) ) {
-			return;
-		}
-		InputStream stream = metadata.getServiceRegistry().getService( ClassLoaderService.class ).locateResourceStream(
-				className
-		);
-		try {
-			indexer.index( stream );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to open input stream for class " + className, e );
-		}
-	}
-
 	private class GlobalIdentifierGeneratorSourceContainer implements IdentifierGeneratorSourceContainer {
 		private final AnnotationBindingContext bindingContext;
 
@@ -251,17 +167,17 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 
 		@Override
-		public List<AnnotationInstance> getSequenceGeneratorSources() {
+		public Collection<AnnotationInstance> getSequenceGeneratorSources() {
 			return bindingContext.getIndex().getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
 		}
 
 		@Override
-		public List<AnnotationInstance> getTableGeneratorSources() {
+		public Collection<AnnotationInstance> getTableGeneratorSources() {
 			return bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
 		}
 
 		@Override
-		public List<AnnotationInstance> getGenericGeneratorSources() {
+		public Collection<AnnotationInstance> getGenericGeneratorSources() {
 			List<AnnotationInstance> annotations = new ArrayList<AnnotationInstance>();
 
 			annotations.addAll( bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR ) );

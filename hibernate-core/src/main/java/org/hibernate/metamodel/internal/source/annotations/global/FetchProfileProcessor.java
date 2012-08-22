@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -32,12 +32,12 @@ import org.jboss.jandex.AnnotationInstance;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.FetchProfile.Fetch;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 
 /**
  * Binds fetch profiles found in annotations.
@@ -57,7 +57,7 @@ public class FetchProfileProcessor {
 	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
 	public static void bind(AnnotationBindingContext bindingContext) {
 
-		List<AnnotationInstance> annotations = bindingContext.getIndex()
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( HibernateDotNames.FETCH_PROFILE );
 		for ( AnnotationInstance fetchProfile : annotations ) {
 			bind( bindingContext.getMetadataImplementor(), fetchProfile );

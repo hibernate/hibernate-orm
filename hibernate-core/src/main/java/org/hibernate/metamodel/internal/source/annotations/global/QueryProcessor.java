@@ -23,15 +23,16 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import java.util.HashMap;
-import java.util.List;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import java.util.Collection;
+import java.util.HashMap;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
@@ -47,11 +48,11 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 
 /**
  * Binds {@link NamedQuery}, {@link NamedQueries}, {@link NamedNativeQuery}, {@link NamedNativeQueries},
@@ -79,7 +80,7 @@ public class QueryProcessor {
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_QUERY );
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_QUERY );
 		for ( AnnotationInstance query : annotations ) {
 			bindNamedQuery( bindingContext.getMetadataImplementor(), query );
 		}

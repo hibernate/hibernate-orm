@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -34,9 +35,9 @@ import org.jboss.jandex.AnnotationInstance;
  * @author Steve Ebersole
  */
 public interface IdentifierGeneratorSourceContainer {
-	public List<AnnotationInstance> getSequenceGeneratorSources();
+	public Collection<AnnotationInstance> getSequenceGeneratorSources();
 
-	public List<AnnotationInstance> getTableGeneratorSources();
+	public Collection<AnnotationInstance> getTableGeneratorSources();
 
-	public List<AnnotationInstance> getGenericGeneratorSources();
+	public Collection<AnnotationInstance> getGenericGeneratorSources();
 }

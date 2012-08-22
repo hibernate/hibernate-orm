@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,8 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -55,12 +58,12 @@ public class IndexBuilder {
 	private final Map<DotName, List<ClassInfo>> subclasses;
 	private final Map<DotName, List<ClassInfo>> implementors;
 	private final Map<DotName, ClassInfo> classes;
-	private Index index;
+	private IndexView index;
 	private final Map<DotName, Map<DotName, List<AnnotationInstance>>> classInfoAnnotationsMap;
 	private final Map<DotName, Map<DotName, List<AnnotationInstance>>> indexedClassInfoAnnotationsMap;
 	private final ServiceRegistry serviceRegistry;
 
-	IndexBuilder(Index index, ServiceRegistry serviceRegistry) {
+	IndexBuilder(IndexView index, ServiceRegistry serviceRegistry) {
 		this.index = index;
 		this.serviceRegistry = serviceRegistry;
 		this.annotations = new HashMap<DotName, List<AnnotationInstance>>();
@@ -167,9 +170,9 @@ public class IndexBuilder {
 
 	void collectGlobalConfigurationFromIndex(GlobalAnnotations globalAnnotations) {
 		for ( DotName annName : DefaultConfigurationHelper.GLOBAL_ANNOTATIONS ) {
-			List<AnnotationInstance> annotationInstanceList = index.getAnnotations( annName );
-			if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
-				globalAnnotations.addIndexedAnnotationInstance( annotationInstanceList );
+			Collection<AnnotationInstance> annotationInstances = index.getAnnotations( annName );
+			if ( CollectionHelper.isNotEmpty( annotationInstances ) ) {
+				globalAnnotations.addIndexedAnnotationInstance( annotationInstances );
 			}
 		}
 		globalAnnotations.filterIndexedAnnotations();

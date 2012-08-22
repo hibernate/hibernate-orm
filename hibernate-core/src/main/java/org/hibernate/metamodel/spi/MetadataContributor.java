@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.jboss.jandex.IndexResult;
+import org.jboss.jandex.IndexView;
 
 /**
  * Contract for contributing MetadataSources.  This hook occurs just after all processing of
@@ -38,5 +38,5 @@ public interface MetadataContributor {
 	 * @param metadata The metadata
 	 * @param jandexIndex The Jandex index
 	 */
-	public void contribute(MetadataImplementor metadata, IndexResult jandexIndex);
+	public void contribute(MetadataImplementor metadata, IndexView jandexIndex);
 }

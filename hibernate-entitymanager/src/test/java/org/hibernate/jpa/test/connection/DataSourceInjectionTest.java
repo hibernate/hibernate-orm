@@ -22,12 +22,17 @@
  */
 package org.hibernate.jpa.test.connection;
 
+import javax.persistence.EntityManagerFactory;
 import java.io.File;
 
-import org.junit.Assert;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+
 import org.junit.Test;
 
-import org.hibernate.ejb.HibernatePersistence;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+
 
 /**
  * @author Emmanuel Bernard
@@ -40,8 +45,12 @@ public class DataSourceInjectionTest {
 		sub.mkdir();
 		PersistenceUnitInfoImpl info = new PersistenceUnitInfoImpl( sub.toURI().toURL(), new String[]{} );
 		try {
-			new HibernatePersistence().createContainerEntityManagerFactory( info, null );
-			Assert.fail( "FakeDatasource should have been used" );
+			EntityManagerFactory emf = new HibernatePersistenceProvider().createContainerEntityManagerFactory( info, null );
+			DatasourceConnectionProviderImpl cp = assertTyping(
+					DatasourceConnectionProviderImpl.class,
+					emf.unwrap( SessionFactoryImplementor.class ).getConnectionProvider()
+			);
+			assertTyping( FakeDataSource.class, cp.getDataSource() );
 		}
 		catch (FakeDataSourceException fde) {
 			//success

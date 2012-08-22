@@ -23,9 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.jboss.jandex.AnnotationInstance;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
@@ -34,13 +35,13 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -64,7 +65,7 @@ public class TableProcessor {
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLE );
+		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLE );
 		for ( AnnotationInstance tableAnnotation : annotations ) {
 			bind( bindingContext.getMetadataImplementor(), tableAnnotation );
 		}

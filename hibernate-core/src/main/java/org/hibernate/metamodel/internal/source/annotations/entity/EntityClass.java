@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -494,7 +495,7 @@ public class EntityClass extends ConfiguredClass {
 
 		// Bind default JPA entity listener callbacks (unless excluded), using superclasses first (unless excluded)
 		if ( JandexHelper.getSingleAnnotation( getClassInfo(), JPADotNames.EXCLUDE_DEFAULT_LISTENERS ) == null ) {
-			List<AnnotationInstance> defaultEntityListenerAnnotations = getLocalBindingContext().getIndex()
+			Collection<AnnotationInstance> defaultEntityListenerAnnotations = getLocalBindingContext().getIndex()
 					.getAnnotations( PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
 			for ( AnnotationInstance annotation : defaultEntityListenerAnnotations ) {
 				for ( Type callbackClass : annotation.value().asClassArray() ) {

@@ -29,7 +29,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
@@ -151,7 +151,7 @@ public final class Nullability {
 				//check for all components values in the collection
 
 				CompositeType componentType = (CompositeType) collectionElementType;
-				Iterator iter = CascadingAction.getLoadedElementsIterator( session, collectionType, value );
+				Iterator iter = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
 				while ( iter.hasNext() ) {
 					Object compValue = iter.next();
 					if (compValue != null) {

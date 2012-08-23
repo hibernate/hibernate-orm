@@ -32,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -60,7 +61,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 
 	@Override
     protected CascadingAction getCascadeAction() {
-		return CascadingAction.PERSIST;
+		return CascadingActions.PERSIST;
 	}
 
 	@Override

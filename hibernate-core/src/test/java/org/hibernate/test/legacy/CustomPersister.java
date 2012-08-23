@@ -552,6 +552,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session) {
+		throw new UnsupportedOperationException( "not supported" );
+	}
+
+	@Override
 	public boolean[] getPropertyVersionability() {
 		return MUTABILITY;
 	}

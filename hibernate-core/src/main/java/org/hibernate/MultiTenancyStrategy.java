@@ -36,7 +36,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public enum MultiTenancyStrategy {
-
 	/**
 	 * Multi-tenancy implemented by use of discriminator columns.
 	 */
@@ -59,19 +58,21 @@ public enum MultiTenancyStrategy {
 			MultiTenancyStrategy.class.getName()
 	);
 
-	public static MultiTenancyStrategy fromConfigValue(Object value) {
-		if ( value == null ) {
+	public boolean requiresMultiTenantConnectionProvider() {
+		return this == DATABASE || this == SCHEMA;
+	}
+
+	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
+		final Object strategy = properties.get( Environment.MULTI_TENANT );
+		if ( strategy == null ) {
 			return MultiTenancyStrategy.NONE;
 		}
 
-		if ( MultiTenancyStrategy.class.isInstance( value ) ) {
-			return (MultiTenancyStrategy) value;
+		if ( MultiTenancyStrategy.class.isInstance( strategy ) ) {
+			return (MultiTenancyStrategy) strategy;
 		}
 
-		return fromExternalName( value.toString() );
-	}
-
-	private static MultiTenancyStrategy fromExternalName(String strategyName) {
+		final String strategyName = strategy.toString();
 		try {
 			return MultiTenancyStrategy.valueOf( strategyName.toUpperCase() );
 		}
@@ -79,9 +80,5 @@ public enum MultiTenancyStrategy {
 			LOG.warn( "Unknown multi tenancy strategy [ " +strategyName +" ], using MultiTenancyStrategy.NONE." );
 			return MultiTenancyStrategy.NONE;
 		}
-	}
-
-	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
-		return fromConfigValue( properties.get( Environment.MULTI_TENANT ) );
 	}
 }

@@ -98,7 +98,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			boolean isClosed,
 			List<ConnectionObserver> observers) {
 		this.connectionReleaseMode = determineConnectionReleaseMode(
-				jdbcServices, isUserSuppliedConnection, connectionReleaseMode
+				jdbcConnectionAccess, isUserSuppliedConnection, connectionReleaseMode
 		);
 		this.jdbcServices = jdbcServices;
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
@@ -110,14 +110,14 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	private static ConnectionReleaseMode determineConnectionReleaseMode(
-			JdbcServices jdbcServices,
+			JdbcConnectionAccess jdbcConnectionAccess,
 			boolean isUserSuppliedConnection,
 			ConnectionReleaseMode connectionReleaseMode) {
 		if ( isUserSuppliedConnection ) {
 			return ConnectionReleaseMode.ON_CLOSE;
 		}
 		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-				! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
+				! jdbcConnectionAccess.supportsAggressiveRelease() ) {
 			LOG.debug( "Connection provider reports to not support aggressive release; overriding" );
 			return ConnectionReleaseMode.AFTER_TRANSACTION;
 		}

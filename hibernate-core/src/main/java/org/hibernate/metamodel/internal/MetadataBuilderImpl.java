@@ -161,16 +161,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
                     false
             );
 
-			multiTenancyStrategy = configService.getSetting(
-					AvailableSettings.MULTI_TENANT,
-					new ConfigurationService.Converter<org.hibernate.MultiTenancyStrategy>() {
-						@Override
-						public MultiTenancyStrategy convert(Object value) {
-							return MultiTenancyStrategy.fromConfigValue( value );
-						}
-					},
-					MultiTenancyStrategy.NONE
-			);
+			multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 		}
 
 

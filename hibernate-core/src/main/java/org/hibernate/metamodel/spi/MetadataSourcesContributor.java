@@ -23,7 +23,8 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.jboss.jandex.IndexResult;
+
+import org.jboss.jandex.IndexView;
 
 import org.hibernate.metamodel.MetadataSources;
 
@@ -39,5 +40,5 @@ public interface MetadataSourcesContributor {
 	 * @param metadataSources
 	 * @param jandexIndex The Jandex index
 	 */
-	public void contribute(MetadataSources metadataSources, IndexResult jandexIndex);
+	public void contribute(MetadataSources metadataSources, IndexView jandexIndex);
 }

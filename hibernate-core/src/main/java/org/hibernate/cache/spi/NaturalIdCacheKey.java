@@ -23,6 +23,8 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -44,7 +46,7 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
-	private final transient ValueHolder<String> toString;
+	private transient ValueHolder<String> toString;
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
@@ -73,7 +75,8 @@ public class NaturalIdCacheKey implements Serializable {
 		result = prime * result + ( ( this.entityName == null ) ? 0 : this.entityName.hashCode() );
 		result = prime * result + ( ( this.tenantId == null ) ? 0 : this.tenantId.hashCode() );
 		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final Type type = propertyTypes[naturalIdPropertyIndexes[i]];
+			final int naturalIdPropertyIndex = naturalIdPropertyIndexes[i];
+            final Type type = propertyTypes[naturalIdPropertyIndex];
 			final Object value = naturalIdValues[i];
 			
 			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
@@ -82,25 +85,29 @@ public class NaturalIdCacheKey implements Serializable {
 		}
 		
 		this.hashCode = result;
-		this.toString = new ValueHolder<String>(
-				new ValueHolder.DeferredInitializer<String>() {
-					@Override
-					public String initialize() {
-						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
-						//the only same way to differentiate the keys is to included the disassembled values in the string.
-						final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
-						for ( int i = 0; i < naturalIdValues.length; i++ ) {
-							toStringBuilder.append( naturalIdValues[i] );
-							if ( i + 1 < naturalIdValues.length ) {
-								toStringBuilder.append( ", " );
-							}
-						}
-						toStringBuilder.append( "]" );
+		initTransients();
+	}
+	
+	private void initTransients() {
+	    this.toString = new ValueHolder<String>(
+                new ValueHolder.DeferredInitializer<String>() {
+                    @Override
+                    public String initialize() {
+                        //Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
+                        //the only same way to differentiate the keys is to included the disassembled values in the string.
+                        final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
+                        for ( int i = 0; i < naturalIdValues.length; i++ ) {
+                            toStringBuilder.append( naturalIdValues[i] );
+                            if ( i + 1 < naturalIdValues.length ) {
+                                toStringBuilder.append( ", " );
+                            }
+                        }
+                        toStringBuilder.append( "]" );
 
-						return toStringBuilder.toString();
-					}
-				}
-		);
+                        return toStringBuilder.toString();
+                    }
+                }
+        );
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -130,18 +137,27 @@ public class NaturalIdCacheKey implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
+		if ( o == null ) {
+			return false;
+		}
 		if ( this == o ) {
 			return true;
 		}
-		
-		if ( hashCode != o.hashCode() || !(o instanceof NaturalIdCacheKey) ) {
+
+		if ( hashCode != o.hashCode() || !( o instanceof NaturalIdCacheKey ) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 
 		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
-		return entityName.equals( other.entityName ) 
+		return EqualsHelper.equals( entityName, other.entityName )
 				&& EqualsHelper.equals( tenantId, other.tenantId )
 				&& Arrays.deepEquals( this.naturalIdValues, other.naturalIdValues );
 	}
+	
+    private void readObject(ObjectInputStream ois)
+            throws ClassNotFoundException, IOException {
+        ois.defaultReadObject();
+        initTransients();
+    }
 }

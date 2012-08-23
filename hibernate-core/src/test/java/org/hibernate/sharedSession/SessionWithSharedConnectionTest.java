@@ -34,6 +34,8 @@ import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.persister.entity.EntityPersister;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -241,12 +243,20 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		
 		EventListenerRegistry eventListenerRegistry = sessionFactory().getServiceRegistry().getService(EventListenerRegistry.class);
 		//register a post commit listener
-		eventListenerRegistry.appendListeners( EventType.POST_COMMIT_INSERT, new PostInsertEventListener(){
-			@Override
-			public void onPostInsert(PostInsertEvent event) {
-				((IrrelevantEntity) event.getEntity()).setName( postCommitMessage );
-			}
-		});
+		eventListenerRegistry.appendListeners(
+				EventType.POST_COMMIT_INSERT,
+				new PostInsertEventListener() {
+					@Override
+					public void onPostInsert(PostInsertEvent event) {
+						((IrrelevantEntity) event.getEntity()).setName( postCommitMessage );
+					}
+
+					@Override
+					public boolean requiresPostCommitHanding(EntityPersister persister) {
+						return true;
+					}
+				}
+		);
 		
 		session.getTransaction().begin();
 		

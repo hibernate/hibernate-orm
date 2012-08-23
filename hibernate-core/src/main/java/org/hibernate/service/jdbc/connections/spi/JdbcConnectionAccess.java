@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -56,8 +56,8 @@ public interface JdbcConnectionAccess extends Serializable {
 	 * Does the underlying provider of connections support aggressive releasing of connections (and re-acquisition
 	 * of those connections later, if need be) in JTA environments?
 	 *
-	 * @see ConnectionProvider#supportsAggressiveRelease()
-	 * @see MultiTenantConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
 	 */
 	public boolean supportsAggressiveRelease();
 }

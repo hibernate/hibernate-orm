@@ -115,6 +115,136 @@ public class BinderHelper {
 		return clone;
 	}
 
+// This is sooooooooo close in terms of not generating a synthetic property if we do not have to (where property ref
+// refers to a single property).  The sticking point is cases where the `referencedPropertyName` come from subclasses
+// or secondary tables.  Part of the problem is in PersistentClass itself during attempts to resolve the referenced
+// property; currently it only considers non-subclass and non-joined properties.  Part of the problem is in terms
+// of SQL generation.
+//	public static void createSyntheticPropertyReference(
+//			Ejb3JoinColumn[] columns,
+//			PersistentClass ownerEntity,
+//			PersistentClass associatedEntity,
+//			Value value,
+//			boolean inverse,
+//			Mappings mappings) {
+//		//associated entity only used for more precise exception, yuk!
+//		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) return;
+//		int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, ownerEntity, mappings );
+//		PersistentClass associatedClass = columns[0].getPropertyHolder() != null ?
+//				columns[0].getPropertyHolder().getPersistentClass() :
+//				null;
+//		if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum ) {
+//			//find properties associated to a certain column
+//			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), mappings );
+//			List<Property> properties = findPropertiesByColumns( columnOwner, columns, mappings );
+//
+//			if ( properties == null ) {
+//				//TODO use a ToOne type doing a second select
+//				StringBuilder columnsList = new StringBuilder();
+//				columnsList.append( "referencedColumnNames(" );
+//				for (Ejb3JoinColumn column : columns) {
+//					columnsList.append( column.getReferencedColumn() ).append( ", " );
+//				}
+//				columnsList.setLength( columnsList.length() - 2 );
+//				columnsList.append( ") " );
+//
+//				if ( associatedEntity != null ) {
+//					//overidden destination
+//					columnsList.append( "of " )
+//							.append( associatedEntity.getEntityName() )
+//							.append( "." )
+//							.append( columns[0].getPropertyName() )
+//							.append( " " );
+//				}
+//				else {
+//					if ( columns[0].getPropertyHolder() != null ) {
+//						columnsList.append( "of " )
+//								.append( columns[0].getPropertyHolder().getEntityName() )
+//								.append( "." )
+//								.append( columns[0].getPropertyName() )
+//								.append( " " );
+//					}
+//				}
+//				columnsList.append( "referencing " )
+//						.append( ownerEntity.getEntityName() )
+//						.append( " not mapped to a single property" );
+//				throw new AnnotationException( columnsList.toString() );
+//			}
+//
+//			final String referencedPropertyName;
+//
+//			if ( properties.size() == 1 ) {
+//				referencedPropertyName = properties.get(0).getName();
+//			}
+//			else {
+//				// Create a synthetic (embedded composite) property to use as the referenced property which
+//				// contains all the properties mapped to the referenced columns.  We need to make a shallow copy
+//				// of the properties to mark them as non-insertable/updatable.
+//
+//				// todo : what if the columns all match with an existing component?
+//
+//				StringBuilder propertyNameBuffer = new StringBuilder( "_" );
+//				propertyNameBuffer.append( associatedClass.getEntityName().replace( '.', '_' ) );
+//				propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName() );
+//				String syntheticPropertyName = propertyNameBuffer.toString();
+//				//create an embeddable component
+//
+//				//todo how about properties.size() == 1, this should be much simpler
+//				Component embeddedComp = columnOwner instanceof PersistentClass ?
+//						new Component( mappings, (PersistentClass) columnOwner ) :
+//						new Component( mappings, (Join) columnOwner );
+//				embeddedComp.setEmbedded( true );
+//				embeddedComp.setNodeName( syntheticPropertyName );
+//				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
+//				for (Property property : properties) {
+//					Property clone = BinderHelper.shallowCopy( property );
+//					clone.setInsertable( false );
+//					clone.setUpdateable( false );
+//					clone.setNaturalIdentifier( false );
+//					clone.setGeneration( property.getGeneration() );
+//					embeddedComp.addProperty( clone );
+//				}
+//				SyntheticProperty synthProp = new SyntheticProperty();
+//				synthProp.setName( syntheticPropertyName );
+//				synthProp.setNodeName( syntheticPropertyName );
+//				synthProp.setPersistentClass( ownerEntity );
+//				synthProp.setUpdateable( false );
+//				synthProp.setInsertable( false );
+//				synthProp.setValue( embeddedComp );
+//				synthProp.setPropertyAccessorName( "embedded" );
+//				ownerEntity.addProperty( synthProp );
+//				//make it unique
+//				TableBinder.createUniqueConstraint( embeddedComp );
+//
+//				referencedPropertyName = syntheticPropertyName;
+//			}
+//
+//			/**
+//			 * creating the property ref to the new synthetic property
+//			 */
+//			if ( value instanceof ToOne ) {
+//				( (ToOne) value ).setReferencedPropertyName( referencedPropertyName );
+//				mappings.addUniquePropertyReference( ownerEntity.getEntityName(), referencedPropertyName );
+//			}
+//			else if ( value instanceof Collection ) {
+//				( (Collection) value ).setReferencedPropertyName( referencedPropertyName );
+//				//not unique because we could create a mtm wo association table
+//				mappings.addPropertyReference( ownerEntity.getEntityName(), referencedPropertyName );
+//			}
+//			else {
+//				throw new AssertionFailure(
+//						"Do a property ref on an unexpected Value type: "
+//								+ value.getClass().getName()
+//				);
+//			}
+//			mappings.addPropertyReferencedAssociation(
+//					( inverse ? "inverse__" : "" ) + associatedClass.getEntityName(),
+//					columns[0].getPropertyName(),
+//					referencedPropertyName
+//			);
+//		}
+//	}
+
 	public static void createSyntheticPropertyReference(
 			Ejb3JoinColumn[] columns,
 			PersistentClass ownerEntity,
@@ -138,15 +268,15 @@ public class BinderHelper {
 			 */
 			StringBuilder propertyNameBuffer = new StringBuilder( "_" );
 			propertyNameBuffer.append( associatedClass.getEntityName().replace( '.', '_' ) );
-			propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName() );
+			propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName().replace( '.', '_' ) );
 			String syntheticPropertyName = propertyNameBuffer.toString();
 			//find properties associated to a certain column
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), mappings );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, mappings );
 			//create an embeddable component
-			Property synthProp = null;
+                        Property synthProp = null;
 			if ( properties != null ) {
-				//todo how about properties.size() == 1, this should be much simpler
+                        //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
 						new Component( mappings, (PersistentClass) columnOwner ) :
 						new Component( mappings, (Join) columnOwner );
@@ -160,8 +290,8 @@ public class BinderHelper {
 					clone.setNaturalIdentifier( false );
 					clone.setGeneration( property.getGeneration() );
 					embeddedComp.addProperty( clone );
-				}
-				synthProp = new SyntheticProperty();
+                                }
+                                    synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setNodeName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
@@ -170,9 +300,9 @@ public class BinderHelper {
 				synthProp.setValue( embeddedComp );
 				synthProp.setPropertyAccessorName( "embedded" );
 				ownerEntity.addProperty( synthProp );
-				//make it unique
+                                //make it unique
 				TableBinder.createUniqueConstraint( embeddedComp );
-			}
+                            }
 			else {
 				//TODO use a ToOne type doing a second select
 				StringBuilder columnsList = new StringBuilder();
@@ -700,7 +830,7 @@ public class BinderHelper {
 		for (int i = 0; i < aliases.length; i++){
 			if (StringHelper.isNotEmpty(aliases[i].table())){
 				ret.put(aliases[i].alias(), aliases[i].table());
-			}
+}
 		}
 		return ret;
 	}

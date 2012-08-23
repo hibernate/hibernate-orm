@@ -1345,18 +1345,7 @@ public class Configuration implements Serializable {
 			metadataSourceQueue.processMetadata( determineMetadataSourcePrecedence() );
 		}
 
-		// process cache queue
-		{
-			for ( CacheHolder holder : caches ) {
-				if ( holder.isClass ) {
-					applyCacheConcurrencyStrategy( holder );
-				}
-				else {
-					applyCollectionCacheConcurrencyStrategy( holder );
-				}
-			}
-			caches.clear();
-		}
+
 
 		try {
 			inSecondPass = true;
@@ -1374,6 +1363,19 @@ public class Configuration implements Serializable {
 		catch ( RecoverableException e ) {
 			//the exception was not recoverable after all
 			throw ( RuntimeException ) e.getCause();
+		}
+
+		// process cache queue
+		{
+			for ( CacheHolder holder : caches ) {
+				if ( holder.isClass ) {
+					applyCacheConcurrencyStrategy( holder );
+				}
+				else {
+					applyCollectionCacheConcurrencyStrategy( holder );
+				}
+			}
+			caches.clear();
 		}
 
 		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {

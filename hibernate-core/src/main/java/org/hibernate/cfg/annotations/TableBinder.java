@@ -402,7 +402,7 @@ public class TableBinder {
 							"No property ref found while expected"
 					);
 				}
-				Property synthProp = referencedEntity.getRecursiveProperty( referencedPropertyName );
+				Property synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
 				if ( synthProp == null ) {
 					throw new AssertionFailure(
 							"Cannot find synthProp: " + referencedEntity.getEntityName() + "." + referencedPropertyName

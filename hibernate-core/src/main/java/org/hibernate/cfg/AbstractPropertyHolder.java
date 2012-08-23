@@ -285,7 +285,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
 				currentOverride.putAll( columnOverride ); //subclasses have precedence over superclasses
 				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
-				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
+				currentJoinTableOverride.putAll( joinTableOverride ); //subclasses have precedence over superclasses
 				columnOverride = currentOverride;
 				joinColumnOverride = currentJoinOverride;
 				joinTableOverride = currentJoinTableOverride;

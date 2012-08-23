@@ -93,7 +93,7 @@ class DatabaseAllocator {
 
 	public static DatabaseAllocator locate(Project project) {
 		if ( ! project.rootProject.hasProperty( DB_ALLOCATOR_KEY ) ) {
-			project.rootProject.setProperty( DB_ALLOCATOR_KEY, new DatabaseAllocator( project.rootProject ) );
+			project.rootProject.ext.setProperty( DB_ALLOCATOR_KEY, new DatabaseAllocator( project.rootProject ) );
 		}
 		return (DatabaseAllocator) project.rootProject.properties[ DB_ALLOCATOR_KEY ];
 	}

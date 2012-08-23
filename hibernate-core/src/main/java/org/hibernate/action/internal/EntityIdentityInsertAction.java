@@ -116,7 +116,14 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 
 	@Override
     protected boolean hasPostCommitEventListeners() {
-		return ! listenerGroup( EventType.POST_COMMIT_INSERT ).isEmpty();
+		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
+		for ( PostInsertEventListener listener : group.listeners() ) {
+			if ( listener.requiresPostCommitHanding( getPersister() ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

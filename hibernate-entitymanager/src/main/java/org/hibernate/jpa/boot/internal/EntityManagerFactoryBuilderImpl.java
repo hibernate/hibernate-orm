@@ -54,7 +54,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexResult;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 
 import org.jboss.logging.Logger;
@@ -82,6 +82,7 @@ import org.hibernate.jpa.boot.spi.JpaUnifiedSettingsBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.packaging.internal.NativeScanner;
@@ -95,6 +96,7 @@ import org.hibernate.secure.internal.JACCConfiguration;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -180,7 +182,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		ScanResult scanResult = scan( bootstrapServiceRegistry );
 		//		2) building a Jandex index
 		Set<String> collectedManagedClassNames = collectManagedClassNames( scanResult );
-		IndexResult jandexIndex = locateOrBuildJandexIndex( collectedManagedClassNames, scanResult.getPackageNames(), bootstrapServiceRegistry );
+		IndexView jandexIndex = locateOrBuildJandexIndex( collectedManagedClassNames, scanResult.getPackageNames(), bootstrapServiceRegistry );
 		//		3) building "metadata sources" to keep for later to use in building the SessionFactory
 		metadataSources = prepareMetadataSources( jandexIndex, collectedManagedClassNames, scanResult, bootstrapServiceRegistry );
 
@@ -226,7 +228,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	private MetadataSources prepareMetadataSources(
-			IndexResult jandexIndex,
+			IndexView jandexIndex,
 			Set<String> collectedManagedClassNames,
 			ScanResult scanResult,
 			BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -286,7 +288,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return collectedNames;
 	}
 
-	private IndexResult locateOrBuildJandexIndex(
+	private IndexView locateOrBuildJandexIndex(
 			Set<String> collectedManagedClassNames,
 			List<String> packageNames,
 			BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -295,14 +297,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) pass that Index along to the metamodel code...
 		//
 		// (1) is mocked up here, but JBoss AS does not currently pass in any Index to use...
-		IndexResult jandexIndex = (IndexResult) configurationValues.get( JANDEX_INDEX );
+		IndexView jandexIndex = (IndexView) configurationValues.get( JANDEX_INDEX );
 		if ( jandexIndex == null ) {
 			jandexIndex = buildJandexIndex( collectedManagedClassNames, packageNames, bootstrapServiceRegistry );
 		}
 		return jandexIndex;
 	}
 
-	private IndexResult buildJandexIndex(Set<String> classNamesSource, List<String> packageNames, BootstrapServiceRegistry bootstrapServiceRegistry) {
+	private IndexView buildJandexIndex(Set<String> classNamesSource, List<String> packageNames, BootstrapServiceRegistry bootstrapServiceRegistry) {
 		Indexer indexer = new Indexer();
 
 		for ( String className : classNamesSource ) {
@@ -319,7 +321,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// for now, we also need to wrap this in a CompositeIndex until Jandex is updated to use a common interface
 		// between the 2...
-		return new CompositeIndex( indexer.complete() );
+		return CompositeIndex.create( indexer.complete() );
 	}
 
 	private void indexResource(String resourceName, Indexer indexer, BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -772,25 +774,37 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	public EntityManagerFactory buildEntityManagerFactory() {
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
+
 		final ServiceRegistry serviceRegistry = buildServiceRegistry();
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+		return ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
+				new ClassLoaderServiceImpl.Work<EntityManagerFactoryImpl>() {
+					@Override
+					public EntityManagerFactoryImpl perform() {
+						hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
 
-		SessionFactoryImplementor sessionFactory;
-		try {
-			sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory( serviceRegistry );
-		}
-		catch (MappingException e) {
-			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
-		}
+						SessionFactoryImplementor sessionFactory;
+						try {
+							sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory( serviceRegistry );
+						}
+						catch (MappingException e) {
+							throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+						}
 
-		if ( suppliedSessionFactoryObserver != null ) {
-			sessionFactory.addObserver( suppliedSessionFactoryObserver );
-		}
-		sessionFactory.addObserver( new ServiceRegistryCloser() );
+						if ( suppliedSessionFactoryObserver != null ) {
+							sessionFactory.addObserver( suppliedSessionFactoryObserver );
+						}
+						sessionFactory.addObserver( new ServiceRegistryCloser() );
 
-		// NOTE : passing cfg is temporary until
-		return new EntityManagerFactoryImpl( persistenceUnit.getName(), sessionFactory, settings, configurationValues, hibernateConfiguration );
+						// NOTE : passing cfg is temporary until
+						return new EntityManagerFactoryImpl( persistenceUnit.getName(), sessionFactory, settings, configurationValues, hibernateConfiguration );
+					}
+				}
+		);
 	}
 
 	public ServiceRegistry buildServiceRegistry() {

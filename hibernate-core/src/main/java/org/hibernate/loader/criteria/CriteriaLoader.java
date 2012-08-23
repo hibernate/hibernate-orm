@@ -237,5 +237,9 @@ public class CriteriaLoader extends OuterJoinLoader {
 	protected List getResultList(List results, ResultTransformer resultTransformer) {
 		return resolveResultTransformer( resultTransformer ).transformList( results );
 	}
+	
+	protected String getQueryIdentifier() { 
+		return "[CRITERIA] " + getSQLString(); 
+	}
 
 }

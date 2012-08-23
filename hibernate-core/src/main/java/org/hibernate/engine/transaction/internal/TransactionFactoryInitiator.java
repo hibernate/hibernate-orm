@@ -41,13 +41,17 @@ import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard instantiator for the standard {@link TransactionFactory} service.
+ * Standard initiator for {@link TransactionFactory} service.
  *
  * @author Steve Ebersole
  */
-public class TransactionFactoryInitiator<T extends TransactionImplementor> implements BasicServiceInitiator<TransactionFactory> {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       TransactionFactoryInitiator.class.getName());
+public class TransactionFactoryInitiator<T extends TransactionImplementor>
+		implements BasicServiceInitiator<TransactionFactory> {
+
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			TransactionFactoryInitiator.class.getName()
+	);
 
 	public static final TransactionFactoryInitiator INSTANCE = new TransactionFactoryInitiator();
 
@@ -87,7 +91,7 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor> imple
 			}
 		}
 		else {
-			final String strategyClassName = mapLegacyNames( strategy.toString() );
+			final String strategyClassName = mapName( strategy.toString() );
 			LOG.transactionStrategy( strategyClassName );
 
 			try {
@@ -111,7 +115,8 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor> imple
 		}
 	}
 
-	private String mapLegacyNames(String name) {
+	private String mapName(String name) {
+		// check legacy names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( "org.hibernate.transaction.JDBCTransactionFactory".equals( name ) ) {
 			return JdbcTransactionFactory.class.getName();
 		}
@@ -123,6 +128,20 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor> imple
 		if ( "org.hibernate.transaction.CMTTransactionFactory".equals( name ) ) {
 			return CMTTransactionFactory.class.getName();
 		}
+
+		// check short names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		if ( JdbcTransactionFactory.SHORT_NAME.endsWith( name ) ) {
+			return JdbcTransactionFactory.class.getName();
+		}
+
+		if ( JtaTransactionFactory.SHORT_NAME.equals( name ) ) {
+			return JtaTransactionFactory.class.getName();
+		}
+
+		if ( CMTTransactionFactory.SHORT_NAME.equals( name ) ) {
+			return CMTTransactionFactory.class.getName();
+		}
+
 
 		return name;
 	}

@@ -1,9 +1,57 @@
 <?xml version='1.0' encoding='utf-8' ?>
 
 <appendix xmlns="http://docbook.org/ns/docbook"
-         xmlns:xl="http://www.w3.org/1999/xlink">
+         xmlns:xlink="http://www.w3.org/1999/xlink">
 
-  <title>Configuration properties</title>
+    <title>Configuration properties</title>
+
+    <section xml:id="config-strategy">
+        <title>Strategy configurations</title>
+        <para>
+            Many configuration settings define pluggable strategies that Hibernate uses for various purposes.
+            The configuration of many of these strategy type settings accept definition in various forms.  The
+            documentation of such configuration settings refer here.  The types of forms available in such cases
+            include:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>short name (if defined)</term>
+                <listitem>
+                    <para>
+                        Certain built-in strategy implementations have a corresponding short name.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>strategy instance</term>
+                <listitem>
+                    <para>
+                        An instance of the strategy implementation to use can be specified
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>strategy Class reference</term>
+                <listitem>
+                    <para>
+                        A <classname>java.lang.Class</classname> reference of the strategy implementation to use can
+                        be specified
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>strategy Class name</term>
+                <listitem>
+                    <para>
+                        The class name (<classname>java.lang.String</classname>) of the strategy implementation to
+                        use can be specified
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </section>
+
+
   <section>
     <title>General Configuration</title>
     <informaltable>
@@ -67,10 +115,9 @@
           </row>
           <row>
             <entry>hibernate.default_entity_mode</entry>
-            <entry><para>One of <literal>dynamic-map</literal>, <literal>dom4j</literal>,
-            <literal>pojo</literal></para></entry>
+            <entry><para><literal>dynamic-map</literal> or <literal>pojo</literal></para></entry>
             <entry>Default mode for entity representation for all sessions opened from this
-            <classname>SessionFactory</classname></entry>
+            <classname>SessionFactory</classname>, defaults to <literal>pojo</literal>.</entry>
           </row>
           <row>
             <entry>hibernate.order_updates</entry>
@@ -229,9 +276,16 @@
         <tbody>
           <row>
             <entry>hibernate.transaction.factory_class</entry>
-            <entry>A fully-qualified classname</entry>
-            <entry>The classname of a <classname>TransactionFactory</classname> to use with Hibernate Transaction API. The
-            default is <classname>JDBCTransactionFactory</classname>).</entry>
+            <entry>
+                <para><property>jdbc</property> or <property></property></para>
+            </entry>
+            <entry>
+                <para>
+                    Names the <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename>
+                    strategy implementation to use.  See <xref linkend="config-strategy"/> and
+                    <xref linkend="services-TransactionFactory"/>
+                </para>
+            </entry>
           </row>
           <row>
             <entry>jta.UserTransaction</entry>
@@ -359,7 +413,7 @@
     <note>
       <para>
         For information on specific configuration of Proxool, refer to the Proxool documentation available from
-          <link xl:href="http://proxool.sourceforge.net/" />.
+          <link xlink:href="http://proxool.sourceforge.net/" />.
       </para>
     </note>
   </section>

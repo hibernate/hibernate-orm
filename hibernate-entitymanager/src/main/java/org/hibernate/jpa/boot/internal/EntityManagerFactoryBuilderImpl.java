@@ -303,7 +303,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// for now, we also need to wrap this in a CompositeIndex until Jandex is updated to use a common interface
 		// between the 2...
-		return new CompositeIndex( indexer.complete() );
+		return CompositeIndex.create( indexer.complete() );
 	}
 
 	private void indexResource(String resourceName, Indexer indexer, BootstrapServiceRegistry bootstrapServiceRegistry) {

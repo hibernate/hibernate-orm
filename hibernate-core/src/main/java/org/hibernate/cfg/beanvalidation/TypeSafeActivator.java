@@ -262,24 +262,16 @@ class TypeSafeActivator {
 				throw new AssertionFailure( "Entity class not found", error );
 			}
 			try {
-				applyDDL( binding, clazz, factory, groups, dialect );
+				final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
+				for ( PropertyDescriptor propertyDescriptor : descriptor.getConstrainedProperties() ) {
+					AttributeBinding attributeBinding = binding.locateAttributeBinding( propertyDescriptor.getPropertyName() );
+					if ( attributeBinding != null ) {
+						applyConstraints( propertyDescriptor, groups, attributeBinding, dialect );
+					}
+				}
 			}
 			catch ( Exception error ) {
 				LOG.unableToApplyConstraints( className, error );
-			}
-		}
-	}
-
-	private static void applyDDL(EntityBinding entityBinding,
-								 Class<?> clazz,
-								 ValidatorFactory factory,
-								 Set<Class<?>> groups,
-								 Dialect dialect) {
-		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
-		for ( PropertyDescriptor propertyDescriptor : descriptor.getConstrainedProperties() ) {
-			AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( propertyDescriptor.getPropertyName() );
-			if ( attributeBinding != null ) {
-				applyConstraints( propertyDescriptor, groups, attributeBinding, dialect );
 			}
 		}
 	}
@@ -298,7 +290,12 @@ class TypeSafeActivator {
 				schemaConstraint.applyConstraint( attributeBinding, constraintDescriptor, propertyDescriptor, dialect );
 			}
 
-			notNullSchemaConstraint.applyConstraint( attributeBinding, constraintDescriptor, propertyDescriptor, dialect );
+			notNullSchemaConstraint.applyConstraint(
+					attributeBinding,
+					constraintDescriptor,
+					propertyDescriptor,
+					dialect
+			);
 		}
 	}
 

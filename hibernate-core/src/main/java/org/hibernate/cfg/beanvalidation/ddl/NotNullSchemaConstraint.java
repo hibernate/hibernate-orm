@@ -33,6 +33,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.InheritanceType;
 
 /**
  * @author Hardy Ferentschik
@@ -62,6 +64,14 @@ public class NotNullSchemaConstraint implements SchemaConstraint {
 	@Override
 	public boolean applyConstraint(AttributeBinding attributeBinding, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor, Dialect dialect) {
 		if ( !NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			return false;
+		}
+
+		EntityBinding entityBinding = (EntityBinding) attributeBinding.getContainer();
+		InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
+
+		// properties of a single table inheritance configuration should not be forced to null
+		if(InheritanceType.SINGLE_TABLE.equals( inheritanceType )) {
 			return false;
 		}
 

@@ -1,6 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
@@ -10,12 +9,16 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.jta )
     compile( libraries.javassist )
+    provided( "javax.enterprise:cdi-api:1.0-SP4" )
     testCompile( project(':hibernate-testing') )
-    testCompile( libraries.junit )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
     testRuntime( libraries.validator )
+    testCompile( "org.jboss.weld.arquillian.container:arquillian-weld-ee-embedded-1.1:1.1.2.Final" )
+    testCompile( "org.jboss.weld:weld-core:1.1.9.Final" )
+    testRuntime( "org.glassfish.web:el-impl:2.1.2-b04" )
+    testRuntime( "org.jboss.ejb3:jboss-ejb3-api:3.1.0" )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +28,7 @@ aptDumpDir = file( "${buildDir}/tmp/apt" )
 
 sourceSets.test {
     originalJavaSrcDirs = java.srcDirs
-    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+    ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
 task generateTestJpaMetamodelClasses(type: Compile) {
@@ -53,8 +56,8 @@ compileTestJava.options.define(compilerArgs: ["-proc:none"])
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Process 'bundle resources' for the packaging tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-bundlesTargetDir = file( "${buildDir}/bundles" )
 task copyBundleResources (type: Copy) {
+	ext.bundlesTargetDir = file( "${buildDir}/bundles" )
     from file('src/test/bundles') 
     into bundlesTargetDir
     filter(ReplaceTokens, tokens: [
@@ -74,7 +77,7 @@ processTestResources.dependsOn copyBundleResources
 // create an artifact configuration composed of the test classes so that envers can access hem test classes
 task testJar(type: Jar, dependsOn: testClasses) {
     classifier = 'test'
-    from sourceSets.test.classes
+    from sourceSets.test.output
 }
 
 configurations {

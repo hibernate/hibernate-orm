@@ -26,7 +26,7 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.jpa.internal.event.JpaIntegrator;
+import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 

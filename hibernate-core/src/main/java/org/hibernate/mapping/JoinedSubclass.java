@@ -72,7 +72,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 	public Iterator getReferenceablePropertyIterator() {
 		return getPropertyIterator();
 	}
-	
+
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}

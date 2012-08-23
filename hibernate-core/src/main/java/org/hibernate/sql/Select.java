@@ -151,6 +151,11 @@ public class Select {
 		return this;
 	}
 
+	public Select setSelectClause(SelectFragment selectFragment) {
+		setSelectClause( selectFragment.toFragmentString().substring( 2 ) );
+		return this;
+	}
+
 	/**
 	 * Sets the whereClause.
 	 * @param whereClause The whereClause to set
@@ -204,5 +209,4 @@ public class Select {
 		LockOptions.copy(lockOptions, this.lockOptions);
 		return this;
 	}
-
 }

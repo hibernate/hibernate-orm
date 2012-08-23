@@ -34,6 +34,8 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
  * @author Steve Ebersole
  */
 public final class JdbcTransactionFactory implements TransactionFactory<JdbcTransaction> {
+	public static final String SHORT_NAME = "jdbc";
+
 	@Override
 	public JdbcTransaction createTransaction(TransactionCoordinator transactionCoordinator) {
 		return new JdbcTransaction( transactionCoordinator );

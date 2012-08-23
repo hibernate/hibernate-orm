@@ -37,6 +37,7 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -168,7 +169,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	protected Object getAnything() { return null; }
 
 	protected CascadingAction getCascadingAction() {
-		return CascadingAction.SAVE_UPDATE;
+		return CascadingActions.SAVE_UPDATE;
 	}
 
 	/**

@@ -1,9 +1,7 @@
-apply plugin: 'java'
-
 dependencies {
     provided( libraries.validation )
     compile project( ':hibernate-core' )
-    compile "c3p0:c3p0:0.9.1"
+    compile( libraries.c3p0 )
 
     testCompile( libraries.validator ) {
         // for test runtime

@@ -774,14 +774,13 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.stat.internal.StatisticsInitiator</classname>
+                            <classname>org.hibernate.engine.transaction.internal.TransactionFactoryInitiator</classname>
                         </para>
                         <para>
-                            Defines a <property>hibernate.stats.factory</property> setting to allow
-                            configuring the
-                            <interfacename>org.hibernate.stat.spi.StatisticsFactory</interfacename> to use internally
-                            when building the actual
-                            <interfacename>org.hibernate.stat.Statistics</interfacename> instance.
+                            Defines a <property>hibernate.transaction.factory_class</property> setting to allow
+                            configuring which <interfacename>TransactionFactory</interfacename> to use.
+                            <property>hibernate.transaction.factory_class</property> follows the rules set forth
+                            under <xref linkend="config-strategy"/>.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -791,18 +790,20 @@
                         <itemizedlist>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> -
-                                    A JTA-based strategy in which Hibernate is not controlling the transactions.  An
-                                    important distinction here is that interaction with the underlying JTA implementation
-                                    is done through the
-                                    <interfacename>javax.transaction.TransactionManager</interfacename>
+                                    <classname>org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory</classname> -
+                                    A non-JTA strategy in which the transactions are managed using the JDBC
+                                    <interfacename>java.sql.Connection</interfacename>.  This implementation's short
+                                    name is <property>jdbc</property>.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory</classname> -
-                                    A non-JTA strategy in which the transactions are managed using the JDBC
-                                    <interfacename>java.sql.Connection</interfacename>
+                                    <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> -
+                                    A JTA-based strategy in which Hibernate is not controlling the transactions.  An
+                                    important distinction here is that interaction with the underlying JTA implementation
+                                    is done through the
+                                    <interfacename>javax.transaction.TransactionManager</interfacename>.  This
+                                    implementation's short name is <property>cmt</property>.
                                 </para>
                             </listitem>
                             <listitem>
@@ -811,7 +812,8 @@
                                     A JTA-based strategy in which Hibernate *may* be controlling the transactions.  An
                                     important distinction here is that interaction with the underlying JTA
                                     implementation is done through the
-                                    <interfacename>javax.transaction.UserTransaction</interfacename>
+                                    <interfacename>javax.transaction.UserTransaction</interfacename>.  This
+                                    implementation's short name is <property>jta</property>.
                                 </para>
                             </listitem>
                         </itemizedlist>

@@ -642,4 +642,5 @@ public interface AvailableSettings {
 	public static final String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
 	// todo : add to Environment
 	String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
+    public static final String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 }

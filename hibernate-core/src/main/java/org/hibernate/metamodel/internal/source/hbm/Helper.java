@@ -35,6 +35,7 @@ import org.hibernate.LockMode;
 import org.hibernate.TruthValue;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbCacheElement;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
@@ -252,7 +253,7 @@ public class Helper {
 			cascades = bindingContext.getMappingDefaults().getCascadeStyle();
 		}
 		for ( String cascade : StringHelper.split( ",", cascades ) ) {
-			cascadeStyles.add( CascadeStyle.getCascadeStyle( cascade ) );
+			cascadeStyles.add( CascadeStyles.getCascadeStyle( cascade ) );
 		}
 		return cascadeStyles;
 	}

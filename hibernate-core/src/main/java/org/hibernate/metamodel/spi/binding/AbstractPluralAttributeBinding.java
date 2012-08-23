@@ -170,6 +170,26 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 
 	@Override
+	public FetchTiming getFetchTiming() {
+		return fetchTiming;
+	}
+
+	@Override
+	public void setFetchTiming(FetchTiming fetchTiming) {
+		this.fetchTiming = fetchTiming;
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
+	}
+
+	@Override
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
+	}
+
+	@Override
 	public String getCustomLoaderName() {
 		return customLoaderName;
 	}
@@ -267,16 +287,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.batchSize = batchSize;
 	}
 
-
-
-
-
-
-
-
-
-
-
 	@Override
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
@@ -324,23 +334,4 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return fetchTiming != FetchTiming.IMMEDIATE;
 	}
 
-	@Override
-	public FetchTiming getFetchTiming() {
-		return fetchTiming;
-	}
-
-	@Override
-	public void setFetchTiming(FetchTiming fetchTiming) {
-		this.fetchTiming = fetchTiming;
-	}
-
-	@Override
-	public FetchStyle getFetchStyle() {
-		return fetchStyle;
-	}
-
-	@Override
-	public void setFetchStyle(FetchStyle fetchStyle) {
-		this.fetchStyle = fetchStyle;
-	}
 }

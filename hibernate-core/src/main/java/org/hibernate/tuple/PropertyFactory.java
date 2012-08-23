@@ -30,6 +30,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.id.IdentifierGenerator;
@@ -212,7 +213,7 @@ public class PropertyFactory {
 
 		final CascadeStyle cascadeStyle = property.isAssociation()
 				? ( (SingularAssociationAttributeBinding) property ).getCascadeStyle()
-				: CascadeStyle.NONE;
+				: CascadeStyles.NONE;
 
 		return new VersionProperty(
 		        property.getAttribute().getName(),
@@ -296,7 +297,7 @@ public class PropertyFactory {
 			final SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) property;
 			final CascadeStyle cascadeStyle = singularAttributeBinding.isAssociation()
 					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
-					: CascadeStyle.NONE;
+					: CascadeStyles.NONE;
 			final FetchMode fetchMode = singularAttributeBinding.isAssociation()
 					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
 					: FetchMode.DEFAULT;
@@ -325,7 +326,7 @@ public class PropertyFactory {
 			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
 			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
 					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCascadeStyle()
-					: CascadeStyle.NONE;
+					: CascadeStyles.NONE;
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
 					? pluralAttributeBinding.getFetchMode()
 					: FetchMode.DEFAULT;

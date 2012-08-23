@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -170,7 +171,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		ManyToOneAttributeBinding manyToOneAttributeBinding = (ManyToOneAttributeBinding) attributeBinding;
 		assertEquals( referencedEntityName, manyToOneAttributeBinding.getReferencedEntityName() );
 		assertSame( referencedEntityBinding, manyToOneAttributeBinding.getReferencedEntityBinding() );
-		assertSame( CascadeStyle.NONE, manyToOneAttributeBinding.getCascadeStyle() );
+		assertSame( CascadeStyles.NONE, manyToOneAttributeBinding.getCascadeStyle() );
 		assertTrue( manyToOneAttributeBinding.isLazy() );
 		assertSame( FetchMode.SELECT, manyToOneAttributeBinding.getFetchMode() );
 		assertSame( FetchTiming.DELAYED, manyToOneAttributeBinding.getFetchTiming() );

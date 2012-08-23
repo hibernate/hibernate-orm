@@ -25,6 +25,8 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.persister.entity.EntityPersister;
+
 /**
  * Called after deleting an item from the datastore
  * 
@@ -32,4 +34,6 @@ import java.io.Serializable;
  */
 public interface PostDeleteEventListener extends Serializable {
 	public void onPostDelete(PostDeleteEvent event);
+
+	public boolean requiresPostCommitHanding(EntityPersister persister);
 }

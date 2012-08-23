@@ -182,6 +182,9 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	public void preFlush(PersistentCollection collection) throws HibernateException {
+		if ( loadedKey == null && collection.getKey() != null ) {
+			loadedKey = collection.getKey();
+		}
 
 		boolean nonMutableChange = collection.isDirty() &&
 				getLoadedPersister()!=null &&

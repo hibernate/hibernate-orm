@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
@@ -53,6 +54,7 @@ import org.junit.After;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.junit4.Helper;
 
 /**
  * @author Strong Liu (stliu@hibernate.org)
@@ -114,6 +116,13 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 		if ( createSchema() ) {
 			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+			final String secondSchemaName = createSecondSchema();
+			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
+				if ( !( getDialect() instanceof H2Dialect ) ) {
+					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
+				}
+				Helper.createH2Schema( secondSchemaName, settings );
+			}
 		}
 
 		if ( StringHelper.isNotEmpty( getAuditStrategy() ) ) {
@@ -196,6 +205,15 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	protected boolean createSchema() {
 		return true;
 	}
+
+	/**
+	 * Feature supported only by H2 dialect.
+	 * @return Provide not empty name to create second schema.
+	 */
+	protected String createSecondSchema() {
+		return null;
+	}
+
 	protected boolean isAudit() {
 		return true;
 	}

@@ -311,7 +311,8 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( removeIt ) {
-					uniqueKeys.remove( uniqueKeyEntry.getKey() );
+					//uniqueKeys.remove( uniqueKeyEntry.getKey() );
+					uniqueKeyEntries.remove();
 				}
 			}
 

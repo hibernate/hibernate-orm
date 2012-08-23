@@ -37,6 +37,8 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
  * @author Gavin King
  */
 public class CMTTransactionFactory  implements TransactionFactory<CMTTransaction> {
+	public static final String SHORT_NAME = "cmt";
+
 	@Override
 	public CMTTransaction createTransaction(TransactionCoordinator transactionCoordinator) {
 		return new CMTTransaction( transactionCoordinator );

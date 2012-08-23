@@ -25,10 +25,13 @@ package org.hibernate.testing.junit4;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.testing.FailureExpected;
 
 /**
@@ -98,4 +101,23 @@ public class Helper {
 				.toString();
 	}
 
+	/**
+	 * @see #createH2Schema(String, Map)
+	 */
+	public static void createH2Schema(String schemaName, Configuration cfg) {
+		createH2Schema( schemaName, cfg.getProperties() );
+	}
+
+	/**
+	 * Create additional H2 schema.
+	 *
+	 * @param schemaName New schema name.
+	 * @param settings Current settings.
+	 */
+	public static void createH2Schema(String schemaName, Map settings) {
+		settings.put(
+				Environment.URL,
+				settings.get( Environment.URL ) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + schemaName
+		);
+	}
 }

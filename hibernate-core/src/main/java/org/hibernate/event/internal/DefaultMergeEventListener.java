@@ -36,6 +36,7 @@ import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -447,7 +448,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	@Override
     protected CascadingAction getCascadeAction() {
-		return CascadingAction.MERGE;
+		return CascadingActions.MERGE;
 	}
 
 	@Override

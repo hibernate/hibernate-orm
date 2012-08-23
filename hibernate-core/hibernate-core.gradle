@@ -1,4 +1,3 @@
-apply plugin: 'java'
 apply plugin: 'antlr'
 apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
@@ -21,6 +20,9 @@ dependencies {
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
+    testCompile( libraries.jandex )
+    testCompile( libraries.classmate )
+    testCompile( libraries.mockito )
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true
@@ -36,7 +38,7 @@ manifest.mainAttributes(
 )
 
 sourceSets.main {
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+    ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
 	originalJavaSrcDirs = java.srcDirs
 }
@@ -53,18 +55,20 @@ idea {
 }
 
 task jaxb {
-    // output directory
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+	ext {
+        // output directory
+        jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
 
-    // input schemas
-    cfgXsd = file( 'src/main/resources/org/hibernate/hibernate-configuration-4.0.xsd')
-    hbmXsd = file( 'src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd' )
-    ormXsd = file( 'src/main/resources/org/hibernate/ejb/orm_2_0.xsd' )
+        // input schemas
+        cfgXsd = file( 'src/main/resources/org/hibernate/hibernate-configuration-4.0.xsd')
+        hbmXsd = file( 'src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd' )
+        ormXsd = file( 'src/main/resources/org/hibernate/ejb/orm_2_0.xsd' )
 
-    // input bindings
-    cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
-    hbmXjb = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
-    ormXjb = file( 'src/main/xjb/orm-bindings.xjb' )
+        // input bindings
+        cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
+        hbmXjb = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
+        ormXjb = file( 'src/main/xjb/orm-bindings.xjb' )
+    }
 
     // configure Gradle up-to-date checking
     inputs.files( [cfgXsd, hbmXsd, ormXsd, cfgXjb, hbmXjb, ormXjb] )

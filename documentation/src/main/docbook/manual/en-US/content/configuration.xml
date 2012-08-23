@@ -309,7 +309,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
         above.</para>
       </warning></para>
 
-    <table frame="topbot" xml:id="configuration-optional-properties" revision="8">
+    <table frame="topbot" xml:id="configuration-optional-properties" revision="9">
       <title>Hibernate Configuration Properties</title>
 
       <tgroup cols="2">
@@ -408,9 +408,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
             <entry><property>hibernate.default_entity_mode</property></entry>
 
             <entry>Sets a default mode for entity representation for all
-            sessions opened from this <literal>SessionFactory</literal> <para>
-            <literal>dynamic-map</literal>, <literal>dom4j</literal>,
-            <literal>pojo</literal> </para></entry>
+            sessions opened from this <literal>SessionFactory</literal>,
+            defaults to <literal>pojo</literal>.<para>
+            <emphasis role="strong">e.g.</emphasis> <literal>dynamic-map</literal> |
+            <literal>pojo</literal> </para> </entry>
           </row>
 
           <row>

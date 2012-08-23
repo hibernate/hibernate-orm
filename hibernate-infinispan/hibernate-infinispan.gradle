@@ -1,23 +1,18 @@
-apply plugin: 'java'
-
 configurations {
     all*.exclude group: 'org.jboss.logging', module: 'jboss-logging-spi'
 }
 
 dependencies {
-    infinispanVersion = '5.1.4.FINAL'
-    jnpVersion = '5.0.3.GA'
-
     compile project( ':hibernate-core' )
-    compile "org.infinispan:infinispan-core:${infinispanVersion}"
-    compile "org.rhq.helpers:rhq-pluginAnnotations:3.0.4"
+    compile( libraries.infinispan )
+    compile( libraries.rhq )
 
     testCompile project( ':hibernate-testing' )
-    testCompile "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar"
-    testCompile "org.jboss:jboss-common-core:2.2.14.GA"
-    testCompile "org.jboss.naming:jnp-client:${jnpVersion}"
-    testCompile "org.jboss.naming:jnpserver:${jnpVersion}"
-    testCompile "org.rhq.helpers:rhq-pluginAnnotations:1.4.0.B01"
+    testCompile( libraries.infinispan_test )
+    testCompile( libraries.jboss_common_core )
+    testCompile( libraries.jnp_client )
+    testCompile( libraries.jnp_server )
+    testCompile( libraries.rhq )
 }
 
 test {

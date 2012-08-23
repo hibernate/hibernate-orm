@@ -322,7 +322,7 @@ public class DomesticCat extends Cat {
     key.</para>
   </section>
 
-  <section xml:id="persistent-classes-dynamicmodels">
+  <section xml:id="persistent-classes-dynamicmodels" revision="1">
     <title>Dynamic models</title>
 
     <note>
@@ -335,8 +335,8 @@ public class DomesticCat extends Cat {
     <para>Persistent entities do not necessarily have to be represented as
     POJO classes or as JavaBean objects at runtime. Hibernate also supports
     dynamic models (using <literal>Map</literal>s of <literal>Map</literal>s
-    at runtime) and the representation of entities as DOM4J trees. With this
-    approach, you do not write persistent classes, only mapping files.</para>
+    at runtime). With this approach, you do not write persistent classes, 
+    only mapping files.</para>
 
     <para>By default, Hibernate works in normal POJO mode. You can set a
     default entity representation mode for a particular
@@ -444,9 +444,6 @@ dynamicSession.close()
     call <literal>flush()</literal> and <literal>close()</literal> on the
     secondary <literal>Session</literal>, and also leave the transaction and
     connection handling to the primary unit of work.</para>
-
-    <para>More information about the XML representation capabilities can be
-    found in <xref linkend="xml" />.</para>
   </section>
 
 

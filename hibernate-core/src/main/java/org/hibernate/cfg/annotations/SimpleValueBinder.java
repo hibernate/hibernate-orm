@@ -24,6 +24,7 @@
 package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.TypeVariable;
 import java.sql.Types;
 import java.util.Calendar;
@@ -40,15 +41,15 @@ import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.util.ReflectHelper;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
@@ -67,18 +68,25 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.usertype.DynamicParameterizedType;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class SimpleValueBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SimpleValueBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SimpleValueBinder.class.getName()
+	);
 
 	private String propertyName;
 	private String returnedClassName;
 	private Ejb3Column[] columns;
 	private String persistentClassName;
 	private String explicitType = "";
+	private String defaultType = "";
 	private Properties typeParameters = new Properties();
 	private Mappings mappings;
 	private Table table;
@@ -88,6 +96,8 @@ public class SimpleValueBinder {
 	//is a Map key
 	private boolean key;
 	private String referencedEntityName;
+	private XProperty xproperty;
+	private AccessType accessType;
 
 	private AttributeConverterDefinition attributeConverterDefinition;
 
@@ -113,6 +123,10 @@ public class SimpleValueBinder {
 
 	public void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
+
+		if ( defaultType.length() == 0 ) {
+			defaultType = returnedClassName;
+		}
 	}
 
 	public void setTable(Table table) {
@@ -140,10 +154,17 @@ public class SimpleValueBinder {
 			returnedClassOrElement = property.getElementClass();
 			isArray = true;
 		}
+		this.xproperty = property;
 		Properties typeParameters = this.typeParameters;
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
-		if ( ( !key && property.isAnnotationPresent( Temporal.class ) )
+
+		Type annType = property.getAnnotation( Type.class );
+		if ( annType != null ) {
+			setExplicitType( annType );
+			type = explicitType;
+		}
+		else if ( ( !key && property.isAnnotationPresent( Temporal.class ) )
 				|| ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) ) {
 
 			boolean isDate;
@@ -179,6 +200,7 @@ public class SimpleValueBinder {
 				default:
 					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
 			}
+			explicitType = type;
 		}
 		else if ( property.isAnnotationPresent( Lob.class ) ) {
 			if ( mappings.getReflectionManager().equals( returnedClassOrElement, java.sql.Clob.class ) ) {
@@ -215,58 +237,43 @@ public class SimpleValueBinder {
 			else {
 				type = "blob";
 			}
+			explicitType = type;
 		}
-		//implicit type will check basic types and Serializable classes
+		else if ( ( !key && property.isAnnotationPresent( Enumerated.class ) )
+				|| ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) ) {
+			type = EnumType.class.getName();
+			explicitType = type;
+		}
+
+		// implicit type will check basic types and Serializable classes
 		if ( columns == null ) {
 			throw new AssertionFailure( "SimpleValueBinder.setColumns should be set before SimpleValueBinder.setType" );
 		}
+
 		if ( BinderHelper.ANNOTATION_STRING_DEFAULT.equals( type ) ) {
 			if ( returnedClassOrElement.isEnum() ) {
 				type = EnumType.class.getName();
-				typeParameters = new Properties();
-				typeParameters.setProperty( EnumType.ENUM, returnedClassOrElement.getName() );
-				String schema = columns[0].getTable().getSchema();
-				schema = schema == null ? "" : schema;
-				String catalog = columns[0].getTable().getCatalog();
-				catalog = catalog == null ? "" : catalog;
-				typeParameters.setProperty( EnumType.SCHEMA, schema );
-				typeParameters.setProperty( EnumType.CATALOG, catalog );
-				typeParameters.setProperty( EnumType.TABLE, columns[0].getTable().getName() );
-				typeParameters.setProperty( EnumType.COLUMN, columns[0].getName() );
-				javax.persistence.EnumType enumType = getEnumType( property );
-				if ( enumType != null ) {
-					if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
-						typeParameters.setProperty( EnumType.TYPE, String.valueOf( Types.INTEGER ) );
-					}
-					else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
-						typeParameters.setProperty( EnumType.TYPE, String.valueOf( Types.VARCHAR ) );
-					}
-					else {
-						throw new AssertionFailure( "Unknown EnumType: " + enumType );
-					}
-				}
 			}
 		}
-		explicitType = type;
+
+		defaultType = BinderHelper.isEmptyAnnotationValue( type ) ? returnedClassName : type;
 		this.typeParameters = typeParameters;
-		Type annType = property.getAnnotation( Type.class );
-		setExplicitType( annType );
 
 		applyAttributeConverter( property );
 	}
 
 	private void applyAttributeConverter(XProperty property) {
-		final boolean canBeConverted = ! property.isAnnotationPresent( Id.class )
-				&& ! isVersion
-				&& ! isAssociation()
-				&& ! property.isAnnotationPresent( Temporal.class )
-				&& ! property.isAnnotationPresent( Enumerated.class );
+		final boolean canBeConverted = !property.isAnnotationPresent( Id.class )
+				&& !isVersion
+				&& !isAssociation()
+				&& !property.isAnnotationPresent( Temporal.class )
+				&& !property.isAnnotationPresent( Enumerated.class );
 
 		if ( canBeConverted ) {
 			// @Convert annotations take precedence
 			final Convert convertAnnotation = locateConvertAnnotation( property );
 			if ( convertAnnotation != null ) {
-				if ( ! convertAnnotation.disableConversion() ) {
+				if ( !convertAnnotation.disableConversion() ) {
 					attributeConverterDefinition = mappings.locateAttributeConverter( convertAnnotation.converter() );
 				}
 			}
@@ -308,10 +315,12 @@ public class SimpleValueBinder {
 		final XClass owner;
 		try {
 			final Class ownerClass = ReflectHelper.classForName( persistentClassName );
-			owner = mappings.getReflectionManager().classForName( persistentClassName, ownerClass  );
+			owner = mappings.getReflectionManager().classForName( persistentClassName, ownerClass );
 		}
-		catch (ClassNotFoundException e) {
-			throw new AnnotationException( "Unable to resolve Class reference during attempt to locate @Convert annotations" );
+		catch ( ClassNotFoundException e ) {
+			throw new AnnotationException(
+					"Unable to resolve Class reference during attempt to locate @Convert annotations"
+			);
 		}
 
 		return lookForEntityDefinedConvertAnnotation( property, owner );
@@ -416,7 +425,7 @@ public class SimpleValueBinder {
 	}
 
 	private static Class getWrapperEquivalent(Class primitive) {
-		if ( ! primitive.isPrimitive() ) {
+		if ( !primitive.isPrimitive() ) {
 			throw new AssertionFailure( "Passed type for which to locate wrapper equivalent was not a primitive" );
 		}
 
@@ -446,23 +455,6 @@ public class SimpleValueBinder {
 		}
 
 		throw new AssertionFailure( "Unexpected primitive type (VOID most likely) passed to getWrapperEquivalent" );
-	}
-
-	private javax.persistence.EnumType getEnumType(XProperty property) {
-		javax.persistence.EnumType enumType = null;
-		if ( key ) {
-			MapKeyEnumerated enumAnn = property.getAnnotation( MapKeyEnumerated.class );
-			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
-			}
-		}
-		else {
-			Enumerated enumAnn = property.getAnnotation( Enumerated.class );
-			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
-			}
-		}
-		return enumType;
 	}
 
 	private TemporalType getTemporalType(XProperty property) {
@@ -529,7 +521,7 @@ public class SimpleValueBinder {
 		if ( columns[0].isNameDeferred() && !mappings.isInSecondPass() && referencedEntityName != null ) {
 			mappings.addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass(
-							referencedEntityName, ( Ejb3JoinColumn[] ) columns, simpleValue
+							referencedEntityName, (Ejb3JoinColumn[]) columns, simpleValue
 					)
 			);
 		}
@@ -544,7 +536,7 @@ public class SimpleValueBinder {
 		LOG.debugf( "Setting SimpleValue typeName for %s", propertyName );
 
 		if ( attributeConverterDefinition != null ) {
-			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
 				throw new AnnotationException(
 						String.format(
 								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s];" +
@@ -557,8 +549,26 @@ public class SimpleValueBinder {
 			simpleValue.setJpaAttributeConverterDefinition( attributeConverterDefinition );
 		}
 		else {
-			String type = BinderHelper.isEmptyAnnotationValue( explicitType ) ? returnedClassName : explicitType;
-			org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );
+			String type;
+			org.hibernate.mapping.TypeDef typeDef;
+
+			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
+				type = explicitType;
+				typeDef = mappings.getTypeDef( type );
+			}
+			else {
+				// try implicit type
+				org.hibernate.mapping.TypeDef implicitTypeDef = mappings.getTypeDef( returnedClassName );
+				if ( implicitTypeDef != null ) {
+					typeDef = implicitTypeDef;
+					type = returnedClassName;
+				}
+				else {
+					typeDef = mappings.getTypeDef( defaultType );
+					type = defaultType;
+				}
+			}
+
 			if ( typeDef != null ) {
 				type = typeDef.getTypeClass();
 				simpleValue.setTypeParameters( typeDef.getParameters() );
@@ -582,10 +592,43 @@ public class SimpleValueBinder {
 		if ( timeStampVersionType != null ) {
 			simpleValue.setTypeName( timeStampVersionType );
 		}
+
+		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
+				&& simpleValue.getMappings().getTypeResolver().basic( simpleValue.getTypeName() ) == null ) {
+			try {
+				Class typeClass = ReflectHelper.classForName( simpleValue.getTypeName() );
+
+				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+					Properties parameters = simpleValue.getTypeParameters();
+					if ( parameters == null ) {
+						parameters = new Properties();
+					}
+					parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+					parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
+					parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
+
+					parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
+					parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
+					parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
+					simpleValue.setTypeParameters( parameters );
+				}
+			}
+			catch ( ClassNotFoundException cnfe ) {
+				throw new MappingException( "Could not determine type for: " + simpleValue.getTypeName(), cnfe );
+			}
+		}
+
 	}
 
 	public void setKey(boolean key) {
 		this.key = key;
 	}
 
+	public AccessType getAccessType() {
+		return accessType;
+	}
+
+	public void setAccessType(AccessType accessType) {
+		this.accessType = accessType;
+	}
 }

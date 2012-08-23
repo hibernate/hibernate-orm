@@ -253,6 +253,9 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "cfgxmlpar", new HashMap() );
+
+		assertTrue( emf.getProperties().containsKey( "test-assertable-setting" ) );
+
 		EntityManager em = emf.createEntityManager();
 		Item i = new Item();
 		i.setDescr( "Blah" );

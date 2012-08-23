@@ -64,10 +64,16 @@ public final class BasicMetadataGenerator {
                     Element type_mapping = prop_mapping.addElement("type");
                     type_mapping.addAttribute("name", typeName);
 
-                    for (java.util.Map.Entry paramKeyValue : typeParameters.entrySet()) {
-                        Element type_param = type_mapping.addElement("param");
-                        type_param.addAttribute("name", (String) paramKeyValue.getKey());
-                        type_param.setText((String) paramKeyValue.getValue());
+                    
+                    for (Object object : typeParameters.keySet()) {
+                        String keyType = (String) object;
+                        String property = typeParameters.getProperty(keyType);
+                        
+                        if (property != null) {
+                            Element type_param = type_mapping.addElement("param");
+                            type_param.addAttribute("name", keyType);
+                            type_param.setText(property);
+                        }
                     }
                 }
             }
@@ -82,4 +88,21 @@ public final class BasicMetadataGenerator {
 
 		return true;
 	}
+
+    @SuppressWarnings({"unchecked"})
+    boolean addKeyManyToOne(Element parent, PropertyAuditingData propertyAuditingData, Value value,
+                            SimpleMapperBuilder mapper) {
+        Type type = value.getType();
+
+        Element manyToOneElement = parent.addElement("key-many-to-one");
+        manyToOneElement.addAttribute("name", propertyAuditingData.getName());
+        manyToOneElement.addAttribute("class", type.getName());
+        MetadataTools.addColumns(manyToOneElement, value.getColumnIterator());
+
+        // A null mapper means that we only want to add xml mappings
+        if (mapper != null) {
+            mapper.add(propertyAuditingData.getPropertyData());
+        }
+        return true;
+    }
 }

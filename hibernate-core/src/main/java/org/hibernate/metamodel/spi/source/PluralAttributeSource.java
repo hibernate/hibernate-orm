@@ -40,15 +40,11 @@ public interface PluralAttributeSource
 	public TableSpecificationSource getCollectionTableSpecificationSource();
 
 	public String getCollectionTableComment();
+
 	public String getCollectionTableCheck();
 
 	public Caching getCaching();
 
-	/**
-	 * Obtain the name of a custom persister class to be used.
-	 *
-	 * @return The custom persister class name
-	 */
 	public String getCustomPersisterClassName();
 
 	public String getWhere();

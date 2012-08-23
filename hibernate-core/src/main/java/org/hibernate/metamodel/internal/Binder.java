@@ -1965,11 +1965,11 @@ public class Binder {
 			referencedAttributeBinding = attributeBinding( entityBinding.getEntity().getName(), referencedAttributeName );
 		}
 		if ( referencedAttributeBinding == null ) {
-			throw new MappingException( "Plural atttribute key references an attribute binding that does not exist: "
+			throw new MappingException( "Plural attribute key references an attribute binding that does not exist: "
 					+ referencedAttributeBinding, bindingContexts.peek().getOrigin() );
 		}
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw new MappingException( "Plural atttribute key references a plural attribute; it must be plural: "
+			throw new MappingException( "Plural attribute key references a plural attribute; it must be plural: "
 					+ referencedAttributeName, bindingContexts.peek().getOrigin() );
 		}
 		return ( SingularAttributeBinding ) referencedAttributeBinding;

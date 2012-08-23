@@ -110,7 +110,7 @@ public class PluralAttributeKeySourceImpl
 
 	@Override
 	public ForeignKey.ReferentialAction getOnDeleteAction() {
-		return "cascade".equals( keyElement.getOnDelete() )
+		return "cascade".equals( keyElement.getOnDelete().value() )
 				? ForeignKey.ReferentialAction.CASCADE
 				: ForeignKey.ReferentialAction.NO_ACTION;
 	}

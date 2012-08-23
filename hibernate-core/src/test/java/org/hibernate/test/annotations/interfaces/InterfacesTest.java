@@ -25,7 +25,6 @@ package org.hibernate.test.annotations.interfaces;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
@@ -34,13 +33,15 @@ import static junit.framework.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class InterfacesTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = { ContactImpl.class, UserImpl.class })
 	public void testInterface() {
 		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
-			assertNotNull( "The Binding for A should exist", getEntityBinding( annotatedClass ) );
+			assertNotNull(
+					"The Binding for " + annotatedClass.getName() + " should exist",
+					getEntityBinding( annotatedClass )
+			);
 		}
 	}
 }

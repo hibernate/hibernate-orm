@@ -29,7 +29,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
- * An enum defining the type of a mapped attribute.
+ * An enum defining the type of a mapped attribute from the JPA perspective.
  *
  * @author Hardy Ferentschik
  */
@@ -40,7 +40,8 @@ public enum AttributeNature {
 	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
 	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
 	MANY_TO_ANY( HibernateDotNames.MANY_TO_ANY ),
-	ELEMENT_COLLECTION( JPADotNames.ELEMENT_COLLECTION ),
+	ELEMENT_COLLECTION_BASIC( JPADotNames.ELEMENT_COLLECTION ),
+	ELEMENT_COLLECTION_EMBEDDABLE( JPADotNames.ELEMENT_COLLECTION ),
 	EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
 	EMBEDDED( JPADotNames.EMBEDDED );
 

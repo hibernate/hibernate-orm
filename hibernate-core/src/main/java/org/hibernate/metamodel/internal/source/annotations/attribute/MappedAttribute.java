@@ -269,7 +269,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		);
 		if ( joinColumnsAnnotation != null ) {
 			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
+					JandexHelper.getValue( joinColumnsAnnotation, "value", AnnotationInstance[].class )
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
 				columnValues.add( new Column( annotation ) );
@@ -285,8 +285,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 		return checkCondition;
 	}
-
-
 }
 
 

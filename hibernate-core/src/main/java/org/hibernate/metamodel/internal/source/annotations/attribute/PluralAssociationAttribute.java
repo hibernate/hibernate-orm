@@ -59,15 +59,15 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final CustomSQL customDeleteAll;
 	private final ClassInfo entityClassInfo;
 	private final boolean isExtraLazy;
-	private LazyCollectionOption lazyOption;
-
-
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
+
+	private LazyCollectionOption lazyOption;
 
 	public static PluralAssociationAttribute createPluralAssociationAttribute(ClassInfo entityClassInfo,
 																			  String name,
 																			  Class<?> attributeType,
+																			  Class<?> referencedAttributeType,
 																			  AttributeNature attributeNature,
 																			  String accessType,
 																			  Map<DotName, List<AnnotationInstance>> annotations,
@@ -76,6 +76,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				entityClassInfo,
 				name,
 				attributeType,
+				referencedAttributeType,
 				attributeNature,
 				accessType,
 				annotations,
@@ -123,14 +124,24 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return customDeleteAll;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "PluralAssociationAttribute" );
+		sb.append( "{name='" ).append( getName() ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
 	private PluralAssociationAttribute(ClassInfo entityClassInfo,
 									   String name,
-									   Class<?> javaType,
+									   Class<?> attributeType,
+									   Class<?> referencedAttributeType,
 									   AttributeNature associationType,
 									   String accessType,
 									   Map<DotName, List<AnnotationInstance>> annotations,
 									   EntityBindingContext context) {
-		super( name, javaType, associationType, accessType, annotations, context );
+		super( name, attributeType, referencedAttributeType, associationType, accessType, annotations, context );
 		this.entityClassInfo = entityClassInfo;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
@@ -138,7 +149,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.caching = determineCachingSettings();
 		this.isExtraLazy = lazyOption == LazyCollectionOption.EXTRA;
 		this.customPersister = determineCustomPersister();
-		this.customLoaderName = determinCustomLoaderName();
+		this.customLoaderName = determineCustomLoaderName();
 		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_INSERT, annotations()
 		);
@@ -149,19 +160,21 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.SQL_DELETE, annotations()
 		);
 		this.customDeleteAll = AnnotationParserHelper.processCustomSqlAnnotation(
-		        HibernateDotNames.SQL_DELETE_ALL, annotations()
+				HibernateDotNames.SQL_DELETE_ALL, annotations()
 		);
 	}
-	private String determinCustomLoaderName(){
+
+	private String determineCustomLoaderName() {
 		String loader = null;
 		final AnnotationInstance customLoaderAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(), HibernateDotNames.LOADER
 		);
-		if(customLoaderAnnotation != null){
+		if ( customLoaderAnnotation != null ) {
 			loader = JandexHelper.getValue( customLoaderAnnotation, "namedQuery", String.class );
 		}
 		return loader;
 	}
+
 	private String determineCustomPersister() {
 		String entityPersisterClass = null;
 		final AnnotationInstance persisterAnnotation = JandexHelper.getSingleAnnotation(
@@ -189,8 +202,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	}
 
 	@Override
-	protected boolean determinIsLazy(AnnotationInstance associationAnnotation) {
-		boolean lazy =  super.determinIsLazy( associationAnnotation );
+	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
+		boolean lazy = super.determineIsLazy( associationAnnotation );
 		final AnnotationInstance lazyCollectionAnnotationInstance = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.LAZY_COLLECTION

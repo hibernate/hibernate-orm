@@ -38,14 +38,14 @@ import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.MappingException;
 
 /**
@@ -78,9 +78,29 @@ public class AssociationAttribute extends MappedAttribute {
 			String accessType,
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
+		return createAssociationAttribute(
+				name,
+				attributeType,
+				attributeType,
+				attributeNature,
+				accessType,
+				annotations,
+				context
+		);
+	}
+
+	public static AssociationAttribute createAssociationAttribute(
+			String name,
+			Class<?> attributeType,
+			Class<?> referencedAttributeType,
+			AttributeNature attributeNature,
+			String accessType,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
 		return new AssociationAttribute(
 				name,
 				attributeType,
+				referencedAttributeType,
 				attributeNature,
 				accessType,
 				annotations,
@@ -90,13 +110,14 @@ public class AssociationAttribute extends MappedAttribute {
 
 	AssociationAttribute(
 			String name,
-			Class<?> javaType,
+			Class<?> attributeType,
+			Class<?> referencedAttributeType,
 			AttributeNature attributeNature,
 			String accessType,
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
-		super( name, javaType, attributeNature, accessType, annotations, context );
-		this.ignoreNotFound = ignoreNotFound();
+		super( name, attributeType, attributeNature, accessType, annotations, context );
+		this.ignoreNotFound = determineNotFoundBehavior();
 
 		AnnotationInstance associationAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
@@ -104,10 +125,10 @@ public class AssociationAttribute extends MappedAttribute {
 		);
 
 		// using jandex we don't really care which exact type of annotation we are dealing with
-		this.referencedEntityType = determineReferencedEntityType( associationAnnotation );
+		this.referencedEntityType = determineReferencedEntityType( associationAnnotation, referencedAttributeType );
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
 		this.isOptional = determineOptionality( associationAnnotation );
-		this.isLazy = determinIsLazy( associationAnnotation );
+		this.isLazy = determineIsLazy( associationAnnotation );
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 
@@ -117,7 +138,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.mapsId = referencedIdAttributeName != null;
 	}
 
-	public boolean isIgnoreNotFound() {
+	public boolean ignoreNotFound() {
 		return ignoreNotFound;
 	}
 
@@ -190,7 +211,7 @@ public class AssociationAttribute extends MappedAttribute {
 		return new CompositeAttributeTypeResolver( new AttributeTypeResolverImpl( this ) );
 	}
 
-	private boolean ignoreNotFound() {
+	private boolean determineNotFoundBehavior() {
 		NotFoundAction action = NotFoundAction.EXCEPTION;
 		AnnotationInstance notFoundAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
@@ -226,7 +247,7 @@ public class AssociationAttribute extends MappedAttribute {
 		return orphanRemoval;
 	}
 
-	protected boolean determinIsLazy(AnnotationInstance associationAnnotation) {
+	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
 		boolean lazy = false;
 		AnnotationValue fetchValue = associationAnnotation.value( "fetch" );
 		if ( fetchValue != null ) {
@@ -238,9 +259,9 @@ public class AssociationAttribute extends MappedAttribute {
 		return lazy;
 	}
 
-	private String determineReferencedEntityType(AnnotationInstance associationAnnotation) {
+	private String determineReferencedEntityType(AnnotationInstance associationAnnotation, Class<?> referencedAttributeType) {
 		// use the annotated attribute type as default target type
-		String targetTypeName = getAttributeType().getName();
+		String targetTypeName = referencedAttributeType.getName();
 
 		// unless we have an explicit @Target
 		AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(

@@ -38,7 +38,6 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ManyToAnyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -59,7 +58,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 		this.nature = resolveAttributeNature();
 	}
 
-	private PluralAttributeNature resolveAttributeNature(){
+	private PluralAttributeNature resolveAttributeNature() {
 		if ( Map.class.isAssignableFrom( attribute.getAttributeType() ) ) {
 			return PluralAttributeNature.MAP;
 		}
@@ -81,7 +80,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public PluralAttributeKeySource getKeySource() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new PluralAttributeKeySourceImpl( );
 	}
 
 	@Override
@@ -92,7 +91,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 			case MANY_TO_ANY:
 				return new ManyToAnyPluralAttributeElementSourceImpl();
 			case ONE_TO_MANY:
-				return new OneToManyPluralAttributeElementSourceImpl();
+				return new OneToManyPluralAttributeElementSourceImpl( attribute );
 		}
 		return null;
 	}
@@ -207,28 +206,6 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 	@Override
 	public FetchStyle getFetchStyle() {
 		return attribute.getFetchStyle();
-	}
-
-	private class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
-		@Override
-		public String getReferencedEntityName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isNotFoundAnException() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Iterable<CascadeStyle> getCascadeStyles() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public PluralAttributeElementNature getNature() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
 	}
 
 	private class ManyToAnyPluralAttributeElementSourceImpl implements ManyToAnyPluralAttributeElementSource {

@@ -24,6 +24,7 @@
 
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -61,17 +62,17 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 
 	@Entity
 	public class Dependent {
-		@Id
 		// should be @EmbeddedId, but embedded id are not working atm
-				DependentId id;
+		@Id
+		DependentId id;
 
 		@MapsId("empid")
 		@OneToMany
-		Employee emp; // maps the empid attribute of embedded id @ManyToOne Employee emp;
+		List<Employee> emp; // maps the empid attribute of embedded id @ManyToOne Employee emp;
 	}
 
 	@Test
-	@Resources(annotatedClasses = DependentId.class)
+	@Resources(annotatedClasses = { })
 	public void testMapsIsOnOneToManyThrowsException() {
 		try {
 			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
@@ -83,8 +84,9 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 		}
 		catch ( MappingException e ) {
 			assertTrue(
-					e.getMessage()
-							.startsWith( "@MapsId can only be specified on a many-to-one or one-to-one associations" )
+					e.getMessage().startsWith(
+							"@MapsId can only be specified on a many-to-one or one-to-one associations"
+					)
 			);
 			assertEquals(
 					"Wrong error origin",

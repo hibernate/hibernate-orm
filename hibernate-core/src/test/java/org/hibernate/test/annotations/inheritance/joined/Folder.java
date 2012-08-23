@@ -36,6 +36,9 @@ public class Folder extends File {
 	@OneToMany(mappedBy = "parent")
 	private Set<File> children = new HashSet<File>();
 
+	public Folder() {
+	}
+
 	public Folder(String name) {
 		super( name );
 	}

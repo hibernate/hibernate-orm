@@ -86,7 +86,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public boolean isNotFoundAnException() {
-		return !associationAttribute.isIgnoreNotFound();
+		return !associationAttribute.ignoreNotFound();
 	}
 
 	@Override

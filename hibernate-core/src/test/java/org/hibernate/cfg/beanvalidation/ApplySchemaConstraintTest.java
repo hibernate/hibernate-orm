@@ -26,6 +26,8 @@ package org.hibernate.cfg.beanvalidation;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -120,6 +122,33 @@ public class ApplySchemaConstraintTest {
 		assertEquals( "@NotNull constraint should have been applied", false, column.isNullable() );
 	}
 
+	@Test
+	public void testNotNullConstraintNotAppliedForEntityWithSingleTableInheritance() throws Exception {
+		MetadataImplementor metadata = buildMetadata(
+				serviceRegistry,
+				BaseClassSingleTable.class,
+				SubClassSingleTable.class
+		);
+		metadata.buildSessionFactory();
+
+		Column column = getColumnForAttribute( metadata.getEntityBinding( SubClassSingleTable.class.getName() ), "s" );
+		assertEquals( "@NotNull constraint should not have been applied", true, column.isNullable() );
+	}
+
+	// TODO - Requires JoinedSubclassEntityPersister to be wired up"
+//	@Test
+//	public void testNotNullConstraintAppliedForEntityWithJoinedInheritance() throws Exception {
+//		MetadataImplementor metadata = buildMetadata(
+//				serviceRegistry,
+//				BaseClassJoined.class,
+//				SubClassJoined.class
+//		);
+//		metadata.buildSessionFactory();
+//
+//		Column column = getColumnForAttribute( metadata.getEntityBinding( SubClassJoined.class.getName() ), "s" );
+//		assertEquals( "@NotNull constraint should have been applied", false, column.isNullable() );
+//	}
+
 	private Column getColumnForAttribute(EntityBinding entityBinding, String propertyName) {
 		AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( propertyName );
 		BasicAttributeBinding basicAttributeBinding = ( BasicAttributeBinding ) attributeBinding;
@@ -201,6 +230,34 @@ public class ApplySchemaConstraintTest {
 		@GeneratedValue
 		private int id;
 
+		@NotNull
+		private String s;
+	}
+
+	@Entity
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	public static class BaseClassSingleTable {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	public static class SubClassSingleTable extends BaseClassSingleTable {
+		@NotNull
+		private String s;
+	}
+
+	@Entity
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class BaseClassJoined {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	public static class SubClassJoined extends BaseClassJoined {
 		@NotNull
 		private String s;
 	}

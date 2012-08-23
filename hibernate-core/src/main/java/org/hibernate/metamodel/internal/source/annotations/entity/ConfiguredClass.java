@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -250,9 +250,7 @@ public class ConfiguredClass {
 
 		// use the class mate library to generic types
 		ResolvedTypeWithMembers resolvedType = localBindingContext.resolveMemberTypes(
-				localBindingContext.getResolvedType(
-						clazz
-				)
+				localBindingContext.getResolvedType( clazz )
 		);
 		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
 			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
@@ -289,6 +287,11 @@ public class ConfiguredClass {
 
 	private boolean isPersistentMember(Set<String> transientNames, Set<String> explicitlyConfiguredMemberNames, Member member) {
 		if ( !ReflectionHelper.isProperty( member ) ) {
+			return false;
+		}
+
+		if ( member instanceof Field && Modifier.isStatic( member.getModifiers() ) ) {
+			// static fields are no instance variables! Catches also the case of serialVersionUID
 			return false;
 		}
 
@@ -424,18 +427,19 @@ public class ConfiguredClass {
 		final String attributeName = ReflectionHelper.getPropertyName( member );
 		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
 				.getMemberMethods();
-		Class<?> attributeType = ( Class<?> ) findResolvedType( member.getName(), resolvedMembers );
+		ResolvedMember resolvedMember = findResolvedMember( member.getName(), resolvedMembers );
+		Class<?> referencedEntityType = resolveCollectionValuedReferenceType( resolvedMember );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
 
-		AttributeNature attributeNature = determineAttributeNature( annotations );
+		AttributeNature attributeNature = determineAttributeNature( annotations, referencedEntityType );
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName,
-						attributeType,
+						resolvedMember.getType().getErasedType(),
 						attributeNature,
 						annotations,
 						accessTypeString,
@@ -457,13 +461,14 @@ public class ConfiguredClass {
 				}
 				break;
 			}
-			case ELEMENT_COLLECTION: {
+			case ELEMENT_COLLECTION_BASIC:
+			case ELEMENT_COLLECTION_EMBEDDABLE: {
 				throw new NotYetImplementedException( "Element collections must still be implemented." );
 			}
 			case EMBEDDED_ID: {
 				final BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName,
-						attributeType,
+						resolvedMember.getType().getErasedType(),
 						attributeNature,
 						annotations,
 						accessTypeString,
@@ -476,6 +481,7 @@ public class ConfiguredClass {
 						getClassInfo(),
 						HibernateDotNames.TARGET
 				);
+				Class<?> attributeType = resolvedMember.getType().getErasedType();
 				if ( targetAnnotation != null ) {
 					attributeType = localBindingContext.locateClassByName(
 							JandexHelper.getValue( targetAnnotation, "value", String.class )
@@ -489,7 +495,7 @@ public class ConfiguredClass {
 			case MANY_TO_ONE: {
 				final AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
 						attributeName,
-						attributeType,
+						resolvedMember.getType().getErasedType(),
 						attributeNature,
 						accessTypeString,
 						annotations,
@@ -503,7 +509,8 @@ public class ConfiguredClass {
 				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
 						classInfo,
 						attributeName,
-						attributeType,
+						resolvedMember.getType().getErasedType(),
+						referencedEntityType,
 						attributeNature,
 						accessTypeString,
 						annotations,
@@ -559,10 +566,12 @@ public class ConfiguredClass {
 	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
 	 *
 	 * @param annotations the annotations defined on the persistent attribute
+	 * @param referencedCollectionType the type of the collection element in case the attribute is collection valued
 	 *
 	 * @return an instance of the {@code AttributeType} enum
 	 */
-	private AttributeNature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations) {
+	private AttributeNature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations,
+													 Class<?> referencedCollectionType) {
 		EnumMap<AttributeNature, AnnotationInstance> discoveredAttributeTypes =
 				new EnumMap<AttributeNature, AnnotationInstance>( AttributeNature.class );
 
@@ -601,7 +610,19 @@ public class ConfiguredClass {
 				JPADotNames.ELEMENT_COLLECTION
 		);
 		if ( elementCollection != null ) {
-			discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION, elementCollection );
+			ClassInfo classInfo = getLocalBindingContext().getIndex().getClassByName(
+					DotName.createSimple(
+							referencedCollectionType.getName()
+					)
+			);
+			if ( classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null ) {
+				discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION_EMBEDDABLE, elementCollection );
+			}
+			else {
+				discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION_BASIC, elementCollection );
+			}
+
+
 		}
 
 		int size = discoveredAttributeTypes.size();
@@ -615,10 +636,10 @@ public class ConfiguredClass {
 		}
 	}
 
-	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {
+	private ResolvedMember findResolvedMember(String name, ResolvedMember[] resolvedMembers) {
 		for ( ResolvedMember resolvedMember : resolvedMembers ) {
 			if ( resolvedMember.getName().equals( name ) ) {
-				return resolvedMember.getType().getErasedType();
+				return resolvedMember;
 			}
 		}
 		throw new AssertionFailure(
@@ -628,6 +649,19 @@ public class ConfiguredClass {
 						classInfo.name().toString()
 				)
 		);
+	}
+
+	private Class<?> resolveCollectionValuedReferenceType(ResolvedMember resolvedMember) {
+		Class<?> type = resolvedMember.getType().getErasedType();
+		if ( Collection.class.isAssignableFrom( type ) ) {
+			return resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
+		}
+		else if ( Map.class.isAssignableFrom( type ) ) {
+			return resolvedMember.getType().getTypeParameters().get( 1 ).getErasedType();
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**

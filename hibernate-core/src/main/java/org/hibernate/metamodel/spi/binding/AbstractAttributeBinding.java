@@ -141,4 +141,13 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 			// can a unique attribute be used as a target? if so, does it need to be non-null?
 		}
 	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "AbstractAttributeBinding" );
+		sb.append( "{attribute=" ).append( attribute.getName() );
+		sb.append( '}' );
+		return sb.toString();
+	}
 }

@@ -36,8 +36,8 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 	public MapBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
-			PluralAttributeIndexNature pluralAttributeIndexNature,
+			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
+			PluralAttributeIndexBinding.Nature pluralAttributeIndexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,

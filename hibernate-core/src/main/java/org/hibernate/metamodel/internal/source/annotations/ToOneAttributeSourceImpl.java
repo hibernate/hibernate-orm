@@ -40,7 +40,6 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
@@ -53,12 +52,13 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	public ToOneAttributeSourceImpl(AssociationAttribute associationAttribute) {
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
-		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet( associationAttribute.getCascadeTypes() );
+
+		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet( associationAttribute.getCascadeTypes(), associationAttribute.getContext() );
 	}
 
 	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.MANY_TO_ONE;
+	public Nature getNature() {
+		return Nature.MANY_TO_ONE;
 	}
 
 	@Override

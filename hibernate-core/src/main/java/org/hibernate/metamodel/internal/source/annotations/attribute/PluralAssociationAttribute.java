@@ -33,6 +33,8 @@ import org.jboss.jandex.DotName;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SortType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
@@ -41,15 +43,19 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.source.MappingException;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
  *
  * @author Hardy Ferentschik
+ * @author Strong Liu
  */
 public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
 	private final String orderBy;
+	private final boolean sorted;
+	private final String comparatorName;
 	private final Caching caching;
 	private final String customPersister;
 	private final String customLoaderName;
@@ -59,6 +65,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final CustomSQL customDeleteAll;
 	private final ClassInfo entityClassInfo;
 	private final boolean isExtraLazy;
+	private final OnDeleteAction onDeleteAction;
+	private final boolean isIndexed;
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
 
@@ -68,7 +76,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 																			  String name,
 																			  Class<?> attributeType,
 																			  Class<?> referencedAttributeType,
-																			  AttributeNature attributeNature,
+																			  Nature attributeNature,
 																			  String accessType,
 																			  Map<DotName, List<AnnotationInstance>> annotations,
 																			  EntityBindingContext context) {
@@ -132,12 +140,27 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		sb.append( '}' );
 		return sb.toString();
 	}
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
+	public String getComparatorName() {
+		return comparatorName;
+	}
+
+	public boolean isSorted() {
+		return sorted;
+	}
+
+	public boolean isIndexed() {
+		return isIndexed;
+	}
 
 	private PluralAssociationAttribute(ClassInfo entityClassInfo,
 									   String name,
 									   Class<?> attributeType,
 									   Class<?> referencedAttributeType,
-									   AttributeNature associationType,
+									   Nature associationType,
 									   String accessType,
 									   Map<DotName, List<AnnotationInstance>> annotations,
 									   EntityBindingContext context) {
@@ -162,6 +185,48 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.customDeleteAll = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_DELETE_ALL, annotations()
 		);
+		this.onDeleteAction = determineOnDeleteAction();
+
+		final AnnotationInstance sortAnnotation =  JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT );
+		if ( sortAnnotation == null ) {
+			this.sorted = false;
+			this.comparatorName = null;
+		}
+		else {
+			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class );
+			this.sorted = sortType != SortType.UNSORTED;
+			if ( this.sorted && sortType == SortType.COMPARATOR ) {
+				String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
+				if ( StringHelper.isEmpty( comparatorName ) ) {
+					throw new MappingException(
+							"Comparator class must be provided when using SortType.COMPARATOR.",
+							getContext().getOrigin()
+					);
+				}
+				this.comparatorName = comparatorName;
+			}
+			else {
+				this.comparatorName = null;
+			}
+		}
+
+		AnnotationInstance orderColumnAnnotation =  JandexHelper.getSingleAnnotation( annotations, JPADotNames.ORDER_COLUMN );
+		AnnotationInstance indexColumnAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.INDEX_COLUMN );
+		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
+
+	}
+
+	private OnDeleteAction determineOnDeleteAction() {
+
+		OnDeleteAction action = null;
+		final AnnotationInstance onDeleteAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.ON_DELETE
+		);
+		if ( onDeleteAnnotation != null ) {
+			action = JandexHelper.getValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+		}
+		return action;
 	}
 
 	private String determineCustomLoaderName() {
@@ -209,12 +274,12 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.LAZY_COLLECTION
 		);
 		if ( lazyCollectionAnnotationInstance != null ) {
-			LazyCollectionOption option = JandexHelper.getEnumValue(
+			lazyOption = JandexHelper.getEnumValue(
 					lazyCollectionAnnotationInstance,
 					"value",
 					LazyCollectionOption.class
 			);
-			return option == LazyCollectionOption.TRUE;
+			return lazyOption == LazyCollectionOption.TRUE;
 
 		}
 		return lazy;

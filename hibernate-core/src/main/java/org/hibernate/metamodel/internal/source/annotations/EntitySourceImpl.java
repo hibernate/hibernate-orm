@@ -36,8 +36,8 @@ import org.jboss.jandex.AnnotationValue;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
@@ -47,6 +47,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
@@ -54,7 +55,6 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -229,18 +229,18 @@ public class EntitySourceImpl implements EntitySource {
 		}
 
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
-			switch ( associationAttribute.getAttributeNature() ) {
+			switch ( associationAttribute.getNature() ) {
 				case ONE_TO_ONE:
 				case MANY_TO_ONE: {
 					attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 					break;
 				}
-				case MANY_TO_MANY: {
-					attributeList.add( new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute ) );
-					break;
-				}
+				case MANY_TO_MANY:
 				case ONE_TO_MANY:
-					attributeList.add( new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute ) );
+					AttributeSource source = ((PluralAssociationAttribute)associationAttribute).isIndexed() ?
+							new IndexedPluralAttributeSourceImpl((PluralAssociationAttribute)associationAttribute  )
+							:new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute );
+					attributeList.add( source );
 					break;
 				default: {
 					throw new NotYetImplementedException();

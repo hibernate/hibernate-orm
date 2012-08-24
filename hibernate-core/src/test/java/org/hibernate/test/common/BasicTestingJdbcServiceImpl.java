@@ -45,7 +45,6 @@ import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.service.jdbc.env.spi.QualifiedObjectNameSupport;
 import org.hibernate.service.spi.Stoppable;
-
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 

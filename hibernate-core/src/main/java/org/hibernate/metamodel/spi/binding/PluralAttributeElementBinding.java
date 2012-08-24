@@ -51,7 +51,7 @@ public interface PluralAttributeElementBinding {
 	 * 
 	 * @return The nature enum.
 	 */
-	public PluralAttributeElementNature getPluralAttributeElementNature();
+	public Nature getNature();
 
 	/**
 	 * Retrieve the Hibernate type descriptor describing the mapping-typing of the elements.
@@ -59,4 +59,47 @@ public interface PluralAttributeElementBinding {
 	 * @return The element type descriptor.
 	 */
 	public HibernateTypeDescriptor getHibernateTypeDescriptor();
+
+	/**
+	 * Describes the nature of plural attribute elements in terms of relational implications.
+	 *
+	 * @author Steve Ebersole
+	 * @author Gail Badner
+	 */
+	enum Nature {
+		/**
+		 * The collection elements are basic, simple values.
+		 */
+		BASIC( false ),
+		/**
+		 * The collection elements are compositions.
+		 */
+		COMPOSITE( false ),
+		/**
+		 * The collection elements represent entity's in a one-to-many association.
+		 */
+		ONE_TO_MANY,
+		/**
+		 * The collection elements represent entity's in a many-to-many association.
+		 */
+		MANY_TO_MANY,
+		/**
+		 * The collection elements represent entity's in a multi-valued ANY mapping.
+		 */
+		MANY_TO_ANY;
+
+		private final boolean isAssociation;
+
+		private Nature() {
+			this( true );
+		}
+
+		private Nature(boolean association) {
+			this.isAssociation = association;
+		}
+
+		public boolean isAssociation() {
+			return isAssociation;
+		}
+	}
 }

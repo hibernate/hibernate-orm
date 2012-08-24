@@ -24,11 +24,11 @@
 package org.hibernate.test.common;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 
 /**
  * @author Steve Ebersole

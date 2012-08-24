@@ -35,7 +35,6 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;

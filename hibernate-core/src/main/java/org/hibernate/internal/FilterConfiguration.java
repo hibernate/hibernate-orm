@@ -43,7 +43,6 @@ public class FilterConfiguration {
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
 	private final PersistentClass persistentClass;
-
 	public FilterConfiguration(
 			String name,
 			String condition,

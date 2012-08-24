@@ -23,11 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.Orderable;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.Sortable;
 
 /**
@@ -47,8 +46,8 @@ public class SetAttributeSourceImpl extends AbstractPluralAttributeSourceImpl im
 	}
 
 	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
-		return PluralAttributeNature.SET;
+	public Nature getNature() {
+		return Nature.SET;
 	}
 
 	@Override

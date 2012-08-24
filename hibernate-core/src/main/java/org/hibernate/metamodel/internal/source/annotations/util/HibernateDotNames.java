@@ -129,11 +129,11 @@ public interface HibernateDotNames {
 	DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
 	DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
 	DotName FILTER = DotName.createSimple( Filter.class.getName() );
+	DotName FILTERS = DotName.createSimple( Filters.class.getName() );
 	DotName FILTER_DEF = DotName.createSimple( FilterDef.class.getName() );
 	DotName FILTER_DEFS = DotName.createSimple( FilterDefs.class.getName() );
 	DotName FILTER_JOIN_TABLE = DotName.createSimple( FilterJoinTable.class.getName() );
 	DotName FILTER_JOIN_TABLES = DotName.createSimple( FilterJoinTables.class.getName() );
-	DotName FILTERS = DotName.createSimple( Filters.class.getName() );
 	DotName FOREIGN_KEY = DotName.createSimple( ForeignKey.class.getName() );
 	DotName FORMULA = DotName.createSimple( Formula.class.getName() );
 	DotName GENERATED = DotName.createSimple( Generated.class.getName() );

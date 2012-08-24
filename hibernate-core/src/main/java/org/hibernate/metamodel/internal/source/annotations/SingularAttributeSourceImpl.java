@@ -36,7 +36,6 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
@@ -115,8 +114,8 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.BASIC;
+	public Nature getNature() {
+		return Nature.BASIC;
 	}
 
 	@Override

@@ -26,6 +26,9 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 import java.util.Iterator;
 
 import org.jboss.jandex.Index;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
@@ -38,11 +41,6 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.fail;

@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * TODO : javadoc
  *
@@ -30,7 +35,45 @@ package org.hibernate.metamodel.spi.domain;
  */
 public interface PluralAttribute extends Attribute {
 	public String getRole();
-	public PluralAttributeNature getNature();
+	public Nature getNature();
 	public Type getElementType();
 	public void setElementType(Type elementType);
+
+	/**
+	 * Identifies the specific semantic of a plural valued attribute.
+	 *
+	 * @author Steve Ebersole
+	 */
+	enum Nature {
+		ARRAY( "array", Object[].class ),
+		BAG( "bag", Collection.class ),
+		IDBAG( "idbag", Collection.class ),
+		SET( "set", Set.class ),
+		LIST( "list", List.class ),
+		MAP( "map", Map.class );
+
+		private final String name;
+		private final Class javaContract;
+		private final boolean indexed;
+
+		Nature(String name, Class javaContract) {
+			this.name = name;
+			this.javaContract = javaContract;
+			this.indexed = Map.class.isAssignableFrom( javaContract )
+					|| List.class.isAssignableFrom( javaContract )
+					|| javaContract.isArray();
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Class getJavaContract() {
+			return javaContract;
+		}
+
+		public boolean isIndexed() {
+			return indexed;
+		}
+	}
 }

@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.relational;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models a SQL <tt>INDEX</tt>
@@ -51,7 +50,7 @@ public class Index extends AbstractConstraint implements Constraint {
 	protected String getGeneratedNamePrefix() {
 		return "IDX";
 	}
-
+	@Override
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		StringBuilder buf = new StringBuilder( " index (" );
 		boolean first = true;

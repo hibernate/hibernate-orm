@@ -33,10 +33,9 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;

@@ -38,10 +38,9 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.jboss.logging.Logger;
-
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
+import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 
 import org.hibernate.HibernateException;

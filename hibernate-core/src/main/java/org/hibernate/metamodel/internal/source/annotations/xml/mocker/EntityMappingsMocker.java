@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;

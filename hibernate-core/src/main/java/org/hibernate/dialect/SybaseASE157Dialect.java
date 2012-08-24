@@ -27,15 +27,10 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.type.StandardBasicTypes;

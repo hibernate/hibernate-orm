@@ -23,9 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -33,37 +37,52 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Hardy Ferentschik
+ * @author Strong Liu <stliu@hibernate.org>
  */
 public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
+	private final PluralAssociationAttribute attribute;
+	private final ForeignKey.ReferentialAction deleteAction;
+
+	public PluralAttributeKeySourceImpl(PluralAssociationAttribute attribute) {
+		this.attribute = attribute;
+		this.deleteAction = attribute.getOnDeleteAction() == OnDeleteAction.CASCADE
+				? ForeignKey.ReferentialAction.CASCADE : ForeignKey.ReferentialAction.NO_ACTION;
+	}
+
 	@Override
 	public List<RelationalValueSource> getValueSources() {
-		// TODO
-		return Collections.emptyList();
+		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
+		if ( !attribute.getColumnValues().isEmpty() ) {
+			for ( Column columnValues : attribute.getColumnValues() ) {
+				valueSources.add( new ColumnSourceImpl( attribute, null, columnValues ) );
+			}
+		}
+		return valueSources;
 	}
 
 	@Override
 	public ForeignKey.ReferentialAction getOnDeleteAction() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return deleteAction;
 	}
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
@@ -89,5 +108,3 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 		}
 	}
 }
-
-

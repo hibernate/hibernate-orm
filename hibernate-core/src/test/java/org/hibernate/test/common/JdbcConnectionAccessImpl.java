@@ -26,10 +26,10 @@ package org.hibernate.test.common;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 
 /**
  * @author Steve Ebersole

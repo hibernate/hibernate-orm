@@ -28,20 +28,19 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.jdbc.env.internal.JdbcEnvironmentImpl;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.schema.internal.DatabaseInformationImpl;
-import org.hibernate.service.schema.spi.DatabaseInformation;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.service.schema.internal.DatabaseInformationImpl;
+import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertNotNull;

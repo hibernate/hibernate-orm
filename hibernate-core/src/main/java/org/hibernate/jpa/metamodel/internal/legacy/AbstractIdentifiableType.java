@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Defines commonality for the JPA {@link javax.persistence.metamodel.IdentifiableType} types.  JPA defines

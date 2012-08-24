@@ -27,14 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
-import org.hibernate.jaxb.spi.hbm.JaxbCompositeElementElement;
-import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.jaxb.spi.hbm.JaxbCompositeElementElement;
+import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -53,8 +52,8 @@ public class CompositePluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public PluralAttributeElementNature getNature() {
-		return PluralAttributeElementNature.COMPONENT;
+	public Nature getNature() {
+		return Nature.COMPONENT;
 	}
 
 	@Override

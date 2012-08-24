@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.relational;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner

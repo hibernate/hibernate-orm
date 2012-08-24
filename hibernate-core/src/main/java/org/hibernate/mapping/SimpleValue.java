@@ -25,7 +25,6 @@ package org.hibernate.mapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import javax.persistence.AttributeConverter;
 import java.lang.reflect.TypeVariable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -35,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import javax.persistence.AttributeConverter;
 
 import org.jboss.logging.Logger;
 

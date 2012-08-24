@@ -24,7 +24,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

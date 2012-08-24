@@ -23,11 +23,6 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.junit.Test;
-
 /**
  * @author Gail Badner
  */

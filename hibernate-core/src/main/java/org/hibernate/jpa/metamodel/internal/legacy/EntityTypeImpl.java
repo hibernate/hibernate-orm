@@ -21,8 +21,8 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
-import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
+import javax.persistence.metamodel.EntityType;
 
 /**
  * Defines the Hibernate implementation of the JPA {@link javax.persistence.metamodel.EntityType} contract.

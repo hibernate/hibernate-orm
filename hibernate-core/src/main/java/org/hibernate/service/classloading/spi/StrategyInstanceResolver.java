@@ -23,8 +23,6 @@
  */
 package org.hibernate.service.classloading.spi;
 
-import org.hibernate.HibernateException;
-
 /**
  * A helper to deal with the common idiom of loading a named strategy implementer.
  *

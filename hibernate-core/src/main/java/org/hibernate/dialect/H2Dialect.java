@@ -23,6 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
+import java.sql.Types;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
@@ -38,10 +43,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
-
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * A dialect compatible with the H2 database.

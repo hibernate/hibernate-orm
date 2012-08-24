@@ -172,10 +172,10 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public PluralAttribute createBag(String name) {
-		return createPluralAttribute( name, PluralAttributeNature.BAG );
+		return createPluralAttribute( name, PluralAttribute.Nature.BAG );
 	}
 
-	protected PluralAttribute createPluralAttribute(String name, PluralAttributeNature nature) {
+	protected PluralAttribute createPluralAttribute(String name, PluralAttribute.Nature nature) {
 		PluralAttribute attribute = nature.isIndexed()
 				? new IndexedPluralAttributeImpl( this, name, nature )
 				: new PluralAttributeImpl( this, name, nature );
@@ -185,17 +185,17 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public PluralAttribute createSet(String name) {
-		return createPluralAttribute( name, PluralAttributeNature.SET );
+		return createPluralAttribute( name, PluralAttribute.Nature.SET );
 	}
 
 	@Override
 	public IndexedPluralAttribute createList(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.LIST );
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.LIST );
 	}
 
 	@Override
 	public IndexedPluralAttribute createMap(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.MAP );
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.MAP );
 	}
 
 	protected void addAttribute(Attribute attribute) {
@@ -258,12 +258,12 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	public static class PluralAttributeImpl implements PluralAttribute {
 		private final AttributeContainer attributeContainer;
-		private final PluralAttributeNature nature;
+		private final Nature nature;
 		private final String name;
 
 		private Type elementType;
 
-		public PluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature nature) {
+		public PluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, Nature nature) {
 			this.attributeContainer = attributeContainer;
 			this.name = name;
 			this.nature = nature;
@@ -286,7 +286,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		}
 
 		@Override
-		public PluralAttributeNature getNature() {
+		public Nature getNature() {
 			return nature;
 		}
 
@@ -314,7 +314,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class IndexedPluralAttributeImpl extends PluralAttributeImpl implements IndexedPluralAttribute {
 		private Type indexType;
 
-		public IndexedPluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature nature) {
+		public IndexedPluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, Nature nature) {
 			super( attributeContainer, name, nature );
 		}
 

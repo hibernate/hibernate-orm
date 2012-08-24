@@ -33,9 +33,9 @@ import org.jboss.jandex.AnnotationInstance;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.type.StandardBasicTypes;
 
 /**

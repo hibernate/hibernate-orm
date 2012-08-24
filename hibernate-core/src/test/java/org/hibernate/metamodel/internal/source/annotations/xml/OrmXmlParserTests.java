@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source.annotations.xml;
 import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

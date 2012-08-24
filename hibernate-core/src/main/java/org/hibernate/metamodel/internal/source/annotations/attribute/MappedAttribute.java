@@ -32,11 +32,11 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
@@ -63,7 +63,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	/**
 	 * The nature of the attribute
 	 */
-	AttributeNature attributeNature;
+	Nature attributeNature;
 
 	/**
 	 * The access type for this property. At the moment this is either 'field' or 'property', but Hibernate
@@ -104,7 +104,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final EntityBindingContext context;
 
-	MappedAttribute(String name, Class<?> attributeType, AttributeNature attributeNature,
+	MappedAttribute(String name, Class<?> attributeType, Nature attributeNature,
 					String accessType, Map<DotName, List<AnnotationInstance>> annotations,
 					EntityBindingContext context) {
 		this.context = context;
@@ -168,7 +168,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		this.naturalIdMutability = naturalIdMutability;
 	}
 
-	public AttributeNature getAttributeNature() {
+	public Nature getNature() {
 		return attributeNature;
 	}
 
@@ -284,6 +284,33 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			checkCondition = checkAnnotation.value( "constraints" ).toString();
 		}
 		return checkCondition;
+	}
+	/**
+	 * An enum defining the type of a mapped attribute.
+	 *
+	 * @author Hardy Ferentschik
+	 */
+	public static enum Nature {
+		BASIC( JPADotNames.BASIC ),
+		ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
+		ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
+		MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
+		MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
+		MANY_TO_ANY( HibernateDotNames.MANY_TO_ANY ),
+		ELEMENT_COLLECTION_BASIC( JPADotNames.ELEMENT_COLLECTION ),
+		ELEMENT_COLLECTION_EMBEDDABLE( JPADotNames.ELEMENT_COLLECTION ),
+		EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
+		EMBEDDED( JPADotNames.EMBEDDED );
+
+		private final DotName annotationDotName;
+
+		Nature(DotName annotationDotName) {
+			this.annotationDotName = annotationDotName;
+		}
+
+		public DotName getAnnotationDotName() {
+			return annotationDotName;
+		}
 	}
 }
 

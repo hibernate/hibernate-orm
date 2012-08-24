@@ -23,26 +23,14 @@
  */
 package org.hibernate.test.sql.storedproc;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.util.List;
+import org.junit.Test;
 
-import org.hibernate.HibernateException;
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StoredProcedureCall;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.StoredProcedureResultSetReturn;
 import org.hibernate.StoredProcedureReturn;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;

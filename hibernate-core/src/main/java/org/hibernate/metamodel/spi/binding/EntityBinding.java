@@ -39,7 +39,6 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
@@ -599,12 +598,12 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
+		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.BAG );
 		final BagBinding binding = new BagBinding(
 				this,
 				attribute,
@@ -621,13 +620,13 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public ListBinding makeListAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext,
 			int base) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
+		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.LIST );
 		final ListBinding binding = new ListBinding(
 				this,
 				attribute,
@@ -645,13 +644,13 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature elementNature,
-			PluralAttributeIndexNature indexNature,
+			PluralAttributeElementBinding.Nature elementNature,
+			PluralAttributeIndexBinding.Nature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
+		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.MAP );
 		final MapBinding binding = new MapBinding(
 				this,
 				attribute,
@@ -669,12 +668,12 @@ public class EntityBinding implements AttributeBindingContainer {
 	@Override
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
+		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.SET );
 		final SetBinding binding = new SetBinding(
 				this,
 				attribute,

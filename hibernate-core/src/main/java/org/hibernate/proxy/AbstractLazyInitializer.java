@@ -23,8 +23,8 @@
  */
 package org.hibernate.proxy;
 
-import javax.naming.NamingException;
 import java.io.Serializable;
+import javax.naming.NamingException;
 
 import org.jboss.logging.Logger;
 

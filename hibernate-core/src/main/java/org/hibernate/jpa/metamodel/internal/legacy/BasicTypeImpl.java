@@ -21,8 +21,8 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
-import javax.persistence.metamodel.BasicType;
 import java.io.Serializable;
+import javax.persistence.metamodel.BasicType;
 
 /**
  * @author Emmanuel Bernard

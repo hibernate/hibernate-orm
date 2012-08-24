@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.annotations.FetchMode;
-
 /**
  * Defines a source of fetch profile information
  *

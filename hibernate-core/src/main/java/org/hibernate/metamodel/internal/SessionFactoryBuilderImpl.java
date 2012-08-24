@@ -40,12 +40,12 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.service.config.spi.ConfigurationService;
 
 /**

@@ -33,13 +33,13 @@ import org.hibernate.metamodel.spi.relational.Value;
 public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBinding {
 
 	private final IndexedPluralAttributeBinding pluralAttributeBinding;
-	private final PluralAttributeIndexNature pluralAttributeIndexNature;
+	private final Nature pluralAttributeIndexNature;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private Value value;
 
 	public BasicPluralAttributeIndexBinding(
 			IndexedPluralAttributeBinding pluralAttributeBinding,
-			PluralAttributeIndexNature pluralAttributeIndexNature) {
+			Nature pluralAttributeIndexNature) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
 		this.pluralAttributeIndexNature = pluralAttributeIndexNature;
 	}
@@ -55,7 +55,7 @@ public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBin
 	}
 
 	@Override
-	public IndexedPluralAttributeBinding getPluralAttributeBinding() {
+	public IndexedPluralAttributeBinding getNature() {
 		return pluralAttributeBinding;
 	}
 
@@ -65,11 +65,11 @@ public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBin
 
 	@Override
 	public Type getPluralAttributeIndexType() {
-		return ( (IndexedPluralAttribute) getPluralAttributeBinding().getAttribute() ).getIndexType();
+		return ( (IndexedPluralAttribute) getNature().getAttribute() ).getIndexType();
 	}
 
 	@Override
-	public PluralAttributeIndexNature getPluralAttributeIndexNature() {
+	public Nature getPluralAttributeIndexNature() {
 		return pluralAttributeIndexNature;
 	}
 }

@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.IndexView;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -69,7 +68,7 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -333,8 +332,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			// Find one-to-many associations with key bindings that are non-inverse and non-nullable
 			PluralAttributeKeyBinding keyBinding = pluralAttributeBinding.getPluralAttributeKeyBinding();
 			if ( keyBinding.isInverse() || keyBinding.isNullable() ||
-					pluralAttributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() !=
-							PluralAttributeElementNature.ONE_TO_MANY ) {
+					pluralAttributeBinding.getPluralAttributeElementBinding().getNature() !=
+							PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
 				continue;
 			}
 			// Ensure this isn't a bidirectional association by ensuring FK columns don't match relational columns of any

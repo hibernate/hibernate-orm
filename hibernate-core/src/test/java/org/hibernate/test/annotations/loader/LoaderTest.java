@@ -30,7 +30,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class LoaderTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getXmlFiles() {
@@ -49,7 +47,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Player.class,
 				Team.class
 		};
@@ -57,37 +55,27 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBasic() throws Exception {
-		Session s = openSession( );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Team t = new Team();
 		Player p = new Player();
-		p.setName("me");
-		t.getPlayers().add(p);
-		p.setTeam(t);
+		p.setName( "me" );
+		t.getPlayers().add( p );
+		p.setTeam( t );
 
+		s.persist( p );
+		s.persist( t );
+		tx.commit();
+		s.close();
 
-		try {
-			s.persist(p);
-			s.persist(t);
-			tx.commit();
-			s.close();
-
-			s= openSession( );
-			tx = s.beginTransaction();
-			Team t2 = (Team)s.load(Team.class,new Long(1));
-			Set<Player> players = t2.getPlayers();
-			Iterator<Player> iterator = players.iterator();
-			assertEquals("me", iterator.next().getName());
-			tx.commit();
-
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			if ( tx != null ) tx.rollback();
-		}
-		finally {
-			s.close();
-		}
+		s = openSession();
+		tx = s.beginTransaction();
+		Team t2 = (Team) s.load( Team.class, t.getId() );
+		Set<Player> players = t2.getPlayers();
+		Iterator<Player> iterator = players.iterator();
+		assertEquals( "me", iterator.next().getName() );
+		tx.commit();
+		s.close();
 	}
 }
 

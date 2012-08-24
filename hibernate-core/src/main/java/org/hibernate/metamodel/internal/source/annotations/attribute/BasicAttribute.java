@@ -23,14 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
-import javax.persistence.FetchType;
-import javax.persistence.GenerationType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.FetchType;
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -101,7 +101,7 @@ public class BasicAttribute extends MappedAttribute {
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
-													   AttributeNature attributeNature,
+													   Nature attributeNature,
 													   Map<DotName, List<AnnotationInstance>> annotations,
 													   String accessType,
 													   EntityBindingContext context) {
@@ -110,7 +110,7 @@ public class BasicAttribute extends MappedAttribute {
 
 	BasicAttribute(String name,
 				   Class<?> attributeType,
-				   AttributeNature attributeNature,
+				   Nature attributeNature,
 				   String accessType,
 				   Map<DotName, List<AnnotationInstance>> annotations,
 				   EntityBindingContext context) {

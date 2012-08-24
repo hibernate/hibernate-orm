@@ -1,10 +1,10 @@
 package org.hibernate.test.annotations.filter.subclass.joined;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 import org.hibernate.test.annotations.filter.subclass.SubClassTest;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.junit.Test;
 
 @FailureExpectedWithNewMetamodel
 public class JoinedSubClassTest extends SubClassTest{

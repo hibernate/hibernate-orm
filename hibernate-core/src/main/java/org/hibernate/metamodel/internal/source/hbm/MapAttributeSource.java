@@ -29,7 +29,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 
 /**
  *
@@ -75,10 +74,10 @@ public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implem
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.metamodel.spi.source.PluralAttributeSource#getPluralAttributeNature()
+	 * @see org.hibernate.metamodel.spi.source.PluralAttributeSource#getNature()
 	 */
 	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
-		return PluralAttributeNature.MAP;
+	public Nature getNature() {
+		return Nature.MAP;
 	}
 }

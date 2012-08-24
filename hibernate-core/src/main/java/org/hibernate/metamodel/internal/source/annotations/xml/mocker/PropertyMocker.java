@@ -33,6 +33,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbAccessType;
 import org.hibernate.jaxb.spi.orm.JaxbEnumType;
 import org.hibernate.jaxb.spi.orm.JaxbMapKey;
@@ -40,7 +41,6 @@ import org.hibernate.jaxb.spi.orm.JaxbMapKeyClass;
 import org.hibernate.jaxb.spi.orm.JaxbMapKeyColumn;
 import org.hibernate.jaxb.spi.orm.JaxbMapKeyJoinColumn;
 import org.hibernate.jaxb.spi.orm.JaxbTemporalType;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Strong Liu

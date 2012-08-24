@@ -37,7 +37,7 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 	public ListBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -51,7 +51,7 @@ public class ListBinding extends AbstractPluralAttributeBinding implements Index
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				metaAttributeContext );
-		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, PluralAttributeIndexNature.BASIC );
+		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, PluralAttributeIndexBinding.Nature.BASIC );
 		this.base = base;
 	}
 

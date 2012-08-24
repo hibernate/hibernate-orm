@@ -25,7 +25,6 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Strong Liu

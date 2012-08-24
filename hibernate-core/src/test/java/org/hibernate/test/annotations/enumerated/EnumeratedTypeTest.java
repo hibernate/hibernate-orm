@@ -1,6 +1,9 @@
 package org.hibernate.test.annotations.enumerated;
 
 import java.io.Serializable;
+
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
@@ -9,9 +12,11 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
-import org.junit.Test;
+
+import static org.hibernate.test.annotations.enumerated.EntityEnum.Common;
+import static org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
+import static org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
 import static org.junit.Assert.assertEquals;
-import static org.hibernate.test.annotations.enumerated.EntityEnum.*;
 
 /**
  * Test type definition for enum

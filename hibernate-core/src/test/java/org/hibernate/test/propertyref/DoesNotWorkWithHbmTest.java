@@ -25,12 +25,11 @@ package org.hibernate.test.propertyref;
 
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

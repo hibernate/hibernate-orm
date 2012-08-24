@@ -23,11 +23,6 @@
  */
 package org.hibernate.service.jdbc.env.spi;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import org.hibernate.engine.jdbc.internal.TypeInfo;
-
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
  * being supported or not.  Obviously {@link java.sql.DatabaseMetaData} reports many things, these are a few in

@@ -21,10 +21,10 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
 import java.io.Serializable;
 import java.lang.reflect.Member;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 /**
  * @author Emmanuel Bernard

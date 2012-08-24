@@ -40,7 +40,7 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.SimpleEntity;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -181,8 +181,8 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 			FetchTiming expectedFetchTiming,
 			boolean expectedNullableCollectionKey) {
 		Assert.assertEquals(
-				PluralAttributeElementNature.ONE_TO_MANY,
-				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
+				PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);
 		assertSame(
 				collectionBinding,

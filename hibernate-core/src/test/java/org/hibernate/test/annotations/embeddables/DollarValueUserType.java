@@ -24,7 +24,6 @@
 package org.hibernate.test.annotations.embeddables;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

@@ -23,10 +23,10 @@
  */
 package org.hibernate.jpa.metamodel.internal.builder;
 
-import javax.persistence.metamodel.Attribute;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.jpa.metamodel.internal.AbstractManagedType;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;

@@ -25,10 +25,10 @@ package org.hibernate.service.jdbc.env.internal;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 
 /**
 * @author Steve Ebersole

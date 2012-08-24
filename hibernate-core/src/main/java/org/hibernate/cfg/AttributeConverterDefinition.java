@@ -23,10 +23,10 @@
  */
 package org.hibernate.cfg;
 
-import javax.persistence.AttributeConverter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import javax.persistence.AttributeConverter;
 
 import org.jboss.logging.Logger;
 

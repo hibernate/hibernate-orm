@@ -25,7 +25,6 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 
 /**

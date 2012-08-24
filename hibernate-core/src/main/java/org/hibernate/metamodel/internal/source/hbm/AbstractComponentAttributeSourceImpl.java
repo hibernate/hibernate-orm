@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.hbm.ComponentSourceElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
@@ -41,7 +42,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbOneToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPrimitiveArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -49,7 +49,6 @@ import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
@@ -194,8 +193,8 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.COMPONENT;
+	public Nature getNature() {
+		return Nature.COMPONENT;
 	}
 
 	@Override

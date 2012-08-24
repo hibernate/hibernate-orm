@@ -50,7 +50,7 @@ import org.hibernate.loader.entity.CollectionElementLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -102,12 +102,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			MetadataImplementor metadata,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
 		super( collection, cacheAccessStrategy, metadata, factory );
-		if ( collection.getPluralAttributeElementBinding().getPluralAttributeElementNature() !=
-				PluralAttributeElementNature.ONE_TO_MANY ) {
+		if ( collection.getPluralAttributeElementBinding().getNature() !=
+				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
 			throw new AssertionError(
 					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
-							PluralAttributeElementNature.ONE_TO_MANY,
-							collection.getPluralAttributeElementBinding().getPluralAttributeElementNature()
+							PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+							collection.getPluralAttributeElementBinding().getNature()
 					)
 			);
 		}

@@ -30,7 +30,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -110,8 +109,8 @@ public class BasicPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public PluralAttributeElementNature getNature() {
-		return PluralAttributeElementNature.BASIC;
+	public Nature getNature() {
+		return Nature.BASIC;
 	}
 
 	@Override

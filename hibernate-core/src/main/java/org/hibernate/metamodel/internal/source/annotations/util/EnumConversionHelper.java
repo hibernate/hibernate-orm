@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -35,7 +34,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 
 /**
  * Helper class which converts between different enum types.
@@ -128,9 +129,14 @@ public class EnumConversionHelper {
 		}
 	}
 
-	public static Set<CascadeStyle> cascadeTypeToCascadeStyleSet(Set<CascadeType> cascadeTypes) {
+	public static Set<CascadeStyle> cascadeTypeToCascadeStyleSet(Set<CascadeType> cascadeTypes, EntityBindingContext context) {
 		if ( CollectionHelper.isEmpty( cascadeTypes ) ) {
-			return Collections.emptySet();
+			final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
+			String cascades = context.getMappingDefaults().getCascadeStyle();
+			for ( String cascade : StringHelper.split( ",", cascades ) ) {
+				cascadeStyles.add( CascadeStyles.getCascadeStyle( cascade ) );
+			}
+			return cascadeStyles;
 		}
 		Set<CascadeStyle> cascadeStyleSet = new HashSet<CascadeStyle>();
 		for ( CascadeType cascadeType : cascadeTypes ) {

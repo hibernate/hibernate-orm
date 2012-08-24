@@ -23,8 +23,8 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
-import javax.persistence.metamodel.Type;
 import java.io.Serializable;
+import javax.persistence.metamodel.Type;
 
 /**
  * Defines commonality for the JPA {@link javax.persistence.metamodel.Type} hierarchy of interfaces.

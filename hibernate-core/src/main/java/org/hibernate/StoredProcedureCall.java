@@ -23,11 +23,10 @@
  */
 package org.hibernate;
 
+import java.util.List;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
-import java.util.List;
 
-import org.hibernate.internal.StoredProcedureCallImpl;
 import org.hibernate.type.Type;
 
 /**

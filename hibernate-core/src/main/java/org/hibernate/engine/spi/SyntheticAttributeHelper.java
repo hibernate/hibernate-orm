@@ -23,8 +23,6 @@
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-
 /**
  * @author Steve Ebersole
  */

@@ -23,11 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.Orderable;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 
 /**
  * @author Steve Ebersole
@@ -41,8 +40,8 @@ public class BagAttributeSourceImpl extends AbstractPluralAttributeSourceImpl im
 	}
 
 	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
-		return PluralAttributeNature.BAG;
+	public Nature getNature() {
+		return Nature.BAG;
 	}
 
 	@Override

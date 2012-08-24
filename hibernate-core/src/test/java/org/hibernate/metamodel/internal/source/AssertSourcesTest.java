@@ -25,6 +25,8 @@ package org.hibernate.metamodel.internal.source;
 
 import java.util.Iterator;
 
+import org.junit.Test;
+
 import org.hibernate.EntityMode;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
@@ -40,15 +42,11 @@ import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -134,7 +132,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		assertTrue( identifierAttributeSource.isSingular() );
 		assertFalse( identifierAttributeSource.isVirtualAttribute() );
 		assertFalse( identifierAttributeSource.isLazy() );
-		assertEquals( SingularAttributeNature.BASIC, identifierAttributeSource.getNature() );
+		assertEquals( SingularAttributeSource.Nature.BASIC, identifierAttributeSource.getNature() );
 		assertEquals( PropertyGeneration.INSERT, identifierAttributeSource.getGeneration() );
 //		assertNull( identifierAttributeSource.getPropertyAccessorName() );
 

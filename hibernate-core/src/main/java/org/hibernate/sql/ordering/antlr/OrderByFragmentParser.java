@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 import antlr.CommonAST;
 import antlr.TokenStream;
 import antlr.collections.AST;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.function.SQLFunction;

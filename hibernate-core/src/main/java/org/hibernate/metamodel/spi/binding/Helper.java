@@ -25,7 +25,6 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
 
 /**
  * Helper utilities specific to the binding package.
@@ -33,7 +32,7 @@ import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
  * @author Steve Ebersole
  */
 public class Helper {
-	public static void checkPluralAttributeNature(PluralAttribute attribute, PluralAttributeNature expected) {
+	public static void checkPluralAttributeNature(PluralAttribute attribute, PluralAttribute.Nature expected) {
 		if ( attribute.getNature() != expected ) {
 			throw new AssertionFailure(
 					String.format(

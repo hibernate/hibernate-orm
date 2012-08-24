@@ -34,6 +34,8 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbAttributes;
 import org.hibernate.jaxb.spi.orm.JaxbDiscriminatorColumn;
 import org.hibernate.jaxb.spi.orm.JaxbEntity;
@@ -49,8 +51,6 @@ import org.hibernate.jaxb.spi.orm.JaxbPreRemove;
 import org.hibernate.jaxb.spi.orm.JaxbPreUpdate;
 import org.hibernate.jaxb.spi.orm.JaxbSecondaryTable;
 import org.hibernate.jaxb.spi.orm.JaxbTable;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Mock <entity> to {@link javax.persistence.Entity @Entity}

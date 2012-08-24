@@ -23,8 +23,6 @@
  */
 package org.hibernate.internal;
 
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,6 +34,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.ParameterMode;
+import javax.persistence.TemporalType;
 
 import org.jboss.logging.Logger;
 
@@ -47,7 +47,6 @@ import org.hibernate.StoredProcedureCall;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.QueryParameters;
@@ -55,6 +54,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;

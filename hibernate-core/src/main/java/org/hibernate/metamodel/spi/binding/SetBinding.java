@@ -34,7 +34,7 @@ public class SetBinding extends AbstractPluralAttributeBinding {
 	public SetBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,

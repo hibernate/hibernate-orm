@@ -24,9 +24,9 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
 
 /**
  * @author Steve Ebersole

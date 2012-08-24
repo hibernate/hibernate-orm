@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 /**
- * Describes plural attributes of {@link PluralAttributeElementNature#MANY_TO_ANY} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#MANY_TO_ANY} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -35,7 +35,7 @@ public class ManyToAnyPluralAttributeElementBinding extends AbstractPluralAttrib
 	}
 
 	@Override
-	public PluralAttributeElementNature getPluralAttributeElementNature() {
-		return PluralAttributeElementNature.MANY_TO_ANY;
+	public Nature getNature() {
+		return Nature.MANY_TO_ANY;
 	}
 }

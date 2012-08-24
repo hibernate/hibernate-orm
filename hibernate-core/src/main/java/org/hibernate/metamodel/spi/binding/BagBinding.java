@@ -35,7 +35,7 @@ public class BagBinding extends AbstractPluralAttributeBinding {
 	protected BagBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,

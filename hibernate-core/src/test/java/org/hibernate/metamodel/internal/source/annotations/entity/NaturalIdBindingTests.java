@@ -9,8 +9,6 @@ import javax.persistence.ManyToOne;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -20,6 +18,12 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

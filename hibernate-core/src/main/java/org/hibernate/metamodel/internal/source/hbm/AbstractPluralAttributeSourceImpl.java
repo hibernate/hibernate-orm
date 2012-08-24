@@ -30,8 +30,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -120,7 +120,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		}
 		else if ( pluralAttributeElement.getManyToAny() != null ) {
 			throw new NotYetImplementedException( "Support for many-to-any not yet implemented" );
-//			return PluralAttributeElementNature.MANY_TO_ANY;
+//			return Nature.MANY_TO_ANY;
 		}
 		else {
 			throw new MappingException(

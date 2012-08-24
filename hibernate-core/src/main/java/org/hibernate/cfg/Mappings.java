@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import javax.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;

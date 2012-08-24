@@ -30,7 +30,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -38,7 +37,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  *
  */
 public class MapAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
-	private final PluralAttributeIndexNature nature;
+	private final Nature nature;
 	private final List<RelationalValueSource> valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 
@@ -98,7 +97,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 						: java.util.Collections.<String, String>emptyMap();
 			}
 		};
-		this.nature = PluralAttributeIndexNature.BASIC;
+		this.nature = Nature.BASIC;
 	}
 
 	public MapAttributeIndexSource(MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement) {
@@ -140,7 +139,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 			}
 		};
 
-		this.nature = PluralAttributeIndexNature.BASIC;
+		this.nature = Nature.BASIC;
 	}
 
 	@Override
@@ -159,7 +158,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 	}
 
 	@Override
-	public PluralAttributeIndexNature getNature() {
+	public Nature getNature() {
 		return nature;
 	}
 

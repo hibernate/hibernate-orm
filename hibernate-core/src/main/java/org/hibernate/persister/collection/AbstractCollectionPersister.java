@@ -88,7 +88,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBind
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
+import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -682,7 +682,7 @@ public abstract class AbstractCollectionPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
-			cacheEntryStructure = collection.getAttribute().getNature() == PluralAttributeNature.MAP ?
+			cacheEntryStructure = collection.getAttribute().getNature() == PluralAttribute.Nature.MAP ?
 					new StructuredMapCacheEntry() :
 					new StructuredCollectionCacheEntry();
 		}
@@ -746,7 +746,7 @@ public abstract class AbstractCollectionPersister
 				null;
 
 		hasOrphanDelete =
-				collection.getPluralAttributeElementBinding().getPluralAttributeElementNature().isAssociation() &&
+				collection.getPluralAttributeElementBinding().getNature().isAssociation() &&
 						( ( PluralAttributeAssociationElementBinding ) collection.getPluralAttributeElementBinding() ).isOrphanDeleteEnabled();
 
 		int batch = collection.getBatchSize();
@@ -888,7 +888,7 @@ public abstract class AbstractCollectionPersister
 			baseIndex = 0;
 		}
 
-		hasIdentifier = collection.getAttribute().getNature() == PluralAttributeNature.IDBAG;
+		hasIdentifier = collection.getAttribute().getNature() == PluralAttribute.Nature.IDBAG;
 		// TODO: fix this when IdBags are supported.
 		//if ( hasIdentifier ) {
 		//}
@@ -959,7 +959,7 @@ public abstract class AbstractCollectionPersister
 
 		sqlSelectSizeString = generateSelectSizeString(
 				collection.getAttribute().getNature().isIndexed() &&
-						collection.getAttribute().getNature() != PluralAttributeNature.MAP
+						collection.getAttribute().getNature() != PluralAttribute.Nature.MAP
 		);
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
@@ -1025,7 +1025,7 @@ public abstract class AbstractCollectionPersister
 		filterHelper = new FilterHelper( collection.getFilterConfigurations(), factory );
 
 		// TODO: fix this when ManyToManyPluralAttributeElementBinding is working
-		//if ( elementBinding.getPluralAttributeElementNature() == PluralAttributeElementNature.MANY_TO_MANY ) {
+		//if ( elementBinding.getNature() == Nature.MANY_TO_MANY ) {
 		//}
 		//else {
 			manyToManyFilterHelper = new FilterHelper( Collections.emptyList(), factory );

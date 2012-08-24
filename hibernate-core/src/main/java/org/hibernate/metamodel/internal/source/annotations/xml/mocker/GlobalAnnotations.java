@@ -37,6 +37,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbAttributes;
 import org.hibernate.jaxb.spi.orm.JaxbEntity;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
@@ -46,8 +48,6 @@ import org.hibernate.jaxb.spi.orm.JaxbNamedQuery;
 import org.hibernate.jaxb.spi.orm.JaxbSequenceGenerator;
 import org.hibernate.jaxb.spi.orm.JaxbSqlResultSetMapping;
 import org.hibernate.jaxb.spi.orm.JaxbTableGenerator;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.spi.source.MappingException;
 

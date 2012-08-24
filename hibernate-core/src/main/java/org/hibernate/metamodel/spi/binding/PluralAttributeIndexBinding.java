@@ -30,13 +30,37 @@ import org.hibernate.metamodel.spi.relational.Value;
  * @author Steve Ebersole
  */
 public interface PluralAttributeIndexBinding {
-	IndexedPluralAttributeBinding getPluralAttributeBinding();
+	IndexedPluralAttributeBinding getNature();
 
-	PluralAttributeIndexNature getPluralAttributeIndexNature();
+	Nature getPluralAttributeIndexNature();
 
 	Value getIndexRelationalValue();
 
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
 
 	Type getPluralAttributeIndexType();
+
+	/**
+	 * Describes the nature of plural attribute indexes in terms of relational implications.
+	 *
+	 * @author Steve Ebersole
+	 */
+	enum Nature {
+		/**
+		 * The collection indexes are basic, simple values.  This is the only valid nature for lists
+		 */
+		BASIC,
+		/**
+		 * The map key is a composite
+		 */
+		COMPOSITE,
+		/**
+		 * The map key is an association identified by a column(s) on the collection table.
+		 */
+		MANY_TO_MANY,
+		/**
+		 * The map key is represented by a Hibernate ANY mapping
+		 */
+		MANY_TO_ANY
+	}
 }

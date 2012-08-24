@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 /**
- * Describes plural attributes of {@link PluralAttributeElementNature#COMPOSITE} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#COMPOSITE} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -35,7 +35,7 @@ public class CompositePluralAttributeElementBinding extends AbstractPluralAttrib
 	}
 
 	@Override
-	public PluralAttributeElementNature getPluralAttributeElementNature() {
-		return PluralAttributeElementNature.COMPOSITE;
+	public Nature getNature() {
+		return Nature.COMPOSITE;
 	}
 }

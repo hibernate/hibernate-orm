@@ -38,7 +38,6 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
@@ -224,8 +223,8 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.MANY_TO_ONE;
+	public Nature getNature() {
+		return Nature.MANY_TO_ONE;
 	}
 
 	@Override

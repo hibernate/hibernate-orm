@@ -25,10 +25,9 @@ package org.hibernate.test.jpa.ql;
 
 import java.math.BigDecimal;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 

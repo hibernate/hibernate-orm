@@ -76,9 +76,8 @@ import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
@@ -127,16 +126,15 @@ import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.Orderable;
+import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeNature;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -401,7 +399,7 @@ public class Binder {
 	private void bindBasicCollectionKey(
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource) {
-		if ( attributeSource.getElementSource().getNature() != org.hibernate.metamodel.spi.source.PluralAttributeElementNature.BASIC ) {
+		if ( attributeSource.getElementSource().getNature() != PluralAttributeElementSource.Nature.BASIC ) {
 			throw new AssertionFailure(
 					String.format(
 							"Expected basic attribute binding; instead got {%s}",
@@ -437,10 +435,10 @@ public class Binder {
 	private void bindBasicSetElementTablePrimaryKey(final PluralAttributeBinding attributeBinding) {
 		final BasicPluralAttributeElementBinding elementBinding =
 				( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding();
-		if ( elementBinding.getPluralAttributeElementNature() != PluralAttributeElementNature.BASIC ) {
+		if ( elementBinding.getNature() != PluralAttributeElementBinding.Nature.BASIC ) {
 			throw new MappingException( String.format(
-					"Expected a SetBinding with an element of nature PluralAttributeElementNature.BASIC; instead was %s",
-					elementBinding.getPluralAttributeElementNature() ), bindingContexts.peek().getOrigin() );
+					"Expected a SetBinding with an element of nature Nature.BASIC; instead was %s",
+					elementBinding.getNature() ), bindingContexts.peek().getOrigin() );
 		}
 		if ( hasAnyNonNullableColumns( elementBinding.getRelationalValueBindings() ) ) {
 			final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
@@ -473,7 +471,7 @@ public class Binder {
 				attributeSource,
 				indexedAttributeBinding.getAttribute(),
 				indexedAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable() ).get( 0 ).getValue() );
-		if ( attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.ONE_TO_MANY ) {
+		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
 			if ( !Column.class.isInstance( indexBinding.getIndexRelationalValue() ) ) {
 				throw new NotYetImplementedException( "derived value as collection index is not supported yet." );
 			}
@@ -544,15 +542,15 @@ public class Binder {
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource,
 			final HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes ) {
-		PluralAttributeNature pluralAttributeNature = attributeSource.getPluralAttributeNature();
-		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY
-				|| pluralAttributeNature == PluralAttributeNature.BAG ) {
+		PluralAttributeSource.Nature pluralAttributeNature = attributeSource.getNature();
+		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.ONE_TO_MANY
+				|| pluralAttributeNature == PluralAttributeSource.Nature.BAG ) {
 			return;
 		}
-		if ( attributeBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.BASIC ) {
-			if ( pluralAttributeNature == PluralAttributeNature.SET ) {
+		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.BASIC ) {
+			if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
 				bindBasicSetElementTablePrimaryKey( attributeBinding );
-			} else if ( pluralAttributeNature == PluralAttributeNature.LIST || pluralAttributeNature == PluralAttributeNature.MAP ) {
+			} else if ( pluralAttributeNature == PluralAttributeSource.Nature.LIST || pluralAttributeNature == PluralAttributeSource.Nature.MAP ) {
 				bindIndexedTablePrimaryKey( ( IndexedPluralAttributeBinding ) attributeBinding );
 			} else {
 				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
@@ -1207,7 +1205,7 @@ public class Binder {
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource,
 			final EntityBinding referencedEntityBinding) {
-		if ( attributeSource.getElementSource().getNature() != org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY ) {
+		if ( attributeSource.getElementSource().getNature() != PluralAttributeElementSource.Nature.ONE_TO_MANY ) {
 			throw new AssertionFailure(
 					String.format(
 							"Expected one-to-many attribute binding; instead got {%s}",
@@ -1219,16 +1217,17 @@ public class Binder {
 				// TODO: Need to look up the table to be able to create the foreign key
 				throw new NotYetImplementedException( "one-to-many using a join table is not supported yet." );
 		}
+		if(!attributeSource.isInverse()){
 		TableSpecification collectionTable = referencedEntityBinding.getPrimaryTable();
 		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
-
+		}
 		attributeBinding.getPluralAttributeKeyBinding().setInverse( attributeSource.isInverse() );
 	}
 
 	private AbstractPluralAttributeBinding bindPluralAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource ) {
-		final PluralAttributeNature nature = attributeSource.getPluralAttributeNature();
+		final PluralAttributeSource.Nature nature = attributeSource.getNature();
 		final PluralAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding attributeBinding;
@@ -1286,14 +1285,14 @@ public class Binder {
 
 		bindSortingAndOrdering( attributeBinding, attributeSource );
 
-		if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.BASIC ) {
+		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.BASIC ) {
 			bindBasicCollectionKey( attributeBinding, attributeSource );
 			bindBasicCollectionElement(
 					( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding(),
 					( BasicPluralAttributeElementSource ) attributeSource.getElementSource(),
 					defaultCollectionElementJavaTypeName( reflectedCollectionJavaTypes ) );
 		}
-		else if ( attributeSource.getElementSource().getNature() == org.hibernate.metamodel.spi.source.PluralAttributeElementNature.ONE_TO_MANY ) {
+		else if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.ONE_TO_MANY ) {
 			final OneToManyPluralAttributeElementSource elementSource =
 					(OneToManyPluralAttributeElementSource) attributeSource.getElementSource();
 			final String defaultElementJavaTypeName = defaultCollectionElementJavaTypeName( reflectedCollectionJavaTypes );
@@ -1435,7 +1434,7 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource,
 			boolean isIdentifierAttribute) {
-		final SingularAttributeNature nature = attributeSource.getNature();
+		final SingularAttributeSource.Nature nature = attributeSource.getNature();
 		final SingularAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
 		switch ( nature ) {
@@ -1466,8 +1465,9 @@ public class Binder {
 			final Sortable sortable = ( Sortable ) attributeSource;
 			if ( sortable.isSorted() ) {
 				Class< Comparator< ? > > comparatorClass =
-						bindingContext().< Comparator< ? > >locateClassByName( sortable.getComparatorName() );
+						bindingContext().locateClassByName( sortable.getComparatorName() );
 				try {
+					attributeBinding.setSorted( sortable.isSorted() );
 					attributeBinding.setComparator( comparatorClass.newInstance() );
 				} catch ( Exception error ) {
 					bindingContext().makeMappingException(
@@ -1874,7 +1874,7 @@ public class Binder {
 			PluralAttributeSource attributeSource ) {
 		return reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionType() != null
 				? reflectedCollectionJavaTypes.getCollectionType().getName()
-				: attributeSource.getPluralAttributeNature().reportedJavaType().getName();
+				: attributeSource.getNature().reportedJavaType().getName();
 	}
 
 	private List< Column > determineForeignKeyTargetColumns(
@@ -2118,15 +2118,16 @@ public class Binder {
 		}
 	}
 
-	private PluralAttributeElementNature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
-		return PluralAttributeElementNature.valueOf( attributeSource.getElementSource().getNature().name() );
+	private PluralAttributeElementBinding.Nature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
+		return PluralAttributeElementBinding.Nature
+				.valueOf( attributeSource.getElementSource().getNature().name() );
 	}
 
-	private PluralAttributeIndexNature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {
+	private PluralAttributeIndexBinding.Nature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {
 		if ( ! IndexedPluralAttributeSource.class.isInstance( attributeSource ) ) {
 			return null;
 		}
-		return PluralAttributeIndexNature.valueOf(
+		return PluralAttributeIndexBinding.Nature.valueOf(
 				( (IndexedPluralAttributeSource) attributeSource ).getIndexSource().getNature().name()
 		);
 	}
@@ -2148,7 +2149,7 @@ public class Binder {
 			return metadata.getTypeResolver().getTypeFactory().bag(
 					bagBinding.getAttribute().getRole(),
 					bagBinding.getReferencedPropertyName(),
-					bagBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE );
+					bagBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPOSITE );
 		}
 	}
 
@@ -2162,7 +2163,7 @@ public class Binder {
 				pluralAttributeBinding.getAttribute().getName(),
 				pluralAttributeBinding.getReferencedPropertyName(),
 				pluralAttributeBinding.getPluralAttributeElementBinding()
-						.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+						.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 		);
 	}
 
@@ -2174,7 +2175,7 @@ public class Binder {
 					listBinding.getAttribute().getRole(),
 					listBinding.getReferencedPropertyName(),
 					listBinding.getPluralAttributeElementBinding()
-							.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);
 		}
 	}
@@ -2188,7 +2189,7 @@ public class Binder {
 					mapBinding.getAttribute().getRole(),
 					mapBinding.getReferencedPropertyName(),
 					mapBinding.getPluralAttributeElementBinding()
-							.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);
 		}
 	}
@@ -2201,7 +2202,7 @@ public class Binder {
 					setBinding.getAttribute().getRole(),
 					setBinding.getReferencedPropertyName(),
 					setBinding.getPluralAttributeElementBinding()
-							.getPluralAttributeElementNature() == PluralAttributeElementNature.COMPOSITE
+							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);
 		}
 	}

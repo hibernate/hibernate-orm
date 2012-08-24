@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
@@ -40,7 +41,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbPrimitiveArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;

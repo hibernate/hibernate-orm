@@ -31,11 +31,11 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.TruthValue;
-import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.DatabaseInformation;
 import org.hibernate.service.schema.spi.SchemaManagementException;

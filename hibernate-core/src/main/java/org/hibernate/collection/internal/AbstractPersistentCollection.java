@@ -23,7 +23,6 @@
  */
 package org.hibernate.collection.internal;
 
-import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import javax.naming.NamingException;
 
 import org.jboss.logging.Logger;
 

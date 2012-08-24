@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
 

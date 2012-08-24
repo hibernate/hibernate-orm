@@ -23,9 +23,6 @@
  */
 package org.hibernate.internal;
 
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-import javax.persistence.metamodel.Metamodel;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -41,6 +38,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+import javax.persistence.metamodel.Metamodel;
 
 import org.jboss.logging.Logger;
 
@@ -112,8 +112,6 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.jpa.metamodel.internal.builder.MetamodelBuilder;
 import org.hibernate.mapping.Collection;
@@ -121,6 +119,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -132,6 +131,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;

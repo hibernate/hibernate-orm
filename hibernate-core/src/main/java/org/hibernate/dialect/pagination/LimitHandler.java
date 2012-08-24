@@ -3,8 +3,6 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.RowSelection;
-
 /**
  * Contract defining dialect-specific LIMIT clause handling. Typically implementers might consider extending
  * {@link AbstractLimitHandler} class.

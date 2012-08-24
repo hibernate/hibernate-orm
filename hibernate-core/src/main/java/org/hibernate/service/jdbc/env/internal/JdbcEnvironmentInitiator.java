@@ -33,7 +33,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;

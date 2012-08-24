@@ -23,15 +23,14 @@
  */
 package org.hibernate.test.annotations.collectionelement.ordered;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OrderBy;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.GenericGenerator;
 

@@ -23,8 +23,6 @@
  */
 package org.hibernate;
 
-import org.hibernate.tool.hbm2ddl.SchemaExportTask;
-
 /**
  * Controls how the session interacts with the second-level
  * cache and query cache.

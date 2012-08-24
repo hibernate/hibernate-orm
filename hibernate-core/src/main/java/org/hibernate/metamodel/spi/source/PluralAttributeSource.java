@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
@@ -31,7 +36,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
  */
 public interface PluralAttributeSource
 		extends AttributeSource, FetchableAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
+	public Nature getNature();
 
 	public PluralAttributeKeySource getKeySource();
 
@@ -60,4 +65,27 @@ public interface PluralAttributeSource
 	public CustomSQL getCustomSqlDelete();
 
 	public CustomSQL getCustomSqlDeleteAll();
+
+	/**
+	 * Describes the nature of the collection itself as declared by the metadata.
+	 *
+	 * @author Steve Ebersole
+	 */
+	enum Nature {
+		BAG( Collection.class ),
+		ID_BAG( Collection.class ),
+		SET( Set.class ),
+		LIST( List.class ),
+		MAP( Map.class );
+
+		private final Class<?> reportedJavaType;
+
+		Nature(Class<?> reportedJavaType) {
+			this.reportedJavaType = reportedJavaType;
+		}
+
+		public Class<?> reportedJavaType() {
+			return reportedJavaType;
+		}
+	}
 }

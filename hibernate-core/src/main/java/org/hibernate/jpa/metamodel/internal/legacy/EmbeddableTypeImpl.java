@@ -21,8 +21,8 @@
  */
 package org.hibernate.jpa.metamodel.internal.legacy;
 
-import javax.persistence.metamodel.EmbeddableType;
 import java.io.Serializable;
+import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.type.ComponentType;
 

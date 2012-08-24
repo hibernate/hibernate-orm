@@ -33,7 +33,6 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -86,7 +85,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public boolean isNotFoundAnException() {
-		return !associationAttribute.ignoreNotFound();
+		return !associationAttribute.isIgnoreNotFound();
 	}
 
 	@Override
@@ -115,8 +114,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
-	public PluralAttributeElementNature getNature() {
-		return PluralAttributeElementNature.MANY_TO_MANY;
+	public Nature getNature() {
+		return Nature.MANY_TO_MANY;
 	}
 }
 

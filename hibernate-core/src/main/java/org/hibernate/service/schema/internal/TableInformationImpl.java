@@ -31,7 +31,6 @@ import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.ForeignKeyInformation;
 import org.hibernate.service.schema.spi.IndexInformation;
 import org.hibernate.service.schema.spi.TableInformation;
-import org.hibernate.tool.hbm2ddl.IndexMetadata;
 
 /**
  * Provides access to information about existing schema objects (tables, sequences etc) of existing database.

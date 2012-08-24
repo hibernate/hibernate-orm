@@ -23,11 +23,6 @@
  */
 package org.hibernate.test.bidir.onetomany.nonindexed;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 /**
  * @author Gail Badner
  */

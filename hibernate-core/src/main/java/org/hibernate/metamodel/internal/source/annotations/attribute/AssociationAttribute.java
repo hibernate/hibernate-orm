@@ -74,45 +74,20 @@ public class AssociationAttribute extends MappedAttribute {
 	public static AssociationAttribute createAssociationAttribute(
 			String name,
 			Class<?> attributeType,
-			AttributeNature attributeNature,
+			Nature attributeNature,
 			String accessType,
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
-		return createAssociationAttribute(
-				name,
-				attributeType,
-				attributeType,
-				attributeNature,
-				accessType,
-				annotations,
-				context
-		);
+		return new AssociationAttribute( name, attributeType, attributeType, attributeNature, accessType, annotations, context );
 	}
 
-	public static AssociationAttribute createAssociationAttribute(
-			String name,
-			Class<?> attributeType,
-			Class<?> referencedAttributeType,
-			AttributeNature attributeNature,
-			String accessType,
-			Map<DotName, List<AnnotationInstance>> annotations,
-			EntityBindingContext context) {
-		return new AssociationAttribute(
-				name,
-				attributeType,
-				referencedAttributeType,
-				attributeNature,
-				accessType,
-				annotations,
-				context
-		);
-	}
+
 
 	AssociationAttribute(
 			String name,
 			Class<?> attributeType,
 			Class<?> referencedAttributeType,
-			AttributeNature attributeNature,
+			Nature attributeNature,
 			String accessType,
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
@@ -138,7 +113,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.mapsId = referencedIdAttributeName != null;
 	}
 
-	public boolean ignoreNotFound() {
+	public boolean isIgnoreNotFound() {
 		return ignoreNotFound;
 	}
 
@@ -341,8 +316,8 @@ public class AssociationAttribute extends MappedAttribute {
 			return null;
 		}
 
-		if ( !( AttributeNature.MANY_TO_ONE.equals( getAttributeNature() ) || AttributeNature.MANY_TO_ONE
-				.equals( getAttributeNature() ) ) ) {
+		if ( !( Nature.MANY_TO_ONE.equals( getNature() ) || Nature.MANY_TO_ONE
+				.equals( getNature() ) ) ) {
 			throw new MappingException(
 					"@MapsId can only be specified on a many-to-one or one-to-one associations",
 					getContext().getOrigin()

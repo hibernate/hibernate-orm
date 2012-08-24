@@ -76,7 +76,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.Select;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
 

@@ -57,9 +57,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -433,7 +433,7 @@ public class ConfiguredClass {
 				classInfo, member.getName()
 		);
 
-		AttributeNature attributeNature = determineAttributeNature( annotations, referencedEntityType );
+		MappedAttribute.Nature attributeNature = determineAttributeNature( annotations, referencedEntityType );
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
@@ -570,39 +570,38 @@ public class ConfiguredClass {
 	 *
 	 * @return an instance of the {@code AttributeType} enum
 	 */
-	private AttributeNature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations,
-													 Class<?> referencedCollectionType) {
-		EnumMap<AttributeNature, AnnotationInstance> discoveredAttributeTypes =
-				new EnumMap<AttributeNature, AnnotationInstance>( AttributeNature.class );
+	private MappedAttribute.Nature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations, Class<?> referencedCollectionType) {
+		EnumMap<MappedAttribute.Nature, AnnotationInstance> discoveredAttributeTypes =
+				new EnumMap<MappedAttribute.Nature, AnnotationInstance>( MappedAttribute.Nature.class );
 
 		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
 		if ( oneToOne != null ) {
-			discoveredAttributeTypes.put( AttributeNature.ONE_TO_ONE, oneToOne );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.ONE_TO_ONE, oneToOne );
 		}
 
 		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
 		if ( oneToMany != null ) {
-			discoveredAttributeTypes.put( AttributeNature.ONE_TO_MANY, oneToMany );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.ONE_TO_MANY, oneToMany );
 		}
 
 		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
 		if ( manyToOne != null ) {
-			discoveredAttributeTypes.put( AttributeNature.MANY_TO_ONE, manyToOne );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.MANY_TO_ONE, manyToOne );
 		}
 
 		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
 		if ( manyToMany != null ) {
-			discoveredAttributeTypes.put( AttributeNature.MANY_TO_MANY, manyToMany );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.MANY_TO_MANY, manyToMany );
 		}
 
 		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED );
 		if ( embedded != null ) {
-			discoveredAttributeTypes.put( AttributeNature.EMBEDDED, embedded );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED, embedded );
 		}
 
 		AnnotationInstance embeddedId = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
 		if ( embeddedId != null ) {
-			discoveredAttributeTypes.put( AttributeNature.EMBEDDED_ID, embeddedId );
+			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED_ID, embeddedId );
 		}
 
 		AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation(
@@ -616,19 +615,17 @@ public class ConfiguredClass {
 					)
 			);
 			if ( classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null ) {
-				discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION_EMBEDDABLE, elementCollection );
+				discoveredAttributeTypes.put( MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE, elementCollection );
 			}
 			else {
-				discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION_BASIC, elementCollection );
+				discoveredAttributeTypes.put( MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC, elementCollection );
 			}
-
-
 		}
 
 		int size = discoveredAttributeTypes.size();
 		switch ( size ) {
 			case 0:
-				return AttributeNature.BASIC;
+				return MappedAttribute.Nature.BASIC;
 			case 1:
 				return discoveredAttributeTypes.keySet().iterator().next();
 			default:

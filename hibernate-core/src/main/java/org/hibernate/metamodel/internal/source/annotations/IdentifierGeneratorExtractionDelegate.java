@@ -23,15 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import javax.persistence.GenerationType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.AvailableSettings;

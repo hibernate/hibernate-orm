@@ -23,10 +23,8 @@
  */
 package org.hibernate.service.schema.spi;
 
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.tool.hbm2ddl.IndexMetadata;
 
 /**
  * Provides access to information about existing tables in the database

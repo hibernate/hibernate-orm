@@ -28,11 +28,9 @@
 package org.hibernate.test.dialect.functional;
 
 import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 /**
  * @author Guenther Demetz

@@ -32,6 +32,9 @@ import java.sql.Types;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.MapKeyEnumerated;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -39,7 +42,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
-import org.jboss.logging.Logger;
 
 /**
  * Enum type mapper

@@ -26,7 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 /**
- * Describes plural attributes of {@link PluralAttributeElementNature#BASIC} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#BASIC} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -41,8 +41,8 @@ public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeE
 	}
 
 	@Override
-	public PluralAttributeElementNature getPluralAttributeElementNature() {
-		return PluralAttributeElementNature.BASIC;
+	public Nature getNature() {
+		return Nature.BASIC;
 	}
 
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {

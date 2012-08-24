@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.ondemandload;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Version;
-import java.io.Serializable;
-import java.math.BigDecimal;
 
 @Entity
 public class Product implements Serializable {

@@ -29,6 +29,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
+import org.junit.Test;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -37,8 +39,6 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
-
-import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

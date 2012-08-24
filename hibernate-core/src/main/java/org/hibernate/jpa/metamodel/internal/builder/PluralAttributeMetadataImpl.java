@@ -23,11 +23,11 @@
  */
 package org.hibernate.jpa.metamodel.internal.builder;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.PluralAttribute;
 import java.lang.reflect.Member;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.jpa.metamodel.internal.AbstractManagedType;

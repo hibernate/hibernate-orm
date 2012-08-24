@@ -23,16 +23,17 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import static org.junit.Assert.fail;
-
 import java.util.ConcurrentModificationException;
+
+import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Guenther Demetz

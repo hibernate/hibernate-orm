@@ -23,10 +23,11 @@
  */
 package org.hibernate.test.cfg.cache;
 
+import org.junit.Test;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
 
 /**
  * Tests using of cacheable configuration files.

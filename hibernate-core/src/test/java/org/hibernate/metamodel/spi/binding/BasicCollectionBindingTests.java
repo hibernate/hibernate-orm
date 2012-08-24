@@ -34,7 +34,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.spi.domain.PluralAttributeNature;
+import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -198,8 +198,8 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		);
 		assertFalse( keyBinding.isInverse() );
 		assertEquals(
-				PluralAttributeElementNature.BASIC,
-				collectionBinding.getPluralAttributeElementBinding().getPluralAttributeElementNature()
+				PluralAttributeElementBinding.Nature.BASIC,
+				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);
 		assertEquals(
 				expectedElementJavaClass.getName(),
@@ -213,10 +213,10 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		assertEquals( 1, collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().size() );
 		RelationalValueBinding elementRelationalValueBinding = collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().get( 0 );
 		assertEquals( expectedElementNullable, elementRelationalValueBinding.isNullable() );
-		if ( collectionBinding.getAttribute().getNature() == PluralAttributeNature.BAG ) {
+		if ( collectionBinding.getAttribute().getNature() == PluralAttribute.Nature.BAG ) {
 			assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
 		}
-		else if ( collectionBinding.getAttribute().getNature() == PluralAttributeNature.SET ) {
+		else if ( collectionBinding.getAttribute().getNature() == PluralAttribute.Nature.SET ) {
 			if ( expectedElementNullable ) {
 				assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
 			}

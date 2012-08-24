@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import javax.persistence.CascadeType;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -42,9 +41,9 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
 import org.hibernate.HibernateException;
-import org.hibernate.jaxb.spi.orm.JaxbCascadeType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jaxb.spi.orm.JaxbCascadeType;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;

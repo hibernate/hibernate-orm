@@ -23,10 +23,10 @@
  */
 package org.hibernate.engine.spi;
 
-import javax.persistence.metamodel.Metamodel;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;

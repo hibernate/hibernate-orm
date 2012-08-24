@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
@@ -47,7 +48,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSynchronizeElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
 import org.hibernate.jaxb.spi.hbm.JoinElementSource;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;

@@ -31,7 +31,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -143,8 +142,8 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 	}
 
 	@Override
-	public PluralAttributeIndexNature getNature() {
-		return PluralAttributeIndexNature.BASIC;
+	public Nature getNature() {
+		return Nature.BASIC;
 	}
 
 	@Override

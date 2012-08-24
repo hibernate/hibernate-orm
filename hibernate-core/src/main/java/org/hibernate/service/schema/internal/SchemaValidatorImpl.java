@@ -32,9 +32,9 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.service.schema.spi.ColumnInformation;
 import org.hibernate.service.schema.spi.DatabaseInformation;
 import org.hibernate.service.schema.spi.SchemaManagementException;
+import org.hibernate.service.schema.spi.SchemaValidator;
 import org.hibernate.service.schema.spi.SequenceInformation;
 import org.hibernate.service.schema.spi.TableInformation;
-import org.hibernate.service.schema.spi.SchemaValidator;
 
 /**
  * @author Steve Ebersole

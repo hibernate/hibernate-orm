@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.domain.Type;

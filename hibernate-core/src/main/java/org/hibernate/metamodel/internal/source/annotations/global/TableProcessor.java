@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 import java.util.Collection;
 
 import org.jboss.jandex.AnnotationInstance;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;

@@ -23,14 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import javax.persistence.GenerationType;
-import javax.persistence.SequenceGenerator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.GenericGenerator;

@@ -27,7 +27,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbListElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 
 /**
  *
@@ -67,10 +66,10 @@ public class ListAttributeSource extends AbstractPluralAttributeSourceImpl imple
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.hibernate.metamodel.spi.source.PluralAttributeSource#getPluralAttributeNature()
+	 * @see org.hibernate.metamodel.spi.source.PluralAttributeSource#getNature()
 	 */
 	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
-		return PluralAttributeNature.LIST;
+	public Nature getNature() {
+		return Nature.LIST;
 	}
 }

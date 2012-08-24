@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import org.hibernate.mapping.RootClass;
-
 import org.junit.Test;
 
+import org.hibernate.mapping.RootClass;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

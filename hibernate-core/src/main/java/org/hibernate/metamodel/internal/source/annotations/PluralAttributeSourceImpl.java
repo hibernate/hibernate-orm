@@ -27,83 +27,108 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.CascadeType;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ManyToAnyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
-import org.hibernate.metamodel.spi.source.PluralAttributeNature;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class PluralAttributeSourceImpl implements PluralAttributeSource {
+public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderable, Sortable {
 
 	private final PluralAssociationAttribute attribute;
-	private final PluralAttributeNature nature;
+	private final Nature nature;
+	private final ExplicitHibernateTypeSource typeSource;
+	private final PluralAttributeKeySource keySource;
+	private final PluralAttributeElementSource elementSource;
 
-	public PluralAttributeSourceImpl(PluralAssociationAttribute attribute) {
+	public PluralAttributeSourceImpl(final PluralAssociationAttribute attribute) {
 		this.attribute = attribute;
 		this.nature = resolveAttributeNature();
+		this.keySource = new PluralAttributeKeySourceImpl( attribute );
+		this.elementSource = determineElementSource();
+		this.typeSource = new ExplicitHibernateTypeSource() {
+			@Override
+			public String getName() {
+				return attribute.getHibernateTypeResolver().getExplicitHibernateTypeName();
+			}
+
+			@Override
+			public Map<String, String> getParameters() {
+				return attribute.getHibernateTypeResolver().getExplicitHibernateTypeParameters();
+			}
+		};
 	}
 
-	private PluralAttributeNature resolveAttributeNature() {
+	private Nature resolveAttributeNature() {
 		if ( Map.class.isAssignableFrom( attribute.getAttributeType() ) ) {
-			return PluralAttributeNature.MAP;
+			return PluralAttributeSource.Nature.MAP;
 		}
 		else if ( List.class.isAssignableFrom( attribute.getAttributeType() ) ) {
-			return PluralAttributeNature.LIST;
+			return PluralAttributeSource.Nature.LIST;
 		}
 		else if ( Set.class.isAssignableFrom( attribute.getAttributeType() ) ) {
-			return PluralAttributeNature.SET;
+			return PluralAttributeSource.Nature.SET;
 		}
 		else {
-			return PluralAttributeNature.BAG;
+			return PluralAttributeSource.Nature.BAG;
 		}
 	}
 
 	@Override
-	public PluralAttributeNature getPluralAttributeNature() {
+	public Nature getNature() {
 		return nature;
 	}
 
 	@Override
-	public PluralAttributeKeySource getKeySource() {
-		return new PluralAttributeKeySourceImpl( );
+	public PluralAttributeElementSource getElementSource() {
+		return elementSource;
 	}
 
-	@Override
-	public PluralAttributeElementSource getElementSource() {
-		switch ( attribute.getAttributeNature() ) {
+	private PluralAttributeElementSource determineElementSource (){
+		switch ( attribute.getNature() ) {
 			case MANY_TO_MANY:
 				return new ManyToManyPluralAttributeElementSourceImpl( attribute );
 			case MANY_TO_ANY:
-				return new ManyToAnyPluralAttributeElementSourceImpl();
+				return new ManyToAnyPluralAttributeElementSourceImpl( attribute );
 			case ONE_TO_MANY:
 				return new OneToManyPluralAttributeElementSourceImpl( attribute );
 		}
-		return null;
+		throw new AssertionError( "unexpected attribute nature" );
+	}
+
+	@Override
+	public PluralAttributeKeySource getKeySource() {
+		return keySource;
 	}
 
 	@Override
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		// todo see org.hibernate.metamodel.internal.Binder#bindOneToManyCollectionKey
+		return null;
 	}
 
 	@Override
 	public String getCollectionTableComment() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
@@ -128,7 +153,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public boolean isInverse() {
-		return attribute.getMappedBy() == null;
+		return attribute.getMappedBy() != null;
 	}
 
 	@Override
@@ -168,17 +193,17 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 
 	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return typeSource;
 	}
 
 	@Override
 	public String getPropertyAccessorName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getAccessType();
 	}
 
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.isOptimisticLockable();
 	}
 
 	@Override
@@ -190,6 +215,26 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 	@Override
 	public FetchMode getFetchMode() {
 		return attribute.getFetchMode();
+	}
+
+	@Override
+	public String getOrder() {
+		return attribute.getOrderBy();
+	}
+
+	@Override
+	public boolean isOrdered() {
+		return StringHelper.isNotEmpty( getOrder() );
+	}
+
+	@Override
+	public String getComparatorName() {
+		return attribute.getComparatorName();
+	}
+
+	@Override
+	public boolean isSorted() {
+		return attribute.isSorted();
 	}
 
 	@Override
@@ -207,17 +252,55 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource {
 	public FetchStyle getFetchStyle() {
 		return attribute.getFetchStyle();
 	}
+	public Iterable<CascadeStyle> interpretCascadeStyles(Set<CascadeType> cascadeTypes) {
+		return EnumConversionHelper.cascadeTypeToCascadeStyleSet( cascadeTypes, attribute.getContext() );
 
-	private class ManyToAnyPluralAttributeElementSourceImpl implements ManyToAnyPluralAttributeElementSource {
 
-		@Override
-		public Iterable<CascadeStyle> getCascadeStyles() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	private class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
+		private final PluralAssociationAttribute attribute;
+
+		private OneToManyPluralAttributeElementSourceImpl(PluralAssociationAttribute attribute) {
+			this.attribute = attribute;
 		}
 
 		@Override
-		public PluralAttributeElementNature getNature() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		public String getReferencedEntityName() {
+			return attribute.getReferencedEntityType();
+		}
+
+		@Override
+		public boolean isNotFoundAnException() {
+			return !attribute.isIgnoreNotFound();
+		}
+
+		@Override
+		public Iterable<CascadeStyle> getCascadeStyles() {
+			return interpretCascadeStyles( attribute.getCascadeTypes() );
+		}
+
+		@Override
+		public Nature getNature() {
+			return Nature.ONE_TO_MANY;
+		}
+	}
+
+	private class ManyToAnyPluralAttributeElementSourceImpl implements ManyToAnyPluralAttributeElementSource {
+		private final PluralAssociationAttribute attribute;
+
+		private ManyToAnyPluralAttributeElementSourceImpl(PluralAssociationAttribute attribute) {
+			this.attribute = attribute;
+		}
+
+		@Override
+		public Iterable<CascadeStyle> getCascadeStyles() {
+			return interpretCascadeStyles( attribute.getCascadeTypes() );
+		}
+
+		@Override
+		public Nature getNature() {
+			return Nature.MANY_TO_ANY;
 		}
 	}
 }

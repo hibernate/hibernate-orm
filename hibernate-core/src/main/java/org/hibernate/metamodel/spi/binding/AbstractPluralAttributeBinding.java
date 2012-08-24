@@ -60,7 +60,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private String orderBy;
 	private boolean sorted;
 	private Comparator< ? > comparator;
-	private String comparatorClassName;
 
 	private String customLoaderName;
 	private CustomSQL customSqlInsert;
@@ -77,7 +76,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -91,10 +90,11 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		);
 		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this, referencedAttributeBinding );
 		this.pluralAttributeElementBinding = interpretNature( pluralAttributeElementNature );
+		this.referencedPropertyName = referencedAttributeBinding.getAttribute().getName();
 	}
 
-	private AbstractPluralAttributeElementBinding interpretNature(PluralAttributeElementNature pluralAttributeElementNature) {
-		switch ( pluralAttributeElementNature ) {
+	private AbstractPluralAttributeElementBinding interpretNature(PluralAttributeElementBinding.Nature nature) {
+		switch ( nature ) {
 			case BASIC: {
 				return new BasicPluralAttributeElementBinding( this );
 			}
@@ -111,7 +111,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 				return new ManyToAnyPluralAttributeElementBinding( this );
 			}
 			default: {
-				throw new AssertionFailure( "Unknown collection element nature : " + pluralAttributeElementNature );
+				throw new AssertionFailure( "Unknown collection element nature : " + nature );
 			}
 		}
 	}
@@ -156,7 +156,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	@Override
 	public boolean isAssociation() {
-		return pluralAttributeElementBinding.getPluralAttributeElementNature().isAssociation();
+		return pluralAttributeElementBinding.getNature().isAssociation();
 	}
 
 	@Override
@@ -297,6 +297,10 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return sorted;
 	}
 
+	public void setSorted(boolean sorted) {
+		this.sorted = sorted;
+	}
+
 	@Override
 	public Comparator< ? > getComparator() {
 		return comparator;
@@ -304,10 +308,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	public void setComparator( Comparator< ? > comparator ) {
 		this.comparator = comparator;
-	}
-
-	public String getComparatorClassName() {
-		return comparatorClassName;
 	}
 
 	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
@@ -321,12 +321,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	@Override
 	public FetchMode getFetchMode() {
-		if ( getFetchStyle() == FetchStyle.JOIN ) {
-			return FetchMode.JOIN;
-		}
-		else {
-			return FetchMode.SELECT;
-		}
+		return getFetchStyle() == FetchStyle.JOIN ? FetchMode.JOIN : FetchMode.SELECT;
 	}
 
 	@Override

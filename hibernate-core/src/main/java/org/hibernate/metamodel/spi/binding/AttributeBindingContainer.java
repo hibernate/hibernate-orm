@@ -163,7 +163,7 @@ public interface AttributeBindingContainer {
 	 */
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -185,7 +185,7 @@ public interface AttributeBindingContainer {
 	 */
 	public ListBinding makeListAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -208,8 +208,8 @@ public interface AttributeBindingContainer {
 	 */
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature elementNature,
-			PluralAttributeIndexNature indexNature,
+			PluralAttributeElementBinding.Nature elementNature,
+			PluralAttributeIndexBinding.Nature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -230,7 +230,7 @@ public interface AttributeBindingContainer {
 	 */
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementNature nature,
+			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,

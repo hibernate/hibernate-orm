@@ -23,17 +23,14 @@
  */
 package org.hibernate.internal;
 
-import javax.persistence.ParameterMode;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.JDBCException;
-import org.hibernate.StoredProcedureCall.StoredProcedureParameter;
 import org.hibernate.StoredProcedureOutputs;
 import org.hibernate.StoredProcedureResultSetReturn;
 import org.hibernate.StoredProcedureReturn;

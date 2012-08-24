@@ -35,6 +35,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbAssociationOverride;
 import org.hibernate.jaxb.spi.orm.JaxbAttributeOverride;
 import org.hibernate.jaxb.spi.orm.JaxbCollectionTable;
@@ -46,7 +47,6 @@ import org.hibernate.jaxb.spi.orm.JaxbLob;
 import org.hibernate.jaxb.spi.orm.JaxbOrderColumn;
 import org.hibernate.jaxb.spi.orm.JaxbPrimaryKeyJoinColumn;
 import org.hibernate.jaxb.spi.orm.JaxbTemporalType;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Strong Liu

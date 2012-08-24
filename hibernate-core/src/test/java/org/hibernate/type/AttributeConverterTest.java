@@ -23,13 +23,15 @@
  */
 package org.hibernate.type;
 
+import java.sql.Clob;
+import java.sql.Types;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.sql.Clob;
-import java.sql.Types;
+
+import org.junit.Test;
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -37,11 +39,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;

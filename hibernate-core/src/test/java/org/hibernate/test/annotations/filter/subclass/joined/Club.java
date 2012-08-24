@@ -2,7 +2,6 @@ package org.hibernate.test.annotations.filter.subclass.joined;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

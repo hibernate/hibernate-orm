@@ -42,8 +42,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.type.Type;
 
 /**

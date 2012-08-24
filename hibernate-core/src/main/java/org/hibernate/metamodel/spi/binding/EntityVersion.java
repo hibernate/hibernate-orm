@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
-
 /**
  * @author Steve Ebersole
  */

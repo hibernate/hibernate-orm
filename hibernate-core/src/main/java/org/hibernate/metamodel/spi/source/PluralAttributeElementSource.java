@@ -27,5 +27,18 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface PluralAttributeElementSource {
-	public PluralAttributeElementNature getNature();
+	public Nature getNature();
+
+	/**
+	 * Describes the nature of the collection elements as declared by the metadata.
+	 *
+	 * @author Steve Ebersole
+	 */
+	enum Nature {
+		BASIC,
+		COMPONENT,
+		ONE_TO_MANY,
+		MANY_TO_MANY,
+		MANY_TO_ANY
+	}
 }

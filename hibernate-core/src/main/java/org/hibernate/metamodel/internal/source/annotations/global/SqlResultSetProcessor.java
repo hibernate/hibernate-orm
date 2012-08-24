@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;

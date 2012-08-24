@@ -1,9 +1,9 @@
 package org.hibernate.test.annotations.filter.subclass;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 public abstract class SubClassTest extends BaseCoreFunctionalTestCase{
 	

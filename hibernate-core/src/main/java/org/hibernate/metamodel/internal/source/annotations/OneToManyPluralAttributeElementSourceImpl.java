@@ -29,7 +29,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementNature;
 
 /**
  * @author Hardy Ferentschik
@@ -48,7 +47,7 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 
 	@Override
 	public boolean isNotFoundAnException() {
-		return !associationAttribute.ignoreNotFound();
+		return !associationAttribute.isIgnoreNotFound();
 	}
 
 	@Override
@@ -58,28 +57,29 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 	}
 
 	@Override
-	public PluralAttributeElementNature getNature() {
-		switch ( associationAttribute.getAttributeNature() ) {
+	public Nature getNature() {
+		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY: {
-				return PluralAttributeElementNature.MANY_TO_MANY;
+				return Nature.MANY_TO_MANY;
 			}
 			case MANY_TO_ANY: {
-				return PluralAttributeElementNature.MANY_TO_ANY;
+				return Nature.MANY_TO_ANY;
 			}
 			case ONE_TO_MANY: {
-				return PluralAttributeElementNature.ONE_TO_MANY;
+				return Nature.ONE_TO_MANY;
 			}
 			case ELEMENT_COLLECTION_BASIC: {
-				return PluralAttributeElementNature.BASIC;
+				return Nature.BASIC;
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				return PluralAttributeElementNature.COMPONENT;
+				return Nature.COMPONENT;
 			}
 			default: {
-				throw new AssertionFailure( "Unexpected attribute nature: " + associationAttribute.getAttributeNature() );
+				throw new AssertionFailure( "Unexpected attribute nature: " + associationAttribute.getNature() );
 			}
 		}
 	}
+
 }
 
 

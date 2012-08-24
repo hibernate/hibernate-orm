@@ -25,9 +25,13 @@ package org.hibernate.bytecode.buildtime.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Set;
 
+import javassist.ClassClassPath;
+import javassist.ClassPool;
 import javassist.bytecode.ClassFile;
 
 import org.hibernate.bytecode.buildtime.spi.AbstractInstrumenter;
@@ -44,6 +48,7 @@ import org.hibernate.bytecode.spi.ClassTransformer;
  *
  * @author Steve Ebersole
  * @author Muga Nishizawa
+ * @author Dustin Schultz
  */
 public class JavassistInstrumenter extends AbstractInstrumenter {
 
@@ -69,6 +74,20 @@ public class JavassistInstrumenter extends AbstractInstrumenter {
 		else {
 			return provider.getTransformer( CLASS_FILTER, new CustomFieldFilter( descriptor, classNames ) );
 		}
+	}
+	
+	@Override
+	public void execute(Set<File> files) {
+		ClassPool cp = ClassPool.getDefault();
+		cp.insertClassPath(new ClassClassPath(this.getClass()));
+		try {
+			for (File file : files) {
+				cp.makeClass(new FileInputStream(file));
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		super.execute(files);
 	}
 
 	private static class CustomClassDescriptor implements ClassDescriptor {

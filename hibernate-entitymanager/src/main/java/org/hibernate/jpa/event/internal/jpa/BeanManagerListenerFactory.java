@@ -42,6 +42,10 @@ public class BeanManagerListenerFactory implements ListenerFactory {
 	private final BeanManager beanManager;
 	private final Map<Class,BeanMetaData> listeners = new ConcurrentHashMap<Class, BeanMetaData>();
 
+	public static BeanManagerListenerFactory fromBeanManagerReference(Object beanManagerReference) {
+		return new BeanManagerListenerFactory( ( BeanManager ) beanManagerReference );
+	}
+
 	public BeanManagerListenerFactory(BeanManager beanManager) {
 		this.beanManager = beanManager;
 	}

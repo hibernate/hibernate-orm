@@ -23,7 +23,8 @@
  */
 package org.hibernate.jpa.event.spi;
 
-import javax.enterprise.inject.spi.BeanManager;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -187,10 +188,10 @@ public class JpaIntegrator implements Integrator {
 		// handle JPA "entity listener classes"...
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final BeanManager beanManager = (BeanManager) configuration.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
-		this.jpaListenerFactory = beanManager == null
+		final Object beanManagerRef = configuration.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
+		this.jpaListenerFactory = beanManagerRef == null
 				? new StandardListenerFactory()
-				: new BeanManagerListenerFactory( beanManager );
+				: buildBeanManagerListenerFactory( beanManagerRef );
 		this.callbackProcessor = new LegacyCallbackProcessor( jpaListenerFactory, configuration.getReflectionManager() );
 
 		Iterator classes = configuration.getClassMappings();
@@ -210,6 +211,34 @@ public class JpaIntegrator implements Integrator {
 					( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
 				}
 			}
+		}
+	}
+
+	private ListenerFactory buildBeanManagerListenerFactory(Object beanManagerRef) {
+		try {
+			// specifically using our classloader here...
+			final Class beanManagerListenerFactoryClass = getClass().getClassLoader()
+					.loadClass( "org.hibernate.jpa.event.internal.jpa.BeanManagerListenerFactory" );
+			final Method beanManagerListenerFactoryBuilderMethod = beanManagerListenerFactoryClass.getMethod(
+					"fromBeanManagerReference",
+					Object.class
+			);
+
+			try {
+				return (ListenerFactory) beanManagerListenerFactoryBuilderMethod.invoke( null, beanManagerRef );
+			}
+			catch (InvocationTargetException e) {
+				throw e.getTargetException();
+			}
+		}
+		catch (ReflectiveOperationException e) {
+			throw new HibernateException( "Could not access BeanManagerListenerFactory class to handle CDI extensions", e );
+		}
+		catch (RuntimeException e) {
+			throw e;
+		}
+		catch (Throwable e) {
+			throw new HibernateException( "Problem calling BeanManagerListenerFactory class to handle CDI extensions", e );
 		}
 	}
 
@@ -288,10 +317,10 @@ public class JpaIntegrator implements Integrator {
 		// handle JPA "entity listener classes"...
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final BeanManager beanManager = (BeanManager) sessionFactory.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
-		this.jpaListenerFactory = beanManager == null
+		final Object beanManagerRef = sessionFactory.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
+		this.jpaListenerFactory = beanManagerRef == null
 				? new StandardListenerFactory()
-				: new BeanManagerListenerFactory( beanManager );
+				: buildBeanManagerListenerFactory( beanManagerRef );
 		this.callbackProcessor = new CallbackProcessorImpl( jpaListenerFactory, metadata, serviceRegistry );
 
         for ( EntityBinding binding : metadata.getEntityBindings() ) {

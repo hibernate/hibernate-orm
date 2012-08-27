@@ -45,6 +45,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

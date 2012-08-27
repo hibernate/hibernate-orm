@@ -30,7 +30,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,15 +41,14 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-5853" )
+@TestForIssue(jiraKey = "HHH-5853")
 public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[]{"propertyref/cachedcollections/Mappings.hbm.xml"};
+		return new String[] { "propertyref/cachedcollections/Mappings.hbm.xml" };
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testRetrievalOfCachedCollectionWithPropertyRefKey() {
 		// create the test data...
 		Session session = openSession();
@@ -64,7 +62,7 @@ public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase 
 		// First attempt to load it via PK lookup
 		session = openSession();
 		session.beginTransaction();
-		ManagedObject obj = (ManagedObject) session.get( ManagedObject.class, 1L );
+		ManagedObject obj = ( ManagedObject ) session.get( ManagedObject.class, 1L );
 		assertNotNull( obj );
 		assertTrue( Hibernate.isInitialized( obj ) );
 		obj.getMembers().size();
@@ -79,7 +77,7 @@ public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase 
 				.add( Restrictions.naturalId().set( "name", "test" ) )
 				.setCacheable( true )
 				.setFetchMode( "members", FetchMode.JOIN );
-		obj = (ManagedObject) criteria.uniqueResult();
+		obj = ( ManagedObject ) criteria.uniqueResult();
 		assertNotNull( obj );
 		assertTrue( Hibernate.isInitialized( obj ) );
 		obj.getMembers().size();

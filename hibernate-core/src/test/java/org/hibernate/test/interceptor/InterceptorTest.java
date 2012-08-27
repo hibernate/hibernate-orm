@@ -56,6 +56,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionIntercept() {
 		Session s = openSession( new CollectionInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -177,6 +178,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testStatefulIntercept() {
 		final StatefulInterceptor statefulInterceptor = new StatefulInterceptor();
 		Session s = openSession( statefulInterceptor );
@@ -200,6 +202,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInitiateIntercept() {
 		final String injectedString = "******";
 		final InstantiateInterceptor initiateInterceptor = new InstantiateInterceptor( injectedString );
@@ -246,6 +249,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6594" )
+	@FailureExpectedWithNewMetamodel
 	public void testPrepareStatementIntercept() {
 		final Queue<String> expectedSQLs = new LinkedList<String>();
 		// Transaction 1
@@ -301,6 +305,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = AssertionFailure.class)
+	@FailureExpectedWithNewMetamodel
 	public void testPrepareStatementFaultIntercept() {
 		final Interceptor interceptor = new EmptyInterceptor() {
 			@Override

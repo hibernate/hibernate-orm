@@ -32,6 +32,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 		value = DialectChecks.SupportsExistsInSelectCheck.class,
 		comment = "dialect does not support exist predicates in the select clause"
 )
+@FailureExpectedWithNewMetamodel
 public class AuctionTest2 extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -24,11 +24,13 @@
 package org.hibernate.test.onetomany;
 
 import org.hibernate.CacheMode;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Burkhard Graves
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
 	protected CacheMode getSessionCacheMode() {
 			return CacheMode.NORMAL;

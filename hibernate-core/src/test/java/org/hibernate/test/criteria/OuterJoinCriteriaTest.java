@@ -33,6 +33,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +48,7 @@ import static org.junit.Assert.fail;
  * @author Mattias Jiderhamn
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 	private Order order1;
 	private Order order2;

@@ -24,10 +24,12 @@
 package org.hibernate.test.event.collection.association.bidirectional.onetomany;
 
 import org.hibernate.test.event.collection.ParentWithCollection;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class BidirectionalOneToManyBagSubclassCollectionEventTest extends BidirectionalOneToManyBagCollectionEventTest {
 	@Override
 	public String[] getMappings() {

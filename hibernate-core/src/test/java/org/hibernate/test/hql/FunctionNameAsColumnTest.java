@@ -36,6 +36,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -109,6 +110,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGetMultiColumnSameNameAsArgFunctionHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -152,6 +154,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGetMultiColumnSameNameAsArgFunctionCriteria() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

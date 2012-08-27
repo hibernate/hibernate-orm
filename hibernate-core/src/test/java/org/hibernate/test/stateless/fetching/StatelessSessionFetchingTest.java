@@ -90,7 +90,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public String logicalCollectionTableName(String tableName, String ownerEntityTable, String associatedEntityTable, String propertyName) {
 			String resolvedTableName = prefix + '_' + super.logicalCollectionTableName( tableName, ownerEntityTable, associatedEntityTable, propertyName );
-			System.out.println( "Logical collection table name : " + tableName + " -> " + resolvedTableName );
+			log.debug( "Logical collection table name : " + tableName + " -> " + resolvedTableName );
 			return resolvedTableName;
 		}
 

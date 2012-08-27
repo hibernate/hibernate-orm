@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                version="2.1">
 
     <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-configuration-4.0.xsd" node="/xsd:schema">

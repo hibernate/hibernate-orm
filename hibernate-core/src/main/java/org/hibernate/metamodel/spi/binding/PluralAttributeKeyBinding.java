@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -38,7 +40,6 @@ public class PluralAttributeKeyBinding {
 
 	private ForeignKey foreignKey;
 	private boolean inverse;
-	// may need notion of "boolean updatable"
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -120,6 +121,16 @@ public class PluralAttributeKeyBinding {
 		}
 		for ( Column column : foreignKey.getSourceColumns() ) {
 			if ( column.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isUpdatable() {
+		List<RelationalValueBinding> valueBindings = referencedAttributeBinding.getRelationalValueBindings();
+		for(final RelationalValueBinding valueBinding : valueBindings){
+			if(valueBinding.isIncludeInUpdate()){
 				return true;
 			}
 		}

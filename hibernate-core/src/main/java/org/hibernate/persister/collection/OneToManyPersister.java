@@ -83,7 +83,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public OneToManyPersister(
 			Collection collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
@@ -95,7 +95,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		keyIsNullable = collection.getKey().isNullable();
 		keyIsUpdateable = collection.getKey().isUpdateable();
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public OneToManyPersister(
 			AbstractPluralAttributeBinding collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
@@ -117,9 +117,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final SingularAttributeBinding referencedAttributeBinding =
 				keyBinding.getReferencedAttributeBinding();
 		keyIsNullable = keyBinding.isNullable();
-		// TODO: fix this...
-		//keyIsUpdateable = referencedAttributeBinding.isUpdateable();
-		keyIsUpdateable = true;
+		keyIsUpdateable = keyBinding.isUpdatable();
 	}
 
 	/**

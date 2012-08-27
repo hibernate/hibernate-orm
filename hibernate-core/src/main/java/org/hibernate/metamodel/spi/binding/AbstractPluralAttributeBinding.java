@@ -116,39 +116,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		}
 	}
 
-//	protected void initializeBinding(PluralAttributeBindingState state) {
-//		super.initialize( state );
-//		fetchMode = state.getFetchMode();
-//		extraLazy = state.isExtraLazy();
-//		pluralAttributeElementBinding.setNodeName( state.getElementNodeName() );
-//		pluralAttributeElementBinding.setTypeName( state.getElementTypeName() );
-//		mutable = state.isMutable();
-//		subselectLoadable = state.isSubselectLoadable();
-//		if ( isSubselectLoadable() ) {
-//			getEntityBinding().setSubselectLoadableCollections( true );
-//		}
-//		cacheConcurrencyStrategy = state.getCacheConcurrencyStrategy();
-//		cacheRegionName = state.getCacheRegionName();
-//		orderBy = state.getOrderBy();
-//		where = state.getWhere();
-//		referencedPropertyName = state.getReferencedPropertyName();
-//		sorted = state.isSorted();
-//		comparator = state.getComparator();
-//		comparatorClassName = state.getComparatorClassName();
-//		orphanDelete = state.isOrphanDelete();
-//		batchSize = state.getBatchSize();
-//		embedded = state.isEmbedded();
-//		optimisticLocked = state.isOptimisticLocked();
-//		collectionPersisterClass = state.getCollectionPersisterClass();
-//		filters.putAll( state.getFilters() );
-//		synchronizedTables.addAll( state.getSynchronizedTables() );
-//		customSQLInsert = state.getCustomSQLInsert();
-//		customSQLUpdate = state.getCustomSQLUpdate();
-//		customSQLDelete = state.getCustomSQLDelete();
-//		customSQLDeleteAll = state.getCustomSQLDeleteAll();
-//		loaderName = state.getLoaderName();
-//	}
-
 	@Override
 	public PluralAttribute getAttribute() {
 		return (PluralAttribute) super.getAttribute();

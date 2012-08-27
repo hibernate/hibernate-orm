@@ -33,6 +33,8 @@ import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.selector.internal.StrategySelectorImpl;
+import org.hibernate.service.selector.spi.StrategySelector;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
@@ -51,6 +53,7 @@ public class BootstrapServiceRegistryImpl
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
+	private final ServiceBinding<StrategySelector> strategySelectorBinding;
 	private final ServiceBinding<IntegratorService> integratorServiceBinding;
 
 	public BootstrapServiceRegistryImpl() {
@@ -59,6 +62,30 @@ public class BootstrapServiceRegistryImpl
 
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
+			LinkedHashSet<Integrator> providedIntegrators) {
+		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+				this,
+				ClassLoaderService.class,
+				classLoaderService
+		);
+
+		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
+		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+				this,
+				StrategySelector.class,
+				strategySelector
+		);
+
+		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+				this,
+				IntegratorService.class,
+				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
+		);
+	}
+
+	public BootstrapServiceRegistryImpl(
+			ClassLoaderService classLoaderService,
+			StrategySelector strategySelector,
 			IntegratorService integratorService) {
 		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
 				this,
@@ -66,18 +93,17 @@ public class BootstrapServiceRegistryImpl
 				classLoaderService
 		);
 
+		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+				this,
+				StrategySelector.class,
+				strategySelector
+		);
+
 		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
 				this,
 				IntegratorService.class,
 				integratorService
 		);
-	}
-
-
-	public BootstrapServiceRegistryImpl(
-			ClassLoaderService classLoaderService,
-			LinkedHashSet<Integrator> providedIntegrators) {
-		this( classLoaderService, new IntegratorServiceImpl( providedIntegrators, classLoaderService ) );
 	}
 
 
@@ -93,6 +119,9 @@ public class BootstrapServiceRegistryImpl
 	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole) {
 		if ( ClassLoaderService.class.equals( serviceRole ) ) {
 			return (ServiceBinding<R>) classLoaderServiceBinding;
+		}
+		else if ( StrategySelector.class.equals( serviceRole) ) {
+			return (ServiceBinding<R>) strategySelectorBinding;
 		}
 		else if ( IntegratorService.class.equals( serviceRole ) ) {
 			return (ServiceBinding<R>) integratorServiceBinding;

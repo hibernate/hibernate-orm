@@ -27,16 +27,12 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.service.selector.spi.StrategySelector;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -64,86 +60,14 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor>
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public TransactionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final Object strategy = configurationValues.get( Environment.TRANSACTION_STRATEGY );
+		final Object strategy = configurationValues.get( AvailableSettings.TRANSACTION_STRATEGY );
+
 		if ( strategy == null ) {
 			LOG.usingDefaultTransactionStrategy();
 			return new JdbcTransactionFactory();
 		}
 
-		if ( TransactionFactory.class.isInstance( strategy ) ) {
-			return (TransactionFactory) strategy;
-		}
-
-		Class<? extends TransactionFactory> transactionFactoryClass;
-		if ( Class.class.isInstance( strategy ) ) {
-			final Class theClass = (Class) strategy;
-			LOG.transactionStrategy( theClass.getName() );
-			try {
-				transactionFactoryClass = (Class<? extends TransactionFactory>) theClass;
-			}
-			catch (ClassCastException e) {
-				throw new ClassLoadingException(
-						String.format(
-								"TransactionFactory implementation class [%s] did not implement TransactionFactory interface",
-								theClass.getName()
-						)
-				);
-			}
-		}
-		else {
-			final String strategyClassName = mapName( strategy.toString() );
-			LOG.transactionStrategy( strategyClassName );
-
-			try {
-				transactionFactoryClass = registry.getService( ClassLoaderService.class ).classForName( strategyClassName );
-			}
-			catch (ClassCastException e) {
-				throw new ClassLoadingException(
-						String.format(
-								"TransactionFactory implementation class [%s] did not implement TransactionFactory interface",
-								strategyClassName
-						)
-				);
-			}
-		}
-
-		try {
-			return transactionFactoryClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new HibernateException( "Unable to instantiate specified TransactionFactory class [" + transactionFactoryClass.getName() + "]", e );
-		}
-	}
-
-	private String mapName(String name) {
-		// check legacy names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		if ( "org.hibernate.transaction.JDBCTransactionFactory".equals( name ) ) {
-			return JdbcTransactionFactory.class.getName();
-		}
-
-		if ( "org.hibernate.transaction.JTATransactionFactory".equals( name ) ) {
-			return JtaTransactionFactory.class.getName();
-		}
-
-		if ( "org.hibernate.transaction.CMTTransactionFactory".equals( name ) ) {
-			return CMTTransactionFactory.class.getName();
-		}
-
-		// check short names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		if ( JdbcTransactionFactory.SHORT_NAME.endsWith( name ) ) {
-			return JdbcTransactionFactory.class.getName();
-		}
-
-		if ( JtaTransactionFactory.SHORT_NAME.equals( name ) ) {
-			return JtaTransactionFactory.class.getName();
-		}
-
-		if ( CMTTransactionFactory.SHORT_NAME.equals( name ) ) {
-			return CMTTransactionFactory.class.getName();
-		}
-
-
-		return name;
+		return registry.getService( StrategySelector.class ).resolveStrategy( TransactionFactory.class, strategy );
 	}
 }
 

@@ -29,6 +29,8 @@ import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.service.selector.internal.StrategySelectorBuilder;
+import org.hibernate.service.selector.internal.StrategySelectorImpl;
 
 /**
  * Builder for bootstrap {@link ServiceRegistry} instances.
@@ -44,6 +46,8 @@ public class BootstrapServiceRegistryBuilder {
 	private ClassLoader resourcesClassLoader;
 	private ClassLoader hibernateClassLoader;
 	private ClassLoader environmentClassLoader;
+
+	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
 
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
@@ -105,6 +109,23 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
+	 * Applies a named strategy implementation to the bootstrap registry
+	 *
+	 * @param strategy The strategy
+	 * @param name The registered name
+	 * @param implementation The strategy implementation Class
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.service.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
+	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
+		this.strategySelectorBuilder.addCustomRegistration( strategy, name, implementation );
+		return this;
+	}
+
+	/**
 	 * Build the bootstrap registry.
 	 *
 	 * @return The built bootstrap registry
@@ -122,6 +143,11 @@ public class BootstrapServiceRegistryBuilder {
 				classLoaderService
 		);
 
-		return new BootstrapServiceRegistryImpl( classLoaderService, integratorService );
+
+		return new BootstrapServiceRegistryImpl(
+				classLoaderService,
+				strategySelectorBuilder.buildSelector( classLoaderService ),
+				integratorService
+		);
 	}
 }

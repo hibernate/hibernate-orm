@@ -605,7 +605,6 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		route = (Route) s.get( Route.class, route.getRouteID() );
-		//System.out.println(route);
 		route.setName( "new routA" );
 
 		route.setTransientField( new String( "sfnaouisrbn" ) );

@@ -34,6 +34,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.fail;
@@ -41,40 +42,41 @@ import static org.junit.Assert.fail;
 /**
  * @author Alex Burgel
  */
+@FailureExpectedWithNewMetamodel
 public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "naturalid/immutable/ParentChildWithManyToOne.hbm.xml" };
 	}
 
-    public void configure(Configuration cfg) {
-        cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-        cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-        cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-    }
+	public void configure(Configuration cfg) {
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
 
 	@Test
 	public void testNaturalIdCheck() throws Exception {
-        Session s = openSession();
-        Transaction t = s.beginTransaction();
-        Parent p = new Parent("alex");
-        Child c = new Child("billy", p);
-        s.persist(p);
-        s.persist(c);
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Parent p = new Parent( "alex" );
+		Child c = new Child( "billy", p );
+		s.persist( p );
+		s.persist( c );
 		t.commit();
 		s.close();
 
-        Field name = c.getClass().getDeclaredField("name");
-        name.setAccessible(true);
-        name.set(c, "phil");
+		Field name = c.getClass().getDeclaredField( "name" );
+		name.setAccessible( true );
+		name.set( c, "phil" );
 
 		s = openSession();
 		t = s.beginTransaction();
-        try {
-            s.saveOrUpdate( c );
+		try {
+			s.saveOrUpdate( c );
 			s.flush();
-            fail( "should have failed because immutable natural ID was altered");
-        }
-        catch (HibernateException he) {
+			fail( "should have failed because immutable natural ID was altered" );
+		}
+		catch ( HibernateException he ) {
 			// expected
 		}
 		finally {
@@ -82,57 +84,56 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 
-        name.set(c, "billy");
+		name.set( c, "billy" );
 
 		s = openSession();
 		t = s.beginTransaction();
-        s.delete(c);
-        s.delete(p);
-        t.commit();
-        s.close();
-    }
+		s.delete( c );
+		s.delete( p );
+		t.commit();
+		s.close();
+	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
-    public void testSaveParentWithDetachedChildren() throws Exception {
-        Session s = openSession();
-        Transaction t = s.beginTransaction();
+	@SuppressWarnings({ "unchecked" })
+	public void testSaveParentWithDetachedChildren() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
 
-        Parent p = new Parent("alex");
-        Child c = new Child("billy", p);
+		Parent p = new Parent( "alex" );
+		Child c = new Child( "billy", p );
 
-        s.persist(p);
-        s.persist(c);
-        t.commit();
-        s.close();
+		s.persist( p );
+		s.persist( c );
+		t.commit();
+		s.close();
 
-        s = openSession();
-        t = s.beginTransaction();
+		s = openSession();
+		t = s.beginTransaction();
 
-        p = (Parent) s.createCriteria(Parent.class)
-				.add( Restrictions.eq("name", "alex") )
-				.setFetchMode("children", FetchMode.JOIN)
-        .setCacheable(true)
-        .uniqueResult();
+		p = ( Parent ) s.createCriteria( Parent.class )
+				.add( Restrictions.eq( "name", "alex" ) )
+				.setFetchMode( "children", FetchMode.JOIN )
+				.setCacheable( true )
+				.uniqueResult();
 
-        t.commit();
-        s.close();
+		t.commit();
+		s.close();
 
-        s = openSession();
-        t = s.beginTransaction();
+		s = openSession();
+		t = s.beginTransaction();
 
-        Child c2 = new Child("joey", p);
-        p.getChildren().add(c2);
+		Child c2 = new Child( "joey", p );
+		p.getChildren().add( c2 );
 
-        s.update(p);
+		s.update( p );
 
-        // this fails if AbstractEntityPersister returns identifiers instead of entities from
-        // AbstractEntityPersister.getNaturalIdSnapshot()
-        s.flush();
+		// this fails if AbstractEntityPersister returns identifiers instead of entities from
+		// AbstractEntityPersister.getNaturalIdSnapshot()
+		s.flush();
 
-        s.delete(p);
-        t.commit();
-        s.close();
-    }
-
+		s.delete( p );
+		t.commit();
+		s.close();
+	}
 }

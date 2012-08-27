@@ -88,7 +88,6 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, plan.getTranslators().length );
 		final QueryTranslator translator = plan.getTranslators()[0];
 		final String generatedSql = translator.getSQLString();
-		System.out.println( "Generated SQL : " + generatedSql );
 
 		final int countExpressionListStart = generatedSql.indexOf( "count(" );
 		final int countExpressionListEnd = generatedSql.indexOf( ")", countExpressionListStart );

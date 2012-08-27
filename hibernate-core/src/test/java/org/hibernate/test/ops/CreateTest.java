@@ -91,11 +91,9 @@ public class CreateTest extends AbstractOperationTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		System.out.println("getting");
 		root = (Node) s.get(Node.class, "root");
 		Node child2 = new Node("child2");
 		root.addChild(child2);
-		System.out.println("committing");
 		tx.commit();
 		s.close();
 

@@ -181,7 +181,6 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 
         kit = (Product) s.get(Product.class, 1);
         kitkat = (Product) s.get(Product.class, 2);
-        System.out.println(kitkat.description);
         assertNotNull(kitkat);
         assertEquals(kit, kitkat.getProductFamily());
         assertEquals(kit.productIdnf, kitkat.getProductFamily().productIdnf);
@@ -216,7 +215,6 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 
         kit = (ProductSqlServer) s.get(ProductSqlServer.class, 1);
         kitkat = (ProductSqlServer) s.get(ProductSqlServer.class, 2);
-        System.out.println(kitkat.description);
         assertNotNull(kitkat);
         assertEquals(kit, kitkat.getProductFamily());
         assertEquals(kit.productIdnf, kitkat.getProductFamily().productIdnf);

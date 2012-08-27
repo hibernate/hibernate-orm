@@ -84,7 +84,6 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		new Comment(i, "This looks like a really good deal");
 		new Comment(i, "Is it the latest version?");
 		new Comment(i, "<comment deleted>");
-		System.out.println( b.getTimestamp() );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -113,7 +112,6 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( b.getItem() ) );
 		assertTrue( Hibernate.isInitialized( b.getItem().getComments() ) );
 		assertEquals( b.getItem().getComments().size(), 3 );
-		System.out.println( b.getTimestamp() );
 		t.commit();
 		s.close();
 

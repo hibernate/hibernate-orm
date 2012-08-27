@@ -876,10 +876,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Container) s.load( Container.class, new Long( c.getId() ) );
-		System.out.println( c.getOneToMany() );
-		System.out.println( c.getManyToMany() );
-		System.out.println( c.getComponents() );
-		System.out.println( c.getComposites() );
+
 		assertTrue( c.getComponents().size()==1 ); //WAS: 2
 		assertTrue( c.getComposites().size()==2 );
 		assertTrue( ( (Container.ContainerInnerClass) c.getComponents().get(0) ).getName().equals("a different name") );

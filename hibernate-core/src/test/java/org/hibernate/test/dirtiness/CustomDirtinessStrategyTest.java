@@ -124,7 +124,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
 			canDirtyCheckCount++;
-			System.out.println( "canDirtyCheck called" );
 			return Thing.class.isInstance( entity );
 		}
 
@@ -133,7 +132,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
 			isDirtyCount++;
-			System.out.println( "isDirty called" );
 			return ! Thing.class.cast( entity ).changedValues.isEmpty();
 		}
 
@@ -142,7 +140,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public void resetDirty(Object entity, EntityPersister persister, Session session) {
 			resetDirtyCount++;
-			System.out.println( "resetDirty called" );
 			Thing.class.cast( entity ).changedValues.clear();
 		}
 
@@ -151,7 +148,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public void findDirty(final Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext) {
 			findDirtyCount++;
-			System.out.println( "findDirty called" );
 			dirtyCheckContext.doDirtyChecking(
 					new AttributeChecker() {
 						@Override
@@ -169,5 +165,4 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 			findDirtyCount = 0;
 		}
 	}
-
 }

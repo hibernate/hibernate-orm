@@ -100,13 +100,13 @@ public class CreateTest extends AbstractOperationTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
-		System.out.println( "getting" );
+
 		root = ( Node ) s.get( Node.class, "root" );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		Node child2 = new Node( "child2" );
 		root.addChild( child2 );
-		System.out.println( "committing" );
+
 		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 

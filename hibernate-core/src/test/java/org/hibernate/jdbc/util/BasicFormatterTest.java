@@ -67,8 +67,6 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		StringTokenizer formatted = new StringTokenizer( formattedQuery, " \t\n\r\f()" );
 		StringTokenizer plain = new StringTokenizer( query, " \t\n\r\f()" );
 
-		System.out.println( "Original: " + query );
-		System.out.println( "Formatted: " + formattedQuery );
 		while ( formatted.hasMoreTokens() && plain.hasMoreTokens() ) {
 			String plainToken = plain.nextToken();
 			String formattedToken = formatted.nextToken();

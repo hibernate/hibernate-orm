@@ -78,9 +78,6 @@ public class DoesNotWorkWithHbmTest extends BaseCoreFunctionalTestCase {
 			List<String> notes = entity.getGlobalNotes();
 			assertNotNull( notes );
 			assertEquals( 2, notes.size() );
-			for ( String s : notes ) {
-				System.out.println( s );
-			}
 			session.delete( entity );
 			session.getTransaction().commit();
 			session.close();

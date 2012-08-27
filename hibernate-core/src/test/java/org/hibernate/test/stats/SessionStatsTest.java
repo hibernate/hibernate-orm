@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class SessionStatsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -52,8 +54,8 @@ public class SessionStatsTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 		boolean isStats = stats.isStatisticsEnabled();
-		stats.setStatisticsEnabled(true);
-		Continent europe = fillDb(s);
+		stats.setStatisticsEnabled( true );
+		Continent europe = fillDb( s );
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
@@ -62,7 +64,7 @@ public class SessionStatsTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 0, sessionStats.getEntityCount() );
 		assertEquals( 0, sessionStats.getCollectionKeys().size() );
 		assertEquals( 0, sessionStats.getCollectionCount() );
-		europe = (Continent) s.get( Continent.class, europe.getId() );
+		europe = ( Continent ) s.get( Continent.class, europe.getId() );
 		Hibernate.initialize( europe.getCountries() );
 		Hibernate.initialize( europe.getCountries().iterator().next() );
 		assertEquals( 2, sessionStats.getEntityKeys().size() );
@@ -72,20 +74,19 @@ public class SessionStatsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		stats.setStatisticsEnabled( isStats);
+		stats.setStatisticsEnabled( isStats );
 
 	}
 
 	private Continent fillDb(Session s) {
 		Continent europe = new Continent();
-		europe.setName("Europe");
+		europe.setName( "Europe" );
 		Country france = new Country();
-		france.setName("France");
+		france.setName( "France" );
 		europe.setCountries( new HashSet() );
-		europe.getCountries().add(france);
-		s.persist(france);
-		s.persist(europe);
+		europe.getCountries().add( france );
+		s.persist( france );
+		s.persist( europe );
 		return europe;
 	}
-
 }

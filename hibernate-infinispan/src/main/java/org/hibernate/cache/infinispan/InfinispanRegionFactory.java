@@ -1,6 +1,7 @@
 package org.hibernate.cache.infinispan;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -24,6 +25,9 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.concurrent.IsolationLevel;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.util.FileLookupFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -381,14 +385,21 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
       try {
-         String configLoc = ConfigurationHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         EmbeddedCacheManager manager = new DefaultCacheManager(configLoc, false);
+         String configLoc = ConfigurationHelper.getString(
+               INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
+         ClassLoader ctxClassLoader = Thread.currentThread().getContextClassLoader();
+         InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
+               configLoc, ctxClassLoader);
+         ParserRegistry parserRegistry = new ParserRegistry(ctxClassLoader);
+         ConfigurationBuilderHolder holder = parserRegistry.parse(is);
+
+         // Override global jmx statistics exposure
          String globalStats = extractProperty(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
-         if (globalStats != null) {
-            manager.getGlobalConfiguration().setExposeGlobalJmxStatistics(Boolean.parseBoolean(globalStats));
-         }
-         manager.start();
-         return manager;
+         if (globalStats != null)
+            holder.getGlobalConfigurationBuilder().globalJmxStatistics()
+                  .enabled(Boolean.parseBoolean(globalStats));
+
+         return new DefaultCacheManager(holder, true);
       } catch (IOException e) {
          throw new CacheException("Unable to create default cache manager", e);
       }

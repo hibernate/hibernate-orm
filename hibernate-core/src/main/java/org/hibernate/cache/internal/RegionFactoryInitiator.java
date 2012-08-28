@@ -25,9 +25,9 @@ package org.hibernate.cache.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -36,7 +36,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Hardy Ferentschik
  */
-public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFactory> {
+public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
 	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
 
 	/**

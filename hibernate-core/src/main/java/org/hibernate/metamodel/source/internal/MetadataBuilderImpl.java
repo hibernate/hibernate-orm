@@ -34,7 +34,7 @@ import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 /**
  * @author Steve Ebersole

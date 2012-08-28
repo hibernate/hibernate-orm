@@ -66,6 +66,8 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -95,13 +97,11 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
-import org.hibernate.service.BootstrapServiceRegistry;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.service.ConfigLoader;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -132,7 +132,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private final PersistenceUnitDescriptor persistenceUnit;
 	private final SettingsImpl settings = new SettingsImpl();
-	private final ServiceRegistryBuilder serviceRegistryBuilder;
+	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
 	private final Map<?,?> configurationValues;
 
 	private final List<JaccDefinition> jaccDefinitions = new ArrayList<JaccDefinition>();
@@ -167,7 +167,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// First we build the boot-strap service registry, which mainly handles class loader interactions
 		final BootstrapServiceRegistry bootstrapServiceRegistry = buildBootstrapServiceRegistry( integrationSettings );
 		// And the main service registry.  This is needed to start adding configuration values, etc
-		this.serviceRegistryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry );
+		this.serviceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Next we build a merged map of all the configuration values
@@ -317,7 +317,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	/**
-	 * Builds the {@link BootstrapServiceRegistry} used to eventually build the {@link ServiceRegistryBuilder}; mainly
+	 * Builds the {@link BootstrapServiceRegistry} used to eventually build the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}; mainly
 	 * used here during instantiation to define class-loading behavior.
 	 *
 	 * @param integrationSettings Any integration settings passed by the EE container or SE application

@@ -28,7 +28,7 @@ import java.util.Properties;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 
 /**
  * Defines the JDBC connection information (currently H2) used by Hibernate for unit (not functional!) tests

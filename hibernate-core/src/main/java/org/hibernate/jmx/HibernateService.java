@@ -9,12 +9,12 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ExternalSessionFactoryConfig;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 
@@ -66,7 +66,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
         LOG.startingServiceAtJndiName( boundName );
         LOG.serviceProperties( properties );
         return buildConfiguration().buildSessionFactory(
-				new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry()
+				new StandardServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry()
 		);
 	}
 

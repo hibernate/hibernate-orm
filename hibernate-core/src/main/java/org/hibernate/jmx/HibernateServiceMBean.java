@@ -134,14 +134,14 @@ public interface HibernateServiceMBean {
 	public void setUserTransactionName(String utName);
 
 	/**
-	 * Get the name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
+	 * Get the name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use.
 	 *
-	 * @return The name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
+	 * @return The name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use.
 	 */
 	public String getJtaPlatformName();
 
 	/**
-	 * Sets the name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
+	 * Sets the name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use.
 	 *
 	 * @param name The implementation class name.
 	 */

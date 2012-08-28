@@ -88,7 +88,7 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
 //		// Make it non-transactional
 //		cfg.getProperties().remove( AvailableSettings.JTA_PLATFORM );
 //		regionFactory = CacheTestUtil.startRegionFactory(
-//				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+//				StandardServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
 //				cfg,
 //				getCacheTestSupport()
 //		);

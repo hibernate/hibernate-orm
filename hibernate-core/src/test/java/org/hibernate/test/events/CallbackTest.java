@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -38,7 +39,6 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

@@ -1,6 +1,6 @@
 package org.hibernate.test.service;
 
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
 

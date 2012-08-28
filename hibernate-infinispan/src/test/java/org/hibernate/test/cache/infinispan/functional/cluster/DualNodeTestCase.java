@@ -33,7 +33,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**

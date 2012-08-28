@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
@@ -34,17 +35,16 @@ import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
 import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
-import org.hibernate.service.config.internal.ConfigurationServiceInitiator;
+import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
-import org.hibernate.service.jdbc.cursor.internal.RefCursorSupportInitiator;
-import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
-import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
-import org.hibernate.service.jmx.internal.JmxServiceInitiator;
-import org.hibernate.service.jndi.internal.JndiServiceInitiator;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.cursor.internal.RefCursorSupportInitiator;
+import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
+import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
+import org.hibernate.jmx.internal.JmxServiceInitiator;
+import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
+import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
 
 /**
@@ -53,10 +53,10 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
  * @author Steve Ebersole
  */
 public class StandardServiceInitiators {
-	public static List<BasicServiceInitiator> LIST = buildStandardServiceInitiatorList();
+	public static List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
-	private static List<BasicServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<BasicServiceInitiator> serviceInitiators = new ArrayList<BasicServiceInitiator>();
+	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
+		final List<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
 
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
 		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );

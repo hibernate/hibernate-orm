@@ -29,11 +29,12 @@ import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.binding.FetchProfile;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -48,28 +49,28 @@ public class MetadataImplTest extends BaseUnitTestCase {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testAddingNullClass() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addClass( null );
 		sources.buildMetadata();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testAddingNullPackageName() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addPackage( null );
 		sources.buildMetadata();
 	}
 
 	@Test(expected = HibernateException.class)
 	public void testAddingNonExistingPackageName() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addPackage( "not.a.package" );
 		sources.buildMetadata();
 	}
 
 	@Test
 	public void testAddingPackageName() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addPackage( "org.hibernate.metamodel.source.internal" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
@@ -78,7 +79,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 
 	@Test
 	public void testAddingPackageNameWithTrailingDot() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addPackage( "org.hibernate.metamodel.source.internal." );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
@@ -87,7 +88,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 
 	@Test
 	public void testGettingSessionFactoryBuilder() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		Metadata metadata = sources.buildMetadata();
 
 		SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();

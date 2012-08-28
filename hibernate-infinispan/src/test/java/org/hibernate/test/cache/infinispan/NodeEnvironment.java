@@ -27,14 +27,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 import static org.hibernate.cache.infinispan.util.CacheHelper.withinTx;
@@ -111,7 +111,7 @@ public class NodeEnvironment {
 	}
 
 	public void prepare() throws Exception {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( configuration.getProperties() )
 				.buildServiceRegistry();
 		regionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, configuration );

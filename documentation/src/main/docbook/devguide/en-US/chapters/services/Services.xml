@@ -81,7 +81,7 @@
             same registry as well as any parent registries.
         </para>
         <para>
-            Use <classname>org.hibernate.service.ServiceRegistryBuilder</classname> to build a
+            Use <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname> to build a
             <interfacename>org.hibernate.service.ServiceRegistry</interfacename> instance.
         </para>
     </section>
@@ -121,7 +121,7 @@
         </section>
 
         <section xml:id="services-ConfigurationService">
-            <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
+            <title><interfacename>org.hibernate.engine.config.spi.ConfigurationService</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -137,7 +137,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.config.internal.ConfigurationServiceInitiator</classname>
+                            <classname>org.hibernate.engine.config.internal.ConfigurationServiceInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -145,7 +145,7 @@
                     <term>Implementations</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.config.internal.ConfigurationServiceImpl</classname>
+                            <classname>org.hibernate.engine.config.internal.ConfigurationServiceImpl</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -153,7 +153,7 @@
         </section>
 
         <section xml:id="services-ConnectionProvider">
-            <title><interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename></title>
+            <title><interfacename>ConnectionProvider</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -168,7 +168,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator</classname>
+                            <classname>ConnectionProviderInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -184,14 +184,14 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl</classname> -
+                                    <classname>DatasourceConnectionProviderImpl</classname> -
                                     provides connection managed delegated to a
                                     <interfacename>javax.sql.DataSource</interfacename>
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl</classname> -
+                                    <classname>DriverManagerConnectionProviderImpl</classname> -
                                     provides rudimentary connection pooling based on simple custom pool.  Note intended
                                     production use!
                                 </para>
@@ -204,7 +204,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl</classname> -
+                                    <classname>UserSuppliedConnectionProviderImpl</classname> -
                                     Provides no connection support.  Indicates the user will supply connections to Hibernate directly.
                                     Not recommended for use.
                                 </para>
@@ -216,7 +216,7 @@
         </section>
 
         <section xml:id="services-DialectFactory">
-            <title><interfacename>org.hibernate.service.jdbc.dialect.spi.DialectFactory</interfacename></title>
+            <title><interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectFactory</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -233,7 +233,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator</classname>
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -241,7 +241,7 @@
                     <term>Implementations</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl</classname>
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -249,7 +249,7 @@
         </section>
 
         <section xml:id="services-DialectResolver">
-            <title><interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename></title>
+            <title><interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -261,8 +261,8 @@
                         <para>
                             The standard resolver implementation acts as a chain, delegating to a series of individual
                             resolvers.  The standard Hibernate resolution behavior is contained in
-                            <classname>org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver</classname>.
-                            <classname>org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator</classname>
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver</classname>.
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator</classname>
                             also consults with the <property>hibernate.dialect_resolvers</property> setting for any
                             custom resolvers.
                         </para>
@@ -272,7 +272,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator</classname>
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -280,7 +280,7 @@
                     <term>Implementations</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jdbc.dialect.internal.DialectResolverSet</classname>
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -319,7 +319,7 @@
         </section>
 
         <section xml:id="services-JmxService">
-            <title><interfacename>org.hibernate.service.jmx.spi.JmxService</interfacename></title>
+            <title><interfacename>org.hibernate.jmx.spi.JmxService</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -333,7 +333,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jmx.internal.JmxServiceInitiator</classname>
+                            <classname>org.hibernate.jmx.internal.JmxServiceInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -343,13 +343,13 @@
                         <itemizedlist>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jmx.internal.DisabledJmxServiceImpl</classname> -
+                                    <classname>org.hibernate.jmx.internal.DisabledJmxServiceImpl</classname> -
                                     A no-op implementation when JMX functionality is disabled.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jmx.internal.JmxServiceImpl</classname> -
+                                    <classname>org.hibernate.jmx.internal.JmxServiceImpl</classname> -
                                     Standard implementation of JMX handling
                                 </para>
                             </listitem>
@@ -360,7 +360,7 @@
         </section>
 
         <section xml:id="services-JndiService">
-            <title><interfacename>org.hibernate.service.jndi.spi.JndiService</interfacename></title>
+            <title><interfacename>org.hibernate.engine.jndi.spi.JndiService</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -374,7 +374,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jndi.internal.JndiServiceInitiator</classname>
+                            <classname>org.hibernate.engine.jndi.internal.JndiServiceInitiator</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -382,7 +382,7 @@
                     <term>Implementations</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jndi.internal.JndiServiceImpl</classname>
+                            <classname>org.hibernate.engine.jndi.internal.JndiServiceImpl</classname>
                         </para>
                     </listitem>
                 </varlistentry>
@@ -390,7 +390,7 @@
         </section>
 
         <section xml:id="services-JtaPlatform">
-            <title><interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename></title>
+            <title><interfacename>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -404,7 +404,7 @@
                     <term>Initiator</term>
                     <listitem>
                         <para>
-                            <classname>org.hibernate.service.jta.platform.internal.JtaPlatformInitiator</classname>
+                            <classname>org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator</classname>
                         </para>
                         <important>
                             <para>
@@ -423,81 +423,81 @@
                         <itemizedlist>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.BitronixJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform</classname> -
                                     Integration with the Bitronix stand-alone transaction manager.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform</classname> -
                                     Integration with the transaction manager as deployed within a Borland Enterprise Server
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform</classname> -
                                     Integration with the transaction manager as deployed within a JBoss Application Server
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform</classname> -
                                     Integration with the JBoss Transactions stand-alone transaction manager
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.JOTMJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform</classname> -
                                     Integration with the JOTM stand-alone transaction manager
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.JOnASJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform</classname> -
                                     Integration with the JOnAS transaction manager.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.JRun4JtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform</classname> -
                                     Integration with the transaction manager as deployed in a JRun 4 application server.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.NoJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform</classname> -
                                     No-op version when no JTA set up is configured
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.OC4JJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in an OC4J (Oracle) application
                                     server.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.OrionJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in an Orion application server.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.ResinJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Resin application server.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.SunOneJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Sun ONE (7 and above)
                                     application server.
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.TransactionManagerLookupBridge</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.TransactionManagerLookupBridge</classname> -
                                     Provides a bridge to legacy (and deprecated)
                                     <interfacename>org.hibernate.transaction.TransactionManagerLookup</interfacename>
                                     implementations
@@ -505,21 +505,21 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a WebSphere Application Server
                                     (6 and above).
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.WebSphereJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a WebSphere Application Server
                                     (4, 5.0 and 5.1).
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <classname>org.hibernate.service.jta.platform.internal.WeblogicJtaPlatform</classname> -
+                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Weblogic application server.
                                 </para>
                             </listitem>
@@ -530,7 +530,7 @@
         </section>
 
         <section xml:id="services-MultiTenantConnectionProvider">
-            <title><interfacename>org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename></title>
+            <title><interfacename>MultiTenantConnectionProvider</interfacename></title>
             <variablelist>
                 <varlistentry>
                     <term>Notes</term>
@@ -875,27 +875,27 @@
             Once a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is built it is considered
             immutable; the services themselves might accept re-configuration, but immutability here means
             adding/replacing services.  So another role provided by the
-            <classname>org.hibernate.service.ServiceRegistryBuilder</classname> is to allow tweaking of the services
+            <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname> is to allow tweaking of the services
             that will be contained in the <interfacename>org.hibernate.service.ServiceRegistry</interfacename>
             generated from it.
         </para>
         <para>
-            There are 2 means to tell a <classname>org.hibernate.service.ServiceRegistryBuilder</classname> about
+            There are 2 means to tell a <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname> about
             custom services.
         </para>
         <itemizedlist>
             <listitem>
                 <para>
-                    Implement a <interfacename>org.hibernate.service.spi.BasicServiceInitiator</interfacename> class
+                    Implement a <interfacename>org.hibernate.boot.registry.StandardServiceInitiator</interfacename> class
                     to control on-demand construction of the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname> via its
                     <methodname>addInitiator</methodname> method.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Just instantiate the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname> via its
                     <methodname>addService</methodname> method.
                 </para>
             </listitem>
@@ -921,7 +921,7 @@
 
             <para>
                 Instances of boot-strap registries are built using the
-                <classname>org.hibernate.service.BootstrapServiceRegistryBuilder</classname> class.
+                <classname>org.hibernate.boot.registry.BootstrapServiceRegistryBuilder</classname> class.
             </para>
 
             <example xml:id="BootstrapServiceRegistryBuilder-example">
@@ -932,7 +932,7 @@
             <section id="services-registry-bootstrap-services">
                 <title>Bootstrap registry services</title>
                 <section id="services-ClassLoaderService">
-                    <title><interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename></title>
+                    <title><interfacename>org.hibernate.boot.registry.classloading.spi.ClassLoaderService</interfacename></title>
                     <para>
                         Hibernate needs to interact with ClassLoaders.  However, the manner in which Hibernate
                         (or any library) should interact with ClassLoaders varies based on the runtime environment
@@ -986,7 +986,7 @@
                     <para>
                         This service focuses on the discovery aspect.  It leverages the standard Java
                         <classname>java.util.ServiceLoader</classname> capability provided by the
-                        <interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename>
+                        <interfacename>org.hibernate.boot.registry.classloading.spi.ClassLoaderService</interfacename>
                         in order to discover implementations of the
                         <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> contract.
                         Integrators would simply define a file named

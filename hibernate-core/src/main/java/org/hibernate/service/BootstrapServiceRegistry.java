@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,10 +24,8 @@
 package org.hibernate.service;
 
 /**
- * Specialization of the {@link ServiceRegistry} contract mainly to make the
- * {@link ServiceRegistryBuilder#ServiceRegistryBuilder(BootstrapServiceRegistry)} signature type-safe
- *
- * @author Steve Ebersole
+ * @deprecated Use {@link org.hibernate.boot.registry.BootstrapServiceRegistry} instead
  */
-public interface BootstrapServiceRegistry extends ServiceRegistry {
+@Deprecated
+public interface BootstrapServiceRegistry extends org.hibernate.boot.registry.BootstrapServiceRegistry {
 }

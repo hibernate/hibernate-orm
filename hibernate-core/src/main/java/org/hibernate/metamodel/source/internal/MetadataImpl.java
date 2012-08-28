@@ -66,7 +66,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationMetadataSourceProces
 import org.hibernate.metamodel.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
 
 /**

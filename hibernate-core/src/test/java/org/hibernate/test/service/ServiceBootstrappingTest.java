@@ -27,14 +27,14 @@ import java.util.Properties;
 
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
-import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicBuild() {
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
@@ -64,7 +64,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.put( Environment.SHOW_SQL, "true" );
 
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( props )
 				.buildServiceRegistry();
 
@@ -79,7 +79,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithServiceOverride() {
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
@@ -90,7 +90,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
 
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( props )
 				.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
 				.buildServiceRegistry();

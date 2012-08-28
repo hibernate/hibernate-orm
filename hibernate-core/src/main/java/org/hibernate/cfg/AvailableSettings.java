@@ -44,10 +44,10 @@ public interface AvailableSettings {
 	public static final String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
 	/**
-	 * Names the {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} to use for obtaining
+	 * Names the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} to use for obtaining
 	 * JDBC connections.  Can either reference an instance of
-	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} or a {@link Class} or {@link String}
-	 * reference to the {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} implementation
+	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} or a {@link Class} or {@link String}
+	 * reference to the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} implementation
 	 * class.
 	 */
 	public static final String CONNECTION_PROVIDER ="hibernate.connection.provider_class";
@@ -64,7 +64,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Names the connection user.  This might mean one of 2 things in out-of-the-box Hibernate
-	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider}: <ul>
+	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}: <ul>
 	 *     <li>The username used to pass along to creating the JDBC connection</li>
 	 *     <li>The username used to obtain a JDBC connection from a data source</li>
 	 * </ul>
@@ -129,8 +129,8 @@ public interface AvailableSettings {
 	public static final String DIALECT ="hibernate.dialect";
 
 	/**
-	 * Names any additional {@link org.hibernate.service.jdbc.dialect.spi.DialectResolver} implementations to
-	 * register with the standard {@link org.hibernate.service.jdbc.dialect.spi.DialectFactory}.
+	 * Names any additional {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolver} implementations to
+	 * register with the standard {@link org.hibernate.engine.jdbc.dialect.spi.DialectFactory}.
 	 */
 	public static final String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
@@ -275,9 +275,9 @@ public interface AvailableSettings {
 	public static final String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
 
 	/**
-	 * Names the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use for integrating
-	 * with {@literal JTA} systems.  Can reference either a {@link org.hibernate.service.jta.platform.spi.JtaPlatform}
-	 * instance or the name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation class
+	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use for integrating
+	 * with {@literal JTA} systems.  Can reference either a {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
+	 * instance or the name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation class
 	 * @since 4.0
 	 */
 	public static final String JTA_PLATFORM = "hibernate.transaction.jta.platform";
@@ -570,9 +570,9 @@ public interface AvailableSettings {
 	public static final String MULTI_TENANT = "hibernate.multiTenancy";
 
 	/**
-	 * Names a {@link org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider} implementation to
+	 * Names a {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider} implementation to
 	 * use.  As MultiTenantConnectionProvider is also a service, can be configured directly through the
-	 * {@link org.hibernate.service.ServiceRegistryBuilder}
+	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}
 	 *
 	 * @since 4.1
 	 */

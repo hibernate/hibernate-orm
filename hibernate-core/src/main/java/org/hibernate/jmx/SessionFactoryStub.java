@@ -53,7 +53,7 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.service.jndi.internal.JndiServiceImpl;
+import org.hibernate.engine.jndi.internal.JndiServiceImpl;
 import org.hibernate.stat.Statistics;
 
 /**

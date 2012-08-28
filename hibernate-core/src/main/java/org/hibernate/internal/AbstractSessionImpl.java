@@ -55,8 +55,8 @@ import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.type.Type;
 
 /**

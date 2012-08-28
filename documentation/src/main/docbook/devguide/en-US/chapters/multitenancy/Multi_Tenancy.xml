@@ -149,7 +149,7 @@
                     <para>
                         Correlates to the separate schema approach.  It is an error to attempt to open a session without
                         a tenant identifier using this strategy.  Additionally, a
-                        <interfacename>org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename>
+                        <interfacename>MultiTenantConnectionProvider</interfacename>
                         must be specified.
                     </para>
                 </listitem>
@@ -160,7 +160,7 @@
                     <para>
                         Correlates to the separate database approach.  It is an error to attempt to open a session without
                         a tenant identifier using this strategy.  Additionally, a
-                        <interfacename>org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename>
+                        <interfacename>MultiTenantConnectionProvider</interfacename>
                         must be specified.
                     </para>
                 </listitem>
@@ -182,7 +182,7 @@
             <para>
                 When using either the DATABASE or SCHEMA approach, Hibernate needs to be able to obtain Connections
                 in a tenant specific manner.  That is the role of the
-                <interfacename>org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename>
+                <interfacename>MultiTenantConnectionProvider</interfacename>
                 contract.  Application developers will need to provide an implementation of this
                 contract.  Most of its methods are extremely self-explanatory.  The only ones which might not be are
                 <methodname>getAnyConnection</methodname> and <methodname>releaseAnyConnection</methodname>.  It is
@@ -205,7 +205,7 @@
                 </listitem>
                 <listitem>
                     <para>
-                        Passed directly to the <classname>org.hibernate.service.ServiceRegistryBuilder</classname>.
+                        Passed directly to the <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname>.
                     </para>
                 </listitem>
                 <listitem>
@@ -213,7 +213,7 @@
                         If none of the above options match, but the settings do specify a
                         <property>hibernate.connection.datasource</property> value, Hibernate will assume it should
                         use the specific
-                        <classname>org.hibernate.service.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl</classname>
+                        <classname>DataSourceBasedMultiTenantConnectionProviderImpl</classname>
                         implementation which works on a number of pretty reasonable assumptions when running inside of
                         an app server and using one <interfacename>javax.sql.DataSource</interfacename> per tenant.
                         See its javadocs for more details.

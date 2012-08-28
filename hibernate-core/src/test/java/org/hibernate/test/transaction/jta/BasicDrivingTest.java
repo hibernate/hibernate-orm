@@ -34,15 +34,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
@@ -70,7 +70,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
 		TestingJtaBootstrap.prepare( configValues );
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( configValues )
 				.buildServiceRegistry();
 	}

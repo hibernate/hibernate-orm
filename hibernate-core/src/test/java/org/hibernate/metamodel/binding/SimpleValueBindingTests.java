@@ -36,7 +36,7 @@ import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.Table;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertSame;

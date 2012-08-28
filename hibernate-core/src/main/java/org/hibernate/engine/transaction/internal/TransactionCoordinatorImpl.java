@@ -51,7 +51,7 @@ import org.hibernate.engine.transaction.synchronization.internal.Synchronization
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 /**
  * Standard implementation of the Hibernate {@link TransactionCoordinator}

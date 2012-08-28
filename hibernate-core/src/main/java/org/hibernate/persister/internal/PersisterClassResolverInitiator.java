@@ -25,16 +25,16 @@ package org.hibernate.persister.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class PersisterClassResolverInitiator implements BasicServiceInitiator<PersisterClassResolver> {
+public class PersisterClassResolverInitiator implements StandardServiceInitiator<PersisterClassResolver> {
 	public static final PersisterClassResolverInitiator INSTANCE = new PersisterClassResolverInitiator();
 	public static final String IMPL_NAME = "hibernate.persister.resolver";
 

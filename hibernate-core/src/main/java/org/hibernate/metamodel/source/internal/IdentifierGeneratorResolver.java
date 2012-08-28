@@ -32,7 +32,7 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 /**
  * @author Gail Badner

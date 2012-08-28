@@ -34,7 +34,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**

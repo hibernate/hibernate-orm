@@ -30,12 +30,12 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.Test;
 
@@ -54,7 +54,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	@Test(expected=GenericJDBCException.class)
 	public void testWithoutIntegrator() {
 		
-		ServiceRegistry reg = new ServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
+		ServiceRegistry reg = new StandardServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
 		.buildServiceRegistry();
 		
 		SessionFactory sf = new Configuration()
@@ -78,7 +78,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWithIntegrator() {
-		ServiceRegistry reg = new ServiceRegistryBuilder(
+		ServiceRegistry reg = new StandardServiceRegistryBuilder(
 				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
 		).buildServiceRegistry();
 		

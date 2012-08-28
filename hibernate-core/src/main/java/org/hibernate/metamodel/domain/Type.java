@@ -50,7 +50,7 @@ public interface Type {
 	 *
 	 * @return The {@link Class} reference
 	 *
-	 * @throws org.hibernate.service.classloading.spi.ClassLoadingException Indicates the class reference
+	 * @throws org.hibernate.boot.registry.classloading.spi.ClassLoadingException Indicates the class reference
 	 * could not be determined.  Generally this is the case in reverse-engineering scenarios where the specified
 	 * domain model classes do not yet exist.
 	 */

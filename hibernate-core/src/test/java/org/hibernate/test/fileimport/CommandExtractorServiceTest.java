@@ -23,9 +23,10 @@
  */
 package org.hibernate.test.fileimport;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
@@ -41,7 +42,7 @@ public class CommandExtractorServiceTest extends MultiLineImportFileTest {
 	}
 
 	@Override
-	protected void prepareBasicRegistryBuilder(ServiceRegistryBuilder serviceRegistryBuilder) {
+	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		super.prepareBasicRegistryBuilder( serviceRegistryBuilder );
 		serviceRegistryBuilder.addService( ImportSqlCommandExtractor.class, new MultipleLinesSqlCommandExtractor() );
 	}

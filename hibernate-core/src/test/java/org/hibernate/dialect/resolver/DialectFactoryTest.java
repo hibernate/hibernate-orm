@@ -55,12 +55,12 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
-import org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl;
-import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
-import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
+import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
+import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

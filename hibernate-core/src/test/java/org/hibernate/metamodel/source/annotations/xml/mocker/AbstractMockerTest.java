@@ -40,7 +40,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 import static org.junit.Assert.assertEquals;

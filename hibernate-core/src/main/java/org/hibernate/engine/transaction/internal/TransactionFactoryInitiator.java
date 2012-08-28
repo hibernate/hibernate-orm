@@ -32,8 +32,8 @@ import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.selector.spi.StrategySelector;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -42,7 +42,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class TransactionFactoryInitiator<T extends TransactionImplementor>
-		implements BasicServiceInitiator<TransactionFactory> {
+		implements StandardServiceInitiator<TransactionFactory> {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,

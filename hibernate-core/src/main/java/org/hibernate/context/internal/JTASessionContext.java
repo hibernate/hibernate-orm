@@ -39,7 +39,7 @@ import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion

@@ -71,7 +71,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * Open a {@link Session}.
 	 * <p/>
 	 * JDBC {@link Connection connection(s} will be obtained from the
-	 * configured {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} as needed
+	 * configured {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} as needed
 	 * to perform requested work.
 	 *
 	 * @return The created session.

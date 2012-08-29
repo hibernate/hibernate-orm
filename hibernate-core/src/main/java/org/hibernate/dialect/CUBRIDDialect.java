@@ -48,7 +48,7 @@ public class CUBRIDDialect extends Dialect {
 		registerColumnType( Types.BIGINT, "bigint" );
         registerColumnType( Types.BIT, "bit(8)" );    
 		registerColumnType( Types.BLOB, "bit varying(65535)" );	
-		registerColumnType( Types.BOOLEAN, "bit(1)");
+		registerColumnType( Types.BOOLEAN, "bit(8)");
 		registerColumnType( Types.CHAR, "char(1)" );
 		registerColumnType( Types.CLOB, "string" );
 		registerColumnType( Types.DATE, "date" );

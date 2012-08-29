@@ -135,19 +135,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	private PreparedStatement buildBatchStatement(String sql, boolean callable) {
-		sql = jdbcCoordinator.getTransactionCoordinator().getTransactionContext().onPrepareStatement( sql );
-		try {
-			if ( callable ) {
-				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareCall( sql );
-			}
-			else {
-				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareStatement( sql );
-			}
-		}
-		catch ( SQLException sqle ) {
-			LOG.sqlExceptionEscapedProxy( sqle );
-			throw sqlExceptionHelper().convert( sqle, "could not prepare batch statement", sql );
-		}
+		return jdbcCoordinator.getStatementPreparer().prepareStatement( sql, callable );
 	}
 
 	@Override

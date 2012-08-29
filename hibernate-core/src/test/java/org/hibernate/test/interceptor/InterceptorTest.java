@@ -34,6 +34,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -130,6 +132,40 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
+	}
+
+	/**
+	 * Test that setting a transaction timeout will cause an Exception to occur
+	 * if the transaction timeout is exceeded.
+	 */
+	@Test
+	public void testTimeout() throws Exception {
+		final int TIMEOUT = 2;
+		final int WAIT = TIMEOUT + 1;
+		Session s = openSession();
+		// Get the transaction and set the timeout BEFORE calling begin()
+		Transaction t = s.getTransaction();
+		t.setTimeout( TIMEOUT );
+		t.begin();
+		// Sleep for an amount of time that exceeds the transaction timeout
+		Thread.sleep( WAIT * 1000 );
+        try {
+        	// Do something with the transaction and try to commit it
+        	s.persist( new User( "john", "test" ) );
+        	t.commit();
+            fail( "Transaction should have timed out" );
+        } 
+        catch ( TransactionException e ) {
+        	// Insure that the Exception is "transaction timeout expired"
+        	String exceptionActual = e.toString();
+			String exceptionExpected = "org.hibernate.TransactionException: transaction timeout expired";
+			if ( !exceptionActual.contains( exceptionExpected ) ) {
+        		String msg = String.format( "Transaction failed for the wrong reason.  Expected [%s] but received [%s]",
+        				exceptionExpected, exceptionActual );
+        		fail( msg );
+        				
+        	}
+        } 
 	}
 
 	@Test

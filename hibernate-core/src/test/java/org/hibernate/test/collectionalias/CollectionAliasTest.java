@@ -62,6 +62,7 @@ public class CollectionAliasTest extends BaseCoreFunctionalTestCase {
 		assertEquals( new Integer( 1 ), tableB.getId().getFirstId() );
 		assertEquals( "a", tableB.getId().getSecondId() );
 		assertEquals( "b", tableB.getId().getThirdId() );
+		s.close();
 	}
 
 	@Override

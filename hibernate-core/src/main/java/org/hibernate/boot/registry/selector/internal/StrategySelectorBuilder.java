@@ -151,48 +151,56 @@ public class StrategySelectorBuilder {
 	}
 
 	private void addDialects(StrategySelectorImpl strategySelector) {
-		strategySelector.registerStrategyImplementor( Dialect.class, "Cache71", Cache71Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "CUBRID", CUBRIDDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "DB2", DB2Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "DB2-390", DB2390Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "DB2-400", DB2400Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Derby10.5", DerbyTenFiveDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Derby10.6", DerbyTenSixDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Derby10.7", DerbyTenSevenDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Firebird", FirebirdDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "FrontBase", FrontBaseDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "H2", H2Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "HSQL", HSQLDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Informix", InformixDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Ingres", IngresDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Ingres9", Ingres9Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Ingres10", Ingres10Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Interbase", InterbaseDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "JDataStore", JDataStoreDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Mckoi", MckoiDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "MimerSQL", MimerSQLDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "MySQL5", MySQL5Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "MySQL5-InnoDB", MySQL5InnoDBDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "MySQL", MySQL5Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "MySQL-InnoDB", MySQL5InnoDBDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Oracle8i", Oracle8iDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Oracle9i", Oracle9iDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Oracle10g", Oracle10gDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Pointbase", PointbaseDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "PostgresPlus", PostgresPlusDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "PostgreSQL81", PostgreSQL81Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "PostgreSQL82", PostgreSQL82Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Progress", ProgressDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SAP", SAPDBDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SQLServer", SQLServerDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SQLServer2005", SQLServer2005Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SQLServer2008", SQLServer2008Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Sybase11", Sybase11Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SybaseAnywhere", SybaseAnywhereDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SybaseASE15", SybaseASE15Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "SybaseASE157", SybaseASE157Dialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "Teradata", TeradataDialect.class );
-		strategySelector.registerStrategyImplementor( Dialect.class, "TimesTen", TimesTenDialect.class );
+		addDialect( strategySelector, Cache71Dialect.class );
+		addDialect( strategySelector, CUBRIDDialect.class );
+		addDialect( strategySelector, DB2Dialect.class );
+		addDialect( strategySelector, DB2390Dialect.class );
+		addDialect( strategySelector, DB2400Dialect.class );
+		addDialect( strategySelector, DerbyTenFiveDialect.class );
+		addDialect( strategySelector, DerbyTenSixDialect.class );
+		addDialect( strategySelector, DerbyTenSevenDialect.class );
+		addDialect( strategySelector, FirebirdDialect.class );
+		addDialect( strategySelector, FrontBaseDialect.class );
+		addDialect( strategySelector, H2Dialect.class );
+		addDialect( strategySelector, HSQLDialect.class );
+		addDialect( strategySelector, InformixDialect.class );
+		addDialect( strategySelector, IngresDialect.class );
+		addDialect( strategySelector, Ingres9Dialect.class );
+		addDialect( strategySelector, Ingres10Dialect.class );
+		addDialect( strategySelector, InterbaseDialect.class );
+		addDialect( strategySelector, JDataStoreDialect.class );
+		addDialect( strategySelector, MckoiDialect.class );
+		addDialect( strategySelector, MimerSQLDialect.class );
+		addDialect( strategySelector, MySQL5Dialect.class );
+		addDialect( strategySelector, MySQL5InnoDBDialect.class );
+		addDialect( strategySelector, MySQL5Dialect.class );
+		addDialect( strategySelector, MySQL5InnoDBDialect.class );
+		addDialect( strategySelector, Oracle8iDialect.class );
+		addDialect( strategySelector, Oracle9iDialect.class );
+		addDialect( strategySelector, Oracle10gDialect.class );
+		addDialect( strategySelector, PointbaseDialect.class );
+		addDialect( strategySelector, PostgresPlusDialect.class );
+		addDialect( strategySelector, PostgreSQL81Dialect.class );
+		addDialect( strategySelector, PostgreSQL82Dialect.class );
+		addDialect( strategySelector, ProgressDialect.class );
+		addDialect( strategySelector, SAPDBDialect.class );
+		addDialect( strategySelector, SQLServerDialect.class );
+		addDialect( strategySelector, SQLServer2005Dialect.class );
+		addDialect( strategySelector, SQLServer2008Dialect.class );
+		addDialect( strategySelector, Sybase11Dialect.class );
+		addDialect( strategySelector, SybaseAnywhereDialect.class );
+		addDialect( strategySelector, SybaseASE15Dialect.class );
+		addDialect( strategySelector, SybaseASE157Dialect.class );
+		addDialect( strategySelector, TeradataDialect.class );
+		addDialect( strategySelector, TimesTenDialect.class );
+	}
+
+	private void addDialect(StrategySelectorImpl strategySelector, Class<? extends Dialect> dialectClass) {
+		String simpleName = dialectClass.getSimpleName();
+		if ( simpleName.endsWith( "Dialect" ) ) {
+			simpleName = simpleName.substring( 0, simpleName.length() - "Dialect".length() );
+		}
+		strategySelector.registerStrategyImplementor( Dialect.class, simpleName, dialectClass );
 	}
 
 	private void addJtaPlatforms(StrategySelectorImpl strategySelector) {

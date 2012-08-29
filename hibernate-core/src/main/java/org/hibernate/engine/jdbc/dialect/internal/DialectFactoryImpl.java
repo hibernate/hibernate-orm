@@ -29,10 +29,9 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.InjectService;
@@ -43,11 +42,11 @@ import org.hibernate.service.spi.InjectService;
  * @author Steve Ebersole
  */
 public class DialectFactoryImpl implements DialectFactory {
-	private ClassLoaderService classLoaderService;
+	private StrategySelector strategySelector;
 
 	@InjectService
-	public void setClassLoaderService(ClassLoaderService classLoaderService) {
-		this.classLoaderService = classLoaderService;
+	public void setStrategySelector(StrategySelector strategySelector) {
+		this.strategySelector = strategySelector;
 	}
 
 	private DialectResolver dialectResolver;
@@ -69,17 +68,19 @@ public class DialectFactoryImpl implements DialectFactory {
 	}
 
 	private Dialect constructDialect(String dialectName) {
+		final Dialect dialect;
 		try {
-			return ( Dialect ) classLoaderService.classForName( dialectName ).newInstance();
+			dialect = strategySelector.resolveStrategy( Dialect.class, dialectName );
+			if ( dialect == null ) {
+				throw new HibernateException( "Unable to construct requested dialect [" + dialectName+ "]" );
+			}
+			return dialect;
 		}
-		catch ( ClassLoadingException e ) {
-			throw new HibernateException( "Dialect class not found: " + dialectName, e );
-		}
-		catch ( HibernateException e ) {
+		catch (HibernateException e) {
 			throw e;
 		}
-		catch ( Exception e ) {
-			throw new HibernateException( "Could not instantiate dialect class", e );
+		catch (Exception e) {
+			throw new HibernateException( "Unable to construct requested dialect [" + dialectName+ "]", e );
 		}
 	}
 

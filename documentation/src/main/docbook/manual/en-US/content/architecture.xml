@@ -167,21 +167,6 @@
         </section>
     </section>
 
-    <section xml:id="architecture-jmx" revision="1">
-        <title>JMX Integration</title>
-
-        <para>
-            JMX is the J2EE standard for the management of Java components. Hibernate can be managed via
-            a JMX standard service. AN MBean implementation is provided in the distribution:
-            <literal>org.hibernate.jmx.HibernateService</literal>.
-        </para>
-
-        <para>
-            Another feature available as a JMX service is runtime Hibernate statistics. See
-            <xref linkend="configuration-optional-statistics"/> for more information.
-        </para>
-    </section>
-
     <section xml:id="architecture-current-session" revision="2">
         <title>Contextual sessions</title>
         <para>
@@ -259,7 +244,7 @@
             The <literal>hibernate.current_session_context_class</literal> configuration parameter
             defines which <literal>org.hibernate.context.spi.CurrentSessionContext</literal> implementation
             should be used.  For backwards compatibility, if this configuration parameter is not set
-            but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
+            but a <literal>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</literal> is configured,
             Hibernate will use the <literal>org.hibernate.context.internal.JTASessionContext</literal>.
             Typically, the value of this parameter would just name the implementation class to
             use. For the three out-of-the-box implementations, however, there are three corresponding

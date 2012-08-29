@@ -283,23 +283,6 @@ public interface AvailableSettings {
 	public static final String JTA_PLATFORM = "hibernate.transaction.jta.platform";
 
 	/**
-	 * Names the {@link org.hibernate.transaction.TransactionManagerLookup} implementation to use for obtaining
-	 * reference to the {@literal JTA} {@link javax.transaction.TransactionManager}
-	 *
-	 * @deprecated See {@link #JTA_PLATFORM}
-	 */
-	@Deprecated
-	public static final String TRANSACTION_MANAGER_STRATEGY = "hibernate.transaction.manager_lookup_class";
-
-	/**
-	 * JNDI name of JTA <tt>UserTransaction</tt> object
-	 *
-	 * @deprecated See {@link #JTA_PLATFORM}
-	 */
-	@Deprecated
-	public static final String USER_TRANSACTION = "jta.UserTransaction";
-
-	/**
 	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
 	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";

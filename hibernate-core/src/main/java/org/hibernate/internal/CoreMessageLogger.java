@@ -1501,12 +1501,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled", id = 426)
 	void setManagerLookupClass();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Using deprecated %s strategy [%s], use newer %s strategy instead [%s]", id = 427)
-	void deprecatedTransactionManagerStrategy(String name,
-											  String transactionManagerStrategy,
-											  String name2,
-											  String jtaPlatform);
+//	@LogMessage(level = WARN)
+//	@Message(value = "Using deprecated %s strategy [%s], use newer %s strategy instead [%s]", id = 427)
+//	void deprecatedTransactionManagerStrategy(String name,
+//											  String transactionManagerStrategy,
+//											  String name2,
+//											  String jtaPlatform);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Encountered legacy TransactionManagerLookup specified; convert to newer %s contract specified via %s setting",

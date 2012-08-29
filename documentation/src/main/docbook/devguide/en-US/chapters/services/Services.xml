@@ -408,11 +408,12 @@
                         </para>
                         <important>
                             <para>
-                                <classname>JtaPlatformInitiator</classname> provides mapping against the legacy,
-                                now-deprecated <interfacename>org.hibernate.transaction.TransactionManagerLookup</interfacename>
-                                names internally for the Hibernate-provided
+                                As of 5.0 support has been completely removed for mapping against legacy
                                 <interfacename>org.hibernate.transaction.TransactionManagerLookup</interfacename>
-                                implementations.
+                                names and custom implementations.  Applications implementing
+                                <interfacename>org.hibernate.transaction.TransactionManagerLookup</interfacename>
+                                or using the <property>hibernate.transaction.manager_lookup_class</property> setting
+                                should update to use JtaPlatform.
                             </para>
                         </important>
                     </listitem>
@@ -424,43 +425,50 @@
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform</classname> -
-                                    Integration with the Bitronix stand-alone transaction manager.
+                                    Integration with the Bitronix stand-alone transaction manager.  Can also be referenced
+                                    using the <property>Bitronix</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform</classname> -
-                                    Integration with the transaction manager as deployed within a Borland Enterprise Server
+                                    Integration with the transaction manager as deployed within a Borland Enterprise Server.
+                                    Can also be referenced using the <property>Borland</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform</classname> -
-                                    Integration with the transaction manager as deployed within a JBoss Application Server
+                                    Integration with the transaction manager as deployed within a JBoss Application Server.
+                                    Can also be referenced using the <property>JBossAS</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform</classname> -
-                                    Integration with the JBoss Transactions stand-alone transaction manager
+                                    Integration with the JBoss Transactions stand-alone transaction manager.
+                                    Can also be referenced using the <property>JBossTS</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform</classname> -
-                                    Integration with the JOTM stand-alone transaction manager
+                                    Integration with the JOTM stand-alone transaction manager. Can also be referenced
+                                    using the <property>JOTM</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform</classname> -
-                                    Integration with the JOnAS transaction manager.
+                                    Integration with the JOnAS transaction manager.  Can also be referenced using the
+                                    <property>JOnAS</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform</classname> -
                                     Integration with the transaction manager as deployed in a JRun 4 application server.
+                                    Can also be referenced using the <property>JRun4</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
@@ -473,6 +481,7 @@
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in an OC4J (Oracle) application
+                                    Can also be referenced using the <property>OC4J</property> configuration short name
                                     server.
                                 </para>
                             </listitem>
@@ -480,47 +489,45 @@
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in an Orion application server.
+                                    Can also be referenced using the <property>Orion</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Resin application server.
+                                    Can also be referenced using the <property>Resin</property> configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Sun ONE (7 and above)
-                                    application server.
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                    <classname>org.hibernate.engine.transaction.jta.platform.internal.TransactionManagerLookupBridge</classname> -
-                                    Provides a bridge to legacy (and deprecated)
-                                    <interfacename>org.hibernate.transaction.TransactionManagerLookup</interfacename>
-                                    implementations
+                                    application server.  Can also be referenced using the <property>SunOne</property>
+                                    configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a WebSphere Application Server
-                                    (6 and above).
+                                    (6 and above).  Can also be referenced using the <property>WebSphereExtended</property>
+                                    configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a WebSphere Application Server
-                                    (4, 5.0 and 5.1).
+                                    (4, 5.0 and 5.1).  Can also be referenced using the <property>WebSphere</property>
+                                    configuration short name
                                 </para>
                             </listitem>
                             <listitem>
                                 <para>
                                     <classname>org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform</classname> -
                                     Integration with transaction manager as deployed in a Weblogic application server.
+                                    Can also be referenced using the <property>Weblogic</property> configuration short name
                                 </para>
                             </listitem>
                         </itemizedlist>

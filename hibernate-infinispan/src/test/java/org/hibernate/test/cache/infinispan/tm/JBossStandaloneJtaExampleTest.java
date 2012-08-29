@@ -61,6 +61,9 @@ import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJta
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -87,10 +90,9 @@ public class JBossStandaloneJtaExampleTest {
       jndiServer = startJndiServer();
       ctx = createJndiContext();
       // Inject configuration to initialise transaction manager from config classloader
-      lookup.init(new org.infinispan.config.Configuration());
+      lookup.init( new org.infinispan.config.Configuration() );
       bindTransactionManager();
       bindUserTransaction();
-      bindDataSource();
    }
 
    @After
@@ -177,51 +179,20 @@ public class JBossStandaloneJtaExampleTest {
 
    }
 
-   public static class ExtendedXADataSource extends StandardXADataSource { // XAPOOL
-      @Override
-      public Connection getConnection() throws SQLException {
-
-         if (getTransactionManager() == null) { // although already set before, it results null again after retrieving the datasource by jndi
-            TransactionManager tm;  // this is because the TransactionManager information is not serialized.
-            try {
-               tm = lookup.getTransactionManager();
-            } catch (Exception e) {
-               throw new SQLException(e);
-            }
-            setTransactionManager(tm);  //  resets the TransactionManager on the datasource retrieved by jndi,
-            //  this makes the datasource JTA-aware
-         }
-
-         // According to Enhydra documentation, here we must return the connection of our XAConnection
-         // see http://cvs.forge.objectweb.org/cgi-bin/viewcvs.cgi/xapool/xapool/examples/xapooldatasource/DatabaseHelper.java?sortby=rev
-         return super.getXAConnection().getConnection();
-      }
-
-      @Override
-      public <T> T unwrap(Class<T> iface) throws SQLException {
-         return null;  // JDK6 stuff
-      }
-
-      @Override
-      public boolean isWrapperFor(Class<?> iface) throws SQLException {
-         return false;  // JDK6 stuff
-      }
-   }
-
    private Main startJndiServer() throws Exception {
       // Create an in-memory jndi
       NamingServer namingServer = new NamingServer();
       NamingContext.setLocal(namingServer);
       Main namingMain = new Main();
       namingMain.setInstallGlobalService(true);
-      namingMain.setPort(-1);
+      namingMain.setPort( -1 );
       namingMain.start();
       return namingMain;
    }
 
    private Context createJndiContext() throws Exception {
       Properties props = new Properties();
-      props.put(Context.INITIAL_CONTEXT_FACTORY, "org.jnp.interfaces.NamingContextFactory");
+      props.put( Context.INITIAL_CONTEXT_FACTORY, "org.jnp.interfaces.NamingContextFactory" );
       props.put("java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces");
       return new InitialContext(props);
    }
@@ -233,14 +204,7 @@ public class JBossStandaloneJtaExampleTest {
 
    private void bindUserTransaction() throws Exception {
       // also the UserTransaction must be registered on jndi: org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory#getUserTransaction() requires this
-      bind("UserTransaction", lookup.getUserTransaction(), lookup.getUserTransaction().getClass(), ctx);
-   }
-
-   private void bindDataSource() throws Exception {
-      ExtendedXADataSource xads = new ExtendedXADataSource();
-      xads.setDriverName("org.h2.Driver");
-      xads.setUrl("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE");
-      ctx.bind("java:/MyDatasource", xads);
+      bind( "UserTransaction", lookup.getUserTransaction(), lookup.getUserTransaction().getClass(), ctx );
    }
 
    /**
@@ -282,12 +246,11 @@ public class JBossStandaloneJtaExampleTest {
    private SessionFactory buildSessionFactory() {
       // Extra options located in src/test/resources/hibernate.properties
       Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.HSQLDialect");
-      cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
-      cfg.setProperty(Environment.DATASOURCE, "java:/MyDatasource");
+      cfg.setProperty( Environment.DIALECT, "HSQL" );
+      cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+      cfg.setProperty( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
       cfg.setProperty(Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory");
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, "org.hibernate.transaction.JBossTransactionManagerLookup");
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, "org.hibernate.transaction.JTATransactionFactory");
+      cfg.setProperty(Environment.TRANSACTION_STRATEGY, "jta");
       cfg.setProperty(Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta");
       cfg.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");

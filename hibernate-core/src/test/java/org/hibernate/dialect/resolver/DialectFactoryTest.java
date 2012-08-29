@@ -29,10 +29,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
+import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -55,12 +56,14 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -76,8 +79,21 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		dialectFactory = new DialectFactoryImpl();
-		dialectFactory.setClassLoaderService( new ClassLoaderServiceImpl( getClass().getClassLoader() ) );
+		dialectFactory.setStrategySelector(
+				new StrategySelectorBuilder().buildSelector( new ClassLoaderServiceImpl( getClass().getClassLoader() ) )
+		);
 		dialectFactory.setDialectResolver( new StandardDialectResolver() );
+	}
+
+	@Test
+	public void testExplicitShortNameUse() {
+		final Map<String, String> configValues = new HashMap<String, String>();
+
+		configValues.put( Environment.DIALECT, "H2" );
+		assertEquals( H2Dialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
+
+		configValues.put( Environment.DIALECT, "Oracle10g" );
+		assertEquals( Oracle10gDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 	}
 
 	@Test
@@ -93,7 +109,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( HibernateException e ) {
-			assertEquals( "unexpected exception type", ClassLoadingException.class, e.getCause().getClass() );
+			assertEquals( "unexpected exception type", StrategySelectionException.class, e.getClass() );
 		}
 
 		configValues.put( Environment.DIALECT, "java.lang.Object" );

@@ -3,10 +3,10 @@ package org.hibernate.tool.hbm2ddl;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -15,7 +15,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ImportSqlCommandExtractorInitiator implements BasicServiceInitiator<ImportSqlCommandExtractor> {
+public class ImportSqlCommandExtractorInitiator implements StandardServiceInitiator<ImportSqlCommandExtractor> {
 	public static final ImportSqlCommandExtractorInitiator INSTANCE = new ImportSqlCommandExtractorInitiator();
 	public static final ImportSqlCommandExtractor DEFAULT_EXTRACTOR = new SingleLineSqlCommandExtractor();
 

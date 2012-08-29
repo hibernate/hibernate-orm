@@ -23,7 +23,7 @@
  */
 package org.hibernate.integrator.spi;
 
-import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
  * Additional, optional contract for Integrators that wish to contribute {@link org.hibernate.service.Service services}
@@ -38,5 +38,5 @@ public interface ServiceContributingIntegrator extends Integrator {
 	 *
 	 * @param serviceRegistryBuilder The build to prepare.
 	 */
-	public void prepareServices(ServiceRegistryBuilder serviceRegistryBuilder);
+	public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder);
 }

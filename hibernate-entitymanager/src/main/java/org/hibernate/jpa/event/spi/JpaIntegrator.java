@@ -55,7 +55,6 @@ import org.hibernate.jpa.event.internal.core.JpaPostLoadEventListener;
 import org.hibernate.jpa.event.internal.core.JpaPostUpdateEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveOrUpdateEventListener;
-import org.hibernate.jpa.event.internal.jpa.BeanManagerListenerFactory;
 import org.hibernate.jpa.event.internal.jpa.CallbackProcessor;
 import org.hibernate.jpa.event.internal.jpa.CallbackProcessorImpl;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
@@ -71,7 +70,7 @@ import org.hibernate.secure.internal.JACCPreInsertEventListener;
 import org.hibernate.secure.internal.JACCPreLoadEventListener;
 import org.hibernate.secure.internal.JACCPreUpdateEventListener;
 import org.hibernate.secure.internal.JACCSecurityListener;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 

@@ -26,8 +26,8 @@ package org.hibernate.test.multitenancy;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.service.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * @author Steve Ebersole

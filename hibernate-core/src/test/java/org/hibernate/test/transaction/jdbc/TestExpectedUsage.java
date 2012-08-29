@@ -33,12 +33,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
@@ -58,7 +58,7 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 	}

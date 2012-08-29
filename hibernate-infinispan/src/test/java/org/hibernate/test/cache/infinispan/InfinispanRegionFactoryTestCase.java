@@ -40,8 +40,8 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cfg.Settings;
-import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
-import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 import static org.junit.Assert.assertEquals;

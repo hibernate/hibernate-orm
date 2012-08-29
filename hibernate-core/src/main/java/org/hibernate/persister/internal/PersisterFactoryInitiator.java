@@ -25,16 +25,16 @@ package org.hibernate.persister.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class PersisterFactoryInitiator implements BasicServiceInitiator<PersisterFactory> {
+public class PersisterFactoryInitiator implements StandardServiceInitiator<PersisterFactory> {
 	public static final PersisterFactoryInitiator INSTANCE = new PersisterFactoryInitiator();
 
 	public static final String IMPL_NAME = "hibernate.persister.factory";

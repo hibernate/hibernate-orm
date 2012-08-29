@@ -23,28 +23,25 @@
  */
 package org.hibernate.test.annotations.embeddables;
 
-import static org.junit.Assert.assertEquals;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.integrator.internal.IntegratorServiceImpl;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
+
 import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Chris Pheby
@@ -57,7 +54,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	@Test(expected=GenericJDBCException.class)
 	public void testWithoutIntegrator() {
 		
-		ServiceRegistry reg = new ServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
+		ServiceRegistry reg = new StandardServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
 		.buildServiceRegistry();
 		
 		SessionFactory sf = new Configuration()
@@ -81,15 +78,9 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWithIntegrator() {
-		
-		LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
-		providedIntegrators.add(new InvestorIntegrator());
-		ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
-		IntegratorService integratorService = new IntegratorServiceImpl(providedIntegrators, classLoaderService);
-		
-		ServiceRegistry reg = new ServiceRegistryBuilder(new BootstrapServiceRegistryImpl(
-				classLoaderService,
-				integratorService)).buildServiceRegistry();
+		ServiceRegistry reg = new StandardServiceRegistryBuilder(
+				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
+		).buildServiceRegistry();
 		
 		SessionFactory sf = new Configuration()
 		.addAnnotatedClass( Investor.class )

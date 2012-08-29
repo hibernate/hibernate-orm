@@ -51,7 +51,7 @@ import org.hibernate.metamodel.source.MappingNotFoundException;
 import org.hibernate.metamodel.source.internal.JaxbHelper;
 import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole

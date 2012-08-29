@@ -42,6 +42,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -59,10 +60,9 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -504,7 +504,7 @@ public class SchemaExport {
 	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return (StandardServiceRegistryImpl) new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry();
+		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry();
 	}
 
 	public static void main(String[] args) {

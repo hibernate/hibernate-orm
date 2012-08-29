@@ -38,8 +38,8 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableHierarchy;
 import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
@@ -50,7 +50,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		meta = (MetadataImpl) sources.buildMetadata();
 	}
 

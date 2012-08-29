@@ -27,7 +27,7 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**

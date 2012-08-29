@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,105 +23,51 @@
  */
 package org.hibernate.service;
 
-import java.util.LinkedHashSet;
-
-import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 /**
- * Builder for bootstrap {@link ServiceRegistry} instances.
- *
- * @author Steve Ebersole
- *
- * @see BootstrapServiceRegistryImpl
- * @see ServiceRegistryBuilder#ServiceRegistryBuilder(BootstrapServiceRegistry)
+ * @deprecated Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder} instead
  */
-public class BootstrapServiceRegistryBuilder {
-	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
-	private ClassLoader applicationClassLoader;
-	private ClassLoader resourcesClassLoader;
-	private ClassLoader hibernateClassLoader;
-	private ClassLoader environmentClassLoader;
-
-	/**
-	 * Add an {@link Integrator} to be applied to the bootstrap registry.
-	 *
-	 * @param integrator The integrator to add.
-	 * @return {@code this}, for method chaining
-	 */
+@Deprecated
+public class BootstrapServiceRegistryBuilder extends org.hibernate.boot.registry.BootstrapServiceRegistryBuilder {
+	@Override
 	public BootstrapServiceRegistryBuilder with(Integrator integrator) {
-		providedIntegrators.add( integrator );
+		super.with( integrator );
 		return this;
 	}
 
-	/**
-	 * Applies the specified {@link ClassLoader} as the application class loader for the bootstrap registry
-	 *
-	 * @param classLoader The class loader to use
-	 * @return {@code this}, for method chaining
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@Override
 	public BootstrapServiceRegistryBuilder withApplicationClassLoader(ClassLoader classLoader) {
-		this.applicationClassLoader = classLoader;
+		super.withApplicationClassLoader( classLoader );
 		return this;
 	}
 
-	/**
-	 * Applies the specified {@link ClassLoader} as the resource class loader for the bootstrap registry
-	 *
-	 * @param classLoader The class loader to use
-	 * @return {@code this}, for method chaining
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@Override
 	public BootstrapServiceRegistryBuilder withResourceClassLoader(ClassLoader classLoader) {
-		this.resourcesClassLoader = classLoader;
+		super.withResourceClassLoader( classLoader );
 		return this;
 	}
 
-	/**
-	 * Applies the specified {@link ClassLoader} as the Hibernate class loader for the bootstrap registry
-	 *
-	 * @param classLoader The class loader to use
-	 * @return {@code this}, for method chaining
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@Override
 	public BootstrapServiceRegistryBuilder withHibernateClassLoader(ClassLoader classLoader) {
-		this.hibernateClassLoader = classLoader;
+		super.withHibernateClassLoader( classLoader );
 		return this;
 	}
 
-	/**
-	 * Applies the specified {@link ClassLoader} as the environment (or system) class loader for the bootstrap registry
-	 *
-	 * @param classLoader The class loader to use
-	 * @return {@code this}, for method chaining
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@Override
 	public BootstrapServiceRegistryBuilder withEnvironmentClassLoader(ClassLoader classLoader) {
-		this.environmentClassLoader = classLoader;
+		super.withEnvironmentClassLoader( classLoader );
 		return this;
 	}
 
-	/**
-	 * Build the bootstrap registry.
-	 *
-	 * @return The built bootstrap registry
-	 */
+	@Override
+	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
+		super.withStrategySelector( strategy, name, implementation );
+		return this;
+	}
+
+	@Override
 	public BootstrapServiceRegistry build() {
-		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
-				applicationClassLoader,
-				resourcesClassLoader,
-				hibernateClassLoader,
-				environmentClassLoader
-		);
-
-		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
-				providedIntegrators,
-				classLoaderService
-		);
-
-		return new BootstrapServiceRegistryImpl( classLoaderService, integratorService );
+		return (BootstrapServiceRegistry) super.build();
 	}
 }

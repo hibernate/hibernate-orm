@@ -28,7 +28,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * A {@link ConnectionHelper} implementation based on a provided

@@ -51,7 +51,7 @@ import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocke
 import org.hibernate.metamodel.source.binder.Binder;
 import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.

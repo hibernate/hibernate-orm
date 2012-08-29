@@ -36,6 +36,7 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.jboss.logging.Logger;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
@@ -46,7 +47,7 @@ import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
@@ -112,7 +113,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 	private void putDoesNotBlockGetTest() throws Exception {
 		Configuration cfg = createConfiguration();
 		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
+				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);
@@ -212,7 +213,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 	private void getDoesNotBlockPutTest() throws Exception {
 		Configuration cfg = createConfiguration();
 		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
+				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);

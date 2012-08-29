@@ -37,7 +37,7 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

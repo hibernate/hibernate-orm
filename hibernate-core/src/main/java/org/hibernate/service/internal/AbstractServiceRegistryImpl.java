@@ -32,11 +32,11 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.service.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
-import org.hibernate.service.jmx.spi.JmxService;
+import org.hibernate.jmx.spi.JmxService;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.ServiceBinding;

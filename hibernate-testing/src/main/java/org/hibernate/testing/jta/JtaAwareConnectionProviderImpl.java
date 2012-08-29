@@ -37,10 +37,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 

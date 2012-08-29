@@ -49,7 +49,7 @@ public interface StatisticsImplementor extends Statistics, Service {
 	public void flush();
 
 	/**
-	 * Callback about a connection being obtained from {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider}
+	 * Callback about a connection being obtained from {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
 	 */
 	public void connect();
 

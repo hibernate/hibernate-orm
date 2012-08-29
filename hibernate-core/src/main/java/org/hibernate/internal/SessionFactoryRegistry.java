@@ -36,9 +36,9 @@ import javax.naming.spi.ObjectFactory;
 import org.jboss.logging.Logger;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.service.jndi.JndiException;
-import org.hibernate.service.jndi.JndiNameException;
-import org.hibernate.service.jndi.spi.JndiService;
+import org.hibernate.engine.jndi.JndiException;
+import org.hibernate.engine.jndi.JndiNameException;
+import org.hibernate.engine.jndi.spi.JndiService;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.

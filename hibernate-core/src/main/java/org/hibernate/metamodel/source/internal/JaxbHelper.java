@@ -57,7 +57,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Helper class for unmarshalling xml configuration using StAX and JAXB.

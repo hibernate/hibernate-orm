@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.IdentityHashMap;
 import javax.persistence.EntityNotFoundException;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.CascadingAction;
@@ -45,7 +46,6 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

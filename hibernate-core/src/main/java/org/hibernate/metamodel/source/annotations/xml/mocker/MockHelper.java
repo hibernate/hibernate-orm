@@ -44,7 +44,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Strong Liu

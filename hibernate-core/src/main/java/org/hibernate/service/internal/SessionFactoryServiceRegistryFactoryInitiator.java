@@ -25,14 +25,14 @@ package org.hibernate.service.internal;
 
 import java.util.Map;
 
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
 /**
  * @author Steve Ebersole
  */
-public class SessionFactoryServiceRegistryFactoryInitiator implements BasicServiceInitiator<SessionFactoryServiceRegistryFactory> {
+public class SessionFactoryServiceRegistryFactoryInitiator implements StandardServiceInitiator<SessionFactoryServiceRegistryFactory> {
 	public static final SessionFactoryServiceRegistryFactoryInitiator INSTANCE = new SessionFactoryServiceRegistryFactoryInitiator();
 
 	@Override

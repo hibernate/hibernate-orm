@@ -30,10 +30,11 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
@@ -99,7 +100,7 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 
 		private void createBindings() {
 			try {
-				sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+				sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 				Resources resourcesAnnotation = origFrameworkMethod.getAnnotation( Resources.class );
 				if ( resourcesAnnotation != null ) {
 					sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );

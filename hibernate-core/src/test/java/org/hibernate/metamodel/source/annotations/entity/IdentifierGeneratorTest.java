@@ -42,7 +42,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityIdentifier;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -147,7 +147,7 @@ public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Test
 	public void testUndefinedGenerator() {
 		try {
-			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+			sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 			sources.addAnnotatedClass( NamedGeneratorEntity.class );
 			sources.buildMetadata();
 			fail();

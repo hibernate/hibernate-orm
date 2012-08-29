@@ -24,10 +24,11 @@ import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,15 +43,15 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		ServiceRegistry serviceRegistry = new ServiceRegistryBuilder()
+		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.buildServiceRegistry();
 		//no exception as the GoofyPersisterClassProvider is not set
 		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
-		ServiceRegistryBuilder.destroy( serviceRegistry );
+		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 
-		serviceRegistry = new ServiceRegistryBuilder()
+		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.buildServiceRegistry();
@@ -69,13 +70,13 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 			);
 		}
 		finally {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
-		serviceRegistry = new ServiceRegistryBuilder()
+		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.buildServiceRegistry();
@@ -91,14 +92,14 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 					( (GoofyException) e.getCause() ).getValue() );
 		}
 		finally {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 
 
         cfg = new Configuration();
 		cfg.addAnnotatedClass( Tree.class );
 		cfg.addAnnotatedClass( Palmtree.class );
-		serviceRegistry = new ServiceRegistryBuilder()
+		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.buildServiceRegistry();
@@ -114,7 +115,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 					( (GoofyException) e.getCause() ).getValue() );
 		}
 		finally {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 }

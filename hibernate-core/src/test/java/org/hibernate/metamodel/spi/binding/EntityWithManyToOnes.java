@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -33,13 +34,9 @@ import javax.persistence.ManyToOne;
  */
 @Entity
 public class EntityWithManyToOnes {
-	@Id
 	private Long id;
 	private String theName;
-	@ManyToOne
 	SimpleEntity simpleEntity;
-	@ManyToOne
-	@JoinColumn( name = "simplename", referencedColumnName = "name" )
 	SimpleEntity simpleEntityFromPropertyRef;
 
 	public EntityWithManyToOnes() {
@@ -49,6 +46,7 @@ public class EntityWithManyToOnes {
 		this.theName = name;
 	}
 
+	@Id
 	public Long getId() {
 		return id;
 	}
@@ -65,6 +63,8 @@ public class EntityWithManyToOnes {
 		this.theName = name;
 	}
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false)
 	public SimpleEntity getSimpleEntity() {
 		return simpleEntity;
 	}
@@ -73,14 +73,16 @@ public class EntityWithManyToOnes {
 		this.simpleEntity = simpleEntity;
 	}
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "simplename", referencedColumnName = "name")
 	public SimpleEntity getSimpleEntityFromPropertyRef() {
 		return simpleEntityFromPropertyRef;
 	}
 
 	public void setSimpleEntityFromPropertyRef(SimpleEntity simpleEntityFromPropertyRef) {
 		this.simpleEntityFromPropertyRef = simpleEntityFromPropertyRef;
-	}	
-	
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();

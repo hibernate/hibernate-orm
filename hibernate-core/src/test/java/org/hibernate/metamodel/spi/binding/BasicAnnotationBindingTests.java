@@ -23,10 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.testing.FailureExpected;
 
 /**
  * Basic tests of annotation based binding code
@@ -34,12 +31,6 @@ import org.hibernate.testing.FailureExpected;
  * @author Hardy Ferentschik
  */
 public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-7037" )
-	public void testEntityWithManyToOneMapping() {
-		super.testEntityWithManyToOneMapping();
-	}
 
 	@Override
 	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {

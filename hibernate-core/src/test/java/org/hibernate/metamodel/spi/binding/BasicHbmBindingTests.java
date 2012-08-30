@@ -31,18 +31,23 @@ import org.hibernate.metamodel.MetadataSources;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
+
+	@Override
 	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
 	}
 
+	@Override
 	public void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleVersionedEntity.hbm.xml" );
 	}
 
+	@Override
 	public void addSourcesForManyToOne(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithManyToOnes.hbm.xml" );
 	}
 
+	@Override
 	public void addSourcesForComponentBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntityWithSimpleComponent.hbm.xml" );
 	}

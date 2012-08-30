@@ -271,12 +271,33 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		return map.toString();
 	}
 
-	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
-	throws HibernateException, SQLException {
-		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-		if ( element!=null ) map.put(index, element);
+	private transient List<Object[]> loadingEntries;
+
+	public Object readFrom(
+			ResultSet rs,
+			CollectionPersister persister,
+			CollectionAliases descriptor,
+			Object owner) throws HibernateException, SQLException {
+		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+		if ( element != null ) {
+			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
+			if ( loadingEntries == null ) {
+				loadingEntries = new ArrayList<Object[]>();
+			}
+			loadingEntries.add( new Object[] { index, element } );
+		}
 		return element;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public boolean endRead() {
+		if ( loadingEntries != null ) {
+			for ( Object[] entry : loadingEntries ) {
+				map.put( entry[0], entry[1] );
+			}
+		}
+		return super.endRead();
 	}
 
 	public Iterator entries(CollectionPersister persister) {

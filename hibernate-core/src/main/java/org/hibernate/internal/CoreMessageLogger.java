@@ -1575,6 +1575,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "NaturalId queries executed to database: %s", id = 442)
 	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
 
+	@Message(value = "Unable to find mapping information for %s. Are you sure all annotated classes and configuration files are added?", id = 443)
+	String missingEntitySource(String entityName);
 
 	// moved from hibernate-entitymanager ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

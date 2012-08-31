@@ -47,6 +47,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -165,6 +166,10 @@ import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOS
  */
 public class Binder {
 	private static final Logger log = Logger.getLogger( Binder.class );
+	private static final CoreMessageLogger coreLogger = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			Binder.class.getName()
+	);
 
 	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
 			final Class< ? > attributeContainerClassReference,
@@ -1993,6 +1998,11 @@ public class Binder {
 		if ( entityBinding == null ) {
 			// Find appropriate source to create binding
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
+			if(entitySource == null) {
+				String msg = coreLogger.missingEntitySource( entityName );
+				throw new MappingException( msg, null );
+			}
+
 			// Get super entity binding (creating it if necessary using recursive call to this method)
 			final EntityBinding superEntityBinding =
 					SubclassEntitySource.class.isInstance( entitySource )

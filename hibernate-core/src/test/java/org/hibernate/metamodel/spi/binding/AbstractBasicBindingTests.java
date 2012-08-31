@@ -46,7 +46,6 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -64,9 +63,9 @@ import static org.junit.Assert.assertTrue;
  * Basic tests of {@code hbm.xml} and annotation binding code
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
-
 	private StandardServiceRegistryImpl serviceRegistry;
 
 	@Before
@@ -77,10 +76,6 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 	@After
 	public void tearDown() {
 		serviceRegistry.destroy();
-	}
-
-	protected ServiceRegistry basicServiceRegistry() {
-		return serviceRegistry;
 	}
 
 	@Test

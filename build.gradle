@@ -6,8 +6,7 @@ allprojects {
     repositories {
 	mavenCentral()
     	mavenLocal()
-        
-        
+
         mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
@@ -17,8 +16,7 @@ buildscript {
     repositories {
 	mavenCentral()
 	    mavenLocal()
-        
-        
+
         mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
@@ -149,12 +147,10 @@ subprojects { subProject ->
                             "-source", "1.6",
                             "-target", "1.6",
                             "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
-
                     ]
             );
             outputs.dir sourceSets.main.generatedLoggingSrcDir;
             doFirst {
-//                source = sourceSets.main.originalJavaSrcDirs
                 sourceSets.main.generatedLoggingSrcDir.mkdirs()
             }
         }

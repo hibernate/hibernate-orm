@@ -11,8 +11,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.metamodel.spi.binding.SimpleEntity;
-
 /**
  * @author Gail Badner
  */
@@ -20,11 +18,11 @@ import org.hibernate.metamodel.spi.binding.SimpleEntity;
 public class EntityWithUnidirectionalOneToMany {
 	private Long id;
 	private String name;
-	private Collection<SimpleEntity> theBag = new ArrayList<SimpleEntity>();
-	private Set<SimpleEntity> theSet = new HashSet<SimpleEntity>();
-	private List<SimpleEntity> theList = new ArrayList<SimpleEntity>();
-	private Map<String, SimpleEntity> theMap = new HashMap<String, SimpleEntity>();
-	private Collection<SimpleEntity> thePropertyRefBag = new ArrayList<SimpleEntity>();
+	private Collection<ReferencedEntity> theBag = new ArrayList<ReferencedEntity>();
+	private Set<ReferencedEntity> theSet = new HashSet<ReferencedEntity>();
+	private List<ReferencedEntity> theList = new ArrayList<ReferencedEntity>();
+	private Map<String, ReferencedEntity> theMap = new HashMap<String, ReferencedEntity>();
+	private Collection<ReferencedEntity> thePropertyRefBag = new ArrayList<ReferencedEntity>();
 
 	@Id
 	public Long getId() {
@@ -44,47 +42,47 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
-	public Collection<SimpleEntity> getTheBag() {
+	public Collection<ReferencedEntity> getTheBag() {
 		return theBag;
 	}
 
-	public void setTheBag(Collection<SimpleEntity> theBag) {
+	public void setTheBag(Collection<ReferencedEntity> theBag) {
 		this.theBag = theBag;
 	}
 
 	@OneToMany
-	public Set<SimpleEntity> getTheSet() {
+	public Set<ReferencedEntity> getTheSet() {
 		return theSet;
 	}
 
-	public void setTheSet(Set<SimpleEntity> theSet) {
+	public void setTheSet(Set<ReferencedEntity> theSet) {
 		this.theSet = theSet;
 	}
 
 	@OneToMany
-	public List<SimpleEntity> getTheList() {
+	public List<ReferencedEntity> getTheList() {
 		return theList;
 	}
 
-	public void setTheList(List<SimpleEntity> theList) {
+	public void setTheList(List<ReferencedEntity> theList) {
 		this.theList = theList;
 	}
 
 	@OneToMany
-	public Map<String, SimpleEntity> getTheMap() {
+	public Map<String, ReferencedEntity> getTheMap() {
 		return theMap;
 	}
 
-	public void setTheMap(Map<String, SimpleEntity> theMap) {
+	public void setTheMap(Map<String, ReferencedEntity> theMap) {
 		this.theMap = theMap;
 	}
 
 	@OneToMany
-	public Collection<SimpleEntity> getThePropertyRefSet() {
+	public Collection<ReferencedEntity> getThePropertyRefSet() {
 		return thePropertyRefBag;
 	}
 
-	public void setThePropertyRefSet(Set<SimpleEntity> thePropertyRefSet) {
+	public void setThePropertyRefSet(Set<ReferencedEntity> thePropertyRefSet) {
 		this.thePropertyRefBag = thePropertyRefSet;
 	}
 }

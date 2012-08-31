@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -42,7 +41,6 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
-import org.hibernate.metamodel.spi.binding.SimpleEntity;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -67,12 +65,16 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
+public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
+	private MetadataImpl metadata;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = ( StandardServiceRegistryImpl ) new ServiceRegistryBuilder().buildServiceRegistry();
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		addSources( metadataSources );
+		metadata = ( MetadataImpl ) metadataSources.getMetadataBuilder().buildMetadata();
 	}
 
 	@After
@@ -80,29 +82,16 @@ public class UnidirectionalOneToManyBindingTests extends BaseUnitTestCase {
 		serviceRegistry.destroy();
 	}
 
-//	@Test
-//	public void testAnnotations() {
-//		doTest( MetadataSourceProcessingOrder.ANNOTATIONS_FIRST );
-//	}
+	public abstract void addSources(MetadataSources sources);
 
 	@Test
-	public void testHbm() {
-		doTest( MetadataSourceProcessingOrder.HBM_FIRST );
-	}
-
-	private void doTest(MetadataSourceProcessingOrder processingOrder) {
-		MetadataSources sources = new MetadataSources( serviceRegistry );
-//		sources.addAnnotatedClass( EntityWithBasicCollections.class );
-		sources.addResource( "org/hibernate/metamodel/spi/binding/onetomany/EntityWithUnidirectionalOneToMany.hbm.xml" );
-		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
-		MetadataImpl metadata = ( MetadataImpl ) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
-
+	public void testOneToMany() {
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalOneToMany.class.getName() );
-		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
+		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( ReferencedEntity.class.getName() );
 		assertNotNull( entityBinding );
 
 		assertEquals(
-				Identifier.toIdentifier( "SimpleEntity" ),
+				Identifier.toIdentifier( "ReferencedEntity" ),
 				simpleEntityBinding.getPrimaryTable().getLogicalName()
 		);
 		assertEquals( 1, simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() );

@@ -67,8 +67,24 @@ public abstract class AbstractJtaPlatform
 	protected abstract UserTransaction locateUserTransaction();
 
 	public void configure(Map configValues) {
-		cacheTransactionManager = ConfigurationHelper.getBoolean( AvailableSettings.JTA_CACHE_TM, configValues, true );
-		cacheUserTransaction = ConfigurationHelper.getBoolean( AvailableSettings.JTA_CACHE_UT, configValues, false );
+		cacheTransactionManager = ConfigurationHelper.getBoolean(
+				AvailableSettings.JTA_CACHE_TM,
+				configValues,
+				canCacheTransactionManagerByDefault()
+		);
+		cacheUserTransaction = ConfigurationHelper.getBoolean(
+				AvailableSettings.JTA_CACHE_UT,
+				configValues,
+				canCacheUserTransactionByDefault()
+		);
+	}
+
+	protected boolean canCacheTransactionManagerByDefault() {
+		return true;
+	}
+
+	protected boolean canCacheUserTransactionByDefault() {
+		return false;
 	}
 
 	protected boolean canCacheTransactionManager() {

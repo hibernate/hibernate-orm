@@ -29,6 +29,9 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.selector.Availability;
+import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
+import org.hibernate.boot.registry.selector.SimpleAvailabilityImpl;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.CUBRIDDialect;
@@ -98,38 +101,27 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 public class StrategySelectorBuilder {
 	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
 
-	private static class CustomRegistration<T> {
-		private final Class<T> strategy;
-		private final String name;
-		private final Class<? extends T> implementation;
-
-		private CustomRegistration(Class<T> strategy, String name, Class<? extends T> implementation) {
-			this.strategy = strategy;
-			this.name = name;
-			this.implementation = implementation;
-		}
-
-		public void registerWith(StrategySelectorImpl strategySelector) {
-			strategySelector.registerStrategyImplementor( strategy, name, implementation );
-		}
-	}
-
-	private final List<CustomRegistration> customRegistrations = new ArrayList<CustomRegistration>();
+	private final List<Availability> explicitAvailabilities = new ArrayList<Availability>();
 
 	@SuppressWarnings("unchecked")
-	public <T> void addCustomRegistration(Class<T> strategy, String name, Class<? extends T> implementation) {
-		if ( !strategy.isInterface() ) {
+	public <T> void addExplicitAvailability(Class<T> strategy, Class<? extends T> implementation, String name) {
+		addExplicitAvailability( new SimpleAvailabilityImpl( strategy, implementation, name ) );
+	}
+
+	public void addExplicitAvailability(Availability availability) {
+		if ( !availability.getStrategyRole().isInterface() ) {
 			// not good form...
-			log.debug( "Registering non-interface strategy implementation : " + strategy.getName()  );
+			log.debug( "Registering non-interface strategy implementation : " + availability.getStrategyRole().getName()  );
 		}
 
-		if ( ! strategy.isAssignableFrom( implementation ) ) {
+		if ( ! availability.getStrategyRole().isAssignableFrom( availability.getStrategyImplementation() ) ) {
 			throw new StrategySelectionException(
-					"Implementation class [" + implementation.getName() + "] does not implement strategy interface ["
-							+ strategy.getName() + "]"
+					"Implementation class [" + availability.getStrategyImplementation().getName()
+							+ "] does not implement strategy interface ["
+							+ availability.getStrategyRole().getName() + "]"
 			);
 		}
-		customRegistrations.add( new CustomRegistration( strategy, name, implementation ) );
+		explicitAvailabilities.add( availability );
 	}
 
 	public StrategySelector buildSelector(ClassLoaderServiceImpl classLoaderService) {
@@ -140,14 +132,30 @@ public class StrategySelectorBuilder {
 		addJtaPlatforms( strategySelector );
 		addTransactionFactories( strategySelector );
 
-		// todo : apply auto-discovered registrations
+		// apply auto-discovered registrations
+		for ( AvailabilityAnnouncer announcer : classLoaderService.loadJavaServices( AvailabilityAnnouncer.class ) ) {
+			for ( Availability discoveredAvailability : announcer.getAvailabilities() ) {
+				applyFromAvailability( strategySelector, discoveredAvailability );
+			}
+		}
 
 		// apply customizations
-		for ( CustomRegistration customRegistration : customRegistrations ) {
-			customRegistration.registerWith( strategySelector );
+		for ( Availability explicitAvailability : explicitAvailabilities ) {
+			applyFromAvailability( strategySelector, explicitAvailability );
 		}
 
 		return strategySelector;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyFromAvailability(StrategySelectorImpl strategySelector, Availability availability) {
+		for ( String name : availability.getSelectorNames() ) {
+			strategySelector.registerStrategyImplementor(
+					availability.getStrategyRole(),
+					name,
+					availability.getStrategyImplementation()
+			);
+		}
 	}
 
 	private void addDialects(StrategySelectorImpl strategySelector) {

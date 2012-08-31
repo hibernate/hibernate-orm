@@ -26,6 +26,8 @@ package org.hibernate.boot.registry;
 import java.util.LinkedHashSet;
 
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.boot.registry.selector.Availability;
+import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -120,7 +122,24 @@ public class BootstrapServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
-		this.strategySelectorBuilder.addCustomRegistration( strategy, name, implementation );
+		this.strategySelectorBuilder.addExplicitAvailability( strategy, implementation, name );
+		return this;
+	}
+
+	/**
+	 * Applies one or more strategy selectors announced as available by the passed announcer.
+	 *
+	 * @param availabilityAnnouncer An announcer for one or more available selectors
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
+	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public <T> BootstrapServiceRegistryBuilder withStrategySelectors(AvailabilityAnnouncer availabilityAnnouncer) {
+		for ( Availability availability : availabilityAnnouncer.getAvailabilities() ) {
+			this.strategySelectorBuilder.addExplicitAvailability( availability );
+		}
 		return this;
 	}
 

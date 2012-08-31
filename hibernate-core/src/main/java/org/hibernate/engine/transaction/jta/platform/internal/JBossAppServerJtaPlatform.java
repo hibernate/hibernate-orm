@@ -36,25 +36,46 @@ import org.hibernate.engine.jndi.JndiException;
 public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
 	public static final String AS7_TM_NAME = "java:jboss/TransactionManager";
 	public static final String AS4_TM_NAME = "java:/TransactionManager";
-	public static final String UT_NAME = "java:comp/UserTransaction";  // should work with AS7 and earlier
+	public static final String JBOSS__UT_NAME = "java:jboss/UserTransaction";
+	public static final String UT_NAME = "java:comp/UserTransaction";
+
+	@Override
+	protected boolean canCacheUserTransactionByDefault() {
+		return true;
+	}
+
+	@Override
+	protected boolean canCacheTransactionManagerByDefault() {
+		return true;
+	}
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			return (TransactionManager) jndiService().locate(AS7_TM_NAME);
+			return (TransactionManager) jndiService().locate( AS7_TM_NAME );
 		}
-		catch(JndiException jndiException) {
+		catch (JndiException jndiException) {
 			try {
-				return (TransactionManager) jndiService().locate(AS4_TM_NAME);
+				return (TransactionManager) jndiService().locate( AS4_TM_NAME );
 			}
-			catch(JndiException jndiExceptionInner) {
-				throw new JndiException("unable to find transaction manager", jndiException);
+			catch (JndiException jndiExceptionInner) {
+				throw new JndiException( "unable to find transaction manager", jndiException );
 			}
 		}
 	}
 
 	@Override
 	protected UserTransaction locateUserTransaction() {
-		return (UserTransaction) jndiService().locate( UT_NAME );
+		try {
+			return (UserTransaction) jndiService().locate( JBOSS__UT_NAME );
+		}
+		catch (JndiException jndiException) {
+			try {
+				return (UserTransaction) jndiService().locate( UT_NAME );
+			}
+			catch (JndiException jndiExceptionInner) {
+				throw new JndiException( "unable to find UserTransaction", jndiException );
+			}
+		}
 	}
 }

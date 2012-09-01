@@ -45,7 +45,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class SaveOrUpdateTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {

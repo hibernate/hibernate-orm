@@ -72,7 +72,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return false;
+		return true;
 	}
 
 	@Override

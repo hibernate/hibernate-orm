@@ -62,7 +62,6 @@ public class InsertOrderingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBatchOrdering() {
 		Session s = openSession();
 		s.beginTransaction();

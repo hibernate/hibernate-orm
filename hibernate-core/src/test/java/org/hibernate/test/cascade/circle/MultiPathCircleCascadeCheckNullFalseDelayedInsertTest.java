@@ -30,7 +30,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class MultiPathCircleCascadeCheckNullFalseDelayedInsertTest extends MultiPathCircleCascadeDelayedInsertTest {
 	@Override
 	 public void configure(Configuration cfg) {

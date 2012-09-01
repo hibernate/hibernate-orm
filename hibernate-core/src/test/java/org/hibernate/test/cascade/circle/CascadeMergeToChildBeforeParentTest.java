@@ -56,7 +56,6 @@ import static org.junit.Assert.assertThat;
  *
  * @author Gail Badner (based on original model provided by Pavol Zibrita)
  */
-@FailureExpectedWithNewMetamodel
 public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

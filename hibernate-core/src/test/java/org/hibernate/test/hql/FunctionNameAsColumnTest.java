@@ -110,7 +110,6 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testGetMultiColumnSameNameAsArgFunctionHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -154,7 +153,6 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testGetMultiColumnSameNameAsArgFunctionCriteria() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

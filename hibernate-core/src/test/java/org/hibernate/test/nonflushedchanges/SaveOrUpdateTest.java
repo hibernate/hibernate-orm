@@ -48,7 +48,6 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );

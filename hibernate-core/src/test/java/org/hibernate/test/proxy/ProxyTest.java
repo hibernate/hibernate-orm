@@ -358,7 +358,6 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testFullyLoadedPCSerialization() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class BidirectionalOneToManyCascadeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

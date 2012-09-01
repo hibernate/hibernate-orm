@@ -37,7 +37,6 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {

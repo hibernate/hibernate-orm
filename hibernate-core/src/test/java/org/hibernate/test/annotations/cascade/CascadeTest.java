@@ -45,7 +45,6 @@ import static org.junit.Assert.assertNull;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class CascadeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testPersist() {
@@ -69,6 +68,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMerge() {
 		Session s;
 		Transaction tx;
@@ -107,6 +107,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemove() {
 		Session s;
 		Transaction tx;
@@ -139,6 +140,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDetach() {
 		Session s;
 		Transaction tx;

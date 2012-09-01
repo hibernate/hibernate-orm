@@ -40,7 +40,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class OrphanTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "orphan/Product.hbm.xml" };

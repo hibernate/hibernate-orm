@@ -39,7 +39,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Michael Rudolf
  */
-@FailureExpectedWithNewMetamodel
 public class DirectPropertyAccessorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey="HHH-3718" )

@@ -65,7 +65,6 @@ import static org.junit.Assert.fail;
  *
  * @author Pavol Zibrita, Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 	private static interface EntityOperation {
 		Object doEntityOperation(Object entity, Session s);

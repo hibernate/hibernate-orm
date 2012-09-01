@@ -42,7 +42,6 @@ public class WhereTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testWhere() {
 		Session s = openSession();
 		s.getTransaction().begin();

@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class SessionStatsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

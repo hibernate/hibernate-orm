@@ -38,7 +38,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Max Rydahl Andersen
  */
-@FailureExpectedWithNewMetamodel
 public class VersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

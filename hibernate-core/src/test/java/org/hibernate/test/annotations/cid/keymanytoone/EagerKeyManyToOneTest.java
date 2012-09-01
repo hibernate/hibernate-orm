@@ -37,7 +37,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";
@@ -49,6 +48,7 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-4147" )
+	@FailureExpectedWithNewMetamodel
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf() {
 		// based on the core testsuite test of same name in org.hibernate.test.keymanytoone.bidir.component.EagerKeyManyToOneTest
 		// meant to test against regression relating to http://opensource.atlassian.com/projects/hibernate/browse/HHH-2277

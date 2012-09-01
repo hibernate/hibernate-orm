@@ -28,7 +28,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class MultiPathCircleCascadeDelayedInsertTest extends MultiPathCircleCascadeTest {
 	@Override
 	public String[] getMappings() {

@@ -37,7 +37,6 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class BackrefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

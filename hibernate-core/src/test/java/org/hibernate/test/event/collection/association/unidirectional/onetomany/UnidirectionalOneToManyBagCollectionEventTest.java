@@ -37,7 +37,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class UnidirectionalOneToManyBagCollectionEventTest extends AbstractAssociationCollectionEventTest {
 	@Override
 	public String[] getMappings() {

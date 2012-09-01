@@ -39,7 +39,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class FetchingTest extends AbstractJPATest {
 	@Override
 	public String[] getMappings() {

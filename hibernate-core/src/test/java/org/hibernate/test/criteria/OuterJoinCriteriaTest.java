@@ -48,7 +48,6 @@ import static org.junit.Assert.fail;
  * @author Mattias Jiderhamn
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 	private Order order1;
 	private Order order2;

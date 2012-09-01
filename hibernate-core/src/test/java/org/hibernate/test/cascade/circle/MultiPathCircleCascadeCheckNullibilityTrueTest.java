@@ -30,7 +30,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class MultiPathCircleCascadeCheckNullibilityTrueTest extends MultiPathCircleCascadeTest {
 	@Override
 	 public void configure(Configuration cfg) {

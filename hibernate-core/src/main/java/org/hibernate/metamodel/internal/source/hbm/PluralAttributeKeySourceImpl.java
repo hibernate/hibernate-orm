@@ -127,7 +127,7 @@ public class PluralAttributeKeySourceImpl
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return false;
+		return true;
 	}
 
 	@Override

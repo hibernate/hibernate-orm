@@ -41,7 +41,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class LazyCollectionInitializationTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

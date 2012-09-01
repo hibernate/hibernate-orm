@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Alex Burgel
  */
-@FailureExpectedWithNewMetamodel
 public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "naturalid/immutable/ParentChildWithManyToOne.hbm.xml" };

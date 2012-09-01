@@ -30,7 +30,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  * @author Burkhard Graves
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class RecursiveVersionedBidirectionalOneToManyCacheTest
 		extends AbstractVersionedRecursiveBidirectionalOneToManyTest {
 	@Override

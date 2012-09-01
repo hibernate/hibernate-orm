@@ -503,6 +503,22 @@ public class Binder {
 
 		List<RelationalValueBinding> sourceColumnBindings =
 				bindValues( attributeBindingContainer, keySource, attributeBinding.getAttribute(), collectionTable );
+		// Determine if the foreign key (source) column is updatable and also extract the columns out
+		// of the RelationalValueBindings.
+		boolean isUpdatable = false;
+		List<Column> sourceColumns = new ArrayList<Column>( sourceColumnBindings.size() );
+		for ( RelationalValueBinding relationalValueBinding : sourceColumnBindings ) {
+			final Value value = relationalValueBinding.getValue();
+			// todo : currently formulas are not supported here... :(
+			if ( !Column.class.isInstance( value ) ) {
+				throw new NotYetImplementedException(
+						"Derived values are not supported when creating a foreign key that targets columns." );
+			}
+			isUpdatable = isUpdatable || relationalValueBinding.isIncludeInUpdate();
+			sourceColumns.add( (Column) value );
+		}
+		keyBinding.setIncludedInUpdate( isUpdatable );
+
 		List<Column> targetColumns =
 				determineForeignKeyTargetColumns(
 						attributeBindingContainer.seekEntityBinding(),
@@ -515,7 +531,7 @@ public class Binder {
 						: quotedIdentifier( keySource.getExplicitForeignKeyName() );
 		ForeignKey foreignKey = bindForeignKey(
 				foreignKeyName,
-				extractColumnsFromRelationalValueBindings( sourceColumnBindings ),
+				sourceColumns,
 				targetColumns
 		);
 		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
@@ -1222,10 +1238,8 @@ public class Binder {
 				// TODO: Need to look up the table to be able to create the foreign key
 				throw new NotYetImplementedException( "one-to-many using a join table is not supported yet." );
 		}
-		if(!attributeSource.isInverse()){
 		TableSpecification collectionTable = referencedEntityBinding.getPrimaryTable();
 		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
-		}
 		attributeBinding.getPluralAttributeKeyBinding().setInverse( attributeSource.isInverse() );
 	}
 
@@ -2158,9 +2172,19 @@ public class Binder {
 		} else {
 			return metadata.getTypeResolver().getTypeFactory().bag(
 					bagBinding.getAttribute().getRole(),
-					bagBinding.getReferencedPropertyName(),
+					getReferencedPropertyNameIfNotId( bagBinding ),
 					bagBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPOSITE );
 		}
+	}
+
+	private String getReferencedPropertyNameIfNotId(PluralAttributeBinding pluralAttributeBinding) {
+		EntityIdentifier entityIdentifier =
+				pluralAttributeBinding.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+		final String idAttributeName =
+				entityIdentifier.getAttributeBinding().getAttribute().getName();
+		return pluralAttributeBinding.getReferencedPropertyName().equals( idAttributeName ) ?
+				null :
+				pluralAttributeBinding.getReferencedPropertyName();
 	}
 
 	private Type resolveCustomCollectionType( PluralAttributeBinding pluralAttributeBinding ) {
@@ -2183,7 +2207,7 @@ public class Binder {
 		} else {
 			return metadata.getTypeResolver().getTypeFactory().list(
 					listBinding.getAttribute().getRole(),
-					listBinding.getReferencedPropertyName(),
+					getReferencedPropertyNameIfNotId( listBinding ),
 					listBinding.getPluralAttributeElementBinding()
 							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);
@@ -2197,7 +2221,7 @@ public class Binder {
 		} else {
 			return metadata.getTypeResolver().getTypeFactory().map(
 					mapBinding.getAttribute().getRole(),
-					mapBinding.getReferencedPropertyName(),
+					getReferencedPropertyNameIfNotId( mapBinding ),
 					mapBinding.getPluralAttributeElementBinding()
 							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);
@@ -2210,7 +2234,7 @@ public class Binder {
 		} else {
 			return metadata.getTypeResolver().getTypeFactory().set(
 					setBinding.getAttribute().getRole(),
-					setBinding.getReferencedPropertyName(),
+					getReferencedPropertyNameIfNotId( setBinding ),
 					setBinding.getPluralAttributeElementBinding()
 							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 			);

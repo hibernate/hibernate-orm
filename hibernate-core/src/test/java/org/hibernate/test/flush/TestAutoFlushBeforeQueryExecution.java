@@ -57,10 +57,10 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-6960" )
-@FailureExpectedWithNewMetamodel
 public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCase {
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAutoflushIsRequired() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

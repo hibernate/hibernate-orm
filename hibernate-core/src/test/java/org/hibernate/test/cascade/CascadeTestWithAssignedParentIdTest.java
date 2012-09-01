@@ -49,7 +49,6 @@ public class CascadeTestWithAssignedParentIdTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testSaveChildWithParent() {
 		Session session = openSession();

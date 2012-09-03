@@ -23,10 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding.onetomany;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Hardy Ferentschik

@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

@@ -24,7 +24,6 @@
 package org.hibernate.test.onetomany;
 
 import org.hibernate.CacheMode;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Burkhard Graves

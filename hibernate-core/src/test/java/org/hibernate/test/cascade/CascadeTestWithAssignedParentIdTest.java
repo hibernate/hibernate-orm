@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cascade;
+
 import java.util.Collections;
 
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

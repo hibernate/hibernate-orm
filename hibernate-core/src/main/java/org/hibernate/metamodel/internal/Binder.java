@@ -1035,7 +1035,6 @@ public class Binder {
 						? attributeSource.getReferencedEntityName()
 						: referencedJavaTypeValue.getValue().getName() );
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
-
 		// Foreign key...
 		final ForeignKeyContributingSource.JoinColumnResolutionDelegate resolutionDelegate =
 				attributeSource.getForeignKeyTargetColumnResolutionDelegate();
@@ -1981,17 +1980,23 @@ public class Binder {
 
 				@Override
 				public Column resolveColumn(String logicalColumnName, String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
-					for(AttributeBinding attributeBinding : attributeBindingContainer.attributeBindings()){
-						if(SingularAttributeBinding.class.isInstance( attributeBinding )){
-							SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast( attributeBinding );
-							for(RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings()){
-								 if(Column.class.isInstance( relationalValueBinding.getValue() )){
-									 Identifier columnIdentifier = Identifier.toIdentifier( quotedIdentifier( logicalColumnName ) );
-									 Column column = Column.class.cast( relationalValueBinding.getValue() );
-									 if(column.getColumnName().equals( columnIdentifier )){
-										 return column;
-									 }
-								 }
+					for ( AttributeBinding attributeBinding : attributeBindingContainer.attributeBindings() ) {
+						if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+							SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast(
+									attributeBinding
+							);
+							for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+								if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+									Identifier columnIdentifier = Identifier.toIdentifier(
+											quotedIdentifier(
+													logicalColumnName
+											)
+									);
+									Column column = Column.class.cast( relationalValueBinding.getValue() );
+									if ( column.getColumnName().equals( columnIdentifier ) ) {
+										return column;
+									}
+								}
 							}
 						}
 					}

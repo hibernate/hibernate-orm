@@ -79,27 +79,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		// Column does not (yet?) deal with formulas at all...
-		//
-		// not sure how to handle "mixed" cases either.  what happens if some @JoinColumns name
-		// a column, but others do not?  For now, lets just throw an error in those cases
-		int alternateColumnReferences = 0;
-		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			if ( column.getReferencedColumnName() != null ) {
-				alternateColumnReferences++;
-			}
-		}
-		if ( alternateColumnReferences == 0 ) {
-			return null;
-		}
-		else {
-			if ( alternateColumnReferences != associationAttribute.getJoinColumnValues().size() ) {
-				throw associationAttribute.getContext().makeMappingException(
-						"Encountered multiple JoinColumns mixing primary-target-columns and alternate-target-columns"
-				);
-			}
-			return new AnnotationJoinColumnResolutionDelegate();
-		}
+		return associationAttribute.getJoinColumnValues().isEmpty()? null : new AnnotationJoinColumnResolutionDelegate();
 	}
 
 	@Override

@@ -694,18 +694,18 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	@Override
 	public AttributeBinding locateAttributeBinding(List<org.hibernate.metamodel.spi.relational.Value> values) {
-		for(AttributeBinding attributeBinding : attributeBindingMap.values()) {
-			if(!(attributeBinding instanceof BasicAttributeBinding)) {
+		for ( AttributeBinding attributeBinding : attributeBindingMap.values() ) {
+			if ( !SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
 				continue;
 			}
-			BasicAttributeBinding basicAttributeBinding = (BasicAttributeBinding) attributeBinding;
+			SingularAttributeBinding basicAttributeBinding = (SingularAttributeBinding) attributeBinding;
 
-			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<org.hibernate.metamodel.spi.relational.Value>(  );
-			for(RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings()) {
+			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<org.hibernate.metamodel.spi.relational.Value>();
+			for ( RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings() ) {
 				attributeValues.add( relationalBinding.getValue() );
 			}
 
-			if(attributeValues.equals( values )) {
+			if ( attributeValues.equals( values ) ) {
 				return attributeBinding;
 			}
 		}

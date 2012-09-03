@@ -29,6 +29,7 @@ import org.hibernate.metamodel.MetadataSources;
  * @author Hardy Ferentschik
  */
 public class HbmUnidirectionalOneToManyBindingTests extends AbstractUnidirectionalOneToManyBindingTests {
+	@Override
 	public void addSources(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/onetomany/EntityWithUnidirectionalOneToMany.hbm.xml" );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/onetomany/ReferencedEntity.hbm.xml" );

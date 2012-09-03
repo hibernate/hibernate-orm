@@ -56,7 +56,7 @@ public class EntityWithUnidirectionalOneToMany {
 		this.theBag = theBag;
 	}
 
-	@OneToMany
+	@OneToMany(fetch = FetchType.EAGER)
 	@JoinColumn(name = "theSetOwner", nullable = false)
 	public Set<ReferencedEntity> getTheSet() {
 		return theSet;
@@ -66,7 +66,7 @@ public class EntityWithUnidirectionalOneToMany {
 		this.theSet = theSet;
 	}
 
-	@OneToMany
+	@OneToMany(fetch = FetchType.EAGER)
 	@JoinColumn(name = "theListOwner", nullable = false)
 	public List<ReferencedEntity> getTheList() {
 		return theList;

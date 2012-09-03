@@ -32,14 +32,9 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  * @author Hardy Ferentschik
  */
 public class AnnotationUnidirectionalOneToManyBindingTests extends AbstractUnidirectionalOneToManyBindingTests {
+	@Override
 	public void addSources(MetadataSources sources) {
 		sources.addAnnotatedClass( EntityWithUnidirectionalOneToMany.class );
 		sources.addAnnotatedClass( ReferencedEntity.class );
-	}
-
-	@Test
-	@FailureExpectedWithNewMetamodel
-	public void testOneToMany() {
-		super.testOneToMany();
 	}
 }

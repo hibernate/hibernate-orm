@@ -560,6 +560,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return collectionBindingMap.values();
 	}
 
+	@Override
 	public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
 		final String owningEntityName = pluralAttributeBinding.getContainer().getPathBase();
 		final String attributeName = pluralAttributeBinding.getAttribute().getName();

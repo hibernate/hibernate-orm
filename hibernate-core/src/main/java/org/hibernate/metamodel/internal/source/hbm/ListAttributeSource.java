@@ -27,6 +27,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbListElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 
 /**
  *
@@ -54,7 +55,7 @@ public class ListAttributeSource extends AbstractPluralAttributeSourceImpl imple
 	}
 
 	@Override
-	public ListAttributeIndexSource getIndexSource() {
+	public PluralAttributeIndexSource getIndexSource() {
 		return indexSource;
 	}
 

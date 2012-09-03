@@ -1972,7 +1972,8 @@ public class Binder {
 		AttributeBinding referencedAttributeBinding;
 		final String referencedAttributeName = resolutionDelegate.getReferencedAttributeName();
 		if ( referencedAttributeName == null ) {
-			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( resolutionDelegate.getJoinColumns( new ForeignKeyContributingSource.JoinColumnResolutionContext() {
+			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding(
+					resolutionDelegate.getJoinColumns( new ForeignKeyContributingSource.JoinColumnResolutionContext() {
 				@Override
 				public List<Value> resolveRelationalValuesForAttribute(String attributeName) {
 					return null;
@@ -1980,6 +1981,20 @@ public class Binder {
 
 				@Override
 				public Column resolveColumn(String logicalColumnName, String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
+					for(AttributeBinding attributeBinding : attributeBindingContainer.attributeBindings()){
+						if(SingularAttributeBinding.class.isInstance( attributeBinding )){
+							SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast( attributeBinding );
+							for(RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings()){
+								 if(Column.class.isInstance( relationalValueBinding.getValue() )){
+									 Identifier columnIdentifier = Identifier.toIdentifier( quotedIdentifier( logicalColumnName ) );
+									 Column column = Column.class.cast( relationalValueBinding.getValue() );
+									 if(column.getColumnName().equals( columnIdentifier )){
+										 return column;
+									 }
+								 }
+							}
+						}
+					}
 					return null;
 				}
 			} ) );

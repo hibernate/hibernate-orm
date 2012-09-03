@@ -99,10 +99,13 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		if(attribute.getJoinColumnValues().isEmpty())return Collections.emptyList();
-		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>( attribute.getJoinColumnValues().size() );
-		for(Column joinColumn : attribute.getJoinColumnValues()){
-			result.add( new ColumnSourceImpl( attribute, null, joinColumn  ) );
+		List<Column> joinClumnValues = attribute.getJoinColumnValues();
+		if ( joinClumnValues.isEmpty() ) {
+			return Collections.emptyList();
+		}
+		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>( joinClumnValues.size() );
+		for ( Column joinColumn : attribute.getJoinColumnValues() ) {
+			result.add( new ColumnSourceImpl( attribute, null, joinColumn ) );
 		}
 		return result;
 	}
@@ -117,7 +120,15 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			List<Column> joinClumnValues = attribute.getJoinColumnValues();
+			if ( joinClumnValues.isEmpty() ) {
+				return null;
+			}
+			List<Value> result = new ArrayList<Value>( joinClumnValues.size() );
+			for ( Column column : attribute.getJoinColumnValues() ) {
+				result.add( context.resolveColumn( column.getReferencedColumnName(), null, null, null ) );
+			}
+			return result;
 		}
 
 		@Override

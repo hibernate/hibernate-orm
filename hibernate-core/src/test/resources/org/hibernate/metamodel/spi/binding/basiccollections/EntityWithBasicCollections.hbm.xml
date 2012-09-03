@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <hibernate-mapping
         xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
-        package="org.hibernate.metamodel.spi.binding" >
+        package="org.hibernate.metamodel.spi.binding.basiccollections">
 
     <class name="EntityWithBasicCollections">
 
-    	<id name="id">
-    		<generator class="increment"/>
-    	</id>
+        <id name="id">
+            <generator class="increment"/>
+        </id>
 
         <set name="thePropertyRefSet" lazy="true">
             <key column="pid" property-ref="name"/>
@@ -38,6 +38,6 @@
             <element column="map_value" type="string"/>
         </map>
 
-	</class>
+    </class>
 
 </hibernate-mapping>

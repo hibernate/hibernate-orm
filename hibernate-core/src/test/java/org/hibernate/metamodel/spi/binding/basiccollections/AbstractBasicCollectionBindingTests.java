@@ -21,19 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.binding;
+package org.hibernate.metamodel.spi.binding.basiccollections;
 
 import java.util.Collection;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
@@ -56,12 +64,16 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-public class BasicCollectionBindingTests extends BaseUnitTestCase {
+public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
+	private MetadataImpl metadata;
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = ( StandardServiceRegistryImpl ) new ServiceRegistryBuilder().buildServiceRegistry();
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		addSources( metadataSources );
+		metadata = ( MetadataImpl ) metadataSources.getMetadataBuilder().buildMetadata();
 	}
 
 	@After
@@ -69,22 +81,10 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 		serviceRegistry.destroy();
 	}
 
-//	@Test
-//	public void testAnnotations() {
-//		doTest( MetadataSourceProcessingOrder.ANNOTATIONS_FIRST );
-//	}
+	public abstract void addSources(MetadataSources sources);
 
 	@Test
-	public void testHbm() {
-		doTest( MetadataSourceProcessingOrder.HBM_FIRST );
-	}
-
-	private void doTest(MetadataSourceProcessingOrder processingOrder) {
-		MetadataSources sources = new MetadataSources( serviceRegistry );
-//		sources.addAnnotatedClass( EntityWithBasicCollections.class );
-		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithBasicCollections.hbm.xml" );
-		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
-
+	public void testBasicCollections() {
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithBasicCollections.class.getName() );
 		final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		assertNotNull( entityBinding );
@@ -124,7 +124,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				SetType.class,
 				Set.class,
 				Integer.class,
-				(SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" ),
+				(SingularAttributeBinding ) entityBinding.locateAttributeBinding( "name" ),
 				Identifier.toIdentifier( "EntityWithBasicCollections_thePropertyRefSet" ),
 				Identifier.toIdentifier( "pid" ),
 				FetchTiming.DELAYED,
@@ -197,7 +197,7 @@ public class BasicCollectionBindingTests extends BaseUnitTestCase {
 				keyBinding.getHibernateTypeDescriptor()
 		);
 		assertFalse( keyBinding.isInverse() );
-		assertEquals(
+		Assert.assertEquals(
 				PluralAttributeElementBinding.Nature.BASIC,
 				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);

@@ -148,7 +148,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".thePropertyRefBag" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".thePropertyRefSet" ),
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
@@ -219,7 +219,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				( SingularAttributeBinding ) expectedElementEntityBinding.locateAttributeBinding(
 						"_" + role + "BackRef"
 				);
-		assertEquals( expectedNullableCollectionKey, keyBinding.isNullable() );
+		assertEquals( "expected "+keyBinding.getPluralAttributeBinding() +" has a " + expectedNullableCollectionKey +" collection key",expectedNullableCollectionKey, keyBinding.isNullable() );
 		if ( keyBinding.isNullable() ) {
 			assertNull( keySourceAttributeBinding );
 		}

@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.metamodel.spi.binding.SimpleEntity;
 /**
  * @author Gail Badner
  */
@@ -18,11 +22,13 @@ import javax.persistence.OneToMany;
 public class EntityWithUnidirectionalOneToMany {
 	private Long id;
 	private String name;
+
 	private Collection<ReferencedEntity> theBag = new ArrayList<ReferencedEntity>();
 	private Set<ReferencedEntity> theSet = new HashSet<ReferencedEntity>();
 	private List<ReferencedEntity> theList = new ArrayList<ReferencedEntity>();
 	private Map<String, ReferencedEntity> theMap = new HashMap<String, ReferencedEntity>();
 	private Collection<ReferencedEntity> thePropertyRefBag = new ArrayList<ReferencedEntity>();
+
 
 	@Id
 	public Long getId() {
@@ -51,6 +57,7 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
+	@JoinColumn(name = "theSetOwner", nullable = false)
 	public Set<ReferencedEntity> getTheSet() {
 		return theSet;
 	}
@@ -60,6 +67,7 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
+	@JoinColumn(name = "theListOwner", nullable = false)
 	public List<ReferencedEntity> getTheList() {
 		return theList;
 	}
@@ -69,6 +77,7 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
+	@JoinColumn(name = "theMapOwner", nullable = false)
 	public Map<String, ReferencedEntity> getTheMap() {
 		return theMap;
 	}
@@ -78,6 +87,8 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
+	@JoinColumn(name = "ownerName", nullable = false, referencedColumnName = "name")
+	@LazyCollection( LazyCollectionOption.EXTRA )
 	public Collection<ReferencedEntity> getThePropertyRefSet() {
 		return thePropertyRefBag;
 	}
@@ -85,6 +96,7 @@ public class EntityWithUnidirectionalOneToMany {
 	public void setThePropertyRefSet(Set<ReferencedEntity> thePropertyRefSet) {
 		this.thePropertyRefBag = thePropertyRefSet;
 	}
+
 }
 
 

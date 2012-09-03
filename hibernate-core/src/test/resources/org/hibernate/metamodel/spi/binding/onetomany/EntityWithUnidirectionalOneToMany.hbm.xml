@@ -27,7 +27,7 @@
             <map-key column="map_key" type="string"/>
             <one-to-many class="ReferencedEntity"/>
         </map>
-        <bag name="thePropertyRefBag" lazy="extra">
+        <bag name="thePropertyRefSet" lazy="extra">
             <key column="ownerName" property-ref="name" not-null="true"/>
             <one-to-many class="ReferencedEntity"/>
         </bag>

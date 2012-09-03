@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.cascade.circle;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner

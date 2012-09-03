@@ -59,7 +59,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	@Override
 	public Collection<String> getReferencedColumnNames() {
 		HashSet<String> referencedColumnNames = new HashSet<String>();
-		for ( Column column : associationAttribute.getColumnValues() ) {
+		for ( Column column : associationAttribute.getJoinColumnValues() ) {
 			if ( column.getReferencedColumnName() != null ) {
 				referencedColumnNames.add( column.getReferencedColumnName() );
 			}

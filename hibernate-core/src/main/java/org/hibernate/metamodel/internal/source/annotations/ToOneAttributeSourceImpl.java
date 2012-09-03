@@ -40,6 +40,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
@@ -65,6 +66,16 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	public String getReferencedEntityName() {
 		return associationAttribute.getReferencedEntityType();
 	}
+	@Override
+	public List<RelationalValueSource> relationalValueSources() {
+		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
+		if ( ! associationAttribute.getJoinColumnValues().isEmpty() ) {
+			for ( Column columnValues : associationAttribute.getJoinColumnValues() ) {
+				valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
+			}
+		}
+		return valueSources;
+	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
@@ -73,7 +84,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		// not sure how to handle "mixed" cases either.  what happens if some @JoinColumns name
 		// a column, but others do not?  For now, lets just throw an error in those cases
 		int alternateColumnReferences = 0;
-		for ( Column column : associationAttribute.getColumnValues() ) {
+		for ( Column column : associationAttribute.getJoinColumnValues() ) {
 			if ( column.getReferencedColumnName() != null ) {
 				alternateColumnReferences++;
 			}
@@ -82,7 +93,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 			return null;
 		}
 		else {
-			if ( alternateColumnReferences != associationAttribute.getColumnValues().size() ) {
+			if ( alternateColumnReferences != associationAttribute.getJoinColumnValues().size() ) {
 				throw associationAttribute.getContext().makeMappingException(
 						"Encountered multiple JoinColumns mixing primary-target-columns and alternate-target-columns"
 				);
@@ -127,7 +138,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			final List<Value> values = new ArrayList<Value>();
-			for ( Column column : associationAttribute.getColumnValues() ) {
+			for ( Column column : associationAttribute.getJoinColumnValues() ) {
 				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
 						column.getReferencedColumnName(),
 						logicalJoinTableName,

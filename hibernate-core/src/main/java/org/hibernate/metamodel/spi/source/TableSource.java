@@ -34,5 +34,5 @@ public interface TableSource extends TableSpecificationSource {
 	 *
 	 * @return The table name, or {@code null} is no name specified.
 	 */
-	public String getExplicitTableName();
+	String getExplicitTableName();
 }

@@ -37,14 +37,14 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
  */
 public class PluralAttributeKeyBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
-
+	private final SingularAttributeBinding referencedAttributeBinding;
 	private ForeignKey foreignKey;
 	private boolean inverse;
 	private boolean isIncludedInUpdate;
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final SingularAttributeBinding referencedAttributeBinding;
+
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
 //	private BasicAttributeBinding otherSide;

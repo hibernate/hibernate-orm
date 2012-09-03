@@ -25,13 +25,18 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.loader.Player;
 import org.hibernate.test.annotations.loader.Team;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -43,7 +48,19 @@ public class OneToManyBindingTest extends BaseAnnotationBindingTestCase {
 		EntityBinding playerBinding = getEntityBinding( Player.class );
 		assertNotNull( playerBinding );
 
+		AttributeBinding attributeBinding = playerBinding.locateAttributeBinding( "team" );
+		assertTrue( attributeBinding.isAssociation() );
+
+		HibernateTypeDescriptor typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+
 		EntityBinding teamBinding = getEntityBinding( Team.class );
 		assertNotNull( teamBinding );
+		attributeBinding =  teamBinding.locateAttributeBinding( "players" );
+		assertTrue( attributeBinding.isAssociation() );
+		typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+
+		PluralAttributeBinding pluralAttributeBinding = PluralAttributeBinding.class.cast( attributeBinding );
+
+
 	}
 }

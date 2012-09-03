@@ -37,7 +37,7 @@ public interface TypeDescriptorSource {
 	 *
 	 * @return The name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Retrieve the name of the class implementing {@link org.hibernate.type.Type},
@@ -45,7 +45,7 @@ public interface TypeDescriptorSource {
 	 *
 	 * @return The implementation class name.
 	 */
-	public String getTypeImplementationClassName();
+	String getTypeImplementationClassName();
 
 	/**
 	 * For what are termed "basic types" there is a registry that contain the type keyed by various
@@ -58,7 +58,7 @@ public interface TypeDescriptorSource {
 	 *
 	 * @return The registration keys for the type built from this type def.
 	 */
-	public String[] getRegistrationKeys();
+	String[] getRegistrationKeys();
 
 	/**
 	 * Types accept configuration.  The values here represent the user supplied values that will be given
@@ -66,5 +66,5 @@ public interface TypeDescriptorSource {
 	 *
 	 * @return The configuration parameters from the underlying source.
 	 */
-	public Map<String,String> getParameters();
+	Map<String,String> getParameters();
 }

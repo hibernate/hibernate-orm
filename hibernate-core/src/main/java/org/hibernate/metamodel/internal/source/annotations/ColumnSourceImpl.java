@@ -32,44 +32,41 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttri
  * @author Hardy Ferentschik
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
-	private final MappedAttribute attribute;
+	private final String readFragement;
+	private final String writeFragement;
+	private final String checkCondition;
 
 	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride, Column columnValues) {
 		super( columnValues );
 		if ( attributeOverride != null ) {
 			setOverrideColumnValues( attributeOverride.getColumnValues() );
 		}
-		this.attribute = attribute;
+		if(BasicAttribute.class.isInstance( attribute )){
+			BasicAttribute basicAttribute = BasicAttribute.class.cast( attribute );
+			this.readFragement = basicAttribute.getCustomReadFragment();
+			this.writeFragement = basicAttribute.getCustomWriteFragment();
+			this.checkCondition = basicAttribute.getCheckCondition();
+		} else {
+			this.readFragement = null;
+			this.writeFragement = null;
+			this.checkCondition = null;
+		}
+
 	}
 
 	@Override
 	public String getReadFragment() {
-		if ( attribute instanceof BasicAttribute ) {
-			return ( ( BasicAttribute ) attribute ).getCustomReadFragment();
-		}
-		else {
-			return null;
-		}
+		return readFragement;
 	}
 
 	@Override
 	public String getWriteFragment() {
-		if ( attribute instanceof BasicAttribute ) {
-			return ( ( BasicAttribute ) attribute ).getCustomWriteFragment();
-		}
-		else {
-			return null;
-		}
+		return writeFragement;
 	}
 
 	@Override
 	public String getCheckCondition() {
-		if ( attribute instanceof BasicAttribute ) {
-			return attribute.getCheckCondition();
-		}
-		else {
-			return null;
-		}
+		return checkCondition;
 	}
 }
 

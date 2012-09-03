@@ -3,6 +3,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.List;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -20,18 +21,23 @@ public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSourc
 	}
 
 	@Override
-	public Nature getNature() {
+	public PluralAttributeIndexBinding.Nature getNature() {
 		switch ( indexedPluralAttributeSource.getElementSource().getNature() ){
 			case BASIC:
-				return Nature.BASIC;
+				return PluralAttributeIndexBinding.Nature.BASIC;
 			case COMPONENT:
-				return Nature.COMPOSITE;
+				return PluralAttributeIndexBinding.Nature.COMPOSITE;
 			case MANY_TO_ANY:
-				return Nature.MANY_TO_ANY;
+				return PluralAttributeIndexBinding.Nature.MANY_TO_ANY;
 			case MANY_TO_MANY:
-				return Nature.MANY_TO_MANY;
+				return PluralAttributeIndexBinding.Nature.MANY_TO_MANY;
 		}
 		return null;
+	}
+
+	@Override
+	public int base() {
+		return 0;
 	}
 
 	@Override

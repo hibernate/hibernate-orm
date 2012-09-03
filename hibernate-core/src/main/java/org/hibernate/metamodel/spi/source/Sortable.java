@@ -24,10 +24,23 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
+ * Contact to define if the source of plural attribute is sortable or not.
+ *
  * @author Steve Ebersole
  */
 public interface Sortable {
-	public boolean isSorted();
-	public String getComparatorName();
+	/**
+	 * If the source of plural attribute is supposed to be sorted.
+	 *
+	 * @return <code>true</code> the attribute will be sortable or <code>false</code> means not.
+	 */
+	boolean isSorted();
+
+	/**
+	 * The comparator class name which will be used to sort the attribute.
+	 *
+	 * @return Qualified class name which implements {@link java.util.Comparator} contact.
+	 */
+	String getComparatorName();
 
 }

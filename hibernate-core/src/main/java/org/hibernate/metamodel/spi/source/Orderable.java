@@ -24,9 +24,20 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
+ * Contact to define if a plural attribute source is orderable or not.
+ *
  * @author Steve Ebersole
  */
 public interface Orderable {
-	public boolean isOrdered();
-	public String getOrder();
+	/**
+	 * If the source of plural attribute is supposed to be applied the <b>order by</b> when loading.
+	 *
+	 * @return <code>true</code> for applying the <b>order by</b> or <code>false</code> means not.
+	 */
+	boolean isOrdered();
+
+	/**
+	 * @return  The <b>order by</b> clause used during loading this plural attribute from DB.
+	 */
+	String getOrder();
 }

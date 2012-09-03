@@ -75,7 +75,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 * Defines the column values (relational values) for this property. A mapped property can refer to multiple
 	 * column values in case of components or join columns etc
 	 */
-	private List<Column> columnValues;
+	private List<Column> columnValues = new ArrayList<Column>(  );
+
+	private List<Column> joinColumnValues = new ArrayList<Column>(  );
 
 	/**
 	 * Is this property an id property (or part thereof).
@@ -150,6 +152,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public List<Column> getColumnValues() {
 		return columnValues;
+	}
+
+	public List<Column> getJoinColumnValues(){
+		return joinColumnValues;
 	}
 
 	public boolean isId() {
@@ -228,14 +234,15 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	}
 
 	private void checkColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
-		columnValues = new ArrayList<Column>();
-
-		// single @Column 
+		// single @Column
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
 				JPADotNames.COLUMN
 		);
 		if ( columnAnnotation != null ) {
+			if ( getNature() == Nature.MANY_TO_ONE  || getNature() == Nature.ONE_TO_ONE) {
+				throw getContext().makeMappingException( "@Column(s) not allowed on a "+ getNature() +" property: " +getContext().getOrigin().getName() +"."+ name );
+			}
 			columnValues.add( new Column( columnAnnotation ) );
 		}
 
@@ -245,7 +252,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				JPADotNames.JOIN_COLUMN
 		);
 		if ( joinColumnAnnotation != null ) {
-			columnValues.add( new Column( joinColumnAnnotation ) );
+			joinColumnValues.add( new Column( joinColumnAnnotation ) );
 		}
 
 		// @org.hibernate.annotations.Columns
@@ -254,6 +261,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				HibernateDotNames.COLUMNS
 		);
 		if ( columnsAnnotation != null ) {
+			if ( getNature() == Nature.MANY_TO_ONE  || getNature() == Nature.ONE_TO_ONE) {
+				throw getContext().makeMappingException( "@Column(s) not allowed on a "+ getNature() +" property: " +getContext().getOrigin().getName() +"."+ name );
+			}
 			List<AnnotationInstance> columnsList = Arrays.asList(
 					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
 			);
@@ -272,7 +282,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 					JandexHelper.getValue( joinColumnsAnnotation, "value", AnnotationInstance[].class )
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
-				columnValues.add( new Column( annotation ) );
+				joinColumnValues.add( new Column( annotation ) );
 			}
 		}
 	}
@@ -310,6 +320,12 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 		public DotName getAnnotationDotName() {
 			return annotationDotName;
+		}
+
+		@Override
+		public String toString() {
+			return "Nature{" +annotationDotName.toString()+
+					'}';
 		}
 	}
 }

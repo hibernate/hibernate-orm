@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -82,21 +83,38 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return null;
+		return attribute.getExplicitForeignKeyName();
 	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		return null; //new JoinColumnResolutionDelegateImpl();
+
+		for ( Column joinColumn : attribute.getJoinColumnValues() ) {
+			if ( StringHelper.isNotEmpty( joinColumn.getReferencedColumnName() ) ) {
+				return new JoinColumnResolutionDelegateImpl( attribute );
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		// TODO
-		return Collections.emptyList();
+		if(attribute.getJoinColumnValues().isEmpty())return Collections.emptyList();
+		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>( attribute.getJoinColumnValues().size() );
+		for(Column joinColumn : attribute.getJoinColumnValues()){
+			result.add( new ColumnSourceImpl( attribute, null, joinColumn  ) );
+		}
+		return result;
 	}
 
 	public static class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+		private final PluralAssociationAttribute attribute;
+
+		public JoinColumnResolutionDelegateImpl(PluralAssociationAttribute attribute) {
+			this.attribute = attribute;
+
+		}
+
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
@@ -104,7 +122,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 		@Override
 		public String getReferencedAttributeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 	}
 }

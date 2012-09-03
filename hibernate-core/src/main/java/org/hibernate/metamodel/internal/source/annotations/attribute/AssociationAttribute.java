@@ -223,15 +223,8 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
-		boolean lazy = false;
-		AnnotationValue fetchValue = associationAnnotation.value( "fetch" );
-		if ( fetchValue != null ) {
-			FetchType fetchType = Enum.valueOf( FetchType.class, fetchValue.asEnum() );
-			if ( FetchType.LAZY.equals( fetchType ) ) {
-				lazy = true;
-			}
-		}
-		return lazy;
+		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class );
+		return FetchType.LAZY == fetchType;
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation, Class<?> referencedAttributeType) {
@@ -310,12 +303,10 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	private String determineMapsId() {
-		String referencedIdAttributeName;
 		AnnotationInstance mapsIdAnnotation = JandexHelper.getSingleAnnotation( annotations(), JPADotNames.MAPS_ID );
 		if ( mapsIdAnnotation == null ) {
 			return null;
 		}
-
 		if ( !( Nature.MANY_TO_ONE.equals( getNature() ) || Nature.MANY_TO_ONE
 				.equals( getNature() ) ) ) {
 			throw new MappingException(
@@ -323,10 +314,7 @@ public class AssociationAttribute extends MappedAttribute {
 					getContext().getOrigin()
 			);
 		}
-
-		referencedIdAttributeName = JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
-
-		return referencedIdAttributeName;
+		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
 	}
 }
 

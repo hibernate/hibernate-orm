@@ -69,6 +69,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final boolean isIndexed;
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
+	private final String explicitForeignKeyName;
 
 	private LazyCollectionOption lazyOption;
 
@@ -102,6 +103,9 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 	public String getInverseForeignKeyName() {
 		return inverseForeignKeyName;
+	}
+	public String getExplicitForeignKeyName(){
+		return explicitForeignKeyName;
 	}
 
 	public Caching getCaching() {
@@ -168,7 +172,21 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.entityClassInfo = entityClassInfo;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
-		this.inverseForeignKeyName = determineInverseForeignKeyName();
+
+		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.FOREIGN_KEY
+		);
+		if ( foreignKey != null ) {
+			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class );
+			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class );
+			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
+		}
+		else {
+			explicitForeignKeyName = null;
+			inverseForeignKeyName = null;
+		}
+
 		this.caching = determineCachingSettings();
 		this.isExtraLazy = lazyOption == LazyCollectionOption.EXTRA;
 		this.customPersister = determineCustomPersister();
@@ -250,22 +268,6 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		return entityPersisterClass;
 	}
-
-	private String determineInverseForeignKeyName() {
-		String foreignKeyName = null;
-
-		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
-				annotations(),
-				HibernateDotNames.FOREIGN_KEY
-		);
-		if ( foreignKey != null &&
-				StringHelper.isNotEmpty( JandexHelper.getValue( foreignKey, "inverseName", String.class ) ) ) {
-			foreignKeyName = JandexHelper.getValue( foreignKey, "inverseName", String.class );
-		}
-
-		return foreignKeyName;
-	}
-
 	@Override
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
 		boolean lazy = super.determineIsLazy( associationAnnotation );

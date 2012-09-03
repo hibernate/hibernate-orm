@@ -52,8 +52,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
-import org.hibernate.metamodel.internal.source.hbm.ListAttributeSource;
-import org.hibernate.metamodel.internal.source.hbm.MapAttributeSource;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -1002,11 +1000,12 @@ public class Binder {
 
 	private AbstractPluralAttributeBinding bindListAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final ListAttributeSource attributeSource,
+			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createList( attributeSource.getName() );
 		}
+		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class.cast( attributeSource ).getIndexSource().base() : 0;
 		return attributeBindingContainer.makeListAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
@@ -1014,7 +1013,7 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-				attributeSource.getIndexSource().base()
+				base
 		);
 	}
 
@@ -1115,7 +1114,7 @@ public class Binder {
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final MapAttributeSource attributeSource,
+			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createMap( attributeSource.getName() );
@@ -1263,7 +1262,7 @@ public class Binder {
 			case LIST:
 				attributeBinding = bindListAttribute(
 						attributeBindingContainer,
-						(ListAttributeSource) attributeSource,
+						attributeSource,
 						attribute
 				);
 				resolvedType = resolveListType( (ListBinding) attributeBinding );
@@ -1271,7 +1270,7 @@ public class Binder {
 			case MAP:
 				attributeBinding = bindMapAttribute(
 						attributeBindingContainer,
-						(MapAttributeSource) attributeSource,
+						attributeSource,
 						attribute
 				);
 				resolvedType = resolveMapType( (MapBinding) attributeBinding );
@@ -1970,15 +1969,14 @@ public class Binder {
 			return entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 		}
 
-		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		final String referencedAttributeName;
-		if ( explicitName == null ) {
-			throw new NotYetImplementedException( "Annotation-style property-ref resolution not yet implemented" );
+		AttributeBinding referencedAttributeBinding;
+		final String referencedAttributeName = resolutionDelegate.getReferencedAttributeName();
+		if ( referencedAttributeName == null ) {
+			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( resolutionDelegate.getJoinColumns(  ) );
 		} else {
-			referencedAttributeName = explicitName;
+			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( referencedAttributeName );
 		}
 
-		AttributeBinding referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( referencedAttributeName );
 
 		if ( referencedAttributeBinding == null ) {
 			referencedAttributeBinding = attributeBinding( entityBinding.getEntity().getName(), referencedAttributeName );
@@ -1988,7 +1986,7 @@ public class Binder {
 					+ referencedAttributeBinding, bindingContexts.peek().getOrigin() );
 		}
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw new MappingException( "Plural attribute key references a plural attribute; it must be plural: "
+			throw new MappingException( "Plural attribute key references a plural attribute; it must not be plural: "
 					+ referencedAttributeName, bindingContexts.peek().getOrigin() );
 		}
 		return ( SingularAttributeBinding ) referencedAttributeBinding;
@@ -2003,7 +2001,9 @@ public class Binder {
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		return explicitName != null ? referencedEntityBinding.locateAttributeBinding( explicitName ) :referencedEntityBinding.locateAttributeBinding(resolutionDelegate.getJoinColumns( resolutionContext ) );
+		return explicitName != null
+				? referencedEntityBinding.locateAttributeBinding( explicitName )
+				:referencedEntityBinding.locateAttributeBinding(resolutionDelegate.getJoinColumns( resolutionContext ) );
 	}
 
 	private EntityBinding entityBinding( final String entityName ) {

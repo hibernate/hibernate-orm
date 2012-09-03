@@ -1972,7 +1972,17 @@ public class Binder {
 		AttributeBinding referencedAttributeBinding;
 		final String referencedAttributeName = resolutionDelegate.getReferencedAttributeName();
 		if ( referencedAttributeName == null ) {
-			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( resolutionDelegate.getJoinColumns(  ) );
+			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( resolutionDelegate.getJoinColumns( new ForeignKeyContributingSource.JoinColumnResolutionContext() {
+				@Override
+				public List<Value> resolveRelationalValuesForAttribute(String attributeName) {
+					return null;
+				}
+
+				@Override
+				public Column resolveColumn(String logicalColumnName, String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
+					return null;
+				}
+			} ) );
 		} else {
 			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( referencedAttributeName );
 		}

@@ -155,7 +155,15 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				if ( isDefaultFetchMode( fetchMode ) ) {
 					if ( persister != null ) {
 						if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
-							resolvedJoinType = getJoinType( nullable, currentDepth );
+							if ( isDuplicateAssociation( lhsTable, lhsColumns, associationType ) ) {
+								resolvedJoinType = JoinType.NONE;
+							}
+							else if ( isTooDeep(currentDepth) || ( associationType.isCollectionType() && isTooManyCollections() ) ) {
+								resolvedJoinType = JoinType.NONE;
+							}
+							else {
+								resolvedJoinType = getJoinType( nullable, currentDepth );
+							}
 						}
 						else {
 							resolvedJoinType = super.getJoinType(

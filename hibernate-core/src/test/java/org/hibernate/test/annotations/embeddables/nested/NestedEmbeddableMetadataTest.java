@@ -23,7 +23,11 @@
  */
 package org.hibernate.test.annotations.embeddables.nested;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -37,6 +41,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.CustomType;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -57,6 +62,6 @@ public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
 		CustomType currencyType = (CustomType) currencyMetadata.getType();
 		int[] currencySqlTypes = currencyType.sqlTypes( mapping );
 		assertEquals( 1, currencySqlTypes.length );
-		assertEquals( Types.VARCHAR, currencySqlTypes[0] );
+		assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
 	}
 }

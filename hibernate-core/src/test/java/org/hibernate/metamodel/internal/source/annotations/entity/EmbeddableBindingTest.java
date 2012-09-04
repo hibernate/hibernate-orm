@@ -35,8 +35,9 @@ import org.junit.Test;
 
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
-import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
@@ -74,8 +75,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "phone";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding compositeBinding = (AbstractCompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
@@ -115,8 +116,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "embedded";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding compositeBinding = (AbstractCompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
@@ -170,8 +171,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String addressComponentName = "address";
 		assertNotNull( binding.locateAttributeBinding( addressComponentName ) );
-		assertTrue( binding.locateAttributeBinding( addressComponentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding attributeCompositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( addressComponentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding attributeCompositeBinding = (AbstractCompositeAttributeBinding) binding.locateAttributeBinding(
 				addressComponentName
 		);
 
@@ -194,8 +195,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String zipComponentName = "zipcode";
 		assertNotNull( attributeCompositeBinding.locateAttributeBinding( zipComponentName ) );
-		assertTrue( attributeCompositeBinding.locateAttributeBinding( zipComponentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding zipCompositeBinding = (CompositeAttributeBinding) attributeCompositeBinding.locateAttributeBinding(
+		assertTrue( attributeCompositeBinding.locateAttributeBinding( zipComponentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding zipCompositeBinding = (AbstractCompositeAttributeBinding) attributeCompositeBinding.locateAttributeBinding(
 				zipComponentName
 		);
 
@@ -264,15 +265,15 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String aComponentName = "a";
 		assertNotNull( binding.locateAttributeBinding( aComponentName ) );
-		assertTrue( binding.locateAttributeBinding( aComponentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding aCompositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( aComponentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding aCompositeBinding = (AbstractCompositeAttributeBinding) binding.locateAttributeBinding(
 				aComponentName
 		);
 
 		final String bComponentName = "b";
 		assertNotNull( aCompositeBinding.locateAttributeBinding( bComponentName ) );
-		assertTrue( aCompositeBinding.locateAttributeBinding( bComponentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding bCompositeBinding = (CompositeAttributeBinding) aCompositeBinding.locateAttributeBinding(
+		assertTrue( aCompositeBinding.locateAttributeBinding( bComponentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding bCompositeBinding = (AbstractCompositeAttributeBinding) aCompositeBinding.locateAttributeBinding(
 				bComponentName
 		);
 
@@ -330,7 +331,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "embedded";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof AbstractCompositeAttributeBinding );
 		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
@@ -384,8 +385,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 
 		final String componentName = "car";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
-		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
-		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof AbstractCompositeAttributeBinding );
+		AbstractCompositeAttributeBinding compositeBinding = (AbstractCompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 

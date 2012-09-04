@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -43,13 +42,10 @@ import org.hibernate.tuple.Instantiator;
  * @author Steve Ebersole
  */
 public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
+	private final Instantiator instantiator = new DynamicMapInstantiator();
 
 	public Class getMappedClass() {
 		return Map.class;
-	}
-
-	protected Instantiator buildInstantiator(Component component) {
-		return new DynamicMapInstantiator();
 	}
 
 	public DynamicMapComponentTuplizer(Component component) {
@@ -69,7 +65,7 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	@Override
-	protected Instantiator buildInstantiator(CompositeAttributeBinding component) {
-		return new DynamicMapInstantiator();
+	protected Instantiator getInstantiator() {
+		return instantiator;
 	}
 }

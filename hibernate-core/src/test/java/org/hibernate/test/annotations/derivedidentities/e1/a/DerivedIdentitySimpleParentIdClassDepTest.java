@@ -40,8 +40,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctionalTestCase {
+	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testManyToOne() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );

@@ -23,16 +23,24 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.type.ComponentType;
 
 import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
-import static org.hibernate.id.EntityIdentifierNature.COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 
 /**
@@ -43,20 +51,12 @@ import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
-	private EntityIdentifierNature nature;
-
-	private SingularNonAssociationAttributeBinding identifierAttributeBinding;
-
-	private IdGenerator idGenerator;
-	private String unsavedValue;
-
-	private Class idClassClass; // the class named in @IdClass
-
+	private EntityIdentifierBinding entityIdentifierBinding;
 	private IdentifierGenerator identifierGenerator;
-	private int columnCount;
 
 	/**
 	 * Create an identifier
@@ -67,107 +67,100 @@ public class EntityIdentifier {
 		this.entityBinding = entityBinding;
 	}
 
+	public EntityBinding getEntityBinding() {
+		return entityBinding;
+	}
+
 	public void prepareAsSimpleIdentifier(
 			SingularNonAssociationAttributeBinding attributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue) {
-		prepareAsSingleAttributeIdentifier( SIMPLE, attributeBinding, idGenerator, unsavedValue );
+		ensureNotBound();
+		this.entityIdentifierBinding =
+				new SimpleAttributeIdentifierBindingImpl( attributeBinding, idGenerator, unsavedValue );
 	}
 
 	public void prepareAsAggregatedCompositeIdentifier(
 			SingularNonAssociationAttributeBinding attributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue) {
-		prepareAsSingleAttributeIdentifier( AGGREGATED_COMPOSITE, attributeBinding, idGenerator, unsavedValue );
-	}
-
-	protected void prepareAsSingleAttributeIdentifier(
-			EntityIdentifierNature nature,
-			SingularNonAssociationAttributeBinding attributeBinding,
-			IdGenerator idGenerator,
-			String unsavedValue) {
 		ensureNotBound();
-
-		this.nature = nature;
-		this.identifierAttributeBinding = attributeBinding;
-		this.idGenerator = idGenerator;
-		this.unsavedValue = unsavedValue;
-		this.columnCount = attributeBinding.getRelationalValueBindings().size();
-
-		// Configure primary key in relational model
-		for ( final RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
-			entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
-		}
+		this.entityIdentifierBinding =
+				new AggregatedComponentIdentifierBindingImpl( attributeBinding, idGenerator, unsavedValue );
 	}
 
 	public void prepareAsNonAggregatedCompositeIdentifier(
-			CompositeAttributeBinding syntheticCompositeAttributeBinding,
-			Class idClassClass) {
+			NonAggregatedCompositeAttributeBinding compositeAttributeBinding,
+			IdGenerator idGenerator,
+			String unsavedValue,
+			Class<?> externalAggregatingClass,
+			String externalAggregatingPropertyAccessorName) {
 		ensureNotBound();
-
-		this.nature = COMPOSITE;
-		this.identifierAttributeBinding = syntheticCompositeAttributeBinding;
-		this.idClassClass = idClassClass;
-
-		for ( AttributeBinding attributeBinding : syntheticCompositeAttributeBinding.attributeBindings() ) {
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				throw new AssertionFailure( "Expecting all singular attribute bindings as part of composite identifier" );
-			}
-			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-			columnCount += singularAttributeBinding.getRelationalValueBindings().size();
-
-			// Configure primary key in relational model
-			for ( final RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
-				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
-			}
-		}
+		this.entityIdentifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
+				compositeAttributeBinding,
+				idGenerator,
+				unsavedValue,
+				externalAggregatingClass,
+				externalAggregatingPropertyAccessorName
+		);
 	}
 
 	public EntityIdentifierNature getNature() {
-		return nature;
-	}
-
-	public boolean isSingleAttribute() {
 		ensureBound();
-		return getNature() != COMPOSITE;
+		return entityIdentifierBinding.getNature();
 	}
 
 	public SingularNonAssociationAttributeBinding getAttributeBinding() {
 		ensureBound();
-		return identifierAttributeBinding;
+		return entityIdentifierBinding.getAttributeBinding();
 	}
 
 	public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
 		ensureBound();
-		if ( getNature() == COMPOSITE ) {
-			for ( AttributeBinding identifierAttributeBinding
-					: ( (CompositeAttributeBinding) this.identifierAttributeBinding ).attributeBindings() ) {
-				if ( identifierAttributeBinding.equals( attributeBinding ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
-		else {
-			return identifierAttributeBinding.equals( attributeBinding );
-		}
+		return entityIdentifierBinding.isIdentifierAttributeBinding( attributeBinding );
 	}
 
 	public String getUnsavedValue() {
-		return unsavedValue;
+		ensureBound();
+		return entityIdentifierBinding.getUnsavedValue();
 	}
 
-	public boolean isEmbedded() {
-		return isSingleAttribute() && columnCount > 1;
+	public boolean isNonAggregatedComposite() {
+		ensureBound();
+		return getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 	}
+
 
 	public Class getIdClassClass() {
-		return idClassClass;
+		ensureBound();
+		if ( ! isNonAggregatedComposite() ) {
+			throw new UnsupportedOperationException(
+					String.format(
+							"Entity identifiers of nature %s does not support idClasses.",
+							entityIdentifierBinding.getNature()
+					)
+			);
+		}
+		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassClass();
+	}
+
+	public String getIdClassPropertyAccessorName() {
+		ensureBound();
+		if ( ! isNonAggregatedComposite() ) {
+			throw new UnsupportedOperationException(
+					String.format(
+							"Entity identifiers of nature %s does not support idClasses.",
+							entityIdentifierBinding.getNature()
+					)
+			);
+		}
+		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassPropertyAccessorName();
 	}
 
 	public boolean isIdentifierMapper() {
-		// i think this is the intended check for this method
-		return ! isSingleAttribute() && idClassClass != null;
+		ensureBound();
+		return isNonAggregatedComposite() &&
+				( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassClass() != null;
 	}
 
 	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
@@ -175,13 +168,7 @@ public class EntityIdentifier {
 	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties) {
 		ensureBound();
 		if ( identifierGenerator == null ) {
-			if ( isSingleAttribute() && idGenerator != null ) {
-				identifierGenerator = identifierAttributeBinding.createIdentifierGenerator(
-						idGenerator,
-						factory,
-						properties
-				);
-			}
+			identifierGenerator = entityIdentifierBinding.createIdentifierGenerator( factory, properties );
 		}
 		return identifierGenerator;
 	}
@@ -204,11 +191,256 @@ public class EntityIdentifier {
 	}
 
 	protected boolean isBound() {
-		return nature != null;
-	}
+		return entityIdentifierBinding != null;	}
 
 	public int getColumnCount() {
 		ensureBound();
-		return columnCount;
+		return entityIdentifierBinding.getColumnCount();
 	}
+
+	private abstract class EntityIdentifierBinding {
+		private final EntityIdentifierNature nature;
+		private final SingularNonAssociationAttributeBinding identifierAttributeBinding;
+		private final IdGenerator idGenerator;
+		private final String unsavedValue;
+		private final int columnCount;
+
+
+		protected EntityIdentifierBinding(
+				EntityIdentifierNature nature,
+				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				IdGenerator idGenerator,
+				String unsavedValue) {
+			this.nature = nature;
+			this.identifierAttributeBinding = identifierAttributeBinding;
+			this.idGenerator = idGenerator;
+			this.unsavedValue = unsavedValue;
+
+			// Configure primary key in relational model
+			final List<RelationalValueBinding> relationalValueBindings = identifierAttributeBinding.getRelationalValueBindings();
+			this.columnCount = relationalValueBindings.size();
+			for ( final RelationalValueBinding valueBinding : relationalValueBindings ) {
+				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
+			}
+		}
+
+		public EntityIdentifierNature getNature() {
+			return nature;
+		}
+
+		public SingularNonAssociationAttributeBinding getAttributeBinding() {
+			return identifierAttributeBinding;
+		}
+
+		public String getUnsavedValue() {
+			return unsavedValue;
+		}
+
+		protected IdGenerator getIdGenerator() {
+			return idGenerator;
+		}
+
+		public int getColumnCount() {
+			return columnCount;
+		}
+
+		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+			return getAttributeBinding().equals( attributeBinding );
+		}
+
+		public abstract IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties);
+	}
+
+	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
+		SimpleAttributeIdentifierBindingImpl(
+				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				IdGenerator idGenerator,
+				String unsavedValue) {
+			super( SIMPLE, identifierAttributeBinding, idGenerator, unsavedValue );
+		}
+		@Override
+		public IdentifierGenerator createIdentifierGenerator(
+				IdentifierGeneratorFactory identifierGeneratorFactory,
+				Properties properties) {
+			final List<RelationalValueBinding> relationalValueBindings =
+					getAttributeBinding().getRelationalValueBindings();
+			if ( relationalValueBindings.size() > 1 ) {
+				throw new MappingException(
+						"A SimpleAttributeBinding used for an identifier has more than 1 Value: " +
+								getAttributeBinding().getAttribute().getName()
+				);
+			}
+
+			final RelationalValueBinding relationalValueBinding = relationalValueBindings.get( 0 );
+			final TableSpecification table = relationalValueBinding.getValue().getTable();
+			if ( !Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+				throw new MappingException(
+						"Cannot create an IdentifierGenerator because the value is not a column: " +
+								relationalValueBinding.getValue().toLoggableString()
+				);
+			}
+
+			Properties params = new Properties();
+			params.putAll( properties );
+
+			// use the schema/catalog specified by getValue().getTable() - but note that
+			// if the schema/catalog were specified as params, they will already be initialized and
+			//will override the values set here (they are in idGenerator.getParameters().)
+			Schema schema = table.getSchema();
+			if ( schema != null ) {
+				if ( schema.getName().getSchema() != null ) {
+					params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getText() );
+				}
+				if ( schema.getName().getCatalog() != null ) {
+					params.setProperty( PersistentIdentifierGenerator.CATALOG, schema.getName().getCatalog().getText() );
+				}
+			}
+
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+
+			//init the table here instead of earlier, so that we can get a quoted table name
+			//TODO: would it be better to simply pass the qualified table name, instead of
+			//      splitting it up into schema/catalog/table names
+			String tableName = table.getQualifiedName( identifierGeneratorFactory.getDialect() );
+			params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
+
+			params.setProperty(
+					PersistentIdentifierGenerator.PK,
+					( (Column) relationalValueBinding.getValue() ).getColumnName().getText(
+							identifierGeneratorFactory.getDialect()
+					)
+			);
+			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+			params.putAll( getIdGenerator().getParameters() );
+			return identifierGeneratorFactory.createIdentifierGenerator(
+					getIdGenerator().getStrategy(),
+					getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
+					params
+			);
+		}
+	}
+
+	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {
+		AggregatedComponentIdentifierBindingImpl(
+				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				IdGenerator idGenerator,
+				String unsavedValue) {
+			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+		}
+
+		public IdentifierGenerator createIdentifierGenerator(
+				IdentifierGeneratorFactory factory,
+				Properties properties) {
+			if ( entityBinding.getSuperEntityBinding() != null ) {
+				throw new AssertionError( "Creating an identifier generator for a component on a subclass." );
+			}
+			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
+			final Class entityClass = entityBinding.getEntity().getClassReference();
+			final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
+			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
+			//		various scenarios for which we need to account here
+			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
+			CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
+					new CompositeNestedGeneratedValueGenerator.GenerationContextLocator() {
+						public Serializable locateGenerationContext( SessionImplementor session, Object incomingObject) {
+							return session.getEntityPersister( entityBinding.getEntity().getName(), incomingObject )
+									.getIdentifier( incomingObject, session );
+						}
+					};
+			// TODO: set up IdentifierGenerator for non-assigned sub-attributes
+			return new CompositeNestedGeneratedValueGenerator( locator );
+		}
+	}
+
+	private class NonAggregatedCompositeIdentifierBindingImpl extends EntityIdentifierBinding {
+		private final Class<?> externalAggregatingClass;
+		private final String externalAggregatingPropertyAccessorName;
+
+		NonAggregatedCompositeIdentifierBindingImpl(
+				NonAggregatedCompositeAttributeBinding identifierAttributeBinding,
+				IdGenerator idGenerator,
+				String unsavedValue,
+				Class<?> externalAggregatingClass,
+				String externalAggregatingPropertyAccessorName) {
+			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+			this.externalAggregatingClass = externalAggregatingClass;
+			this.externalAggregatingPropertyAccessorName = externalAggregatingPropertyAccessorName;
+			if ( identifierAttributeBinding.attributeBindingSpan() == 0 ) {
+				throw new MappingException(
+						"A composite ID has 0 attributes for " + entityBinding.getEntity().getName()
+				);
+			}
+			for ( AttributeBinding attributeBinding : identifierAttributeBinding.attributeBindings() ) {
+				if ( ! attributeBinding.getAttribute().isSingular() ) {
+					throw new MappingException(
+							String.format(
+									"The composite ID for [%s] contains an attribute [%s} that is plural.",
+									entityBinding.getEntity().getName(),
+									attributeBinding.getAttribute().getName()
+							)
+					);
+				}
+				if ( attributeBinding.isAssociation() ) {
+					throw new MappingException(
+							String.format(
+									"The composite ID for [%s] contains an attribute [%s} that is an association.",
+									entityBinding.getEntity().getName(),
+									attributeBinding.getAttribute().getName()
+							)
+					);
+				}
+			}
+		}
+
+		private NonAggregatedCompositeAttributeBinding getNonAggregatedCompositeAttributeBinding() {
+			return (NonAggregatedCompositeAttributeBinding) getAttributeBinding();
+		}
+		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().attributeBindings() ) {
+				if ( idAttributeBindings.equals( attributeBinding ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public Class getIdClassClass() {
+			return externalAggregatingClass;
+		}
+
+		public String getIdClassPropertyAccessorName() {
+			return externalAggregatingPropertyAccessorName;
+		}
+
+		public IdentifierGenerator createIdentifierGenerator(
+				IdentifierGeneratorFactory factory,
+				Properties properties) {
+			if ( entityBinding.getSuperEntityBinding() != null ) {
+				throw new AssertionError( "Creating an identifier generator for a component on a subclass." );
+			}
+			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
+			final Class entityClass = entityBinding.getEntity().getClassReference();
+			final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
+			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
+			//		various scenarios for which we need to account here
+			//if ( idClassClass != null ) {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			//	attributeDeclarer = idClassClass;
+			//}
+			//else {
+			// we have the "straight up" embedded (again the hibernate term) component identifier
+			//	attributeDeclarer = entityClass;
+			//}
+			CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
+					new CompositeNestedGeneratedValueGenerator.GenerationContextLocator() {
+						public Serializable locateGenerationContext( SessionImplementor session, Object incomingObject) {
+							return session.getEntityPersister( entityBinding.getEntity().getName(), incomingObject )
+									.getIdentifier( incomingObject, session );
+						}
+					};
+			// TODO: set up IdentifierGenerator for non-assigned sub-attributes
+			return new CompositeNestedGeneratedValueGenerator( locator );
+		}
+	}
+
 }

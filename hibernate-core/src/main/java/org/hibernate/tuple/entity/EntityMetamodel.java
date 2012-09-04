@@ -52,10 +52,11 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -375,7 +376,8 @@ public class EntityMetamodel implements Serializable {
 
 		identifierProperty = PropertyFactory.buildIdentifierProperty(
 		        entityBinding,
-		        sessionFactory.getIdentifierGenerator( rootName )
+				rootName,
+				sessionFactory
 		);
 
 		versioned = entityBinding.isVersioned();
@@ -393,14 +395,21 @@ public class EntityMetamodel implements Serializable {
 		boolean hasLazy = false;
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		SingularNonAssociationAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails()
-				.getEntityIdentifier()
-				.getAttributeBinding();
+		final EntityIdentifier rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
 		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
-		propertySpan = rootEntityIdentifier == null ?
-				entityBinding.getAttributeBindingClosureSpan() :
-				entityBinding.getAttributeBindingClosureSpan() - 1;
+		int identifierAttributeBindingSpan;
+		if ( rootEntityIdentifier.getAttributeBinding() == null ) {
+			identifierAttributeBindingSpan = 0;
+		}
+		else if ( rootEntityIdentifier.isNonAggregatedComposite() ) {
+			identifierAttributeBindingSpan =
+			( (AbstractCompositeAttributeBinding) rootEntityIdentifier.getAttributeBinding() ).attributeBindingSpan();
+		}
+		else {
+			identifierAttributeBindingSpan = 1;
+		}
+		propertySpan = entityBinding.getAttributeBindingClosureSpan() - identifierAttributeBindingSpan;
 
 		properties = new StandardProperty[propertySpan];
 		List naturalIdNumbers = new ArrayList();
@@ -699,7 +708,7 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Attribute attribute, int i) {
 		propertyIndexes.put( attribute.getName(), i );
 		if ( attribute.isSingular() &&
-				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComponent() ) {
+				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComposite() ) {
 			Composite composite =
 					(Composite) ( (SingularAttribute) attribute ).getSingularAttributeType();
 			for ( Attribute subAttribute : composite.attributes() ) {

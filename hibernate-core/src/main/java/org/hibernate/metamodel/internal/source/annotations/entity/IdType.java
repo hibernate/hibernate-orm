@@ -37,7 +37,7 @@ public enum IdType {
 
 	/**
 	 * multiple @Id annotations.  Corresponds to
-	 * {@link org.hibernate.id.EntityIdentifierNature#COMPOSITE}
+	 * {@link org.hibernate.id.EntityIdentifierNature#NON_AGGREGATED_COMPOSITE}
 	 */
 	COMPOSED,
 

@@ -32,8 +32,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 
@@ -83,7 +83,10 @@ public class ComponentMetamodel implements Serializable {
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 	}
 
-	public ComponentMetamodel(CompositeAttributeBinding component, boolean isIdentifierAttributeBinding) {
+	public ComponentMetamodel(
+			AbstractCompositeAttributeBinding component,
+			boolean isIdentifierAttributeBinding,
+			boolean isIdentifierMapper) {
 		this.isKey = isIdentifierAttributeBinding;
 		propertySpan = component.attributeBindingSpan();
 		properties = new StandardProperty[propertySpan];
@@ -101,10 +104,14 @@ public class ComponentMetamodel implements Serializable {
 		// TODO: provide support for custom tuplizer
 		final String tuplizerClassName = null;
 		if ( tuplizerClassName == null ) {
-			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer( entityMode, component );
+			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer(
+					entityMode, component, isIdentifierMapper
+			);
 		}
 		else {
-			componentTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+			componentTuplizer = componentTuplizerFactory.constructTuplizer(
+					tuplizerClassName, component, isIdentifierMapper
+			);
 		}
 	}
 

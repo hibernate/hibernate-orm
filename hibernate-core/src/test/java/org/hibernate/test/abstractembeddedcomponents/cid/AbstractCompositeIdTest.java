@@ -33,7 +33,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class AbstractCompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

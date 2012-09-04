@@ -46,9 +46,9 @@ import org.hibernate.jpa.metamodel.internal.MetamodelImpl;
 import org.hibernate.jpa.metamodel.internal.UnsupportedFeature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HierarchyDetails;
+import org.hibernate.metamodel.spi.binding.NonAggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.Hierarchical;
@@ -295,7 +295,7 @@ public class MetamodelBuilder {
 			}
 			default: {
 				// nature == (non-aggregated) COMPOSITE
-				CompositeAttributeBinding idAttributeBinding = (CompositeAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				NonAggregatedCompositeAttributeBinding idAttributeBinding = (NonAggregatedCompositeAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						Set<SingularAttribute> idClassAttributes = new HashSet<SingularAttribute>();

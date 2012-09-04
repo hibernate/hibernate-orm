@@ -56,12 +56,12 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
@@ -72,6 +72,8 @@ import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
+import org.hibernate.metamodel.spi.binding.MutableAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.NonAggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
@@ -203,7 +205,7 @@ public class Binder {
 					// unsavedValue = null;
 					break;
 				}
-				case COMPOSITE: {
+				case NON_AGGREGATED_COMPOSITE: {
 					// The generator strategy should be "assigned" and processed above.
 					throw new IllegalStateException( String.format(
 							"Expected generator strategy for composite ID: 'assigned'; instead it is: %s",
@@ -276,9 +278,10 @@ public class Binder {
 			EntityBinding rootEntityBinding,
 			AggregatedCompositeIdentifierSource identifierSource ) {
 		// locate the attribute binding
-		final CompositeAttributeBinding idAttributeBinding = ( CompositeAttributeBinding ) bindIdentifierAttribute(
-				rootEntityBinding, identifierSource.getIdentifierAttributeSource()
-		);
+		final CompositeAttributeBinding idAttributeBinding =
+				(CompositeAttributeBinding) bindIdentifierAttribute(
+						rootEntityBinding, identifierSource.getIdentifierAttributeSource()
+				);
 
 		// Configure ID generator
 		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
@@ -298,7 +301,7 @@ public class Binder {
 	}
 
 	private AttributeBinding bindAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource) {
 		// Return existing binding if available
 		final String attributeName = attributeSource.getName();
@@ -316,7 +319,7 @@ public class Binder {
 	}
 
 	private void bindAttributes(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final AttributeSourceContainer attributeSourceContainer ) {
 		for ( final AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
 			bindAttribute( attributeBindingContainer, attributeSource );
@@ -324,7 +327,7 @@ public class Binder {
 	}
 
 	private AbstractPluralAttributeBinding bindBagAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
@@ -341,7 +344,7 @@ public class Binder {
 	}
 
 	private BasicAttributeBinding bindBasicAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource,
 			SingularAttribute attribute ) {
 		if ( attribute == null ) {
@@ -571,8 +574,8 @@ public class Binder {
 		}
 	}
 
-	private CompositeAttributeBinding bindComponentAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+	private CompositeAttributeBinding bindAggregatedCompositeAttribute(
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final ComponentAttributeSource attributeSource,
 			SingularAttribute attribute,
 			boolean isAttributeIdentifier) {
@@ -616,14 +619,15 @@ public class Binder {
 						composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = attributeSource.getNaturalIdMutability();
 		final CompositeAttributeBinding attributeBinding =
-				attributeBindingContainer.makeComponentAttributeBinding(
+				attributeBindingContainer.makeAggregatedCompositeAttributeBinding(
 						attribute,
 						referencingAttribute,
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
 						naturalIdMutability,
-						createMetaAttributeContext( attributeBindingContainer, attributeSource ) );
+						createMetaAttributeContext( attributeBindingContainer, attributeSource )
+				);
 		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
 		bindHibernateTypeDescriptor(
 				attributeBinding.getHibernateTypeDescriptor(),
@@ -643,7 +647,7 @@ public class Binder {
 			}
 		}
 		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
-				new ComponentMetamodel( attributeBinding, isAttributeIdentifier )
+				new ComponentMetamodel( attributeBinding, isAttributeIdentifier, false )
 		);
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		return attributeBinding;
@@ -916,7 +920,7 @@ public class Binder {
 				bindAggregatedCompositeIdentifier( rootEntityBinding, ( AggregatedCompositeIdentifierSource ) identifierSource );
 				break;
 			}
-			case COMPOSITE: {
+			case NON_AGGREGATED_COMPOSITE: {
 				bindNonAggregatedCompositeIdentifier(
 						rootEntityBinding,
 						( NonAggregatedCompositeIdentifierSource ) identifierSource );
@@ -929,7 +933,7 @@ public class Binder {
 	}
 
 	private SingularAttributeBinding bindIdentifierAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource) {
 		return bindSingularAttribute( attributeBindingContainer, attributeSource, true );
 	}
@@ -979,7 +983,7 @@ public class Binder {
 
 
 	private AbstractPluralAttributeBinding bindListAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
@@ -998,7 +1002,7 @@ public class Binder {
 	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final ToOneAttributeSource attributeSource,
 			SingularAttribute attribute ) {
 		if( attribute == null ){
@@ -1112,7 +1116,7 @@ public class Binder {
 	}
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
@@ -1164,27 +1168,62 @@ public class Binder {
 			EntityBinding rootEntityBinding,
 			NonAggregatedCompositeIdentifierSource identifierSource ) {
 		// locate the attribute bindings for the real attributes
-		List< SingularAttributeBinding > idAttributeBindings = new ArrayList< SingularAttributeBinding >();
+		List<SingularAttributeBinding> idAttributeBindings =
+				new ArrayList< SingularAttributeBinding >();
 		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
-			idAttributeBindings.add( bindIdentifierAttribute( rootEntityBinding, attributeSource ) );
+			SingularAttributeBinding singularAttributeBinding =
+					bindIdentifierAttribute( rootEntityBinding, attributeSource );
+			if ( singularAttributeBinding.isAssociation() ) {
+				throw new NotYetImplementedException( "composite IDs containing an association attribute is not implemented yet." );
+			}
+			idAttributeBindings.add( singularAttributeBinding );
 		}
 
+		final Class<?> idClassClass = identifierSource.getLookupIdClass();
+		final String idClassPropertyAccessorName =
+				idClassClass == null ?
+						null :
+						propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() );
+
+		// Configure ID generator
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			final Map< String, String > params = new HashMap< String, String >();
+			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
 		// Create the synthetic attribute
-		SingularAttribute syntheticAttribute =
+		final SingularAttribute syntheticAttribute =
 				rootEntityBinding.getEntity().createSyntheticCompositeAttribute(
 						SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME,
-						rootEntityBinding.getEntity() );
-
-		// Create the synthetic attribute binding.
-		final CompositeAttributeBinding syntheticAttributeBinding =
-				rootEntityBinding.makeVirtualComponentAttributeBinding(
+						rootEntityBinding.getEntity()
+				);
+		final NonAggregatedCompositeAttributeBinding syntheticAttributeBinding =
+				rootEntityBinding.makeVirtualCompositeAttributeBinding(
 						syntheticAttribute,
 						idAttributeBindings,
-						createMetaAttributeContext( rootEntityBinding, identifierSource.getMetaAttributeSources() ) );
+						createMetaAttributeContext( rootEntityBinding, identifierSource.getMetaAttributeSources() )
+				);
+		bindHibernateTypeDescriptor(
+				syntheticAttributeBinding.getHibernateTypeDescriptor(),
+				syntheticAttribute.getSingularAttributeType().getClassName(),
+				null,
+				null
+		);
 
+		// Create the synthetic attribute binding.
 		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsNonAggregatedCompositeIdentifier(
 				syntheticAttributeBinding,
-				identifierSource.getLookupIdClass() );
+				generator,
+				interpretIdentifierUnsavedValue( identifierSource, generator ),
+				idClassClass,
+				idClassPropertyAccessorName
+		);
+
+		final Type resolvedType = metadata.getTypeResolver().getTypeFactory().embeddedComponent(
+				new ComponentMetamodel( syntheticAttributeBinding, true, false )
+		);
+		bindHibernateResolvedType( syntheticAttributeBinding.getHibernateTypeDescriptor(), resolvedType );
 	}
 
 	private void bindOneToManyCollectionElement(
@@ -1246,7 +1285,7 @@ public class Binder {
 	}
 
 	private AbstractPluralAttributeBinding bindPluralAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource ) {
 		final PluralAttributeSource.Nature nature = attributeSource.getNature();
 		final PluralAttribute attribute =
@@ -1407,7 +1446,7 @@ public class Binder {
 	}
 
 	private AbstractPluralAttributeBinding bindSetAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource,
 			PluralAttribute attribute ) {
 		if ( attribute == null ) {
@@ -1447,7 +1486,7 @@ public class Binder {
 	}
 
 	private SingularAttributeBinding bindSingularAttribute(
-			final AttributeBindingContainer attributeBindingContainer,
+			final MutableAttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource,
 			boolean isIdentifierAttribute) {
 		final SingularAttributeSource.Nature nature = attributeSource.getNature();
@@ -1462,8 +1501,8 @@ public class Binder {
 						ToOneAttributeSource.class.cast( attributeSource ),
 						attribute
 				);
-			case COMPONENT:
-				return bindComponentAttribute(
+			case COMPOSITE:
+				return bindAggregatedCompositeAttribute(
 						attributeBindingContainer,
 						ComponentAttributeSource.class.cast( attributeSource ),
 						attribute,
@@ -2234,9 +2273,13 @@ public class Binder {
 	}
 
 	private String propertyAccessorName( final AttributeSource attributeSource ) {
-		return attributeSource.getPropertyAccessorName() == null
+		return propertyAccessorName( attributeSource.getPropertyAccessorName() );
+	}
+
+	private String propertyAccessorName(final String propertyAccessorName) {
+		return propertyAccessorName == null
 				? bindingContexts.peek().getMappingDefaults().getPropertyAccessorName()
-				: attributeSource.getPropertyAccessorName();
+				: propertyAccessorName;
 	}
 
 	private String quotedIdentifier( final String name ) {
@@ -2262,7 +2305,7 @@ public class Binder {
 				hibernateTypeDescriptor.getExplicitTypeName(),
 				typeParameters,
 				pluralAttributeBinding.getAttribute().getName(),
-				pluralAttributeBinding.getReferencedPropertyName(),
+				getReferencedPropertyNameIfNotId( pluralAttributeBinding ),
 				pluralAttributeBinding.getPluralAttributeElementBinding()
 						.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
 		);

@@ -252,6 +252,12 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		}
 
 		@Override
+		public String getIdClassPropertyAccessorName() {
+			// TODO: retrieve property accessor name for IdClass
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
 			for ( BasicAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
@@ -274,7 +280,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		@Override
 		public EntityIdentifierNature getNature() {
-			return EntityIdentifierNature.COMPOSITE;
+			return EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 		}
 
 		@Override

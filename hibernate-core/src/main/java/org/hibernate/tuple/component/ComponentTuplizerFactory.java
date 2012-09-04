@@ -32,7 +32,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 
 /**
  * A registry allowing users to define the default {@link ComponentTuplizer} class to use per {@link EntityMode}.
@@ -41,8 +41,10 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
  */
 public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
-	private static final Class[] COMPONENT_TUP_CTOR_SIG_NEW = new Class[] { CompositeAttributeBinding.class };
-
+	private static final Class[] COMPONENT_TUP_CTOR_SIG_NEW = new Class[] {
+			AbstractCompositeAttributeBinding.class,
+			boolean.class
+	};
 
 	private Map<EntityMode,Class<? extends ComponentTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
@@ -98,10 +100,13 @@ public class ComponentTuplizerFactory implements Serializable {
 	 * {@link Constructor#newInstance} call fails.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public ComponentTuplizer constructTuplizer(String tuplizerClassName, CompositeAttributeBinding metadata) {
+	public ComponentTuplizer constructTuplizer(
+			String tuplizerClassName,
+			AbstractCompositeAttributeBinding metadata,
+			boolean isIdentifierMapper) {
 		try {
 			Class<? extends ComponentTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
-			return constructTuplizer( tuplizerClass, metadata );
+			return constructTuplizer( tuplizerClass, metadata, isIdentifierMapper );
 		}
 		catch ( ClassNotFoundException e ) {
 			throw new HibernateException( "Could not locate specified tuplizer class [" + tuplizerClassName + "]" );
@@ -139,11 +144,14 @@ public class ComponentTuplizerFactory implements Serializable {
 	 *
 	 * @throws HibernateException if the {@link java.lang.reflect.Constructor#newInstance} call fails.
 	 */
-	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, CompositeAttributeBinding metadata) {
+	public ComponentTuplizer constructTuplizer(
+			Class<? extends ComponentTuplizer> tuplizerClass,
+			AbstractCompositeAttributeBinding metadata,
+			boolean isIdentifierMapper) {
 		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG_NEW );
 		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
 		try {
-			return constructor.newInstance( metadata );
+			return constructor.newInstance( metadata, isIdentifierMapper );
 		}
 		catch ( Throwable t ) {
 			throw new HibernateException( "Unable to instantiate default tuplizer [" + tuplizerClass.getName() + "]", t );
@@ -181,13 +189,16 @@ public class ComponentTuplizerFactory implements Serializable {
 	 * @throws HibernateException If no default tuplizer found for that entity-mode; may be re-thrown from
 	 * {@link #constructTuplizer} too.
 	 */
-	public ComponentTuplizer constructDefaultTuplizer(EntityMode entityMode, CompositeAttributeBinding metadata) {
+	public ComponentTuplizer constructDefaultTuplizer(
+			EntityMode entityMode,
+			AbstractCompositeAttributeBinding metadata,
+			boolean isIdentifierMapper) {
 		Class<? extends ComponentTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
 		if ( tuplizerClass == null ) {
 			throw new HibernateException( "could not determine default tuplizer class to use [" + entityMode + "]" );
 		}
 
-		return constructTuplizer( tuplizerClass, metadata );
+		return constructTuplizer( tuplizerClass, metadata, isIdentifierMapper );
 	}
 
 	private boolean isComponentTuplizerImplementor(Class tuplizerClass) {

@@ -51,9 +51,42 @@ public abstract class AbstractSingularAttributeBinding
 		this.naturalIdMutability = naturalIdMutability;
 	}
 
+	@Override
+	public boolean isNullable() {
+		return hasNullableRelationalValueBinding( getRelationalValueBindings() );
+	}
+
+	@Override
+	public boolean isIncludedInInsert() {
+		return hasInsertableRelationalValueBinding( getRelationalValueBindings() );
+	}
+
+	@Override
+	public boolean isIncludedInUpdate() {
+		return hasUpdateableRelationalValueBinding( getRelationalValueBindings() );
+	}
+
 	protected static boolean hasNullableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 			if ( relationalValueBinding.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected static boolean hasInsertableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			if ( relationalValueBinding.isIncludeInInsert() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected static boolean hasUpdateableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			if ( relationalValueBinding.isIncludeInUpdate() ) {
 				return true;
 			}
 		}

@@ -32,11 +32,13 @@ import javax.persistence.Entity;
 
 import org.junit.Test;
 
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -48,7 +50,8 @@ public class EmbeddedIdTest extends BaseAnnotationBindingTestCase {
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
 		EntityIdentifier identifier = binding.getHierarchyDetails().getEntityIdentifier();
-		assertTrue( identifier.isEmbedded() );
+		assertTrue( !identifier.isNonAggregatedComposite() );
+		assertEquals( identifier.getNature(), EntityIdentifierNature.AGGREGATED_COMPOSITE  );
 	}
 
 	@Entity

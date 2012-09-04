@@ -60,5 +60,5 @@ public interface Type {
 
 	public boolean isAssociation();
 
-	public boolean isComponent();
+	public boolean isComposite();
 }

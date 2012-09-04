@@ -35,7 +35,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class IdClassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

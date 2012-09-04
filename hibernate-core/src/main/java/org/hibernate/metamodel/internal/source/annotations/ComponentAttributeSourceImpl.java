@@ -71,7 +71,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public Nature getNature() {
-		return Nature.COMPONENT;
+		return Nature.COMPOSITE;
 	}
 
 	@Override

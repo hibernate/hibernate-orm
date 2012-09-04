@@ -35,9 +35,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 /**
@@ -55,25 +53,8 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private final Class proxyInterface;
 	private final boolean isAbstract;
 
-	public PojoInstantiator(Component component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = component.getComponentClass();
-		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.optimizer = optimizer;
-
-		this.proxyInterface = null;
-		this.embeddedIdentifier = false;
-
-		try {
-			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
-		}
-		catch ( PropertyNotFoundException pnfe ) {
-			LOG.noDefaultConstructor(mappedClass.getName());
-			constructor = null;
-		}
-	}
-
-	public PojoInstantiator(CompositeAttributeBinding component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = component.getClassReference();
+	public PojoInstantiator(Class<?> classReference, ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		this.mappedClass = classReference;
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;
 
@@ -109,7 +90,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		this.mappedClass = entityBinding.getEntity().getClassReference();
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.proxyInterface = entityBinding.getProxyInterfaceType().getValue();
-		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isEmbedded();
+		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();
 		this.optimizer = optimizer;
 
 		try {

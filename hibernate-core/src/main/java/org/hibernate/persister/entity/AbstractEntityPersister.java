@@ -101,9 +101,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
@@ -2353,7 +2353,7 @@ public abstract class AbstractEntityPersister
 
 	private void internalInitSubclassPropertyAliasesMap(String path, Iterable<AttributeBinding> attributeBindings) {
 		for ( AttributeBinding prop : attributeBindings ) {
-			if ( prop == prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().getAttributeBinding() ) {
+			if ( prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( prop ) ) {
 				// ID propertie aliases are dealt with elsewhere.
 				continue;
 			}
@@ -2363,8 +2363,8 @@ public abstract class AbstractEntityPersister
 			}
 			SingularAttributeBinding singularProp = (SingularAttributeBinding) prop;
 			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
-			if ( prop instanceof CompositeAttributeBinding ) {
-				CompositeAttributeBinding component = ( CompositeAttributeBinding ) prop;
+			if ( prop instanceof AbstractCompositeAttributeBinding ) {
+				AbstractCompositeAttributeBinding component = (AbstractCompositeAttributeBinding) prop;
 				internalInitSubclassPropertyAliasesMap( propname, component.attributeBindings() );
 			}
 			else {

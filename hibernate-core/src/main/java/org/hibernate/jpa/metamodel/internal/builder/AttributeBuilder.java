@@ -45,8 +45,8 @@ import org.hibernate.jpa.metamodel.internal.MappedSuperclassTypeImpl;
 import org.hibernate.jpa.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.SingularAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.UnsupportedFeature;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
@@ -55,7 +55,6 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 
 import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
@@ -239,8 +238,8 @@ public class AttributeBuilder {
 						(ComponentType) attributeTypeDescriptor.getHibernateType()
 				);
 				context.registerEmbeddedableType( embeddableType );
-				CompositeAttributeBinding compositeAttributeBinding =
-						(CompositeAttributeBinding) attributeTypeDescriptor.getAttributeMetadata().getAttributeBinding();
+				AbstractCompositeAttributeBinding compositeAttributeBinding =
+						(AbstractCompositeAttributeBinding) attributeTypeDescriptor.getAttributeMetadata().getAttributeBinding();
 				for ( AttributeBinding subAttributeBinding : compositeAttributeBinding.attributeBindings() ) {
 					final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
 					if ( attribute != null ) {
@@ -303,7 +302,7 @@ public class AttributeBuilder {
 			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 
 			final PersistentAttributeType jpaAttributeType;
-			if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isComponent() ) {
+			if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isComposite() ) {
 				jpaAttributeType = PersistentAttributeType.EMBEDDED;
 			}
 			else if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isAssociation() ) {
@@ -447,14 +446,14 @@ public class AttributeBuilder {
 			final IdentifiableType identifiableType = (IdentifiableType) owner;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
-				throw new IllegalArgumentException( "expecting IdClass mapping" );
+				throw new IllegalArgumentException( "expecting non-aggregated identifier mapping" );
 			}
 			org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
-			if ( ! EmbeddedComponentType.class.isInstance( type ) ) {
-				throw new IllegalArgumentException( "expecting IdClass mapping" );
+			if ( ! ComponentType.class.isInstance( type ) ) {
+				throw new IllegalArgumentException( "expecting non-aggregated identifier mapping" );
 			}
 
-			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+			final ComponentType componentType = (ComponentType) type;
 			final String attributeName = attributeBinding.getAttribute().getName();
 			return componentType.getComponentTuplizer()
 					.getGetter( componentType.getPropertyIndex( attributeName ) )

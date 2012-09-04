@@ -87,35 +87,61 @@ public final class PropertyAccessorFactory {
 	}
 
 	/**
-     * Retrieves a PropertyAccessor instance based on the given property definition and
-     * entity mode.
-     *
-     * @param property The property for which to retrieve an accessor.
-     * @param mode The mode for the resulting entity.
-     * @return An appropriate accessor.
-     * @throws MappingException
-     */
-	public static PropertyAccessor getPropertyAccessor(AttributeBinding property, EntityMode mode) throws MappingException {
+	 * Retrieves a PropertyAccessor instance based on the given property accessor name and
+	 * entity mode.
+	 * <p/>
+	 * NOTE: This method is not intended to be used to get a backref property accessor.
+	 *       To retrieve a backref property accessor, use {@link #getBackRefPropertyAccessor}.
+	 * <p/>	 *
+	 * @param propertyAccessorName The property accessor name.
+	 * @param mode The entity mode.
+	 * @return An appropriate accessor.
+	 * @throws MappingException
+	 */
+	public static PropertyAccessor getPropertyAccessor(
+			String propertyAccessorName,
+			EntityMode mode) throws MappingException {
+		if ( propertyAccessorName == null ) {
+			throw new IllegalArgumentException(
+					"propertyAccessorName must be non-null."
+			);
+		}
 		if ( null == mode || EntityMode.POJO.equals( mode ) ) {
-			if ( property.isBackRef() ) {
-				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-				BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) property;
-				return new BackrefPropertyAccessor(
-						backRefAttributeBinding.getCollectionRole(), backRefAttributeBinding.getEntityName()
-				);
-			}
-			else {
-				return getPojoPropertyAccessor( property.getPropertyAccessorName() );
-			}
+			return getPojoPropertyAccessor( propertyAccessorName );
 		}
 		else if (EntityMode.MAP.equals( mode ) ) {
-			if ( property.isBackRef() ) {
+			return getDynamicMapPropertyAccessor();
+		}
+		else {
+			throw new MappingException( "Unknown entity mode [" + mode + "]" );
+		}
+	}
+
+	/**
+	 * Retrieves a PropertyAccessor instance for a backref property using its entity name
+	 * and the collection role.
+	 * <p/>
+	 * NOTE: This method is not intended to be used to get a backref property accessor.
+	 *       To retrieve a backref property accessor, use {@link #getBackRefPropertyAccessor}.
+	 * <p/>	 *
+	 * @param entityName The name of the entity owning the backref property.
+	 * @param collectionRole The collection role.
+	 * @param mode The entity mode.
+	 * @return An appropriate accessor.
+	 * @throws MappingException
+	 */
+	public static PropertyAccessor getBackRefPropertyAccessor(String entityName, String collectionRole, EntityMode mode) {
+		if ( null == mode || EntityMode.POJO.equals( mode ) ) {
 				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-				return PropertyAccessorFactory.getPropertyAccessor( null, property.getPropertyAccessorName() );
-			}
-			else {
-				return getDynamicMapPropertyAccessor();
-			}
+				return new BackrefPropertyAccessor(
+						collectionRole, entityName
+				);
+		}
+		else if (EntityMode.MAP.equals( mode ) ) {
+				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
+				//TODO: this doesn't look right...
+				//return PropertyAccessorFactory.getPropertyAccessor( null, property.getPropertyAccessorName() );
+				return null;
 		}
 		else {
 			throw new MappingException( "Unknown entity mode [" + mode + "]" );

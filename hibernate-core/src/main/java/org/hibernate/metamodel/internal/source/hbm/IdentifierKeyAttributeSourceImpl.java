@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.domain;
+package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
- * Models the concept class in the hierarchy with no persistent attributes.
- *
- * @author Hardy Ferentschik
+ * @author Gail Badner
  */
-public class NonEntity extends AbstractAttributeContainer {
-	/**
-	 * Constructor for the non-entity
-	 *
-	 * @param entityName The name of the non-entity
-	 * @param className The name of this non-entity's java class
-	 * @param classReference The reference to this non-entity's {@link Class}
-	 * @param superType The super type for this non-entity. If there is not super type {@code null} needs to be passed.
-	 */
-	public NonEntity(String entityName, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
-		super( entityName, className, classReference, superType );
+public class IdentifierKeyAttributeSourceImpl extends KeyAttributeSourceImpl {
+
+	public IdentifierKeyAttributeSourceImpl(
+			MappingDocument mappingDocument,
+			final JaxbKeyPropertyElement keyPropertyElement) {
+		super( mappingDocument, keyPropertyElement, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID );
 	}
 
 	@Override
-	public boolean isAssociation() {
-		return true;
-	}
-
-	@Override
-	public boolean isComposite() {
+	public boolean areValuesIncludedInUpdateByDefault() {
 		return false;
 	}
 }

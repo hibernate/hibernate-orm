@@ -37,7 +37,7 @@ public interface Attribute {
 	public String getName();
 
 	/**
-	 * Retrieve the declaring container for this attribute (entity/component).
+	 * Retrieve the declaring container for this attribute (entity or aggregated composite).
 	 *
 	 * @return The attribute container.
 	 */

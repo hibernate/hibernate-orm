@@ -23,17 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Properties;
-
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-
 /**
  * @author Steve Ebersole
  */
 public interface SingularNonAssociationAttributeBinding extends SingularAttributeBinding {
-	/**
-	 * Ugh
-	 */
-	public IdentifierGenerator createIdentifierGenerator(IdGenerator idGenerator, IdentifierGeneratorFactory factory, Properties properties);
 }

@@ -26,11 +26,13 @@ package org.hibernate.metamodel.spi.domain;
 /**
  * Describes the type of a type :/
  *
+ * todo: this is not currently used; is it needed?
+ *
  * @author Steve Ebersole
  */
 public enum TypeNature {
 	BASIC( "basic" ),
-	COMPONENT( "component" ),
+	COMPOSITE( "composite" ),
 	ENTITY( "entity" ),
 	SUPERCLASS( "superclass" ),
 	NON_ENTITY( "non-entity" );

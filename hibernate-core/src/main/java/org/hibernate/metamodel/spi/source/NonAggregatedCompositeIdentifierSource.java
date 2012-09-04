@@ -40,6 +40,13 @@ public interface NonAggregatedCompositeIdentifierSource extends CompositeIdentif
 	public Class getLookupIdClass();
 
 	/**
+	 * Obtain the property accessor name for the {@link javax.persistence.IdClass}, if one.
+	 *
+	 * @return The property accessor name for the {@link javax.persistence.IdClass}, or {@code null} if none.
+	 **/
+	public String getIdClassPropertyAccessorName();
+
+	/**
 	 * Obtain the source descriptor for the identifier attribute.
 	 *
 	 * @return The identifier attribute source.

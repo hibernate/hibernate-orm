@@ -36,7 +36,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
@@ -56,6 +58,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	private ReflectionOptimizer optimizer;
 	private final Getter parentGetter;
 	private final Setter parentSetter;
+	private final Instantiator instantiator;
 
 	public PojoComponentTuplizer(Component component) {
 		super( component );
@@ -92,12 +95,21 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 					componentClass, getterNames, setterNames, propTypes
 			);
 		}
+		instantiator = buildInstantiator( componentClass, component.isEmbedded(), optimizer );
 	}
 
-	public PojoComponentTuplizer(CompositeAttributeBinding component) {
-		super( component );
+	public PojoComponentTuplizer(
+			AbstractCompositeAttributeBinding component,
+			boolean isIdentifierMapper) {
+		super( component, isIdentifierMapper );
 
-		this.componentClass = component.getClassReference();
+		final EntityIdentifier entityIdentifier =
+				component.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+
+		this.componentClass =
+				isIdentifierMapper ?
+						entityIdentifier.getIdClassClass() :
+						component.getClassReference();
 
 		String[] getterNames = new String[propertySpan];
 		String[] setterNames = new String[propertySpan];
@@ -109,7 +121,10 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 
 		final String parentPropertyName =
-				component.getParentReference() == null ? null : component.getParentReference().getName();
+				component.isAggregated() &&
+						( (CompositeAttributeBinding) component ).getParentReference() != null ?
+						( (CompositeAttributeBinding) component ).getParentReference().getName() :
+						null;
 		if ( parentPropertyName == null ) {
 			parentSetter = null;
 			parentGetter = null;
@@ -130,6 +145,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 					componentClass, getterNames, setterNames, propTypes
 			);
 		}
+		instantiator = buildInstantiator( componentClass, component.getAttribute().isSynthetic(), optimizer );
 	}
 
 	public Class getMappedClass() {
@@ -179,18 +195,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		parentSetter.set( component, parent, factory );
 	}
 
-	protected Instantiator buildInstantiator(Component component) {
-		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( component.getComponentClass() ) ) {
-			return new ProxiedInstantiator( component );
-		}
-		if ( optimizer == null ) {
-			return new PojoInstantiator( component, null );
-		}
-		else {
-			return new PojoInstantiator( component, optimizer.getInstantiationOptimizer() );
-		}
-	}
-
 	protected Getter buildGetter(Component component, Property prop) {
 		return prop.getGetter( component.getComponentClass() );
 	}
@@ -199,15 +203,20 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		return prop.getSetter( component.getComponentClass() );
 	}
 
-	protected Instantiator buildInstantiator(CompositeAttributeBinding component) {
-		if ( component.getAttribute().isSynthetic() && ReflectHelper.isAbstractClass( component.getClassReference() ) ) {
-			return new ProxiedInstantiator( component );
+	@Override
+	protected Instantiator getInstantiator() {
+		return instantiator;
+	}
+
+	private static Instantiator buildInstantiator(Class<?> mappedClass, boolean isVirtual, ReflectionOptimizer optimizer) {
+		if (isVirtual && ReflectHelper.isAbstractClass( mappedClass ) ) {
+			return new ProxiedInstantiator( mappedClass );
 		}
 		if ( optimizer == null ) {
-			return new PojoInstantiator( component, null );
+			return new PojoInstantiator( mappedClass, null );
 		}
 		else {
-			return new PojoInstantiator( component, optimizer.getInstantiationOptimizer() );
+			return new PojoInstantiator( mappedClass, optimizer.getInstantiationOptimizer() );
 		}
 	}
 
@@ -215,22 +224,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
-		public ProxiedInstantiator(Component component) {
-			proxiedClass = component.getComponentClass();
-			if ( proxiedClass.isInterface() ) {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
-						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
-			}
-			else {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
-						.buildBasicProxyFactory( proxiedClass, null );
-			}
-		}
-
-		public ProxiedInstantiator(CompositeAttributeBinding component) {
-			proxiedClass = component.getClassReference();
+		public ProxiedInstantiator(Class<?> proxyClass) {
+			this.proxiedClass = proxyClass;
 			if ( proxiedClass.isInterface() ) {
 				factory = Environment.getBytecodeProvider()
 						.getProxyFactoryFactory()

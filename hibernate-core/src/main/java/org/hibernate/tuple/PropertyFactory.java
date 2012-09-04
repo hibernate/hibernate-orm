@@ -32,6 +32,7 @@ import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
@@ -41,16 +42,18 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.NonAggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
-import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
+import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -109,32 +112,47 @@ public class PropertyFactory {
 	 * Generates an IdentifierProperty representation of the for a given entity mapping.
 	 *
 	 * @param mappedEntity The mapping definition of the entity.
-	 * @param generator The identifier value generator to use for this identifier.
+	 * @param rootEntityName The entity name for the EntityBinding at the root of this hierarchy.
+	 * @param sessionFactory The session factory.
 	 * @return The appropriate IdentifierProperty definition.
 	 */
-	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
+	public static IdentifierProperty buildIdentifierProperty(
+			EntityBinding mappedEntity,
+			String rootEntityName,
+			SessionFactoryImplementor sessionFactory) {
 
-		final SingularAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+		final IdentifierGenerator generator = sessionFactory.getIdentifierGenerator( rootEntityName );
+
+		final SingularAttributeBinding attributeBinding = mappedEntity.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
 		//		see org.hibernate.metamodel.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
 
 		final String mappedUnsavedValue = mappedEntity.getHierarchyDetails().getEntityIdentifier().getUnsavedValue();
-		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		final Type type;
+		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper() ) {
+			type = sessionFactory.getTypeResolver().getTypeFactory().component(
+					new ComponentMetamodel( (NonAggregatedCompositeAttributeBinding) attributeBinding, true, true )
+			);
+		}
+		else {
+			type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		}
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
-				getGetterOrNull( property ),
+				getGetterOrNull( attributeBinding ),
 				type,
 				getConstructor( mappedEntity )
 			);
 
-		if ( property == null ) {
+		if ( attributeBinding.getAttribute().isSynthetic()  ) {
 			// this is a virtual id property...
 			return new IdentifierProperty(
 			        type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite() &&
+							mappedEntity.getHierarchyDetails().getEntityIdentifier().getIdClassClass() == null,
 					mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper(),
 					unsavedValue,
 					generator
@@ -142,10 +160,10 @@ public class PropertyFactory {
 		}
 		else {
 			return new IdentifierProperty(
-					property.getAttribute().getName(),
+					attributeBinding.getAttribute().getName(),
 					null,
 					type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite(),
 					unsavedValue,
 					generator
 				);
@@ -310,13 +328,13 @@ public class PropertyFactory {
 					null,
 					type,
 					lazyAvailable && singularAttributeBinding.isLazy(),
-					areAnyValuesIncludedInInsert( singularAttributeBinding ), // insertable
-					areAnyValuesIncludedInUpdate( singularAttributeBinding ), // updatable
+					singularAttributeBinding.isIncludedInInsert(), // insertable
+					singularAttributeBinding.isIncludedInUpdate(), // updatable
 					propertyGeneration == PropertyGeneration.INSERT
 							|| propertyGeneration == PropertyGeneration.ALWAYS,
 					propertyGeneration == PropertyGeneration.ALWAYS,
 					singularAttributeBinding.isNullable(),
-					alwaysDirtyCheck || areAnyValuesIncludedInUpdate( singularAttributeBinding ),
+					alwaysDirtyCheck || singularAttributeBinding.isIncludedInUpdate(),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode
@@ -350,24 +368,6 @@ public class PropertyFactory {
 					fetchMode
 				);
 		}
-	}
-
-	private static boolean areAnyValuesIncludedInInsert(SingularAttributeBinding attributeBinding) {
-		for ( RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
-			if ( valueBinding.isIncludeInInsert() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean areAnyValuesIncludedInUpdate(SingularAttributeBinding attributeBinding) {
-		for ( RelationalValueBinding valueBinding : attributeBinding.getRelationalValueBindings() ) {
-			if ( valueBinding.isIncludeInUpdate() ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static Constructor getConstructor(PersistentClass persistentClass) {
@@ -412,6 +412,29 @@ public class PropertyFactory {
 		);
 	}
 
+	//TODO: Remove this...
+	public static Getter getIdentifierMapperGetter(
+			String propertyPath,
+			String identifierMapperPropertyAccessorName,
+			EntityMode entityMode,
+			Class<?> identifierMapperClassReference) {
+		final PropertyAccessor pa =
+				PropertyAccessorFactory.getPropertyAccessor( identifierMapperPropertyAccessorName, entityMode );
+		return pa.getGetter( identifierMapperClassReference, propertyPath );
+
+	}
+
+	//TODO: Remove this...
+	public static Setter getIdentifierMapperSetter(
+			String propertyPath,
+			String identifierMapperPropertyAccessorName,
+			EntityMode entityMode,
+			Class<?> identifierMapperClassReference) {
+		final PropertyAccessor pa =
+				PropertyAccessorFactory.getPropertyAccessor( identifierMapperPropertyAccessorName, entityMode );
+		return pa.getSetter( identifierMapperClassReference, propertyPath );
+	}
+
 	private static Getter getGetterOrNull(AttributeBinding mappingProperty) {
 		try {
 			return getGetter( mappingProperty );
@@ -430,11 +453,17 @@ public class PropertyFactory {
 	}
 
 	private static PropertyAccessor getPropertyAccessor(AttributeBinding mappingProperty) {
-		// TODO: fix this to work w/ component entity mode also
-		return PropertyAccessorFactory.getPropertyAccessor(
-				mappingProperty,
-				mappingProperty.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode()
-		);
+		EntityMode entityMode = mappingProperty.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode();
+
+		if ( mappingProperty.isBackRef() ) {
+			BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) mappingProperty;
+			return PropertyAccessorFactory.getBackRefPropertyAccessor(
+					backRefAttributeBinding.getEntityName(), backRefAttributeBinding.getCollectionRole(), entityMode
+			);
+		}
+		else {
+			return PropertyAccessorFactory.getPropertyAccessor( mappingProperty.getPropertyAccessorName(), entityMode );
+		}
 	}
 
 }

@@ -50,9 +50,24 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	/**
 	 * Convenience method to determine if all {@link RelationalValueBinding simple value bindings} allow nulls.
 	 *
-	 * @return {@code true} indicates that all values allow {@code null}; {@code false} indicates one or more do not
+	 * @return {@code true} indicates that all values allow {@code null}; {@code false} indicates one or more do not.
 	 */
 	public boolean isNullable();
+
+	/**
+	 * Convenience method to determine if any {@link RelationalValueBinding simple value bindings} are inserted.
+	 *
+	 * @return {@code true} indicates that at least one value is inserted; {@code false} indicates none are inserted.
+	 */
+	public boolean isIncludedInInsert();
+
+	/**
+	 * Convenience method to determine if any {@link RelationalValueBinding simple value bindings} can be updated.
+	 *
+	 * @return {@code true} indicates that at least one value can be updated; {@code false} indicates none can
+	 * be updated.
+	 */
+	public boolean isIncludedInUpdate();
 
 	/**
 	 * Convenience method to determine if this attribute is an natural id and if it is, then returns its mutability.

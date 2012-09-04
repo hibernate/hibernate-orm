@@ -27,7 +27,7 @@ import java.util.Set;
 
 /**
  * Basic contract for any container holding attributes. This allows polymorphic handling of both
- * components and entities in terms of the attributes they hold.
+ * aggregated composites and entities in terms of the attributes they hold.
  *
  * @author Steve Ebersole
  */

@@ -49,7 +49,7 @@ public class Superclass extends AbstractAttributeContainer {
 	}
 
 	@Override
-	public boolean isComponent() {
+	public boolean isComposite() {
 		return false;
 	}
 }

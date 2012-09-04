@@ -26,9 +26,9 @@ package org.hibernate.metamodel.spi.domain;
 import org.hibernate.internal.util.ValueHolder;
 
 /**
- * Models the notion of a component (what JPA calls an Embeddable).
+ * Models the notion of an aggregated composite (what JPA calls an Embeddable).
  * <p/>
- * NOTE : Components are not currently really hierarchical.  But that is a feature I want to add.
+ * NOTE : Composites are not currently really hierarchical.  But that is a feature I want to add.
  *
  * @author Steve Ebersole
  */
@@ -43,14 +43,14 @@ public class Composite extends AbstractAttributeContainer {
 	}
 
 	@Override
-	public boolean isComponent() {
+	public boolean isComposite() {
 		return true;
 	}
 
 	@Override
 	public String getRoleBaseName() {
 		// todo : this is not really completely accurate atm
-		//		the role base here should really be the role of the component attribute.
+		//		the role base here should really be the role of the aggregated composite attribute.
 		return getClassName();
 	}
 }

@@ -75,7 +75,7 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 */
 	enum Nature {
 		BASIC,
-		COMPONENT,
+		COMPOSITE,
 		MANY_TO_ONE,
 		ONE_TO_ONE,
 		ANY

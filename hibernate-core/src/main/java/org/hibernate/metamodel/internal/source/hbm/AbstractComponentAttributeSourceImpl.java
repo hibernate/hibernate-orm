@@ -194,7 +194,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 
 	@Override
 	public Nature getNature() {
-		return Nature.COMPONENT;
+		return Nature.COMPOSITE;
 	}
 
 	@Override

@@ -65,7 +65,7 @@ public class BasicType implements Type {
 	}
 
 	@Override
-	public boolean isComponent() {
+	public boolean isComposite() {
 		return false;
 	}
 }

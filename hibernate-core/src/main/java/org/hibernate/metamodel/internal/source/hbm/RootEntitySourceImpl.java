@@ -100,14 +100,18 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 		else {
 			// if we get here, we should have a composite identifier.  Just need to determine if it is aggregated, or not...
-			if ( entityElement().getCompositeId().isMapped() || StringHelper.isNotEmpty( entityElement().getCompositeId().getName() ) ) {
-				if ( StringHelper.isEmpty( entityElement().getCompositeId().getClazz() ) ) {
+			if ( StringHelper.isEmpty( entityElement().getCompositeId().getName() ) ) {
+				if ( entityElement().getCompositeId().isMapped() &&
+						StringHelper.isEmpty( entityElement().getCompositeId().getClazz() ) ) {
 					throw makeMappingException( "mapped composite identifier must name component class to use." );
 				}
-				return new AggregatedCompositeIdentifierSourceImpl();
+				return new NonAggregatedCompositeIdentifierSourceImpl();
 			}
 			else {
-				return new NonAggregatedCompositeIdentifierSourceImpl();
+				if ( entityElement().getCompositeId().isMapped() ) {
+					throw makeMappingException("cannot combine mapped=\"true\" with specified name");
+				}
+				return new AggregatedCompositeIdentifierSourceImpl();
 			}
 		}
 	}
@@ -441,9 +445,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 //			for ( Object attributeElement : compositeIdElement().getKeyPropertyOrKeyManyToOne() ) {
 //				attributeSources.add( buildAttributeSource( attributeElement ) );
 //			}
-			for ( JaxbKeyPropertyElement element : compositeIdElement().getKeyProperty()){
-//				attributeSources.add( buildPropertyAttributeSource( element ) );
-				//todo : implement
+			for ( JaxbKeyPropertyElement keyProperty : compositeIdElement().getKeyProperty()){
+				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
 			}
 			for (JaxbKeyManyToOneElement element : compositeIdElement().getKeyManyToOne()){
 				//todo: implement
@@ -504,26 +507,24 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	private class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedCompositeIdentifierSource {
 		@Override
 		public Class getLookupIdClass() {
-			return StringHelper.isEmpty( entityElement().getCompositeId().getClazz() )
-					? null
-					: bindingContext().locateClassByName( entityElement().getCompositeId().getClazz() );
+			return StringHelper.isEmpty( entityElement().getCompositeId().getClazz() ) ?
+					null :
+					bindingContext().locateClassByName(
+							bindingContext().qualifyClassName( entityElement().getCompositeId().getClazz() )
+			);
+		}
+
+		@Override
+		public String getIdClassPropertyAccessorName() {
+			return null;
 		}
 
 		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			final List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
 			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-			for(final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty()){
-//				final AttributeSource attributeSource = buildAttributeSource(
-//						keyProperty,
-//						null,
-//						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
-//				);
-//				if ( ! attributeSource.isSingular() ) {
-//					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );
-//				}
-//				attributeSources.add( (SingularAttributeSource) attributeSource );
-				//todo : implement
+			for(final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty()) {
+				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
 			}
 			for(final JaxbKeyManyToOneElement keyProperty : compositeId.getKeyManyToOne()){
 //				final AttributeSource attributeSource = buildAttributeSource(
@@ -568,7 +569,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 		@Override
 		public EntityIdentifierNature getNature() {
-			return EntityIdentifierNature.COMPOSITE;
+			return EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 		}
 
 		@Override
@@ -578,7 +579,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 		@Override
 		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
-			return entityElement().getId().getMeta();
+			return entityElement().getCompositeId().getMeta();
 		}
 	}
 }

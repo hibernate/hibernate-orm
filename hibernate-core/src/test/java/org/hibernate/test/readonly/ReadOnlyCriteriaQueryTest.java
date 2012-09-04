@@ -58,7 +58,6 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {

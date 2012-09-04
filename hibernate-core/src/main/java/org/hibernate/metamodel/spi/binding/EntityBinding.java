@@ -54,7 +54,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-public class EntityBinding implements AttributeBindingContainer {
+public class EntityBinding implements MutableAttributeBindingContainer {
 	private static final String NULL_DISCRIMINATOR_MATCH_VALUE = "null";
 	private static final String NOT_NULL_DISCRIMINATOR_MATCH_VALUE = "not null";
 
@@ -508,7 +508,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	}
 
 	@Override
-	public CompositeAttributeBinding makeComponentAttributeBinding(
+	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
@@ -530,7 +530,7 @@ public class EntityBinding implements AttributeBindingContainer {
 		return binding;
 	}
 
-	public CompositeAttributeBinding makeVirtualComponentAttributeBinding(
+	public NonAggregatedCompositeAttributeBinding makeVirtualCompositeAttributeBinding(
 			SingularAttribute syntheticAttribute,
 			List<SingularAttributeBinding> subAttributeBindings,
 			MetaAttributeContext metaAttributeContext) {
@@ -539,7 +539,7 @@ public class EntityBinding implements AttributeBindingContainer {
 					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
 			);
 		}
-		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
+		final NonAggregatedCompositeAttributeBinding binding = new NonAggregatedCompositeAttributeBinding(
 				this,
 				syntheticAttribute,
 				PropertyAccessorFactory.EMBEDDED_ACCESSOR_NAME,

@@ -35,7 +35,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-@FailureExpectedWithNewMetamodel
 public class IdClassCompositePKTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityMappningPropertiesAreNotIgnored() {

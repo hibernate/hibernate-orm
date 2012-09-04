@@ -55,7 +55,7 @@ public enum EntityIdentifierNature {
 	 *
 	 * @see javax.persistence.IdClass
 	 */
-	COMPOSITE,
+	NON_AGGREGATED_COMPOSITE,
 
 	/**
 	 * Composite identifier mapped to a single entity attribute by means of an actual component class used to

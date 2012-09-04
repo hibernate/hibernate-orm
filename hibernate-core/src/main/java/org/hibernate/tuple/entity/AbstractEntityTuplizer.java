@@ -51,6 +51,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
@@ -90,11 +91,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	protected final boolean hasCustomAccessors;
 	private final Instantiator instantiator;
 	private final ProxyFactory proxyFactory;
-	private final CompositeType identifierMapperType;
-
-	public Type getIdentifierMapperType() {
-		return identifierMapperType;
-	}
+	private final boolean hasIdentifierMapper;
 
 	/**
 	 * Build an appropriate Getter for the given property.
@@ -220,14 +217,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		Component mapper = mappingInfo.getIdentifierMapper();
 		if ( mapper == null ) {
-			identifierMapperType = null;
+			hasIdentifierMapper = false;
 			mappedIdentifierValueMarshaller = null;
 		}
 		else {
-			identifierMapperType = (CompositeType) mapper.getType();
+			hasIdentifierMapper = true;
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
-					(ComponentType) identifierMapperType
+					(ComponentType) mapper.getType()
 			);
 		}
 	}
@@ -258,7 +255,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		boolean foundCustomAccessor = false;
 		int i = 0;
 		for ( AttributeBinding property : mappingInfo.getAttributeBindingClosure() ) {
-			if ( property == mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() ) {
+			if ( mappingInfo.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( property ) ) {
 				continue; // ID binding processed above
 			}
 
@@ -284,19 +281,22 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			proxyFactory = null;
 		}
 
-
-		// TODO: Fix this when components are working (HHH-6173)
-		//Component mapper = mappingInfo.getEntityIdentifier().getIdentifierMapper();
-		Component mapper = null;
-		if ( mapper == null ) {
-			identifierMapperType = null;
+		final EntityIdentifier entityIdentifier = mappingInfo.getHierarchyDetails().getEntityIdentifier();
+		if ( !entityIdentifier.isIdentifierMapper() ) {
+			hasIdentifierMapper = false;
 			mappedIdentifierValueMarshaller = null;
 		}
 		else {
-			identifierMapperType = ( CompositeType ) mapper.getType();
+			hasIdentifierMapper = true;
+			// TODO: this only deals with normal IdClass; still need to deal with MapsId
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
-					( ComponentType ) entityMetamodel.getIdentifierProperty().getType(),
-					( ComponentType ) identifierMapperType
+					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
+					(ComponentType) mappingInfo
+							.getHierarchyDetails()
+							.getEntityIdentifier()
+							.getAttributeBinding()
+							.getHibernateTypeDescriptor()
+							.getResolvedTypeMapping()
 			);
 		}
 	}
@@ -330,7 +330,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		else {
 			if ( idGetter == null ) {
-				if (identifierMapperType==null) {
+				if ( !hasIdentifierMapper) {
 					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 				}
 				else {
@@ -380,7 +380,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else if ( idSetter != null ) {
 			idSetter.set( entity, id, getFactory() );
 		}
-		else if ( identifierMapperType != null ) {
+		else if ( hasIdentifierMapper ) {
 			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
 		}
 	}

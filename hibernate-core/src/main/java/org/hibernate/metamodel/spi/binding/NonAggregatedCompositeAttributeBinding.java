@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,76 +24,56 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * TODO : this really needs an overhaul...  mainly, get rid of the KeyValueBinding concept...
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BasicAttributeBinding
-		extends AbstractSingularAttributeBinding
-		implements SingularNonAssociationAttributeBinding {
+public class NonAggregatedCompositeAttributeBinding extends AbstractCompositeAttributeBinding {
+	private final Map<String, AttributeBinding> attributeBindingMap;
 
-	private final List<RelationalValueBinding> relationalValueBindings;
-	private boolean hasDerivedValue;
-	private final PropertyGeneration generation;
-
-	BasicAttributeBinding(
+	public NonAggregatedCompositeAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
-			List<RelationalValueBinding> relationalValueBindings,
 			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean lazy,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
-			PropertyGeneration generation) {
+			List<SingularAttributeBinding> subAttributeBindings) {
 		super(
 				container,
 				attribute,
 				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
+				false,
+				false,
 				naturalIdMutability,
 				metaAttributeContext
 		);
-		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
+		if ( !AttributeContainer.class.isInstance( attribute.getSingularAttributeType() ) ||
+				attribute.getSingularAttributeType().isComposite() ) {
+			throw new IllegalArgumentException(
+					"Expected the attribute type to be an non-component attribute container"
+			);
 		}
-		this.generation = generation;
+		Map<String, AttributeBinding> map = new LinkedHashMap<String, AttributeBinding>();
+		for ( SingularAttributeBinding attributeBinding : subAttributeBindings ) {
+			map.put( attributeBinding.getAttribute().getName(), attributeBinding );
+		}
+		attributeBindingMap = Collections.unmodifiableMap( map );
 	}
 
 	@Override
-	public boolean isAssociation() {
+	public boolean isAggregated() {
 		return false;
 	}
 
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
-	}
-
 	@Override
-	public boolean hasDerivedValue() {
-		return hasDerivedValue;
-	}
-
-	@Override
-	public boolean isNullable() {
-		return hasNullableRelationalValueBinding( relationalValueBindings );
-	}
-
-	public PropertyGeneration getGeneration() {
-		return generation;
-	}
-
-	@Override
-	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
-		valueBindings.addAll( relationalValueBindings );
+	protected Map<String, AttributeBinding> attributeBindingMapInternal() {
+		return attributeBindingMap;
 	}
 }

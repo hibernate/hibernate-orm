@@ -58,6 +58,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class Oracle8iDialect extends Dialect {
+	
+	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public Oracle8iDialect() {
 		super();
@@ -551,15 +553,30 @@ public class Oracle8iDialect extends Dialect {
 		return false;
 	}
 
-
-	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	@Override
 	public boolean supportsEmptyInList() {
 		return false;
 	}
+	
 	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
+	 */
+	@Override
+	public boolean limitsParamListSize() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
+	 */
+	@Override
+	public int getParamListSizeLimit() {
+		return PARAM_LIST_SIZE_LIMIT;
 	}
 
 }

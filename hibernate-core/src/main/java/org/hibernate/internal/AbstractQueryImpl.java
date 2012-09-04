@@ -49,6 +49,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
@@ -65,6 +66,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Abstract implementation of the Query interface.
@@ -73,6 +75,7 @@ import org.hibernate.type.Type;
  * @author Max Andersen
  */
 public abstract class AbstractQueryImpl implements Query {
+	private static final Logger log = Logger.getLogger( AbstractQueryImpl.class );
 
 	private static final Object UNSET_PARAMETER = new MarkerObject("<unset parameter>");
 	private static final Object UNSET_TYPE = new MarkerObject("<unset type>");
@@ -798,6 +801,22 @@ public abstract class AbstractQueryImpl implements Query {
 	 */
 	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
+		
+		// HHH-1123
+		// Some DBs limit the size of param lists.  For now, warn...
+		//
+		// TODO: HHH-1123 was rejected, but this issue may still deserve some
+		// research.
+		Dialect dialect = session.getFactory().getDialect();
+		if (dialect.limitsParamListSize()
+				&& vals.size() >= dialect.getParamListSizeLimit()) {
+			log.warn(dialect.getClass().getName()
+					+ " limits the size of parameter lists to "
+					+ dialect.getParamListSizeLimit()
+					+ " entries.  The given list size of "
+					+ vals.size() + " may cause failures.");
+		}
+			
 		Type type = typedList.getType();
 
 		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();

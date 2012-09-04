@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
  *
  * @author Gavin King
  */
-public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
+public class SybaseASE15Dialect extends SybaseDialect {
 	public SybaseASE15Dialect() {
 		super();
 

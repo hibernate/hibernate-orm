@@ -39,6 +39,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
+	
+	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
 	public SQLServerDialect() {
 		registerColumnType( Types.VARBINARY, "image" );
@@ -188,5 +190,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
     protected SqlTypeDescriptor getSqlTypeDescriptorOverride( int sqlCode ) {
         return sqlCode == Types.TINYINT ? SmallIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride(sqlCode);
     }
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
+	 */
+	@Override
+	public boolean limitsParamListSize() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
+	 */
+	@Override
+	public int getParamListSizeLimit() {
+		return PARAM_LIST_SIZE_LIMIT;
+	}
 }
 

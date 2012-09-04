@@ -52,6 +52,8 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @Deprecated
 public class Oracle9Dialect extends Dialect {
+	
+	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Oracle9Dialect.class.getName());
 
@@ -360,14 +362,27 @@ public class Oracle9Dialect extends Dialect {
 		return false;
 	}
 
-
-	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	public boolean supportsEmptyInList() {
 		return false;
 	}
 
 	public boolean supportsExistsInSelect() {
 		return false;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
+	 */
+	@Override
+	public boolean limitsParamListSize() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
+	 */
+	@Override
+	public int getParamListSizeLimit() {
+		return PARAM_LIST_SIZE_LIMIT;
 	}
 }

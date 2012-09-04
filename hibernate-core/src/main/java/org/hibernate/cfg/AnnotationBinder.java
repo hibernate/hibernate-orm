@@ -2495,7 +2495,7 @@ public final class AnnotationBinder {
 			value.setColumns( columns );
 			value.setPersistentClassName( persistentClassName );
 			value.setMappings( mappings );
-			value.setType( inferredData.getProperty(), inferredData.getClassOrElement() );
+			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName );
 			value.setAccessType( propertyAccessor );
 			id = value.make();
 		}

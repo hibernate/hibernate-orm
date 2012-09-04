@@ -185,7 +185,7 @@ public class PropertyBinder {
 		simpleValueBinder.setReturnedClassName( returnedClassName );
 		simpleValueBinder.setColumns( columns );
 		simpleValueBinder.setPersistentClassName( containerClassName );
-		simpleValueBinder.setType( property, returnedClass );
+		simpleValueBinder.setType( property, returnedClass, containerClassName );
 		simpleValueBinder.setMappings( mappings );
 		simpleValueBinder.setReferencedEntityName( referencedEntityName );
 		simpleValueBinder.setAccessType( accessType );

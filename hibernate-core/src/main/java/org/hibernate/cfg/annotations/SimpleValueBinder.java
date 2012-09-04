@@ -140,10 +140,11 @@ public class SimpleValueBinder {
 
 	//TODO execute it lazily to be order safe
 
-	public void setType(XProperty property, XClass returnedClass) {
+	public void setType(XProperty property, XClass returnedClass, String declaringClassName) {
 		if ( returnedClass == null ) {
+			// we cannot guess anything
 			return;
-		} //we cannot guess anything
+		}
 		XClass returnedClassOrElement = returnedClass;
                 boolean isArray = false;
 		if ( property.isArray() ) {
@@ -237,6 +238,17 @@ public class SimpleValueBinder {
 		}
 		else if ( ( !key && property.isAnnotationPresent( Enumerated.class ) )
 				|| ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) ) {
+			final Class attributeJavaType = mappings.getReflectionManager().toClass( returnedClassOrElement );
+			if ( !Enum.class.isAssignableFrom( attributeJavaType ) ) {
+				throw new AnnotationException(
+						String.format(
+								"Attribute [%s.%s] was annotated as enumerated, but its java type is not an enum [%s]",
+								declaringClassName,
+								xproperty.getName(),
+								attributeJavaType.getName()
+						)
+				);
+			}
 			type = EnumType.class.getName();
 			explicitType = type;
 		}

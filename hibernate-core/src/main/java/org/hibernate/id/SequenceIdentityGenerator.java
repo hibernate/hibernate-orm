@@ -111,7 +111,7 @@ public class SequenceIdentityGenerator
 			insert.executeUpdate();
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
-					getPersister().getIdentifierColumnNames()[0],
+					getPersister().getRootTableKeyColumnNames()[0],
 					getPersister().getIdentifierType()
 			);
 		}

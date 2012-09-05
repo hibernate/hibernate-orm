@@ -53,6 +53,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -1393,17 +1394,34 @@ public final class AnnotationBinder {
 				if ( element.isAnnotationPresent( Id.class ) && element.isAnnotationPresent( Column.class ) ) {
 					String columnName = element.getAnnotation( Column.class ).name();
 					for ( XProperty prop : declaringClass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
-						if ( prop.isAnnotationPresent( JoinColumn.class )
-								&& prop.getAnnotation( JoinColumn.class ).name().equals( columnName )
-								&& !prop.isAnnotationPresent( MapsId.class ) ) {
-							//create a PropertyData fpr the specJ property holding the mapping
-							PropertyData specJPropertyData = new PropertyInferredData(
-									declaringClass,  //same dec
-									prop, // the actual @XToOne property
-									propertyAccessor, //TODO we should get the right accessor but the same as id would do
-									mappings.getReflectionManager()
-							);
-							mappings.addPropertyAnnotatedWithMapsIdSpecj( entity, specJPropertyData, element.toString() );
+						if ( !prop.isAnnotationPresent( MapsId.class ) ) {
+						   /**
+						    * The detection of a configured individual JoinColumn differs between Annotation 
+						    * and XML configuration processing.
+						    */
+						   boolean isRequiredAnnotationPresent = false;
+						   JoinColumns groupAnnotation = prop.getAnnotation(JoinColumns.class);
+						   if ( ( prop.isAnnotationPresent( JoinColumn.class )
+	                        && prop.getAnnotation( JoinColumn.class ).name().equals( columnName ) ) ) {
+						      isRequiredAnnotationPresent = true;
+						   } else if ( prop.isAnnotationPresent( JoinColumns.class ) ) {
+						      for ( JoinColumn columnAnnotation : groupAnnotation.value() ) {
+						         if ( columnName.equals(columnAnnotation.name() ) ) {
+						            isRequiredAnnotationPresent = true;
+						            break;
+						         }
+						      }
+						   }
+						   if ( isRequiredAnnotationPresent ) {
+   							//create a PropertyData fpr the specJ property holding the mapping
+   							PropertyData specJPropertyData = new PropertyInferredData(
+   									declaringClass,  //same dec
+   									prop, // the actual @XToOne property
+   									propertyAccessor, //TODO we should get the right accessor but the same as id would do
+   									mappings.getReflectionManager()
+   							);
+   							mappings.addPropertyAnnotatedWithMapsIdSpecj( entity, specJPropertyData, element.toString() );
+						   }
 						}
 					}
 				}

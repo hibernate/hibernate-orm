@@ -30,8 +30,10 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.LocalStatus;
+import org.hibernate.testing.RequiresDialect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,6 +43,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)
 public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {

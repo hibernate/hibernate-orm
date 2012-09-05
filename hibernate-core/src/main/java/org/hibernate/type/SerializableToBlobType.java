@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.dom4j.Node;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -43,14 +42,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * @author Emmanuel Bernard
  */
-public class SerializableToBlobType extends AbstractLobType implements ParameterizedType {
+public class SerializableToBlobType extends AbstractLobType implements DynamicParameterizedType {
 	/**
-	 * class name of the serialisable class
+	 * class name of the serialisable class   
 	 */
 	public static final String CLASS_NAME = "classname";
 	private Class serializableClass;
@@ -138,17 +137,19 @@ public class SerializableToBlobType extends AbstractLobType implements Parameter
 	}
 
 	public void setParameterValues(Properties parameters) {
-		if ( parameters != null ) {
+		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
+		if ( reader != null ) {
+			serializableClass = reader.getReturnedClass();
+		}
+		else {
 			String className = parameters.getProperty( CLASS_NAME );
 			if ( className == null ) {
-				throw new MappingException(
-						"No class name defined for type: " + SerializableToBlobType.class.getName()
-				);
+				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
 			}
 			try {
 				serializableClass = ReflectHelper.classForName( className );
 			}
-			catch (ClassNotFoundException e) {
+			catch ( ClassNotFoundException e ) {
 				throw new MappingException( "Unable to load class from " + CLASS_NAME + " parameter", e );
 			}
 		}

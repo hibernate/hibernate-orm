@@ -1,12 +1,14 @@
 // $Id: AggressiveReleaseTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.connections;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Hibernate;
@@ -14,21 +16,21 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Implementation of AggressiveReleaseTest.
  *
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {

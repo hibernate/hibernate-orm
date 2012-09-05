@@ -96,6 +96,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -1213,6 +1214,11 @@ public final class HbmBinder {
 			}
 		}
 
+		resolveAndBindTypeDef(simpleValue, mappings, typeName, parameters);
+	}
+
+	private static void resolveAndBindTypeDef(SimpleValue simpleValue,
+			Mappings mappings, String typeName, Properties parameters) {
 		TypeDef typeDef = mappings.getTypeDef( typeName );
 		if ( typeDef != null ) {
 			typeName = typeDef.getTypeClass();
@@ -1222,6 +1228,19 @@ public final class HbmBinder {
 			allParameters.putAll( typeDef.getParameters() );
 			allParameters.putAll( parameters );
 			parameters = allParameters;
+		}else if (typeName!=null && !mappings.isInSecondPass()){
+			BasicType basicType=mappings.getTypeResolver().basic(typeName);
+			if (basicType==null) {
+				/*
+				 * If the referenced typeName isn't a basic-type, it's probably a typedef defined 
+				 * in a mapping file not read yet.
+				 * It should be solved by deferring the resolution and binding of this type until 
+				 * all mapping files are read - the second passes.
+				 * Fixes issue HHH-7300
+				 */
+				SecondPass resolveUserTypeMappingSecondPass=new ResolveUserTypeMappingSecondPass(simpleValue,typeName,mappings,parameters);
+				mappings.addSecondPass(resolveUserTypeMappingSecondPass);
+			}
 		}
 
 		if ( !parameters.isEmpty() ) simpleValue.setTypeParameters( parameters );
@@ -3148,5 +3167,28 @@ public final class HbmBinder {
 
 	private static interface EntityElementHandler {
 		public void handleEntity(String entityName, String className, Mappings mappings);
+	}
+	
+	private static class ResolveUserTypeMappingSecondPass implements SecondPass{
+
+		private SimpleValue simpleValue;
+		private String typeName;
+		private Mappings mappings;
+		private Properties parameters;
+
+		public ResolveUserTypeMappingSecondPass(SimpleValue simpleValue,
+				String typeName, Mappings mappings, Properties parameters) {
+			this.simpleValue=simpleValue;
+			this.typeName=typeName;
+			this.parameters=parameters;
+			this.mappings=mappings;
+		}
+
+		@Override
+		public void doSecondPass(java.util.Map persistentClasses)
+				throws MappingException {
+			resolveAndBindTypeDef(simpleValue, mappings, typeName, parameters);		
+		}
+		
 	}
 }

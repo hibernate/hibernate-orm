@@ -25,16 +25,27 @@ package org.hibernate.dialect;
 
 
 /**
- * This dialect is being deprecated; it had been used both as the base class
- * for TransactSQL-based dialects as well as the physical dialect for handling
- * Sybase.  Those functions have now been split.
- * {@link AbstractTransactSQLDialect} should be used as the base class for 
- * TransactSQL-based dialects.
+ * All Sybase dialects share an IN list size limit.
  *
- * @deprecated use {@link AbstractTransactSQLDialect}, {@link SybaseASE15Dialect} or {@link SQLServerDialect}
- * instead depending on need.
- *
- * @author Gail Badner
+ * @author Brett Meyer
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
+	
+	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
+	 */
+	@Override
+	public boolean limitsParamListSize() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
+	 */
+	@Override
+	public int getParamListSizeLimit() {
+		return PARAM_LIST_SIZE_LIMIT;
+	}
 }

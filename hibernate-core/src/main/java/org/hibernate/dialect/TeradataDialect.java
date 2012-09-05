@@ -37,6 +37,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Jay Nance
  */
 public class TeradataDialect extends Dialect {
+	
+	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	/**
 	 * Constructor
@@ -255,5 +257,21 @@ public class TeradataDialect extends Dialect {
 
 	public boolean supportsBindAsCallableArgument() {
 		return false;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
+	 */
+	@Override
+	public boolean limitsParamListSize() {
+		return true;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
+	 */
+	@Override
+	public int getParamListSizeLimit() {
+		return PARAM_LIST_SIZE_LIMIT;
 	}
 }

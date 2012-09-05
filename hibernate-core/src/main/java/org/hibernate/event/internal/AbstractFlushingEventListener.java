@@ -358,6 +358,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			if ( collectionEntry.getLoadedPersister() == null ) {
 				//if the collection is dereferenced, remove from the session cache
 				//iter.remove(); //does not work, since the entrySet is not backed by the set
+				persistentCollection.unsetSession( session );
 				persistenceContext.getCollectionEntries()
 						.remove(persistentCollection);
 			}

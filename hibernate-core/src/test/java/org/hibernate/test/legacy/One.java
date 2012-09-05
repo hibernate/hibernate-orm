@@ -1,11 +1,12 @@
 //$Id: One.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
+import java.util.HashSet;
 import java.util.Set;
 
 public class One {
 	Long key;
 	String value;
-	Set manies;
+	Set manies = new HashSet();
 	private int x;
 	
 	public int getX() {

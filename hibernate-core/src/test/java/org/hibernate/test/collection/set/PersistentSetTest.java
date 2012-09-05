@@ -24,15 +24,19 @@
 package org.hibernate.test.collection.set;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -141,6 +145,36 @@ public class PersistentSetTest extends BaseCoreFunctionalTestCase {
 		session.delete( parent );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-4468", message = "Fails due to fix for HHH-4468" )
+	public void testCollectionNullify() {
+		Session session = openSession();
+		session.beginTransaction();
+		Parent parent = new Parent( "p1" );
+		session.save( parent );
+		session.getTransaction().commit();
+		session.close();
+
+		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
+		long recreateCount = stats.getRecreateCount();
+		long updateCount = stats.getUpdateCount();
+
+		session = openSession();
+		session.beginTransaction();
+		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		assertTrue( !Hibernate.isInitialized( parent.getChildren() ) );
+		parent.setChildren( null );
+		session.flush();
+		assertEquals( null, parent.getChildren() );
+		session.delete( parent );
+		session.getTransaction().commit();
+		session.close();
+
+		assertEquals( null, parent.getChildren() );
+		assertEquals( recreateCount, stats.getRecreateCount() );
+		assertEquals( updateCount, stats.getUpdateCount() );
 	}
 
 	@Test

@@ -31,6 +31,7 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.loader.Player;
 import org.hibernate.test.annotations.loader.Team;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 public class OneToManyBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = { Team.class, Player.class })
+	@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7549")
 	public void testPluralAttributeBindingTest() {
 		EntityBinding playerBinding = getEntityBinding( Player.class );
 		assertNotNull( playerBinding );

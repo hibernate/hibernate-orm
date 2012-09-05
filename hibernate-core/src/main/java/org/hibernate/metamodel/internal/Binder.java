@@ -1232,9 +1232,13 @@ public class Binder {
 					)
 			);
 		}
+		// TODO - verify whether table spec source should/can be null or whether there will always be one (HF)
 		if ( attributeSource.getCollectionTableSpecificationSource() != null ) {
+			TableSpecificationSource tableSpecificationSource = attributeSource.getCollectionTableSpecificationSource();
+			if(tableSpecificationSource.getExplicitCatalogName() != null || tableSpecificationSource.getExplicitSchemaName() != null) {
 				// TODO: Need to look up the table to be able to create the foreign key
 				throw new NotYetImplementedException( "one-to-many using a join table is not supported yet." );
+			}
 		}
 		TableSpecification collectionTable = referencedEntityBinding.getPrimaryTable();
 		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );

@@ -137,6 +137,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAutoflushIsNotRequiredWithUnrelatedCollectionChange() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

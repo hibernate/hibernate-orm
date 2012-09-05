@@ -2365,24 +2365,14 @@ public abstract class Dialect implements ConversionContext {
 		// oddly most database in fact seem to, so true is the default.
 		return true;
 	}
-	
+
 	/**
-	 * Does this databases restrict the number of parameters in a query list?
+	 * Return the limit that the underlying database places on the number elements in an {@code IN} predicate.
+	 * If the database defines no such limits, simply return zero or less-than-zero.
 	 * 
-	 * @return boolean
-	 * 		True if limited, false if not.
+	 * @return int The limit, or zero-or-less to indicate no limit.
 	 */
-	public boolean limitsParamListSize() {
-		return false;
-	}
-	
-	/**
-	 * If limitsListSize() is true, define the size threshold.
-	 * 
-	 * @return int
-	 * 		The list size threshold
-	 */
-	public int getParamListSizeLimit() {
+	public int getInExpressionCountLimit() {
 		return 0;
 	}
 }

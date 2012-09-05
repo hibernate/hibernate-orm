@@ -32,20 +32,12 @@ package org.hibernate.dialect;
 public class SybaseDialect extends AbstractTransactSQLDialect {
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
-	
+
 	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
-	 */
+		 * @see org.hibernate.dialect.Dialect#getInExpressionCountLimit()
+		 */
 	@Override
-	public boolean limitsParamListSize() {
-		return true;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
-	 */
-	@Override
-	public int getParamListSizeLimit() {
+	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
 }

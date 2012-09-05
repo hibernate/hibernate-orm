@@ -1574,4 +1574,13 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "NaturalId queries executed to database: %s", id = 442)
 	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
+					"However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
+					"to execute the query in the database",
+			id = 443
+	)
+	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
 }

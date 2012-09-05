@@ -75,7 +75,10 @@ import org.jboss.logging.Logger;
  * @author Max Andersen
  */
 public abstract class AbstractQueryImpl implements Query {
-	private static final Logger log = Logger.getLogger( AbstractQueryImpl.class );
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractQueryImpl.class.getName()
+	);
 
 	private static final Object UNSET_PARAMETER = new MarkerObject("<unset parameter>");
 	private static final Object UNSET_TYPE = new MarkerObject("<unset type>");
@@ -803,20 +806,13 @@ public abstract class AbstractQueryImpl implements Query {
 		Collection vals = (Collection) typedList.getValue();
 		
 		// HHH-1123
-		// Some DBs limit the size of param lists.  For now, warn...
-		//
-		// TODO: HHH-1123 was rejected, but this issue may still deserve some
-		// research.
-		Dialect dialect = session.getFactory().getDialect();
-		if (dialect.limitsParamListSize()
-				&& vals.size() >= dialect.getParamListSizeLimit()) {
-			log.warn(dialect.getClass().getName()
-					+ " limits the size of parameter lists to "
-					+ dialect.getParamListSizeLimit()
-					+ " entries.  The given list size of "
-					+ vals.size() + " may cause failures.");
+		// Some DBs limit number of IN expressions.  For now, warn...
+		final Dialect dialect = session.getFactory().getDialect();
+		final int inExprLimit = dialect.getInExpressionCountLimit();
+		if ( inExprLimit > 0 && vals.size() > inExprLimit ) {
+			log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, name, vals.size() );
 		}
-			
+
 		Type type = typedList.getType();
 
 		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();

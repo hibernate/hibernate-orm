@@ -258,20 +258,12 @@ public class TeradataDialect extends Dialect {
 	public boolean supportsBindAsCallableArgument() {
 		return false;
 	}
-	
+
 	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
-	 */
+		 * @see org.hibernate.dialect.Dialect#getInExpressionCountLimit()
+		 */
 	@Override
-	public boolean limitsParamListSize() {
-		return true;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
-	 */
-	@Override
-	public int getParamListSizeLimit() {
+	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
 }

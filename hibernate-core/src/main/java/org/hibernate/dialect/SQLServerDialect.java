@@ -190,20 +190,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
     protected SqlTypeDescriptor getSqlTypeDescriptorOverride( int sqlCode ) {
         return sqlCode == Types.TINYINT ? SmallIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride(sqlCode);
     }
-	
+
 	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#limitsParamListSize()
-	 */
+		 * @see org.hibernate.dialect.Dialect#getInExpressionCountLimit()
+		 */
 	@Override
-	public boolean limitsParamListSize() {
-		return true;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hibernate.dialect.Dialect#getParamListSizeLimit()
-	 */
-	@Override
-	public int getParamListSizeLimit() {
+	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
 }

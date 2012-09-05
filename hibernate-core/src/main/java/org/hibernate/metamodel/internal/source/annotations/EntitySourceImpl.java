@@ -242,6 +242,12 @@ public class EntitySourceImpl implements EntitySource {
 							:new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute );
 					attributeList.add( source );
 					break;
+				case ELEMENT_COLLECTION_BASIC:
+				case ELEMENT_COLLECTION_EMBEDDABLE: {
+					source = new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute );
+					attributeList.add( source );
+					break;
+				}
 				default: {
 					throw new NotYetImplementedException();
 				}

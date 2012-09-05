@@ -92,7 +92,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		// TODO: this will fail until HHH-7121 is fixed
 		//assertTrue( entityBinding.getPrimaryTable().locateColumn( "`name`" ).isUnique() );
 
-		checkResult(
+		assertBasicCollectionBinding(
 				entityBinding,
 				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" ),
 				BagType.class,
@@ -105,7 +105,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 				true
 		);
 
-		checkResult(
+		assertBasicCollectionBinding(
 				entityBinding,
 				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" ),
 				SetType.class,
@@ -118,13 +118,13 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 				true
 		);
 
-		checkResult(
+		assertBasicCollectionBinding(
 				entityBinding,
 				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" ),
 				SetType.class,
 				Set.class,
 				Integer.class,
-				(SingularAttributeBinding ) entityBinding.locateAttributeBinding( "name" ),
+				( SingularAttributeBinding ) entityBinding.locateAttributeBinding( "name" ),
 				Identifier.toIdentifier( "EntityWithBasicCollections_thePropertyRefSet" ),
 				Identifier.toIdentifier( "pid" ),
 				FetchTiming.DELAYED,
@@ -132,7 +132,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		);
 	}
 
-	private <X extends CollectionType> void checkResult(
+	private <X extends CollectionType> void assertBasicCollectionBinding(
 			EntityBinding collectionOwnerBinding,
 			PluralAttributeBinding collectionBinding,
 			Class<X> expectedCollectionTypeClass,

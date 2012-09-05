@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.binding.basiccollections;
 import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Hardy Ferentschik
@@ -37,7 +36,6 @@ public class AnnotationBasicCollectionBindingTests extends AbstractBasicCollecti
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBasicCollections() {
 		super.testBasicCollections();
 	}

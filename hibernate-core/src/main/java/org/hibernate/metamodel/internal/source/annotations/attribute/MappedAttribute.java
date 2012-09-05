@@ -75,9 +75,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 * Defines the column values (relational values) for this property. A mapped property can refer to multiple
 	 * column values in case of components or join columns etc
 	 */
-	private List<Column> columnValues = new ArrayList<Column>(  );
+	private List<Column> columnValues = new ArrayList<Column>();
 
-	private List<Column> joinColumnValues = new ArrayList<Column>(  );
+	private List<Column> joinColumnValues = new ArrayList<Column>();
 
 	/**
 	 * Is this property an id property (or part thereof).
@@ -86,7 +86,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	/**
 	 * Is this property a natural id property and what's the mutability it is.
- 	 */
+	 */
 	private SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	/**
@@ -154,7 +154,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return columnValues;
 	}
 
-	public List<Column> getJoinColumnValues(){
+	public List<Column> getJoinColumnValues() {
 		return joinColumnValues;
 	}
 
@@ -229,7 +229,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		if ( naturalIdAnnotation == null ) {
 			return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 		}
-		final boolean mutable = naturalIdAnnotation.value("mutable") == null ? false : naturalIdAnnotation.value( "mutable" ).asBoolean();
+		final boolean mutable = naturalIdAnnotation.value( "mutable" ) == null ? false :
+				naturalIdAnnotation.value("mutable").asBoolean();
 		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
 	}
 
@@ -240,8 +241,11 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				JPADotNames.COLUMN
 		);
 		if ( columnAnnotation != null ) {
-			if ( getNature() == Nature.MANY_TO_ONE  || getNature() == Nature.ONE_TO_ONE) {
-				throw getContext().makeMappingException( "@Column(s) not allowed on a "+ getNature() +" property: " +getContext().getOrigin().getName() +"."+ name );
+			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
+				throw getContext().makeMappingException(
+						"@Column(s) not allowed on a " + getNature() + " property: " + getContext().getOrigin()
+								.getName() + "." + name
+				);
 			}
 			columnValues.add( new Column( columnAnnotation ) );
 		}
@@ -261,8 +265,11 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				HibernateDotNames.COLUMNS
 		);
 		if ( columnsAnnotation != null ) {
-			if ( getNature() == Nature.MANY_TO_ONE  || getNature() == Nature.ONE_TO_ONE) {
-				throw getContext().makeMappingException( "@Column(s) not allowed on a "+ getNature() +" property: " +getContext().getOrigin().getName() +"."+ name );
+			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
+				throw getContext().makeMappingException(
+						"@Column(s) not allowed on a " + getNature() + " property: " + getContext().getOrigin()
+								.getName() + "." + name
+				);
 			}
 			List<AnnotationInstance> columnsList = Arrays.asList(
 					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
@@ -295,10 +302,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 		return checkCondition;
 	}
+
 	/**
 	 * An enum defining the type of a mapped attribute.
-	 *
-	 * @author Hardy Ferentschik
 	 */
 	public static enum Nature {
 		BASIC( JPADotNames.BASIC ),
@@ -320,12 +326,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 		public DotName getAnnotationDotName() {
 			return annotationDotName;
-		}
-
-		@Override
-		public String toString() {
-			return "Nature{" +annotationDotName.toString()+
-					'}';
 		}
 	}
 }

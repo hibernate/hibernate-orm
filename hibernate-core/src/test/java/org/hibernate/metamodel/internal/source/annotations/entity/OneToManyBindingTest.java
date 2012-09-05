@@ -54,12 +54,10 @@ public class OneToManyBindingTest extends BaseAnnotationBindingTestCase {
 
 		EntityBinding teamBinding = getEntityBinding( Team.class );
 		assertNotNull( teamBinding );
-		attributeBinding =  teamBinding.locateAttributeBinding( "players" );
+		attributeBinding = teamBinding.locateAttributeBinding( "players" );
 		assertTrue( attributeBinding.isAssociation() );
 		typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 
 		PluralAttributeBinding pluralAttributeBinding = PluralAttributeBinding.class.cast( attributeBinding );
-
-
 	}
 }

@@ -28,8 +28,12 @@ package org.hibernate.jaxb.spi.hbm;
  */
 public interface TableInformationSource {
 	public String getSchema();
+
 	public String getCatalog();
+
 	public String getTable();
+
 	public String getSubselect();
+
 	public String getSubselectAttribute();
 }

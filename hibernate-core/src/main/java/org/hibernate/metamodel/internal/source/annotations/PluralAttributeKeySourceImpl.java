@@ -115,16 +115,15 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 		public JoinColumnResolutionDelegateImpl(PluralAssociationAttribute attribute) {
 			this.attribute = attribute;
-
 		}
 
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
-			List<Column> joinClumnValues = attribute.getJoinColumnValues();
-			if ( joinClumnValues.isEmpty() ) {
+			List<Column> joinColumnValues = attribute.getJoinColumnValues();
+			if ( joinColumnValues.isEmpty() ) {
 				return null;
 			}
-			List<Value> result = new ArrayList<Value>( joinClumnValues.size() );
+			List<Value> result = new ArrayList<Value>( joinColumnValues.size() );
 			for ( Column column : attribute.getJoinColumnValues() ) {
 				result.add( context.resolveColumn( column.getReferencedColumnName(), null, null, null ) );
 			}

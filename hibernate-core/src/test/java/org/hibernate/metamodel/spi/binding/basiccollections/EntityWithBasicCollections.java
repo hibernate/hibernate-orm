@@ -30,9 +30,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  * @author Gail Badner
@@ -64,6 +70,7 @@ public class EntityWithBasicCollections {
 		this.id = id;
 	}
 
+	@Column(unique = true)
 	public String getName() {
 		return name;
 	}
@@ -72,7 +79,8 @@ public class EntityWithBasicCollections {
 		this.name = name;
 	}
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
+	@JoinColumn(name = "owner_id")
 	public Collection<String> getTheBag() {
 		return theBag;
 	}
@@ -82,6 +90,8 @@ public class EntityWithBasicCollections {
 	}
 
 	@ElementCollection
+	@LazyCollection(value = LazyCollectionOption.EXTRA)
+	@JoinColumn(name = "pid")
 	public Set<String> getTheSet() {
 		return theSet;
 	}
@@ -91,6 +101,8 @@ public class EntityWithBasicCollections {
 	}
 
 	@ElementCollection
+	@JoinColumn(name = "pid", referencedColumnName = "name")
+	@Column(name="property_ref_set_stuff", nullable = false)
 	public Set<Integer> getThePropertyRefSet() {
 		return thePropertyRefSet;
 	}

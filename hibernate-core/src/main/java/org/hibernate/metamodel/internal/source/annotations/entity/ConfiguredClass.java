@@ -54,7 +54,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -461,10 +460,6 @@ public class ConfiguredClass {
 				}
 				break;
 			}
-			case ELEMENT_COLLECTION_BASIC:
-			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				throw new NotYetImplementedException( "Element collections must still be implemented." );
-			}
 			case EMBEDDED_ID: {
 				final BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName,
@@ -490,7 +485,6 @@ public class ConfiguredClass {
 				resolveEmbeddable( attributeName, attributeType, annotations );
 				break;
 			}
-			// OneToOne, OneToMany, ManyToOne, ManyToMany
 			case ONE_TO_ONE:
 			case MANY_TO_ONE: {
 				final AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
@@ -504,6 +498,8 @@ public class ConfiguredClass {
 				associationAttributeMap.put( attributeName, attribute );
 				break;
 			}
+			case ELEMENT_COLLECTION_BASIC:
+			case ELEMENT_COLLECTION_EMBEDDABLE:
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
 				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
@@ -609,12 +605,13 @@ public class ConfiguredClass {
 				JPADotNames.ELEMENT_COLLECTION
 		);
 		if ( elementCollection != null ) {
+			// class info can be null for types like string, etc where there are no annotations
 			ClassInfo classInfo = getLocalBindingContext().getIndex().getClassByName(
 					DotName.createSimple(
 							referencedCollectionType.getName()
 					)
 			);
-			if ( classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null ) {
+			if ( classInfo != null && classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null ) {
 				discoveredAttributeTypes.put( MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE, elementCollection );
 			}
 			else {

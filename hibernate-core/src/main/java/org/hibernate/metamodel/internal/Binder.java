@@ -2173,8 +2173,7 @@ public class Binder {
 	}
 
 	private PluralAttributeElementBinding.Nature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
-		return PluralAttributeElementBinding.Nature
-				.valueOf( attributeSource.getElementSource().getNature().name() );
+		return PluralAttributeElementBinding.Nature.valueOf( attributeSource.getElementSource().getNature().name() );
 	}
 
 	private PluralAttributeIndexBinding.Nature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {

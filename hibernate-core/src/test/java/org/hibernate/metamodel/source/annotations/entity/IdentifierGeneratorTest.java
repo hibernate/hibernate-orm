@@ -24,14 +24,20 @@
 
 package org.hibernate.metamodel.source.annotations.entity;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -42,17 +48,13 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityIdentifier;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import org.hibernate.testing.RequiresDialect;
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
  */
+@RequiresDialect(H2Dialect.class)
 public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	class NoGenerationEntity {

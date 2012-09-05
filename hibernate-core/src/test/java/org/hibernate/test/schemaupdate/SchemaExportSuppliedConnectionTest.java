@@ -37,19 +37,6 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  */
 public class SchemaExportSuppliedConnectionTest extends SchemaExportTest {
 
-	private ServiceRegistry serviceRegistry;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
-
-	@After
-	public void tearDown() {
-		ServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
-	}
-
 	@Override
 	protected SchemaExport createSchemaExport(Configuration cfg) {
 		return new SchemaExport( serviceRegistry, cfg );

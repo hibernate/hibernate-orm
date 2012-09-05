@@ -27,12 +27,15 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * Implementation of BasicConnectionProviderTest.
  *
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)
 public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() {

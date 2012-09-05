@@ -7,11 +7,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.test.annotations.id.sequences.entities.HibernateSequenceEntity;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -19,6 +21,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6068")
+@RequiresDialect( value = H2Dialect.class)
 public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	private static final String SCHEMA_NAME = "OTHER_SCHEMA";
 

@@ -63,7 +63,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	/**
 	 * The nature of the attribute
 	 */
-	Nature attributeNature;
+	private final Nature attributeNature;
 
 	/**
 	 * The access type for this property. At the moment this is either 'field' or 'property', but Hibernate
@@ -76,8 +76,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 * column values in case of components or join columns etc
 	 */
 	private List<Column> columnValues = new ArrayList<Column>();
-
-	private List<Column> joinColumnValues = new ArrayList<Column>();
 
 	/**
 	 * Is this property an id property (or part thereof).
@@ -152,10 +150,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public List<Column> getColumnValues() {
 		return columnValues;
-	}
-
-	public List<Column> getJoinColumnValues() {
-		return joinColumnValues;
 	}
 
 	public boolean isId() {
@@ -250,15 +244,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			columnValues.add( new Column( columnAnnotation ) );
 		}
 
-		// single @JoinColumn
-		AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				JPADotNames.JOIN_COLUMN
-		);
-		if ( joinColumnAnnotation != null ) {
-			joinColumnValues.add( new Column( joinColumnAnnotation ) );
-		}
-
 		// @org.hibernate.annotations.Columns
 		AnnotationInstance columnsAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
@@ -276,20 +261,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
 				columnValues.add( new Column( annotation ) );
-			}
-		}
-
-		// @JoinColumns
-		AnnotationInstance joinColumnsAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				JPADotNames.JOIN_COLUMNS
-		);
-		if ( joinColumnsAnnotation != null ) {
-			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( joinColumnsAnnotation, "value", AnnotationInstance[].class )
-			);
-			for ( AnnotationInstance annotation : columnsList ) {
-				joinColumnValues.add( new Column( annotation ) );
 			}
 		}
 	}

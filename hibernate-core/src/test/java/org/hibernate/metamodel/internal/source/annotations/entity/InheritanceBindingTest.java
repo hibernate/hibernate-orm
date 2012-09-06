@@ -158,7 +158,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 			OtherSubclassOfSingleTableInheritance.class,
 			SubclassOfSubclassOfSingleTableInheritance.class
 	})
-	public void testRootPolymporhism() {
+	public void testRootPolymporphism() {
 		EntityBinding rootEntityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
 		EntityBinding subclassEntityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
 		EntityBinding otherSubclassEntityBinding = getEntityBinding( OtherSubclassOfSingleTableInheritance.class );

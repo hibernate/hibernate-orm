@@ -22,7 +22,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 
 	@Override
 	public ExplicitHibernateTypeSource getExplicitHibernateTypeSource() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new ExplicitHibernateTypeSourceImpl( associationAttribute );
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>(  );
+		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
 		if ( !associationAttribute.getColumnValues().isEmpty() ) {
 			for ( Column columnValues : associationAttribute.getColumnValues() ) {
 				valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
@@ -51,6 +51,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 		return valueSources;
 	}
 
+	// TODO - these values are also hard coded in the hbm version of this source implementation. Do we really need them? (HF)
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return true;

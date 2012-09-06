@@ -61,17 +61,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		this.nature = resolveAttributeNature();
 		this.keySource = new PluralAttributeKeySourceImpl( attribute );
 		this.elementSource = determineElementSource();
-		this.typeSource = new ExplicitHibernateTypeSource() {
-			@Override
-			public String getName() {
-				return attribute.getHibernateTypeResolver().getExplicitHibernateTypeName();
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return attribute.getHibernateTypeResolver().getExplicitHibernateTypeParameters();
-			}
-		};
+		this.typeSource = new ExplicitHibernateTypeSourceImpl( attribute );
 	}
 
 	@Override

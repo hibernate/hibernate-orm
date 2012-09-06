@@ -104,7 +104,7 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 			}
 		}
 
-		private void createBindings() {
+		private void createBindings() throws Throwable {
 			try {
 				sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 				Resources resourcesAnnotation = origFrameworkMethod.getAnnotation( Resources.class );
@@ -127,6 +127,7 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 				Class<?> expected = testAnnotation.expected();
 				if ( t.getClass().equals( expected ) ) {
 					expectedException = true;
+					return;
 				}
 			}
 		}

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,14 +63,12 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean isOptional;
 	private final boolean isLazy;
 	private final boolean isOrphanRemoval;
-	// todo FetchMode is currently used in the persisters. This will probably get replaced bt FetchStyle and FetchTiming
 	private final FetchMode fetchMode;
 	private final FetchStyle fetchStyle;
 	private final boolean mapsId;
 	private final String referencedIdAttributeName;
-
-	private boolean isInsertable = true;
-	private boolean isUpdatable = true;
+	private final List<Column> joinColumnValues;
+	private final boolean definesExplicitJoinTable;
 	private AttributeTypeResolver resolver;
 
 	public static AssociationAttribute createAssociationAttribute(
@@ -78,10 +78,16 @@ public class AssociationAttribute extends MappedAttribute {
 			String accessType,
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
-		return new AssociationAttribute( name, attributeType, attributeType, attributeNature, accessType, annotations, context );
+		return new AssociationAttribute(
+				name,
+				attributeType,
+				attributeType,
+				attributeNature,
+				accessType,
+				annotations,
+				context
+		);
 	}
-
-
 
 	AssociationAttribute(
 			String name,
@@ -106,11 +112,14 @@ public class AssociationAttribute extends MappedAttribute {
 		this.isLazy = determineIsLazy( associationAnnotation );
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
+		this.joinColumnValues = determineJoinColumnAnnotations( annotations );
 
 		this.fetchMode = determineFetchMode();
 		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
+
+		this.definesExplicitJoinTable = determineExplicitJoinTable( annotations );
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -149,6 +158,14 @@ public class AssociationAttribute extends MappedAttribute {
 		return mapsId;
 	}
 
+	public List<Column> getJoinColumnValues() {
+		return joinColumnValues;
+	}
+
+	public boolean definesExplicitJoinTable() {
+		return definesExplicitJoinTable;
+	}
+
 	@Override
 	public AttributeTypeResolver getHibernateTypeResolver() {
 		if ( resolver == null ) {
@@ -169,12 +186,12 @@ public class AssociationAttribute extends MappedAttribute {
 
 	@Override
 	public boolean isInsertable() {
-		return isInsertable;
+		return true;
 	}
 
 	@Override
 	public boolean isUpdatable() {
-		return isUpdatable;
+		return true;
 	}
 
 	@Override
@@ -315,6 +332,77 @@ public class AssociationAttribute extends MappedAttribute {
 			);
 		}
 		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
+	}
+
+	private List<Column> determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
+		ArrayList<Column> joinColumns = new ArrayList<Column>();
+
+		// single @JoinColumn
+		AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_COLUMN
+		);
+		if ( joinColumnAnnotation != null ) {
+			joinColumns.add( new Column( joinColumnAnnotation ) );
+		}
+
+		// @JoinColumns
+		AnnotationInstance joinColumnsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_COLUMNS
+		);
+		if ( joinColumnsAnnotation != null ) {
+			List<AnnotationInstance> columnsList = Arrays.asList(
+					JandexHelper.getValue( joinColumnsAnnotation, "value", AnnotationInstance[].class )
+			);
+			for ( AnnotationInstance annotation : columnsList ) {
+				joinColumns.add( new Column( annotation ) );
+			}
+		}
+		joinColumns.trimToSize();
+		return joinColumns;
+	}
+
+	private boolean determineExplicitJoinTable(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.COLLECTION_TABLE
+		);
+
+		AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_TABLE
+		);
+
+		// sanity checks
+		if ( collectionTableAnnotation != null && joinTableAnnotation != null ) {
+			throw new MappingException(
+					"@CollectionTable and JoinTable specified on the same attribute",
+					getContext().getOrigin()
+			);
+		}
+
+		if ( collectionTableAnnotation != null ) {
+			if ( JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION ) == null ) {
+				throw new MappingException(
+						"@CollectionTable annotation without a @ElementCollection",
+						getContext().getOrigin()
+				);
+			}
+		}
+
+		if ( joinTableAnnotation != null ) {
+			if ( JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE ) == null
+					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY ) == null
+					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) == null ) {
+				throw new MappingException(
+						"@JoinTable annotation without an association",
+						getContext().getOrigin()
+				);
+			}
+		}
+
+		return collectionTableAnnotation != null || joinTableAnnotation != null;
 	}
 }
 

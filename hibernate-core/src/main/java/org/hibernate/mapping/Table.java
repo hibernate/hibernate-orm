@@ -394,7 +394,7 @@ public class Table implements RelationalModel, Serializable {
 
 				boolean useUniqueConstraint = column.isUnique() &&
 						dialect.supportsUnique() &&
-						( !column.isNullable() || dialect.supportsNotNullUnique() );
+						( column.isNullable() || dialect.supportsNotNullUnique() );
 				if ( useUniqueConstraint ) {
 					alter.append( " unique" );
 				}
@@ -495,7 +495,7 @@ public class Table implements RelationalModel, Serializable {
 			}
 
 			boolean useUniqueConstraint = col.isUnique() &&
-					( !col.isNullable() || dialect.supportsNotNullUnique() );
+					( col.isNullable() || dialect.supportsNotNullUnique() );
 			if ( useUniqueConstraint ) {
 				if ( dialect.supportsUnique() ) {
 					buf.append( " unique" );

@@ -40,4 +40,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
+	
+	@Override
+	public boolean supportsNotNullUnique() {
+		return false;
+	}
 }

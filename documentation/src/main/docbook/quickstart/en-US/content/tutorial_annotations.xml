@@ -4,7 +4,7 @@
     <title>Tutorial Using Native Hibernate APIs and Annotation Mappings</title>
 
     <para>
-        This tutorial is located within the download bundle under <filename>basic</filename>.
+        This tutorial is located within the download bundle under <filename>annotations</filename>.
     </para>
     <itemizedlist>
       <title>Objectives</title>
@@ -55,8 +55,7 @@ public class Event {
           It functions the same as the <varname>class</varname> mapping element discussed in <xref
           linkend="hibernate-gsg-tutorial-basic-mapping"/>.  Additionally the
           <interfacename>@javax.persistence.Table</interfacename> annotation explicitly specifies the table
-          name. Without this specification, the default table name would be <literal>EVENT</literal>).<!-- It is a
-          literal value, not a table as a table -->
+          name. Without this specification, the default table name would be <database class="table">EVENT</database>).
         </para>
 
         <example xml:id="hibernate-gsg-tutorial-annotations-entity-id">

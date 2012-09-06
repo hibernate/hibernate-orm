@@ -5,6 +5,40 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.7 (2012.09.06)
+
+** Bug
+    * [HHH-5188] - Use provided enum type ordinal/string when reading
+    * [HHH-7134] - Detection of wrong circularity when two tables with same name in different schemas
+    * [HHH-7157] - Bi-directional Many-to-One and One-to-Many mapping with EmbeddedId fails
+    * [HHH-7203] - IdentityGenerator fails with JOINED Inheritance when inserting entity to PosgtreSQL
+    * [HHH-7300] - TypeDefs won't be found depending of files read-order
+    * [HHH-7308] - beforeTransactionCompletion() not getting called in the same scenarios as afterTransactionCompletion() in the TransactionObserver for child Sessions
+    * [HHH-7371] - Natural-id: ObjectNotFoundException when found entity is marked as deleted
+    * [HHH-7398] - Transaction timeouts are not properly enforced
+    * [HHH-7509] - NPE regression in second level cache
+    * [HHH-7518] - NPE when registering EhCache JMX mbeans
+    * [HHH-7524] - Enabling AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS results in leaking DB-connections
+    * [HHH-7532] - SQLGrammarException generating Id's with DB2400Dialect
+    * [HHH-7543] - EnversPostUpdateEventListenerImpl causes a NullPointerException due to the fact that the "oldstate" is null
+    * [HHH-7544] - Compile time instrumentation causes java.lang.VerifyError under Java 7
+    * [HHH-7545] - Aliases for a collection key and element column can collide causing one to be excluded
+    * [HHH-7557] - Map entries get deleted
+    * [HHH-7560] - ehcache unit test intermittently failing (UnknownServiceException)
+    * [HHH-7563] - Fallback for JBossAppServerJtaPlatform.locateUserTransaction() to look at "java:jboss" if "java:comp" not available
+    * [HHH-7566] - Activating JOIN fetch profile involving self-referential associations causes StackOverflowError
+    * [HHH-7567] - Better checking when @Enumerated involved
+    * [HHH-7568] - Add JPA1.0 compound key compatability when orm descriptor file used to override annotations.
+
+** Improvement
+    * [HHH-1123] - Cannot put more than 1000 elements in a InExpression
+    * [HHH-4751] - Fix for @embeddedid error: Type not supported: org.hibernate.type.ManyToOneType
+    * [HHH-7059] - The DerbyDialect deprecation warning should appear no more, when using one of the version-specific dialects
+    * [HHH-7115] - Allow types to have access to target usage data
+    * [HHH-7212] - [Envers] Avoid useless temporary session in Tools.getTargetFromProxy()
+    * [HHH-7367] - Upgrade to Infinispan 5.1.6.FINAL
+
+
 Changes in version 4.1.6 (2012.08.08)
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -22,10 +56,13 @@ Changes in version 4.1.6 (2012.08.08)
     * [HHH-7498] - some tests were targeting to the H2 only but now runs on db matrix
     * [HHH-7501] - java.lang.ClassCastException: oracle.jdbc.driver.T4CStatement cannot be cast to java.sql.PreparedStatement
     * [HHH-7508] - Debug logging throws MissingFormatArgumentException when using non standard Optimizer
+
 ** Improvement
     * [HHH-7502] - Problems with multi-tenancy and 2nd level cache
+
 ** New Feature
     * [HHH-7457] - Enable loading of collections thats been detached from session
+    
 ** Task
     * [HHH-7385] - upgrade to Gradle 1.0
 

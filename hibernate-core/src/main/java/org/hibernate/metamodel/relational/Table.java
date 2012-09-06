@@ -200,7 +200,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			}
 
 			boolean useUniqueConstraint = col.isUnique() &&
-					( !col.isNullable() || dialect.supportsNotNullUnique() );
+					( col.isNullable() || dialect.supportsNotNullUnique() );
 			if ( useUniqueConstraint ) {
 				if ( dialect.supportsUnique() ) {
 					buf.append( " unique" );

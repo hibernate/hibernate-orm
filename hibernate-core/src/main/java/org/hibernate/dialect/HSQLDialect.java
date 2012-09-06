@@ -707,4 +707,9 @@ public class HSQLDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
+	
+	@Override
+	public boolean supportsNotNullUnique() {
+		return false;
+	}
 }

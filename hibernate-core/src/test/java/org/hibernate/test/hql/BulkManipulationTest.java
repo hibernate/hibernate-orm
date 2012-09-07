@@ -70,6 +70,18 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void testUpdateWithSubquery() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// just checking parsing and syntax...
+		s.createQuery( "update Human h set h.bodyWeight = h.bodyWeight + (select count(1) from IntegerVersioned)" ).executeUpdate();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testDeleteNonExistentEntity() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

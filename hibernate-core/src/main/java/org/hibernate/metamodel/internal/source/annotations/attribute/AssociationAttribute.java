@@ -68,7 +68,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean mapsId;
 	private final String referencedIdAttributeName;
 	private final List<Column> joinColumnValues;
-	private final boolean definesExplicitJoinTable;
+	private final AnnotationInstance joinTableAnnotation;
 	private AttributeTypeResolver resolver;
 
 	public static AssociationAttribute createAssociationAttribute(
@@ -119,7 +119,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
 
-		this.definesExplicitJoinTable = determineExplicitJoinTable( annotations );
+		this.joinTableAnnotation = determineExplicitJoinTable( annotations );
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -162,8 +162,8 @@ public class AssociationAttribute extends MappedAttribute {
 		return joinColumnValues;
 	}
 
-	public boolean definesExplicitJoinTable() {
-		return definesExplicitJoinTable;
+	public AnnotationInstance getJoinTableAnnotation() {
+		return joinTableAnnotation;
 	}
 
 	@Override
@@ -363,7 +363,8 @@ public class AssociationAttribute extends MappedAttribute {
 		return joinColumns;
 	}
 
-	private boolean determineExplicitJoinTable(Map<DotName, List<AnnotationInstance>> annotations) {
+	private AnnotationInstance determineExplicitJoinTable(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance annotationInstance = null;
 		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
 				JPADotNames.COLLECTION_TABLE
@@ -389,6 +390,7 @@ public class AssociationAttribute extends MappedAttribute {
 						getContext().getOrigin()
 				);
 			}
+			annotationInstance = collectionTableAnnotation;
 		}
 
 		if ( joinTableAnnotation != null ) {
@@ -400,9 +402,10 @@ public class AssociationAttribute extends MappedAttribute {
 						getContext().getOrigin()
 				);
 			}
+			annotationInstance = joinTableAnnotation;
 		}
 
-		return collectionTableAnnotation != null || joinTableAnnotation != null;
+		return annotationInstance;
 	}
 }
 

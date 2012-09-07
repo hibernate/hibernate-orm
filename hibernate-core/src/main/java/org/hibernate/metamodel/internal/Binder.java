@@ -1844,36 +1844,64 @@ public class Binder {
 
 	private TableSpecification createTable(
 			final TableSpecificationSource tableSpecSource,
-			final DefaultNamingStrategy defaultNamingStrategy ) {
+			final DefaultNamingStrategy defaultNamingStrategy) {
+
 		final LocalBindingContext bindingContext = bindingContexts.peek();
 		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
+		final String explicitCatalogName = tableSpecSource == null ? null : tableSpecSource.getExplicitCatalogName();
+		final String explicitSchemaName = tableSpecSource == null ? null : tableSpecSource.getExplicitSchemaName();
 		final Schema.Name schemaName =
 				new Schema.Name(
-						createIdentifier( tableSpecSource.getExplicitCatalogName(), mappingDefaults.getCatalogName() ),
-						createIdentifier( tableSpecSource.getExplicitSchemaName(), mappingDefaults.getSchemaName() )
+						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
+						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
 				);
 		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
-		if ( tableSpecSource instanceof TableSource ) {
+
+		TableSpecification tableSpec = null;
+		if ( tableSpecSource == null ) {
+			if ( defaultNamingStrategy == null ) {
+				throw new MappingException(
+						"An explicit name must be specified for the table",
+						bindingContext.getOrigin()
+				);
+			}
+			String tableName = defaultNamingStrategy.defaultName();
+			tableSpec = createTableSpecification( bindingContext, schema, tableName );
+		}
+		else if ( tableSpecSource instanceof TableSource ) {
 			final TableSource tableSource = ( TableSource ) tableSpecSource;
 			String tableName = tableSource.getExplicitTableName();
 			if ( tableName == null ) {
 				if ( defaultNamingStrategy == null ) {
-					throw new MappingException( "An explicit name must be specified for the table", bindingContext.getOrigin() );
+					throw new MappingException(
+							"An explicit name must be specified for the table",
+							bindingContext.getOrigin()
+					);
 				}
 				tableName = defaultNamingStrategy.defaultName();
 			}
-			tableName = quotedIdentifier( tableName );
-			final Identifier logicalTableId = Identifier.toIdentifier( tableName );
-			tableName = quotedIdentifier( bindingContext.getNamingStrategy().tableName( tableName ) );
-			final Identifier physicalTableId = Identifier.toIdentifier( tableName );
-			final Table table = schema.locateTable( logicalTableId );
-			return ( table == null ? schema.createTable( logicalTableId, physicalTableId ) : table );
+			tableSpec = createTableSpecification( bindingContext, schema, tableName );
 		}
-		final InLineViewSource inLineViewSource = ( InLineViewSource ) tableSpecSource;
-		return schema.createInLineView(
-				Identifier.toIdentifier( inLineViewSource.getLogicalName() ),
-				inLineViewSource.getSelectStatement()
-		);
+		else {
+			final InLineViewSource inLineViewSource = ( InLineViewSource ) tableSpecSource;
+			tableSpec = schema.createInLineView(
+					Identifier.toIdentifier( inLineViewSource.getLogicalName() ),
+					inLineViewSource.getSelectStatement()
+			);
+		}
+
+		return tableSpec;
+	}
+
+	private TableSpecification createTableSpecification(LocalBindingContext bindingContext, Schema schema, String tableName) {
+		TableSpecification tableSpec;
+		tableName = quotedIdentifier( tableName );
+		final Identifier logicalTableId = Identifier.toIdentifier( tableName );
+		tableName = quotedIdentifier( bindingContext.getNamingStrategy().tableName( tableName ) );
+		final Identifier physicalTableId = Identifier.toIdentifier( tableName );
+		final Table table = schema.locateTable( logicalTableId );
+		tableSpec = ( table == null ? schema.createTable( logicalTableId, physicalTableId ) : table );
+		return tableSpec;
 	}
 
 	private String defaultCollectionElementJavaTypeName(

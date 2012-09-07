@@ -29,8 +29,8 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.metamodel.MetadataSources;
@@ -47,10 +47,10 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 	protected List<Class<?>> annotatedClasses = new ArrayList<Class<?>>();
 
 	@Rule
-	public MethodRule buildMetaData = new MethodRule() {
+	public TestRule buildMetaData = new TestRule() {
 		@Override
-		public Statement apply(final Statement statement, FrameworkMethod frameworkMethod, Object o) {
-			return new KeepSetupFailureStatement( statement, frameworkMethod );
+		public Statement apply(Statement base, Description description) {
+			return new KeepSetupFailureStatement( base, description );
 		}
 	};
 
@@ -74,13 +74,13 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 
 	class KeepSetupFailureStatement extends Statement {
 		private final Statement origStatement;
-		private final FrameworkMethod origFrameworkMethod;
+		private final Description description;
 		private Throwable setupError;
 		private boolean expectedException;
 
-		KeepSetupFailureStatement(Statement statement, FrameworkMethod frameworkMethod) {
+		KeepSetupFailureStatement(Statement statement, Description description) {
 			this.origStatement = statement;
-			this.origFrameworkMethod = frameworkMethod;
+			this.description = description;
 		}
 
 		@Override
@@ -104,10 +104,10 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 			}
 		}
 
-		private void createBindings() throws Throwable {
+		private void createBindings() {
 			try {
 				sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-				Resources resourcesAnnotation = origFrameworkMethod.getAnnotation( Resources.class );
+				Resources resourcesAnnotation = description.getAnnotation( Resources.class );
 				if ( resourcesAnnotation != null ) {
 					sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
 
@@ -123,11 +123,10 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 			}
 			catch ( final Throwable t ) {
 				setupError = t;
-				Test testAnnotation = origFrameworkMethod.getAnnotation( Test.class );
+				Test testAnnotation = description.getAnnotation( Test.class );
 				Class<?> expected = testAnnotation.expected();
 				if ( t.getClass().equals( expected ) ) {
 					expectedException = true;
-					return;
 				}
 			}
 		}

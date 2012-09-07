@@ -42,7 +42,6 @@ import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
-import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
@@ -50,18 +49,18 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  */
 public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderable, Sortable {
 
-	private final PluralAssociationAttribute attribute;
+	private final PluralAssociationAttribute associationAttribute;
 	private final Nature nature;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
 
-	public PluralAttributeSourceImpl(final PluralAssociationAttribute attribute) {
-		this.attribute = attribute;
+	public PluralAttributeSourceImpl(final PluralAssociationAttribute associationAttribute) {
+		this.associationAttribute = associationAttribute;
 		this.nature = resolveAttributeNature();
-		this.keySource = new PluralAttributeKeySourceImpl( attribute );
+		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.elementSource = determineElementSource();
-		this.typeSource = new ExplicitHibernateTypeSourceImpl( attribute );
+		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 	}
 
 	@Override
@@ -75,19 +74,19 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	private PluralAttributeElementSource determineElementSource() {
-		switch ( attribute.getNature() ) {
+		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:
-				return new ManyToManyPluralAttributeElementSourceImpl( attribute );
+				return new ManyToManyPluralAttributeElementSourceImpl( associationAttribute );
 			case MANY_TO_ANY:
-				return new ManyToAnyPluralAttributeElementSourceImpl( attribute );
+				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute );
 			case ONE_TO_MANY:
-				return new OneToManyPluralAttributeElementSourceImpl( attribute );
+				return new OneToManyPluralAttributeElementSourceImpl( associationAttribute );
 			case ELEMENT_COLLECTION_BASIC:
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				return new BasicPluralAttributeElementSourceImpl( attribute );
+				return new BasicPluralAttributeElementSourceImpl( associationAttribute );
 			}
 		}
-		throw new AssertionError( "unexpected attribute nature" );
+		throw new AssertionError( "Unexpected attribute nature for a association:" + associationAttribute.getNature() );
 	}
 
 	@Override
@@ -99,22 +98,13 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
 		// todo - see org.hibernate.metamodel.internal.Binder#bindOneToManyCollectionKey
 		// todo - needs to cater for @CollectionTable and @JoinTable
-		return new TableSource() {
-			@Override
-			public String getExplicitSchemaName() {
-				return null;  //To change body of implemented methods use File | Settings | File Templates.
-			}
 
-			@Override
-			public String getExplicitCatalogName() {
-				return null;  //To change body of implemented methods use File | Settings | File Templates.
-			}
-
-			@Override
-			public String getExplicitTableName() {
-				return null;  //To change body of implemented methods use File | Settings | File Templates.
-			}
-		};
+		if ( associationAttribute.getJoinTableAnnotation() == null ) {
+			return null;
+		}
+		else {
+			return new TableSourceImpl( associationAttribute.getJoinTableAnnotation() );
+		}
 	}
 
 	@Override
@@ -124,57 +114,57 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public String getCollectionTableCheck() {
-		return attribute.getCheckCondition();
+		return associationAttribute.getCheckCondition();
 	}
 
 	@Override
 	public Caching getCaching() {
-		return attribute.getCaching();
+		return associationAttribute.getCaching();
 	}
 
 	@Override
 	public String getCustomPersisterClassName() {
-		return attribute.getCustomPersister();
+		return associationAttribute.getCustomPersister();
 	}
 
 	@Override
 	public String getWhere() {
-		return attribute.getWhereClause();
+		return associationAttribute.getWhereClause();
 	}
 
 	@Override
 	public boolean isInverse() {
-		return attribute.getMappedBy() != null;
+		return associationAttribute.getMappedBy() != null;
 	}
 
 	@Override
 	public String getCustomLoaderName() {
-		return attribute.getCustomLoaderName();
+		return associationAttribute.getCustomLoaderName();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlInsert() {
-		return attribute.getCustomInsert();
+		return associationAttribute.getCustomInsert();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlUpdate() {
-		return attribute.getCustomUpdate();
+		return associationAttribute.getCustomUpdate();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlDelete() {
-		return attribute.getCustomDelete();
+		return associationAttribute.getCustomDelete();
 	}
 
 	@Override
 	public CustomSQL getCustomSqlDeleteAll() {
-		return attribute.getCustomDeleteAll();
+		return associationAttribute.getCustomDeleteAll();
 	}
 
 	@Override
 	public String getName() {
-		return attribute.getName();
+		return associationAttribute.getName();
 	}
 
 	@Override
@@ -189,12 +179,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public String getPropertyAccessorName() {
-		return attribute.getAccessType();
+		return associationAttribute.getAccessType();
 	}
 
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
-		return attribute.isOptimisticLockable();
+		return associationAttribute.isOptimisticLockable();
 	}
 
 	@Override
@@ -205,12 +195,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public FetchMode getFetchMode() {
-		return attribute.getFetchMode();
+		return associationAttribute.getFetchMode();
 	}
 
 	@Override
 	public String getOrder() {
-		return attribute.getOrderBy();
+		return associationAttribute.getOrderBy();
 	}
 
 	@Override
@@ -220,20 +210,20 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public String getComparatorName() {
-		return attribute.getComparatorName();
+		return associationAttribute.getComparatorName();
 	}
 
 	@Override
 	public boolean isSorted() {
-		return attribute.isSorted();
+		return associationAttribute.isSorted();
 	}
 
 	@Override
 	public FetchTiming getFetchTiming() {
-		if ( attribute.isExtraLazy() ) {
+		if ( associationAttribute.isExtraLazy() ) {
 			return FetchTiming.EXTRA_DELAYED;
 		}
-		if ( attribute.isLazy() ) {
+		if ( associationAttribute.isLazy() ) {
 			return FetchTiming.DELAYED;
 		}
 		return FetchTiming.IMMEDIATE;
@@ -241,17 +231,17 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public FetchStyle getFetchStyle() {
-		return attribute.getFetchStyle();
+		return associationAttribute.getFetchStyle();
 	}
 
 	private Nature resolveAttributeNature() {
-		if ( Map.class.isAssignableFrom( attribute.getAttributeType() ) ) {
+		if ( Map.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.MAP;
 		}
-		else if ( List.class.isAssignableFrom( attribute.getAttributeType() ) ) {
+		else if ( List.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.LIST;
 		}
-		else if ( Set.class.isAssignableFrom( attribute.getAttributeType() ) ) {
+		else if ( Set.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.SET;
 		}
 		else {

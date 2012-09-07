@@ -32,9 +32,16 @@ import javax.persistence.JoinTable;
 
 import org.junit.Test;
 
+import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.ListBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 /**
  * Tests for different types of @ElementCollection mappings.
@@ -61,10 +68,17 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		}
 	}
 
-	@Test(expected = MappingException.class)
-	@Resources(annotatedClasses = { TestEntity.class })
+	@Test
 	public void testElementCollectionWithJoinTableThrowsException() {
-		getEntityBinding( TestEntity.class );
+		try {
+			sources.addAnnotatedClass( TestEntity.class );
+			sources.buildMetadata();
+			fail( "Invalid use of @JoinTable with @ElementCollection" );
+		}
+		catch ( MappingException e ) {
+			assertEquals( "Unexpected error origin", TestEntity.class.getName(), e.getOrigin().getName() );
+			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
+		}
 	}
 
 	@Entity
@@ -86,10 +100,70 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		}
 	}
 
-	@Test(expected = MappingException.class)
-	@Resources(annotatedClasses = { TestEntity.class })
+	@Test
 	public void testCollectionTableAndJoinTableThrowsException() {
-		getEntityBinding( TestEntity.class );
+		try {
+			sources.addAnnotatedClass( TestEntity2.class );
+			sources.buildMetadata();
+			fail( "Invalid use of @JoinTable AND @CollectionTable" );
+		}
+		catch ( MappingException e ) {
+			assertEquals( "Unexpected error origin", TestEntity2.class.getName(), e.getOrigin().getName() );
+			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
+		}
+	}
+
+	@Entity
+		 class TestEntity3 {
+		@Id
+		private int id;
+
+		@ElementCollection
+		private List<String> strings;
+
+		public int getId() {
+			return id;
+		}
+
+		public List<String> getStrings() {
+			return strings;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = TestEntity3.class)
+	public void testDefaultJoinTableName() {
+		EntityBinding entityBinding = getEntityBinding( TestEntity3.class );
+		ListBinding listBinding = (ListBinding) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertEquals( "Wrong default collection table name", "ElementCollectionBindingTest$TestEntity3_strings", tableSpec.getLogicalName().getText() );
+	}
+
+	@Entity
+	class TestEntity4 {
+		@Id
+		private int id;
+
+		@ElementCollection
+		@CollectionTable(name = "STRING_COLLECTION")
+		private List<String> strings;
+
+		public int getId() {
+			return id;
+		}
+
+		public List<String> getStrings() {
+			return strings;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = TestEntity4.class)
+	public void testExplicitJoinTableName() {
+		EntityBinding entityBinding = getEntityBinding( TestEntity4.class );
+		ListBinding listBinding = (ListBinding) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		assertEquals( "Wrong default collection table name", "STRING_COLLECTION", tableSpec.getLogicalName().getText() );
 	}
 }
 

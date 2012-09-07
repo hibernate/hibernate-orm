@@ -84,8 +84,15 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		URL myUrl = originalClassLoader.getResource(
 				PackagingTestCase.class.getName().replace( '.', '/' ) + ".class"
 		);
-		// this is assuming that there is a target directory
-		int index = myUrl.getFile().lastIndexOf( "target" );
+		int index;
+		if (myUrl.getFile().contains( "target" )) {
+			// assume there's normally a /target
+			index = myUrl.getFile().lastIndexOf( "target" );
+		} else {
+			// if running in some IDEs, may be in /bin instead
+			index = myUrl.getFile().lastIndexOf( "bin" );
+		}
+		
 		if ( index == -1 ) {
 			fail( "Unable to setup packaging test" );
 		}

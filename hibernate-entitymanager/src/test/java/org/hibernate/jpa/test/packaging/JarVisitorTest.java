@@ -226,6 +226,8 @@ public class JarVisitorTest extends PackagingTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-6806")
 	public void testJarVisitorFactory() throws Exception{
+
+		addPackageToClasspath( buildExplodedPar(), buildDefaultPar() );
 		
         //setting URL to accept vfs based protocol
 		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {

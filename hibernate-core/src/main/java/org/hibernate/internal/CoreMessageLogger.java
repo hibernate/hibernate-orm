@@ -1578,6 +1578,16 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to find mapping information for %s. Are you sure all annotated classes and configuration files are added?", id = 443)
 	String missingEntitySource(String entityName);
 
+	@Message(value = "@JoinTable annotation without an association. Check %s#%s", id = 444)
+	String joinTableForNonAssociationAttribute(String entityName, String propertyName);
+
+	@Message(value = "@CollectionTable annotation without a @ElementCollection. Check %s#%s", id = 445)
+	String collectionTableWithoutElementCollection(String entityName, String propertyName);
+
+	@Message(value = "@CollectionTable and @JoinTable specified on the same attribute. Check %s#%s", id = 446)
+	String collectionTableAndJoinTableUsedTogether(String entityName, String propertyName);
+
+
 	// moved from hibernate-entitymanager ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@LogMessage( level = ERROR )

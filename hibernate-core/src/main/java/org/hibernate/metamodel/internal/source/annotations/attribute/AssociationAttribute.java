@@ -35,10 +35,12 @@ import javax.persistence.FetchType;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
@@ -56,6 +58,11 @@ import org.hibernate.metamodel.spi.source.MappingException;
  * @author Hardy Ferentschik
  */
 public class AssociationAttribute extends MappedAttribute {
+	private static final CoreMessageLogger coreLogger = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AssociationAttribute.class.getName()
+	);
+
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
 	private final String mappedBy;
@@ -359,6 +366,35 @@ public class AssociationAttribute extends MappedAttribute {
 				joinColumns.add( new Column( annotation ) );
 			}
 		}
+
+		// @JoinColumn as part of @CollectionTable
+		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.COLLECTION_TABLE
+		);
+		if(collectionTableAnnotation != null) {
+			List<AnnotationInstance> columnsList = Arrays.asList(
+					JandexHelper.getValue( collectionTableAnnotation, "joinColumns", AnnotationInstance[].class )
+			);
+			for ( AnnotationInstance annotation : columnsList ) {
+				joinColumns.add( new Column( annotation ) );
+			}
+		}
+
+		// @JoinColumn as part of @JoinTable
+		AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.JOIN_TABLE
+		);
+		if(joinTableAnnotation != null) {
+			List<AnnotationInstance> columnsList = Arrays.asList(
+					JandexHelper.getValue( joinTableAnnotation, "joinColumns", AnnotationInstance[].class )
+			);
+			for ( AnnotationInstance annotation : columnsList ) {
+				joinColumns.add( new Column( annotation ) );
+			}
+		}
+
 		joinColumns.trimToSize();
 		return joinColumns;
 	}
@@ -377,18 +413,20 @@ public class AssociationAttribute extends MappedAttribute {
 
 		// sanity checks
 		if ( collectionTableAnnotation != null && joinTableAnnotation != null ) {
-			throw new MappingException(
-					"@CollectionTable and JoinTable specified on the same attribute",
-					getContext().getOrigin()
+			String msg = coreLogger.collectionTableAndJoinTableUsedTogether(
+					getContext().getOrigin().getName(),
+					getName()
 			);
+			throw new MappingException( msg, getContext().getOrigin() );
 		}
 
 		if ( collectionTableAnnotation != null ) {
 			if ( JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION ) == null ) {
-				throw new MappingException(
-						"@CollectionTable annotation without a @ElementCollection",
-						getContext().getOrigin()
+				String msg = coreLogger.collectionTableWithoutElementCollection(
+						getContext().getOrigin().getName(),
+						getName()
 				);
+				throw new MappingException( msg, getContext().getOrigin() );
 			}
 			annotationInstance = collectionTableAnnotation;
 		}
@@ -397,10 +435,11 @@ public class AssociationAttribute extends MappedAttribute {
 			if ( JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE ) == null
 					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY ) == null
 					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) == null ) {
-				throw new MappingException(
-						"@JoinTable annotation without an association",
-						getContext().getOrigin()
+				String msg = coreLogger.joinTableForNonAssociationAttribute(
+						getContext().getOrigin().getName(),
+						getName()
 				);
+				throw new MappingException( msg, getContext().getOrigin() );
 			}
 			annotationInstance = joinTableAnnotation;
 		}

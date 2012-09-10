@@ -35,6 +35,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -53,23 +54,36 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	public ToOneAttributeSourceImpl(AssociationAttribute associationAttribute) {
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
-
-		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet( associationAttribute.getCascadeTypes(), associationAttribute.getContext() );
+		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
+				associationAttribute.getCascadeTypes(),
+				associationAttribute.getContext()
+		);
 	}
 
 	@Override
 	public Nature getNature() {
-		return Nature.MANY_TO_ONE;
+		if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
+			return Nature.ONE_TO_ONE;
+		}
+		else if ( MappedAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
+			return Nature.MANY_TO_ONE;
+		}
+		else {
+			throw new AssertionError(
+					"Wrong attribute nature for toOne attribute: " + associationAttribute.getNature()
+			);
+		}
 	}
 
 	@Override
 	public String getReferencedEntityName() {
 		return associationAttribute.getReferencedEntityType();
 	}
+
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		if ( ! associationAttribute.getJoinColumnValues().isEmpty() ) {
+		if ( !associationAttribute.getJoinColumnValues().isEmpty() ) {
 			for ( Column columnValues : associationAttribute.getJoinColumnValues() ) {
 				valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
 			}
@@ -79,7 +93,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		return associationAttribute.getJoinColumnValues().isEmpty()? null : new AnnotationJoinColumnResolutionDelegate();
+		return associationAttribute.getJoinColumnValues()
+				.isEmpty() ? null : new AnnotationJoinColumnResolutionDelegate();
 	}
 
 	@Override
@@ -105,6 +120,16 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public FetchStyle getFetchStyle() {
 		return associationAttribute.getFetchStyle();
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "ToOneAttributeSourceImpl" );
+		sb.append( "{associationAttribute=" ).append( associationAttribute );
+		sb.append( ", cascadeStyles=" ).append( cascadeStyles );
+		sb.append( '}' );
+		return sb.toString();
 	}
 
 	public class AnnotationJoinColumnResolutionDelegate
@@ -143,7 +168,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 			);
 
 			if ( joinTableAnnotation != null ) {
-				return JandexHelper.getValue( joinTableAnnotation, "table", String.class );
+				return JandexHelper.getValue( joinTableAnnotation, "name", String.class );
 			}
 
 			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...

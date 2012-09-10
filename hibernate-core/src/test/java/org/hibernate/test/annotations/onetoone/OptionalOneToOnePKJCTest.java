@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -41,10 +42,11 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel(message = "Needs one to one mapping support. See Binder#bindSingularAttribute")
 public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@TestForIssue(jiraKey = "HHH-4982")
 	public void testNullBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -53,7 +55,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.persist( person );
 			s.flush();
-			fail( "should have thrown IdentifierGenerationException.");
+			fail( "should have thrown IdentifierGenerationException." );
 		}
 		catch ( IdentifierGenerationException ex ) {
 			// expected
@@ -65,7 +67,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@TestForIssue(jiraKey = "HHH-4982")
 	public void testNotFoundBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -76,7 +78,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 			// Hibernate resets the ID to null before executing the foreign generator
 			s.persist( person );
 			s.flush();
-			fail( "should have thrown IdentifierGenerationException.");
+			fail( "should have thrown IdentifierGenerationException." );
 		}
 		catch ( IdentifierGenerationException ex ) {
 			// expected
@@ -89,7 +91,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	// @PrimaryKeyJoinColumn @OneToOne(optional=true) non-foreign generator
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@TestForIssue(jiraKey = "HHH-4982")
 	public void testNotFoundBidirDefaultIdGenerator() {
 		Session s = openSession();
 		s.getTransaction().begin();

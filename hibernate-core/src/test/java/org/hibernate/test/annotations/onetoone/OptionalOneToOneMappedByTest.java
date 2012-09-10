@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +41,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel(message = "Needs one to one mapping support. See Binder#bindSingularAttribute")
 public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 
 	// @OneToOne(mappedBy="address") with foreign generator

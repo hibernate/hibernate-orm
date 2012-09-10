@@ -37,7 +37,7 @@ public class PersonAddress {
 	@GeneratedValue
 	private Integer id;
 
-	@OneToOne(mappedBy="personAddress")
+	@OneToOne(mappedBy = "personAddress")
 	private Person person;
 
 	public Integer getId() {

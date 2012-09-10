@@ -38,12 +38,15 @@ import org.hibernate.annotations.Parameter;
  */
 @Entity
 public class Person {
-	@Id @GeneratedValue(generator = "fk")
-	@GenericGenerator(strategy = "foreign", name = "fk", parameters = @Parameter(name="property", value="personAddress"))
+	@Id
+	@GeneratedValue(generator = "fk")
+	@GenericGenerator(strategy = "foreign",
+			name = "fk",
+			parameters = @Parameter(name = "property", value = "personAddress"))
 	private Integer id;
 
 	@PrimaryKeyJoinColumn
-	@OneToOne(optional=true)
+	@OneToOne(optional = true)
 	private PersonAddress personAddress;
 
 	public Integer getId() {

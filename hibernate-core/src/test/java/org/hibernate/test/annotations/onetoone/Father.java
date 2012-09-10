@@ -24,7 +24,6 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
-
 /**
  * @author Hardy Ferentschik
  */
@@ -32,7 +31,7 @@ public class Father {
 	private int id;
 
 	private String name;
-	
+
 	public int getId() {
 		return id;
 	}

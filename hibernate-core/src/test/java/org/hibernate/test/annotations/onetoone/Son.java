@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,12 +23,11 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
-
 /**
  * @author Hardy Ferentschik
  */
 public class Son {
-		private int id;
+	private int id;
 
 	private String name;
 

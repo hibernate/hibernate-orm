@@ -30,8 +30,6 @@ import java.sql.Clob;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
@@ -41,6 +39,7 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

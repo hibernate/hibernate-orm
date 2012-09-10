@@ -26,7 +26,10 @@ package org.hibernate.type.descriptor.java;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.sql.Blob;
+import java.sql.SQLException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -118,6 +121,13 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 		}
 		if ( InputStream.class.isInstance( value ) ) {
 			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
+		}
+		if ( Blob.class.isInstance( value )) {
+			try {
+				return fromBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
+			} catch ( SQLException e ) {
+				throw new HibernateException(e);
+			}
 		}
 		throw unknownWrap( value.getClass() );
 	}

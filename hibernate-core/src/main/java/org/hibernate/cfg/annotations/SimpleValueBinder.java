@@ -24,12 +24,11 @@
 package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.TypeVariable;
-import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converts;
@@ -225,7 +224,6 @@ public class SimpleValueBinder {
 					.toXClass( Serializable.class )
 					.isAssignableFrom( returnedClassOrElement ) ) {
 				type = SerializableToBlobType.class.getName();
-				//typeParameters = new Properties();
 				typeParameters.setProperty(
 						SerializableToBlobType.CLASS_NAME,
 						returnedClassOrElement.getName()

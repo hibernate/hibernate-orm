@@ -29,12 +29,12 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.spi.Configurable;
@@ -50,8 +50,9 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private ServiceRegistryImplementor serviceRegistry;
 	private JdbcEnvironment jdbcEnvironment;
 
-	private ConnectionProvider connectionProvider;
 	private SqlStatementLogger sqlStatementLogger;
+
+	private ConnectionProvider connectionProvider;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {

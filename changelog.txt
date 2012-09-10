@@ -256,7 +256,7 @@ https://hibernate.onjira.com/browse/HHH/fixforversion/11223
 ** Task
     * [HHH-6082] - Incorporate EntityManager documentation into main dev guide
     * [HHH-6336] - Add TenantIdentifierResolver
-    * [HHH-6656] - Document org.hibernate.service.classloading.spi.ClassLoaderService
+    * [HHH-6656] - Document org.hibernate.boot.registry.classloading.spi.ClassLoaderService
     * [HHH-6966] - Re apply HHH-6782
     * [HHH-6985] - Change up tests for PostgreSQL LockMode issues
     * [HHH-7011] - Document multi-tenancy

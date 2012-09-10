@@ -1,14 +1,13 @@
 package org.hibernate.test.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.persistence.Entity;
-
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
+import javax.persistence.Entity;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author Artem V. Navrotskiy

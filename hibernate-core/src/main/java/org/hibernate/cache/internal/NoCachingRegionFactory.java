@@ -33,7 +33,6 @@ import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 
@@ -43,7 +42,7 @@ import org.hibernate.cache.spi.access.AccessType;
  * @author Steve Ebersole
  */
 public class NoCachingRegionFactory extends AbstractRegionFactory {
-	public static RegionFactory INSTANCE = new NoCachingRegionFactory();
+	public static NoCachingRegionFactory INSTANCE = new NoCachingRegionFactory();
 
 	@Override
 	public void start() {

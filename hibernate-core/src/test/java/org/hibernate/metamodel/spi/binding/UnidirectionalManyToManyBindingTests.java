@@ -27,13 +27,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -48,7 +48,7 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().buildServiceRegistry();
 	}
 
 	@After
@@ -77,9 +77,12 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertNotNull( entityBinding );
 
-		assertEquals( Identifier.toIdentifier( "SimpleEntity" ), simpleEntityBinding.getPrimaryTable().getLogicalName() );
+		assertEquals(
+				Identifier.toIdentifier( "SimpleEntity" ),
+				simpleEntityBinding.getPrimaryTable().getLogicalName()
+		);
 		assertEquals( 1, simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() );
 		Column simpleEntityIdColumn = simpleEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 );
-		assertEquals( Identifier.toIdentifier("id") , simpleEntityIdColumn.getColumnName() );
+		assertEquals( Identifier.toIdentifier( "id" ) , simpleEntityIdColumn.getColumnName() );
 	}
 }

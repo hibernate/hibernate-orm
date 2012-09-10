@@ -23,6 +23,9 @@
  */
 package org.hibernate.test.propertyref;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.List;
 
 import org.junit.Test;
@@ -30,16 +33,17 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.dialect.H2Dialect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
 @FailureExpectedWithNewMetamodel
+@RequiresDialect(H2Dialect.class)
 public class DoesNotWorkWithHbmTest extends BaseCoreFunctionalTestCase {
 
 	@Override

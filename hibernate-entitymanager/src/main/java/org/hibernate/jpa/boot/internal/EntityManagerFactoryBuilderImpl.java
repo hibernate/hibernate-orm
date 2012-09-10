@@ -64,6 +64,11 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.boot.spi.JaccDefinition;
 import org.hibernate.cfg.Configuration;
@@ -74,15 +79,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaUnifiedSettingsBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.packaging.internal.NativeScanner;
@@ -93,15 +100,10 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
-import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
-import static org.hibernate.jpa.boot.spi.JpaBootstrapServiceRegistryBuilder.buildBootstrapServiceRegistry;
 
 /**
  * @author Steve Ebersole
@@ -131,7 +133,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private final PersistenceUnitDescriptor persistenceUnit;
 	private final SettingsImpl settings = new SettingsImpl();
-	private final ServiceRegistryBuilder serviceRegistryBuilder;
+	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
 	private final Map<?,?> configurationValues;
 
 	private final List<JaccDefinition> jaccDefinitions = new ArrayList<JaccDefinition>();
@@ -164,9 +166,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// First we build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnit, integrationSettings );
+		final BootstrapServiceRegistry bootstrapServiceRegistry = buildBootstrapServiceRegistry(  integrationSettings );
 		// And the main service registry.  This is needed to start adding configuration values, etc
-		this.serviceRegistryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry );
+		this.serviceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Next we build a merged map of all the configuration values
@@ -193,6 +195,38 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( useClassTransformer ) {
 			persistenceUnit.pushClassTransformer( metadataSources.collectMappingClassNames() );
 		}
+	}
+
+	/**
+	 * Builds the {@link BootstrapServiceRegistry} used to eventually build the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}; mainly
+	 * used here during instantiation to define class-loading behavior.
+	 *
+	 * @param integrationSettings Any integration settings passed by the EE container or SE application
+	 *
+	 * @return The built BootstrapServiceRegistry
+	 */
+	private BootstrapServiceRegistry buildBootstrapServiceRegistry(Map integrationSettings) {
+		final BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder();
+		bootstrapServiceRegistryBuilder.with( new JpaIntegrator() );
+
+		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );
+		if ( integratorProvider != null ) {
+			integrationSettings.remove( INTEGRATOR_PROVIDER );
+			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
+				bootstrapServiceRegistryBuilder.with( integrator );
+			}
+		}
+
+		ClassLoader classLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		if ( classLoader != null ) {
+			integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		}
+		else {
+			classLoader = persistenceUnit.getClassLoader();
+		}
+		bootstrapServiceRegistryBuilder.withApplicationClassLoader( classLoader );
+
+		return bootstrapServiceRegistryBuilder.build();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -789,7 +823,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 						SessionFactoryImplementor sessionFactory;
 						try {
-							sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory( serviceRegistry );
+							sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory(
+									serviceRegistry
+							);
 						}
 						catch (MappingException e) {
 							throw persistenceException( "Unable to build Hibernate SessionFactory", e );
@@ -801,7 +837,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						sessionFactory.addObserver( new ServiceRegistryCloser() );
 
 						// NOTE : passing cfg is temporary until
-						return new EntityManagerFactoryImpl( persistenceUnit.getName(), sessionFactory, settings, configurationValues, hibernateConfiguration );
+						return new EntityManagerFactoryImpl(
+								persistenceUnit.getName(),
+								sessionFactory,
+								settings,
+								configurationValues,
+								hibernateConfiguration
+						);
 					}
 				}
 		);

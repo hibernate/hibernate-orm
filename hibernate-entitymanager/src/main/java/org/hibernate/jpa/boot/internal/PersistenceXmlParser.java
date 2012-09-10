@@ -58,9 +58,9 @@ import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.packaging.internal.JarVisitorFactory;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.spi.source.XsdException;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.

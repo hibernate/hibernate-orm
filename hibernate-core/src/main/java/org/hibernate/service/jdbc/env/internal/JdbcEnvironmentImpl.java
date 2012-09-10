@@ -31,8 +31,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.internal.TypeInfo;
 import org.hibernate.engine.jdbc.internal.TypeInfoExtracter;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -41,10 +44,7 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
-import org.hibernate.service.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.service.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
@@ -232,9 +232,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		final Object setting = serviceRegistry.getService( ConfigurationService.class )
 				.getSettings()
 				.get( AvailableSettings.SCHEMA_NAME_RESOLVER );
-		return serviceRegistry.getService( ClassLoaderService.class )
-				.getStrategyInstanceResolver()
-				.resolveDefaultableStrategyInstance( setting, SchemaNameResolver.class, TemporarySchemaNameResolver.INSTANCE );
+		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				SchemaNameResolver.class,
+				setting,
+				TemporarySchemaNameResolver.INSTANCE
+		);
 	}
 
 	private Set<String> buildMergedReservedWords(Dialect dialect, DatabaseMetaData dbmd) throws SQLException {

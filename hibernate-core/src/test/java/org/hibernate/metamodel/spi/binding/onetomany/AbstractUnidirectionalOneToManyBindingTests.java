@@ -33,6 +33,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
@@ -46,8 +48,6 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
@@ -71,7 +71,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 	@Before
 	public void setUp() {
-		serviceRegistry = ( StandardServiceRegistryImpl ) new ServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = ( StandardServiceRegistryImpl ) new StandardServiceRegistryBuilder().buildServiceRegistry();
 		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		addSources( metadataSources );
 		metadata = ( MetadataImpl ) metadataSources.getMetadataBuilder().buildMetadata();

@@ -56,8 +56,8 @@ public interface JdbcConnectionAccess extends Serializable {
 	 * Does the underlying provider of connections support aggressive releasing of connections (and re-acquisition
 	 * of those connections later, if need be) in JTA environments?
 	 *
-	 * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
-	 * @see org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
+	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
 	 */
 	public boolean supportsAggressiveRelease();
 }

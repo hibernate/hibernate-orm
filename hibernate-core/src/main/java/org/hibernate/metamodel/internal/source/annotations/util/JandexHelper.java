@@ -45,7 +45,7 @@ import org.jboss.jandex.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Utility methods for working with the jandex annotation index.

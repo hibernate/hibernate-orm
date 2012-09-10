@@ -39,7 +39,7 @@ import org.xml.sax.SAXException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Hardy Ferentschik

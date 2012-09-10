@@ -35,12 +35,13 @@ import org.hibernate.Interceptor;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.SessionFactoryBuilderImpl;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.Type;
 
@@ -90,7 +91,7 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 	}
 
 	private SessionFactoryBuilder getSessionFactoryBuilder() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addAnnotatedClass( SimpleEntity.class );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		return  metadata.getSessionFactoryBuilder();

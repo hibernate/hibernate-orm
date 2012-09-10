@@ -53,7 +53,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
@@ -181,7 +181,8 @@ public class StoredProcedureCallImpl extends AbstractBasicQueryContractImpl impl
 			throw new QueryException( "Cannot mix named and positional parameters" );
 		}
 		if ( typeOfParameters == null ) {
-			// protect to only do this check once
+			// protect to only do this check o
+			// nce
 			final ExtractedDatabaseMetaData databaseMetaData = session().getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getLogicalConnection()

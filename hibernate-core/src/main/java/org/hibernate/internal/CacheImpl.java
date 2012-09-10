@@ -40,6 +40,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -47,7 +48,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.InjectService;
 

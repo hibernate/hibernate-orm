@@ -46,7 +46,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbCascadeType;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Strong Liu

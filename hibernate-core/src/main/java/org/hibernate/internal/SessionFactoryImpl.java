@@ -62,6 +62,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -129,13 +130,12 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
-import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
-import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -167,7 +167,7 @@ import org.hibernate.type.TypeResolver;
  * and pooling under the covers. It is crucial that the class is not only thread
  * safe, but also highly concurrent. Synchronization must be used extremely sparingly.
  *
- * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider
+ * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider
  * @see org.hibernate.Session
  * @see org.hibernate.hql.spi.QueryTranslator
  * @see org.hibernate.persister.entity.EntityPersister
@@ -231,22 +231,19 @@ public final class SessionFactoryImpl
 			private final EntityNotFoundDelegate entityNotFoundDelegate;
 
 			{
-				final StrategyInstanceResolver strategyInstanceResolver
-						= serviceRegistry.getService( ClassLoaderService.class ).getStrategyInstanceResolver();
-
 				interceptor = cfg.getInterceptor();
 
-				customEntityDirtinessStrategy = strategyInstanceResolver.resolveDefaultableStrategyInstance(
-						cfg.getProperties().get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
+				customEntityDirtinessStrategy = serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
 						CustomEntityDirtinessStrategy.class,
+						cfg.getProperties().get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
 						DefaultCustomEntityDirtinessStrategy.INSTANCE
 				);
 
 				currentTenantIdentifierResolver = cfg.getCurrentTenantIdentifierResolver() != null
 						? cfg.getCurrentTenantIdentifierResolver()
-						: strategyInstanceResolver.resolveStrategyInstance(
-								cfg.getProperties().get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER ),
-								CurrentTenantIdentifierResolver.class
+						: serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
+						        CurrentTenantIdentifierResolver.class,
+								cfg.getProperties().get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
 						);
 
 				observer = userObserver;

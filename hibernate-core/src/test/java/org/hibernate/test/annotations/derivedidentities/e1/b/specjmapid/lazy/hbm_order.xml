@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat, Inc. and/or its affiliates or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat, Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+-->
+
+<hibernate-mapping>
+ 
+    <class name="org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo" mutable="true" table="O_CUSTOMER">
+        <cache usage="transactional" include="all"/>
+        <id name="id" type="java.lang.Integer" column="C_ID" access="field">
+            <generator class="assigned"/>
+        </id>
+        <version name="version" access="field" column="C_VERSION" type="integer"/>
+        <property name="firstName" type="java.lang.String" column="C_FIRST"/>
+        <property name="lastName" type="java.lang.String" column="C_LAST"/>
+        <property name="contact" type="java.lang.String" column="C_CONTACT"/>
+        <property name="since" type="java.util.Calendar" column="C_SINCE"/>
+        <property name="balance" type="java.math.BigDecimal" column="C_BALANCE"/>
+        <property name="credit" type="java.lang.String" column="C_CREDIT"/>
+        <property name="creditLimit" type="java.math.BigDecimal" column="C_CREDIT_LIMIT"/>
+        <property name="ytdPayment" type="java.math.BigDecimal" column="C_YTD_PAYMENT"/>
+         
+        <bag name="customerInventories" access="field" table="O_CUSTINVENTORY" lazy="false" cascade="all" fetch="select">
+            <cache usage="transactional" include="all"/>
+            <key>
+                <column name="CI_CUSTOMERID" not-null="true"/>
+            </key>
+            <one-to-many class="org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo"/>
+        </bag>
+        
+    </class>
+</hibernate-mapping>

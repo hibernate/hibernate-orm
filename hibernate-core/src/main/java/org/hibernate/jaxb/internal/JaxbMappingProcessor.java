@@ -50,6 +50,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -57,8 +59,6 @@ import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 
 /**

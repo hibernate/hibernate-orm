@@ -4,10 +4,10 @@ import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
@@ -25,7 +25,7 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		cfg.getProperties().put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
 		cfg.setProperty( Environment.MULTI_TENANT_CONNECTION_PROVIDER, "class.not.present.in.classpath" );
 		cfg.buildMappings();
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() ).buildServiceRegistry();
 		cfg.buildSessionFactory( serviceRegistry );
 	}
@@ -37,7 +37,7 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		cfg.getProperties().put( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.name() );
 		cfg.buildMappings();
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService(
 						MultiTenantConnectionProvider.class,

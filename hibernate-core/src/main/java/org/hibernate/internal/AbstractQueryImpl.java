@@ -49,6 +49,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
@@ -65,6 +66,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Abstract implementation of the Query interface.
@@ -73,6 +75,10 @@ import org.hibernate.type.Type;
  * @author Max Andersen
  */
 public abstract class AbstractQueryImpl implements Query {
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractQueryImpl.class.getName()
+	);
 
 	private static final Object UNSET_PARAMETER = new MarkerObject("<unset parameter>");
 	private static final Object UNSET_TYPE = new MarkerObject("<unset type>");
@@ -798,6 +804,15 @@ public abstract class AbstractQueryImpl implements Query {
 	 */
 	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
+		
+		// HHH-1123
+		// Some DBs limit number of IN expressions.  For now, warn...
+		final Dialect dialect = session.getFactory().getDialect();
+		final int inExprLimit = dialect.getInExpressionCountLimit();
+		if ( inExprLimit > 0 && vals.size() > inExprLimit ) {
+			log.tooManyInExpressions( dialect.getClass().getName(), inExprLimit, name, vals.size() );
+		}
+
 		Type type = typedList.getType();
 
 		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();

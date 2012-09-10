@@ -36,6 +36,10 @@ import javax.validation.constraints.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -45,11 +49,7 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.service.BootstrapServiceRegistry;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.validator.constraints.Length;
 
 import static junit.framework.Assert.assertEquals;
@@ -160,7 +160,7 @@ public class ApplySchemaConstraintTest {
 	private StandardServiceRegistryImpl createServiceRegistry() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		final BootstrapServiceRegistry bootstrapServiceRegistry = builder.build();
-		ServiceRegistryBuilder registryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry );
+		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		return ( StandardServiceRegistryImpl ) registryBuilder.buildServiceRegistry();
 	}
 

@@ -36,17 +36,16 @@ import org.hibernate.Interceptor;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.StrategyInstanceResolver;
-import org.hibernate.service.config.spi.ConfigurationService;
 
 /**
  * @author Gail Badner
@@ -111,14 +110,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 
 		public SessionFactoryOptionsImpl(ServiceRegistry serviceRegistry) {
-			final StrategyInstanceResolver strategyInstanceResolver
-					= serviceRegistry.getService( ClassLoaderService.class ).getStrategyInstanceResolver();
-
 			final Map configurationSettings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
-			this.interceptor = strategyInstanceResolver.resolveDefaultableStrategyInstance(
-					configurationSettings.get( AvailableSettings.INTERCEPTOR ),
+			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+
+			this.interceptor = strategySelector.resolveDefaultableStrategy(
 					Interceptor.class,
+					configurationSettings.get( AvailableSettings.INTERCEPTOR ),
 					EmptyInterceptor.INSTANCE
 			);
 
@@ -129,15 +127,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 				}
 			};
 
-			this.customEntityDirtinessStrategy = strategyInstanceResolver.resolveDefaultableStrategyInstance(
-					configurationSettings.get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
+			this.customEntityDirtinessStrategy = strategySelector.resolveDefaultableStrategy(
 					CustomEntityDirtinessStrategy.class,
+					configurationSettings.get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
 					DefaultCustomEntityDirtinessStrategy.INSTANCE
 			);
 
-			this.currentTenantIdentifierResolver = strategyInstanceResolver.resolveStrategyInstance(
-					configurationSettings.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER  ),
-					CurrentTenantIdentifierResolver.class
+			this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
+					CurrentTenantIdentifierResolver.class,
+					configurationSettings.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
 		}
 

@@ -24,7 +24,6 @@ dependencies {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JPA model-gen set up
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-aptDumpDir = file( "${buildDir}/tmp/apt" )
 
 sourceSets.test {
     originalJavaSrcDirs = java.srcDirs
@@ -32,6 +31,7 @@ sourceSets.test {
     java.srcDir generatedJpaMetamodelSrcDir
 }
 task generateTestJpaMetamodelClasses(type: Compile) {
+    ext.aptDumpDir = file( "${buildDir}/tmp/apt/jpamodelgen" )
     classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.test.originalJavaSrcDirs
     destinationDir = aptDumpDir
@@ -45,6 +45,9 @@ task generateTestJpaMetamodelClasses(type: Compile) {
     outputs.dir sourceSets.test.generatedJpaMetamodelSrcDir;
     doFirst {
         sourceSets.test.generatedJpaMetamodelSrcDir.mkdirs()
+    }
+    doLast {
+        aptDumpDir.delete()
     }
 }
 // for the time being eat the annoying output from running the annotation processors

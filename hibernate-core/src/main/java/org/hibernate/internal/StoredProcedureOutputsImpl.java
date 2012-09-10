@@ -42,7 +42,7 @@ import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.service.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 
 /**
  * @author Steve Ebersole

@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.Entity;
@@ -41,7 +42,6 @@ import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertSame;

@@ -25,8 +25,8 @@ import java.util.Properties;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * HibernateTransactionManagerLookup.

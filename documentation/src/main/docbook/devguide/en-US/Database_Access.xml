@@ -32,9 +32,9 @@
 
         <para>
             Hibernate obtains JDBC connections as needed though the
-            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> interface
+            <interfacename>ConnectionProvider</interfacename> interface
             which is a service contract.  Applications may also supply their own
-            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> implementation
+            <interfacename>ConnectionProvider</interfacename> implementation
             to define a custom approach for supplying connections to Hibernate (from a different connection pool
             implementation, for example).
         </para>
@@ -232,7 +232,7 @@
       </para>
       <para>
         You can define your own plugin strategy for obtaining JDBC connections by implementing the interface
-        <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> and specifying your custom
+        <interfacename>ConnectionProvider</interfacename> and specifying your custom
         implementation with the <property>hibernate.connection.provider_class</property> property.
       </para>
     </section>
@@ -386,22 +386,22 @@
       <section>
           <title>Dialect resolution</title>
           <para>
-              Assuming a <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> has been
+              Assuming a <interfacename>ConnectionProvider</interfacename> has been
               set up, Hibernate will attempt to automatically determine the Dialect to use based on the
               <interfacename>java.sql.DatabaseMetaData</interfacename> reported by a
               <interfacename>java.sql.Connection</interfacename> obtained from that
-              <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename>.
+              <interfacename>ConnectionProvider</interfacename>.
           </para>
           <para>
                 This functionality is provided by a series of
-                <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> instances registered
+                <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> instances registered
                 with Hibernate internally.  Hibernate comes with a standard set of recognitions.  If your application
                 requires extra Dialect resolution capabilities, it would simply register a custom implementation
-                of <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> as follows:
+                of <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> as follows:
           </para>
           <!-- document an example using the service registry -->
             <para>
-                Registered <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> are
+                Registered <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> are
                 <emphasis>prepended</emphasis> to an internal list of resolvers, so they take precedence
                 before any already registered resolvers including the standard one.
             </para>

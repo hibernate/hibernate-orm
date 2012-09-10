@@ -71,4 +71,7 @@ public class DB2400Dialect extends DB2Dialect {
 				.toString();
 	}
 
+	public String getForUpdateString() {
+		return " for update with rs";
+	}
 }

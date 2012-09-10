@@ -25,14 +25,16 @@ package org.hibernate.cache.internal;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -72,50 +74,21 @@ public class RegionFactoryInitiator implements SessionFactoryServiceInitiator<Re
 	}
 
 	private RegionFactory initiateService(SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor registry){
-		final Object impl = registry.getService( ConfigurationService.class ).getSettings().get( IMPL_NAME );
 		boolean isCacheEnabled = isCacheEnabled( registry );
-		RegionFactory factory;
 		if ( !isCacheEnabled ) {
 			LOG.debugf(
 					"Second level cache has been disabled, so using % as cache region factory",
 					NoCachingRegionFactory.class.getName()
 			);
-			factory = NoCachingRegionFactory.INSTANCE;
-		}
-		else if ( impl == null ) {
-			LOG.debugf(
-					"No 'hibernate.cache.region.factory_class' is provided, so using %s as default",
-					NoCachingRegionFactory.class.getName()
-			);
-			factory = NoCachingRegionFactory.INSTANCE;
-		}
-		else {
-			LOG.debugf( "Cache region factory : %s", impl.toString() );
-			if ( getServiceInitiated().isInstance( impl ) ) {
-				factory = (RegionFactory) impl;
-			}
-			else {
-				Class<? extends RegionFactory> customImplClass = null;
-				if ( Class.class.isInstance( impl ) ) {
-					customImplClass = (Class<? extends RegionFactory>) impl;
-				}
-				else {
-					customImplClass = registry.getService( ClassLoaderService.class )
-							.classForName( mapLegacyNames( impl.toString() ) );
-				}
-
-				try {
-					factory = customImplClass.newInstance();
-				}
-				catch ( Exception e ) {
-					throw new ServiceException(
-							"Could not initialize custom RegionFactory impl [" + customImplClass.getName() + "]", e
-					);
-				}
-			}
+			return NoCachingRegionFactory.INSTANCE;
 		}
 
-		return  factory;
+		final Object setting = registry.getService( ConfigurationService.class ).getSettings().get( IMPL_NAME );
+		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				RegionFactory.class,
+				setting,
+				NoCachingRegionFactory.INSTANCE
+		);
 	}
 
 	private static boolean isCacheEnabled(ServiceRegistryImplementor serviceRegistry) {

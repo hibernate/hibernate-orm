@@ -30,6 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OrderBy;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -73,6 +74,7 @@ public class Person {
 
 	@ElementCollection
 	@JoinColumn
+	@JoinTable(name = "T_NICKNAMES_A")
 	@OrderBy
 	public Set<String> getNickNamesAscendingNaturalSort() {
 		return nickNamesAscendingNaturalSort;
@@ -84,6 +86,7 @@ public class Person {
 
 	@ElementCollection
 	@JoinColumn
+	@JoinTable(name = "T_NICKNAMES_D")
 	@OrderBy( "desc" )
 	public Set<String> getNickNamesDescendingNaturalSort() {
 		return nickNamesDescendingNaturalSort;
@@ -97,6 +100,7 @@ public class Person {
 	@ElementCollection
 	@JoinColumn
 	@OrderBy
+	@JoinTable(name = "T_ADDRESS_A")
 	public Set<Address> getAddressesAscendingNaturalSort() {
 		return addressesAscendingNaturalSort;
 	}
@@ -108,6 +112,7 @@ public class Person {
 	@ElementCollection
 	@JoinColumn
 	@OrderBy( "desc" )
+	@JoinTable(name = "T_ADDRESS_D")
 	public Set<Address> getAddressesDescendingNaturalSort() {
 		return addressesDescendingNaturalSort;
 	}
@@ -119,6 +124,7 @@ public class Person {
 	@ElementCollection
 	@JoinColumn
 	@OrderBy( "city" )
+	@JoinTable(name = "T_ADD_CITY_A")
 	public Set<Address> getAddressesCityAscendingSort() {
 		return addressesCityAscendingSort;
 	}
@@ -130,6 +136,7 @@ public class Person {
 	@ElementCollection
 	@JoinColumn
 	@OrderBy( "city desc" )
+	@JoinTable(name = "T_ADD_CITY_D")
 	public Set<Address> getAddressesCityDescendingSort() {
 		return addressesCityDescendingSort;
 	}

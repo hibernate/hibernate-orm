@@ -1,17 +1,15 @@
 package org.hibernate.test.cache;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -25,49 +23,31 @@ import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Chris Dennis
+ * @author Brett Meyer
  */
-public class HibernateCacheTest {
+public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 
-	private static SessionFactory sessionFactory;
-	private static Configuration config;
 	private static final String REGION_PREFIX = "hibernate.test.";
 
-	public synchronized static SessionFactory getSessionFactory() {
-		if ( sessionFactory == null ) {
-			try {
-				sessionFactory = config.buildSessionFactory();
-			}
-			catch ( HibernateException ex ) {
-				System.err.println( "Initial SessionFactory creation failed." + ex );
-				throw new ExceptionInInitializerError( ex );
-			}
-		}
-		return sessionFactory;
-	}
-
-	@BeforeClass
-	public static void setUp() {
+	@Override
+	protected void configure(Configuration config) {
 		System.setProperty( "derby.system.home", "target/derby" );
-		config = new Configuration().configure( "/hibernate-config/hibernate.cfg.xml" );
-		config.setProperty( "hibernate.hbm2ddl.auto", "create" );
-		getSessionFactory().getStatistics().setStatisticsEnabled( true );
+		config.configure( "hibernate-config/hibernate.cfg.xml" );
 	}
-
-	@AfterClass
-	public static void tearDown() {
-		getSessionFactory().close();
+	
+	@Override
+	protected void afterSessionFactoryBuilt() {
+		sessionFactory().getStatistics().setStatisticsEnabled( true );
 	}
 
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
-		Session s = getSessionFactory().openSession();
+		Session s = sessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Item i = new Item();
 		i.setName( "widget" );
@@ -76,7 +56,7 @@ public class HibernateCacheTest {
 		t.commit();
 		s.close();
 
-		SecondLevelCacheStatistics slcs = s.getSessionFactory()
+		SecondLevelCacheStatistics slcs = sessionFactory()
 				.getStatistics()
 				.getSecondLevelCacheStatistics( REGION_PREFIX + Item.class.getName() );
 
@@ -84,7 +64,7 @@ public class HibernateCacheTest {
 		assertThat( slcs.getElementCountInMemory(), equalTo( 1L ) );
 		assertThat( slcs.getEntries().size(), equalTo( 1 ) );
 
-		s = getSessionFactory().openSession();
+		s = sessionFactory().openSession();
 		t = s.beginTransaction();
 		i = (Item) s.get( Item.class, i.getId() );
 
@@ -110,7 +90,7 @@ public class HibernateCacheTest {
 		assertThat( (String) map.get( "name" ), equalTo( "widget" ) );
 
 		// cleanup
-		s = getSessionFactory().openSession();
+		s = sessionFactory().openSession();
 		t = s.beginTransaction();
 		s.delete( i );
 		t.commit();
@@ -119,8 +99,8 @@ public class HibernateCacheTest {
 
 	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
-		getSessionFactory().evictEntity( Item.class.getName() );
-		Statistics stats = getSessionFactory().getStatistics();
+		sessionFactory().evictEntity( Item.class.getName() );
+		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( REGION_PREFIX + Item.class.getName() );
 		Map cacheEntries = statistics.getEntries();
@@ -129,7 +109,7 @@ public class HibernateCacheTest {
 
 	@Test
 	public void testStaleWritesLeaveCacheConsistent() {
-		Session s = getSessionFactory().openSession();
+		Session s = sessionFactory().openSession();
 		Transaction txn = s.beginTransaction();
 		VersionedItem item = new VersionedItem();
 		item.setName( "steve" );
@@ -144,7 +124,7 @@ public class HibernateCacheTest {
 		item.setVersion( item.getVersion() - 1 );
 
 		try {
-			s = getSessionFactory().openSession();
+			s = sessionFactory().openSession();
 			txn = s.beginTransaction();
 			s.update( item );
 			txn.commit();
@@ -172,7 +152,7 @@ public class HibernateCacheTest {
 		}
 
 		// check the version value in the cache...
-		SecondLevelCacheStatistics slcs = getSessionFactory().getStatistics()
+		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
 				.getSecondLevelCacheStatistics( REGION_PREFIX + VersionedItem.class.getName() );
 		assertThat( slcs, CoreMatchers.<Object>notNullValue() );
 		final Map entries = slcs.getEntries();
@@ -189,7 +169,7 @@ public class HibernateCacheTest {
 
 
 		// cleanup
-		s = getSessionFactory().openSession();
+		s = sessionFactory().openSession();
 		txn = s.beginTransaction();
 		item = (VersionedItem) s.load( VersionedItem.class, item.getId() );
 		s.delete( item );
@@ -200,8 +180,8 @@ public class HibernateCacheTest {
 
 	@Test
 	public void testGeneralUsage() {
-		EventManager mgr = new EventManager( getSessionFactory() );
-		Statistics stats = getSessionFactory().getStatistics();
+		EventManager mgr = new EventManager( sessionFactory() );
+		Statistics stats = sessionFactory().getStatistics();
 
 		// create 3 persons Steve, Orion, Tim
 		Person stevePerson = new Person();
@@ -246,8 +226,6 @@ public class HibernateCacheTest {
 		for ( Event event : (List<Event>) mgr.listEvents() ) {
 			mgr.listEmailsOfEvent( event.getId() );
 		}
-
-		getSessionFactory().close();
 
 		QueryStatistics queryStats = stats.getQueryStatistics( "from Event" );
 		assertThat( "Cache Miss Count", queryStats.getCacheMissCount(), equalTo( 1L ) );

@@ -41,8 +41,9 @@ import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 import static org.junit.Assert.assertEquals;

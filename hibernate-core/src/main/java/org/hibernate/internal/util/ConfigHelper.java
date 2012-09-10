@@ -40,7 +40,7 @@ import org.hibernate.internal.CoreMessageLogger;
 /**
  * A simple class to centralize logic needed to locate config files on the system.
  *
- * @todo : Update usages to use {@link org.hibernate.service.classloading.spi.ClassLoaderService}
+ * @todo : Update usages to use {@link org.hibernate.boot.registry.classloading.spi.ClassLoaderService}
  *
  * @author Steve Ebersole
  */

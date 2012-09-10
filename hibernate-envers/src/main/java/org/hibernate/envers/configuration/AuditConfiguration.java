@@ -40,7 +40,7 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.synchronization.AuditProcessManager;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Adam Warski (adam at warski dot org)

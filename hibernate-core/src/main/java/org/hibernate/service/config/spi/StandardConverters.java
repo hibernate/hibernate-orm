@@ -23,7 +23,8 @@
  */
 package org.hibernate.service.config.spi;
 
-import static org.hibernate.service.config.spi.ConfigurationService.Converter;
+
+import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 
 /**
  * Standard set of setting converters
@@ -31,7 +32,7 @@ import static org.hibernate.service.config.spi.ConfigurationService.Converter;
  * @author Steve Ebersole
  */
 public class StandardConverters {
-	public static final Converter<Boolean> BOOLEAN = new Converter<java.lang.Boolean>() {
+	public static final Converter<Boolean> BOOLEAN = new Converter<Boolean>() {
 		@Override
 		public Boolean convert(Object value) {
 			if ( value == null ) {

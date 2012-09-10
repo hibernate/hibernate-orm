@@ -38,7 +38,7 @@ import org.hibernate.cfg.Environment;
 /**
  * Helper for dealing with JNDI.
  *
- * @deprecated As JNDI access should get routed through {@link org.hibernate.service.jndi.spi.JndiService}
+ * @deprecated As JNDI access should get routed through {@link org.hibernate.engine.jndi.spi.JndiService}
  */
 @Deprecated
 public final class JndiHelper {

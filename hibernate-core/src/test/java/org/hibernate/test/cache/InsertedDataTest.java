@@ -28,9 +28,9 @@ import java.util.Map;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -58,7 +58,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void prepareBasicRegistryBuilder(ServiceRegistryBuilder serviceRegistryBuilder) {
+	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_PREFIX, "" );
 		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}

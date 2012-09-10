@@ -52,9 +52,9 @@ import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
-import org.hibernate.service.jndi.JndiException;
-import org.hibernate.service.jndi.JndiNameException;
+import org.hibernate.engine.jdbc.dialect.internal.AbstractDialectResolver;
+import org.hibernate.engine.jndi.JndiException;
+import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -1501,12 +1501,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled", id = 426)
 	void setManagerLookupClass();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Using deprecated %s strategy [%s], use newer %s strategy instead [%s]", id = 427)
-	void deprecatedTransactionManagerStrategy(String name,
-											  String transactionManagerStrategy,
-											  String name2,
-											  String jtaPlatform);
+//	@LogMessage(level = WARN)
+//	@Message(value = "Using deprecated %s strategy [%s], use newer %s strategy instead [%s]", id = 427)
+//	void deprecatedTransactionManagerStrategy(String name,
+//											  String transactionManagerStrategy,
+//											  String name2,
+//											  String jtaPlatform);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Encountered legacy TransactionManagerLookup specified; convert to newer %s contract specified via %s setting",
@@ -1586,6 +1586,15 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@Message(value = "@CollectionTable and @JoinTable specified on the same attribute. Check %s#%s", id = 446)
 	String collectionTableAndJoinTableUsedTogether(String entityName, String propertyName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
+					"However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
+					"to execute the query in the database",
+			id = 447
+	)
+	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
 
 
 	// moved from hibernate-entitymanager ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

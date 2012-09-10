@@ -44,6 +44,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.beanvalidation.ddl.DigitsSchemaConstraint;
 import org.hibernate.cfg.beanvalidation.ddl.LengthSchemaConstraint;
 import org.hibernate.cfg.beanvalidation.ddl.MaxSchemaConstraint;
@@ -63,8 +65,6 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.classloading.spi.ClassLoadingException;
 
 /**
  * @author Emmanuel Bernard

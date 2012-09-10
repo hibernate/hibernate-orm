@@ -25,11 +25,11 @@ package org.hibernate.metamodel.internal.source.annotations.xml;
 
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertNotNull;
@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertNotNull;
 public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test
 	public void testSimpleOrmVersion2() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-father.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
@@ -50,7 +50,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleOrmVersion1() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-star.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
@@ -60,7 +60,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 
 	@Test(expected = MappingException.class)
 	public void testInvalidOrmXmlThrowsException() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-invalid.xml" );
 		sources.buildMetadata();
 	}

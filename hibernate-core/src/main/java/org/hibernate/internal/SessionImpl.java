@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -64,6 +66,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ObjectDeletedException;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ReplicationMode;
@@ -281,17 +284,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 				@Override
 				public void beforeCompletion(TransactionImplementor transaction) {
-					if ( isOpen() ) {
-						if ( flushBeforeCompletionEnabled ){
-							SessionImpl.this.managedFlush();
-						}
-						getActionQueue().beforeTransactionCompletion();
+					if ( isOpen() && flushBeforeCompletionEnabled ) {
+						SessionImpl.this.managedFlush();
 					}
-					else {
-						if (actionQueue.hasAfterTransactionActions()){
-							LOG.log( Logger.Level.DEBUG, "Session had after transaction actions that were not processed");
-						}
-					}
+					beforeTransactionCompletion( transaction );
 				}
 
 				@Override
@@ -2604,7 +2600,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			if ( entityId == null ) {
 				return null;
 			}
-			return this.getIdentifierLoadAccess().load( entityId );
+			try {
+				return this.getIdentifierLoadAccess().load( entityId );
+			}
+			catch (EntityNotFoundException enf) {
+				// OK
+			}
+			catch (ObjectNotFoundException nf) {
+				// OK
+			}
+			return null;
 		}
 	}
 
@@ -2662,7 +2667,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			if ( entityId == null ) {
 				return null;
 			}
-			return this.getIdentifierLoadAccess().load( entityId );
+			try {
+				return this.getIdentifierLoadAccess().load( entityId );
+			}
+			catch (EntityNotFoundException enf) {
+				// OK
+			}
+			catch (ObjectNotFoundException nf) {
+				// OK
+			}
+			return null;
 		}
 	}
 }

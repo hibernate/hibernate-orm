@@ -55,7 +55,7 @@ import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMapp
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate

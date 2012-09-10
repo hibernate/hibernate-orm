@@ -57,7 +57,7 @@ import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole

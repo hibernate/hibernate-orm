@@ -33,11 +33,11 @@ import javax.persistence.OneToMany;
 
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistryBuilder;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
-import org.hibernate.testing.junit4.Resources;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -72,10 +72,9 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
-	@Resources(annotatedClasses = { })
 	public void testMapsIsOnOneToManyThrowsException() {
 		try {
-			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+			sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
 			sources.addAnnotatedClass( DependentId.class );
 			sources.addAnnotatedClass( Dependent.class );
 			sources.addAnnotatedClass( Employee.class );

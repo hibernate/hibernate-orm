@@ -30,7 +30,7 @@ package org.hibernate.dialect;
  * (Tested on ASA 8.x)
  * @author ?
  */
-public class SybaseAnywhereDialect extends AbstractTransactSQLDialect {
+public class SybaseAnywhereDialect extends SybaseDialect {
 	/**
 	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
 	 * but I suppose Hibernate use this syntax only with tables with just 1 column

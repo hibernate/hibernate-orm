@@ -25,23 +25,21 @@ package org.hibernate.service.schema.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.schema.spi.SchemaManagementTool;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class SchemaManagementToolInitiator implements BasicServiceInitiator<SchemaManagementTool> {
+public class SchemaManagementToolInitiator implements StandardServiceInitiator<SchemaManagementTool> {
 	public static final SchemaManagementToolInitiator INSTANCE = new SchemaManagementToolInitiator();
 
 	public SchemaManagementTool initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.SCHEMA_MANAGEMENT_TOOL );
-		SchemaManagementTool tool = registry.getService( ClassLoaderService.class )
-				.getStrategyInstanceResolver()
-				.resolveStrategyInstance( setting, SchemaManagementTool.class );
+		SchemaManagementTool tool = registry.getService( StrategySelector.class ).resolveStrategy( SchemaManagementTool.class, setting );
 		if ( tool == null ) {
 			tool = new HibernateSchemaManagementTool();
 		}

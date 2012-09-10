@@ -56,7 +56,9 @@ public class DerbyDialect extends DB2Dialect {
 
 	public DerbyDialect() {
 		super();
-		LOG.deprecatedDerbyDialect();
+		if (this.getClass() == DerbyDialect.class) {
+			LOG.deprecatedDerbyDialect();
+		}
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
         registerColumnType( Types.BLOB, "blob" );

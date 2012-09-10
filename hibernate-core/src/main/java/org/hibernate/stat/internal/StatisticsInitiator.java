@@ -30,9 +30,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -107,8 +107,10 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 
 		StatisticsImplementor statistics = statisticsFactory.buildStatistics( sessionFactory );
-		final boolean enabled = registry.getService( ConfigurationService.class ).getSetting( AvailableSettings.GENERATE_STATISTICS,
-				StandardConverters.BOOLEAN, false
+		final boolean enabled = registry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.GENERATE_STATISTICS,
+				StandardConverters.BOOLEAN, 
+				false
 		);
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );

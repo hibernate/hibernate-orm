@@ -38,11 +38,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.service.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
@@ -66,7 +66,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		AbstractMultiTenantConnectionProvider multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
 		Configuration cfg = buildConfiguration();
 
-		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.buildServiceRegistry();

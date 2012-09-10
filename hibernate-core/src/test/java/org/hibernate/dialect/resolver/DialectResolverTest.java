@@ -30,9 +30,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.TestingDialects;
 import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
-import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver;
+import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

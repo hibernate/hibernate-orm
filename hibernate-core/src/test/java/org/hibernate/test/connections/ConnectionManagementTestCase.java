@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -46,6 +47,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+
 public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTestCase {
 	@Override
 	public final String[] getMappings() {

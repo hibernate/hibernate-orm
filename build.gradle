@@ -120,7 +120,6 @@ subprojects { subProject ->
                 testCompile files( toolsJar )
             }
         }
-        ext.aptDumpDir = subProject.file( "${buildDir}/tmp/apt" )
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -133,6 +132,7 @@ subprojects { subProject ->
         }
 
         task generateMainLoggingClasses(type: Compile) {
+            ext.aptDumpDir = subProject.file( "${buildDir}/tmp/apt/logging" )
             classpath = compileJava.classpath + configurations.jbossLoggingTool
             source = sourceSets.main.originalJavaSrcDirs
             destinationDir = aptDumpDir
@@ -152,6 +152,9 @@ subprojects { subProject ->
             outputs.dir sourceSets.main.generatedLoggingSrcDir;
             doFirst {
                 sourceSets.main.generatedLoggingSrcDir.mkdirs()
+            }
+            doLast {
+                aptDumpDir.delete()
             }
         }
 

@@ -29,13 +29,14 @@ import java.util.Properties;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.jaxb.internal.JaxbConfigurationProcessor;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Loads {@code cfg.xml} files.

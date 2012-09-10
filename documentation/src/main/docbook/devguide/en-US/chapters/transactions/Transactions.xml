@@ -95,7 +95,7 @@
             <para>
                 JTA-based transaction approach which leverages the
                 <interfacename>javax.transaction.UserTransaction</interfacename> interface as obtained from
-                <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
+                <interfacename>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
                 <classname>org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory</classname> class.
             </para>
@@ -111,7 +111,7 @@
             <para>
                 Another JTA-based transaction approach which leverages the JTA
                 <interfacename>javax.transaction.TransactionManager</interfacename> interface as obtained from
-                <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
+                <interfacename>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
                 <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> class.  In
                 an actual JEE CMT environment, access to the

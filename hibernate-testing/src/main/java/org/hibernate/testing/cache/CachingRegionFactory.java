@@ -34,15 +34,9 @@ import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.config.spi.StandardConverters;
-import org.hibernate.service.spi.InjectService;
 
 /**
  * @author Strong Liu

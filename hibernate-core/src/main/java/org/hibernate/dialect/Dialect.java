@@ -2409,4 +2409,14 @@ public abstract class Dialect implements ConversionContext {
 		// oddly most database in fact seem to, so true is the default.
 		return true;
 	}
+
+	/**
+	 * Return the limit that the underlying database places on the number elements in an {@code IN} predicate.
+	 * If the database defines no such limits, simply return zero or less-than-zero.
+	 * 
+	 * @return int The limit, or zero-or-less to indicate no limit.
+	 */
+	public int getInExpressionCountLimit() {
+		return 0;
+	}
 }

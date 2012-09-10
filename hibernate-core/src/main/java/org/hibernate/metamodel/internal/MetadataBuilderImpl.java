@@ -29,6 +29,7 @@ import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
@@ -40,8 +41,7 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.config.spi.StandardConverters;
 
 /**

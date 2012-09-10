@@ -43,9 +43,9 @@ import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertTrue;
@@ -64,7 +64,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().buildServiceRegistry();
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 

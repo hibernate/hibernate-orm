@@ -23,14 +23,17 @@
  */
 package org.hibernate.test.collectionalias;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * The bug fixed by HHH-7545 showed showed different results depending on the order
  * in which entity mappings were processed.
  *
  * This mappings are in the opposite order here than in CollectionAliasTest.
  *
- * @Author Gail Badner
+ * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel // NPE @ AbstractCollectionPersister.java:871
 public class ReorderedMappingsCollectionAliasTest extends CollectionAliasTest {
 
 	@Override

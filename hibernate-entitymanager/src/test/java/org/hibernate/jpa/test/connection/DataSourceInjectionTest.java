@@ -25,9 +25,9 @@ package org.hibernate.jpa.test.connection;
 import javax.persistence.EntityManagerFactory;
 import java.io.File;
 
+import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 import org.junit.Test;
 

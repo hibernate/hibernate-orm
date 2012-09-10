@@ -43,6 +43,9 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.boot.spi.JaccDefinition;
 import org.hibernate.cache.spi.access.AccessType;
@@ -72,10 +75,7 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
@@ -161,7 +161,7 @@ public class EntityManagerFactoryBuilderUsingMetamodelImpl implements EntityMana
 
 	@Override
 	public EntityManagerFactory buildEntityManagerFactory() {
-		final ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry );
+		final StandardServiceRegistryBuilder serviceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		final SpecialProperties specialProperties = processProperties( serviceRegistryBuilder );
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
@@ -188,7 +188,7 @@ public class EntityManagerFactoryBuilderUsingMetamodelImpl implements EntityMana
 		);
 	}
 
-	private SpecialProperties processProperties(ServiceRegistryBuilder serviceRegistryBuilder) {
+	private SpecialProperties processProperties(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		final SpecialProperties specialProperties = new SpecialProperties();
 
 		applyJdbcConnectionProperties( serviceRegistryBuilder );
@@ -293,7 +293,7 @@ public class EntityManagerFactoryBuilderUsingMetamodelImpl implements EntityMana
 		return specialProperties;
 	}
 
-	private void applyJdbcConnectionProperties(ServiceRegistryBuilder serviceRegistryBuilder) {
+	private void applyJdbcConnectionProperties(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		if ( persistenceUnit.getJtaDataSource() != null ) {
 			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getJtaDataSource() );
 		}
@@ -320,7 +320,7 @@ public class EntityManagerFactoryBuilderUsingMetamodelImpl implements EntityMana
 		}
 	}
 
-	private void applyTransactionProperties(ServiceRegistryBuilder serviceRegistryBuilder, SpecialProperties specialProperties) {
+	private void applyTransactionProperties(StandardServiceRegistryBuilder serviceRegistryBuilder, SpecialProperties specialProperties) {
 		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
 				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
 		);

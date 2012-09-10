@@ -26,6 +26,8 @@ package org.hibernate.test.collectionalias;
 import org.junit.Test;
 
 import org.hibernate.Session;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -36,6 +38,7 @@ import static org.junit.Assert.assertSame;
  * @author Dave Stephan
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel // NPE @ AbstractCollectionPersister.java:871
 public class CollectionAliasTest extends BaseCoreFunctionalTestCase {
 
 	@TestForIssue( jiraKey = "HHH-7545" )

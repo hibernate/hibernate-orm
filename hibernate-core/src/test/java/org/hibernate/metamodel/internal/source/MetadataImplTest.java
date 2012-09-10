@@ -73,7 +73,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 	@Test
 	public void testAddingPackageName() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addPackage( "org.hibernate.metamodel.source.internal" );
+		sources.addPackage( "org.hibernate.metamodel.internal.source" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		assertFetchProfile( metadata );
@@ -82,7 +82,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 	@Test
 	public void testAddingPackageNameWithTrailingDot() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addPackage( "org.hibernate.metamodel.source.internal." );
+		sources.addPackage( "org.hibernate.metamodel.internal.source." );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		assertFetchProfile( metadata );

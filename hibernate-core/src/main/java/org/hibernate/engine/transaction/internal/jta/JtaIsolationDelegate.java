@@ -39,7 +39,7 @@ import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
 /**
  * An isolation delegate for JTA environments.

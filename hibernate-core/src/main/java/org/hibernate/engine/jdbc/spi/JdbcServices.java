@@ -30,8 +30,8 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.service.Service;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Contract for services around JDBC operations.  These represent shared resources, aka not varied by session/use.

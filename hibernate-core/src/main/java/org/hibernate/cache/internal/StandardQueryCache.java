@@ -44,7 +44,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 

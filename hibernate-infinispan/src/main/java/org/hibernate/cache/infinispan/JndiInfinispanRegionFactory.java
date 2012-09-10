@@ -21,23 +21,12 @@
  */
 package org.hibernate.cache.infinispan;
 
-import java.util.Properties;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * A {@link org.hibernate.cache.spi.RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache

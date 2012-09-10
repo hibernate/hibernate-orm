@@ -50,7 +50,7 @@ import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.service.jdbc.env.internal.LobCreatorBuilderImpl;
+import org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;

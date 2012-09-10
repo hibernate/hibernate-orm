@@ -47,7 +47,7 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache

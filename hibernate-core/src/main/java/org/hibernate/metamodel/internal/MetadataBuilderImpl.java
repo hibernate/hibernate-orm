@@ -42,7 +42,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 
 /**
  * @author Steve Ebersole

@@ -34,9 +34,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
-import org.hibernate.cfg.Settings;
 import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 
 /**
  * A singleton EhCacheRegionFactory implementation.

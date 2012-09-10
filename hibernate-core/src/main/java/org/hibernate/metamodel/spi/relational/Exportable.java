@@ -28,7 +28,7 @@ package org.hibernate.metamodel.spi.relational;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.service.schema.spi.Exporter
+ * @see org.hibernate.tool.schema.spi.Exporter
  */
 public interface Exportable {
 	/**

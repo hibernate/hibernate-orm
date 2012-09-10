@@ -47,7 +47,7 @@ public class ObjectName {
 	/**
 	 * Tries to create an {@code ObjectName} from a name.  This form explicitly looks for the form
 	 * {@code catalog.schema.name}.  If you need db specific parsing use
-	 * {@link org.hibernate.service.jdbc.env.spi.QualifiedObjectNameSupport#parseName} instead
+	 * {@link org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameSupport#parseName} instead
 	 *
 	 * @param text simple or qualified name of the database object.
 	 */

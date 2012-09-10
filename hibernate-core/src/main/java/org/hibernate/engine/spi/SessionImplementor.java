@@ -44,7 +44,7 @@ import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.type.Type;
 
 /**

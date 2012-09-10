@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Represents a database and manages the named schema/catalog pairs defined within.

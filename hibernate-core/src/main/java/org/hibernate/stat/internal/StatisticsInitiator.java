@@ -33,7 +33,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.spi.StatisticsFactory;
@@ -73,7 +73,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			MetadataImplementor metadata,
 			ServiceRegistryImplementor registry) {
 		ConfigurationService configurationService =  registry.getService( ConfigurationService.class );
-		final Object configValue = configurationService.getSetting( STATS_BUILDER, null );
+		final Object configValue = configurationService.getSetting( STATS_BUILDER );
 		return initiateServiceInternal( sessionFactory, configValue, registry );
 	}
 

@@ -46,6 +46,7 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Card.class, CardField.class, Key.class, PrimaryKey.class };
 	}
 
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-4147" )
 	@FailureExpectedWithNewMetamodel

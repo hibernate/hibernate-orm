@@ -617,54 +617,6 @@ public final class SessionFactoryImpl
 		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy() {
-		CustomEntityDirtinessStrategy defaultValue = new CustomEntityDirtinessStrategy() {
-			@Override
-			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
-
-			@Override
-			public boolean isDirty(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
-
-			@Override
-			public void resetDirty(Object entity, EntityPersister persister, Session session) {
-			}
-
-			@Override
-			public void findDirty(
-					Object entity,
-					EntityPersister persister,
-					Session session,
-					DirtyCheckContext dirtyCheckContext) {
-				// todo : implement proper method body
-			}
-		};
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY,
-				CustomEntityDirtinessStrategy.class,
-				defaultValue
-		);
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
-			CurrentTenantIdentifierResolver explicitResolver) {
-		if ( explicitResolver != null ) {
-			return explicitResolver;
-		}
-		return serviceRegistry.getService( ConfigurationService.class )
-				.getSetting(
-						AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
-						CurrentTenantIdentifierResolver.class,
-						null
-				);
-
-	}
-
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(MetadataImplementor metadata,SessionFactoryOptions sessionFactoryOptions) throws HibernateException {
 		LOG.debug( "Building session factory" );

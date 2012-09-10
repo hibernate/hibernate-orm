@@ -26,25 +26,13 @@ package org.hibernate.engine.config.internal;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			ConfigurationServiceImpl.class.getName()
-	);
+public class ConfigurationServiceImpl implements ConfigurationService {
 	private final Map settings;
-	private ServiceRegistryImplementor serviceRegistry;
 
 	@SuppressWarnings( "unchecked" )
 	public ConfigurationServiceImpl(Map settings) {
@@ -57,13 +45,19 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
+	@SuppressWarnings("unchecked")
+	public <T> T getSetting(String name) {
+		return (T) getSettings().get( name );
 	}
 
 	@Override
 	public <T> T getSetting(String name, Converter<T> converter) {
 		return getSetting( name, converter, null );
+	}
+
+	@Override
+	public <T> T getSetting(String name, Class<T> expectedType) {
+		return getSetting( name, expectedType, null );
 	}
 
 	@Override
@@ -75,44 +69,13 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 
 		return converter.convert( value );
 	}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T getSetting(String name, Class<T> expected, T defaultValue) {
 		Object value = settings.get( name );
-		T target = cast( expected, value );
-		return target !=null ? target : defaultValue;
+		return value == null
+				? defaultValue
+				: (T) value;
 	}
-	@Override
-	public <T> T cast(Class<T> expected, Object candidate){
-		if(candidate == null) return null;
-		if ( expected.isInstance( candidate ) ) {
-			return (T) candidate;
-		}
-		Class<T> target;
-		if ( Class.class.isInstance( candidate ) ) {
-			target = Class.class.cast( candidate );
-		}
-		else {
-			try {
-				target = serviceRegistry.getService( ClassLoaderService.class ).classForName( candidate.toString() );
-			}
-			catch ( ClassLoadingException e ) {
-				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
-				target = null;
-			}
-		}
-		if ( target != null ) {
-			try {
-				return target.newInstance();
-			}
-			catch ( Exception e ) {
-				LOG.debugf(
-						"Unable to instantiate %s class %s", expected.getName(),
-						target.getName()
-				);
-			}
-		}
-		return null;
-	}
-
-
 }

@@ -59,7 +59,7 @@ import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.config.spi.StandardConverters;
+import org.hibernate.engine.config.spi.StandardConverters;
 
 /**
  * Loads {@code hbm.xml} and {@code orm.xml} files and processes them using StAX and JAXB.

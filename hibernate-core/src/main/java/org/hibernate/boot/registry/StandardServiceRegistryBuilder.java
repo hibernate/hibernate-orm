@@ -36,7 +36,7 @@ import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
-import org.hibernate.service.ConfigLoader;
+import org.hibernate.boot.registry.internal.ConfigLoader;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.StandardServiceInitiators;

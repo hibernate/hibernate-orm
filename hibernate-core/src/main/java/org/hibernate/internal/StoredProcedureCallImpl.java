@@ -54,7 +54,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.service.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;

@@ -36,7 +36,7 @@ import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.service.ConfigLoader;
+import org.hibernate.boot.registry.internal.ConfigLoader;
 
 import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
 

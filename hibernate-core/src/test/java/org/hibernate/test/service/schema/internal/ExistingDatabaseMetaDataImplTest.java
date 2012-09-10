@@ -36,10 +36,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.jdbc.env.internal.JdbcEnvironmentImpl;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.service.schema.internal.DatabaseInformationImpl;
-import org.hibernate.service.schema.spi.DatabaseInformation;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.tool.schema.internal.DatabaseInformationImpl;
+import org.hibernate.tool.schema.spi.DatabaseInformation;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -105,7 +105,7 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 		assertNotNull( databaseMetaData.getSequenceInformation( name ) );
 
 		// knowing if identifiers coming back from the database are quoted is all dicked up...
-		// see org.hibernate.service.jdbc.env.internal.NormalizingIdentifierHelperImpl
+		// see org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl
 		//
 		// surely JDBC has a better way to determine this right?
 	}

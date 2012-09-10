@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.service.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.service.schema.spi.ColumnInformation;
-import org.hibernate.service.schema.spi.TableInformation;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.tool.schema.spi.ColumnInformation;
+import org.hibernate.tool.schema.spi.TableInformation;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).

@@ -64,7 +64,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -153,7 +153,7 @@ public class SchemaExport {
 
 		SchemaManagementTool schemaManagementTool = serviceRegistry.getService( SchemaManagementTool.class );
 		final List<String> commands = new ArrayList<String>();
-		final org.hibernate.service.schema.spi.Target target = new org.hibernate.service.schema.spi.Target() {
+		final org.hibernate.tool.schema.spi.Target target = new org.hibernate.tool.schema.spi.Target() {
 			@Override
 			public boolean acceptsImportScriptActions() {
 				return false;

@@ -239,7 +239,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			return PluralAttributeSource.Nature.MAP;
 		}
 		else if ( List.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
-			return PluralAttributeSource.Nature.LIST;
+			return associationAttribute.isIndexed()? Nature.LIST : Nature.BAG;
 		}
 		else if ( Set.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.SET;

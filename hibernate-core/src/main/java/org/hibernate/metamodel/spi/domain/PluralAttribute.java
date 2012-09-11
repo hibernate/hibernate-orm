@@ -54,12 +54,12 @@ public interface PluralAttribute extends Attribute {
 
 		private final String name;
 		private final Class javaContract;
-		private final boolean indexed;
+		private final boolean indexable;
 
 		Nature(String name, Class javaContract) {
 			this.name = name;
 			this.javaContract = javaContract;
-			this.indexed = Map.class.isAssignableFrom( javaContract )
+			this.indexable = Map.class.isAssignableFrom( javaContract )
 					|| List.class.isAssignableFrom( javaContract )
 					|| javaContract.isArray();
 		}
@@ -72,8 +72,8 @@ public interface PluralAttribute extends Attribute {
 			return javaContract;
 		}
 
-		public boolean isIndexed() {
-			return indexed;
+		public boolean isIndexable() {
+			return indexable;
 		}
 	}
 }

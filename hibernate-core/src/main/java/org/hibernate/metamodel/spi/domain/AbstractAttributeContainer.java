@@ -176,7 +176,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	protected PluralAttribute createPluralAttribute(String name, PluralAttribute.Nature nature) {
-		PluralAttribute attribute = nature.isIndexed()
+		PluralAttribute attribute = nature.isIndexable()
 				? new IndexedPluralAttributeImpl( this, name, nature )
 				: new PluralAttributeImpl( this, name, nature );
 		addAttribute( attribute );

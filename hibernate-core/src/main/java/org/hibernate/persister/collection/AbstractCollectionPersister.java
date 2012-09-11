@@ -851,7 +851,7 @@ public abstract class AbstractCollectionPersister
 
 		// INDEX AND ROW SELECT
 
-		hasIndex = collection.getAttribute().getNature().isIndexed();
+		hasIndex = collection.getAttribute().getNature().isIndexable();
 		indexContainsFormula = false;
 		indexNodeName = null;
 		if ( hasIndex ) {
@@ -958,7 +958,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		sqlSelectSizeString = generateSelectSizeString(
-				collection.getAttribute().getNature().isIndexed() &&
+				collection.getAttribute().getNature().isIndexable() &&
 						collection.getAttribute().getNature() != PluralAttribute.Nature.MAP
 		);
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();

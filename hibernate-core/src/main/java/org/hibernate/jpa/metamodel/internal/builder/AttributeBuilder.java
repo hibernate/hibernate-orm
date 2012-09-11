@@ -354,7 +354,7 @@ public class AttributeBuilder {
 				final IndexedPluralAttributeBinding indexedPluralAttributeBinding
 						= (IndexedPluralAttributeBinding) pluralAttributeBinding;
 				final PluralAttributeIndexBinding.Nature indexNature
-						= indexedPluralAttributeBinding.getPluralAttributeIndexBinding().getPluralAttributeIndexNature();
+						= indexedPluralAttributeBinding.getPluralAttributeIndexBinding().getNature();
 
 				if ( indexNature == PluralAttributeIndexBinding.Nature.MANY_TO_ANY ) {
 					context.handleUnsupportedFeature( UnsupportedFeature.ANY );

@@ -247,6 +247,11 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return action;
 	}
 
+	@Override
+	public boolean isOptimisticLockable() {
+		return hasOptimisticLockAnnotation() ? super.isOptimisticLockable() : StringHelper.isEmpty( getMappedBy() );
+	}
+
 	private String determineCustomLoaderName() {
 		String loader = null;
 		final AnnotationInstance customLoaderAnnotation = JandexHelper.getSingleAnnotation(

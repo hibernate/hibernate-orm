@@ -200,6 +200,24 @@ public class AssociationAttribute extends MappedAttribute {
 	public boolean isUpdatable() {
 		return true;
 	}
+	protected boolean hasOptimisticLockAnnotation(){
+		AnnotationInstance optimisticLockAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.OPTIMISTIC_LOCK
+		);
+		return optimisticLockAnnotation != null;
+	}
+	@Override
+	public boolean isOptimisticLockable() {
+		if(hasOptimisticLockAnnotation()){
+			return super.isOptimisticLockable();
+		} else {
+			Nature nature = getNature();
+			return (nature != Nature.ONE_TO_ONE && nature != Nature.MANY_TO_ONE ) || isInsertable();
+		}
+
+	}
+
 
 	@Override
 	public PropertyGeneration getPropertyGeneration() {

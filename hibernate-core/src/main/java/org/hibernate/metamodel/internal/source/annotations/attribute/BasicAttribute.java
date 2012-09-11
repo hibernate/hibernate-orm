@@ -193,6 +193,19 @@ public class BasicAttribute extends MappedAttribute {
 		return versionSourceType;
 	}
 
+	@Override
+	public boolean isOptimisticLockable() {
+		boolean isOptimisticLockable = super.isOptimisticLockable();
+		if ( !isOptimisticLockable ) {
+			if ( isId() || isVersioned() ) {
+				throw new AnnotationException(
+						"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
+								+ getName()
+				);
+			}
+		}
+		return isOptimisticLockable;
+	}
 
 	@Override
 	public String toString() {

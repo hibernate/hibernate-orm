@@ -55,7 +55,7 @@ public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBin
 	}
 
 	@Override
-	public IndexedPluralAttributeBinding getNature() {
+	public IndexedPluralAttributeBinding getIndexedPluralAttributeBinding() {
 		return pluralAttributeBinding;
 	}
 
@@ -65,11 +65,11 @@ public class BasicPluralAttributeIndexBinding implements PluralAttributeIndexBin
 
 	@Override
 	public Type getPluralAttributeIndexType() {
-		return ( (IndexedPluralAttribute) getNature().getAttribute() ).getIndexType();
+		return ( (IndexedPluralAttribute) getIndexedPluralAttributeBinding().getAttribute() ).getIndexType();
 	}
 
 	@Override
-	public Nature getPluralAttributeIndexNature() {
+	public Nature getNature() {
 		return pluralAttributeIndexNature;
 	}
 }

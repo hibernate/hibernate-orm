@@ -30,9 +30,9 @@ import org.hibernate.metamodel.spi.relational.Value;
  * @author Steve Ebersole
  */
 public interface PluralAttributeIndexBinding {
-	IndexedPluralAttributeBinding getNature();
+	IndexedPluralAttributeBinding getIndexedPluralAttributeBinding();
 
-	Nature getPluralAttributeIndexNature();
+	Nature getNature();
 
 	Value getIndexRelationalValue();
 

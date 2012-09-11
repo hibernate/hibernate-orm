@@ -28,9 +28,6 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -44,14 +41,10 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	
 	private static final long serialVersionUID = 1L;
 
-	private JavaTypeDescriptor<T> javaTypeDescriptor = new SerializableTypeDescriptor( Serializable.class );
-
 	/**
 	 * @param sqlTypeDescriptor
 	 * @param javaTypeDescriptor
 	 */
-	// TODO: After HHH-7586, this should eventually use the actual T class.
-	// But, for now, just use Serializable.
 	public SerializableToBlobType() {
 		super( BlobTypeDescriptor.DEFAULT, new SerializableTypeDescriptor( Serializable.class ) );
 	}
@@ -60,39 +53,27 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	 * {@inheritDoc}
 	 */
 	public String getName() {
-		return null;
+		return getClass().getName();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings("unchecked")
-	// TODO: This method (and DynamicParameterizedType) should go away after HHH-7586.
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
-			javaTypeDescriptor = new SerializableTypeDescriptor<T>( reader.getReturnedClass() );
+			setJavaTypeDescriptor( new SerializableTypeDescriptor<T>( reader.getReturnedClass() ) );
 		} else {
 			String className = parameters.getProperty( CLASS_NAME );
 			if ( className == null ) {
 				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
 			}
 			try {
-				javaTypeDescriptor = new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) );
+				setJavaTypeDescriptor( new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) ) );
 			} catch ( ClassNotFoundException e ) {
 				throw new MappingException( "Unable to load class from " + CLASS_NAME + " parameter", e );
 			}
 		}
-		
-		
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	// TODO: Remove after HHH-7586.
-	protected ValueExtractor<T> getExtractor(WrapperOptions options) {
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor );
 	}
 }

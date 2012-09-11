@@ -42,7 +42,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
-import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -59,8 +58,10 @@ public abstract class AbstractStandardBasicType<T>
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
 
-	private final SqlTypeDescriptor sqlTypeDescriptor;
-	private final JavaTypeDescriptor<T> javaTypeDescriptor;
+	// Don't use final here.  Need to initialize after-the-fact
+	// by DynamicParameterizedTypes.
+	private SqlTypeDescriptor sqlTypeDescriptor;
+	private JavaTypeDescriptor<T> javaTypeDescriptor;
 
 	public AbstractStandardBasicType(SqlTypeDescriptor sqlTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
@@ -125,27 +126,22 @@ public abstract class AbstractStandardBasicType<T>
 		return dictatedSize;
 	}
 	
-	/**
-	 * This is necessary due to legacy SimpleValue and DynamicParameterizedType
-	 * usage.  Entity types come in *after* the descriptors have been
-	 * intialized, so this is used to over-ride as necessary.
-	 * 
-	 * @return ValueExtractor
-	 */
-	// TODO: Remove (or make private) after HHH-7586.
-	protected ValueExtractor<T> getExtractor(WrapperOptions options) {
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor );
-	}
-
-
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public final JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
+	
+	public final void setJavaTypeDescriptor( JavaTypeDescriptor<T> javaTypeDescriptor ) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
+	}
 
 	public final SqlTypeDescriptor getSqlTypeDescriptor() {
 		return sqlTypeDescriptor;
+	}
+	
+	public final void setSqlTypeDescriptor( SqlTypeDescriptor sqlTypeDescriptor ) {
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
 	}
 
 	public final Class getReturnedClass() {
@@ -279,7 +275,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		return getExtractor(options).extract( rs, name, options );
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
 	}
 
 	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException {
@@ -425,7 +421,7 @@ public abstract class AbstractStandardBasicType<T>
 			}
 		};
 
-		return getExtractor(options).extract(
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				startIndex,
 				options
@@ -452,6 +448,6 @@ public abstract class AbstractStandardBasicType<T>
 			}
 		};
 
-		return getExtractor(options).extract( statement, paramNames, options );
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
 	}
 }

@@ -200,7 +200,7 @@ public class BasicAttribute extends MappedAttribute {
 			if ( isId() || isVersioned() ) {
 				throw new AnnotationException(
 						"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
-								+ getName()
+								+ getRole()
 				);
 			}
 		}
@@ -211,7 +211,7 @@ public class BasicAttribute extends MappedAttribute {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "SimpleAttribute" );
-		sb.append( "{name=" ).append( getName() );
+		sb.append( "{name=" ).append( getRole() );
 		return sb.toString();
 	}
 
@@ -295,7 +295,7 @@ public class BasicAttribute extends MappedAttribute {
 			}
 
 			if ( alreadyProcessedForColumn ) {
-				throw new AnnotationException( "Multiple definition of read/write conditions for column " + getName() );
+				throw new AnnotationException( "Multiple definition of read/write conditions for column " + getRole() );
 			}
 
 			readWrite[0] = annotationInstance.value( "read" ) == null ?
@@ -322,7 +322,7 @@ public class BasicAttribute extends MappedAttribute {
 		if ( StringHelper.isNotEmpty( name ) ) {
 			generator = locateIdentifierGeneratorDefinition( name );
 			if ( generator == null ) {
-				throw new MappingException( String.format( "Unable to find named generator %s", name ), null );
+				throw new MappingException( String.format( "Unable to find named generator %s", getRole() ), getContext().getOrigin() );
 			}
 		}
 		else {

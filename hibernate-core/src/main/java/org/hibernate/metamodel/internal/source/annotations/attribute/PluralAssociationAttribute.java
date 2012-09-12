@@ -217,7 +217,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
 				if ( StringHelper.isEmpty( comparatorName ) ) {
 					throw new MappingException(
-							"Comparator class must be provided when using SortType.COMPARATOR.",
+							"Comparator class must be provided when using SortType.COMPARATOR on property: "+ getRole(),
 							getContext().getOrigin()
 					);
 				}
@@ -230,6 +230,9 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 		AnnotationInstance orderColumnAnnotation =  JandexHelper.getSingleAnnotation( annotations, JPADotNames.ORDER_COLUMN );
 		AnnotationInstance indexColumnAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.INDEX_COLUMN );
+		if(orderColumnAnnotation!=null && indexColumnAnnotation!=null){
+			throw new MappingException( "@OrderColumn and @IndexColumn can't be used together on property: " + getRole() ,getContext().getOrigin() );
+		}
 		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 
 	}
@@ -323,7 +326,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		if ( jpaWhereAnnotation != null && hibernateWhereAnnotation != null ) {
 			throw new AnnotationException(
 					"Cannot use sql order by clause (@org.hibernate.annotations.OrderBy) " +
-							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getName()
+							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getRole()
 			);
 		}
 

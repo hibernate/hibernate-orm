@@ -53,7 +53,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 	@Override
 	public List<RelationalValueSource> getValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		if ( !attribute.getColumnValues().isEmpty() ) {
+		if ( !attribute.getJoinColumnValues().isEmpty() ) {
 			for ( Column columnValues : attribute.getColumnValues() ) {
 				valueSources.add( new ColumnSourceImpl( attribute, null, columnValues ) );
 			}

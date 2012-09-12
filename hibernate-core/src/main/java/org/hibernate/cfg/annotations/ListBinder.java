@@ -112,8 +112,8 @@ public class ListBinder extends CollectionBinder {
 			PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 					this.collection,
 					StringHelper.qualify( this.collection.getRole(), "key" ),
-					(XClass) null,
-					(XProperty) null, propertyHolder, mappings
+					null,
+					null, propertyHolder, mappings
 			);
 			List list = (List) this.collection;
 			if ( !list.isOneToMany() ) indexColumn.forceNotNull();

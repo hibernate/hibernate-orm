@@ -33,7 +33,9 @@ import javax.persistence.JoinTable;
 
 import org.junit.Test;
 
+import org.hibernate.annotations.IndexColumn;
 import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -140,8 +142,8 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 	@Resources(annotatedClasses = TestEntity3.class)
 	public void testDefaultJoinTableName() {
 		EntityBinding entityBinding = getEntityBinding( TestEntity3.class );
-		ListBinding listBinding = ( ListBinding ) entityBinding.locateAttributeBinding( "strings" );
-		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		BagBinding bagBinding = ( BagBinding ) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
 		assertEquals(
 				"Wrong default collection table name",
 				"ElementCollectionBindingTest$TestEntity3_strings",
@@ -171,8 +173,8 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 	@Resources(annotatedClasses = TestEntity4.class)
 	public void testExplicitJoinTableName() {
 		EntityBinding entityBinding = getEntityBinding( TestEntity4.class );
-		ListBinding listBinding = ( ListBinding ) entityBinding.locateAttributeBinding( "strings" );
-		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		BagBinding bagBinding = ( BagBinding ) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
 		assertEquals(
 				"Wrong default collection table name",
 				"STRING_COLLECTION",
@@ -203,8 +205,8 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 	@Resources(annotatedClasses = TestEntity5.class)
 	public void testJoinColumnAsPartOfCollectionTable() {
 		EntityBinding entityBinding = getEntityBinding( TestEntity5.class );
-		ListBinding listBinding = ( ListBinding ) entityBinding.locateAttributeBinding( "strings" );
-		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		BagBinding bagBinding = ( BagBinding ) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
 		Column column = tableSpec.locateColumn( "FOO" );
 		assertNotNull( "The join column should be named FOO", column );
 	}
@@ -231,8 +233,8 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 	@Resources(annotatedClasses = TestEntity6.class)
 	public void testElementCollectionWithJoinColumn() {
 		EntityBinding entityBinding = getEntityBinding( TestEntity6.class );
-		ListBinding listBinding = ( ListBinding ) entityBinding.locateAttributeBinding( "strings" );
-		TableSpecification tableSpec = listBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		BagBinding bagBinding = ( BagBinding ) entityBinding.locateAttributeBinding( "strings" );
+		TableSpecification tableSpec = bagBinding.getPluralAttributeKeyBinding().getCollectionTable();
 		Column column = tableSpec.locateColumn( "FOO" );
 		assertNotNull( "The join column should be named FOO", column );
 	}

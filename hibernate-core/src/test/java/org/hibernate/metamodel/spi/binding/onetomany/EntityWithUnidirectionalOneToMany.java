@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
+import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 /**
@@ -68,6 +69,7 @@ public class EntityWithUnidirectionalOneToMany {
 
 	@OneToMany(fetch = FetchType.EAGER)
 	@JoinColumn(name = "theListOwner", nullable = false)
+	@IndexColumn( name = "list_index")
 	public List<ReferencedEntity> getTheList() {
 		return theList;
 	}

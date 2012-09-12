@@ -25,8 +25,10 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
@@ -52,11 +54,16 @@ public class Column {
 	private String referencedColumnName; // from @JoinColumn
 
 	public Column(AnnotationInstance columnAnnotation) {
-		if ( columnAnnotation != null &&
-				!( JPADotNames.COLUMN.equals( columnAnnotation.name() ) || JPADotNames.JOIN_COLUMN.equals(
-						columnAnnotation.name()
-				) ) ) {
-			throw new AssertionFailure( "A @Column or @JoinColumn annotation needs to be passed to the constructor" );
+		if(columnAnnotation!=null){
+			DotName name = columnAnnotation.name();
+			if(!(JPADotNames.COLUMN.equals( name )
+				|| JPADotNames.JOIN_COLUMN.equals( name )
+				|| JPADotNames.ORDER_COLUMN.equals( name )
+				|| HibernateDotNames.INDEX_COLUMN.equals( name )
+			)){
+				throw new AssertionFailure( "A @Column or @JoinColumn annotation needs to be passed to the constructor" );
+
+			}
 		}
 		applyColumnValues( columnAnnotation );
 	}

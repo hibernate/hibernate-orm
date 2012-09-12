@@ -100,6 +100,11 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String checkCondition;
 
 	/**
+	 * FQN of the attribute.
+	 */
+	private final String role;
+
+	/**
 	 * The binding context
 	 */
 	private final EntityBindingContext context;
@@ -125,11 +130,16 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
 		this.checkCondition = checkCheckAnnotation();
 		this.naturalIdMutability = checkNaturalId();
+		this.role = context.getOrigin().getName() + "#" + name;
 		checkColumnAnnotations( annotations );
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public String getRole(){
+		return role;
 	}
 
 	public final Class<?> getAttributeType() {
@@ -185,7 +195,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "MappedAttribute" );
-		sb.append( "{name='" ).append( context.getOrigin().getName() ).append( "#" ).append( name ).append( '\'' );
+		sb.append( "{name='" ).append( getRole() ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -237,8 +247,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		if ( columnAnnotation != null ) {
 			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
 				throw getContext().makeMappingException(
-						"@Column(s) not allowed on a " + getNature() + " property: " + getContext().getOrigin()
-								.getName() + "." + name
+						"@Column(s) not allowed on a " + getNature() + " property: " + getRole()
 				);
 			}
 			columnValues.add( new Column( columnAnnotation ) );
@@ -252,8 +261,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		if ( columnsAnnotation != null ) {
 			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
 				throw getContext().makeMappingException(
-						"@Column(s) not allowed on a " + getNature() + " property: " + getContext().getOrigin()
-								.getName() + "." + name
+						"@Column(s) not allowed on a " + getNature() + " property: " + getRole()
 				);
 			}
 			List<AnnotationInstance> columnsList = Arrays.asList(

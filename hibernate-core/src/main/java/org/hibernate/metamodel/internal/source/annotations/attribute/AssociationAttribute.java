@@ -352,7 +352,7 @@ public class AssociationAttribute extends MappedAttribute {
 		if ( !( Nature.MANY_TO_ONE.equals( getNature() ) || Nature.MANY_TO_ONE
 				.equals( getNature() ) ) ) {
 			throw new MappingException(
-					"@MapsId can only be specified on a many-to-one or one-to-one associations",
+					"@MapsId can only be specified on a many-to-one or one-to-one associations, property: "+ getRole(),
 					getContext().getOrigin()
 			);
 		}

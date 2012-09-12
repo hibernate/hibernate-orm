@@ -50,6 +50,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * TODO : javadoc
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public abstract class AbstractStandardBasicType<T>
 		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T> {
@@ -252,24 +253,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public final T nullSafeGet(ResultSet rs, String name, final SessionImplementor session) throws SQLException {
-		// todo : have SessionImplementor extend WrapperOptions
-		final WrapperOptions options = new WrapperOptions() {
-			public boolean useStreamForLobBinding() {
-				return Environment.useStreamsForBinary();
-			}
-
-			public LobCreator getLobCreator() {
-				return Hibernate.getLobCreator( session );
-			}
-
-			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
-						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
-						: sqlTypeDescriptor;
-				return remapped == null ? sqlTypeDescriptor : remapped;
-			}
-		};
-
+		final WrapperOptions options = getOptions(session);
 		return nullSafeGet( rs, name, options );
 	}
 
@@ -287,24 +271,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object value,
 			int index,
 			final SessionImplementor session) throws SQLException {
-		// todo : have SessionImplementor extend WrapperOptions
-		final WrapperOptions options = new WrapperOptions() {
-			public boolean useStreamForLobBinding() {
-				return Environment.useStreamsForBinary();
-			}
-
-			public LobCreator getLobCreator() {
-				return Hibernate.getLobCreator( session );
-			}
-
-			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
-						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
-						: sqlTypeDescriptor;
-				return remapped == null ? sqlTypeDescriptor : remapped;
-			}
-		};
-
+		final WrapperOptions options = getOptions(session);
 		nullSafeSet( st, value, index, options );
 	}
 
@@ -393,5 +360,26 @@ public abstract class AbstractStandardBasicType<T>
 		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT == foreignKeyDirection
 				? getReplacement( (T) original, (T) target, session )
 				: target;
+	}
+
+	// TODO : have SessionImplementor extend WrapperOptions
+	private WrapperOptions getOptions(final SessionImplementor session) {
+		return new WrapperOptions() {
+			public boolean useStreamForLobBinding() {
+				return Environment.useStreamsForBinary()
+						|| session.getFactory().getDialect().useInputStreamToInsertBlob();
+			}
+
+			public LobCreator getLobCreator() {
+				return Hibernate.getLobCreator( session );
+			}
+
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
+			}
+		};
 	}
 }

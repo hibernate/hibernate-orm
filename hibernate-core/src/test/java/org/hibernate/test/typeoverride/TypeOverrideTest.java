@@ -23,7 +23,10 @@
  */
 package org.hibernate.test.typeoverride;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -31,17 +34,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -62,17 +62,16 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 		// no override
 		assertSame( IntegerTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
 
-		// override depends on Dialect.useInputStreamToInsertBlob();
-		// Postgresql explicitly overrides BlobTypeDescriptor.DEFAULT
-		if ( getDialect().useInputStreamToInsertBlob() ) {
+		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
+		if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) )  {
 			assertSame(
-					BlobTypeDescriptor.STREAM_BINDING,
+					BlobTypeDescriptor.BLOB_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
-		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) )  {
+		else if (SybaseDialect.class.isInstance( getDialect() )) {
 			assertSame(
-					BlobTypeDescriptor.BLOB_BINDING,
+					BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}

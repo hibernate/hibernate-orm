@@ -30,8 +30,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.BinaryStream;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -42,7 +40,31 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 
-	private BlobTypeDescriptor() {}
+	private BlobTypeDescriptor() {
+	}
+
+	@Override
+	public int getSqlType() {
+		return Types.BLOB;
+	}
+
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
+	protected abstract <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor);
+
+	@Override
+	public <X> BasicExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return getBlobExtractor( javaTypeDescriptor );
+	}
+
+	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
+
+	public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return getBlobBinder( javaTypeDescriptor );
+	}
 
 	public static final BlobTypeDescriptor DEFAULT =
 			new BlobTypeDescriptor() {
@@ -51,16 +73,29 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+							BlobTypeDescriptor descriptor = BLOB_BINDING;
 							if ( options.useStreamForLobBinding() ) {
-								STREAM_BINDING.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+								descriptor = STREAM_BINDING;
 							}
 							else if ( byte[].class.isInstance( value ) ) {
 								// performance shortcut for binding BLOB data in byte[] format
-								PRIMITIVE_ARRAY_BINDING.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+								descriptor = PRIMITIVE_ARRAY_BINDING;
 							}
-							else {
-								BLOB_BINDING.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-							}
+							descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+						}
+					};
+				}
+
+				@Override
+                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+						// For now, default to using getBlob.  If extraction
+						// should also check useStreamForLobBinding, add
+						// checks here and use STREAM_BINDING.
+						
+						@Override
+						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+							return BLOB_BINDING.getExtractor( javaTypeDescriptor ).doExtract( rs, name, options );
 						}
 					};
 				}
@@ -78,6 +113,16 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
+
+				@Override
+                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+						@Override
+						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+							return javaTypeDescriptor.wrap( rs.getBytes( name ), options );
+						}
+					};
+				}
 			};
 
 	public static final BlobTypeDescriptor BLOB_BINDING =
@@ -89,6 +134,16 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 								throws SQLException {
 							st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
+						}
+					};
+				}
+
+				@Override
+                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+						@Override
+						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+							return javaTypeDescriptor.wrap( rs.getBlob( name ), options );
 						}
 					};
 				}
@@ -107,29 +162,15 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
+
+				@Override
+                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+						@Override
+						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+							return javaTypeDescriptor.wrap( rs.getBinaryStream( name ), options );
+						}
+					};
+				}
 			};
-
-	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
-
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBlob( name ), options );
-			}
-		};
-	}
-
-	public int getSqlType() {
-		return Types.BLOB;
-	}
-
-	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return getBlobBinder( javaTypeDescriptor );
-	}
 }

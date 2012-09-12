@@ -25,6 +25,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -53,6 +54,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-        return sqlCode == Types.BLOB ? LongVarbinaryTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+        return sqlCode == Types.BLOB ? BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

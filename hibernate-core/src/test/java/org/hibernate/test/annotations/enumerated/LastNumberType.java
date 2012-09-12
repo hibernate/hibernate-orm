@@ -36,7 +36,10 @@ public class LastNumberType extends org.hibernate.type.EnumType {
 		else {
 
 			String enumString = ( (Enum<?>) value ).name();
-			st.setObject( index, enumString.charAt( enumString.length() - 1 ), sqlTypes()[0] );
+			// Using setString here, rather than setObject.  A few JDBC drivers
+			// (Oracle, DB2, and SQLServer) were having trouble converting
+			// the char to VARCHAR.
+			st.setString( index, enumString.substring( enumString.length() - 1 ) );
 		}
 	}
 }

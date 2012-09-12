@@ -35,7 +35,10 @@ public class FirstLetterType extends org.hibernate.type.EnumType {
 		}
 		else {
 			String enumString = ( (Enum<?>) value ).name();
-			st.setObject( index, enumString.charAt( 0 ), sqlTypes()[0] );
+			// Using setString here, rather than setObject.  A few JDBC drivers
+			// (Oracle, DB2, and SQLServer) were having trouble converting
+			// the char to VARCHAR.
+			st.setString( index, enumString.substring( 0, 1 ) );
 		}
 	}
 }

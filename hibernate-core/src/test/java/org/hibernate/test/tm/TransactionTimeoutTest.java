@@ -79,7 +79,7 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 	public void testTransactionTimeoutSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.getTransaction();
-		transaction.setTimeout( 2 );
+		transaction.setTimeout( 5 );
 		transaction.begin();
 		session.persist( new Person( "Lukasz", "Antoniak" ) );
 		transaction.commit();

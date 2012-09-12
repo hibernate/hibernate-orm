@@ -78,17 +78,18 @@ public class JaxbMappingProcessor {
 	private final boolean validateXml;
 
 	public JaxbMappingProcessor(ServiceRegistry serviceRegistry) {
-		this(
-				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSetting(
-						VALIDATE_XML_SETTING,
-						StandardConverters.BOOLEAN,
-						true
-				)
-		);
+		this( serviceRegistry, true );
+//		this(
+//				serviceRegistry,
+//				serviceRegistry.getService( ConfigurationService.class ).getSetting(
+//						VALIDATE_XML_SETTING,
+//						StandardConverters.BOOLEAN,
+//						true
+//				)
+//		);
 	}
 
-	public JaxbMappingProcessor(ServiceRegistry serviceRegistry, Boolean validateXml) {
+	public JaxbMappingProcessor(ServiceRegistry serviceRegistry, boolean validateXml) {
 		this.serviceRegistry = serviceRegistry;
 		this.validateXml = validateXml;
 	}

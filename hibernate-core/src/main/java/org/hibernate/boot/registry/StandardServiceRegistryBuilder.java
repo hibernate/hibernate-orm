@@ -25,14 +25,15 @@ package org.hibernate.boot.registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
@@ -42,6 +43,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceContributor;
 
 /**
  * Builder for standard {@link org.hibernate.service.ServiceRegistry} instances.
@@ -65,7 +67,7 @@ public class StandardServiceRegistryBuilder {
 	 * Create a default builder
 	 */
 	public StandardServiceRegistryBuilder() {
-		this( new BootstrapServiceRegistryImpl() );
+		this( new BootstrapServiceRegistryBuilder().build() );
 	}
 
 	/**
@@ -193,24 +195,33 @@ public class StandardServiceRegistryBuilder {
 		return this;
 	}
 
-	/**
-	 * Build the service registry accounting for all settings and service initiators and services.
-	 *
-	 * @return The built service registry
-	 */
-	public ServiceRegistry buildServiceRegistry() {
+	public StandardServiceRegistry build() {
 		Map<?,?> settingsCopy = new HashMap();
 		settingsCopy.putAll( settings );
 		Environment.verifyProperties( settingsCopy );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
-		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			if ( ServiceContributingIntegrator.class.isInstance( integrator ) ) {
-				ServiceContributingIntegrator.class.cast( integrator ).prepareServices( this );
-			}
-		}
+		applyServiceContributingIntegrators();
+		applyServiceContributors();
 
 		return new StandardServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
+	}
+
+	@SuppressWarnings("deprecation")
+	private void applyServiceContributingIntegrators() {
+		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+			if ( org.hibernate.integrator.spi.ServiceContributingIntegrator.class.isInstance( integrator ) ) {
+				org.hibernate.integrator.spi.ServiceContributingIntegrator.class.cast( integrator ).prepareServices( this );
+			}
+		}
+	}
+
+	private void applyServiceContributors() {
+		LinkedHashSet<ServiceContributor> serviceContributors =
+				bootstrapServiceRegistry.getService( ClassLoaderService.class ).loadJavaServices( ServiceContributor.class );
+		for ( ServiceContributor serviceContributor : serviceContributors ) {
+			serviceContributor.contribute( this );
+		}
 	}
 
 	/**

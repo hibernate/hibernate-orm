@@ -107,7 +107,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * After all options have been set, build the SessionFactory.
 	 *
-	 * @return The built Sessionfactory.
+	 * @return The built SessionFactory.
 	 */
-	public SessionFactory buildSessionFactory();
+	public SessionFactory build();
 }

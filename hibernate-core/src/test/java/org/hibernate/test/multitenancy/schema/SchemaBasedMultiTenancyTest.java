@@ -69,7 +69,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
-				.buildServiceRegistry();
+				.build();
 
 		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}

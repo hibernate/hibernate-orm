@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -34,6 +34,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -106,10 +107,11 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 
 		private void createBindings() {
 			try {
-				sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
+				sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
+				MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 				Resources resourcesAnnotation = description.getAnnotation( Resources.class );
 				if ( resourcesAnnotation != null ) {
-					sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
+					metadataBuilder.with( resourcesAnnotation.cacheMode() );
 
 					for ( Class<?> annotatedClass : resourcesAnnotation.annotatedClasses() ) {
 						annotatedClasses.add( annotatedClass );
@@ -119,7 +121,7 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 						sources.addResource( resourcesAnnotation.ormXmlPath() );
 					}
 				}
-				meta = ( MetadataImpl ) sources.buildMetadata();
+				meta = ( MetadataImpl ) metadataBuilder.build();
 			}
 			catch ( final Throwable t ) {
 				setupError = t;

@@ -161,7 +161,7 @@ public class ApplySchemaConstraintTest {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		final BootstrapServiceRegistry bootstrapServiceRegistry = builder.build();
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		return ( StandardServiceRegistryImpl ) registryBuilder.buildServiceRegistry();
+		return ( StandardServiceRegistryImpl ) registryBuilder.build();
 	}
 
 	private MetadataImplementor buildMetadata(ServiceRegistry serviceRegistry, Class<?>... classes) {

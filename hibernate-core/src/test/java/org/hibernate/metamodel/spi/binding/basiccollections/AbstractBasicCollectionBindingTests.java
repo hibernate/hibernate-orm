@@ -70,10 +70,10 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 
 	@Before
 	public void setUp() {
-		serviceRegistry = ( StandardServiceRegistryImpl ) new StandardServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = ( StandardServiceRegistryImpl ) new StandardServiceRegistryBuilder().build();
 		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		addSources( metadataSources );
-		metadata = ( MetadataImpl ) metadataSources.getMetadataBuilder().buildMetadata();
+		metadata = ( MetadataImpl ) metadataSources.getMetadataBuilder().build();
 	}
 
 	@After

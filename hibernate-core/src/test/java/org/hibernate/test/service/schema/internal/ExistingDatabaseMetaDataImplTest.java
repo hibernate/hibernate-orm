@@ -56,7 +56,7 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 	@Before
 	public void prepare() throws SQLException {
 		Properties props = Environment.getProperties();
-		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder().applySettings( props ).buildServiceRegistry();
+		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder().applySettings( props ).build();
 		connection = DriverManager.getConnection(
 				props.getProperty( Environment.URL ),
 				props.getProperty( Environment.USER ),

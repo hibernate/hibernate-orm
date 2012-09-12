@@ -115,7 +115,7 @@ public class NodeEnvironment {
 	public void prepare() throws Exception {
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( configuration.getProperties() )
-				.buildServiceRegistry();
+				.build();
 		sessionFactory = (SessionFactoryImplementor)configuration.buildSessionFactory( serviceRegistry );
 		regionFactory = (InfinispanRegionFactory)sessionFactory.getServiceRegistry().getService( RegionFactory.class );
 	}

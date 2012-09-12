@@ -166,12 +166,12 @@ public class EntityManagerFactoryBuilderUsingMetamodelImpl implements EntityMana
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		prepareMetadataBuilder( metadataBuilder, specialProperties );
-		final Metadata metadata = metadataBuilder.buildMetadata();
+		final Metadata metadata = metadataBuilder.build();
 
 		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 		prepareSessionFactoryBuilder( sessionFactoryBuilder, specialProperties );
 		sessionFactoryBuilder.add( new ServiceRegistryCloser() );
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.buildSessionFactory();
+		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
 
 		final Settings emfCreationSettings = prepareEntitytManagerFactoryCreationSettings( specialProperties );
 

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
@@ -55,6 +56,7 @@ import org.hibernate.stat.Statistics;
 public interface SessionFactory extends Referenceable, Serializable {
 
 	public interface SessionFactoryOptions {
+		public StandardServiceRegistry getServiceRegistry();
 		public Interceptor getInterceptor();
 		public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();

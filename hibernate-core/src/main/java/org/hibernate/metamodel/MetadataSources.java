@@ -44,6 +44,8 @@ import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.jaxb.internal.JaxbMappingProcessor;
 import org.hibernate.jaxb.spi.JaxbRoot;
@@ -54,8 +56,8 @@ import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate
@@ -66,10 +68,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
 
-	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-	private final JaxbMappingProcessor jaxbProcessor;
 	private final ServiceRegistry serviceRegistry;
-	private final MetadataBuilderImpl metadataBuilder;
+	private final JaxbMappingProcessor jaxbProcessor;
+	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
@@ -84,10 +85,21 @@ public class MetadataSources {
 	 * @param serviceRegistry The service registry to use.
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
+		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
+		if ( ! isExpectedServiceRegistryType( serviceRegistry ) ) {
+			LOG.debugf(
+					"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
+							"problems later attempting to construct MetadataBuilder",
+					serviceRegistry.getClass().getName()
+			);
+		}
 		this.serviceRegistry = serviceRegistry;
-
 		this.jaxbProcessor = new JaxbMappingProcessor( serviceRegistry );
-		this.metadataBuilder = new MetadataBuilderImpl( this );
+	}
+
+	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
+		return BootstrapServiceRegistry.class.isInstance( serviceRegistry )
+				|| StandardServiceRegistry.class.isInstance( serviceRegistry );
 	}
 
 	public List<JaxbRoot> getJaxbRootList() {
@@ -118,25 +130,37 @@ public class MetadataSources {
 		return hasOrmXmlJaxbRoots;
 	}
 
-
 	/**
 	 * Get a builder for metadata where non-default options can be specified.
 	 *
 	 * @return The built metadata.
 	 */
 	public MetadataBuilder getMetadataBuilder() {
-		return metadataBuilder;
+		return new MetadataBuilderImpl( this );
+	}
+
+	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
+		return new MetadataBuilderImpl( this, serviceRegistry );
 	}
 
 	/**
 	 * Short-hand form of calling {@link #getMetadataBuilder()} and using its
-	 * {@link org.hibernate.metamodel.MetadataBuilder#buildMetadata()} method in cases where the application wants
+	 * {@link org.hibernate.metamodel.MetadataBuilder#build()} method in cases where the application wants
 	 * to accept the defaults.
 	 *
 	 * @return The built metadata.
 	 */
 	public Metadata buildMetadata() {
-		return getMetadataBuilder().buildMetadata();
+		return getMetadataBuilder().build();
+	}
+
+	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry) {
+		return getMetadataBuilder( serviceRegistry ).build();
 	}
 
 	/**

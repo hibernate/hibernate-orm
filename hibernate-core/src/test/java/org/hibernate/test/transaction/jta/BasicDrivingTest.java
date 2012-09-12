@@ -72,7 +72,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		TestingJtaBootstrap.prepare( configValues );
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( configValues )
-				.buildServiceRegistry();
+				.build();
 	}
 
 	@After

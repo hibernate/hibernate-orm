@@ -62,6 +62,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CollectionRegion;
@@ -258,6 +259,10 @@ public final class SessionFactoryImpl
 
 			}
 
+			@Override
+			public StandardServiceRegistry getServiceRegistry() {
+				return (StandardServiceRegistry) serviceRegistry;
+			}
 
 			@Override
 			public Interceptor getInterceptor() {
@@ -634,7 +639,7 @@ public final class SessionFactoryImpl
 		);
 
 		this.serviceRegistry =
-				metadata.getServiceRegistry()
+				sessionFactoryOptions.getServiceRegistry()
 						.getService( SessionFactoryServiceRegistryFactory.class )
 						.buildServiceRegistry( this, metadata );
 

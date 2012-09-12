@@ -41,7 +41,7 @@ public class ServiceRegistryBuilder {
 	public static StandardServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
 		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( serviceRegistryConfig )
-				.buildServiceRegistry();
+				.build();
 	}
 
 	public static void destroy(ServiceRegistry serviceRegistry) {

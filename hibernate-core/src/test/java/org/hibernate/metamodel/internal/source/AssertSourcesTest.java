@@ -28,6 +28,8 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
@@ -45,8 +47,6 @@ import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class AssertSourcesTest extends BaseUnitTestCase {
-	final ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().buildServiceRegistry() ;
+	final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build() ;
 
 	@Test
 	public void testUserEntitySources() {

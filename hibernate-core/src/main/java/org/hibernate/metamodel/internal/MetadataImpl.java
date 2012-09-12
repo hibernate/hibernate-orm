@@ -130,7 +130,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
     private boolean globallyQuotedIdentifiers = false;
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
-		this.serviceRegistry =  metadataSources.getServiceRegistry();
+		this.serviceRegistry =  options.getServiceRegistry();
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
 		this.database = new Database( options, serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment() );
@@ -195,7 +195,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		final List<JaxbRoot> jaxbRoots = new ArrayList<JaxbRoot>();
 		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
-			// todo : handle Jandex index here...
 			jaxbRoots.addAll( producer.produceRoots( this, jandexView ) );
 		}
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
@@ -603,7 +602,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactory buildSessionFactory() {
-		return getSessionFactoryBuilder().buildSessionFactory();
+		return getSessionFactoryBuilder().build();
 	}
 
 	@Override

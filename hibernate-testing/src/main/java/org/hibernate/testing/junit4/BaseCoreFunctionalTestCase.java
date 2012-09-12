@@ -34,13 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -48,6 +48,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -59,23 +60,22 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.type.Type;
+
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.type.Type;
 
 import static org.junit.Assert.fail;
 
@@ -132,7 +132,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void buildSessionFactory() {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
-		serviceRegistry = buildServiceRegistry( configuration );
+		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
+		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
 		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				USE_NEW_METADATA_MAPPINGS,
 				new ConfigurationService.Converter<Boolean>() {
@@ -144,7 +145,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				true
 		);
 		if ( isMetadataUsed ) {
-			MetadataImplementor metadataImplementor = buildMetadata( serviceRegistry );
+			MetadataImplementor metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
 			afterConstructAndConfigureMetadata( metadataImplementor );
 			applyCacheSettings(metadataImplementor);
 			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
@@ -169,10 +170,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	}
 
-	private MetadataImplementor buildMetadata(ServiceRegistry serviceRegistry) {
-		 	MetadataSources sources = new MetadataSources( serviceRegistry );
-			addMappings( sources );
-			return (MetadataImplementor) sources.buildMetadata();
+	private MetadataImplementor buildMetadata(
+			BootstrapServiceRegistry bootRegistry,
+			StandardServiceRegistryImpl serviceRegistry) {
+		MetadataSources sources = new MetadataSources( bootRegistry );
+		addMappings( sources );
+		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
 	}
 
 	// TODO: is this still needed?
@@ -392,26 +395,24 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
-	protected StandardServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
-		Properties properties = new Properties();
-		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-
-		final BootstrapServiceRegistry bootstrapServiceRegistry = generateBootstrapRegistry( properties );
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry )
-				.applySettings( properties );
-		prepareBasicRegistryBuilder( registryBuilder );
-		return (StandardServiceRegistryImpl) registryBuilder.buildServiceRegistry();
-	}
-
-	protected BootstrapServiceRegistry generateBootstrapRegistry(Properties properties) {
+	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		prepareBootstrapRegistryBuilder( builder );
 		return builder.build();
 	}
 
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+	}
+
+	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
+		Properties properties = new Properties();
+		properties.putAll( configuration.getProperties() );
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+
+		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry ).applySettings( properties );
+		prepareBasicRegistryBuilder( registryBuilder );
+		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}
 
 	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {

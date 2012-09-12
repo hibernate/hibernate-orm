@@ -76,7 +76,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( configValues )
-				.buildServiceRegistry();
+				.build();
 	}
 
 	@After

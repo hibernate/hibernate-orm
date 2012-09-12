@@ -36,6 +36,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -45,7 +46,6 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Gail Badner
@@ -57,7 +57,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 
 	SessionFactoryBuilderImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;
-		options = new SessionFactoryOptionsImpl( metadata.getServiceRegistry() );
+		options = new SessionFactoryOptionsImpl( metadata.getOptions().getServiceRegistry() );
 	}
 
 	@Override
@@ -97,11 +97,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
+	public SessionFactory build() {
 		return new SessionFactoryImpl( metadata, options );
 	}
 
 	private static class SessionFactoryOptionsImpl implements SessionFactory.SessionFactoryOptions {
+		private final StandardServiceRegistry serviceRegistry;
+
 		private Interceptor interceptor;
 		private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 		private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
@@ -109,7 +111,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private List<EntityNameResolver> entityNameResolvers = new ArrayList<EntityNameResolver>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 
-		public SessionFactoryOptionsImpl(ServiceRegistry serviceRegistry) {
+		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+
 			final Map configurationSettings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
@@ -137,6 +141,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					CurrentTenantIdentifierResolver.class,
 					configurationSettings.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
+		}
+
+		@Override
+		public StandardServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
 		}
 
 		@Override

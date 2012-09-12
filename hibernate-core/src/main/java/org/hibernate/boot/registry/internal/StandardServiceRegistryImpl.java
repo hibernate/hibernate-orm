@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.service.Service;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.Configurable;
@@ -41,7 +41,7 @@ import org.hibernate.service.spi.ServiceInitiator;
  *
  * @author Steve Ebersole
  */
-public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements ServiceRegistry {
+public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
 	private final Map configurationValues;
 
 	@SuppressWarnings( {"unchecked"})

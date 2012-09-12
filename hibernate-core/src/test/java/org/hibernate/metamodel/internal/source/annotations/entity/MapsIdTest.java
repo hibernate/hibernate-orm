@@ -74,7 +74,7 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 	@Test
 	public void testMapsIsOnOneToManyThrowsException() {
 		try {
-			sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
+			sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 			sources.addAnnotatedClass( DependentId.class );
 			sources.addAnnotatedClass( Dependent.class );
 			sources.addAnnotatedClass( Employee.class );

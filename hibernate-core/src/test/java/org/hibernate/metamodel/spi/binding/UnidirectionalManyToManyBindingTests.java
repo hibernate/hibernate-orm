@@ -48,7 +48,7 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build();
 	}
 
 	@After
@@ -71,7 +71,7 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithUnidirectionalManyToManys.hbm.xml" );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
-		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).buildMetadata();
+		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).build();
 
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalManyToMany.class.getName() );
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );

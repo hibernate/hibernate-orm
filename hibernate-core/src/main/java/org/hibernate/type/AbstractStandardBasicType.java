@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.dom4j.Node;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -42,6 +41,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -122,6 +122,18 @@ public abstract class AbstractStandardBasicType<T>
 
 	protected Size getDictatedSize() {
 		return dictatedSize;
+	}
+	
+	/**
+	 * This is necessary due to legacy SimpleValue and DynamicParameterizedType
+	 * usage.  Entity types come in *after* the descriptors have been
+	 * intialized, so this is used to over-ride as necessary.
+	 * 
+	 * @return ValueExtractor
+	 */
+	// TODO: Remove (or make private) after HHH-7586.
+	protected ValueExtractor<T> getExtractor(WrapperOptions options) {
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor );
 	}
 
 
@@ -266,7 +278,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
+		return getExtractor(options).extract( rs, name, options );
 	}
 
 	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException {

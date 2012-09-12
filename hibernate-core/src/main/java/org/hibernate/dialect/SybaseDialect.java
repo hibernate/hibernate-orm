@@ -23,6 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
+import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
 
 /**
  * All Sybase dialects share an IN list size limit.
@@ -44,5 +49,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsNotNullUnique() {
 		return false;
+	}
+	
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+        return sqlCode == Types.BLOB ? LongVarbinaryTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

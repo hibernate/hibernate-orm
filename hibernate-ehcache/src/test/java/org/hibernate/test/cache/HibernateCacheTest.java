@@ -11,8 +11,10 @@ import java.util.Map;
 import org.hamcrest.CoreMatchers;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
@@ -23,6 +25,7 @@ import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -30,19 +33,28 @@ import org.junit.Test;
  * @author Chris Dennis
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 
 	private static final String REGION_PREFIX = "hibernate.test.";
 
 	@Override
 	protected void configure(Configuration config) {
-		System.setProperty( "derby.system.home", "target/derby" );
-		config.configure( "hibernate-config/hibernate.cfg.xml" );
+		config.setProperty( AvailableSettings.USE_QUERY_CACHE, "true");
+		config.setProperty( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
+		config.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		config.setProperty( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
+		config.setProperty( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
 	}
-	
 	@Override
-	protected void afterSessionFactoryBuilt() {
-		sessionFactory().getStatistics().setStatisticsEnabled( true );
+	protected String getBaseForMappings() {
+		return "hibernate-config/domain/";
+	}
+
+
+	@Override
+	protected String[] getMappings() {
+		return new String[]{"Account.hbm.xml", "Event.hbm.xml", "HolidayCalendar.hbm.xml", "Item.hbm.xml", "Person.hbm.xml", "PhoneNumber.hbm.xml"};
 	}
 
 	@Test

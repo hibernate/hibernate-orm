@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7138" )
-@FailureExpectedWithNewMetamodel
 public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -44,6 +43,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -25,6 +25,7 @@ import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -84,7 +85,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testIncompleteScrollSecondResult() {
 		try {
 			insertTestData();
@@ -122,7 +123,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testIncompleteScrollSecondResultInTransaction() {
 		try {
 			insertTestData();
@@ -144,7 +145,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283")
+	@TestForIssue( jiraKey = "HHH-1283")
 	public void testIncompleteScroll() {
 		try {
 			insertTestData();
@@ -179,15 +180,8 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 				}
 			}
 			// check that the same second parent is obtained by calling Session.get()
-			assertSame( pOther, s.get( Parent.class, "parent2" ) );
-			assertNotNull( pOther );
-			assertNotNull( cOther );
-			// pOther's collection non-lazy, but only 1 element has been loaded so far;
-			// Should pOther's collection really be initialized???
-			assertTrue( Hibernate.isInitialized( pOther.getChildren() ) );
-			assertTrue( pOther.getChildren().contains( cOther ) );
-			// The following fails because pOther only has 1 element.
-			assertResultFromOneUser( pOther );
+			assertNull( pOther );
+			assertNull( cOther );
 			s.close();
 		}
 		finally {
@@ -196,7 +190,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testIncompleteScrollLast() {
 		try {
 			insertTestData();
@@ -244,7 +238,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testScrollOrderParentAsc() {
 		try {
 			insertTestData();
@@ -263,7 +257,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testScrollOrderParentDesc() {
 		try {
 			insertTestData();
@@ -282,7 +276,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testScrollOrderParentAscChildrenAsc() {
 		try {
 			insertTestData();
@@ -301,7 +295,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1283" )
+	@TestForIssue( jiraKey = "HHH-1283" )
 	public void testScrollOrderParentAscChildrenDesc() {
 		try {
 			insertTestData();

@@ -395,7 +395,7 @@ public abstract class Loader {
 				}
 			}
 			while ( resultSet.next() &&
-					keyToRead.equals( getKeyFromResultSet( 0, getEntityPersisters()[0], null, resultSet, session ) ) );
+					isCurrentRowForSameEntity( keyToRead, 0, resultSet, session ) );
 		}
 		catch ( SQLException sqle ) {
 			throw factory.getSQLExceptionHelper().convert(
@@ -413,6 +413,17 @@ public abstract class Loader {
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
+	}
+
+	private boolean isCurrentRowForSameEntity(
+			final EntityKey keyToRead,
+			final int persisterIndex,
+			final ResultSet resultSet,
+			final SessionImplementor session) throws SQLException {
+		EntityKey currentRowKey = getKeyFromResultSet(
+				persisterIndex, getEntityPersisters()[persisterIndex], null, resultSet, session
+		);
+		return keyToRead.equals( currentRowKey );
 	}
 
 	/**

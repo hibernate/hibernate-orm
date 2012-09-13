@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -82,11 +83,15 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		if ( !associationAttribute.getJoinColumnValues().isEmpty() ) {
-			for ( Column columnValues : associationAttribute.getJoinColumnValues() ) {
-				valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
-			}
+		if ( associationAttribute.getJoinColumnValues().isEmpty() ) {
+			return Collections.emptyList();
+		}
+		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>(
+				associationAttribute.getJoinColumnValues()
+						.size()
+		);
+		for ( Column columnValues : associationAttribute.getJoinColumnValues() ) {
+			valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
 		}
 		return valueSources;
 	}

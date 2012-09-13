@@ -381,12 +381,21 @@ public abstract class Loader {
 						hydratedObjects,
 						loadedKeys,
 						returnProxies
+				);
+				if ( ! keyToRead.equals( loadedKeys[0] ) ) {
+					throw new AssertionFailure(
+							String.format(
+									"Unexpected key read for row; expected [%s]; actual [%s]",
+									keyToRead,
+									loadedKeys[0] )
 					);
+				}
 				if ( result == null ) {
 					result = loaded;
 				}
 			}
-			while ( keyToRead.equals( loadedKeys[0] ) && resultSet.next() );
+			while ( resultSet.next() &&
+					keyToRead.equals( getKeyFromResultSet( 0, getEntityPersisters()[0], null, resultSet, session ) ) );
 		}
 		catch ( SQLException sqle ) {
 			throw factory.getSQLExceptionHelper().convert(

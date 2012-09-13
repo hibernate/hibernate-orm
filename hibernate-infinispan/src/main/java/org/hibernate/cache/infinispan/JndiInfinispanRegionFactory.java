@@ -24,9 +24,9 @@ package org.hibernate.cache.infinispan;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.service.jndi.spi.JndiService;
+import org.hibernate.engine.jndi.spi.JndiService;
 
 /**
  * A {@link org.hibernate.cache.spi.RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache

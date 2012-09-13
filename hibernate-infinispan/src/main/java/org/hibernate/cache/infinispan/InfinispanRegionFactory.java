@@ -44,9 +44,9 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 
 /**

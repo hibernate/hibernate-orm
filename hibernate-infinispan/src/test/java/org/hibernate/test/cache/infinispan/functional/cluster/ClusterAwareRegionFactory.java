@@ -39,7 +39,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
-import org.hibernate.service.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;

@@ -20,11 +20,10 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+
 import org.junit.Test;
 
 /**
@@ -34,6 +33,7 @@ import org.junit.Test;
  */
 @RequiresDialect(H2Dialect.class)
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
+
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
@@ -66,7 +66,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	// Some additional tests specifically for the aggressive-release functionality...
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSerializationOnAfterStatementAggressiveRelease() throws Throwable {
 		prepare();
 		try {
@@ -91,7 +90,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSerializationFailsOnAfterStatementAggressiveReleaseWithOpenResources() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -132,7 +130,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueryIteration() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -165,7 +162,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueryScrolling() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -198,7 +194,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSuppliedConnection() throws Throwable {
 		prepare();
 
@@ -223,7 +218,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testConnectionMaintanenceDuringFlush() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();

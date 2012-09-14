@@ -5,6 +5,8 @@
 
 <hibernate-mapping package="org.hibernate.test.connections">
 
+    <filter-def name="nameIsNull" condition="name is null" />
+
 	<class name="Silly">
 		<id name="id" type="long">
 			<generator class="increment"/>
@@ -19,7 +21,5 @@
 		</id>
 		<property name="name"/>
 	</class>
-
-    <filter-def name="nameIsNull" condition="name is null" />
 
 </hibernate-mapping>

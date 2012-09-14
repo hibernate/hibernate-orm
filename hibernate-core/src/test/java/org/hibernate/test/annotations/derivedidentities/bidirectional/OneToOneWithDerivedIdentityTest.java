@@ -32,9 +32,9 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@FailureExpected(jiraKey = "HHH-5695")
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpected(jiraKey = "HHH-5695")
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();

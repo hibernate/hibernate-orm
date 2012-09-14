@@ -412,6 +412,7 @@ public class EntityHierarchyBuilder {
 					info, JPADotNames.INHERITANCE
 			);
 			if ( inheritanceAnnotation != null ) {
+//			if ( inheritanceAnnotation != null && !inheritanceAnnotation.value( "strategy" ).asString().equals( inheritanceType.toString() ) ) {
 				throw new AnnotationException(
 						String.format(
 								"The inheritance type for %s must be specified on the root entity %s",

@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
 
 
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
+@FailureExpectedWithNewMetamodel
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 
@@ -72,7 +73,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDialectSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -144,7 +144,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSetProperties() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -185,7 +184,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSetPropertiesMap() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -219,7 +217,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBroken() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -252,7 +249,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNothinToUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -277,7 +273,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCachedQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -341,7 +336,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCachedQueryRegion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -396,7 +390,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -558,7 +551,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBlobClob() throws Exception {
 		// Sybase does not support ResultSet.getBlob(String)
 		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
@@ -655,7 +647,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCachedQueryOnInsert() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

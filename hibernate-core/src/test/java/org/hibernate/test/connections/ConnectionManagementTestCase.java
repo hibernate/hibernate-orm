@@ -22,18 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.connections;
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.internal.util.SerializationHelper;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.junit.Test;
 
 /**
  * Common test cases relating to session management and how the sessions
@@ -139,8 +138,7 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * be allowed to serialize.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
-	public final void testConnectedSerialization() throws Throwable {
+	public void testConnectedSerialization() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
 
@@ -166,7 +164,6 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * be allowed to serialize.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public final void testEnabledFilterSerialization() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
@@ -205,7 +202,6 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * to serialize.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public final void testManualDisconnectedSerialization() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
@@ -224,7 +220,6 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * expected in the given environment.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public final void testManualDisconnectChain() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
@@ -253,8 +248,7 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * prior to disconnecting.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
-	public final void testManualDisconnectWithOpenResources() throws Throwable {
+	public void testManualDisconnectWithOpenResources() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
 
@@ -323,7 +317,6 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 	 * Test that session-closed protections work properly in all environments.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSessionClosedProtections() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();

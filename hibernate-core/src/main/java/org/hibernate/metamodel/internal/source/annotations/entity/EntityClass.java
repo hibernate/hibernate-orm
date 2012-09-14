@@ -285,10 +285,8 @@ public class EntityClass extends ConfiguredClass {
 		}
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
 
-		final AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.IMMUTABLE
-		);
-		isMutable = hibernateImmutableAnnotation == null
+		List< AnnotationInstance > hibernateImmutableAnnotations = getClassInfo().annotations().get( HibernateDotNames.IMMUTABLE );
+		isMutable = ( hibernateImmutableAnnotations == null || hibernateImmutableAnnotations.isEmpty() )
 				&& hibernateEntityAnnotation != null
 				&& hibernateEntityAnnotation.value( "mutable" ) != null
 				&& hibernateEntityAnnotation.value( "mutable" ).asBoolean();

@@ -23,14 +23,14 @@
  */
 package org.hibernate.testing.junit4;
 
-import org.jboss.logging.Logger;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.runners.model.Statement;
 
 /**
  * @author Steve Ebersole
  */
 public class BeforeClassCallbackHandler extends Statement {
-	private static final Logger log = Logger.getLogger( BeforeClassCallbackHandler.class );
 
 	private final CustomRunner runner;
 	private final Statement wrappedStatement;
@@ -45,9 +45,13 @@ public class BeforeClassCallbackHandler extends Statement {
 		try {
 			runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
 		}
-		catch (CallbackException e) {
-			// be nice to see the exception. but junit seems to be eating it...
-			log.error( "Before class callback error : " + e.getLocalizedMessage(), e );
+		catch ( CallbackException error ) {
+			runner.setBeforeClassMethodFailed();
+			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null &&
+					( !runner.useNewMetamodel() ||
+					runner.getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) == null ) ) {
+				throw error;
+			}
 		}
 		wrappedStatement.evaluate();
 	}

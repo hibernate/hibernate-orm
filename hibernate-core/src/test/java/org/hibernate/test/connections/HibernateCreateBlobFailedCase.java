@@ -33,7 +33,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -43,7 +42,6 @@ import static org.junit.Assert.assertFalse;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class HibernateCreateBlobFailedCase extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

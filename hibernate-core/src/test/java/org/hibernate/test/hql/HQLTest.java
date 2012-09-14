@@ -88,6 +88,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	public boolean createSchema() {

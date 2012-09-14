@@ -38,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class LoaderTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getXmlFiles() {
@@ -55,7 +56,6 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBasic() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

@@ -33,7 +33,6 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.LocalStatus;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 
 import static org.junit.Assert.assertEquals;
@@ -89,7 +88,6 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testTransactionProtection() {
 		Session session = sessionFactory().getCurrentSession();
 		try {
@@ -102,7 +100,6 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testContextCleanup() {
 		Session session = sessionFactory().getCurrentSession();
 		session.beginTransaction();

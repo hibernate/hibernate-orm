@@ -37,9 +37,11 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.junit.Test;
 
 /**
  * Implementation of SuppliedConnectionTest.
@@ -66,6 +68,30 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		}
 		catch( Throwable ignore ) {
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.test.connections.ConnectionManagementTestCase#testConnectedSerialization()
+	 */
+	@Override
+	@Test
+	@FailureExpectedWithNewMetamodel
+	public void testConnectedSerialization() throws Throwable {
+		super.testConnectedSerialization();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.test.connections.ConnectionManagementTestCase#testManualDisconnectWithOpenResources()
+	 */
+	@Override
+	@Test
+	@FailureExpectedWithNewMetamodel
+	public void testManualDisconnectWithOpenResources() throws Throwable {
+		super.testManualDisconnectWithOpenResources();
 	}
 
 	@Override

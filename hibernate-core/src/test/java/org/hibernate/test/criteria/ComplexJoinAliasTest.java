@@ -94,7 +94,7 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Wilson
  * @link https://hibernate.onjira.com/browse/HHH-4630
  */
-
+@FailureExpectedWithNewMetamodel
 public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -106,7 +106,6 @@ public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCriteriaThroughCompositeId() throws Exception {
 		Session session = openSession();
 

@@ -55,9 +55,32 @@ import org.hibernate.testing.SkipForDialect;
  * @author Steve Ebersole
  */
 public class CustomRunner extends BlockJUnit4ClassRunner {
+
 	private static final Logger log = Logger.getLogger( CustomRunner.class );
+	private static Dialect dialect = determineDialect();
+
+	private static Dialect determineDialect() {
+		try {
+			return Dialect.getDialect();
+		}
+		catch( Exception e ) {
+			return new Dialect() {
+			};
+		}
+	}
+
+	private static class MatcherInstantiationException extends RuntimeException {
+		private MatcherInstantiationException(Class<? extends Skip.Matcher> matcherClass, Throwable cause) {
+			super( "Unable to instantiate specified Matcher [" + matcherClass.getName(), cause );
+		}
+	}
 
 	private TestClassMetadata testClassMetadata;
+    private Boolean isAllTestsIgnored = null;
+	private Object testInstance;
+	private List<FrameworkMethod> computedTestMethods;
+	private Boolean useNewMetamodel;
+	private boolean beforeClassMethodFailed;
 
 	public CustomRunner(Class<?> clazz) throws InitializationError {
 		super( clazz );
@@ -70,11 +93,17 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		testClassMetadata.validate( errors );
 	}
 
+	boolean beforeClassMethodFailed() {
+		return beforeClassMethodFailed;
+	}
+
+	void setBeforeClassMethodFailed() {
+		beforeClassMethodFailed = true;
+	}
+
 	public TestClassMetadata getTestClassMetadata() {
 		return testClassMetadata;
 	}
-
-    private Boolean isAllTestsIgnored = null;
 
     private boolean isAllTestsIgnored() {
         if ( isAllTestsIgnored == null ) {
@@ -122,10 +151,8 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Statement methodBlock(FrameworkMethod method) {
 		final Statement originalMethodBlock = super.methodBlock( method );
 		final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) method;
-		return new FailureExpectedHandler( originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );
+		return new FailureExpectedHandler( this, originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );
 	}
-
-	private Object testInstance;
 
 	protected Object getTestInstance() throws Exception {
 		if ( testInstance == null ) {
@@ -138,8 +165,6 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Object createTest() throws Exception {
 		return getTestInstance();
 	}
-
-	private List<FrameworkMethod> computedTestMethods;
 
 	@Override
 	protected List<FrameworkMethod> computeTestMethods() {
@@ -169,9 +194,6 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		final boolean doValidation = Boolean.valueOf(
 				System.getProperty( Helper.VALIDATE_FAILURE_EXPECTED, "true" )
 		);
-		final boolean useNewMetamodel = Boolean.valueOf(
-				System.getProperty( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS, "true" )
-		);
 		int testCount = 0;
 
 		Ignore virtualIgnore;
@@ -179,7 +201,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		for ( FrameworkMethod frameworkMethod : methods ) {
             FailureExpected failureExpected = null;
 			// Convert @FailureExpectedWithNewMetamodel annotations to @FailureExpected annotations
-            if ( useNewMetamodel ) {
+            if ( useNewMetamodel() ) {
 	            final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel =
 	            		Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
 	            if ( failureExpectedWithNewMetamodel != null ) {
@@ -219,35 +241,11 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		return result;
 	}
 
-	@SuppressWarnings( {"ClassExplicitlyAnnotation"})
-	public static class IgnoreImpl implements Ignore {
-		private final String value;
-
-		public IgnoreImpl(String value) {
-			this.value = value;
+	boolean useNewMetamodel() {
+		if ( useNewMetamodel == null ) {
+			useNewMetamodel = Boolean.valueOf( System.getProperty( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS, "true" ) );
 		}
-
-		@Override
-		public String value() {
-			return value;
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Ignore.class;
-		}
-	}
-
-	private static Dialect dialect = determineDialect();
-
-	private static Dialect determineDialect() {
-		try {
-			return Dialect.getDialect();
-		}
-		catch( Exception e ) {
-			return new Dialect() {
-			};
-		}
+		return useNewMetamodel;
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {
@@ -355,10 +353,22 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 
-	private static class MatcherInstantiationException extends RuntimeException {
-		private MatcherInstantiationException(Class<? extends Skip.Matcher> matcherClass, Throwable cause) {
-			super( "Unable to instantiate specified Matcher [" + matcherClass.getName(), cause );
+	@SuppressWarnings( {"ClassExplicitlyAnnotation"})
+	public static class IgnoreImpl implements Ignore {
+		private final String value;
+
+		public IgnoreImpl(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public String value() {
+			return value;
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Ignore.class;
 		}
 	}
-
 }

@@ -788,7 +788,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:sequence>
             <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
             <xs:element name="meta-value" minOccurs="0" maxOccurs="unbounded" type="meta-value-element"/>
-            <xs:element name="column" type="column-element"/>
+            <xs:element name="column" maxOccurs="unbounded" type="column-element"/>
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
         <xs:attribute name="cascade" type="xs:string"/>
@@ -1115,7 +1115,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:complexType name="many-to-any-element">
         <xs:sequence>
             <xs:element name="meta-value" minOccurs="0" maxOccurs="unbounded" type="meta-value-element"/>
-            <xs:element name="column" type="column-element"/>
+            <xs:element name="column" minOccurs="2" maxOccurs="unbounded" type="column-element"/>
         </xs:sequence>
         <xs:attribute name="id-type" use="required" type="xs:string"/>
         <xs:attribute name="meta-type" type="xs:string"/>
@@ -1195,7 +1195,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     </xs:complexType>
     <xs:complexType name="index-many-to-any-element">
         <xs:sequence>
-            <xs:element name="column" type="column-element"/>
+            <xs:element name="column" minOccurs="2" maxOccurs="unbounded" type="column-element"/>
         </xs:sequence>
         <xs:attribute name="id-type" use="required" type="xs:string"/>
         <xs:attribute name="meta-type" type="xs:string"/>

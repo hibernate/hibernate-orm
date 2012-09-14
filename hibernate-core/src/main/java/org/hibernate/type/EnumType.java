@@ -282,14 +282,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 			if ( jdbcValue == null ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Binding null to parameter: {0}", index );
+					LOG.trace(String.format("Binding null to parameter: [%s]", index));
 				}
 				st.setNull( index, getSqlType() );
 				return;
 			}
 
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Binding '{0}' to parameter: '{1}", jdbcValue, index );
+				LOG.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue, index));
 			}
 			st.setObject( index, jdbcValue, EnumType.this.sqlType );
 		}
@@ -308,14 +308,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 			final int ordinal = rs.getInt( names[0] );
 			if ( rs.wasNull() ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Returning null as column {0}", names[0] );
+					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromOrdinal( ordinal );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Returning '{0}' as column {1}", enumValue, names[0] );
+				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;
 		}
@@ -378,14 +378,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 			if ( rs.wasNull() ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Returning null as column {0}", names[0] );
+					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromName( value );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Returning '{0}' as column {1}", enumValue, names[0] );
+				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;
 		}

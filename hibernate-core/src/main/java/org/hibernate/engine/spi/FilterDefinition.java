@@ -33,7 +33,7 @@ import org.hibernate.type.Type;
 /**
  * A FilterDefinition defines the global attributes of a dynamic filter.  This
  * information includes its name as well as its defined parameters (name and type).
- * 
+ *
  * @author Steve Ebersole
  */
 public class FilterDefinition implements Serializable {
@@ -49,7 +49,9 @@ public class FilterDefinition implements Serializable {
 	public FilterDefinition(String name, String defaultCondition, Map<String,Type> parameterTypes) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
-		this.parameterTypes.putAll( parameterTypes );
+		if (parameterTypes != null) {
+			this.parameterTypes.putAll( parameterTypes );
+		}
 	}
 
 	/**

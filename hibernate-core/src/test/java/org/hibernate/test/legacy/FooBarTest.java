@@ -42,6 +42,10 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.testing.*;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
@@ -3935,6 +3939,59 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-7603")
+	public void testLazyCollectionsTouchedDuringPreCommit() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		Qux q = new Qux();
+		s.save( q );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		q = ( Qux ) s.load( Qux.class, q.getKey() );
+		s.getTransaction().commit();
+
+		//clear the session
+		s.clear();
+
+		//now reload the proxy and delete it
+		s.beginTransaction();
+
+		final Qux qToDelete = ( Qux ) s.load( Qux.class, q.getKey() );
+
+		//register a pre commit process that will touch the collection and delete the entity
+		( ( EventSource ) s ).getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
+			@Override
+			public void doBeforeTransactionCompletion(SessionImplementor session) {
+				qToDelete.getFums().size();
+			}
+		} );
+
+		s.delete( qToDelete );
+		boolean ok = false;
+		try {
+			s.getTransaction().commit();
+		}
+		catch (LazyInitializationException e) {
+			ok = true;
+			s.getTransaction().rollback();
+		}
+		finally {
+			s.close();
+		}
+		assertTrue( "lazy collection should have blown in the before trans completion", ok );
+
+		s = openSession();
+		s.beginTransaction();
+		q = ( Qux ) s.load( Qux.class, q.getKey() );
+		s.delete( q );
+		s.getTransaction().commit();
+		s.close();
+	}
+	
 	@Test
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();

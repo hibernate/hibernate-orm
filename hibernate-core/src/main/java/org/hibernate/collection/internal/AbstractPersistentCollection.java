@@ -140,16 +140,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 							@Override
 							public Boolean doWork() {
 								CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-								CollectionPersister persister = entry.getLoadedPersister();
-								if ( persister.isExtraLazy() ) {
-									if ( hasQueuedOperations() ) {
-										session.flush();
+
+								if ( entry != null ) {
+									CollectionPersister persister = entry.getLoadedPersister();
+									if ( persister.isExtraLazy() ) {
+										if ( hasQueuedOperations() ) {
+											session.flush();
+										}
+										cachedSize = persister.getSize( entry.getLoadedKey(), session );
+										return true;
 									}
-									cachedSize = persister.getSize( entry.getLoadedKey(), session );
-									return true;
+									else {
+										read();
+									}
 								}
-								else {
-									read();
+								else{
+									throwLazyInitializationExceptionIfNotConnected();
 								}
 								return false;
 							}

@@ -150,6 +150,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 
 import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
@@ -1252,15 +1253,12 @@ public class Binder {
 		final PluralAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding attributeBinding;
-		final Type resolvedType;
 		switch ( nature ) {
 			case BAG:
 				attributeBinding = bindBagAttribute( attributeBindingContainer, attributeSource, attribute );
-				resolvedType = resolveBagType( (BagBinding) attributeBinding );
 				break;
 			case SET:
 				attributeBinding = bindSetAttribute( attributeBindingContainer, attributeSource, attribute );
-				resolvedType = resolveSetType( (SetBinding) attributeBinding );
 				break;
 			case LIST:
 				attributeBinding = bindListAttribute(
@@ -1268,7 +1266,6 @@ public class Binder {
 						attributeSource,
 						attribute
 				);
-				resolvedType = resolveListType( (ListBinding) attributeBinding );
 				break;
 			case MAP:
 				attributeBinding = bindMapAttribute(
@@ -1276,12 +1273,11 @@ public class Binder {
 						attributeSource,
 						attribute
 				);
-				resolvedType = resolveMapType( (MapBinding) attributeBinding );
 				break;
 			default:
 				throw new NotYetImplementedException( nature.toString() );
 		}
-
+		final Type resolvedType = resolvePluralType( attributeBinding, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = typeHelper.getReflectedCollectionJavaTypes( attributeBinding );
 		bindHibernateTypeDescriptor(
@@ -2227,16 +2223,6 @@ public class Binder {
 		return bindingContexts.peek().isGloballyQuotedIdentifiers() ? StringHelper.quote( name ) : name;
 	}
 
-	private Type resolveBagType( BagBinding bagBinding ) {
-		if ( bagBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
-			return resolveCustomCollectionType( bagBinding );
-		} else {
-			return metadata.getTypeResolver().getTypeFactory().bag(
-					bagBinding.getAttribute().getRole(),
-					getReferencedPropertyNameIfNotId( bagBinding ),
-					bagBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPOSITE );
-		}
-	}
 
 	private String getReferencedPropertyNameIfNotId(PluralAttributeBinding pluralAttributeBinding) {
 		EntityIdentifier entityIdentifier =
@@ -2262,45 +2248,29 @@ public class Binder {
 		);
 	}
 
-	private Type resolveListType( ListBinding listBinding ) {
-		if ( listBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
-			return resolveCustomCollectionType( listBinding );
+	private Type resolvePluralType( PluralAttributeBinding pluralAttributeBinding, PluralAttributeSource.Nature nature){
+		if ( pluralAttributeBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
+			return resolveCustomCollectionType( pluralAttributeBinding );
 		} else {
-			return metadata.getTypeResolver().getTypeFactory().list(
-					listBinding.getAttribute().getRole(),
-					getReferencedPropertyNameIfNotId( listBinding ),
-					listBinding.getPluralAttributeElementBinding()
-							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
-			);
+			final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
+			final String role = pluralAttributeBinding.getAttribute().getRole();
+			final String propertyRef = getReferencedPropertyNameIfNotId( pluralAttributeBinding );
+			final boolean embedded = pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPOSITE;
+			switch ( nature ){
+				case BAG:
+					return typeFactory.bag( role, propertyRef, embedded );
+				case LIST:
+					return typeFactory.list( role, propertyRef, embedded );
+				case MAP:
+					return typeFactory.map( role, propertyRef, embedded );
+				case SET:
+					return typeFactory.set( role, propertyRef, embedded );
+				default:
+					throw new NotYetImplementedException( nature + " is to be implemented" );
+			}
 		}
 	}
 
-
-	private Type resolveMapType( MapBinding mapBinding ) {
-		if ( mapBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
-			return resolveCustomCollectionType( mapBinding );
-		} else {
-			return metadata.getTypeResolver().getTypeFactory().map(
-					mapBinding.getAttribute().getRole(),
-					getReferencedPropertyNameIfNotId( mapBinding ),
-					mapBinding.getPluralAttributeElementBinding()
-							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
-			);
-		}
-	}
-
-	private Type resolveSetType( SetBinding setBinding ) {
-		if ( setBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
-			return resolveCustomCollectionType( setBinding );
-		} else {
-			return metadata.getTypeResolver().getTypeFactory().set(
-					setBinding.getAttribute().getRole(),
-					getReferencedPropertyNameIfNotId( setBinding ),
-					setBinding.getPluralAttributeElementBinding()
-							.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
-			);
-		}
-	}
 
 	private interface DefaultNamingStrategy {
 

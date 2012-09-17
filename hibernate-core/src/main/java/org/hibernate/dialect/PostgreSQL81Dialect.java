@@ -462,4 +462,14 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
 	}
+	
+	@Override
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait ";
+	}
+	
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return getForUpdateString(aliases) + " nowait ";
+	}
 }

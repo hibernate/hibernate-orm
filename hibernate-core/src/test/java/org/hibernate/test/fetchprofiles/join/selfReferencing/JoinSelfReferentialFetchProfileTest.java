@@ -28,13 +28,11 @@ import org.hibernate.criterion.Restrictions;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel // NPE @ Binder.bindManyToOneAttribute(Binder.java:1053)
 public class JoinSelfReferentialFetchProfileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

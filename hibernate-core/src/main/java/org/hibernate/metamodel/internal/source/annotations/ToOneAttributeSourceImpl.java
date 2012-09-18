@@ -149,6 +149,9 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			final List<Value> values = new ArrayList<Value>();
 			for ( Column column : associationAttribute.getJoinColumnValues() ) {
+				if ( column.getReferencedColumnName() == null ) {
+					return context.resolveRelationalValuesForAttribute( null );
+				}
 				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
 						column.getReferencedColumnName(),
 						logicalJoinTableName,

@@ -1950,6 +1950,13 @@ public class Binder {
 
 						@Override
 						public List< Value > resolveRelationalValuesForAttribute( String attributeName ) {
+							if ( attributeName == null ) {
+								List< Value > values = new ArrayList< Value >();
+								for ( Column column : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
+									values.add( column );
+								}
+								return values;
+							}
 							final AttributeBinding referencedAttributeBinding =
 									entityBinding.locateAttributeBinding( attributeName );
 							if ( referencedAttributeBinding == null ) {
@@ -2311,6 +2318,13 @@ public class Binder {
 
 		@Override
 		public List< Value > resolveRelationalValuesForAttribute( String attributeName ) {
+			if ( attributeName == null ) {
+				List< Value > values = new ArrayList< Value >();
+				for ( Column column : referencedEntityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
+					values.add( column );
+				}
+				return values;
+			}
 			final AttributeBinding referencedAttributeBinding =
 					referencedEntityBinding.locateAttributeBinding( attributeName );
 			if ( !referencedAttributeBinding.getAttribute().isSingular() ) {

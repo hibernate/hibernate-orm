@@ -135,6 +135,7 @@ public class Product implements java.io.Serializable {
 		this.someBigInteger = someBigInteger;
 	}
 
+	@Column( precision = 10, scale = 3)
 	public BigDecimal getSomeBigDecimal() {
 		return someBigDecimal;
 	}

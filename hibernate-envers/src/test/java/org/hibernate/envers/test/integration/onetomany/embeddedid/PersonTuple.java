@@ -79,17 +79,17 @@ public class PersonTuple implements Serializable {
 
     @MapsId("personAId")
     @ManyToOne(optional = false)
-    @JoinColumn(insertable = false, updatable = false)
+    @JoinColumn(insertable = false, updatable = false, nullable=false)
     private Person personA;
 
     @MapsId("personBId")
     @ManyToOne(optional = false)
-    @JoinColumn(insertable = false, updatable = false)
+    @JoinColumn(insertable = false, updatable = false, nullable=false)
     private Person personB;
 
     @MapsId("constantId")
     @ManyToOne(optional = false)
-    @JoinColumn(insertable = false, updatable = false)
+    @JoinColumn(insertable = false, updatable = false, nullable=false)
     private Constant constant;
 
     @Column(nullable = false)

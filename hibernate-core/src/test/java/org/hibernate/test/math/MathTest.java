@@ -53,9 +53,9 @@ public class MathTest extends BaseCoreFunctionalTestCase {
 		
 		s = openSession();
 		s.beginTransaction();
-		int value1 = (int)s.createQuery( "select bitand(m.value,0) from MathEntity m where m.id=" + id ).uniqueResult();
-		int value2 = (int)s.createQuery( "select bitand(m.value,2) from MathEntity m where m.id=" + id ).uniqueResult();
-		int value3 = (int)s.createQuery( "select bitand(m.value,3) from MathEntity m where m.id=" + id ).uniqueResult();
+		int value1 = ((Integer) s.createQuery( "select bitand(m.value,0) from MathEntity m where m.id=" + id ).uniqueResult()).intValue();
+		int value2 = ((Integer) s.createQuery( "select bitand(m.value,2) from MathEntity m where m.id=" + id ).uniqueResult()).intValue();
+		int value3 = ((Integer )s.createQuery( "select bitand(m.value,3) from MathEntity m where m.id=" + id ).uniqueResult()).intValue();
 		s.getTransaction().commit();
 		s.close();
 

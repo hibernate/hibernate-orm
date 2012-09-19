@@ -236,6 +236,15 @@ public class EntityHierarchyBuilder {
 		}
 
 		for ( ClassInfo subClassInfo : subClasses ) {
+			if ( !isEntityClass( subClassInfo ) ) {
+				if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.EMBEDDABLE ) ) {
+					throw new AnnotationException( "An embeddable cannot extend an entity: " + subClassInfo );
+				}
+				if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.MAPPED_SUPERCLASS ) ) {
+					throw new AnnotationException( "A mapped superclass cannot extend an entity: " + subClassInfo );
+				}
+				continue;
+			}
 			addSubClassToSubclassMap( classInfo.name(), subClassInfo, classToDirectSubclassMap );
 			processHierarchy(
 					bindingContext,

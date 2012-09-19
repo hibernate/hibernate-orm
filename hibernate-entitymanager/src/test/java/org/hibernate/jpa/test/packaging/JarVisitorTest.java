@@ -23,6 +23,11 @@
  */
 package org.hibernate.jpa.test.packaging;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -30,12 +35,12 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.Set;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
-import org.junit.Test;
-
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.packaging.internal.ClassFilter;
 import org.hibernate.jpa.packaging.internal.Entry;
 import org.hibernate.jpa.packaging.internal.ExplodedJarVisitor;
@@ -47,20 +52,17 @@ import org.hibernate.jpa.packaging.internal.JarProtocolVisitor;
 import org.hibernate.jpa.packaging.internal.JarVisitor;
 import org.hibernate.jpa.packaging.internal.JarVisitorFactory;
 import org.hibernate.jpa.packaging.internal.PackageFilter;
-import org.hibernate.jpa.test.pack.explodedpar.Carpet;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
-
+import org.hibernate.jpa.test.pack.explodedpar.Carpet;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
 @SuppressWarnings("unchecked")
 public class JarVisitorTest extends PackagingTestCase {
 	@Test

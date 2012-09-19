@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -190,6 +191,41 @@ public class JandexHelper {
 	}
 
 	/**
+	 * @param classInfo the class info from which to retrieve the annotation instance
+	 * @param annotationName the annotation to retrieve from the class info
+	 * @param target the annotation target
+	 *
+	 * @return the single annotation defined on the class with the supplied target or {@code null} in case the annotation is not specified at all
+	 *
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+	 */
+	public static AnnotationInstance getSingleAnnotation(
+			ClassInfo classInfo,
+			DotName annotationName,
+			Class< ? extends AnnotationTarget > target ) {
+		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
+		if ( annotationList == null ) {
+			return null;
+		}
+		annotationList = new ArrayList< AnnotationInstance >( annotationList );
+		for ( Iterator< AnnotationInstance > iter = annotationList.iterator(); iter.hasNext(); ) {
+			if ( !target.isInstance( iter.next().target() ) ) {
+				iter.remove();
+			}
+		}
+		if ( annotationList.isEmpty() ) {
+			return null;
+		}
+		if ( annotationList.size() == 1 ) {
+			return annotationList.get( 0 );
+		}
+		throw new AssertionFailure(
+				"Found more than one instance of the annotation "
+						+ annotationList.get( 0 ).name().toString()
+						+ ". Expected was one." );
+	}
+
+	/**
 	 * @param annotations List of annotation instances keyed against their dot name.
 	 * @param annotationName the annotation to retrieve from map
 	 *
@@ -216,6 +252,19 @@ public class JandexHelper {
 	}
 
 	/**
+	 * @param classInfo the class info from which to retrieve the annotation instance
+	 * @param annotationName the annotation to check
+	 *
+	 * @return returns {@code true} if the annotations contains only a single instance of specified annotation or {@code false}
+	 * 			otherwise.
+	 *
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+	 */
+	public static boolean containsSingleAnnotation( ClassInfo classInfo, DotName annotationName ) {
+		return containsSingleAnnotation( classInfo.annotations(), annotationName );
+	}
+
+	/**
 	 * @param annotations List of annotation instances keyed against their dot name.
 	 * @param annotationName the annotation to check
 	 *
@@ -223,8 +272,7 @@ public class JandexHelper {
 	 *
 	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
 	 */
-	public static boolean containsSingleAnnotations(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
-			throws AssertionFailure {
+	public static boolean containsSingleAnnotation( Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName ) {
 		return getSingleAnnotation( annotations, annotationName ) != null;
 	}
 

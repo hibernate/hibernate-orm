@@ -232,7 +232,7 @@ public class ConfiguredClass {
 		// default to the hierarchy access type to start with
 		AccessType accessType = defaultAccessType;
 
-		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
+		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS, ClassInfo.class );
 		if ( accessAnnotation != null && accessAnnotation.target().getClass().equals( ClassInfo.class ) ) {
 			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
 		}

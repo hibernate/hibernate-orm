@@ -447,7 +447,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictNaturalIdRegions();
 		}
 	}
-	protected boolean isCleanupTestDataRequired(){return false;}
+	
+	protected boolean isCleanupTestDataRequired() { return false; }
+	
 	protected void cleanupTestData() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();

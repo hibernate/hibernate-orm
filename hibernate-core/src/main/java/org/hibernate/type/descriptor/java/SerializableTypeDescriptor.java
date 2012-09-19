@@ -38,6 +38,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * Descriptor for general {@link Serializable} handling.
  *
  * @author Steve Ebersole
+ * @author Brett meyer
  */
 public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
 
@@ -99,30 +100,27 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		}
-		if ( byte[].class.isAssignableFrom( type ) ) {
+		} else if ( byte[].class.isAssignableFrom( type ) ) {
 			return (X) toBytes( value );
-		}
-		if ( InputStream.class.isAssignableFrom( type ) ) {
+		} else if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( toBytes( value ) );
-		}
-		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+		} else if ( BinaryStream.class.isAssignableFrom( type ) ) {
 			return (X) new BinaryStreamImpl( toBytes( value ) );
+		} else if ( Blob.class.isAssignableFrom( type )) {
+			return (X) options.getLobCreator().createBlob( toBytes(value) );
 		}
+		
 		throw unknownUnwrap( type );
 	}
 
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		}
-		if ( byte[].class.isInstance( value ) ) {
+		} else if ( byte[].class.isInstance( value ) ) {
 			return fromBytes( (byte[]) value );
-		}
-		if ( InputStream.class.isInstance( value ) ) {
+		} else if ( InputStream.class.isInstance( value ) ) {
 			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
-		}
-		if ( Blob.class.isInstance( value )) {
+		} else if ( Blob.class.isInstance( value )) {
 			try {
 				return fromBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
 			} catch ( SQLException e ) {

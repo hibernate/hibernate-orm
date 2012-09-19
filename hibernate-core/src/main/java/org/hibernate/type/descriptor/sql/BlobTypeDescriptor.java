@@ -39,6 +39,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 

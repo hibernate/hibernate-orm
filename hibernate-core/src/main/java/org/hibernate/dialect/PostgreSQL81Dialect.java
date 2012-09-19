@@ -155,29 +155,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		SqlTypeDescriptor descriptor;
-		switch ( sqlCode ) {
-			case Types.BLOB: {
-				descriptor = BlobTypeDescriptor.BLOB_BINDING;
-				break;
-			}
-			case Types.CLOB: {
-				descriptor = ClobTypeDescriptor.CLOB_BINDING;
-				break;
-			}
-			default: {
-				descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
-				break;
-			}
-		}
-		return descriptor;
-	}
-
 	public String getAddColumnString() {
 		return "add column";
 	}

@@ -37,6 +37,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * Descriptor for {@link Types#BLOB BLOB} handling.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
+ * @author Brett Meyer
  */
 public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 

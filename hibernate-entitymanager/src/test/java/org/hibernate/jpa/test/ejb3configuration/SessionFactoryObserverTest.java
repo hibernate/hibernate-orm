@@ -50,7 +50,7 @@ public class SessionFactoryObserverTest {
 		);
 
 		try {
-			final EntityManagerFactory entityManagerFactory = builder.buildEntityManagerFactory();
+			final EntityManagerFactory entityManagerFactory = builder.build();
 			entityManagerFactory.close();
 			Assert.fail( "GoofyException should have been thrown" );
 		}

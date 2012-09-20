@@ -116,7 +116,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 				configurationProperties
 		);
 
-        emf = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.buildEntityManagerFactory();
+        emf = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.build();
 
 		serviceRegistry = (StandardServiceRegistryImpl) emf.getSessionFactory().getServiceRegistry().getParentServiceRegistry();
 

@@ -93,7 +93,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		entityManagerFactory = (EntityManagerFactoryImpl) Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).buildEntityManagerFactory();
+		).build();
 
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()

@@ -52,7 +52,7 @@ public class InterceptorTest {
     public void testConfiguredInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).buildEntityManagerFactory();
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
         EntityManager em = emf.createEntityManager();
         Item i = new Item();
         i.setName( "Laptop" );
@@ -78,7 +78,7 @@ public class InterceptorTest {
     public void testConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).buildEntityManagerFactory();
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
         EntityManager em = emf.createEntityManager();
         Item i = new Item();
         i.setName( "Laptop" );
@@ -104,7 +104,7 @@ public class InterceptorTest {
     public void testEmptyCreateEntityManagerFactoryAndPropertyUse() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).buildEntityManagerFactory();
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 		EntityManager em = emf.createEntityManager();
         Item i = new Item();
         i.setName( "Laptop" );
@@ -130,7 +130,7 @@ public class InterceptorTest {
     public void testOnLoadCallInInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, new ExceptionInterceptor( true ) );
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).buildEntityManagerFactory();
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 		EntityManager em = emf.createEntityManager();
         Item i = new Item();
         i.setName( "Laptop" );

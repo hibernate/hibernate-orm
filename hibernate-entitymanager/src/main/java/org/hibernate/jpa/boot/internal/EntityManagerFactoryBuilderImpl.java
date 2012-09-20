@@ -133,7 +133,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final PersistenceUnitDescriptor persistenceUnit;
 	private final SettingsImpl settings = new SettingsImpl();
 	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
-	private final Map<?,?> configurationValues;
+	private final Map configurationValues;
 
 	private final List<JaccDefinition> jaccDefinitions = new ArrayList<JaccDefinition>();
 	private final List<CacheRegionDefinition> cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
@@ -147,6 +147,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
+
+	private Object validatorFactory;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -198,7 +200,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// temporary!
-	public Map<?, ?> getConfigurationValues() {
+	@SuppressWarnings("unchecked")
+	public Map getConfigurationValues() {
 		return Collections.unmodifiableMap( configurationValues );
 	}
 
@@ -488,6 +491,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		applyJdbcConnectionProperties();
 		applyTransactionProperties();
 
+		// this check is needed for tests.  Second form happens later (mainly against the explicitly passed validator)
+		// when building EMF...
 		final Object validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
 		if ( validationFactory != null ) {
 			BeanValidationIntegrator.validateFactory( validationFactory );
@@ -499,7 +504,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
 		}
 
-		for ( Map.Entry entry : configurationValues.entrySet() ) {
+		for ( Object oEntry : configurationValues.entrySet() ) {
+			Map.Entry entry = (Map.Entry) oEntry;
 			if ( entry.getKey() instanceof String ) {
 				final String keyString = (String) entry.getKey();
 
@@ -913,16 +919,32 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@Override
+	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
+		this.validatorFactory = validatorFactory;
+		return this;
+	}
+
+	@Override
 	public void cancel() {
 		// todo : close the bootstrap registry (not critical, but nice to do)
 
 	}
 
 	@SuppressWarnings("unchecked")
-	public EntityManagerFactory buildEntityManagerFactory() {
+	public EntityManagerFactory build() {
 		// IMPL NOTE : TCCL handling here is temporary.
 		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
 		// 		in turn which relies on TCCL being set.
+
+		if ( validatorFactory != null ) {
+			// NOTE : need to add it to both
+			configurationValues.put( AvailableSettings.VALIDATION_FACTORY, validatorFactory );
+		}
+
+		final Object validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
+		if ( validationFactory != null ) {
+			BeanValidationIntegrator.validateFactory( validationFactory );
+		}
 
 		final ServiceRegistry serviceRegistry = buildServiceRegistry();
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );

@@ -82,7 +82,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration ).buildEntityManagerFactory();
+			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration ).build();
 		}
 
 		return null;
@@ -100,7 +100,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, integration ).buildEntityManagerFactory();
+		return Bootstrap.getEntityManagerFactoryBuilder( info, integration ).build();
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

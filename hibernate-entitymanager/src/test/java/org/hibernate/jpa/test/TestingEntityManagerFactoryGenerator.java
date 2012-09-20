@@ -46,6 +46,6 @@ public class TestingEntityManagerFactoryGenerator {
 	}
 
 	public static EntityManagerFactory generateEntityManagerFactory(PersistenceUnitDescriptor descriptor, Map settings) {
-		return Bootstrap.getEntityManagerFactoryBuilder( descriptor, settings ).buildEntityManagerFactory();
+		return Bootstrap.getEntityManagerFactoryBuilder( descriptor, settings ).build();
 	}
 }

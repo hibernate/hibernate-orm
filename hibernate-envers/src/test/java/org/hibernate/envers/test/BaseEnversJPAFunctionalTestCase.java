@@ -97,7 +97,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
 		);
-		entityManagerFactory = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.buildEntityManagerFactory();
+		entityManagerFactory = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.build();
 
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()

@@ -51,7 +51,7 @@ public class IdentifierGeneratorStrategyProviderTest {
 		final EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				new PersistenceUnitInfoAdapter(),
 				settings
-		).buildEntityManagerFactory();
+		).build();
 
 		final EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {

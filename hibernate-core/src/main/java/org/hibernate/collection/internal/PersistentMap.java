@@ -296,6 +296,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 			for ( Object[] entry : loadingEntries ) {
 				map.put( entry[0], entry[1] );
 			}
+            loadingEntries = null;
 		}
 		return super.endRead();
 	}

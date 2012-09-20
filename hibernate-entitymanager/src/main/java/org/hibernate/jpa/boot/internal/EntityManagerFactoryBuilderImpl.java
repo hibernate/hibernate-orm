@@ -68,6 +68,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -130,6 +131,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	public static final String JANDEX_INDEX = "hibernate.jandex_index";
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Explicit "injectables"
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private Object validatorFactory;
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	private final PersistenceUnitDescriptor persistenceUnit;
 	private final SettingsImpl settings = new SettingsImpl();
 	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
@@ -147,8 +154,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
-
-	private Object validatorFactory;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -176,8 +181,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.configurationValues = mergePropertySources( persistenceUnit, integrationSettings, bootstrapServiceRegistry );
 		// add all merged configuration values into the service registry builder
 		this.serviceRegistryBuilder.applySettings( configurationValues );
-		// And being processing those configuration values
-		processProperties( bootstrapServiceRegistry );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Next we do a preliminary pass at metadata processing, which involves:
@@ -188,6 +191,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		IndexView jandexIndex = locateOrBuildJandexIndex( collectedManagedClassNames, scanResult.getPackageNames(), bootstrapServiceRegistry );
 		//		3) building "metadata sources" to keep for later to use in building the SessionFactory
 		metadataSources = prepareMetadataSources( jandexIndex, collectedManagedClassNames, scanResult, bootstrapServiceRegistry );
+
+		withValidatorFactory( configurationValues.get( AvailableSettings.VALIDATION_FACTORY ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// push back class transformation to the environment; for the time being this only has any effect in EE
@@ -487,133 +492,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void processProperties(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		applyJdbcConnectionProperties();
-		applyTransactionProperties();
-
-		// this check is needed for tests.  Second form happens later (mainly against the explicitly passed validator)
-		// when building EMF...
-		final Object validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
-		if ( validationFactory != null ) {
-			BeanValidationIntegrator.validateFactory( validationFactory );
-		}
-
-		// flush before completion validation
-		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
-			serviceRegistryBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-		}
-
-		for ( Object oEntry : configurationValues.entrySet() ) {
-			Map.Entry entry = (Map.Entry) oEntry;
-			if ( entry.getKey() instanceof String ) {
-				final String keyString = (String) entry.getKey();
-
-				if ( AvailableSettings.INTERCEPTOR.equals( keyString ) ) {
-					sessionFactoryInterceptor = instantiateCustomClassFromConfiguration(
-							entry.getValue(),
-							Interceptor.class,
-							bootstrapServiceRegistry
-					);
-				}
-				else if ( AvailableSettings.SESSION_INTERCEPTOR.equals( keyString ) ) {
-					settings.setSessionInterceptorClass(
-							loadSessionInterceptorClass( entry.getValue(), bootstrapServiceRegistry )
-					);
-				}
-				else if ( AvailableSettings.NAMING_STRATEGY.equals( keyString ) ) {
-					namingStrategy = instantiateCustomClassFromConfiguration(
-							entry.getValue(),
-							NamingStrategy.class,
-							bootstrapServiceRegistry
-					);
-				}
-				else if ( AvailableSettings.SESSION_FACTORY_OBSERVER.equals( keyString ) ) {
-					suppliedSessionFactoryObserver = instantiateCustomClassFromConfiguration(
-							entry.getValue(),
-							SessionFactoryObserver.class,
-							bootstrapServiceRegistry
-					);
-				}
-				else if ( AvailableSettings.DISCARD_PC_ON_CLOSE.equals( keyString ) ) {
-					settings.setReleaseResourcesOnCloseEnabled( "true".equals( entry.getValue() ) );
-				}
-				else if ( keyString.startsWith( AvailableSettings.CLASS_CACHE_PREFIX ) ) {
-					addCacheRegionDefinition(
-							keyString.substring( AvailableSettings.CLASS_CACHE_PREFIX.length() + 1 ),
-							(String) entry.getValue(),
-							CacheRegionDefinition.CacheType.ENTITY
-					);
-				}
-				else if ( keyString.startsWith( AvailableSettings.COLLECTION_CACHE_PREFIX ) ) {
-					addCacheRegionDefinition(
-							keyString.substring( AvailableSettings.COLLECTION_CACHE_PREFIX.length() + 1 ),
-							(String) entry.getValue(),
-							CacheRegionDefinition.CacheType.COLLECTION
-					);
-				}
-				else if ( keyString.startsWith( AvailableSettings.JACC_PREFIX )
-						&& ! ( keyString.equals( AvailableSettings.JACC_CONTEXT_ID )
-						|| keyString.equals( AvailableSettings.JACC_ENABLED ) ) ) {
-					addJaccDefinition( (String) entry.getKey(), entry.getValue() );
-				}
-			}
-		}
-	}
-
-	private void applyJdbcConnectionProperties() {
-		if ( persistenceUnit.getJtaDataSource() != null ) {
-			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getJtaDataSource() );
-		}
-		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
-		}
-		else {
-			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );
-			if ( StringHelper.isNotEmpty( driver ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DRIVER, driver );
-			}
-			final String url = (String) configurationValues.get( AvailableSettings.JDBC_URL );
-			if ( StringHelper.isNotEmpty( url ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.URL, url );
-			}
-			final String user = (String) configurationValues.get( AvailableSettings.JDBC_USER );
-			if ( StringHelper.isNotEmpty( user ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.USER, user );
-			}
-			final String pass = (String) configurationValues.get( AvailableSettings.JDBC_PASSWORD );
-			if ( StringHelper.isNotEmpty( pass ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.PASS, pass );
-			}
-		}
-	}
-
-	private void applyTransactionProperties() {
-		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
-				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
-		);
-		if ( txnType == null ) {
-			txnType = persistenceUnit.getTransactionType();
-		}
-		if ( txnType == null ) {
-			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		}
-		settings.setTransactionType( txnType );
-		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_STRATEGY );
-		if ( hasTxStrategy ) {
-			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_STRATEGY );
-		}
-		else {
-			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class );
-			}
-			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class );
-			}
-		}
-	}
-
 	private String jaccContextId;
 
 	private void addJaccDefinition(String key, Object value) {
@@ -640,35 +518,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		catch ( IndexOutOfBoundsException e ) {
 			throw persistenceException( "Illegal usage of " + AvailableSettings.JACC_PREFIX + ": " + key );
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Class<? extends Interceptor> loadSessionInterceptorClass(
-			Object value,
-			BootstrapServiceRegistry bootstrapServiceRegistry) {
-		if ( value == null ) {
-			return null;
-		}
-
-		Class theClass;
-		if ( Class.class.isInstance( value ) ) {
-			theClass = (Class) value;
-		}
-		else {
-			theClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( value.toString() );
-		}
-
-		try {
-			return (Class<? extends Interceptor>) theClass;
-		}
-		catch (ClassCastException e) {
-			throw persistenceException(
-					String.format(
-							"Specified Interceptor implementation class [%s] was not castable to Interceptor",
-							theClass.getName()
-					)
-			);
 		}
 	}
 
@@ -711,66 +560,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		final CacheRegionDefinition def = new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
 		cacheRegionDefinitions.add( def );
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T> T instantiateCustomClassFromConfiguration(
-			Object value,
-			Class<T> type,
-			ServiceRegistry bootstrapServiceRegistry) {
-		if ( value == null ) {
-			return null;
-		}
-
-		if ( type.isInstance( value ) ) {
-			return (T) value;
-		}
-
-		final Class<? extends T> implementationClass;
-
-		if ( Class.class.isInstance( value ) ) {
-			try {
-				implementationClass = (Class<? extends T>) value;
-			}
-			catch (ClassCastException e) {
-				throw persistenceException(
-						String.format(
-								"Specified implementation class [%s] was not of expected type [%s]",
-								((Class) value).getName(),
-								type.getName()
-						)
-				);
-			}
-		}
-		else {
-			final String implementationClassName = value.toString();
-			try {
-				implementationClass = bootstrapServiceRegistry.getService( ClassLoaderService.class )
-						.classForName( implementationClassName );
-			}
-			catch (ClassCastException e) {
-				throw persistenceException(
-						String.format(
-								"Specified implementation class [%s] was not of expected type [%s]",
-								implementationClassName,
-								type.getName()
-						)
-				);
-			}
-		}
-
-		try {
-			return implementationClass.newInstance();
-		}
-		catch (Exception e) {
-			throw persistenceException(
-					String.format(
-							"Unable to instantiate specified implementation class [%s]",
-							implementationClass.getName()
-					),
-					e
-			);
-		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -921,6 +710,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@Override
 	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
 		this.validatorFactory = validatorFactory;
+
+		if ( validatorFactory != null ) {
+			BeanValidationIntegrator.validateFactory( validatorFactory );
+		}
 		return this;
 	}
 
@@ -932,22 +725,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	public EntityManagerFactory build() {
-		// IMPL NOTE : TCCL handling here is temporary.
-		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
-		// 		in turn which relies on TCCL being set.
-
-		if ( validatorFactory != null ) {
-			// NOTE : need to add it to both
-			configurationValues.put( AvailableSettings.VALIDATION_FACTORY, validatorFactory );
-		}
-
-		final Object validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
-		if ( validationFactory != null ) {
-			BeanValidationIntegrator.validateFactory( validationFactory );
-		}
+		processProperties();
 
 		final ServiceRegistry serviceRegistry = buildServiceRegistry();
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
 
 		return ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
 				new ClassLoaderServiceImpl.Work<EntityManagerFactoryImpl>() {
@@ -975,6 +760,136 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 	}
 
+	private void processProperties() {
+		applyJdbcConnectionProperties();
+		applyTransactionProperties();
+
+		Object validationFactory = this.validatorFactory;
+		if ( validationFactory == null ) {
+			validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
+		}
+		if ( validationFactory != null ) {
+			BeanValidationIntegrator.validateFactory( validationFactory );
+			serviceRegistryBuilder.applySetting( AvailableSettings.VALIDATION_FACTORY, validationFactory );
+		}
+
+		// flush before completion validation
+		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
+			serviceRegistryBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
+			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
+		}
+
+		final StrategySelector strategySelector = serviceRegistryBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
+
+		for ( Object oEntry : configurationValues.entrySet() ) {
+			Map.Entry entry = (Map.Entry) oEntry;
+			if ( entry.getKey() instanceof String ) {
+				final String keyString = (String) entry.getKey();
+
+				if ( AvailableSettings.INTERCEPTOR.equals( keyString ) ) {
+					sessionFactoryInterceptor = strategySelector.resolveStrategy( Interceptor.class, entry.getValue() );
+				}
+				else if ( AvailableSettings.SESSION_INTERCEPTOR.equals( keyString ) ) {
+					settings.setSessionInterceptorClass(
+							loadSessionInterceptorClass( entry.getValue(), strategySelector )
+					);
+				}
+				else if ( AvailableSettings.NAMING_STRATEGY.equals( keyString ) ) {
+					namingStrategy = strategySelector.resolveStrategy( NamingStrategy.class, entry.getValue() );
+				}
+				else if ( AvailableSettings.SESSION_FACTORY_OBSERVER.equals( keyString ) ) {
+					suppliedSessionFactoryObserver = strategySelector.resolveStrategy( SessionFactoryObserver.class, entry.getValue() );
+				}
+				else if ( AvailableSettings.DISCARD_PC_ON_CLOSE.equals( keyString ) ) {
+					settings.setReleaseResourcesOnCloseEnabled( "true".equals( entry.getValue() ) );
+				}
+				else if ( keyString.startsWith( AvailableSettings.CLASS_CACHE_PREFIX ) ) {
+					addCacheRegionDefinition(
+							keyString.substring( AvailableSettings.CLASS_CACHE_PREFIX.length() + 1 ),
+							(String) entry.getValue(),
+							CacheRegionDefinition.CacheType.ENTITY
+					);
+				}
+				else if ( keyString.startsWith( AvailableSettings.COLLECTION_CACHE_PREFIX ) ) {
+					addCacheRegionDefinition(
+							keyString.substring( AvailableSettings.COLLECTION_CACHE_PREFIX.length() + 1 ),
+							(String) entry.getValue(),
+							CacheRegionDefinition.CacheType.COLLECTION
+					);
+				}
+				else if ( keyString.startsWith( AvailableSettings.JACC_PREFIX )
+						&& ! ( keyString.equals( AvailableSettings.JACC_CONTEXT_ID )
+						|| keyString.equals( AvailableSettings.JACC_ENABLED ) ) ) {
+					addJaccDefinition( (String) entry.getKey(), entry.getValue() );
+				}
+			}
+		}
+	}
+
+	private void applyJdbcConnectionProperties() {
+		if ( persistenceUnit.getJtaDataSource() != null ) {
+			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getJtaDataSource() );
+		}
+		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
+			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+		}
+		else {
+			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );
+			if ( StringHelper.isNotEmpty( driver ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DRIVER, driver );
+			}
+			final String url = (String) configurationValues.get( AvailableSettings.JDBC_URL );
+			if ( StringHelper.isNotEmpty( url ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.URL, url );
+			}
+			final String user = (String) configurationValues.get( AvailableSettings.JDBC_USER );
+			if ( StringHelper.isNotEmpty( user ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.USER, user );
+			}
+			final String pass = (String) configurationValues.get( AvailableSettings.JDBC_PASSWORD );
+			if ( StringHelper.isNotEmpty( pass ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.PASS, pass );
+			}
+		}
+	}
+
+	private void applyTransactionProperties() {
+		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
+				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
+		);
+		if ( txnType == null ) {
+			txnType = persistenceUnit.getTransactionType();
+		}
+		if ( txnType == null ) {
+			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
+			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		}
+		settings.setTransactionType( txnType );
+		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_STRATEGY );
+		if ( hasTxStrategy ) {
+			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_STRATEGY );
+		}
+		else {
+			if ( txnType == PersistenceUnitTransactionType.JTA ) {
+				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class );
+			}
+			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
+				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class );
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private Class<? extends Interceptor> loadSessionInterceptorClass(Object value, StrategySelector strategySelector) {
+		if ( value == null ) {
+			return null;
+		}
+
+		return Class.class.isInstance( value )
+				? (Class<? extends Interceptor>) value
+				: strategySelector.selectStrategyImplementor( Interceptor.class, value.toString() );
+	}
+
 	public ServiceRegistry buildServiceRegistry() {
 		return serviceRegistryBuilder.buildServiceRegistry();
 	}
@@ -994,11 +909,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			cfg.setInterceptor( sessionFactoryInterceptor );
 		}
 
-		final IdentifierGeneratorStrategyProvider strategyProvider = instantiateCustomClassFromConfiguration(
-				props.get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER ),
-				IdentifierGeneratorStrategyProvider.class,
-				serviceRegistry
-		);
+		final Object strategyProviderValue = props.get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+		final IdentifierGeneratorStrategyProvider strategyProvider = strategyProviderValue == null
+				? null
+				: serviceRegistry.getService( StrategySelector.class )
+						.resolveStrategy( IdentifierGeneratorStrategyProvider.class, strategyProviderValue );
+
 		if ( strategyProvider != null ) {
 			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = cfg.getIdentifierGeneratorFactory();
 			for ( Map.Entry<String,Class<?>> entry : strategyProvider.getStrategies().entrySet() ) {

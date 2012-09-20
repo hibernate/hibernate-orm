@@ -57,7 +57,6 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
-import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
@@ -70,9 +69,7 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
-import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -81,7 +78,6 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
-import org.hibernate.metamodel.spi.binding.SetBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -94,7 +90,6 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
@@ -119,7 +114,6 @@ import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
@@ -148,7 +142,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -164,8 +157,7 @@ import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOS
  * @author Gail Badner
  */
 public class Binder {
-	private static final Logger log = Logger.getLogger( Binder.class );
-	private static final CoreMessageLogger coreLogger = Logger.getMessageLogger(
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			Binder.class.getName()
 	);
@@ -377,7 +369,7 @@ public class Binder {
 				createSingularAttributeJavaType( attributeBinding.getAttribute() ) );
 		Type resolvedType = heuristicType( hibernateTypeDescriptor );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		bindJdbcDataType( resolvedType, ( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
+		typeHelper.bindJdbcDataType( resolvedType, ( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
 		attributeBinding.getAttribute().resolveType( bindingContext().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		return attributeBinding;
 	}
@@ -394,9 +386,9 @@ public class Binder {
 		);
 		Type resolvedElementType = heuristicType( elementBinding.getHibernateTypeDescriptor() );
 		bindHibernateResolvedType( elementBinding.getHibernateTypeDescriptor(), resolvedElementType );
-		bindJdbcDataType(
+		typeHelper.bindJdbcDataType(
 				resolvedElementType,
-				(AbstractValue) elementBinding.getRelationalValueBindings().get( 0 ).getValue()
+				elementBinding.getRelationalValueBindings().get( 0 ).getValue()
 		);
 	}
 
@@ -440,9 +432,9 @@ public class Binder {
 		final BasicPluralAttributeElementBinding elementBinding =
 				( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding();
 		if ( elementBinding.getNature() != PluralAttributeElementBinding.Nature.BASIC ) {
-			throw new MappingException( String.format(
+			bindingContext().makeMappingException( String.format(
 					"Expected a SetBinding with an element of nature Nature.BASIC; instead was %s",
-					elementBinding.getNature() ), bindingContexts.peek().getOrigin() );
+					elementBinding.getNature() ) );
 		}
 		if ( hasAnyNonNullableColumns( elementBinding.getRelationalValueBindings() ) ) {
 			final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
@@ -489,7 +481,7 @@ public class Binder {
 				defaultIndexJavaTypeName );
 		Type resolvedElementType = heuristicType( indexBinding.getHibernateTypeDescriptor() );
 		bindHibernateResolvedType( indexBinding.getHibernateTypeDescriptor(), resolvedElementType );
-		bindJdbcDataType( resolvedElementType, (AbstractValue) indexBinding.getIndexRelationalValue() );
+		typeHelper.bindJdbcDataType( resolvedElementType, (AbstractValue) indexBinding.getIndexRelationalValue() );
 	}
 
 	void bindCollectionTableForeignKey(
@@ -551,10 +543,10 @@ public class Binder {
 		if ( resolvedKeyType.isComponentType() ) {
 			ComponentType componentType = ( ComponentType ) resolvedKeyType;
 			for ( Type subType : componentType.getSubtypes() ) {
-				bindJdbcDataType( subType, fkColumnIterator.next() );
+				typeHelper.bindJdbcDataType( subType, fkColumnIterator.next() );
 			}
 		} else {
-			bindJdbcDataType( resolvedKeyType, fkColumnIterator.next() );
+			typeHelper.bindJdbcDataType( resolvedKeyType, fkColumnIterator.next() );
 		}
 	}
 
@@ -689,7 +681,7 @@ public class Binder {
 		hibernateTypeDescriptor.setExplicitTypeName( typeName );
 		Type resolvedType = heuristicType( hibernateTypeDescriptor );
 		bindHibernateResolvedType( hibernateTypeDescriptor, resolvedType );
-		bindJdbcDataType( resolvedType, value );
+		typeHelper.bindJdbcDataType( resolvedType, value );
 	}
 
 	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
@@ -884,20 +876,20 @@ public class Binder {
 			final String defaultJavaTypeName ) {
 		if ( explicitTypeName == null ) {
 			if ( hibernateTypeDescriptor.getJavaTypeName() != null ) {
-				throw new MappingException( String.format(
+				bindingContext().makeMappingException( String.format(
 						"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
 						hibernateTypeDescriptor.getJavaTypeName(),
-						defaultJavaTypeName ), bindingContexts.peek().getOrigin() );
+						defaultJavaTypeName ) );
 			}
 			hibernateTypeDescriptor.setJavaTypeName( defaultJavaTypeName );
 		} else {
 			// Check if user-specified name is of a User-Defined Type (UDT)
 			final TypeDefinition typeDef = metadata.getTypeDefinition( explicitTypeName );
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-				throw new MappingException( String.format(
+				bindingContext().makeMappingException( String.format(
 						"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
 						hibernateTypeDescriptor.getExplicitTypeName(),
-						explicitTypeName ), bindingContexts.peek().getOrigin() );
+						explicitTypeName ) );
 			}
 			if ( typeDef == null ) {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
@@ -953,14 +945,11 @@ public class Binder {
 		entityIdentifier.createIdentifierGenerator( identifierGeneratorFactory, properties );
 		if ( IdentityGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
 			if ( rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() != 1 ) {
-				throw new MappingException(
-						String.format(
-								"ID for %s is mapped as an identity with %d columns. IDs mapped as an identity can only have 1 column.",
-								rootEntityBinding.getEntity().getName(),
-								rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan()
-						),
-						bindingContexts.peek().getOrigin()
-				);
+				bindingContext().makeMappingException( String.format(
+						"ID for %s is mapped as an identity with %d columns. IDs mapped as an identity can only have 1 column.",
+						rootEntityBinding.getEntity().getName(),
+						rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan()
+				) );
 			}
 			rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 ).setIdentity( true );
 		}
@@ -986,18 +975,6 @@ public class Binder {
 		return bindingContexts.peek();
 	}
 
-	private void bindJdbcDataType( final Type resolvedType, final AbstractValue value ) {
-		if ( resolvedType != null && value != null ) {
-			final Type resolvedRelationalType =
-					resolvedType.isEntityType()
-							? EntityType.class.cast( resolvedType ).getIdentifierOrUniqueKeyType( metadata )
-							: resolvedType;
-			value.setJdbcDataType( new JdbcDataType(
-					resolvedRelationalType.sqlTypes( metadata )[ 0 ],
-					resolvedRelationalType.getName(),
-					resolvedRelationalType.getReturnedClass() ) );
-		}
-	}
 
 	private AbstractPluralAttributeBinding bindListAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -1021,21 +998,20 @@ public class Binder {
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final ToOneAttributeSource attributeSource,
-			SingularAttribute attribute ) {
-		if ( attribute == null ) {
-			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
-		}
+			final SingularAttribute singularAttribute ) {
+		final SingularAttribute attribute = singularAttribute != null ? singularAttribute : createSingularAttribute( attributeBindingContainer, attributeSource );
 		// TODO: figure out which table is used (could be secondary table...)
 		final TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
-		final List< RelationalValueBinding > relationalValueBindings =
-				bindValues( attributeBindingContainer, attributeSource, attribute, table );
 
+		//find the referenced entitybinding
 		org.hibernate.internal.util.ValueHolder< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
 		final String referencedEntityName =
 				bindingContext().qualifyClassName( attributeSource.getReferencedEntityName() != null
 						? attributeSource.getReferencedEntityName()
 						: referencedJavaTypeValue.getValue().getName() );
 		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
+		//now find the referenced attribute binding, either the referenced entity's id attribute or the referenced attribute
+		//todo referenced entityBinding null check?
 		// Foreign key...
 		final ForeignKeyContributingSource.JoinColumnResolutionDelegate resolutionDelegate =
 				attributeSource.getForeignKeyTargetColumnResolutionDelegate();
@@ -1058,9 +1034,25 @@ public class Binder {
 							attributeSource.getName(),
 							referencedAttributeBinding.getAttribute().getName() ) );
 		}
-
+		//bind @ManyToOne columns on the owner table
+		final List< RelationalValueBinding > relationalValueBindings =
+				bindValues( attributeBindingContainer, attributeSource, attribute, table, new DefaultNamingStrategy(){
+					@Override
+					public String defaultName() {
+						final SingularAttributeBinding referencedSingularAttributeBinding = SingularAttributeBinding.class.cast( referencedAttributeBinding );
+						final RelationalValueBinding relationalValueBinding =  referencedSingularAttributeBinding.getRelationalValueBindings().get( 0 );
+						final Value referencedValue = relationalValueBinding.getValue();
+						if(!Column.class.isInstance( referencedValue )){
+							//todo throw exception?
+						}
+						return bindingContext().getNamingStrategy().foreignKeyColumnName( attribute.getName(),
+								referencedEntityBinding.getEntity().getName(),
+								referencedEntityBinding.getEntity().getName(),
+								Column.class.cast( referencedValue ).getColumnName().getText());
+					}
+				} );
 		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
-
+		// now we have everything to create a ManyToOneAttributeBinding
 		final ManyToOneAttributeBinding attributeBinding =
 				attributeBindingContainer.makeManyToOneAttributeBinding(
 						attribute,
@@ -1103,7 +1095,7 @@ public class Binder {
 				attributeSource.getTypeInformation(),
 				referencedJavaTypeValue );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		bindJdbcDataType( resolvedType, ( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
+		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings.get( 0 ).getValue() );
 
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
@@ -1318,12 +1310,9 @@ public class Binder {
 							elementSource.getReferencedEntityName() :
 							defaultElementJavaTypeName;
 			if  ( referencedEntityName == null ) {
-				throw new MappingException(
-						String.format( "The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
-								createAttributePath( attributeBinding )
-						),
-						bindingContexts.peek().getOrigin()
-				);
+				bindingContext().makeMappingException( String.format( "The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
+						createAttributePath( attributeBinding )
+				) );
 			}
 			EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
  			bindOneToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
@@ -1527,11 +1516,24 @@ public class Binder {
 		}
 	}
 
+	private List<RelationalValueBinding> bindValues(final AttributeBindingContainer attributeBindingContainer,
+													final RelationalValueSourceContainer valueSourceContainer,
+													final Attribute attribute,
+													final TableSpecification defaultTable){
+		return bindValues( attributeBindingContainer, valueSourceContainer, attribute, defaultTable, new DefaultNamingStrategy() {
+			@Override
+			public String defaultName() {
+				return bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() );
+			}
+		} );
+	}
+
 	private List< RelationalValueBinding > bindValues(
 			final AttributeBindingContainer attributeBindingContainer,
 			final RelationalValueSourceContainer valueSourceContainer,
 			final Attribute attribute,
-			final TableSpecification defaultTable ) {
+			final TableSpecification defaultTable,
+			final DefaultNamingStrategy defaultNamingStrategy) {
 		final List< RelationalValueBinding > valueBindings = new ArrayList< RelationalValueBinding >();
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = SingularAttributeSource.class.isInstance(
 				valueSourceContainer
@@ -1542,7 +1544,7 @@ public class Binder {
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			final String columnName =
-					quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
+					quotedIdentifier( defaultNamingStrategy.defaultName() );
 			final Column column = defaultTable.locateOrCreateColumn( columnName );
 			column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
 			if(isNaturalId){
@@ -1658,9 +1660,7 @@ public class Binder {
 			final boolean isNullableByDefault,
 			final boolean isDefaultAttributeName ) {
 		if ( columnSource.getName() == null && defaultName == null ) {
-			throw new MappingException(
-					"Cannot resolve name for column because no name was specified and default name is null.",
-					bindingContexts.peek().getOrigin() );
+			bindingContext().makeMappingException( "Cannot resolve name for column because no name was specified and default name is null." );
 		}
 		final String name;
 		if ( StringHelper.isNotEmpty( columnSource.getName() ) ) {
@@ -1856,10 +1856,7 @@ public class Binder {
 		TableSpecification tableSpec = null;
 		if ( tableSpecSource == null ) {
 			if ( defaultNamingStrategy == null ) {
-				throw new MappingException(
-						"An explicit name must be specified for the table",
-						bindingContext.getOrigin()
-				);
+				bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 			}
 			String tableName = defaultNamingStrategy.defaultName();
 			tableSpec = createTableSpecification( bindingContext, schema, tableName );
@@ -1869,10 +1866,7 @@ public class Binder {
 			String tableName = tableSource.getExplicitTableName();
 			if ( tableName == null ) {
 				if ( defaultNamingStrategy == null ) {
-					throw new MappingException(
-							"An explicit name must be specified for the table",
-							bindingContext.getOrigin()
-					);
+					bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 				}
 				tableName = defaultNamingStrategy.defaultName();
 			}
@@ -2047,12 +2041,12 @@ public class Binder {
 			referencedAttributeBinding = attributeBinding( entityBinding.getEntity().getName(), referencedAttributeName );
 		}
 		if ( referencedAttributeBinding == null ) {
-			throw new MappingException( "Plural attribute key references an attribute binding that does not exist: "
-					+ referencedAttributeBinding, bindingContexts.peek().getOrigin() );
+			bindingContext().makeMappingException( "Plural attribute key references an attribute binding that does not exist: "
+					+ referencedAttributeBinding );
 		}
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw new MappingException( "Plural attribute key references a plural attribute; it must not be plural: "
-					+ referencedAttributeName, bindingContexts.peek().getOrigin() );
+			bindingContext().makeMappingException( "Plural attribute key references a plural attribute; it must not be plural: "
+					+ referencedAttributeName );
 		}
 		return ( SingularAttributeBinding ) referencedAttributeBinding;
 	}
@@ -2078,8 +2072,8 @@ public class Binder {
 			// Find appropriate source to create binding
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
 			if(entitySource == null) {
-				String msg = coreLogger.missingEntitySource( entityName );
-				throw new MappingException( msg, null );
+				String msg = log.missingEntitySource( entityName );
+				bindingContext().makeMappingException( msg );
 			}
 
 			// Get super entity binding (creating it if necessary using recursive call to this method)

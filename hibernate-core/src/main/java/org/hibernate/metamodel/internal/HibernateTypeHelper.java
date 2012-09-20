@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
@@ -79,7 +80,7 @@ import org.hibernate.type.Type;
  * Currently the following methods are also required to be non-private because of handling discriminators which
  * are currently not modeled using attributes:<ul>
  *     <li>{@link #determineHibernateTypeFromDescriptor}</li>
- *     <li>{@link #pushHibernateTypeInformationDown(org.hibernate.type.Type, org.hibernate.metamodel.spi.relational.Value)}</li>
+ *     <li>{@link #bindJdbcDataType(org.hibernate.type.Type, org.hibernate.metamodel.spi.relational.Value)}</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -235,7 +236,7 @@ public class HibernateTypeHelper {
 		return null;
 	}
 
-	private final Properties EMPTY_PROPERTIES = new Properties();
+	private static final Properties EMPTY_PROPERTIES = new Properties();
 
 	private Type determineHibernateTypeFromAttributeJavaType(SingularAttribute singularAttribute) {
 		if ( singularAttribute.getSingularAttributeType() != null ) {
@@ -254,11 +255,14 @@ public class HibernateTypeHelper {
 	}
 
 	private static Properties getTypeParameters(HibernateTypeDescriptor hibernateTypeDescriptor) {
-		Properties typeParameters = new Properties( );
-		if ( hibernateTypeDescriptor.getTypeParameters() != null ) {
-			typeParameters.putAll( hibernateTypeDescriptor.getTypeParameters() );
+		if ( CollectionHelper.isEmpty( hibernateTypeDescriptor.getTypeParameters() ) ) {
+			return EMPTY_PROPERTIES;
 		}
-		return typeParameters;
+		else {
+			Properties typeParameters = new Properties();
+			typeParameters.putAll( hibernateTypeDescriptor.getTypeParameters() );
+			return typeParameters;
+		}
 	}
 
 	private void pushHibernateTypeInformationDown(
@@ -346,24 +350,27 @@ public class HibernateTypeHelper {
 			return;
 		}
 		final Value value = relationalValueBindings.get( 0 ).getValue();
-		pushHibernateTypeInformationDown(
-				(
-						resolvedHibernateType.isEntityType() ?
-						( ( EntityType ) resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata ) :
-						resolvedHibernateType
-				),
-				value
-		);
+		bindJdbcDataType(resolvedHibernateType, value );
 	}
 
-	public void pushHibernateTypeInformationDown(Type resolvedHibernateType, Value value) {
-		if ( value.getJdbcDataType() == null ) {
+	/**
+	 * Bind relational types using hibernate type just resolved.
+	 *
+	 * @param resolvedHibernateType The hibernate type resolved from metadata.
+	 * @param value The relational value to be binded.
+	 */
+	public void bindJdbcDataType(Type resolvedHibernateType, Value value) {
+		if ( value.getJdbcDataType() == null && resolvedHibernateType != null && value != null ) {
+			final Type resolvedRelationalType =
+					resolvedHibernateType.isEntityType()
+							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata )
+							: resolvedHibernateType;
 			if ( AbstractValue.class.isInstance( value ) ) {
 				( (AbstractValue) value ).setJdbcDataType(
 						new JdbcDataType(
-								resolvedHibernateType.sqlTypes( metadata )[0],
-								resolvedHibernateType.getName(),
-								resolvedHibernateType.getReturnedClass()
+								resolvedRelationalType.sqlTypes( metadata )[0],
+								resolvedRelationalType.getName(),
+								resolvedRelationalType.getReturnedClass()
 						)
 				);
 			}

@@ -32,6 +32,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -135,6 +136,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	// Explicit "injectables"
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private Object validatorFactory;
+	private DataSource dataSource;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final PersistenceUnitDescriptor persistenceUnit;
@@ -718,6 +720,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@Override
+	public EntityManagerFactoryBuilder withDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+
+		return this;
+	}
+
+	@Override
 	public void cancel() {
 		// todo : close the bootstrap registry (not critical, but nice to do)
 
@@ -827,7 +836,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void applyJdbcConnectionProperties() {
-		if ( persistenceUnit.getJtaDataSource() != null ) {
+		if ( dataSource != null ) {
+			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, dataSource );
+		}
+		else if ( persistenceUnit.getJtaDataSource() != null ) {
 			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getJtaDataSource() );
 		}
 		else if ( persistenceUnit.getNonJtaDataSource() != null ) {

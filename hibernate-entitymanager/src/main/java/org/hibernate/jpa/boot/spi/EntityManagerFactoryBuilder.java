@@ -24,6 +24,7 @@
 package org.hibernate.jpa.boot.spi;
 
 import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
 
 /**
  * Represents a 2-phase JPA bootstrap process for building a Hibernate EntityManagerFactory.
@@ -49,6 +50,16 @@ public interface EntityManagerFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory);
+
+	/**
+	 * Allows passing in a DataSource (delayed from constructing the builder, AKA phase 2) to be used
+	 * in building the EntityManagerFactory
+	 *
+	 * @param dataSource The DataSource to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public EntityManagerFactoryBuilder withDataSource(DataSource dataSource);
 
 	/**
 	 * Build {@link EntityManagerFactory} instance

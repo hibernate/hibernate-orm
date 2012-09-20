@@ -22,20 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
-import java.lang.annotation.Retention;
+
 import javax.persistence.Column;
 import javax.persistence.FetchType;
+import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defined a ToMany association pointing to different entity types.
- * Matching the according entity type is doe through a metadata discriminator column
- * This kind of mapping should be only marginal.
+ * This is the collection-valued form of @Any definitions.  Defines a ToMany-style association pointing
+ * to one of several entity types depending on a local discriminator.  See {@link Any} for further information.
+ *
+ * @see Any
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)

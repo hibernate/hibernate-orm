@@ -36,9 +36,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Prefer the standard {@link javax.persistence.Access} annotation
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated Use {@link AttributeAccessor} instead; renamed to avoid confusion with the JPA
+ * {@link javax.persistence.AccessType} enum.
  */
 @Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
+@Deprecated
 public @interface AccessType {
 	String value();
 }

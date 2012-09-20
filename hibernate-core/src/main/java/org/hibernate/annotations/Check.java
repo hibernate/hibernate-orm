@@ -31,8 +31,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Arbitrary SQL check constraints which can be defined at the class,
- * property or collection level
+ * Arbitrary SQL CHECK constraints which can be defined at the class, property or collection level
  *
  * @author Emmanuel Bernard
  */

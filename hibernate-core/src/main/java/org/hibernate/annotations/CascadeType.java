@@ -25,7 +25,7 @@ package org.hibernate.annotations;
 
 
 /**
- * Cascade types (can override default EJB3 cascades
+ * Cascade types (can override default JPA cascades
  */
 public enum CascadeType {
 	ALL,

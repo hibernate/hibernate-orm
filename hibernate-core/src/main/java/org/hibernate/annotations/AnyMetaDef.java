@@ -31,9 +31,12 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines @Any and @manyToAny metadata
+ * Used to provide metadata about an {@link Any} or {@link ManyToAny} mapping.
+ *
+ * @see AnyMetaDefs
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @java.lang.annotation.Target( { PACKAGE, TYPE, METHOD, FIELD } )
 @Retention( RUNTIME )
@@ -45,18 +48,18 @@ public @interface AnyMetaDef {
 	String name() default "";
 
 	/**
-	 * meta discriminator Hibernate type
+	 * Names the discriminator Hibernate Type for this Any/ManyToAny mapping.  The default is to use
+	 * {@link org.hibernate.type.StringType}
 	 */
 	String metaType();
 
 	/**
-	 * Hibernate type of the id column
-	 * @return Hibernate type of the id column
+	 * Names the identifier Hibernate Type for the entity associated through this Any/ManyToAny mapping.
 	 */
 	String idType();
 
 	/**
-	 * Matching discriminator values with their respective entity
+	 * Maps discriminator values to the matching corresponding entity types.
 	 */
 	MetaValue[] metaValues();
 }

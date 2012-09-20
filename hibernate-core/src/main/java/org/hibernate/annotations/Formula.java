@@ -30,10 +30,34 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Formula. To be used as a replacement for @Column in most places
- * The formula has to be a valid SQL fragment
+ * Defines a formula (derived value) which is a SQL fragment that acts as a @Column alternative in most cases.
+ * Represents read-only state.
+ *
+ * In certain cases @ColumnTransformer might be a better option, especially as it leaves open the option of still
+ * being writable.
+ *
+ * <blockquote><pre>
+ *     // perform calculations
+ *     &#064;Formula( "sub_total + (sub_total * tax)" )
+ *     long getTotalCost() { ... }
+ * </pre></blockquote>
+ *
+ * <blockquote><pre>
+ *     // call functions
+ *     &#064;Formula( "upper( substring( middle_name, 1 ) )" )
+ *     Character getMiddleInitial() { ... }
+ * </pre></blockquote>
+ *
+ * <blockquote><pre>
+ *     // this might be better handled through @ColumnTransformer
+ *     &#064;Formula( "decrypt(credit_card_num)" )
+ *     String getCreditCardNumber() { ... }
+ * </pre></blockquote>
+ *
+ * @see ColumnTransformer
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

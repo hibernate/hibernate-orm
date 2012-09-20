@@ -111,27 +111,26 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
-		if ( ! ( Blob.class.isAssignableFrom( type ) || BinaryStream.class.isAssignableFrom( type ) ) ) {
-			throw unknownUnwrap( type );
-		}
-
 		if ( value == null ) {
 			return null;
 		}
 
-		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			try {
+		try {
+			if ( BinaryStream.class.isAssignableFrom( type ) ) {
 				return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+			} else if ( byte[].class.isAssignableFrom( type )) {
+				return (X) DataHelper.extractBytes( value.getBinaryStream() );
+			} else if (Blob.class.isAssignableFrom( type )) {
+				final Blob blob =  WrappedBlob.class.isInstance( value )
+						? ( (WrappedBlob) value ).getWrappedBlob()
+						: value;
+				return (X) blob;
 			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access blob stream", e );
-			}
+		} catch ( SQLException e ) {
+			throw new HibernateException( "Unable to access blob stream", e );
 		}
-
-		final Blob blob =  WrappedBlob.class.isInstance( value )
-				? ( (WrappedBlob) value ).getWrappedBlob()
-				: value;
-		return (X) blob;
+		
+		throw unknownUnwrap( type );
 	}
 
 	public <X> Blob wrap(X value, WrapperOptions options) {

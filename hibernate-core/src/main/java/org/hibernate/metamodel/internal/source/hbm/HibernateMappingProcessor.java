@@ -228,6 +228,49 @@ public class HibernateMappingProcessor {
 
 	private void processFetchProfiles() {
 		processFetchProfiles( mappingRoot().getFetchProfile(), null );
+		for ( JaxbClassElement classElement : mappingRoot().getClazz() ) {
+			processFetchProfiles(
+					classElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
+					.qualifyClassName( classElement.getName() )
+			);
+
+			// processing fetch profiles defined in the <joined-subclass>
+			processFetchProfilesInJoinedSubclass(classElement.getJoinedSubclass());
+			// <union-subclass>
+			processFetchProfilesInUnionSubclass( classElement.getUnionSubclass() );
+			// <subclass>
+			processFetchProfilesInSubclass( classElement.getSubclass() );
+		}
+	}
+
+	private void processFetchProfilesInSubclass(List<JaxbSubclassElement> subclass) {
+		for ( JaxbSubclassElement subclassElement : subclass ) {
+			processFetchProfiles(
+					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
+					.qualifyClassName( subclassElement.getName() )
+			);
+			processFetchProfilesInSubclass( subclassElement.getSubclass() );
+		}
+	}
+
+	private void processFetchProfilesInUnionSubclass(List<JaxbUnionSubclassElement> unionSubclass) {
+		for ( JaxbUnionSubclassElement subclassElement : unionSubclass ) {
+			processFetchProfiles(
+					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
+					.qualifyClassName( subclassElement.getName() )
+			);
+			processFetchProfilesInUnionSubclass( subclassElement.getUnionSubclass() );
+		}
+	}
+
+	private void processFetchProfilesInJoinedSubclass(List<JaxbJoinedSubclassElement> joinedSubclassElements) {
+		for ( JaxbJoinedSubclassElement subclassElement : joinedSubclassElements ) {
+			processFetchProfiles(
+					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
+					.qualifyClassName( subclassElement.getName() )
+			);
+			processFetchProfilesInJoinedSubclass( subclassElement.getJoinedSubclass() );
+		}
 	}
 
 	public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName) {

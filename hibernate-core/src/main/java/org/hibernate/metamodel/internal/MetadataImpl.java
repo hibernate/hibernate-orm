@@ -400,7 +400,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( profile == null || profile.getName() == null ) {
 			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
 		}
-		fetchProfiles.put( profile.getName(), profile );
+		FetchProfile old = fetchProfiles.put( profile.getName(), profile );
+		if ( old != null ) {
+			LOG.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
+		}
 	}
 
 	@Override

@@ -41,6 +41,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
@@ -271,7 +272,7 @@ public class AssociationAttribute extends MappedAttribute {
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation, Class<?> referencedAttributeType) {
 		// use the annotated attribute type as default target type
-		String targetTypeName = referencedAttributeType.getName();
+		String targetTypeName = null;
 
 		// unless we have an explicit @Target
 		AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
@@ -285,6 +286,12 @@ public class AssociationAttribute extends MappedAttribute {
 		AnnotationValue targetEntityValue = associationAnnotation.value( "targetEntity" );
 		if ( targetEntityValue != null ) {
 			targetTypeName = targetEntityValue.asClass().name().toString();
+		}
+
+		if( StringHelper.isEmpty( targetTypeName ) && referencedAttributeType!=null ){
+			targetTypeName = referencedAttributeType.getName();
+		} else {
+			getContext().makeMappingException( "Can't find the target type for this collection attribute: "+ getRole() );
 		}
 
 		return targetTypeName;

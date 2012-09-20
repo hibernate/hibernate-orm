@@ -294,6 +294,11 @@ public class ConfiguredClass {
 			return false;
 		}
 
+		if ( member instanceof Method && Method.class.cast( member ).getReturnType().equals( void.class ) ){
+			// not a getter
+			return false;
+		}
+
 		if ( transientNames.contains( member.getName() ) ) {
 			return false;
 		}
@@ -646,6 +651,9 @@ public class ConfiguredClass {
 	}
 
 	private Class<?> resolveCollectionValuedReferenceType(ResolvedMember resolvedMember) {
+		if ( resolvedMember.getType().getTypeParameters().isEmpty() ) {
+			return null; // no generic at all
+		}
 		Class<?> type = resolvedMember.getType().getErasedType();
 		if ( Collection.class.isAssignableFrom( type ) ) {
 			return resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();

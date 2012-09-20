@@ -38,9 +38,10 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class AccessTest extends BaseCoreFunctionalTestCase {
+
 	@Test
+    @FailureExpectedWithNewMetamodel
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -61,6 +62,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @FailureExpectedWithNewMetamodel
 	public void testSuperclassNonOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setGod( "Buddha" );
@@ -76,7 +78,9 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-    @Test
+
+	@Test
+    @FailureExpectedWithNewMetamodel
 	public void testPropertyOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.weight = 3;
@@ -92,7 +96,9 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
+    @FailureExpectedWithNewMetamodel
 	public void testNonOverridenSubclass() throws Exception {
 		Chair chair = new Chair();
 		chair.setPillow( "Blue" );
@@ -108,7 +114,9 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
+    @FailureExpectedWithNewMetamodel
 	public void testOverridenSubclass() throws Exception {
 		BigBed bed = new BigBed();
 		bed.size = 5;
@@ -126,6 +134,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
 	public void testFieldsOverriding() throws Exception {
 		Gardenshed gs = new Gardenshed();
@@ -143,6 +152,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

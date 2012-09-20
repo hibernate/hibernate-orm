@@ -27,7 +27,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -37,23 +36,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.members.HierarchicType;
-import com.fasterxml.classmate.members.ResolvedMember;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.logging.Logger;
+import javax.persistence.AccessType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -66,6 +56,17 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.ReflectionHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
+
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.members.HierarchicType;
+import com.fasterxml.classmate.members.ResolvedMember;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -73,7 +74,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
-	public static final Logger LOG = Logger.getLogger( ConfiguredClass.class.getName() );
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AssertionFailure.class.getName());
 
 	/**
 	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
@@ -233,8 +234,13 @@ public class ConfiguredClass {
 		AccessType accessType = defaultAccessType;
 
 		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS, ClassInfo.class );
-		if ( accessAnnotation != null && accessAnnotation.target().getClass().equals( ClassInfo.class ) ) {
+		if ( accessAnnotation != null ) {
 			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
+		} else {
+			accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, HibernateDotNames.ACCESS_TYPE, ClassInfo.class );
+			if ( accessAnnotation != null ) {
+				accessType = AccessType.valueOf( accessAnnotation.value().asString().toUpperCase() );
+			}
 		}
 
 		return accessType;
@@ -321,8 +327,14 @@ public class ConfiguredClass {
 		Set<String> explicitAccessPropertyNames = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
+		List<AnnotationInstance> hibernateAccessAnnotations = classInfo.annotations().get( HibernateDotNames.ACCESS_TYPE );
 		if ( accessAnnotations == null ) {
-			return explicitAccessPropertyNames;
+			accessAnnotations = hibernateAccessAnnotations;
+			if ( accessAnnotations == null ) {
+				return explicitAccessPropertyNames;
+			}
+		} else if ( hibernateAccessAnnotations != null ) {
+			accessAnnotations.addAll( hibernateAccessAnnotations );
 		}
 
 		// iterate over all @Access annotations defined on the current class
@@ -334,18 +346,19 @@ public class ConfiguredClass {
 				continue;
 			}
 
-			AccessType accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
-
-			if ( !isExplicitAttributeAccessAnnotationPlacedCorrectly( annotationTarget, accessType ) ) {
-				continue;
+			AccessType accessType;
+			if ( JPADotNames.ACCESS.equals( accessAnnotation.name() ) ) {
+				accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
+				checkExplicitJpaAttributeAccessAnnotationPlacedCorrectly( annotationTarget, accessType );
+			} else {
+				accessType = AccessType.valueOf( accessAnnotation.value().asString().toUpperCase() );
 			}
 
 			// the placement is correct, get the member
 			Member member;
 			if ( annotationTarget instanceof MethodInfo ) {
-				Method m;
 				try {
-					m = clazz.getMethod( ( ( MethodInfo ) annotationTarget ).name() );
+					member = clazz.getMethod( ( ( MethodInfo ) annotationTarget ).name() );
 				}
 				catch ( NoSuchMethodException e ) {
 					throw new HibernateException(
@@ -354,13 +367,10 @@ public class ConfiguredClass {
 									+ " of class " + clazz.getName()
 					);
 				}
-				member = m;
-				accessType = AccessType.PROPERTY;
 			}
 			else {
-				Field f;
 				try {
-					f = clazz.getField( ( ( FieldInfo ) annotationTarget ).name() );
+					member = clazz.getField( ( ( FieldInfo ) annotationTarget ).name() );
 				}
 				catch ( NoSuchFieldException e ) {
 					throw new HibernateException(
@@ -369,8 +379,6 @@ public class ConfiguredClass {
 									+ " of class " + clazz.getName()
 					);
 				}
-				member = f;
-				accessType = AccessType.FIELD;
 			}
 			if ( ReflectionHelper.isProperty( member ) ) {
 				createMappedAttribute( member, resolvedMembers, accessType );
@@ -380,26 +388,20 @@ public class ConfiguredClass {
 		return explicitAccessPropertyNames;
 	}
 
-	private boolean isExplicitAttributeAccessAnnotationPlacedCorrectly(AnnotationTarget annotationTarget, AccessType accessType) {
+	private void checkExplicitJpaAttributeAccessAnnotationPlacedCorrectly(AnnotationTarget annotationTarget, AccessType accessType) {
 		// when the access type of the class is FIELD
 		// overriding access annotations must be placed on properties AND have the access type PROPERTY
 		if ( AccessType.FIELD.equals( classAccessType ) ) {
 			if ( !MethodInfo.class.isInstance( annotationTarget ) ) {
-				LOG.tracef(
-						"The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
-								"@Access has to be placed on the property (getter)", classInfo.name().toString()
-				);
-				return false;
+				String msg = LOG.accessTypeOverrideShouldBeAnnotatedOnProperty( classInfo.name().toString() );
+				LOG.trace( msg );
+				throw new AnnotationException( msg );
 			}
 
 			if ( !AccessType.PROPERTY.equals( accessType ) ) {
-				LOG.tracef(
-						"The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
-								"@Access has to be placed on the property (getter) with an access type of AccessType.PROPERTY. " +
-								"Using AccessType.FIELD on the property has no effect",
-						classInfo.name().toString()
-				);
-				return false;
+				String msg = LOG.accessTypeOverrideShouldBeProperty( classInfo.name().toString() );
+				LOG.trace( msg );
+				throw new AnnotationException( msg );
 			}
 		}
 
@@ -407,24 +409,17 @@ public class ConfiguredClass {
 		// overriding access annotations must be placed on fields and have the access type FIELD
 		if ( AccessType.PROPERTY.equals( classAccessType ) ) {
 			if ( !FieldInfo.class.isInstance( annotationTarget ) ) {
-				LOG.tracef(
-						"The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
-								"@Access has to be placed on the field ", classInfo.name().toString()
-				);
-				return false;
+				String msg = LOG.accessTypeOverrideShouldBeAnnotatedOnField( classInfo.name().toString() );
+				LOG.trace( msg );
+				throw new AnnotationException( msg );
 			}
 
 			if ( !AccessType.FIELD.equals( accessType ) ) {
-				LOG.tracef(
-						"The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
-								"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
-								"Using AccessType.PROPERTY on the field has no effect",
-						classInfo.name().toString()
-				);
-				return false;
+				String msg = LOG.accessTypeOverrideShouldBeField( classInfo.name().toString() );
+				LOG.trace( msg );
+				throw new AnnotationException( msg );
 			}
 		}
-		return true;
 	}
 
 	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
@@ -476,6 +471,7 @@ public class ConfiguredClass {
 				);
 				idAttributeMap.put( attributeName, attribute );
 			}
+			//$FALL-THROUGH$
 			case EMBEDDED: {
 				final AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
 						getClassInfo(),
@@ -520,7 +516,7 @@ public class ConfiguredClass {
 				associationAttributeMap.put( attributeName, attribute );
 				break;
 			}
-
+			case MANY_TO_ANY: {}
 		}
 	}
 
@@ -720,29 +716,6 @@ public class ConfiguredClass {
 			prefix = JandexHelper.getPropertyName( target );
 		}
 		return prefix;
-	}
-
-	private List<AnnotationInstance> findAssociationOverrides() {
-		List<AnnotationInstance> associationOverrideList = new ArrayList<AnnotationInstance>();
-
-		AnnotationInstance associationOverrideAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo,
-				JPADotNames.ASSOCIATION_OVERRIDE
-		);
-		if ( associationOverrideAnnotation != null ) {
-			associationOverrideList.add( associationOverrideAnnotation );
-		}
-
-		AnnotationInstance associationOverridesAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo,
-				JPADotNames.ASSOCIATION_OVERRIDES
-		);
-		if ( associationOverrideAnnotation != null ) {
-			AnnotationInstance[] attributeOverride = associationOverridesAnnotation.value().asNestedArray();
-			Collections.addAll( associationOverrideList, attributeOverride );
-		}
-
-		return associationOverrideList;
 	}
 
 	private String determineCustomTuplizer() {

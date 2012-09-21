@@ -195,10 +195,10 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	}
 		public static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
-		private K key;
+		private final K key;
 		private V value;
 
-		IdentityMapEntry(K key, V value) {
+		IdentityMapEntry(final K key, final V value) {
 			this.key=key;
 			this.value=value;
 		}
@@ -211,33 +211,54 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 			return value;
 		}
 
-		public V setValue(V value) {
+		public V setValue(final V value) {
 			V result = this.value;
 			this.value = value;
 			return result;
 		}
 	}
 
+	/**
+	 * We need to base the identity on {@link System#identityHashCode(Object)} but
+	 * attempt to lazily initialize and cache this value: being a native invocation
+	 * it is an expensive value to retrieve.
+	 */
 	public static final class IdentityKey<K> implements Serializable {
-		private K key;
+
+		private final K key;
+		private int hash = 0;
 
 		IdentityKey(K key) {
-			this.key=key;
+			this.key = key;
 		}
 
 		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
 		@Override
-        public boolean equals(Object other) {
+		public boolean equals(Object other) {
 			return key == ( (IdentityKey) other ).key;
 		}
 
 		@Override
-        public int hashCode() {
-			return System.identityHashCode(key);
+		public int hashCode() {
+			if ( this.hash == 0 ) {
+				//We consider "zero" as non-initialized value
+				final int newHash = System.identityHashCode( key );
+				if ( newHash == 0 ) {
+					//So make sure we don't store zeros as it would trigger initialization again:
+					//any value is fine as long as we're deterministic.
+					this.hash = -1;
+					return -1;
+				}
+				else {
+					this.hash = newHash;
+					return newHash;
+				}
+			}
+			return hash;
 		}
 
 		@Override
-        public String toString() {
+		public String toString() {
 			return key.toString();
 		}
 

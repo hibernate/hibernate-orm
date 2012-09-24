@@ -576,5 +576,10 @@ public class Oracle8iDialect extends Dialect {
 	public boolean supportsNotNullUnique() {
 		return false;
 	}
+	
+	@Override
+	public boolean forceLobAsLastValue() {
+		return true;
+	}
 
 }

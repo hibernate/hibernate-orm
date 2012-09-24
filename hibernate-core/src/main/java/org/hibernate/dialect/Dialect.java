@@ -2369,4 +2369,15 @@ public abstract class Dialect implements ConversionContext {
 	public int getInExpressionCountLimit() {
 		return 0;
 	}
+	
+	/**
+	 * HHH-4635
+	 * Oracle expects all Lob values to be last in inserts and updates.
+	 * 
+	 * @return boolean True of Lob values should be last, false if it
+	 * does not matter.
+	 */
+	public boolean forceLobAsLastValue() {
+		return false;
+	}
 }

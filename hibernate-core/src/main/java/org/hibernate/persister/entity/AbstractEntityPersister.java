@@ -184,6 +184,8 @@ public abstract class AbstractEntityPersister
 	private final boolean[][] propertyColumnInsertable;
 	private final boolean[] propertyUniqueness;
 	private final boolean[] propertySelectable;
+	
+	private final List<Integer> lobProperties = new ArrayList<Integer>();
 
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
@@ -630,6 +632,10 @@ public abstract class AbstractEntityPersister
 			propertySelectable[i] = prop.isSelectable();
 
 			propertyUniqueness[i] = prop.getValue().isAlternateUniqueKey();
+			
+			if (prop.isLob() && getFactory().getDialect().forceLobAsLastValue() ) {
+				lobProperties.add( i );
+			}
 
 			i++;
 
@@ -942,6 +948,8 @@ public abstract class AbstractEntityPersister
 			propertySelectable[i] = true;
 
 			propertyUniqueness[i] = singularAttributeBinding.isAlternateUniqueKey();
+			
+			// TODO: Does this need AttributeBindings wired into lobProperties?  Currently in Property only.
 
 			i++;
 
@@ -2508,10 +2516,24 @@ public abstract class AbstractEntityPersister
 
 		boolean hasColumns = false;
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j ) 
+					&& !lobProperties.contains( i ) ) {
 				// this is a property of the table, which we are updating
-				update.addColumns( getPropertyColumnNames(i), propertyColumnUpdateable[i], propertyColumnWriters[i] );
+				update.addColumns( getPropertyColumnNames(i),
+						propertyColumnUpdateable[i], propertyColumnWriters[i] );
 				hasColumns = hasColumns || getPropertyColumnSpan( i ) > 0;
+			}
+		}
+		
+		// HHH-4635
+		// Oracle expects all Lob properties to be last in inserts
+		// and updates.  Insert them at the end.
+		for ( int i : lobProperties ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+				// this property belongs on the table and is to be inserted
+				update.addColumns( getPropertyColumnNames(i),
+						propertyColumnUpdateable[i], propertyColumnWriters[i] );
+				hasColumns = true;
 			}
 		}
 
@@ -2579,7 +2601,8 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that inserts a row
 	 */
-	protected String generateInsertString(boolean identityInsert, boolean[] includeProperty, int j) {
+	protected String generateInsertString(boolean identityInsert,
+			boolean[] includeProperty, int j) {
 
 		// todo : remove the identityInsert param and variations;
 		//   identity-insert strings are now generated from generateIdentityInsertString()
@@ -2589,9 +2612,13 @@ public abstract class AbstractEntityPersister
 
 		// add normal properties
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+			
+			if ( includeProperty[i] && isPropertyOfTable( i, j )
+					&& !lobProperties.contains( i ) ) {
 				// this property belongs on the table and is to be inserted
-				insert.addColumns( getPropertyColumnNames(i), propertyColumnInsertable[i], propertyColumnWriters[i] );
+				insert.addColumns( getPropertyColumnNames(i),
+						propertyColumnInsertable[i],
+						propertyColumnWriters[i] );
 			}
 		}
 
@@ -2610,6 +2637,18 @@ public abstract class AbstractEntityPersister
 
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
 			insert.setComment( "insert " + getEntityName() );
+		}
+		
+		// HHH-4635
+		// Oracle expects all Lob properties to be last in inserts
+		// and updates.  Insert them at the end.
+		for ( int i : lobProperties ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+				// this property belongs on the table and is to be inserted
+				insert.addColumns( getPropertyColumnNames(i),
+						propertyColumnInsertable[i],
+						propertyColumnWriters[i] );
+			}
 		}
 
 		String result = insert.toStatementString();
@@ -2678,8 +2717,9 @@ public abstract class AbstractEntityPersister
 			boolean[][] includeColumns,
 			int j,
 			PreparedStatement st,
-			SessionImplementor session) throws HibernateException, SQLException {
-		return dehydrate( id, fields, null, includeProperty, includeColumns, j, st, session, 1 );
+			SessionImplementor session,
+			boolean isUpdate) throws HibernateException, SQLException {
+		return dehydrate( id, fields, null, includeProperty, includeColumns, j, st, session, 1, isUpdate );
 	}
 
 	/**
@@ -2694,31 +2734,57 @@ public abstract class AbstractEntityPersister
 	        final int j,
 	        final PreparedStatement ps,
 	        final SessionImplementor session,
-	        int index) throws SQLException, HibernateException {
+	        int index,
+	        boolean isUpdate ) throws SQLException, HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Dehydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}
 
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j )
+					&& !lobProperties.contains( i )) {
 				getPropertyTypes()[i].nullSafeSet( ps, fields[i], index, includeColumns[i], session );
-				//index += getPropertyColumnSpan( i );
 				index += ArrayHelper.countTrue( includeColumns[i] ); //TODO:  this is kinda slow...
 			}
 		}
-
-		if ( rowId != null ) {
-			ps.setObject( index, rowId );
-			index += 1;
+		
+		if ( !isUpdate ) {
+			index += dehydrateId( id, rowId, ps, session, index );
 		}
-		else if ( id != null ) {
-			getIdentifierType().nullSafeSet( ps, id, index, session );
-			index += getIdentifierColumnSpan();
+		
+		// HHH-4635
+		// Oracle expects all Lob properties to be last in inserts
+		// and updates.  Insert them at the end.
+		for ( int i : lobProperties ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+				getPropertyTypes()[i].nullSafeSet( ps, fields[i], index, includeColumns[i], session );
+				index += ArrayHelper.countTrue( includeColumns[i] ); //TODO:  this is kinda slow...
+			}
+		}
+		
+		if ( isUpdate ) {
+			index += dehydrateId( id, rowId, ps, session, index );
 		}
 
 		return index;
 
+	}
+	
+	private int dehydrateId( 
+			final Serializable id,
+			final Object rowId,
+			final PreparedStatement ps,
+	        final SessionImplementor session,
+			int index ) throws SQLException {
+		if ( rowId != null ) {
+			ps.setObject( index, rowId );
+			return 1;
+		} else if ( id != null ) {
+			getIdentifierType().nullSafeSet( ps, id, index, session );
+			return getIdentifierColumnSpan();
+		}
+		return 0;
 	}
 
 	/**
@@ -2860,7 +2926,7 @@ public abstract class AbstractEntityPersister
 
 		Binder binder = new Binder() {
 			public void bindValues(PreparedStatement ps) throws SQLException {
-				dehydrate( null, fields, notNull, propertyColumnInsertable, 0, ps, session );
+				dehydrate( null, fields, notNull, propertyColumnInsertable, 0, ps, session, false );
 			}
 			public Object getEntity() {
 				return object;
@@ -2956,7 +3022,7 @@ public abstract class AbstractEntityPersister
 				// Write the values of fields onto the prepared statement - we MUST use the state at the time the
 				// insert was issued (cos of foreign key constraints). Not necessarily the object's current state
 
-				dehydrate( id, fields, null, notNull, propertyColumnInsertable, j, insert, session, index );
+				dehydrate( id, fields, null, notNull, propertyColumnInsertable, j, insert, session, index, false );
 
 				if ( useBatch ) {
 					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( inserBatchKey ).addToBatch();
@@ -3083,7 +3149,7 @@ public abstract class AbstractEntityPersister
 				index+= expectation.prepare( update );
 
 				//Now write the values of fields onto the prepared statement
-				index = dehydrate( id, fields, rowId, includeProperty, propertyColumnUpdateable, j, update, session, index );
+				index = dehydrate( id, fields, rowId, includeProperty, propertyColumnUpdateable, j, update, session, index, true );
 
 				// Write any appropriate versioning conditional parameters
 				if ( useVersion && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {

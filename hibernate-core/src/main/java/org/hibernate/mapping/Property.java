@@ -62,6 +62,7 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
+	private boolean lob;
 
 	public boolean isBackRef() {
 		return false;
@@ -337,6 +338,14 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setNaturalIdentifier(boolean naturalIdentifier) {
 		this.naturalIdentifier = naturalIdentifier;
+	}
+
+	public boolean isLob() {
+		return lob;
+	}
+
+	public void setLob(boolean lob) {
+		this.lob = lob;
 	}
 
 }

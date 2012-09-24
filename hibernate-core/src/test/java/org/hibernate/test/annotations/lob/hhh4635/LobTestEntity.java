@@ -5,6 +5,7 @@ import java.sql.Blob;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Entity
@@ -14,6 +15,7 @@ public class LobTestEntity {
 	@Id
 	private Long id;
 	
+	@Lob
 	private Blob lobValue;
 	
 	@Column( name = "qwerty", length = 4000 )

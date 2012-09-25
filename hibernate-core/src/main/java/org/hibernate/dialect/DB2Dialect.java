@@ -53,7 +53,7 @@ public class DB2Dialect extends Dialect {
 	public DB2Dialect() {
 		super();
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.BIGINT, "big_integer" );
 		registerColumnType( Types.SMALLINT, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.INTEGER, "integer" );

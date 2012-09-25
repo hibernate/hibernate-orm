@@ -32,12 +32,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.manager.DefaultCacheManager;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -56,7 +55,6 @@ import static org.junit.Assert.fail;
  * @author Galder Zamarreño
  * @version $Revision: $
  */
-@Ignore
 public class PutFromLoadValidatorUnitTestCase {
    private Object KEY1 = "KEY1";
 
@@ -67,16 +65,17 @@ public class PutFromLoadValidatorUnitTestCase {
       tm = DualNodeJtaTransactionManagerImpl.getInstance("test");
    }
 
-    @After
-    public void tearDown() throws Exception {
-        tm = null;
-        try {
-            DualNodeJtaTransactionManagerImpl.cleanupTransactions();
-        }
-        finally {
-            DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
-        }
+   @After
+   public void tearDown() throws Exception {
+      tm = null;
+      try {
+         DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+      }
+      finally {
+         DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
+      }
     }
+
    @Test
    public void testNakedPut() throws Exception {
       nakedPutTest(false);
@@ -87,7 +86,9 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void nakedPutTest(boolean transactional) throws Exception {
-      PutFromLoadValidator testee = new PutFromLoadValidator(transactional ? tm : null);
+      PutFromLoadValidator testee = new PutFromLoadValidator(
+            new DefaultCacheManager(), transactional ? tm : null,
+            PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       if (transactional) {
          tm.begin();
       }
@@ -111,8 +112,8 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void registeredPutTest(boolean transactional) throws Exception {
-      PutFromLoadValidator testee = new PutFromLoadValidator(
-            transactional ? tm : null);
+      PutFromLoadValidator testee = new PutFromLoadValidator(new DefaultCacheManager(),
+            transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       if (transactional) {
          tm.begin();
       }
@@ -147,8 +148,8 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void nakedPutAfterRemovalTest(boolean transactional, boolean removeRegion)
          throws Exception {
-      PutFromLoadValidator testee = new PutFromLoadValidator(
-            transactional ? tm : null);
+      PutFromLoadValidator testee = new PutFromLoadValidator(new DefaultCacheManager(),
+            transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       if (removeRegion) {
          testee.invalidateRegion();
       } else {
@@ -187,8 +188,8 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void registeredPutAfterRemovalTest(boolean transactional, boolean removeRegion)
          throws Exception {
-      PutFromLoadValidator testee = new PutFromLoadValidator(
-            transactional ? tm : null);
+      PutFromLoadValidator testee = new PutFromLoadValidator(new DefaultCacheManager(),
+            transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       if (removeRegion) {
          testee.invalidateRegion();
       } else {
@@ -228,8 +229,8 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void registeredPutWithInterveningRemovalTest(boolean transactional, boolean removeRegion)
          throws Exception {
-      PutFromLoadValidator testee = new PutFromLoadValidator(
-            transactional ? tm : null);
+      PutFromLoadValidator testee = new PutFromLoadValidator(new DefaultCacheManager(),
+            transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       if (transactional) {
          tm.begin();
       }
@@ -269,7 +270,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void delayedNakedPutAfterRemovalTest(boolean transactional, boolean removeRegion)
          throws Exception {
-      PutFromLoadValidator testee = new TestValidator(transactional ? tm : null, 100, 1000, 500, 10000);
+      PutFromLoadValidator testee = new TestValidator(transactional ? tm : null, 100);
       if (removeRegion) {
          testee.invalidateRegion();
       } else {
@@ -300,7 +301,9 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void multipleRegistrationtest(final boolean transactional) throws Exception {
-      final PutFromLoadValidator testee = new PutFromLoadValidator(transactional ? tm : null);
+      final PutFromLoadValidator testee = new PutFromLoadValidator(
+            new DefaultCacheManager(), transactional ? tm : null,
+            PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
 
       final CountDownLatch registeredLatch = new CountDownLatch(3);
       final CountDownLatch finishedLatch = new CountDownLatch(3);
@@ -356,14 +359,14 @@ public class PutFromLoadValidatorUnitTestCase {
     */
    @Test
    public void testRemovalCleanup() throws Exception {
-      TestValidator testee = new TestValidator(null, 200, 1000, 500, 10000);
+      TestValidator testee = new TestValidator(null, 200);
       testee.invalidateKey("KEY1");
       testee.invalidateKey("KEY2");
-      expectRemovalLenth(2, testee, 3000l);
+      expectRemovalLenth(2, testee, 60000l);
       assertEquals(2, testee.getRemovalQueueLength());
-      expectRemovalLenth(2, testee, 3000l);
+      expectRemovalLenth(2, testee, 60000l);
       assertEquals(2, testee.getRemovalQueueLength());
-      expectRemovalLenth( 2, testee, 3000l );
+      expectRemovalLenth( 2, testee, 60000l );
    }
 
    private void expectRemovalLenth(int expectedLength, TestValidator testee, long timeout) throws InterruptedException {
@@ -383,132 +386,20 @@ public class PutFromLoadValidatorUnitTestCase {
       }
    }
 
-   /**
-    * Very much a white box test of the logic for ensuring pending put registrations get cleaned up.
-    *
-    * @throws Exception
-    */
-   @Test
-   public void testPendingPutCleanup() throws Exception {
-      TestValidator testee = new TestValidator(tm, 5000, 600, 300, 900);
-
-      // Start with a regionRemoval so we can confirm at the end that all
-      // registrations have been cleaned out
-      testee.invalidateRegion();
-
-      testee.registerPendingPut("1");
-      testee.registerPendingPut("2");
-      testee.registerPendingPut("3");
-      testee.registerPendingPut("4");
-      testee.registerPendingPut("5");
-      testee.registerPendingPut("6");
-      testee.acquirePutFromLoadLock("6");
-      testee.releasePutFromLoadLock("6");
-      testee.acquirePutFromLoadLock("2");
-      testee.releasePutFromLoadLock("2");
-      // ppq = [1,2(c),3,4,5,6(c)]
-      assertEquals(6, testee.getPendingPutQueueLength());
-      assertEquals(0, testee.getOveragePendingPutQueueLength());
-
-      // Sleep past "pendingPutRecentPeriod"
-      Thread.sleep(310);
-      testee.registerPendingPut("7");
-      // White box -- should have cleaned out 2 (completed) but
-      // not gotten to 6 (also removed)
-      // ppq = [1,3,4,5,6(c),7]
-      assertEquals(0, testee.getOveragePendingPutQueueLength());
-      assertEquals(6, testee.getPendingPutQueueLength());
-
-      // Sleep past "pendingPutOveragePeriod"
-      Thread.sleep(310);
-      testee.registerPendingPut("8");
-      // White box -- should have cleaned out 6 (completed) and
-      // moved 1, 3, 4  and 5 to overage queue
-      // oppq = [1,3,4,5] ppq = [7,8]
-      assertEquals(4, testee.getOveragePendingPutQueueLength());
-      assertEquals(2, testee.getPendingPutQueueLength());
-
-      // Sleep past "maxPendingPutDelay"
-      Thread.sleep(310);
-      testee.acquirePutFromLoadLock("3");
-      testee.releasePutFromLoadLock("3");
-      // White box -- should have cleaned out 1 (overage) and
-      // moved 7 to overage queue
-      // oppq = [3(c),4,5,7] ppq=[8]
-      assertEquals(4, testee.getOveragePendingPutQueueLength());
-      assertEquals(1, testee.getPendingPutQueueLength());
-
-      // Sleep past "maxPendingPutDelay"
-      Thread.sleep(310);
-      tm.begin();
-      testee.registerPendingPut("7");
-      Transaction tx = tm.suspend();
-
-      // White box -- should have cleaned out 3 (completed)
-      // and 4 (overage) and moved 8 to overage queue
-      // We now have 5,7,8 in overage and 7tx in pending
-      // oppq = [5,7,8] ppq=[7tx]
-      assertEquals(3, testee.getOveragePendingPutQueueLength());
-      assertEquals(1, testee.getPendingPutQueueLength());
-
-      // Validate that only expected items can do puts, thus indirectly
-      // proving the others have been cleaned out of pendingPuts map
-      boolean locked = testee.acquirePutFromLoadLock("1");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      // 5 was overage, so should have been cleaned
-      assertEquals(2, testee.getOveragePendingPutQueueLength());
-      locked = testee.acquirePutFromLoadLock("2");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      // 7 was overage, so should have been cleaned
-      assertEquals(1, testee.getOveragePendingPutQueueLength());
-      locked = testee.acquirePutFromLoadLock("3");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      locked = testee.acquirePutFromLoadLock("4");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      locked = testee.acquirePutFromLoadLock("5");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      locked = testee.acquirePutFromLoadLock("1");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(testee.acquirePutFromLoadLock("6"));
-      locked = testee.acquirePutFromLoadLock("7");
-      if (locked) {
-         testee.releasePutFromLoadLock("1");
-      }
-      assertFalse(locked);
-      assertTrue(testee.acquirePutFromLoadLock("8"));
-      testee.releasePutFromLoadLock("8");
-      tm.resume(tx);
-      assertTrue(testee.acquirePutFromLoadLock("7"));
-      testee.releasePutFromLoadLock("7");
-   }
    @Test
    public void testInvalidateKeyBlocksForInProgressPut() throws Exception {
       invalidationBlocksForInProgressPutTest(true);
    }
+
    @Test
    public void testInvalidateRegionBlocksForInProgressPut() throws Exception {
       invalidationBlocksForInProgressPutTest(false);
    }
 
    private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
-      final PutFromLoadValidator testee = new PutFromLoadValidator(null);
+      final PutFromLoadValidator testee = new PutFromLoadValidator(
+            new DefaultCacheManager(), null,
+            PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
       final CountDownLatch removeLatch = new CountDownLatch(1);
       final CountDownLatch pferLatch = new CountDownLatch(1);
       final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
@@ -566,22 +457,9 @@ public class PutFromLoadValidatorUnitTestCase {
    private static class TestValidator extends PutFromLoadValidator {
 
       protected TestValidator(TransactionManager transactionManager,
-                              long nakedPutInvalidationPeriod, long pendingPutOveragePeriod,
-                              long pendingPutRecentPeriod, long maxPendingPutDelay) {
-         super(transactionManager, nakedPutInvalidationPeriod, pendingPutOveragePeriod,
-               pendingPutRecentPeriod, maxPendingPutDelay);
-      }
-
-      @Override
-      public int getOveragePendingPutQueueLength() {
-         // TODO Auto-generated method stub
-         return super.getOveragePendingPutQueueLength();
-      }
-
-      @Override
-      public int getPendingPutQueueLength() {
-         // TODO Auto-generated method stub
-         return super.getPendingPutQueueLength();
+                              long nakedPutInvalidationPeriod) {
+         super(new DefaultCacheManager(),
+               transactionManager, nakedPutInvalidationPeriod);
       }
 
       @Override

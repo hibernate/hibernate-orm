@@ -8,13 +8,13 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.cache.infinispan.util.Caches;
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.util.AddressAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 
@@ -29,37 +29,38 @@ import org.hibernate.cache.spi.RegionFactory;
  */
 public abstract class BaseRegion implements Region {
 
-   private enum InvalidateState { INVALID, CLEARING, VALID };
    private static final Log log = LogFactory.getLog(BaseRegion.class);
+
+   private enum InvalidateState {
+      INVALID, CLEARING, VALID
+   }
+
    private final String name;
-   protected final CacheAdapter cacheAdapter;
-   protected final AddressAdapter address;
-   protected final TransactionManager transactionManager;
-   protected final boolean replication;
-   protected final Object invalidationMutex = new Object();
-   protected final AtomicReference<InvalidateState> invalidateState = new AtomicReference<InvalidateState>(InvalidateState.VALID);
+   private final AdvancedCache regionClearCache;
+   private final TransactionManager tm;
+   private final Object invalidationMutex = new Object();
+   private final AtomicReference<InvalidateState> invalidateState =
+         new AtomicReference<InvalidateState>(InvalidateState.VALID);
    private final RegionFactory factory;
 
-   public BaseRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager, RegionFactory factory) {
-      this.cacheAdapter = cacheAdapter;
+   protected final AdvancedCache cache;
+
+   public BaseRegion(AdvancedCache cache, String name, RegionFactory factory) {
+      this.cache = cache;
       this.name = name;
-      this.transactionManager = transactionManager;
-      this.replication = cacheAdapter.isClusteredReplication();
-      this.address = this.cacheAdapter.getAddress();
+      this.tm = cache.getTransactionManager();
       this.factory = factory;
+      this.regionClearCache = cache.withFlags(
+            Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT);
    }
 
    public String getName() {
       return name;
    }
 
-   public CacheAdapter getCacheAdapter() {
-      return cacheAdapter;
-   }
-
    public long getElementCountInMemory() {
       if (checkValid())
-         return cacheAdapter.size();
+         return cache.size();
 
       return 0;
    }
@@ -92,51 +93,46 @@ public abstract class BaseRegion implements Region {
 
    public Map toMap() {
       if (checkValid())
-         return cacheAdapter.toMap();
+         return cache;
 
       return Collections.EMPTY_MAP;
    }
 
    public void destroy() throws CacheException {
       try {
-         cacheAdapter.stop();
+         cache.stop();
       } finally {
-         cacheAdapter.removeListener(this);
+         cache.removeListener(this);
       }
    }
 
    public boolean contains(Object key) {
-      if (!checkValid())
-         return false;
-      // Reads are non-blocking in Infinispan, so not sure of the necessity of passing ZERO_LOCK_ACQUISITION_TIMEOUT
-      return cacheAdapter.withFlags(FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT).containsKey(key);
-   }
-
-   public AddressAdapter getAddress() {
-      return address;
+      return checkValid() && cache.containsKey(key);
    }
 
    public boolean checkValid() {
       boolean valid = isValid();
       if (!valid) {
          synchronized (invalidationMutex) {
-            if (invalidateState.compareAndSet(InvalidateState.INVALID, InvalidateState.CLEARING)) {
+            if (invalidateState.compareAndSet(
+                  InvalidateState.INVALID, InvalidateState.CLEARING)) {
                Transaction tx = suspend();
                try {
                   // Clear region in a separate transaction
-                  cacheAdapter.withinTx(new Callable<Void>() {
+                  Caches.withinTx(cache, new Callable<Void>() {
                      @Override
                      public Void call() throws Exception {
-                        cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL,
-                              FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT).clear();
+                        regionClearCache.clear();
                         return null;
                      }
                   });
-                  invalidateState.compareAndSet(InvalidateState.CLEARING, InvalidateState.VALID);
+                  invalidateState.compareAndSet(
+                        InvalidateState.CLEARING, InvalidateState.VALID);
                }
                catch (Exception e) {
                   if (log.isTraceEnabled()) {
-                     log.trace("Could not invalidate region: " + e.getLocalizedMessage());
+                     log.trace("Could not invalidate region: "
+                           + e.getLocalizedMessage());
                   }
                }
                finally {
@@ -150,42 +146,8 @@ public abstract class BaseRegion implements Region {
       return valid;
    }
 
-
-
    protected boolean isValid() {
       return invalidateState.get() == InvalidateState.VALID;
-   }
-
-   /**
-    * Performs a Infinispan <code>get(Fqn, Object)</code>
-    *
-    * @param key The key of the item to get
-    * @param suppressTimeout should any TimeoutException be suppressed?
-    * @param flagAdapters flags to add to the get invocation
-    * @return The retrieved object
-    * @throws CacheException issue managing transaction or talking to cache
-    */
-   protected Object get(Object key, boolean suppressTimeout, FlagAdapter... flagAdapters) throws CacheException {
-      CacheAdapter localCacheAdapter = cacheAdapter;
-      if (flagAdapters != null && flagAdapters.length > 0)
-         localCacheAdapter = cacheAdapter.withFlags(flagAdapters);
-
-      if (suppressTimeout)
-         return localCacheAdapter.getAllowingTimeout(key);
-      else
-         return localCacheAdapter.get(key);
-   }
-   
-   public Object getOwnerForPut() {
-      Transaction tx = null;
-      try {
-          if (transactionManager != null) {
-              tx = transactionManager.getTransaction();
-          }
-      } catch (SystemException se) {
-          throw new CacheException("Could not obtain transaction", se);
-      }
-      return tx == null ? Thread.currentThread() : tx;
    }
 
    /**
@@ -197,8 +159,8 @@ public abstract class BaseRegion implements Region {
    public Transaction suspend() {
        Transaction tx = null;
        try {
-           if (transactionManager != null) {
-               tx = transactionManager.suspend();
+           if (tm != null) {
+               tx = tm.suspend();
            }
        } catch (SystemException se) {
            throw new CacheException("Could not suspend transaction", se);
@@ -215,7 +177,7 @@ public abstract class BaseRegion implements Region {
    public void resume(Transaction tx) {
        try {
            if (tx != null)
-               transactionManager.resume(tx);
+               tm.resume(tx);
        } catch (Exception e) {
            throw new CacheException("Could not resume transaction", e);
        }
@@ -227,7 +189,17 @@ public abstract class BaseRegion implements Region {
    }
 
    public TransactionManager getTransactionManager() {
-      return transactionManager;
+      return tm;
+   }
+
+   // Used to satisfy TransactionalDataRegion.isTransactionAware in subclasses
+   @SuppressWarnings("unused")
+   public boolean isTransactionAware() {
+      return tm != null;
+   }
+
+   public AdvancedCache getCache() {
+      return cache;
    }
 
 }

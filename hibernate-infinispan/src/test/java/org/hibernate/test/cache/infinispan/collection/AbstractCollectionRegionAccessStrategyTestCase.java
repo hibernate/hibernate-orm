@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import javax.transaction.TransactionManager;
 
 import junit.framework.AssertionFailedError;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.After;
@@ -42,7 +44,6 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
@@ -103,8 +104,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		localCollectionRegion = localEnvironment.getCollectionRegion( REGION_NAME, getCacheDataDescription() );
 		localAccessStrategy = localCollectionRegion.buildAccessStrategy( getAccessType() );
 
-		invalidation = localCollectionRegion.getCacheAdapter().isClusteredInvalidation();
-		synchronous = localCollectionRegion.getCacheAdapter().isSynchronous();
+		invalidation = Caches.isInvalidationCache(localCollectionRegion.getCache());
+		synchronous = Caches.isSynchronousCache(localCollectionRegion.getCache());
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -161,7 +162,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
       final TransactionManager remoteTm = remoteCollectionRegion.getTransactionManager();
-      PutFromLoadValidator validator = new PutFromLoadValidator(remoteTm) {
+      PutFromLoadValidator validator = new PutFromLoadValidator(
+            new DefaultCacheManager(), remoteTm, 20000) {
 			@Override
 			public boolean acquirePutFromLoadLock(Object key) {
 				boolean acquired = super.acquirePutFromLoadLock( key );
@@ -195,7 +197,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		Callable<Void> removeCallable = new Callable<Void>() {
 			public Void call() throws Exception {
 				removeLatch.await();
-            CacheHelper.withinTx(localTm, new Callable<Void>() {
+            Caches.withinTx(localTm, new Callable<Void>() {
                @Override
                public Void call() throws Exception {
                   delegate.remove("k1");
@@ -214,7 +216,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		pferFuture.get();
 		removeFuture.get();
 
-		assertFalse( localCollectionRegion.getCacheAdapter().containsKey( "k1" ) );
+		assertFalse(localCollectionRegion.getCache().containsKey("k1"));
 	}
 
 	@Test
@@ -394,7 +396,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// Wait for async propagation
 		sleep( 250 );
 
-      CacheHelper.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
+      Caches.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
          @Override
          public Void call() throws Exception {
             if (evict)
@@ -414,9 +416,9 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 		final String KEY = KEY_BASE + testCount++;
 
-		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
 
-		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
 		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
@@ -429,7 +431,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// Wait for async propagation
 		sleep( 250 );
 
-      CacheHelper.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
+      Caches.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
          @Override
          public Void call() throws Exception {
             if (evict)
@@ -443,19 +445,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// This should re-establish the region root node
 		assertNull( localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
 
 		// Re-establishing the region root on the local node doesn't
 		// propagate it to other nodes. Do a get on the remote node to re-establish
 		assertEquals( null, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
 		// Test whether the get above messes up the optimistic version
 		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
 		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 1, getValidKeyCount( remoteCollectionRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 1, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
 		// Wait for async propagation of the putFromLoad
 		sleep( 250 );

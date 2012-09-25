@@ -61,6 +61,8 @@ public class StandardQueryCache implements QueryCache {
 			StandardQueryCache.class.getName()
 	);
 
+   private static final boolean tracing = LOG.isTraceEnabled();
+
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;
 
@@ -241,7 +243,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object[] tuple) {
-		if ( !LOG.isTraceEnabled() ) {
+		if ( !tracing ) {
 			return;
 		}
 		if ( tuple == null ) {

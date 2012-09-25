@@ -26,11 +26,11 @@ package org.hibernate.test.cache.infinispan;
 import java.util.Properties;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.infinispan.AdvancedCache;
 
 /**
  * Base class for tests of Region implementations.
@@ -40,7 +40,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
  */
 public abstract class AbstractRegionImplTestCase extends AbstractNonFunctionalTestCase {
 
-   protected abstract CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory);
+   protected abstract AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory);
 
    protected abstract Region createRegion(InfinispanRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);
 

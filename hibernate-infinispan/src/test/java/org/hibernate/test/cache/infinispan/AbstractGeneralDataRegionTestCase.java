@@ -25,13 +25,13 @@ package org.hibernate.test.cache.infinispan;
 
 import java.util.Set;
 
+import org.infinispan.AdvancedCache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
@@ -152,7 +152,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				cfg,
 				getCacheTestSupport()
 		);
-		CacheAdapter localCache = getInfinispanCache( regionFactory );
+		AdvancedCache localCache = getInfinispanCache( regionFactory );
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -170,7 +170,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				cfg,
 				getCacheTestSupport()
 		);
-		CacheAdapter remoteCache = getInfinispanCache( regionFactory );
+      AdvancedCache remoteCache = getInfinispanCache( regionFactory );
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();

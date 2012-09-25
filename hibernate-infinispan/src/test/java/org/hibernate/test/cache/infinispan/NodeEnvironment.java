@@ -31,13 +31,12 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-
-import static org.hibernate.cache.infinispan.util.CacheHelper.withinTx;
+import org.infinispan.context.Flag;
 
 /**
  * Defines the environment for a node.
@@ -120,27 +119,27 @@ public class NodeEnvironment {
 	public void release() throws Exception {
 		if ( entityRegionMap != null ) {
 			for ( final EntityRegionImpl region : entityRegionMap.values() ) {
-				withinTx(region.getTransactionManager(), new Callable<Void>() {
+				Caches.withinTx(region.getTransactionManager(), new Callable<Void>() {
                @Override
                public Void call() throws Exception {
-                  region.getCacheAdapter().withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
+                  region.getCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
                   return null;
                }
             });
-				region.getCacheAdapter().stop();
+				region.getCache().stop();
 			}
 			entityRegionMap.clear();
 		}
 		if ( collectionRegionMap != null ) {
 			for ( final CollectionRegionImpl collectionRegion : collectionRegionMap.values() ) {
-            withinTx(collectionRegion.getTransactionManager(), new Callable<Void>() {
+            Caches.withinTx(collectionRegion.getTransactionManager(), new Callable<Void>() {
                @Override
                public Void call() throws Exception {
-                  collectionRegion.getCacheAdapter().withFlags( FlagAdapter.CACHE_MODE_LOCAL ).clear();
+                  collectionRegion.getCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
                   return null;
                }
             });
-				collectionRegion.getCacheAdapter().stop();
+				collectionRegion.getCache().stop();
 			}
 			collectionRegionMap.clear();
 		}

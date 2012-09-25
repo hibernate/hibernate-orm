@@ -27,14 +27,13 @@ import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
+import org.infinispan.AdvancedCache;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -81,8 +80,9 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
    }
 
    @Override
-   protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache(InfinispanRegionFactory.DEF_ENTITY_RESOURCE).getAdvancedCache());
+   protected AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory) {
+      return regionFactory.getCacheManager().getCache(
+            InfinispanRegionFactory.DEF_ENTITY_RESOURCE).getAdvancedCache();
    }
 
 }

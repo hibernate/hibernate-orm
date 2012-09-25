@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007, Red Hat, Inc. and/or it's affiliates or third-party contributors as
+ * Copyright (c) 2012, Red Hat, Inc or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat, Inc. and/or it's affiliates.
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,37 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.infinispan.util;
 
-import java.util.concurrent.Callable;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
+package org.hibernate.test.cache.infinispan.functional;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
 /**
- * Helper for dealing with Infinisan cache instances.
- * 
  * @author Galder Zamarreño
- * @since 3.5
  */
-public class CacheHelper {
+@NamedQueries({@NamedQuery(name=Age.QUERY, query = "SELECT a FROM Age a")})
+@Entity
+public class Age {
 
-   /**
-    * Disallow external instantiation of CacheHelper.
-    */
-   private CacheHelper() {
+   public static final String QUERY = "Age.findAll";
+
+	@Id
+	@GeneratedValue
+	private Integer id;
+	private Integer age;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+   public Integer getAge() {
+      return age;
    }
 
-   public static <T> T withinTx(TransactionManager tm, Callable<T> c) throws Exception {
-      tm.begin();
-      try {
-         return c.call();
-      } catch (Exception e) {
-         tm.setRollbackOnly();
-         throw e;
-      } finally {
-         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
-         else tm.rollback();
-      }
+   public void setAge(Integer age) {
+      this.age = age;
    }
-
 }

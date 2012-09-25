@@ -25,13 +25,14 @@ package org.hibernate.cache.infinispan.access;
 
 import javax.transaction.Transaction;
 
+import org.hibernate.cache.infinispan.util.Caches;
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -49,20 +50,26 @@ import org.hibernate.cache.spi.access.SoftLock;
 public class TransactionalAccessDelegate {
    private static final Log log = LogFactory.getLog(TransactionalAccessDelegate.class);
    private static final boolean isTrace = log.isTraceEnabled();
-   protected final CacheAdapter cacheAdapter;
-   protected final BaseRegion region;
-   protected final PutFromLoadValidator putValidator;
+   private final AdvancedCache cache;
+   private final BaseRegion region;
+   private final PutFromLoadValidator putValidator;
+   private final AdvancedCache writeCache;
+   private final AdvancedCache putFromLoadCache;
 
    public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
       this.region = region;
-      this.cacheAdapter = region.getCacheAdapter();
+      this.cache = region.getCache();
       this.putValidator = validator;
+      this.writeCache = Caches.isInvalidationCache(cache) ?
+            Caches.ignoreReturnValuesCache(cache, Flag.CACHE_MODE_LOCAL) :
+            Caches.ignoreReturnValuesCache(cache);
+      this.putFromLoadCache = Caches.ignoreReturnValuesCache(cache);
    }
 
    public Object get(Object key, long txTimestamp) throws CacheException {
       if (!region.checkValid()) 
          return null;
-      Object val = cacheAdapter.get(key);
+      Object val = cache.get(key);
       if (val == null)
          putValidator.registerPendingPut(key);
       return val;
@@ -84,7 +91,7 @@ public class TransactionalAccessDelegate {
       // without https://issues.jboss.org/browse/ISPN-1986, it's impossible to
       // know whether the put actually occurred. Knowing this is crucial so
       // that Hibernate can expose accurate statistics.
-      if (minimalPutOverride && cacheAdapter.containsKey(key))
+      if (minimalPutOverride && cache.containsKey(key))
          return false;
 
       if (!putValidator.acquirePutFromLoadLock(key)) {
@@ -93,7 +100,7 @@ public class TransactionalAccessDelegate {
       }
 
       try {
-         cacheAdapter.putForExternalRead(key, value);
+         putFromLoadCache.putForExternalRead(key, value);
       } finally {
          putValidator.releasePutFromLoadLock(key);
       }
@@ -119,11 +126,7 @@ public class TransactionalAccessDelegate {
       if (!region.checkValid())
          return false;
 
-      if (cacheAdapter.isClusteredInvalidation())
-         cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL).put(key, value);
-      else
-         cacheAdapter.put(key, value);
-
+      writeCache.put(key, value);
       return true;
    }
 
@@ -135,7 +138,7 @@ public class TransactionalAccessDelegate {
       // We update whether or not the region is valid. Other nodes
       // may have already restored the region so they need to
       // be informed of the change.
-      cacheAdapter.put(key, value);
+      writeCache.put(key, value);
       return true;
    }
 
@@ -151,21 +154,21 @@ public class TransactionalAccessDelegate {
       // We update whether or not the region is valid. Other nodes
       // may have already restored the region so they need to
       // be informed of the change.
-      cacheAdapter.remove(key);
+      writeCache.remove(key);
    }
 
    public void removeAll() throws CacheException {
        if (!putValidator.invalidateRegion()) {
          throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
        }
-      cacheAdapter.clear();
+      cache.clear();
    }
 
    public void evict(Object key) throws CacheException {
       if (!putValidator.invalidateKey(key)) {
          throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
-      }      
-      cacheAdapter.remove(key);
+      }
+      writeCache.remove(key);
    }
 
    public void evictAll() throws CacheException {
@@ -175,9 +178,10 @@ public class TransactionalAccessDelegate {
       Transaction tx = region.suspend();
       try {
          region.invalidateRegion(); // Invalidate the local region and then go remote
-         cacheAdapter.broadcastEvictAll();
+         Caches.broadcastEvictAll(cache);
       } finally {
          region.resume(tx);
       }
    }
+
 }

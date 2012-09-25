@@ -13,6 +13,7 @@ dependencies {
     testCompile( libraries.jnp_client )
     testCompile( libraries.jnp_server )
     testCompile( libraries.rhq )
+    testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 
 test {
@@ -27,3 +28,15 @@ test {
    enabled = true
 }
 
+task packageTests(type: Jar) {
+  from sourceSets.test.output
+  classifier = 'tests'
+}
+
+task sourcesTestJar(type: Jar, dependsOn:classes) {
+  from sourceSets.test.allSource
+  classifier = 'test-sources'
+}
+
+artifacts.archives packageTests
+artifacts.archives sourcesTestJar

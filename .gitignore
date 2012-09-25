@@ -32,3 +32,10 @@ bin
 # Miscellaneous
 *.log
 .clover
+
+# JBoss Transactions
+ObjectStore
+
+# Profiler and heap dumps
+*.jps
+*.hprof

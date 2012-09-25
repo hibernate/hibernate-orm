@@ -94,6 +94,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatefulPersistenceContext.class.getName() );
 
+   private static final boolean tracing = LOG.isTraceEnabled();
+
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
 	private static final int INIT_COLL_SIZE = 8;
@@ -1004,7 +1006,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-			LOG.debug( "Initializing non-lazy collections" );
+         if (tracing)
+			   LOG.trace( "Initializing non-lazy collections" );
+
 			//do this work only at the very highest level of the load
 			loadCounter++; //don't let this method be called recursively
 			try {

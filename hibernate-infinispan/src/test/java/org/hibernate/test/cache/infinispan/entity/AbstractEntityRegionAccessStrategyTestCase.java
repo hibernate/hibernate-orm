@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.infinispan.Cache;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
@@ -39,7 +40,6 @@ import org.junit.Test;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
@@ -97,8 +97,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		localEntityRegion = localEnvironment.getEntityRegion( REGION_NAME, getCacheDataDescription() );
 		localAccessStrategy = localEntityRegion.buildAccessStrategy( getAccessType() );
 
-		invalidation = localEntityRegion.getCacheAdapter().isClusteredInvalidation();
-		synchronous = localEntityRegion.getCacheAdapter().isSynchronous();
+		invalidation = Caches.isInvalidationCache(localEntityRegion.getCache());
+		synchronous = Caches.isSynchronousCache(localEntityRegion.getCache());
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -109,8 +109,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		remoteEntityRegion = remoteEnvironment.getEntityRegion( REGION_NAME, getCacheDataDescription() );
 		remoteAccessStrategy = remoteEntityRegion.buildAccessStrategy( getAccessType() );
 
-      waitForClusterToForm(localEntityRegion.getCacheAdapter().getCache(),
-                           remoteEntityRegion.getCacheAdapter().getCache());
+      waitForClusterToForm(localEntityRegion.getCache(),
+            remoteEntityRegion.getCache());
 	}
 
    protected void waitForClusterToForm(Cache... caches) {
@@ -534,8 +534,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
 	private void evictOrRemoveTest(final boolean evict) throws Exception {
 		final String KEY = KEY_BASE + testCount++;
-		assertEquals( 0, getValidKeyCount( localEntityRegion.getCacheAdapter().keySet() ) );
-		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localEntityRegion.getCache().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCache().keySet() ) );
 
 		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
@@ -545,7 +545,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
 		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
-      CacheHelper.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
+      Caches.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
          @Override
          public Void call() throws Exception {
             if ( evict )
@@ -556,15 +556,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
          }
       });
 		assertEquals(null, localAccessStrategy.get(KEY, System.currentTimeMillis()));
-		assertEquals( 0, getValidKeyCount( localEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localEntityRegion.getCache().keySet() ) );
 		assertEquals( null, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCache().keySet() ) );
 	}
 
 	private void evictOrRemoveAllTest(final boolean evict) throws Exception {
 		final String KEY = KEY_BASE + testCount++;
-		assertEquals( 0, getValidKeyCount( localEntityRegion.getCacheAdapter().keySet() ) );
-		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localEntityRegion.getCache().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCache().keySet() ) );
 		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
@@ -580,7 +580,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		// Wait for async propagation
 		sleep( 250 );
 
-      CacheHelper.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
+      Caches.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
          @Override
          public Void call() throws Exception {
             if (evict) {
@@ -595,17 +595,17 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
 		// This should re-establish the region root node in the optimistic case
 		assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
-		assertEquals( 0, getValidKeyCount( localEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( localEntityRegion.getCache().keySet() ) );
 
 		// Re-establishing the region root on the local node doesn't
 		// propagate it to other nodes. Do a get on the remote node to re-establish
 		assertEquals( null, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 0, getValidKeyCount( remoteEntityRegion.getCache().keySet() ) );
 
 		// Test whether the get above messes up the optimistic version
 		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
 		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		assertEquals( 1, getValidKeyCount( remoteEntityRegion.getCacheAdapter().keySet() ) );
+		assertEquals( 1, getValidKeyCount( remoteEntityRegion.getCache().keySet() ) );
 
 		// Wait for async propagation
 		sleep( 250 );

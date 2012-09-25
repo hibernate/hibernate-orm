@@ -180,6 +180,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionImpl.class.getName());
 
+   private static final boolean tracing = LOG.isTraceEnabled();
+
 	private transient long timestamp;
 
 	private transient SessionOwner sessionOwner;
@@ -309,7 +311,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			factory.getStatisticsImplementor().openSession();
 		}
 
-		LOG.debugf( "Opened session at timestamp: %s", timestamp );
+      if (tracing)
+		   LOG.tracef( "Opened session at timestamp: %s", timestamp );
 	}
 
 	@Override

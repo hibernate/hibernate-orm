@@ -35,7 +35,6 @@ public class Parent {
     }
     public void setChildren(Set<Child> children) {
         this.children = children;
-        //children.size();  // This will result in the same exception as the PostLoad method...
     }
     
     @PostLoad

@@ -1037,7 +1037,16 @@ public abstract class Loader {
 				}
 			}
 		}
-
+		
+		// Until this entire method is refactored w/ polymorphism, postLoad was
+		// split off from initializeEntity.  It *must* occur after
+		// endCollectionLoad to ensure the collection is in the
+		// persistence context.
+		if ( hydratedObjects!=null ) {
+			for ( Object hydratedObject : hydratedObjects ) {
+				TwoPhaseLoad.postLoad( hydratedObject, session, post );
+			}
+		}
 	}
 
 	private void endCollectionLoad(

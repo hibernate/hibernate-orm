@@ -8,7 +8,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -20,7 +19,6 @@ public class PostLoadTest extends BaseEntityManagerFunctionalTestCase {
      * access the association.
      */
 	@Test
-	@FailureExpected( jiraKey="HHH-6043" )
     public void testAccessAssociatedSetInPostLoad() {
     	Child child = new Child();
         child.setId(1);

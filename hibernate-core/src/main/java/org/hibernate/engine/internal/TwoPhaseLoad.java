@@ -280,19 +280,6 @@ public final class TwoPhaseLoad {
 				session
 		);
 
-		if ( session.isEventSource() ) {
-			postLoadEvent.setEntity( entity ).setId( id ).setPersister( persister );
-
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = session
-					.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.POST_LOAD );
-			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
-				listener.onPostLoad( postLoadEvent );
-			}
-		}
-
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Done materializing entity %s",
@@ -302,6 +289,45 @@ public final class TwoPhaseLoad {
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );
+		}
+	}
+	
+	/**
+	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
+	 * the Set collections are added to the persistence context by Loader.
+	 * Without the split, LazyInitializationExceptions can occur in the Entity's
+	 * postLoad if it acts upon the collection.
+	 * 
+	 * 
+	 * HHH-6043
+	 * 
+	 * @param entity
+	 * @param session
+	 * @param postLoadEvent
+	 */
+	public static void postLoad(
+			final Object entity,
+			final SessionImplementor session,
+			final PostLoadEvent postLoadEvent) {
+		
+		if ( session.isEventSource() ) {
+			final PersistenceContext persistenceContext
+					= session.getPersistenceContext();
+			final EntityEntry entityEntry = persistenceContext.getEntry(entity);
+			final Serializable id = entityEntry.getId();
+			
+			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() )
+					.setPersister( entityEntry.getPersister() );
+
+			final EventListenerGroup<PostLoadEventListener> listenerGroup
+					= session
+							.getFactory()
+							.getServiceRegistry()
+							.getService( EventListenerRegistry.class )
+							.getEventListenerGroup( EventType.POST_LOAD );
+			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPostLoad( postLoadEvent );
+			}
 		}
 	}
 

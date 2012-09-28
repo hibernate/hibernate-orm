@@ -24,11 +24,11 @@
 
 package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 
+import java.sql.Time;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.TemporalType;
 
-import org.jboss.jandex.AnnotationInstance;
+import javax.persistence.TemporalType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -37,6 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.StandardBasicTypes;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
@@ -65,7 +66,20 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 				// Although JPA 2.1 states that @Temporal is required on
 				// Date/Calendar attributes, allow it to be left off in order
 				// to support legacy mappings.
-				return StandardBasicTypes.TIMESTAMP.getName();
+				// java.util.Date -> TimestampType
+				// java.sql.Timestamp -> TimestampType
+				// java.sql.Date -> DateType
+				// java.sql.Time -> TimeType
+				// java.util.Calendar -> CalendarType
+				if ( java.sql.Date.class.isAssignableFrom( attributeType ) ) {
+					return StandardBasicTypes.DATE.getName();
+				} else if ( Time.class.isAssignableFrom( attributeType ) ) {
+					return StandardBasicTypes.TIME.getName();
+				} else if ( Calendar.class.isAssignableFrom( attributeType ) ) {
+					return StandardBasicTypes.CALENDAR.getName();
+				} else {
+					return StandardBasicTypes.TIMESTAMP.getName();
+				}
 			} else {
 				final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
 				final boolean isDate = Date.class.isAssignableFrom( attributeType );

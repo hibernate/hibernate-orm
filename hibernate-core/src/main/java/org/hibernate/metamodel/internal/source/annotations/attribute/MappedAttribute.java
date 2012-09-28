@@ -265,7 +265,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				);
 			}
 			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( columnsAnnotation, "value", AnnotationInstance[].class )
+					JandexHelper.getValue( columnsAnnotation, "columns", AnnotationInstance[].class )
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
 				columnValues.add( new Column( annotation ) );

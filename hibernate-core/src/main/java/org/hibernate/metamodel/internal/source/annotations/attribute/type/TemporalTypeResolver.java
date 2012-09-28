@@ -65,11 +65,7 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 				// Although JPA 2.1 states that @Temporal is required on
 				// Date/Calendar attributes, allow it to be left off in order
 				// to support legacy mappings.
-				if ( Calendar.class.isAssignableFrom( attributeType ) ) {
-					return StandardBasicTypes.CALENDAR.getName();
-				} else {
-					return StandardBasicTypes.TIMESTAMP.getName();
-				}
+				return StandardBasicTypes.TIMESTAMP.getName();
 			} else {
 				final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
 				final boolean isDate = Date.class.isAssignableFrom( attributeType );

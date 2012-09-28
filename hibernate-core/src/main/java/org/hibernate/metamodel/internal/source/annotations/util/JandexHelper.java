@@ -363,11 +363,11 @@ public class JandexHelper {
 			if ( val != null ) {
 				// Annotation parameters of type Class are handled using Strings
 				if ( val instanceof Class ) {
-					val = ( ( Class ) val).getName();
+					val = ( ( Class ) val ).getName();
 				}
 			}
 			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
-			return val == null ? null : val;
+			return val;
 		}
 		catch ( RuntimeException error ) {
 			throw error;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Identifier;

@@ -29,12 +29,12 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.tool.schema.spi.ColumnInformation;
-import org.hibernate.tool.schema.spi.DatabaseInformation;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
-import org.hibernate.tool.schema.spi.SequenceInformation;
-import org.hibernate.tool.schema.spi.TableInformation;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +74,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 		for ( Value value : table.values() ) {
 			if ( Column.class.isInstance( value ) ) {
 				final Column column = (Column) value;
-				final ColumnInformation columnInformation = tableInformation.getColumnInformation( column.getColumnName() );
+				final ColumnInformation columnInformation = tableInformation.getColumn( column.getColumnName() );
 				if ( columnInformation == null ) {
 					throw new SchemaManagementException(
 							String.format(

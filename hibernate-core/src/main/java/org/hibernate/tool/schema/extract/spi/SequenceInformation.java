@@ -21,33 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
+ * Access to information about existing sequences.
  *
- * @author Christoph Sturm
- * @author Teodor Danciu
  * @author Steve Ebersole
  */
-public interface DatabaseInformation {
+public interface SequenceInformation {
 	/**
-	 * Obtain reference to the named TableInformation
+	 * The qualified sequence name.
 	 *
-	 * @param tableName The qualified table name
-	 *
-	 * @return The table information.  May return {@code null} if not found.
+	 * @return The sequence name
 	 */
-	public TableInformation getTableInformation(ObjectName tableName);
+	public ObjectName getSequenceName();
 
 	/**
-	 * Obtain reference to the named SequenceInformation
+	 * Retrieve the extracted increment-size defined for the sequence.
 	 *
-	 * @param sequenceName The qualified sequence name
-	 *
-	 * @return The sequence information.  May return {@code null} if not found.
+	 * @return The extracted increment size; use a negative number to indicate the increment could not be extracted.
 	 */
-	public SequenceInformation getSequenceInformation(ObjectName sequenceName);
+	public int getIncrementSize();
 }

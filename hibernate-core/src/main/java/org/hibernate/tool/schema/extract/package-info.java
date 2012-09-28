@@ -21,32 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
-
-import java.util.List;
-
-import org.hibernate.metamodel.spi.relational.Database;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+package org.hibernate.tool.schema.extract;
 
 /**
- * Service delegate for handling schema migration.
- *
- * @author Steve Ebersole
+ * Defines a model of schema information extracted from the database through JDBC.
  */
-public interface SchemaMigrator {
-	/**
-	 * Perform a migration to the specified targets.
-	 *
-	 * @param database The current Hibernate relational model
-	 * @param existingDatabase Access to the information about the existing database.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param targets The migration targets
-	 *
-	 * @throws SchemaManagementException
-	 */
-	public void doMigration(
-			Database database,
-			DatabaseInformation existingDatabase,
-			boolean createSchemas,
-			List<Target> targets) throws SchemaManagementException;
-}

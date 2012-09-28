@@ -21,30 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
 
-import java.util.List;
-
-import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Provides access to information about existing index in the database
+ * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
  *
  * @author Christoph Sturm
+ * @author Teodor Danciu
  * @author Steve Ebersole
  */
-public interface IndexInformation {
+public interface DatabaseInformation {
 	/**
-	 * Obtain the identifier for this index.
+	 * Obtain reference to the named TableInformation
 	 *
-	 * @return The index identifier.
+	 * @param tableName The qualified table name
+	 *
+	 * @return The table information.  May return {@code null} if not found.
 	 */
-	public Identifier getIndexIdentifier();
+	public TableInformation getTableInformation(ObjectName tableName);
 
 	/**
-	 * Obtain the columns indexed under this index.
+	 * Obtain reference to the named SequenceInformation
 	 *
-	 * @return The columns
+	 * @param sequenceName The qualified sequence name
+	 *
+	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	public List<ColumnInformation> getIndexedColumns();
+	public SequenceInformation getSequenceInformation(ObjectName sequenceName);
 }

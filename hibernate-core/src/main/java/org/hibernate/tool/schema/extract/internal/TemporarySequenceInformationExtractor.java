@@ -21,19 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.tool.schema.extract.internal;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.schema.spi.SequenceInformation;
-import org.hibernate.tool.schema.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 /**
  * Temporary implementation that works for H2.
@@ -41,15 +41,10 @@ import org.hibernate.tool.schema.spi.SequenceInformationExtractor;
  * @author Steve Ebersole
  */
 public class TemporarySequenceInformationExtractor implements SequenceInformationExtractor {
-	private final JdbcEnvironment jdbcEnvironment;
-
-	public TemporarySequenceInformationExtractor(JdbcEnvironment jdbcEnvironment) {
-		this.jdbcEnvironment = jdbcEnvironment;
-	}
-
 	@Override
-	public Iterable<SequenceInformation> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException {
-		Statement statement = databaseMetaData.getConnection().createStatement();
+	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException {
+		final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
+		final Statement statement = extractionContext.getJdbcConnection().createStatement();
 		try {
 			ResultSet resultSet = statement.executeQuery(
 					"select SEQUENCE_CATALOG, SEQUENCE_SCHEMA, SEQUENCE_NAME, INCREMENT " +
@@ -61,20 +56,14 @@ public class TemporarySequenceInformationExtractor implements SequenceInformatio
 					sequenceInformationList.add(
 							new SequenceInformationImpl(
 									new ObjectName(
-											jdbcEnvironment.getIdentifierHelper().fromMetaDataCatalogName(
-													resultSet.getString(
-															"SEQUENCE_CATALOG"
-													)
+											identifierHelper.fromMetaDataCatalogName(
+													resultSet.getString( "SEQUENCE_CATALOG" )
 											),
-											jdbcEnvironment.getIdentifierHelper().fromMetaDataSchemaName(
-													resultSet.getString(
-															"SEQUENCE_SCHEMA"
-													)
+											identifierHelper.fromMetaDataSchemaName(
+													resultSet.getString( "SEQUENCE_SCHEMA" )
 											),
-											jdbcEnvironment.getIdentifierHelper().fromMetaDataCatalogName(
-													resultSet.getString(
-															"SEQUENCE_NAME"
-													)
+											identifierHelper.fromMetaDataCatalogName(
+													resultSet.getString( "SEQUENCE_NAME" )
 											)
 									),
 									resultSet.getInt( "INCREMENT" )

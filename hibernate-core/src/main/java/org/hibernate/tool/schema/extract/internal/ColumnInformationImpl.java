@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.tool.schema.extract.internal;
 
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.tool.schema.spi.ColumnInformation;
-import org.hibernate.tool.schema.spi.TableInformation;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
  * JDBC column metadata

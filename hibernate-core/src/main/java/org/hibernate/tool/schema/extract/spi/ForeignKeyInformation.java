@@ -21,32 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.tool.schema.extract.spi;
 
-import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.tool.schema.spi.SequenceInformation;
+import java.util.List;
+
+import org.hibernate.metamodel.spi.relational.Identifier;
 
 /**
- * For now we only collect sequence name.  If all databases support it, would really like to see INCREMENT here as well.
- *
  * @author Steve Ebersole
  */
-public class SequenceInformationImpl implements SequenceInformation {
-	private final ObjectName sequenceName;
-	private final int incrementSize;
+public interface ForeignKeyInformation {
+	/**
+	 * Obtain the identifier for this FK.
+	 *
+	 * @return The FK identifier.
+	 */
+	public Identifier getForeignKeyIdentifier();
 
-	public SequenceInformationImpl(ObjectName sequenceName, int incrementSize) {
-		this.sequenceName = sequenceName;
-		this.incrementSize = incrementSize;
-	}
+	/**
+	 * Get the column mappings that define the reference.  Returned in sequential order.
+	 *
+	 * @return The sequential column reference mappings.
+	 */
+	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings();
 
-	@Override
-	public ObjectName getSequenceName() {
-		return sequenceName;
-	}
+	public static interface ColumnReferenceMapping {
+		/**
+		 * Obtain the information about the referencing column (the source column, which points to
+		 * the referenced column).
+		 *
+		 * @return The referencing column.
+		 */
+		public ColumnInformation getReferencingColumnMetadata();
 
-	@Override
-	public int getIncrementSize() {
-		return incrementSize;
+		/**
+		 * Obtain the information about the referenced column (the target side).
+		 *
+		 * @return The referenced column
+		 */
+		public ColumnInformation getReferencedColumnMetadata();
 	}
 }

@@ -21,44 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
-
-import java.util.List;
+package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
 
 /**
+ * Provides access to information about existing primary key for a table
+ *
  * @author Steve Ebersole
  */
-public interface ForeignKeyInformation {
+public interface PrimaryKeyInformation {
 	/**
-	 * Obtain the identifier for this FK.
+	 * Obtain the identifier for this PK.
 	 *
-	 * @return The FK identifier.
+	 * @return The PK identifier.
 	 */
-	public Identifier getForeignKeyIdentifier();
+	public Identifier getPrimaryKeyIdentifier();
 
-	/**
-	 * Get the list of column mappings that define the reference.
-	 *
-	 * @return The mapping list
-	 */
-	public List<ColumnReferenceMapping> getColumnReferenceMappingList();
-
-	public static interface ColumnReferenceMapping {
-		/**
-		 * Obtain the information about the referencing column (the source column, which points to
-		 * the referenced column).
-		 *
-		 * @return The referencing column.
-		 */
-		public ColumnInformation getReferencingColumnMetadata();
-
-		/**
-		 * Obtain the information about the referenced column (the target side).
-		 *
-		 * @return The referenced column
-		 */
-		public ColumnInformation getReferencedColumnMetadata();
-	}
+	public Iterable<ColumnInformation> getColumns();
 }

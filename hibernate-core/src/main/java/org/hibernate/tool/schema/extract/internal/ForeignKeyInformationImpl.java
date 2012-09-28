@@ -21,15 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.tool.schema.extract.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.tool.schema.spi.ColumnInformation;
-import org.hibernate.tool.schema.spi.ForeignKeyInformation;
-import org.hibernate.tool.schema.spi.SchemaManagementException;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +36,7 @@ public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	private final Identifier fkIdentifier;
 	private final List<ColumnReferenceMapping> columnMappingList;
 
-	private ForeignKeyInformationImpl(
+	public ForeignKeyInformationImpl(
 			Identifier fkIdentifier,
 			List<ColumnReferenceMapping> columnMappingList) {
 		this.fkIdentifier = fkIdentifier;
@@ -51,36 +49,8 @@ public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	}
 
 	@Override
-	public List<ColumnReferenceMapping> getColumnReferenceMappingList() {
+	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings() {
 		return columnMappingList;
-	}
-
-	public static Builder builder(Identifier fkIdentifier) {
-		return new Builder( fkIdentifier );
-	}
-
-	public static class Builder {
-		private final Identifier fkIdentifier;
-		private final List<ColumnReferenceMapping> columnMappingList = new ArrayList<ColumnReferenceMapping>();
-
-		public Builder(Identifier fkIdentifier) {
-			this.fkIdentifier = fkIdentifier;
-		}
-		
-		public Builder addColumnMapping(ColumnInformation referencing, ColumnInformation referenced) {
-			columnMappingList.add( new ColumnReferenceMappingImpl( referencing, referenced ) );
-			return this;
-		}
-
-		public ForeignKeyInformationImpl build() {
-			if ( columnMappingList.isEmpty() ) {
-				throw new SchemaManagementException(
-						"Attempt to resolve foreign key metadata from JDBC metadata failed to find " +
-								"column mappings for foreign key named [" + fkIdentifier.getText() + "]"
-				);
-			}
-			return new ForeignKeyInformationImpl( fkIdentifier, columnMappingList );
-		}
 	}
 	
 	public static class ColumnReferenceMappingImpl implements ColumnReferenceMapping {

@@ -179,11 +179,11 @@ public class Identifier {
 		Identifier that = (Identifier) o;
 
 		return isQuoted == that.isQuoted
-				&& text.equals( that.text );
+				&& isQuoted ? text.equals( that.text ) : text.equalsIgnoreCase( that.text );
 	}
 
 	@Override
 	public int hashCode() {
-		return text.hashCode();
+		return isQuoted ? text.hashCode() : text.toUpperCase().hashCode();
 	}
 }

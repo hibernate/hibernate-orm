@@ -31,8 +31,8 @@ import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.schema.spi.ColumnInformation;
-import org.hibernate.tool.schema.spi.TableInformation;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
@@ -201,7 +201,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			}
 
 			final Column column = (Column) value;
-			final ColumnInformation columnInformation = tableInformation.getColumnInformation( column.getColumnName() );
+			final ColumnInformation columnInformation = tableInformation.getColumn( column.getColumnName() );
 
 			if ( columnInformation != null ) {
 				continue;

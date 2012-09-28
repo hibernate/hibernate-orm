@@ -21,27 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.internal;
 
 import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
- * Access to information about existing sequences.
+ * For now we only collect sequence name.  If all databases support it, would really like to see INCREMENT here as well.
  *
  * @author Steve Ebersole
  */
-public interface SequenceInformation {
-	/**
-	 * The qualified sequence name.
-	 *
-	 * @return The sequence name
-	 */
-	public ObjectName getSequenceName();
+public class SequenceInformationImpl implements SequenceInformation {
+	private final ObjectName sequenceName;
+	private final int incrementSize;
 
-	/**
-	 * Retrieve the extracted increment-size defined for the sequence.
-	 *
-	 * @return The extracted increment size; use a negative number to indicate the increment could not be extracted.
-	 */
-	public int getIncrementSize();
+	public SequenceInformationImpl(ObjectName sequenceName, int incrementSize) {
+		this.sequenceName = sequenceName;
+		this.incrementSize = incrementSize;
+	}
+
+	@Override
+	public ObjectName getSequenceName() {
+		return sequenceName;
+	}
+
+	@Override
+	public int getIncrementSize() {
+		return incrementSize;
+	}
 }

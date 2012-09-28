@@ -21,32 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
 
-import java.util.List;
-
-import org.hibernate.metamodel.spi.relational.Database;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import java.sql.SQLException;
 
 /**
- * Service delegate for handling schema migration.
+ * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have support for obtaining information
+ * about sequences from DatabaseMetaData.
  *
  * @author Steve Ebersole
  */
-public interface SchemaMigrator {
+public interface SequenceInformationExtractor {
 	/**
-	 * Perform a migration to the specified targets.
+	 * Get the information about sequences.
 	 *
-	 * @param database The current Hibernate relational model
-	 * @param existingDatabase Access to the information about the existing database.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param targets The migration targets
+	 * @param extractionContext Access to resources needed to perform the extraction
 	 *
-	 * @throws SchemaManagementException
+	 * @return The extracted information about existing sequences.
+	 *
+	 * @throws SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
+	 * caller.
 	 */
-	public void doMigration(
-			Database database,
-			DatabaseInformation existingDatabase,
-			boolean createSchemas,
-			List<Target> targets) throws SchemaManagementException;
+	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException;
 }

@@ -28,19 +28,20 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformationBuilder;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.spi.relational.ObjectName;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.schema.internal.DatabaseInformationImpl;
-import org.hibernate.tool.schema.spi.DatabaseInformation;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +57,7 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 	@Before
 	public void prepare() throws SQLException {
 		Properties props = Environment.getProperties();
-		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder().applySettings( props ).build();
+		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder().applySettings( props ).build();
 		connection = DriverManager.getConnection(
 				props.getProperty( Environment.URL ),
 				props.getProperty( Environment.USER ),
@@ -83,14 +84,15 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 			}
 		}
 		if ( serviceRegistry != null ) {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
 	@Test
 	public void testGetTableMetadata() throws Exception {
-		DatabaseInformation databaseMetaData =
-				DatabaseInformationImpl.builder( jdbcEnvironment, connection.getMetaData() ).prepareAll().build();
+		DatabaseInformation databaseMetaData = new DatabaseInformationBuilder( jdbcEnvironment, connection )
+				.prepareAll()
+				.build();
 
 		ObjectName name = new ObjectName( null, null, "t1" );
 		assertNotNull( databaseMetaData.getTableInformation( name ) );

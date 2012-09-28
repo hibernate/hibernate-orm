@@ -21,27 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
+
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have support for obtaining information
- * about sequences from DatabaseMetaData.
+ * Defines a context for performing extraction including providing access to information about ongoing extraction as
+ * well as to delegates needed in performing extraction.
  *
  * @author Steve Ebersole
  */
-public interface SequenceInformationExtractor {
-	/**
-	 * Get the information about sequences.
-	 *
-	 * @param databaseMetaData The JDBC DatabaseMetadata
-	 *
-	 * @return The extracted information about existing sequences.
-	 *
-	 * @throws SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
-	 * caller.
-	 */
-	public Iterable<SequenceInformation> extractMetadata(DatabaseMetaData databaseMetaData) throws SQLException;
+public interface ExtractionContext {
+	public JdbcEnvironment getJdbcEnvironment();
+	public Connection getJdbcConnection();
+	public DatabaseMetaData getJdbcDatabaseMetaData();
+
+	public static interface RegisteredObjectAccess {
+		public TableInformation locateRegisteredTableInformation(ObjectName tableName);
+		public SequenceInformation locateRegisteredSequenceInformation(ObjectName sequenceName);
+	}
+
+	public RegisteredObjectAccess getRegisteredObjectAccess();
 }

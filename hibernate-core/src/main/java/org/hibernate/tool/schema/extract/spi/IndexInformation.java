@@ -21,53 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.spi;
+package org.hibernate.tool.schema.extract.spi;
+
+import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.ObjectName;
 
 /**
- * Provides access to information about existing tables in the database
+ * Provides access to information about existing index in the database
  *
  * @author Christoph Sturm
- * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
-public interface TableInformation {
+public interface IndexInformation {
 	/**
-	 * Get the qualified name of the table.
+	 * Obtain the identifier for this index.
 	 *
-	 * @return The qualified table name
+	 * @return The index identifier.
 	 */
-	public ObjectName getName();
+	public Identifier getIndexIdentifier();
 
 	/**
-	 * Retrieve the named ColumnInformation
+	 * Obtain the columns indexed under this index.
 	 *
-	 * @param columnIdentifier The column identifier (simple name)
-	 *
-	 * @return The matching column information.  May return {@code null}
+	 * @return The columns
 	 */
-	public ColumnInformation getColumnInformation(Identifier columnIdentifier);
-
-	/**
-	 * Retrieve the named ForeignKeyInformation
-	 *
-	 * @param keyName The foreign key identifier (simple name)
-	 *
-	 * @return The matching foreign key information.  May return {@code null}
-	 */
-	public ForeignKeyInformation getForeignKeyInformation(Identifier keyName);
-
-	/**
-	 * Obtain an iterable over all the table's defined foreign keys.
-	 *
-	 * @return The iterable.
-	 */
-	public Iterable<ForeignKeyInformation> getForeignKeyInformations();
-
-	/**
-	 * todo : create an IndexInformation...
-	 */
-	public IndexInformation getIndexInformation(Identifier indexName);
+	public List<ColumnInformation> getIndexedColumns();
 }

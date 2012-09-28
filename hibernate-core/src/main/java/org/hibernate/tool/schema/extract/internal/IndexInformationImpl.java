@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.tool.schema.extract.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.tool.schema.spi.ColumnInformation;
-import org.hibernate.tool.schema.spi.IndexInformation;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 /**

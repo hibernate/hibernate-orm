@@ -24,6 +24,7 @@
 package org.hibernate.tool.schema.spi;
 
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 
 /**
  * Service delegate for handling schema validations

@@ -40,6 +40,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 	private final BasicAttribute mappedAttribute;
@@ -54,38 +55,44 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 
 	@Override
 	public String resolveHibernateTypeName(AnnotationInstance temporalAnnotation) {
-
-		if ( isTemporalType( mappedAttribute.getAttributeType() ) ) {
+		Class attributeType = mappedAttribute.getAttributeType();
+		
+		if ( isTemporalType( attributeType ) ) {
 			if ( mappedAttribute.isVersioned() && mappedAttribute.getVersionSourceType() != null ) {
 				return mappedAttribute.getVersionSourceType().typeName();
 			}
 			if ( temporalAnnotation == null ) {
-				//SPEC 11.1.47 The Temporal annotation must be specified for persistent fields or properties of type java.util.Date and java.util.Calendar.
-				//todo actually the legacy mapping doesn't require this
-				throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is a Temporal type, but no @Temporal annotation found." );
+				// Although JPA 2.1 states that @Temporal is required on
+				// Date/Calendar attributes, allow it to be left off in order
+				// to support legacy mappings.
+				if ( Calendar.class.isAssignableFrom( attributeType ) ) {
+					return StandardBasicTypes.CALENDAR.getName();
+				} else {
+					return StandardBasicTypes.TIMESTAMP.getName();
+				}
+			} else {
+				final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
+				final boolean isDate = Date.class.isAssignableFrom( attributeType );
+				String type;
+				switch ( temporalType ) {
+					case DATE:
+						type = isDate ? StandardBasicTypes.DATE.getName() : StandardBasicTypes.CALENDAR_DATE.getName();
+						break;
+					case TIME:
+						type = StandardBasicTypes.TIME.getName();
+						if ( !isDate ) {
+							throw new NotYetImplementedException( "Calendar cannot persist TIME only" );
+						}
+						break;
+					case TIMESTAMP:
+						type = isDate ? StandardBasicTypes.TIMESTAMP.getName() : StandardBasicTypes.CALENDAR.getName();
+						break;
+					default:
+						throw new AssertionFailure( "Unknown temporal type: " + temporalType );
+				}
+				return type;
 			}
-			final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
-			final boolean isDate = Date.class.isAssignableFrom( mappedAttribute.getAttributeType() );
-			String type;
-			switch ( temporalType ) {
-				case DATE:
-					type = isDate ? StandardBasicTypes.DATE.getName() : StandardBasicTypes.CALENDAR_DATE.getName();
-					break;
-				case TIME:
-					type = StandardBasicTypes.TIME.getName();
-					if ( !isDate ) {
-						throw new NotYetImplementedException( "Calendar cannot persist TIME only" );
-					}
-					break;
-				case TIMESTAMP:
-					type = isDate ? StandardBasicTypes.TIMESTAMP.getName() : StandardBasicTypes.CALENDAR.getName();
-					break;
-				default:
-					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
-			}
-			return type;
-		}
-		else {
+		} else {
 			if ( temporalAnnotation != null ) {
 				throw new AnnotationException(
 						"@Temporal should only be set on a java.util.Date or java.util.Calendar property: " + mappedAttribute

@@ -895,7 +895,8 @@ public class Binder {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
 			} else {
 				hibernateTypeDescriptor.setExplicitTypeName( typeDef.getTypeImplementorClass().getName() );
-				hibernateTypeDescriptor.setTypeParameters( typeDef.getParameters() );
+				// Don't use set() -- typeDef#parameters is unmodifiable
+				hibernateTypeDescriptor.getTypeParameters().putAll( typeDef.getParameters() );
 			}
 			if ( explictTypeParameters != null ) {
 				hibernateTypeDescriptor.getTypeParameters().putAll( explictTypeParameters );

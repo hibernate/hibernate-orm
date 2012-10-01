@@ -21,30 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.extract.spi;
-
-import java.util.List;
+package org.hibernate.tool.schema.extract.internal;
 
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
+import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
 
 /**
- * Provides access to information about existing index in the database
- *
- * @author Christoph Sturm
  * @author Steve Ebersole
  */
-public interface IndexInformation {
-	/**
-	 * Obtain the identifier for this index.
-	 *
-	 * @return The index identifier.
-	 */
-	public Identifier getIndexIdentifier();
+public class PrimaryKeyInformationImpl implements PrimaryKeyInformation {
+	private final Identifier identifier;
+	private final Iterable<ColumnInformation> columns;
 
-	/**
-	 * Obtain the columns indexed under this index.  Returned in sequential order.
-	 *
-	 * @return The columns
-	 */
-	public List<ColumnInformation> getIndexedColumns();
+	public PrimaryKeyInformationImpl(Identifier identifier, Iterable<ColumnInformation> columns) {
+		this.identifier = identifier;
+		this.columns = columns;
+	}
+
+	@Override
+	public Identifier getPrimaryKeyIdentifier() {
+		return identifier;
+	}
+
+	@Override
+	public Iterable<ColumnInformation> getColumns() {
+		return columns;
+	}
 }

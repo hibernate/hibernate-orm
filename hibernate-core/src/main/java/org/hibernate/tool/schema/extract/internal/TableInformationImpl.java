@@ -31,6 +31,7 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
+import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
 import org.hibernate.tool.schema.extract.spi.SchemaMetaDataExtractor;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -48,8 +49,11 @@ public class TableInformationImpl implements TableInformation {
 	private final String comment;
 
 	private Map<Identifier, ColumnInformation> columns;
+	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
+
+	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 
 	public TableInformationImpl(
 			SchemaMetaDataExtractor metaDataExtractor,
@@ -97,6 +101,15 @@ public class TableInformationImpl implements TableInformation {
 	@Override
 	public ColumnInformation getColumn(Identifier columnIdentifier) {
 		return columns().get( columnIdentifier );
+	}
+
+	@Override
+	public PrimaryKeyInformation getPrimaryKey() {
+		if ( ! wasPrimaryKeyLoaded ) {
+			primaryKey = metaDataExtractor.getPrimaryKey( this );
+			wasPrimaryKeyLoaded = true;
+		}
+		return primaryKey;
 	}
 
 	@Override

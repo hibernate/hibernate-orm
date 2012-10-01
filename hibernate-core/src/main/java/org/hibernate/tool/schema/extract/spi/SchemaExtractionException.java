@@ -23,28 +23,17 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import java.util.List;
-
-import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.HibernateException;
 
 /**
- * Provides access to information about existing index in the database
- *
- * @author Christoph Sturm
  * @author Steve Ebersole
  */
-public interface IndexInformation {
-	/**
-	 * Obtain the identifier for this index.
-	 *
-	 * @return The index identifier.
-	 */
-	public Identifier getIndexIdentifier();
+public class SchemaExtractionException extends HibernateException {
+	public SchemaExtractionException(String message) {
+		super( message );
+	}
 
-	/**
-	 * Obtain the columns indexed under this index.  Returned in sequential order.
-	 *
-	 * @return The columns
-	 */
-	public List<ColumnInformation> getIndexedColumns();
+	public SchemaExtractionException(String message, Throwable root) {
+		super( message, root );
+	}
 }

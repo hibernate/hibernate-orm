@@ -23,11 +23,6 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import java.util.Map;
-
-import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl;
-import org.hibernate.tool.schema.extract.internal.IndexInformationImpl;
 import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
 
 /**
@@ -84,6 +79,15 @@ public interface SchemaMetaDataExtractor {
 	 * @return The extracted column information
 	 */
 	public Iterable<ColumnInformation> getColumns(TableInformation tableInformation);
+
+	/**
+	 * Extract information about the given table's primary key.
+	 *
+	 * @param tableInformation The table for which to locate primary key information,
+	 *
+	 * @return The extracted primary key information
+	 */
+	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation);
 
 	/**
 	 * Extract information about indexes defined against the given table.  Typically called from the TableInformation

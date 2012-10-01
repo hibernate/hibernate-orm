@@ -72,6 +72,13 @@ public interface TableInformation {
 	public ColumnInformation getColumn(Identifier columnIdentifier);
 
 	/**
+	 * Retrieve information about the table's primary key, if one is defined (aka, may return {@code null}).
+	 *
+	 * @return The primary key information, or {@code null} if the table did not define a primary key.
+	 */
+	public PrimaryKeyInformation getPrimaryKey();
+
+	/**
 	 * Obtain an iterable over all the table's defined foreign keys.
 	 *
 	 * @return The iterable.

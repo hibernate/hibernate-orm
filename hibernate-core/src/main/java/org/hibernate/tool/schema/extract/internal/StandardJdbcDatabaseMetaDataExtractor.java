@@ -35,12 +35,15 @@ import java.util.StringTokenizer;
 import org.hibernate.JDBCException;
 import org.hibernate.TruthValue;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
+import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
+import org.hibernate.tool.schema.extract.spi.SchemaExtractionException;
 import org.hibernate.tool.schema.extract.spi.SchemaMetaDataExtractor;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -177,6 +180,73 @@ public class StandardJdbcDatabaseMetaDataExtractor implements SchemaMetaDataExtr
 			return TruthValue.FALSE;
 		}
 		return TruthValue.UNKNOWN;
+	}
+
+	@Override
+	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation) {
+		try {
+			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getPrimaryKeys(
+					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalog() ),
+					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchema() ),
+					identifierHelper().toMetaDataObjectName( tableInformation.getName().getName() )
+			);
+
+			final List<ColumnInformation> pkColumns = new ArrayList<ColumnInformation>();
+			boolean firstPass = true;
+			Identifier pkIdentifier = null;
+
+			try {
+				while ( resultSet.next() ) {
+					final String currentPkName = resultSet.getString( "PK_NAME" );
+					final Identifier currentPkIdentifier = currentPkName == null
+							? null
+							: identifierHelper().fromMetaDataObjectName( currentPkName );
+					if ( firstPass ) {
+						pkIdentifier = currentPkIdentifier;
+						firstPass = false;
+					}
+					else {
+						if ( !EqualsHelper.equals( pkIdentifier, currentPkIdentifier ) ) {
+							throw new SchemaExtractionException(
+									String.format(
+											"Encountered primary keys differing name on table %s",
+											tableInformation.getName().toText()
+									)
+							);
+						}
+					}
+
+					final int columnPosition = resultSet.getInt( "KEY_SEQ" );
+					final String columnName = resultSet.getString( "COLUMN_NAME" );
+
+					final Identifier columnIdentifier = identifierHelper().fromMetaDataObjectName( columnName );
+					final ColumnInformation column = tableInformation.getColumn( columnIdentifier );
+					pkColumns.add( columnPosition-1, column );
+				}
+			}
+			finally {
+				resultSet.close();
+			}
+
+			if ( firstPass ) {
+				// we did not find any results (no pk)
+				return null;
+			}
+			else {
+				// validate column list is properly contiguous
+				for ( int i = 0; i < pkColumns.size(); i++ ) {
+					if ( pkColumns.get( i ) == null ) {
+						throw new SchemaExtractionException( "Primary Key information was missing for KEY_SEQ = " + ( i+1) );
+					}
+				}
+
+				// build the return
+				return new PrimaryKeyInformationImpl( pkIdentifier, pkColumns );
+			}
+		}
+		catch (SQLException e) {
+			throw convertSQLException( e, "Error while reading primary key meta data for " + tableInformation.getName().toText() );
+		}
 	}
 
 	@Override

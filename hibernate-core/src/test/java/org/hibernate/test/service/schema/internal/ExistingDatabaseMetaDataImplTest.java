@@ -26,6 +26,7 @@ package org.hibernate.test.service.schema.internal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -33,10 +34,13 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformationBuilder;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,7 +48,10 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -65,8 +72,8 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 		);
 		connection.createStatement().execute( "CREATE SCHEMA another_schema" );
 
-		connection.createStatement().execute( "CREATE TABLE t1 (name varchar)" );
-		connection.createStatement().execute( "CREATE TABLE another_schema.t2 (name varchar)" );
+		connection.createStatement().execute( "CREATE TABLE t1 (name varchar, primary key(name))" );
+		connection.createStatement().execute( "CREATE TABLE another_schema.t2 (name varchar, primary key(name))" );
 
 		connection.createStatement().execute( "CREATE SEQUENCE seq1" );
 		connection.createStatement().execute( "CREATE SEQUENCE db1.another_schema.seq2" );
@@ -95,10 +102,21 @@ public class ExistingDatabaseMetaDataImplTest extends BaseUnitTestCase {
 				.build();
 
 		ObjectName name = new ObjectName( null, null, "t1" );
-		assertNotNull( databaseMetaData.getTableInformation( name ) );
+		TableInformation table = databaseMetaData.getTableInformation( name );
+		assertNotNull( table );
+		assertNotNull( table.getPrimaryKey() );
+		ColumnInformation nameColumn = table.getColumn( Identifier.toIdentifier( "name" ) );
+		assertNotNull( nameColumn );
+		Iterator<ColumnInformation> pkColumns = table.getPrimaryKey().getColumns().iterator();
+		assertTrue( pkColumns.hasNext() );
+		ColumnInformation pkColumn = pkColumns.next();
+		assertFalse( pkColumns.hasNext() );
+		assertSame( nameColumn, pkColumn );
+
 
 		name = new ObjectName( null, "another_schema", "t2" );
 		assertNotNull( databaseMetaData.getTableInformation( name ) );
+		assertNotNull( databaseMetaData.getTableInformation( name ).getPrimaryKey() );
 
 		name = new ObjectName( null, null, "seq1" );
 		assertNotNull( databaseMetaData.getSequenceInformation( name ) );

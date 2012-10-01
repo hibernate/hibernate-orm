@@ -38,5 +38,10 @@ public interface PrimaryKeyInformation {
 	 */
 	public Identifier getPrimaryKeyIdentifier();
 
+	/**
+	 * Obtain the columns making up the primary key.  Returned in sequential order.
+	 *
+	 * @return The columns
+	 */
 	public Iterable<ColumnInformation> getColumns();
 }

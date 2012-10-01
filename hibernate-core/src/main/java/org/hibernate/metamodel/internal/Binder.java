@@ -1270,6 +1270,11 @@ public class Binder {
 			default:
 				throw new NotYetImplementedException( nature.toString() );
 		}
+
+		// Must do first -- sorting/ordering can determine the resolved type
+		// (ex: Set vs. SortedSet).
+		bindSortingAndOrdering( attributeBinding, attributeSource );
+		
 		final Type resolvedType = resolvePluralType( attributeBinding, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = typeHelper.getReflectedCollectionJavaTypes( attributeBinding );
@@ -1292,8 +1297,6 @@ public class Binder {
 		attributeBinding.setCustomSqlDelete( attributeSource.getCustomSqlDelete() );
 		attributeBinding.setCustomSqlDeleteAll( attributeSource.getCustomSqlDeleteAll() );
 		attributeBinding.setWhere( attributeSource.getWhere() );
-
-		bindSortingAndOrdering( attributeBinding, attributeSource );
 
 		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.BASIC ) {
 			bindBasicCollectionKey( attributeBinding, attributeSource );
@@ -1470,11 +1473,12 @@ public class Binder {
 			final PluralAttributeSource attributeSource ) {
 		if ( Sortable.class.isInstance( attributeSource ) ) {
 			final Sortable sortable = ( Sortable ) attributeSource;
-			if ( sortable.isSorted() ) {
+			attributeBinding.setSorted( sortable.isSorted() );
+			if ( sortable.isSorted()
+					&& !sortable.getComparatorName().equalsIgnoreCase( "natural" ) ) {
 				Class< Comparator< ? > > comparatorClass =
 						bindingContext().locateClassByName( sortable.getComparatorName() );
 				try {
-					attributeBinding.setSorted( sortable.isSorted() );
 					attributeBinding.setComparator( comparatorClass.newInstance() );
 				} catch ( Exception error ) {
 					bindingContext().makeMappingException(
@@ -2264,9 +2268,21 @@ public class Binder {
 				case LIST:
 					return typeFactory.list( role, propertyRef, embedded );
 				case MAP:
-					return typeFactory.map( role, propertyRef, embedded );
+					if ( pluralAttributeBinding.isSorted() ) {
+						return typeFactory.sortedMap( role, propertyRef, embedded, pluralAttributeBinding.getComparator() );
+					}
+					// TODO: else if ( pluralAttributeBinding.hasOrder() ) { orderedMap... }
+					else {
+						return typeFactory.map( role, propertyRef, embedded );
+					}
 				case SET:
-					return typeFactory.set( role, propertyRef, embedded );
+					if ( pluralAttributeBinding.isSorted() ) {
+						return typeFactory.sortedSet( role, propertyRef, embedded, pluralAttributeBinding.getComparator() );
+					}
+					// TODO: else if ( pluralAttributeBinding.hasOrder() ) { orderedSet... }
+					else {
+						return typeFactory.set( role, propertyRef, embedded );
+					}
 				default:
 					throw new NotYetImplementedException( nature + " is to be implemented" );
 			}

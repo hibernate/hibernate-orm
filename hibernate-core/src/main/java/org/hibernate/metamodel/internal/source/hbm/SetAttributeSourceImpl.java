@@ -52,7 +52,9 @@ public class SetAttributeSourceImpl extends AbstractPluralAttributeSourceImpl im
 
 	@Override
 	public boolean isSorted() {
-		return StringHelper.isNotEmpty( getComparatorName() ) && !getComparatorName().equals("unsorted");
+		String comparatorName = getComparatorName();
+		return StringHelper.isNotEmpty( comparatorName )
+				&& !comparatorName.equals("unsorted");
 	}
 
 	@Override

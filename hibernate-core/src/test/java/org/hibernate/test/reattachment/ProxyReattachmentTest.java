@@ -23,17 +23,16 @@
  */
 package org.hibernate.test.reattachment;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Test of proxy reattachment semantics
@@ -47,7 +46,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUpdateAfterEvict() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -74,7 +72,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUpdateAfterClear() {
 		Session s = openSession();
 		s.beginTransaction();

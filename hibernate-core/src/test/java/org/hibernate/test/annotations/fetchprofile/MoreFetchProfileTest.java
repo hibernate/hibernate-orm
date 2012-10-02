@@ -24,23 +24,20 @@
  */
 package org.hibernate.test.annotations.fetchprofile;
 
-import java.util.Date;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.Date;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@FailureExpectedWithNewMetamodel
 public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testFetchWithTwoOverrides() throws Exception {

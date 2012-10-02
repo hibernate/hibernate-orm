@@ -23,6 +23,9 @@
  */
 package org.hibernate.test.annotations.dataTypes;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -30,27 +33,21 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(value = {DialectChecks.SupportsExpectedLobUsagePattern.class, BasicOperationsTest.OracleDialectChecker.class}, jiraKey = "HHH-6834")
-@FailureExpectedWithNewMetamodel
 public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";

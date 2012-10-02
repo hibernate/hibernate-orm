@@ -23,28 +23,25 @@
  */
 package org.hibernate.test.typeparameters;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.jdbc.Work;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Test for parameterizable types.
  *
  * @author Michael Gloegl
  */
-@FailureExpectedWithNewMetamodel
 public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.bag;
-import java.util.ArrayList;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.ArrayList;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Tests related to operations on a PersistentBag.
@@ -46,7 +44,6 @@ public class PersistentBagTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testWriteMethodDirtying() {
 		BagOwner parent = new BagOwner( "root" );
 		BagOwner child = new BagOwner( "c1" );

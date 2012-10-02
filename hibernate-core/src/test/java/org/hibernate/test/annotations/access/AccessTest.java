@@ -23,17 +23,15 @@
  */
 package org.hibernate.test.annotations.access;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -41,7 +39,6 @@ import static org.junit.Assert.assertNull;
 public class AccessTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-    @FailureExpectedWithNewMetamodel
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -62,7 +59,6 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-    @FailureExpectedWithNewMetamodel
 	public void testSuperclassNonOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setGod( "Buddha" );
@@ -80,7 +76,6 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-    @FailureExpectedWithNewMetamodel
 	public void testPropertyOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.weight = 3;
@@ -98,7 +93,6 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
-    @FailureExpectedWithNewMetamodel
 	public void testNonOverridenSubclass() throws Exception {
 		Chair chair = new Chair();
 		chair.setPillow( "Blue" );
@@ -116,7 +110,6 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
-    @FailureExpectedWithNewMetamodel
 	public void testOverridenSubclass() throws Exception {
 		BigBed bed = new BigBed();
 		bed.size = 5;

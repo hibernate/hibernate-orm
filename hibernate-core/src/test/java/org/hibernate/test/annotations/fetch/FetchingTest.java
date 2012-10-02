@@ -40,7 +40,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class FetchingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLazy() throws Exception {
@@ -64,6 +63,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExtraLazy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -89,6 +89,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testHibernateFetchingLazy() throws Exception {
 		Session s;
 		Transaction tx;

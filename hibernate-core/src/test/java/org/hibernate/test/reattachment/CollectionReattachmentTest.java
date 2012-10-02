@@ -23,11 +23,9 @@
  */
 package org.hibernate.test.reattachment;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * Test of collection reattachment semantics
@@ -41,7 +39,6 @@ public class CollectionReattachmentTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUpdateOwnerAfterClear() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -69,7 +66,6 @@ public class CollectionReattachmentTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUpdateOwnerAfterEvict() {
 		Session s = openSession();
 		s.beginTransaction();

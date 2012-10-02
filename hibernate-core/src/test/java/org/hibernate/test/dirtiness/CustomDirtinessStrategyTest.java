@@ -40,7 +40,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	private static final String INITIAL_NAME = "thing 1";
 	private static final String SUBSEQUENT_NAME = "thing 2";
@@ -57,6 +56,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOnlyCustomStrategy() {
 		Session session = openSession();
 		session.beginTransaction();

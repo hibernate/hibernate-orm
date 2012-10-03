@@ -383,11 +383,15 @@ public final class HqlParser extends HqlBaseParser {
 
 	@Override
     public void processMemberOf(Token n, AST p, ASTPair currentAST) {
-		AST inAst = n == null ? astFactory.create( IN, "in" ) : astFactory.create( NOT_IN, "not in" );
-		astFactory.makeASTRoot( currentAST, inAst );
-		AST ast = createSubquery( p );
-		ast = ASTUtil.createParent( astFactory, IN_LIST, "inList", ast );
-		inAst.addChild( ast );
+		// convert MEMBER OF to the equivalent IN ELEMENTS structure...
+		AST inNode = n == null ? astFactory.create( IN, "in" ) : astFactory.create( NOT_IN, "not in" );
+		astFactory.makeASTRoot( currentAST, inNode );
+
+		AST inListNode = astFactory.create( IN_LIST, "inList" );
+		inNode.addChild( inListNode );
+		AST elementsNode = astFactory.create( ELEMENTS, "elements" );
+		inListNode.addChild( elementsNode );
+		elementsNode.addChild( p );
 	}
 
 	static public void panic() {

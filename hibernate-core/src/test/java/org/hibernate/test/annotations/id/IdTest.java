@@ -23,11 +23,12 @@
  */
 package org.hibernate.test.annotations.id;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.test.annotations.id.entities.Ball;
 import org.hibernate.test.annotations.id.entities.BreakDance;
 import org.hibernate.test.annotations.id.entities.Computer;
@@ -45,11 +46,10 @@ import org.hibernate.test.annotations.id.entities.Shoe;
 import org.hibernate.test.annotations.id.entities.SoundSystem;
 import org.hibernate.test.annotations.id.entities.Store;
 import org.hibernate.test.annotations.id.entities.Tree;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -289,9 +289,9 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = (Column) configuration().getClassMapping(Ball.class.getName())
-				.getIdentifierProperty().getValue().getColumnIterator().next();
-		assertEquals( "ball_id", idCol.getName() );
+		Column idCol = SchemaUtil.getIndexes( Ball.class, metadata() )
+				.next().getColumns().get( 0 );
+		assertEquals( "ball_id", idCol.getColumnName().getText() );
 	}
 
 	@Test

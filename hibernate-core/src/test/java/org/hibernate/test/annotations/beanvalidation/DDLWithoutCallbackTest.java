@@ -23,23 +23,23 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
-import javax.validation.ConstraintViolationException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import java.math.BigDecimal;
+
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Vladimir Klyushnikov
@@ -93,11 +93,9 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDDLEnabled() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
-		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
+		Column column = SchemaUtil.getColumn( Address.class, "country", metadata() );
+		assertFalse( "DDL constraints are not applied", column.isNullable() );
 	}
 
 	@Override

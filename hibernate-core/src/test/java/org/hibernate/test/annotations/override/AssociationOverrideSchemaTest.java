@@ -1,17 +1,17 @@
 package org.hibernate.test.annotations.override;
 
-import java.util.Iterator;
-
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -37,24 +37,18 @@ public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testJoinTableSchemaName() {
-		Iterator<Table> tableIterator = configuration().getTableMappings();
-		while ( tableIterator.hasNext() ) {
-			Table table = tableIterator.next();
-			if ( TABLE_NAME.equals( table.getName() ) ) {
-				Assert.assertEquals( SCHEMA_NAME, table.getSchema() );
-				return;
-			}
-		}
-		Assert.fail();
+		TableSpecification table = SchemaUtil.getTable( TABLE_NAME, metadata() );
+		assertNotNull( table );
+		assertEquals( SCHEMA_NAME, table.getSchema().getName().getSchema().getText());
 	}
 
 	@Test
 	public void testJoinTableJoinColumnName() {
-		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, configuration() ) );
+		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, metadata() ) );
 	}
 
 	@Test
 	public void testJoinTableColumnName() {
-		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, configuration() ) );
+		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, metadata() ) );
 	}
 }

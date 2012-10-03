@@ -23,11 +23,12 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
@@ -47,14 +48,13 @@ import org.hibernate.test.annotations.id.sequences.entities.Shoe;
 import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -316,9 +316,9 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
-				.getIdentifierProperty().getValue().getColumnIterator().next();
-		assertEquals( "ball_id", idCol.getName() );
+		Column idCol = SchemaUtil.getIndexes( Ball.class, metadata() )
+				.next().getColumns().get( 0 );
+		assertEquals( "ball_id", idCol.getColumnName().getText() );
 	}
 
 	@Test

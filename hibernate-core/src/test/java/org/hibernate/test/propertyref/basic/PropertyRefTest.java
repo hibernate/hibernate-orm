@@ -23,10 +23,15 @@
  */
 package org.hibernate.test.propertyref.basic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -36,16 +41,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -273,9 +273,9 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
-		PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
+		TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );
 
-		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
+		Iterator foreignKeyIterator = table.getForeignKeys().iterator();
 		boolean found = false;
 		while ( foreignKeyIterator.hasNext() ) {
 			ForeignKey element = (ForeignKey) foreignKeyIterator.next();

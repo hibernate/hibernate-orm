@@ -23,6 +23,8 @@
  */
 package org.hibernate.testing.junit4;
 
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -65,26 +67,22 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.type.Type;
-
-import org.junit.After;
-import org.junit.Before;
-
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-
-import static org.junit.Assert.fail;
+import org.hibernate.type.Type;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"deprecation"} )
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
@@ -93,6 +91,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private boolean isMetadataUsed;
 	private Configuration configuration;
+	private MetadataImplementor metadataImplementor;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
@@ -104,6 +103,22 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected Configuration configuration() {
 		return configuration;
+	}
+
+	protected MetadataImplementor metadata() {
+		return metadataImplementor;
+	}
+
+	protected EntityBinding getEntityBinding(Class<?> clazz) {
+		return metadataImplementor.getEntityBinding( clazz.getName() );
+	}
+
+	protected EntityBinding getRootEntityBinding(Class<?> clazz) {
+		return metadataImplementor.getRootEntityBinding( clazz.getName() );
+	}
+	
+	protected Iterator<PluralAttributeBinding> getCollectionBindings() {
+		return metadataImplementor.getCollectionBindings().iterator();
 	}
 
 	protected StandardServiceRegistryImpl serviceRegistry() {
@@ -145,7 +160,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				true
 		);
 		if ( isMetadataUsed ) {
-			MetadataImplementor metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
+			metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
 			afterConstructAndConfigureMetadata( metadataImplementor );
 			applyCacheSettings(metadataImplementor);
 			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
@@ -176,13 +191,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		MetadataSources sources = new MetadataSources( bootRegistry );
 		addMappings( sources );
 		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
-	}
-
-	// TODO: is this still needed?
-	protected Configuration buildConfiguration() {
-		Configuration cfg = constructAndConfigureConfiguration();
-		afterConstructAndConfigureConfiguration( cfg );
-		return cfg;
 	}
 
 	private Configuration constructAndConfigureConfiguration() {

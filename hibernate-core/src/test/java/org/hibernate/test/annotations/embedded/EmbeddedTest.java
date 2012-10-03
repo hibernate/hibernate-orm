@@ -408,9 +408,9 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", metadata() ) );
 
 		//just to make sure, use the mapping
 		Session s;
@@ -532,7 +532,12 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 				CorpType.class,
 				Nationality.class,
 				Manager.class,
-				FavoriteThings.class
+				FavoriteThings.class,
+				Address.class,
+				Country.class,
+				InternetFavorites.class,
+				FixedLeg.class,
+				FloatLeg.class
 		};
 	}
 }

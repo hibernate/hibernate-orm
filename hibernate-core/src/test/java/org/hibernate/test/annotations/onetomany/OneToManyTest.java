@@ -479,6 +479,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4605" )
 	public void testJoinColumnConfiguredInXml() {
+		// TODO: How to check joins with EntityBinding?
 		PersistentClass pc = configuration().getClassMapping( Model.class.getName() );
 		Table table = pc.getRootTable();
 		Iterator iter = table.getColumnIterator();

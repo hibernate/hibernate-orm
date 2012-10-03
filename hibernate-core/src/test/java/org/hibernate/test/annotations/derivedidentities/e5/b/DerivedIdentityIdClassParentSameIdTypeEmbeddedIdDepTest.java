@@ -40,9 +40,9 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentityIdClassParentSameIdTypeEmbeddedIdDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
 		Person e = new Person();
 		e.firstName = "Emmanuel";
 		e.lastName = "Bernard";

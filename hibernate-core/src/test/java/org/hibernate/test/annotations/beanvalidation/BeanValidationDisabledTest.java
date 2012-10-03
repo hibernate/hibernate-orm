@@ -23,21 +23,20 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
-import javax.validation.ConstraintViolationException;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import java.math.BigDecimal;
+
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -62,11 +61,11 @@ public class BeanValidationDisabledTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDDLDisabled() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
+		EntityBinding binding = getEntityBinding( Address.class );
+		Column countryColumn = binding.getPrimaryTable().locateColumn( "country" );
 		assertTrue( "DDL constraints are applied", countryColumn.isNullable() );
+		return;
 	}
 
 	@Override

@@ -50,6 +50,7 @@ import static org.junit.Assert.fail;
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() throws Exception {
+		// TODO: How to get Joins with EntityBindings?
 		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();

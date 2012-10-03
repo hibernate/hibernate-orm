@@ -59,7 +59,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
+		assertEquals( "Flight", getEntityBinding( Flight.class ).getPrimaryTableName() );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -314,7 +314,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
+		assertEquals( "Corporation", getEntityBinding( Company.class ).getPrimaryTableName() );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();

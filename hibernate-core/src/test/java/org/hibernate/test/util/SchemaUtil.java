@@ -22,43 +22,67 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.util;
+
 import java.util.Iterator;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
  * Check that the Hibernate metamodel contains some database objects
  *
- * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public abstract class SchemaUtil {
-	public static boolean isColumnPresent(String tableName, String columnName, Configuration cfg) {
-		final Iterator<Table> tables = ( Iterator<Table> ) cfg.getTableMappings();
-		while (tables.hasNext()) {
-			Table table = tables.next();
-			if (tableName.equals( table.getName() ) ) {
-				Iterator<Column> columns = (Iterator<Column>) table.getColumnIterator();
-				while ( columns.hasNext() ) {
-					Column column = columns.next();
-					if ( columnName.equals( column.getName() ) ) {
-						return true;
-					}
-				}
-			}
+	
+	public static boolean isColumnPresent(
+			String tableName, String columnName, Metadata metadata ) {
+		try {
+			TableSpecification table = getTable( tableName, metadata );
+			return ( table.locateColumn( columnName ) == null ) ? false : true;
+		} catch ( AssertionFailure e ) {
+			return false;
 		}
-		return false;
 	}
 
-	public static boolean isTablePresent(String tableName, Configuration cfg) {
-		final Iterator<Table> tables = ( Iterator<Table> ) cfg.getTableMappings();
-		while (tables.hasNext()) {
-			Table table = tables.next();
-			if (tableName.equals( table.getName() ) ) {
-				return true;
-			}
+	public static boolean isTablePresent( String tableName, Metadata metadata ) {
+		try {
+			TableSpecification table = getTable( tableName, metadata );
+			return ( table == null ) ? false : true;
+		} catch ( AssertionFailure e ) {
+			return false;
 		}
-		return false;
+	}
+	
+	public static TableSpecification getTable( 
+			Class<?> entityClass, Metadata metadata ) throws AssertionFailure {
+		final EntityBinding binding = metadata.getEntityBinding( 
+				entityClass.getName() );
+		return binding.getPrimaryTable();
+	}
+	
+	public static TableSpecification getTable( 
+			String tableName, Metadata metadata ) throws AssertionFailure {
+		final EntityBinding binding = metadata.getEntityBinding( tableName );
+		return binding.locateTable( tableName );
+	}
+	
+	public static Column getColumn( Class<?> entityClass, String columnName,
+			Metadata metadata ) throws AssertionFailure {
+		return getTable( entityClass, metadata ).locateColumn( columnName );
+	}
+	
+	public static Column getColumn( String tableName, String columnName,
+			Metadata metadata ) throws AssertionFailure {
+		return getTable( tableName, metadata ).locateColumn( columnName );
+	}
+	
+	public static Iterator<Index> getIndexes( Class<?> entityClass,
+			Metadata metadata ) throws AssertionFailure {
+		return getTable( entityClass, metadata ).getIndexes().iterator();
 	}
 }

@@ -48,6 +48,8 @@ public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTes
 
 	@Test
 	public void testSameMappingValues() {
+		// TODO: These need to use the new metamodel, but the information
+		// is not available in EntityBinding.
 		RootClass forest = (RootClass) configuration().getClassMapping( Forest.class.getName() );
 		RootClass forest2 = (RootClass) configuration().getClassMapping( Forest2.class.getName() );
 		assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );

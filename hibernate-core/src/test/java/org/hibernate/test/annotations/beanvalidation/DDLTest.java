@@ -23,18 +23,17 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import org.junit.Test;
-
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator are enabled.
@@ -46,56 +45,49 @@ import static org.junit.Assert.assertTrue;
 public class DDLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testBasicDDL() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "state" ).getColumnIterator().next();
-		assertEquals( stateColumn.getLength(), 3 );
-		Column zipColumn = (Column) classMapping.getProperty( "zip" ).getColumnIterator().next();
-		assertEquals( zipColumn.getLength(), 5 );
+		Column stateColumn = SchemaUtil.getColumn( Address.class, "state", metadata() );
+		assertEquals( stateColumn.getSize().getLength(), 3 );
+		Column zipColumn = SchemaUtil.getColumn( Address.class, "zip", metadata() );
+		assertEquals( zipColumn.getSize().getLength(), 5 );
 		assertFalse( zipColumn.isNullable() );
 	}
 
 	@Test
 	public void testApplyOnIdColumn() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Column serialColumn = (Column) classMapping.getIdentifierProperty().getColumnIterator().next();
-		assertEquals( "Validator annotation not applied on ids", 2, serialColumn.getLength() );
+		Index index = SchemaUtil.getIndexes( Tv.class, metadata() ).next();
+		assertEquals( "Validator annotation not applied on ids", 2,
+				index.getColumns().get( 0 ).getSize().getLength() );
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5281" )
 	public void testLengthConstraint() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Column modelColumn = (Column) classMapping.getProperty( "model" ).getColumnIterator().next();
-		assertEquals( modelColumn.getLength(), 5 );
+		Column column = SchemaUtil.getColumn( Tv.class, "model", metadata() );
+		assertEquals( column.getSize().getLength(), 5 );
 	}
 
 	@Test
 	public void testApplyOnManyToOne() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( TvOwner.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "tv" ).getColumnIterator().next();
-		assertEquals( "Validator annotations not applied on associations", false, serialColumn.isNullable() );
+		Column column = SchemaUtil.getColumn( TvOwner.class, "tv", metadata() );
+		assertEquals( "Validator annotations not applied on associations", false, column.isNullable() );
 	}
 
 	@Test
 	public void testSingleTableAvoidNotNull() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Rock.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "bit" ).getColumnIterator().next();
-		assertTrue( "Notnull should not be applied on single tables", serialColumn.isNullable() );
+		Column column = SchemaUtil.getColumn( Rock.class, "bit", metadata() );
+		assertTrue( "Notnull should not be applied on single tables", column.isNullable() );
 	}
 
 	@Test
 	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Property property = classMapping.getProperty( "tuner.frequency" );
-		Column serialColumn = (Column) property.getColumnIterator().next();
+		Column column = SchemaUtil.getColumn( Tv.class, "tuner.frequency", metadata() );
 		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", false, serialColumn.isNullable()
+				"Validator annotations are applied on tuner as it is @NotNull", false, column.isNullable()
 		);
 
-		property = classMapping.getProperty( "recorder.time" );
-		serialColumn = (Column) property.getColumnIterator().next();
+		column = SchemaUtil.getColumn( Tv.class, "recorder.time", metadata() );
 		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
+				"Validator annotations are applied on tuner as it is @NotNull", true, column.isNullable()
 		);
 	}
 

@@ -311,6 +311,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
+		// TODO: How to check joins with EntityBinding?
 		PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
 		Iterator iter = pc.getJoinIterator();
 		Table table = ( ( Join ) iter.next() ).getTable();

@@ -23,23 +23,23 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
-import java.io.InputStream;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.io.InputStream;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-6271")
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
+	
 	@Test
 	public void testNonExistentOrmVersion() {
 		try {
-			Configuration config = buildConfiguration();
+			Configuration config = configuration();
 			String xmlFileName = "org/hibernate/test/annotations/xml/ejb3/orm5.xml";
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
 			config.addInputStream( is );

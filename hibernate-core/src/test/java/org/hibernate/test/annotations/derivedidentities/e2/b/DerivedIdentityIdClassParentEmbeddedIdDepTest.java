@@ -18,11 +18,11 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentityIdClassParentEmbeddedIdDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_firstName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_lastName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_firstName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_lastName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", metadata() ) );
 		Employee e = new Employee();
 		e.firstName = "Emmanuel";
 		e.lastName = "Bernard";

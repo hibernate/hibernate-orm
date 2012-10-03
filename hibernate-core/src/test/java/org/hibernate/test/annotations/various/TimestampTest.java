@@ -23,49 +23,48 @@
  */
 package org.hibernate.test.annotations.various;
 
-import org.junit.Test;
-
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.DbTimestampType;
-import org.hibernate.type.TimestampType;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.DbTimestampType;
+import org.hibernate.type.TimestampType;
+import org.hibernate.type.Type;
+import org.junit.Test;
 
 /**
  * Test for the @Timestamp annotation.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class TimestampTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testTimestampSourceIsVM() throws Exception {
 		assertTimestampSource( VMTimestamped.class, TimestampType.class );
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testTimestampSourceIsDB() throws Exception {
 		assertTimestampSource( DBTimestamped.class, DbTimestampType.class );
 	}
 
 	private void assertTimestampSource(Class<?> clazz, Class<?> expectedTypeClass) throws Exception {
-		buildConfiguration();
 		ClassMetadata meta = sessionFactory().getClassMetadata( clazz );
 		assertTrue( "Entity is annotated with @Timestamp and should hence be versioned", meta.isVersioned() );
 
-		PersistentClass persistentClass = configuration().getClassMapping( clazz.getName() );
-		assertNotNull( persistentClass );
-		Property versionProperty = persistentClass.getVersion();
-		assertNotNull( versionProperty );
-		assertEquals( "Wrong timestamp type", expectedTypeClass, versionProperty.getType().getClass() );
+		EntityBinding binding = getEntityBinding( clazz );
+		assertNotNull( binding );
+		Type type = binding.getHierarchyDetails().getEntityVersion()
+				.getVersioningAttributeBinding().getHibernateTypeDescriptor()
+				.getResolvedTypeMapping();
+		assertNotNull( type );
+		assertEquals( "Wrong timestamp type", expectedTypeClass,
+				type.getClass() );
 	}
 
 	@Override

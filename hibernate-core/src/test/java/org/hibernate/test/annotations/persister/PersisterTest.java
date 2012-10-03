@@ -23,15 +23,14 @@
  */
 package org.hibernate.test.annotations.persister;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Shawn Clowater
@@ -41,21 +40,22 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityEntityPersisterAndPersisterSpecified() throws Exception {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified
-		PersistentClass persistentClass = configuration().getClassMapping( Deck.class.getName() );
-		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
-				persistentClass.getEntityPersisterClass() );
+		Class<? extends EntityPersister> clazz = getEntityBinding( Deck.class ).getCustomEntityPersisterClass();
+		assertEquals( "Incorrect Persister class for " + Deck.class.getName(),
+				EntityPersister.class, clazz );
 	}
 
 	@Test
 	public void testEntityEntityPersisterSpecified() throws Exception {
 		//tests the persister specified with an @Entity.persister()
-		PersistentClass persistentClass = configuration().getClassMapping( Card.class.getName() );
-		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
-				SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
+		Class<? extends EntityPersister> clazz = getEntityBinding( Card.class ).getCustomEntityPersisterClass();
+		assertEquals( "Incorrect Persister class for " + Card.class.getName(),
+				SingleTableEntityPersister.class, clazz );
 	}
 
 	@Test
 	public void testCollectionPersisterSpecified() throws Exception {
+		// TODO: use getCollectionBindings()
 		//tests the persister specified by the @Persister annotation on a collection
 		Collection collection = configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
 		assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,

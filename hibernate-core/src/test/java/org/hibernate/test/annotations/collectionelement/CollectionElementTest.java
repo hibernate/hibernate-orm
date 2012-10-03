@@ -34,8 +34,7 @@ import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -251,32 +250,28 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDefaultValueColumnForBasic() throws Exception {
-		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
-		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
-		isCollectionColumnPresent( Boy.class.getName(), "nickNames", "nickNames" );
-		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
+		isCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "nickNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
 	}
 
 	@Test
 	public void testDefaultFKNameForElementCollection() throws Exception {
-		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
+		isCollectionColumnPresent( Boy.class.getName(), "Boy_id" );
 	}
 
-	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {
-
-	}
-
-	private void isDefaultValueCollectionColumnPresent(String collectionOwner, String propertyName) {
-		isCollectionColumnPresent( collectionOwner, propertyName, propertyName );
-	}
-
-	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+	private void isCollectionColumnPresent(String collectionOwner, String columnName) {
+		// TODO: Is this correct?  Cannot test due to ManyToOne issues.
+		Iterator<PluralAttributeBinding> bindings = getCollectionBindings();
 		boolean hasDefault = false;
-		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
-			if ( columnName.equals( column.getName() ) ) hasDefault = true;
+		while ( bindings.hasNext() ) {
+			PluralAttributeBinding binding = bindings.next();
+			if ( binding.getAttribute().getName().equals( columnName )
+					&& binding.getAttribute().getAttributeContainer().getClassName().equals( collectionOwner ) ) {
+				hasDefault = true;
+				break;
+			}
 		}
 		assertTrue( "Could not find " + columnName, hasDefault );
 	}

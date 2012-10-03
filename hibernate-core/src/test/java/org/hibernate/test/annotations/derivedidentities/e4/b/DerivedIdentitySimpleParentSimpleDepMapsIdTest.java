@@ -44,8 +44,8 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", metadata() ) );
 		Person e = new Person();
 		e.ssn = "aaa";
 		Session s = openSession(  );
@@ -70,8 +70,8 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends BaseCoreFunc
 
 	@Test
 	public void testManyToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "FK", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", metadata() ) );
 		Person e = new Person();
 		e.ssn = "aaa";
 		Session s = openSession(  );

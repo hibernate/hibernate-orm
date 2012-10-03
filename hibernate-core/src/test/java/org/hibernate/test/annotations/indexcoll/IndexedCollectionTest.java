@@ -39,6 +39,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -74,6 +75,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
+		// TODO: Use getCollectionBindings, but unsure of suffix, etc.
 		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;

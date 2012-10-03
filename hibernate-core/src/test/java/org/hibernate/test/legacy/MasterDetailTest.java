@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.legacy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -31,8 +35,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -47,14 +49,11 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.jdbc.AbstractWork;
-import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipLog;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 
 @FailureExpectedWithNewMetamodel
@@ -104,10 +103,10 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	@Test
 	public void testMeta() throws Exception {
-		PersistentClass clazz = configuration().getClassMapping( Master.class.getName() );
-		MetaAttribute meta = clazz.getMetaAttribute("foo");
+		EntityBinding binding = getEntityBinding( Master.class );
+		MetaAttribute meta = binding.getMetaAttributeContext().getMetaAttribute("foo");
 		assertTrue( "foo".equals( meta.getValue() ) );
-		meta = clazz.getProperty("name").getMetaAttribute("bar");
+		meta = binding.getMetaAttributeContext().getMetaAttribute("bar");
 		assertTrue( meta.isMultiValued() );
 	}
 

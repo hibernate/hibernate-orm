@@ -40,8 +40,8 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentitySimpleParentEmbeddedIdDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", metadata() ) );
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";
@@ -64,8 +64,8 @@ public class DerivedIdentitySimpleParentEmbeddedIdDepTest extends BaseCoreFuncti
 
 	@Test
 	public void testOneToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "ExclusiveDependent", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "ExclusiveDependent", "empPK", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "ExclusiveDependent", "FK", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "ExclusiveDependent", "empPK", metadata() ) );
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";

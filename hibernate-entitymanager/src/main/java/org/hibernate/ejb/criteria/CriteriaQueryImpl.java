@@ -49,346 +49,347 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, Serializable {
-	private final Class<T> returnType;
+    private final Class<T> returnType;
 
-	private final QueryStructure<T> queryStructure;
-	private List<Order> orderSpecs = Collections.emptyList();
-
-
-	public CriteriaQueryImpl(
-			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> returnType) {
-		super( criteriaBuilder );
-		this.returnType = returnType;
-		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Class<T> getResultType() {
-		return returnType;
-	}
+    private final QueryStructure<T> queryStructure;
+    private List<Order> orderSpecs = Collections.emptyList();
 
 
-	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    public CriteriaQueryImpl(
+            CriteriaBuilderImpl criteriaBuilder,
+            Class<T> returnType) {
+        super( criteriaBuilder );
+        this.returnType = returnType;
+        this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> distinct(boolean applyDistinction) {
-		queryStructure.setDistinct( applyDistinction );
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public Class<T> getResultType() {
+        return returnType;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isDistinct() {
-		return queryStructure.isDistinct();
-	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public Selection<T> getSelection() {
-		return ( Selection<T> ) queryStructure.getSelection();
-	}
+    // SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void applySelection(Selection<? extends T> selection) {
-		queryStructure.setSelection( selection );
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> distinct(boolean applyDistinction) {
+        queryStructure.setDistinct( applyDistinction );
+        return this;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> select(Selection<? extends T> selection) {
-		applySelection( selection );
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isDistinct() {
+        return queryStructure.isDistinct();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public CriteriaQuery<T> multiselect(Selection<?>... selections) {
-		return multiselect( Arrays.asList( selections ) );
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings({ "unchecked" })
+    public Selection<T> getSelection() {
+        return ( Selection<T> ) queryStructure.getSelection();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
+    public void applySelection(Selection<? extends T> selection) {
+        queryStructure.setSelection( selection );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> select(Selection<? extends T> selection) {
+        applySelection( selection );
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings({ "unchecked" })
+    public CriteriaQuery<T> multiselect(Selection<?>... selections) {
+        return multiselect( Arrays.asList( selections ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings({ "unchecked" })
+    public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
 		final Selection<? extends T> selection;
 
-		if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
-			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
-		}
-		else if ( getResultType().isArray() ) {
+        if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
+            selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
+        }
+        else if ( getResultType().isArray() ) {
 			selection = ( Selection<? extends T> )  criteriaBuilder().array(
-					( Class<? extends Object[]> ) getResultType(),
-					selections
-			);
-		}
-		else if ( Object.class.equals( getResultType() ) ) {
-			switch ( selections.size() ) {
-				case 0: {
-					throw new IllegalArgumentException(
-							"empty selections passed to criteria query typed as Object"
-					);
-				}
-				case 1: {
-					selection = ( Selection<? extends T> ) selections.get( 0 );
-					break;
-				}
-				default: {
+                    ( Class<? extends Object[]> ) getResultType(),
+                    selections
+            );
+        }
+        else if ( Object.class.equals( getResultType() ) ) {
+            switch ( selections.size() ) {
+                case 0: {
+                    throw new IllegalArgumentException(
+                            "empty selections passed to criteria query typed as Object"
+                    );
+                }
+                case 1: {
+                    selection = ( Selection<? extends T> ) selections.get( 0 );
+                    break;
+                }
+                default: {
 					selection = ( Selection<? extends T> ) criteriaBuilder().array( selections );
-				}
-			}
-		}
-		else {
-			selection = criteriaBuilder().construct( getResultType(), selections );
-		}
+                }
+            }
+        }
+        else {
+            selection = criteriaBuilder().construct( getResultType(), selections );
+        }
 		applySelection( selection );
-		return this;
-	}
+        return this;
+    }
 
 
-	// ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Set<Root<?>> getRoots() {
-		return queryStructure.getRoots();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public Set<Root<?>> getRoots() {
+        return queryStructure.getRoots();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public <X> Root<X> from(EntityType<X> entityType) {
-		return queryStructure.from( entityType );
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public <X> Root<X> from(EntityType<X> entityType) {
+        return queryStructure.from( entityType );
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public <X> Root<X> from(Class<X> entityClass) {
-		return queryStructure.from( entityClass );
-	}
-
-
-	// RESTRICTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Predicate getRestriction() {
-		return queryStructure.getRestriction();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> where(Expression<Boolean> expression) {
-		queryStructure.setRestriction( criteriaBuilder().wrap( expression ) );
-		return this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> where(Predicate... predicates) {
-		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
-		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public <X> Root<X> from(Class<X> entityClass) {
+        return queryStructure.from( entityClass );
+    }
 
 
-	// GROUPING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // RESTRICTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public List<Expression<?>> getGroupList() {
-		return queryStructure.getGroupings();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public Predicate getRestriction() {
+        return queryStructure.getRestriction();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> groupBy(Expression<?>... groupings) {
-		queryStructure.setGroupings( groupings );
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> where(Expression<Boolean> expression) {
+        queryStructure.setRestriction( criteriaBuilder().wrap( expression ) );
+        return this;
+    }
 
-	public CriteriaQuery<T> groupBy(List<Expression<?>> groupings) {
-		queryStructure.setGroupings( groupings );
-		return this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Predicate getGroupRestriction() {
-		return queryStructure.getHaving();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> having(Expression<Boolean> expression) {
-		queryStructure.setHaving( criteriaBuilder().wrap( expression ) );
-		return this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> having(Predicate... predicates) {
-		queryStructure.setHaving( criteriaBuilder().and( predicates ) );
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> where(Predicate... predicates) {
+        // TODO : assuming this should be a conjuntion, but the spec does not say specifically...
+        queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
+        return this;
+    }
 
 
-	// ORDERING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // GROUPING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public List<Order> getOrderList() {
-		return orderSpecs;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public List<Expression<?>> getGroupList() {
+        return queryStructure.getGroupings();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> orderBy(Order... orders) {
-		if ( orders != null && orders.length > 0 ) {
-			orderSpecs = Arrays.asList( orders );
-		}
-		else {
-			orderSpecs = Collections.emptyList();
-		}
-		return this;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> groupBy(Expression<?>... groupings) {
+        queryStructure.setGroupings( groupings );
+        return this;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CriteriaQuery<T> orderBy(List<Order> orders) {
-		orderSpecs = orders;
-		return this;
-	}
+    public CriteriaQuery<T> groupBy(List<Expression<?>> groupings) {
+        queryStructure.setGroupings( groupings );
+        return this;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Set<ParameterExpression<?>> getParameters() {
-		return queryStructure.getParameters();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public Predicate getGroupRestriction() {
+        return queryStructure.getHaving();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public <U> Subquery<U> subquery(Class<U> subqueryType) {
-		return queryStructure.subquery( subqueryType );
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> having(Expression<Boolean> expression) {
+        queryStructure.setHaving( criteriaBuilder().wrap( expression ) );
+        return this;
+    }
 
-	public void validate() {
-		// getRoots() is explicitly supposed to return empty if none defined, no need to check for null
-		if ( getRoots().isEmpty() ) {
-			throw new IllegalStateException( "No criteria query roots were specified" );
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> having(Predicate... predicates) {
+        queryStructure.setHaving( criteriaBuilder().and( predicates ) );
+        return this;
+    }
 
-		// if there is not an explicit selection, there is an *implicit* selection of the root entity provided only
-		// a single query root was defined.
-		if ( getSelection() == null && !hasImplicitSelection() ) {
-			throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
-		}
-	}
 
-	/**
-	 * If no explicit selection was defined, we have a condition called an implicit selection if the query specified
-	 * a single {@link Root} and the java type of that {@link Root root's} model is the same as this criteria's
-	 * {@link #getResultType() result type}.
-	 *
-	 * @return True if there is an explicit selection; false otherwise.
-	 */
-	private boolean hasImplicitSelection() {
-		if ( getRoots().size() != 1 ) {
-			return false;
-		}
+    // ORDERING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		Root root = getRoots().iterator().next();
-		if ( root.getModel().getJavaType() != returnType ) {
-			return false;
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public List<Order> getOrderList() {
+        return orderSpecs;
+    }
 
-		// if we get here, the query defined no selection but defined a single root of the same type as the
-		// criteria query return, so we use that as the implicit selection
-		//
-		// todo : should we put an implicit marker in the selection to this fact to make later processing easier?
-		return true;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> orderBy(Order... orders) {
+        if ( orders != null && orders.length > 0 ) {
+            orderSpecs = Arrays.asList( orders );
+        }
+        else {
+            orderSpecs = Collections.emptyList();
+        }
+        return this;
+    }
 
-	public CriteriaQueryCompiler.RenderedCriteriaQuery render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		final StringBuilder jpaqlQuery = new StringBuilder();
+    /**
+     * {@inheritDoc}
+     */
+    public CriteriaQuery<T> orderBy(List<Order> orders) {
+        orderSpecs = orders;
+        return this;
+    }
 
-		queryStructure.render( jpaqlQuery, renderingContext );
+    /**
+     * {@inheritDoc}
+     */
+    public Set<ParameterExpression<?>> getParameters() {
+        return queryStructure.getParameters();
+    }
 
-		if ( ! getOrderList().isEmpty() ) {
-			jpaqlQuery.append( " order by " );
-			String sep = "";
-			for ( Order orderSpec : getOrderList() ) {
-				jpaqlQuery.append( sep )
-						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
-						.append( orderSpec.isAscending() ? " asc" : " desc" );
-				sep = ", ";
-			}
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public <U> Subquery<U> subquery(Class<U> subqueryType) {
+        return queryStructure.subquery( subqueryType );
+    }
 
-		return new CriteriaQueryCompiler.RenderedCriteriaQuery() {
-			public String getQueryString() {
-				return jpaqlQuery.toString();
-			}
+    public void validate() {
+        // getRoots() is explicitly supposed to return empty if none defined, no need to check for null
+        if ( getRoots().isEmpty() ) {
+            throw new IllegalStateException( "No criteria query roots were specified" );
+        }
 
-			@SuppressWarnings({ "unchecked" })
-			public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
-				SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-				return selection == null
-						? null
-						: selection.getValueHandlers();
-			}
+        // if there is not an explicit selection, there is an *implicit* selection of the root entity provided only
+        // a single query root was defined.
+        if ( getSelection() == null && !hasImplicitSelection() ) {
+            throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
+        }
+    }
 
-			public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator() {
-				return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
-					public void validate(Type[] returnTypes) {
-						SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-						if ( selection != null ) {
-							if ( selection.isCompoundSelection() ) {
-								if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
-									throw new IllegalStateException(
-											"Number of return values [" + returnTypes.length +
-													"] did not match expected [" +
-													selection.getCompoundSelectionItems().size() + "]"
-									);
-								}
-							}
-							else {
-								if ( returnTypes.length > 1 ) {
-									throw new IllegalStateException(
-											"Number of return values [" + returnTypes.length +
-													"] did not match expected [1]"
-									);
-								}
-							}
-						}
-					}
-				};
-			}
-		};
-	}
+    /**
+     * If no explicit selection was defined, we have a condition called an implicit selection if the query specified
+     * a single {@link Root} and the java type of that {@link Root root's} model is the same as this criteria's
+     * {@link #getResultType() result type}.
+     *
+     * @return True if there is an explicit selection; false otherwise.
+     */
+    private boolean hasImplicitSelection() {
+        if ( getRoots().size() != 1 ) {
+            return false;
+        }
+
+        Root root = getRoots().iterator().next();
+        Class<?> javaType = root.getModel().getJavaType();
+        if ( javaType != null && javaType != returnType ) {
+            return false;
+        }
+
+        // if we get here, the query defined no selection but defined a single root of the same type as the
+        // criteria query return, so we use that as the implicit selection
+        //
+        // todo : should we put an implicit marker in the selection to this fact to make later processing easier?
+        return true;
+    }
+
+    public CriteriaQueryCompiler.RenderedCriteriaQuery render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+        final StringBuilder jpaqlQuery = new StringBuilder();
+
+        queryStructure.render( jpaqlQuery, renderingContext );
+
+        if ( ! getOrderList().isEmpty() ) {
+            jpaqlQuery.append( " order by " );
+            String sep = "";
+            for ( Order orderSpec : getOrderList() ) {
+                jpaqlQuery.append( sep )
+                        .append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
+                        .append( orderSpec.isAscending() ? " asc" : " desc" );
+                sep = ", ";
+            }
+        }
+
+        return new CriteriaQueryCompiler.RenderedCriteriaQuery() {
+            public String getQueryString() {
+                return jpaqlQuery.toString();
+            }
+
+            @SuppressWarnings({ "unchecked" })
+            public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
+                SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+                return selection == null
+                        ? null
+                        : selection.getValueHandlers();
+            }
+
+            public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator() {
+                return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
+                    public void validate(Type[] returnTypes) {
+                        SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+                        if ( selection != null ) {
+                            if ( selection.isCompoundSelection() ) {
+                                if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
+                                    throw new IllegalStateException(
+                                            "Number of return values [" + returnTypes.length +
+                                                    "] did not match expected [" +
+                                                    selection.getCompoundSelectionItems().size() + "]"
+                                    );
+                                }
+                            }
+                            else {
+                                if ( returnTypes.length > 1 ) {
+                                    throw new IllegalStateException(
+                                            "Number of return values [" + returnTypes.length +
+                                                    "] did not match expected [1]"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+        };
+    }
 }

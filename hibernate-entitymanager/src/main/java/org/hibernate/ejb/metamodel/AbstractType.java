@@ -28,16 +28,30 @@ import javax.persistence.metamodel.Type;
 /**
  * Defines commonality for the JPA {@link Type} hierarchy of interfaces.
  *
+ * This adds a type name so we don't rely on the class name. That allows
+ * for non-class-based (metadata-driven) models. --koehn
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractType<X> implements Type<X>, Serializable {
-	private final Class<X> javaType;
+    private final Class<X> javaType;
+    private String typeName;
 
-	public AbstractType(Class<X> javaType) {
-		this.javaType = javaType;
-	}
+    public AbstractType(Class<X> javaType) {
+        this.javaType = javaType;
 
-	public Class<X> getJavaType() {
-		return javaType;
-	}
+        this.typeName = javaType != null ? javaType.getName() : "unknown";
+    }
+
+    public Class<X> getJavaType() {
+        return javaType;
+    }
+
+    public String getTypeName() {
+        return typeName;
+    }
+
+    public void setTypeName(String name) {
+        this.typeName = name;
+    }
 }

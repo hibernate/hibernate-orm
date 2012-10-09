@@ -92,8 +92,6 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
     @Test
-    @RequiresDialect( DB2Dialect.class )
-    @FailureExpected( jiraKey = "HHH-6655" )
     public void testTrim() {
         final String expectedResult = "David R. Vincent";
         EntityManager em = getOrCreateEntityManager();

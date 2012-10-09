@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
@@ -36,10 +37,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
@@ -58,8 +55,8 @@ import org.hibernate.ejb.test.callbacks.Television;
 import org.hibernate.ejb.test.callbacks.VideoSystem;
 import org.hibernate.ejb.test.inheritance.Fruit;
 import org.hibernate.ejb.test.inheritance.Strawberry;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -91,8 +88,6 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
     @Test
-    @RequiresDialect( DB2Dialect.class )
-    @FailureExpected( jiraKey = "HHH-6655" )
     public void testTrim() {
         final String expectedResult = "David R. Vincent";
         EntityManager em = getOrCreateEntityManager();

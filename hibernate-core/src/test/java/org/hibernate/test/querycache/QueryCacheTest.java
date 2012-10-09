@@ -23,17 +23,21 @@
  */
 package org.hibernate.test.querycache;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-
+import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.testing.DialectChecks;
@@ -41,17 +45,29 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.Transformers;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
+ * @author Brett Meyer
  */
 public class QueryCacheTest extends BaseCoreFunctionalTestCase {
+
+	private static final CompositeKey PK = new CompositeKey(1, 2);
+	
 	@Override
 	public String[] getMappings() {
 		return new String[] { "querycache/Item.hbm.xml" };
+	}
+
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] { 
+				CompositeKey.class,
+				EntityWithCompositeKey.class,
+				StringCompositeKey.class,
+				EntityWithStringCompositeKey.class				
+		};
 	}
 
 	@Override
@@ -431,6 +447,52 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		assertEquals( qs.getExecutionCount(), 3 );
 		assertEquals( es.getFetchCount(), 0 ); //check that it was being cached
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-4459" )
+	public void testGetByCompositeId() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.persist( new EntityWithCompositeKey( PK ) );
+		Query query = s.createQuery( "FROM EntityWithCompositeKey e WHERE e.pk = :pk" );
+		query.setCacheable( true );
+		query.setParameter( "pk", PK );
+		assertEquals(1, query.list().size( ));
+		s.getTransaction().rollback();
+		s.close();
+		
+		s = openSession();
+		s.beginTransaction();
+		EntityWithStringCompositeKey entity = new EntityWithStringCompositeKey();
+		StringCompositeKey key = new StringCompositeKey();
+		key.setAnalog( "foo1" );
+		key.setDevice( "foo2" );
+		key.setDeviceType( "foo3" );
+		key.setSubstation( "foo4" );
+		entity.setPk( key );
+		s.persist( entity );
+		Criteria c = s.createCriteria(
+				EntityWithStringCompositeKey.class ).add( Restrictions.eq( 
+						"pk", key ) );
+		c.setCacheable( true );
+		assertEquals( 1, c.list().size() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+//	@Test
+//	public void testGetByCompositeIdNoCache() {
+//		Query query = em.createQuery("FROM EntityWithCompositeKey e WHERE e.pk = :pk");
+//		query.setParameter("pk", PK);
+//		assertEquals(1, query.getResultList().size());
+//	}
+//
+//	@Test
+//	public void testGetByEntityIself() {
+//		Query query = em.createQuery("FROM EntityWithCompositeKey e WHERE e = :ent");
+//		query.setParameter("ent", new EntityWithCompositeKey(PK));
+//		assertEquals(1, query.getResultList().size());
+//	}
 
 }
 

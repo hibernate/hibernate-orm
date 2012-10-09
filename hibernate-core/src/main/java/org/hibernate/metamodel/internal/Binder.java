@@ -999,10 +999,15 @@ public class Binder {
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final ToOneAttributeSource attributeSource,
-			final SingularAttribute singularAttribute ) {
-		final SingularAttribute attribute = singularAttribute != null ? singularAttribute : createSingularAttribute( attributeBindingContainer, attributeSource );
+			SingularAttribute attribute ) {
+		if( attribute == null ){
+			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
+		}
 		// TODO: figure out which table is used (could be secondary table...)
 		final TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
+		final List< RelationalValueBinding > relationalValueBindings =
+			               bindValues( attributeBindingContainer, attributeSource, attribute, table );
+
 
 		//find the referenced entitybinding
 		org.hibernate.internal.util.ValueHolder< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
@@ -1035,23 +1040,7 @@ public class Binder {
 							attributeSource.getName(),
 							referencedAttributeBinding.getAttribute().getName() ) );
 		}
-		//bind @ManyToOne columns on the owner table
-		final List< RelationalValueBinding > relationalValueBindings =
-				bindValues( attributeBindingContainer, attributeSource, attribute, table, new DefaultNamingStrategy(){
-					@Override
-					public String defaultName() {
-						final SingularAttributeBinding referencedSingularAttributeBinding = SingularAttributeBinding.class.cast( referencedAttributeBinding );
-						final RelationalValueBinding relationalValueBinding =  referencedSingularAttributeBinding.getRelationalValueBindings().get( 0 );
-						final Value referencedValue = relationalValueBinding.getValue();
-						if(!Column.class.isInstance( referencedValue )){
-							//todo throw exception?
-						}
-						return bindingContext().getNamingStrategy().foreignKeyColumnName( attribute.getName(),
-								referencedEntityBinding.getEntity().getName(),
-								referencedEntityBinding.getEntity().getName(),
-								Column.class.cast( referencedValue ).getColumnName().getText());
-					}
-				} );
+
 		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
 		// now we have everything to create a ManyToOneAttributeBinding
 		final ManyToOneAttributeBinding attributeBinding =
@@ -1521,24 +1510,12 @@ public class Binder {
 		}
 	}
 
-	private List<RelationalValueBinding> bindValues(final AttributeBindingContainer attributeBindingContainer,
-													final RelationalValueSourceContainer valueSourceContainer,
-													final Attribute attribute,
-													final TableSpecification defaultTable){
-		return bindValues( attributeBindingContainer, valueSourceContainer, attribute, defaultTable, new DefaultNamingStrategy() {
-			@Override
-			public String defaultName() {
-				return bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() );
-			}
-		} );
-	}
 
 	private List< RelationalValueBinding > bindValues(
 			final AttributeBindingContainer attributeBindingContainer,
 			final RelationalValueSourceContainer valueSourceContainer,
 			final Attribute attribute,
-			final TableSpecification defaultTable,
-			final DefaultNamingStrategy defaultNamingStrategy) {
+			final TableSpecification defaultTable) {
 		final List< RelationalValueBinding > valueBindings = new ArrayList< RelationalValueBinding >();
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = SingularAttributeSource.class.isInstance(
 				valueSourceContainer
@@ -1549,7 +1526,7 @@ public class Binder {
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			final String columnName =
-					quotedIdentifier( defaultNamingStrategy.defaultName() );
+					quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
 			final Column column = defaultTable.locateOrCreateColumn( columnName );
 			column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
 			if(isNaturalId){

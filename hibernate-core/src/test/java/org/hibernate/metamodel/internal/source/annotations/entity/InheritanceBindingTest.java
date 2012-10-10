@@ -165,7 +165,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		EntityBinding subclassOfSubclassEntityBinding = getEntityBinding( SubclassOfSubclassOfSingleTableInheritance.class );
 
 		assertTrue( rootEntityBinding.isRoot() );
-		assertNull( rootEntityBinding.getDiscriminatorMatchValue() );
+		assertEquals( rootEntityBinding.getEntity().getName(), rootEntityBinding.getDiscriminatorMatchValue() );
 		assertNull( rootEntityBinding.getSuperEntityBinding() );
 		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ) );
 		assertTrue( rootEntityBinding.isPolymorphic() );

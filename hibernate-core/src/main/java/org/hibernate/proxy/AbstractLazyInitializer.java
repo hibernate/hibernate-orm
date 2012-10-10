@@ -33,7 +33,6 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -224,12 +223,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	protected void prepareForPossibleSpecialSpecjInitialization() {
 		if ( session != null ) {
-			specjLazyLoad =
-					Boolean.parseBoolean(
-							session.getFactory()
-									.getProperties()
-									.getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS )
-					);
+			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( specjLazyLoad && sessionFactoryUuid == null ) {
 				try {

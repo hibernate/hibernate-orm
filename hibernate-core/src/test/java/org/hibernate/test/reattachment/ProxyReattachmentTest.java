@@ -39,6 +39,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7680" )
 public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

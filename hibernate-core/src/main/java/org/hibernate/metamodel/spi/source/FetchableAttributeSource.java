@@ -33,13 +33,6 @@ import org.hibernate.engine.FetchTiming;
  * @author Steve Ebersole
  */
 public interface FetchableAttributeSource {
-	/**
-	 * Obtain the fetch mode to be applied to this association.
-	 *
-	 * @return The fetch mode.
-	 */
-	public FetchMode getFetchMode();
-
 	public FetchTiming getFetchTiming();
 
 	public FetchStyle getFetchStyle();

@@ -194,11 +194,6 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return associationAttribute.getFetchMode();
-	}
-
-	@Override
 	public String getOrder() {
 		return associationAttribute.getOrderBy();
 	}

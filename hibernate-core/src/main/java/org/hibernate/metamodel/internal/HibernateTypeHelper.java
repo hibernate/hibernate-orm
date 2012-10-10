@@ -55,6 +55,7 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -343,14 +344,7 @@ public class HibernateTypeHelper {
 		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
 			hibernateTypeDescriptor.setJavaTypeName( resolvedHibernateType.getReturnedClass().getName() );
 		}
-
-		// todo : this can be made a lot smarter, but for now this will suffice.  currently we only handle single value bindings
-
-		if ( relationalValueBindings.size() > 1 ) {
-			return;
-		}
-		final Value value = relationalValueBindings.get( 0 ).getValue();
-		bindJdbcDataType(resolvedHibernateType, value );
+		bindJdbcDataType( resolvedHibernateType, relationalValueBindings );
 	}
 
 	/**
@@ -374,6 +368,24 @@ public class HibernateTypeHelper {
 						)
 				);
 			}
+		}
+	}
+
+	public void bindJdbcDataType(Type resolvedHibernateType, List<RelationalValueBinding> relationalValueBindings) {
+		if ( relationalValueBindings.size() <= 1 ) {
+			bindJdbcDataType( resolvedHibernateType, relationalValueBindings.get( 0 ).getValue() );
+			return;
+		}
+		final Type resolvedRelationalType =
+				resolvedHibernateType.isEntityType()
+						? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata )
+						: resolvedHibernateType;
+		if ( !ComponentType.class.isInstance( resolvedRelationalType ) ) {
+			binder.bindingContext().makeMappingException( "Column number mismatch" ); // todo refine the exception message
+		}
+		Type[] subTypes = ComponentType.class.cast( resolvedRelationalType ).getSubtypes();
+		for ( int i = 0; i < subTypes.length; i++ ) {
+			bindJdbcDataType( subTypes[i], relationalValueBindings.get( i ).getValue() );
 		}
 	}
 

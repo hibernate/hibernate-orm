@@ -83,7 +83,6 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testManyToOneNaturalIdCached() {
 		NaturalIdOnManyToOne singleManyToOne = new NaturalIdOnManyToOne();
 		Citizen c1 = new Citizen();

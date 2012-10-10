@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.FetchMode;
@@ -32,6 +33,9 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.Binder;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -216,13 +220,6 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return manyToOneElement.getFetch() == null
-				? FetchMode.DEFAULT
-				: FetchMode.valueOf( manyToOneElement.getFetch().value() );
-	}
-
-	@Override
 	public Nature getNature() {
 		return Nature.MANY_TO_ONE;
 	}
@@ -267,6 +264,33 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 		return manyToOneElement.getClazz() != null
 				? manyToOneElement.getClazz()
 				: manyToOneElement.getEntityName();
+	}
+
+	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
+		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+					referencedAttributeBinding
+			);
+			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>();
+			for ( final AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+				result.addAll( getDefaultNamingStrategies( entityName, tableName, attributeBinding ) );
+			}
+			return result;
+		}
+		else {
+			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>( 1 );
+			result.add(
+					new Binder.DefaultNamingStrategy() {
+						@Override
+						public String defaultName() {
+							return bindingContext().getNamingStrategy().propertyToColumnName( getName() );
+						}
+					}
+			);
+			return result;
+		}
+
 	}
 
 	@Override

@@ -93,7 +93,6 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7663" )
 	public void testSqlQueryAutoDiscovery() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();
@@ -120,7 +119,6 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7663" )
 	public void testDialectGetColumnAliasExtractor() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();

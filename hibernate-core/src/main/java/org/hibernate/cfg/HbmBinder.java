@@ -2028,7 +2028,7 @@ public final class HbmBinder {
 
 	private static void initOuterJoinFetchSetting(Element node, Fetchable model) {
 		Attribute fetchNode = node.attribute( "fetch" );
-		final FetchMode fetchStyle;
+		final FetchMode fetchMode;
 		boolean lazy = true;
 		if ( fetchNode == null ) {
 			Attribute jfNode = node.attribute( "outer-join" );
@@ -2038,37 +2038,37 @@ public final class HbmBinder {
 					// default to join and non-lazy for the "second join"
 					// of the many-to-many
 					lazy = false;
-					fetchStyle = FetchMode.JOIN;
+					fetchMode = FetchMode.JOIN;
 				}
 				else if ( "one-to-one".equals( node.getName() ) ) {
 					//NOTE SPECIAL CASE:
 					// one-to-one constrained=false cannot be proxied,
 					// so default to join and non-lazy
 					lazy = ( (OneToOne) model ).isConstrained();
-					fetchStyle = lazy ? FetchMode.DEFAULT : FetchMode.JOIN;
+					fetchMode = lazy ? FetchMode.DEFAULT : FetchMode.JOIN;
 				}
 				else {
-					fetchStyle = FetchMode.DEFAULT;
+					fetchMode = FetchMode.DEFAULT;
 				}
 			}
 			else {
 				// use old (HB 2.1) defaults if outer-join is specified
 				String eoj = jfNode.getValue();
 				if ( "auto".equals( eoj ) ) {
-					fetchStyle = FetchMode.DEFAULT;
+					fetchMode = FetchMode.DEFAULT;
 				}
 				else {
 					boolean join = "true".equals( eoj );
-					fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+					fetchMode = join ? FetchMode.JOIN : FetchMode.SELECT;
 				}
 			}
 		}
 		else {
 			boolean join = "join".equals( fetchNode.getValue() );
 			//lazy = !join;
-			fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+			fetchMode = join ? FetchMode.JOIN : FetchMode.SELECT;
 		}
-		model.setFetchMode( fetchStyle );
+		model.setFetchMode( fetchMode );
 		model.setLazy(lazy);
 	}
 

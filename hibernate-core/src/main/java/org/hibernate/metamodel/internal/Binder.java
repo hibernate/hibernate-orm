@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.FetchMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
@@ -369,7 +370,7 @@ public class Binder {
 				createSingularAttributeJavaType( attributeBinding.getAttribute() ) );
 		Type resolvedType = heuristicType( hibernateTypeDescriptor );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		typeHelper.bindJdbcDataType( resolvedType, ( AbstractValue ) relationalValueBindings.get( 0 ).getValue() );
+		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings );
 		attributeBinding.getAttribute().resolveType( bindingContext().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		return attributeBinding;
 	}
@@ -388,7 +389,7 @@ public class Binder {
 		bindHibernateResolvedType( elementBinding.getHibernateTypeDescriptor(), resolvedElementType );
 		typeHelper.bindJdbcDataType(
 				resolvedElementType,
-				elementBinding.getRelationalValueBindings().get( 0 ).getValue()
+				elementBinding.getRelationalValueBindings()
 		);
 	}
 
@@ -481,7 +482,7 @@ public class Binder {
 				defaultIndexJavaTypeName );
 		Type resolvedElementType = heuristicType( indexBinding.getHibernateTypeDescriptor() );
 		bindHibernateResolvedType( indexBinding.getHibernateTypeDescriptor(), resolvedElementType );
-		typeHelper.bindJdbcDataType( resolvedElementType, (AbstractValue) indexBinding.getIndexRelationalValue() );
+		typeHelper.bindJdbcDataType( resolvedElementType, indexBinding.getIndexRelationalValue() );
 	}
 
 	void bindCollectionTableForeignKey(
@@ -1005,8 +1006,6 @@ public class Binder {
 		}
 		// TODO: figure out which table is used (could be secondary table...)
 		final TableSpecification table = attributeBindingContainer.seekEntityBinding().getPrimaryTable();
-		final List< RelationalValueBinding > relationalValueBindings =
-			               bindValues( attributeBindingContainer, attributeSource, attribute, table );
 
 
 		//find the referenced entitybinding
@@ -1040,6 +1039,22 @@ public class Binder {
 							attributeSource.getName(),
 							referencedAttributeBinding.getAttribute().getName() ) );
 		}
+		/**
+		 * this is not correct, here, if no @JoinColumn defined, we simply create the FK column only with column calucated
+		 * but what we should do is get all the column info from the referenced column(s), including nullable, size etc.
+		 */
+		final List<RelationalValueBinding> relationalValueBindings =
+				bindValues(
+						attributeBindingContainer,
+						attributeSource,
+						attribute,
+						table,
+						attributeSource.getDefaultNamingStrategies(
+								attributeBindingContainer.seekEntityBinding().getEntity().getName(),
+								table.getLogicalName().getText(),
+								referencedAttributeBinding
+						));
+
 
 		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
 		// now we have everything to create a ManyToOneAttributeBinding
@@ -1085,11 +1100,13 @@ public class Binder {
 				attributeSource.getTypeInformation(),
 				referencedJavaTypeValue );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings.get( 0 ).getValue() );
+		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings );
 
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
+//		attributeBinding.setFetchMode( attributeSource.getFetchMode() );
+
 
 		return attributeBinding;
 	}
@@ -1510,13 +1527,30 @@ public class Binder {
 		}
 	}
 
+	private List<RelationalValueBinding> bindValues(
+			final AttributeBindingContainer attributeBindingContainer,
+			final RelationalValueSourceContainer valueSourceContainer,
+			final Attribute attribute,
+			final TableSpecification defaultTable) {
+		final List<DefaultNamingStrategy> list = new ArrayList<DefaultNamingStrategy>( 1 );
+		list.add(
+				new DefaultNamingStrategy() {
+					@Override
+					public String defaultName() {
+						return bindingContext().getNamingStrategy().propertyToColumnName( attribute.getName() );
+					}
+				}
+		);
+		return bindValues( attributeBindingContainer, valueSourceContainer, attribute, defaultTable, list );
+	}
 
 	private List< RelationalValueBinding > bindValues(
 			final AttributeBindingContainer attributeBindingContainer,
 			final RelationalValueSourceContainer valueSourceContainer,
 			final Attribute attribute,
-			final TableSpecification defaultTable) {
-		final List< RelationalValueBinding > valueBindings = new ArrayList< RelationalValueBinding >();
+			final TableSpecification defaultTable,
+			final List<DefaultNamingStrategy> defaultNamingStrategyList) {
+		final List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = SingularAttributeSource.class.isInstance(
 				valueSourceContainer
 		) ? SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability()
@@ -1525,17 +1559,20 @@ public class Binder {
 		final boolean isImmutableNaturalId = isNaturalId && (naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE);
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
-			final String columnName =
-					quotedIdentifier( bindingContexts.peek().getNamingStrategy().propertyToColumnName( attribute.getName() ) );
-			final Column column = defaultTable.locateOrCreateColumn( columnName );
-			column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
-			if(isNaturalId){
-				addUniqueConstraintForNaturalIdColumn( defaultTable, column );
+			for(DefaultNamingStrategy defaultNamingStrategy : defaultNamingStrategyList){
+				final String columnName =
+						quotedIdentifier( defaultNamingStrategy.defaultName() );
+				final Column column = defaultTable.locateOrCreateColumn( columnName );
+				column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
+				if(isNaturalId){
+					addUniqueConstraintForNaturalIdColumn( defaultTable, column );
+				}
+				valueBindings.add( new RelationalValueBinding(
+						column,
+						valueSourceContainer.areValuesIncludedInInsertByDefault(),
+						valueSourceContainer.areValuesIncludedInUpdateByDefault() && !isImmutableNaturalId ) );
 			}
-			valueBindings.add( new RelationalValueBinding(
-					column,
-					valueSourceContainer.areValuesIncludedInInsertByDefault(),
-					valueSourceContainer.areValuesIncludedInUpdateByDefault() && !isImmutableNaturalId ) );
+
 		} else {
 			final String name = attribute.getName();
 			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
@@ -2267,7 +2304,7 @@ public class Binder {
 	}
 
 
-	private interface DefaultNamingStrategy {
+	public static interface DefaultNamingStrategy {
 
 		String defaultName();
 	}

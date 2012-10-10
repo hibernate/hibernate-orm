@@ -326,11 +326,4 @@ public abstract class AbstractPluralAttributeSourceImpl
 			}
 		}
 	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		return pluralAttributeElement.getFetch() == null
-				? null
-				: FetchMode.valueOf( pluralAttributeElement.getFetch().value() );
-	}
 }

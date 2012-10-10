@@ -172,8 +172,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 
 	@Test
 	@Resources(annotatedClasses = {
-			NaturalIdBindingTests.EntityWithAssociation.class,
-			NaturalIdBindingTests.SimpleEntity.class
+			EntityWithAssociation.class,
+			SimpleEntity.class
 	})
 	public void testAssociationNaturalIdBinding() {
 		EntityBinding entityBinding = getEntityBinding( EntityWithAssociation.class );
@@ -202,7 +202,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 		assertEquals( 2, uniqueKey.getColumns().size() );
 		for ( final Column c : uniqueKey.getColumns() ) {
 			String name = c.getColumnName().getText();
-			assertTrue( "name".equals( name ) || "simpleEntity".equals( name ) );
+			assertTrue( "name".equals( name ) || "simpleEntity_id".equals( name ) );
 		}
 
 	}

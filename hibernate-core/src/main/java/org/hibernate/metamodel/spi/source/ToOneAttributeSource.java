@@ -23,6 +23,12 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
+import org.hibernate.metamodel.internal.Binder;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+
 /**
  * Further contract for sources of {@code *-to-one} style associations.
  *
@@ -37,4 +43,6 @@ public interface ToOneAttributeSource
 	 * @return The name of the referenced entity
 	 */
 	public String getReferencedEntityName();
+
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding);
 }

@@ -37,7 +37,6 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
-import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
@@ -71,7 +70,6 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean isOptional;
 	private final boolean isLazy;
 	private final boolean isOrphanRemoval;
-	private final FetchMode fetchMode;
 	private final FetchStyle fetchStyle;
 	private final boolean mapsId;
 	private final String referencedIdAttributeName;
@@ -122,7 +120,6 @@ public class AssociationAttribute extends MappedAttribute {
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 		this.joinColumnValues = determineJoinColumnAnnotations( annotations );
 
-		this.fetchMode = determineFetchMode();
 		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
@@ -148,10 +145,6 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public boolean isOrphanRemoval() {
 		return isOrphanRemoval;
-	}
-
-	public FetchMode getFetchMode() {
-		return fetchMode;
 	}
 
 	public FetchStyle getFetchStyle() {
@@ -319,25 +312,7 @@ public class AssociationAttribute extends MappedAttribute {
 		return cascadeTypes;
 	}
 
-	private FetchMode determineFetchMode() {
-		FetchMode mode = FetchMode.DEFAULT;
-
-		AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.FETCH );
-		if ( fetchAnnotation != null ) {
-			org.hibernate.annotations.FetchMode annotationFetchMode = JandexHelper.getEnumValue(
-					fetchAnnotation,
-					"value",
-					org.hibernate.annotations.FetchMode.class
-			);
-			mode = EnumConversionHelper.annotationFetchModeToHibernateFetchMode( annotationFetchMode );
-		}
-
-		return mode;
-	}
-
 	private FetchStyle determineFetchStyle() {
-		FetchStyle style = FetchStyle.SELECT;
-
 		AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.FETCH );
 		if ( fetchAnnotation != null ) {
 			org.hibernate.annotations.FetchMode annotationFetchMode = JandexHelper.getEnumValue(
@@ -345,10 +320,10 @@ public class AssociationAttribute extends MappedAttribute {
 					"value",
 					org.hibernate.annotations.FetchMode.class
 			);
-			style = EnumConversionHelper.annotationFetchModeToFetchStyle( annotationFetchMode );
+			return EnumConversionHelper.annotationFetchModeToFetchStyle( annotationFetchMode );
 		}
 
-		return style;
+		return null;
 	}
 
 	private String determineMapsId() {

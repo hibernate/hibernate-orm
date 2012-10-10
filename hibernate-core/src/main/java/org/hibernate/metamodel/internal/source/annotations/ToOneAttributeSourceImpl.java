@@ -34,12 +34,16 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -82,6 +86,38 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
+			final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
+		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+					referencedAttributeBinding
+			);
+			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>(  );
+			for ( final AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+				result.addAll( getDefaultNamingStrategies( entityName, tableName, attributeBinding ) );
+			}
+			return result;
+		}
+		else {
+			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>( 1 );
+			result.add(
+					new Binder.DefaultNamingStrategy() {
+						@Override
+						public String defaultName() {
+							return associationAttribute.getContext().getNamingStrategy().foreignKeyColumnName(
+									associationAttribute.getName(),
+									entityName,
+									tableName,
+									referencedAttributeBinding.getAttribute().getName()
+							);
+						}
+					}
+			);
+			return result;
+		}
+	}
+
+	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		if ( associationAttribute.getJoinColumnValues().isEmpty() ) {
 			return Collections.emptyList();
@@ -113,18 +149,18 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return associationAttribute.getFetchMode();
-	}
-
-	@Override
 	public FetchTiming getFetchTiming() {
 		return associationAttribute.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 	}
 
 	@Override
 	public FetchStyle getFetchStyle() {
-		return associationAttribute.getFetchStyle();
+		if ( associationAttribute.getFetchStyle() != null ) {
+			return associationAttribute.getFetchStyle();
+		}
+		else {
+			return associationAttribute.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+		}
 	}
 
 	@Override

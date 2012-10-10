@@ -39,7 +39,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -586,11 +585,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected void prepareForPossibleSpecialSpecjInitialization() {
 		if ( session != null ) {
-			specjLazyLoad = Boolean.parseBoolean(
-					session.getFactory()
-							.getProperties()
-							.getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS )
-			);
+			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( specjLazyLoad && sessionFactoryUuid == null ) {
 				try {

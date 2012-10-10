@@ -81,6 +81,7 @@ public final class Settings {
 	private boolean namedQueryStartupCheckingEnabled;
 	private EntityTuplizerFactory entityTuplizerFactory;
 	private boolean checkNullability;
+	private boolean initializeLazyStateOutsideTransactions;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 	private String importFiles;
@@ -263,6 +264,7 @@ public final class Settings {
 //	public ComponentTuplizerFactory getComponentTuplizerFactory() {
 //		return componentTuplizerFactory;
 //	}
+
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -457,5 +459,13 @@ public final class Settings {
 
 	void setMultiTenancyStrategy(MultiTenancyStrategy multiTenancyStrategy) {
 		this.multiTenancyStrategy = multiTenancyStrategy;
+	}
+
+	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
+		return initializeLazyStateOutsideTransactions;
+	}
+
+	void setInitializeLazyStateOutsideTransactions(boolean initializeLazyStateOutsideTransactions) {
+		this.initializeLazyStateOutsideTransactions = initializeLazyStateOutsideTransactions;
 	}
 }

@@ -35,6 +35,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -92,6 +93,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7663" )
 	public void testSqlQueryAutoDiscovery() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();
@@ -118,6 +120,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7663" )
 	public void testDialectGetColumnAliasExtractor() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();

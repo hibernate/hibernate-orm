@@ -23,7 +23,6 @@
  */
 package org.hibernate.collection.internal;
 
-import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.jboss.logging.Logger;
+import javax.naming.NamingException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -55,6 +54,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -175,6 +175,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private <T> T withTemporarySessionIfNeeded(LazyInitializationWork<T> lazyInitializationWork) {
 		SessionImplementor originalSession = null;
 		boolean isTempSession = false;
+		boolean isJTA = false;
 
 		if ( session == null ) {
 			if ( specjLazyLoad ) {
@@ -207,6 +208,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		if ( isTempSession ) {
+			// TODO: On the next major release, add an
+			// 'isJTA' or 'getTransactionFactory' method to Session.
+			isJTA = session.getTransactionCoordinator()
+					.getTransactionContext().getTransactionEnvironment()
+					.getTransactionFactory()
+					.compatibleWithJtaSynchronization();
+			
+			if ( !isJTA ) {
+				// Explicitly handle the transactions only if we're not in
+				// a JTA environment.  A lazy loading temporary session can
+				// be created even if a current session and transaction are
+				// open (ex: session.clear() was used).  We must prevent
+				// multiple transactions.
+				( ( Session) session ).beginTransaction();
+			}
+			
 			session.getPersistenceContext().addUninitializedDetachedCollection(
 					session.getFactory().getCollectionPersister( getRole() ),
 					this
@@ -220,6 +237,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( isTempSession ) {
 				// make sure the just opened temp session gets closed!
 				try {
+					if ( !isJTA ) {
+						( ( Session) session ).getTransaction().commit();
+					}
 					( (Session) session ).close();
 				}
 				catch (Exception e) {

@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.basic;
 
 import java.util.Arrays;
+import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -32,6 +33,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -70,5 +73,30 @@ public class Simple extends AbstractEntityTest {
 
         assert getAuditReader().find(IntTestEntity.class, id1, 1).equals(ver1);
         assert getAuditReader().find(IntTestEntity.class, id1, 2).equals(ver2);
+    }
+
+    @Test
+    public void testAuditRecordsRollback() {
+        // Given
+        EntityManager em = getEntityManager();
+        em.getTransaction().begin();
+        IntTestEntity iteToRollback = new IntTestEntity(30);
+        em.persist(iteToRollback);
+        Integer rollbackedIteId = iteToRollback.getId();
+        em.getTransaction().rollback();
+
+        // When
+        em.getTransaction().begin();
+        IntTestEntity ite2 = new IntTestEntity(50);
+        em.persist(ite2);
+        Integer ite2Id = ite2.getId();
+        em.getTransaction().commit();
+
+        // Then
+        List<Number> revisionsForSavedClass = getAuditReader().getRevisions(IntTestEntity.class, ite2Id);
+        assertEquals(revisionsForSavedClass.size(), 1, "There should be one revision for inserted entity");
+
+        List<Number> revisionsForRolledbackClass = getAuditReader().getRevisions(IntTestEntity.class, rollbackedIteId);
+        assertEquals(revisionsForRolledbackClass.size(), 0, "There should be no revisions for insert that was rolled back");
     }
 }

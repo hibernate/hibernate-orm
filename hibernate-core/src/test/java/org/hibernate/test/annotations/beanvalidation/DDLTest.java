@@ -28,7 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
@@ -54,9 +54,9 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testApplyOnIdColumn() throws Exception {
-		Index index = SchemaUtil.getIndexes( Tv.class, metadata() ).next();
+		PrimaryKey id = SchemaUtil.getPrimaryKey( Tv.class, metadata() );
 		assertEquals( "Validator annotation not applied on ids", 2,
-				index.getColumns().get( 0 ).getSize().getLength() );
+				id.getColumns().get( 0 ).getSize().getLength() );
 	}
 
 	@Test

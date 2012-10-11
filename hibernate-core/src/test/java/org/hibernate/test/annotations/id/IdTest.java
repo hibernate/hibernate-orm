@@ -289,8 +289,8 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = SchemaUtil.getIndexes( Ball.class, metadata() )
-				.next().getColumns().get( 0 );
+		Column idCol = SchemaUtil.getPrimaryKey( Ball.class, metadata() )
+				.getColumns().get( 0 );
 		assertEquals( "ball_id", idCol.getColumnName().getText() );
 	}
 

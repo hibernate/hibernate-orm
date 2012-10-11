@@ -23,13 +23,11 @@
  */
 package org.hibernate.test.util;
 
-import java.util.Iterator;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -81,8 +79,8 @@ public abstract class SchemaUtil {
 		return getTable( tableName, metadata ).locateColumn( columnName );
 	}
 	
-	public static Iterator<Index> getIndexes( Class<?> entityClass,
+	public static PrimaryKey getPrimaryKey( Class<?> entityClass,
 			Metadata metadata ) throws AssertionFailure {
-		return getTable( entityClass, metadata ).getIndexes().iterator();
+		return getTable( entityClass, metadata ).getPrimaryKey();
 	}
 }

@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -59,11 +60,14 @@ public abstract class SchemaUtil {
 		}
 	}
 	
+	private static EntityBinding getEntityBinding( 
+			Class<?> entityClass, Metadata metadata ) {
+		return metadata.getEntityBinding( entityClass.getName() );
+	}
+	
 	public static TableSpecification getTable( 
 			Class<?> entityClass, Metadata metadata ) throws AssertionFailure {
-		final EntityBinding binding = metadata.getEntityBinding( 
-				entityClass.getName() );
-		return binding.getPrimaryTable();
+		return getEntityBinding( entityClass, metadata ).getPrimaryTable();
 	}
 	
 	public static TableSpecification getTable( 
@@ -80,6 +84,15 @@ public abstract class SchemaUtil {
 	public static Column getColumn( String tableName, String columnName,
 			Metadata metadata ) throws AssertionFailure {
 		return getTable( tableName, metadata ).locateColumn( columnName );
+	}
+	
+	public static Column getColumnByAttribute( Class<?> entityClass,
+			String attributeName, Metadata metadata ) throws AssertionFailure {
+		EntityBinding binding = getEntityBinding( entityClass, metadata );
+		AttributeBinding attributeBinding = binding.locateAttributeBinding(
+				attributeName );
+		// TODO
+		return null;
 	}
 	
 	public static PrimaryKey getPrimaryKey( Class<?> entityClass,

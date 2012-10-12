@@ -27,8 +27,10 @@ import javax.persistence.Table;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
+import org.geolatte.geom.codec.Wkt;
+import org.geolatte.geom.codec.WktDecoder;
+import org.geolatte.geom.jts.JTS;
 
-import org.hibernate.spatial.testing.EWKTReader;
 import org.hibernate.spatial.testing.TestDataElement;
 
 /**
@@ -71,10 +73,10 @@ public class GeomEntity {
 	}
 
 	public static GeomEntity createFrom(TestDataElement element) throws ParseException {
-		EWKTReader reader = new EWKTReader();
+		WktDecoder<org.geolatte.geom.Geometry> decoder = Wkt.newWktDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
+		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );
-		Geometry geom = reader.read( element.wkt );
 		geom.setSRID( element.srid );
 		result.setGeom( geom );
 		result.setType( element.type );

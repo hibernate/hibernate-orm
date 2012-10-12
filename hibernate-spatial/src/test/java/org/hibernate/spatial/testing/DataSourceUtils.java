@@ -38,8 +38,11 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.geolatte.geom.codec.Wkt;
+import org.geolatte.geom.codec.WktDecodeException;
+import org.geolatte.geom.codec.WktDecoder;
+import org.geolatte.geom.jts.JTS;
 
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
@@ -356,13 +359,13 @@ public class DataSourceUtils {
 	 */
 	public Map<Integer, Geometry> expectedGeoms(String type, TestData testData) {
 		Map<Integer, Geometry> result = new HashMap<Integer, Geometry>();
-		EWKTReader parser = new EWKTReader();
+		WktDecoder<org.geolatte.geom.Geometry> decoder = Wkt.newWktDecoder();
 		for ( TestDataElement testDataElement : testData ) {
 			if ( testDataElement.type.equalsIgnoreCase( type ) ) {
 				try {
-					result.put( testDataElement.id, parser.read( testDataElement.wkt ) );
+					result.put( testDataElement.id, JTS.to( decoder.decode( testDataElement.wkt ) ) );
 				}
-				catch ( ParseException e ) {
+				catch ( WktDecodeException e ) {
 					System.out
 							.println(
 									String.format(

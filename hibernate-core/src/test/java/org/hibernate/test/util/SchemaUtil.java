@@ -23,9 +23,12 @@
  */
 package org.hibernate.test.util;
 
+import java.util.Iterator;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -82,5 +85,21 @@ public abstract class SchemaUtil {
 	public static PrimaryKey getPrimaryKey( Class<?> entityClass,
 			Metadata metadata ) throws AssertionFailure {
 		return getTable( entityClass, metadata ).getPrimaryKey();
+	}
+	
+	public static PluralAttributeBinding getCollection( Class<?> entityClass, String fieldName,
+			Metadata metadata ) {
+		Iterator<PluralAttributeBinding> collectionBindings
+				= metadata.getCollectionBindings().iterator();
+		while ( collectionBindings.hasNext() ) {
+			PluralAttributeBinding collectionBinding
+					= collectionBindings.next();
+			if ( collectionBinding.getAttribute().getName().equals( fieldName )
+					&& collectionBinding.getAttribute().getAttributeContainer()
+							.getClassReference().equals( entityClass ) ) {
+				return collectionBinding;
+			}
+		}
+		return null;
 	}
 }

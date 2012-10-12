@@ -23,12 +23,13 @@
  */
 package org.hibernate.test.stats;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.junit.Test;
-
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -36,21 +37,21 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * Show the difference between fetch and load
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class StatsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -65,7 +66,6 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
-	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -106,9 +106,10 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		// open second SessionFactory
-		Collection coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
-		coll.setFetchMode(FetchMode.JOIN);
-		coll.setLazy(false);
+		PluralAttributeBinding coll = SchemaUtil.getCollection( Continent.class, "countries", metadata() );
+		coll.setFetchStyle( FetchStyle.JOIN );
+		// TODO: Is there a way to set this on the metamodel?
+//		coll.setLazy(false);
 		SessionFactory sf = configuration().buildSessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
@@ -129,9 +130,10 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		sf.close();
 
 		// open third SessionFactory
-		coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
-		coll.setFetchMode(FetchMode.SELECT);
-		coll.setLazy(false);
+		coll = SchemaUtil.getCollection( Continent.class, "countries", metadata() );
+		coll.setFetchStyle( FetchStyle.SELECT	 );
+		// TODO: Is there a way to set this on the metamodel?
+//		coll.setLazy(false);
 		sf = configuration().buildSessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
@@ -156,7 +158,6 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueryStatGathering() {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

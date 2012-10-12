@@ -76,6 +76,12 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 
 	@Override
 	public <X> Geometry wrap(X value, WrapperOptions options) {
+		if ( value == null ) {
+			return null;
+		}
+		if ( Geometry.class.isInstance( value ) ) {
+			return (Geometry) value;
+		}
 		if ( String.class.isInstance( value ) ) {
 			return fromString( (String) value );
 		}

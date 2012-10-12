@@ -24,6 +24,7 @@ package org.hibernate.spatial;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
+import org.geolatte.geom.jts.JTS;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
@@ -63,11 +64,12 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 		if ( value == null ) {
 			return null;
 		}
-
 		if ( Geometry.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
-
+		if ( org.geolatte.geom.Geometry.class.isAssignableFrom( type ) ) {
+			return (X) JTS.from( value );
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
@@ -81,6 +83,9 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 		}
 		if ( Geometry.class.isInstance( value ) ) {
 			return (Geometry) value;
+		}
+		if ( org.geolatte.geom.Geometry.class.isInstance( value ) ) {
+			return JTS.to( (org.geolatte.geom.Geometry) value );
 		}
 		if ( String.class.isInstance( value ) ) {
 			return fromString( (String) value );

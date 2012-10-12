@@ -27,9 +27,7 @@ dependencies {
     compile([group: 'com.vividsolutions', name: 'jts', version: '1.12']) {
         transitive = false
     }
-    compile([group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.3'])
-    compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])
-
+    compile([group: 'org.geolatte', name: 'geolatte-geom', version: '0.11-SNAPSHOT'])
 
     compile(libraries.dom4j) {
         transitive = false
@@ -38,11 +36,12 @@ dependencies {
 
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
-//    testRuntime([group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
+    testRuntime([group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
 //    testRuntime([group: 'com.oracle.jdbc', name: 'ojdbc6', version: '11.2.0.3'])
 //    testRuntime([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
 //    testRuntime("org.opengeo:geodb:0.7")
 //    testRuntime("mysql:mysql-connector-java:5.1.15")
+    testRuntime("postgresql:postgresql:8.4-701.jdbc4")
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)

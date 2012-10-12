@@ -21,12 +21,18 @@
 
 package org.hibernate.spatial.dialect.sqlserver;
 
-import java.sql.Types;
-
+import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
+import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicBinder;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
+
+import java.sql.*;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -53,12 +59,63 @@ public class SqlServer2008GeometryTypeDescriptor extends GeometrySqlTypeDescript
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueBinder<X>) new SqlServer2008GeometryValueBinder( javaTypeDescriptor );
+		return new BasicBinder<X>(javaTypeDescriptor, this){
+			@Override
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+				Geometry jtsGeom = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				byte[] bytes = Encoders.encode( jtsGeom );
+				st.setObject( index, bytes );
+			}
+
+		};
 	}
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new SqlServer2008GeometryValueExtractor( javaTypeDescriptor );
+		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+
+			@Override
+			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				return getJavaDescriptor().wrap( toJTS( rs.getObject( name ) ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return getJavaDescriptor().wrap( toJTS( statement.getObject( index ) ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
+				return getJavaDescriptor().wrap( toJTS( statement.getObject( name ) ), options );
+			}
+		};
+	}
+
+	private Geometry toJTS(Object obj) {
+		byte[] raw = null;
+		if ( obj == null ) {
+			return null;
+		}
+		if ( ( obj instanceof byte[] ) ) {
+			raw = (byte[]) obj;
+		}
+		else if ( obj instanceof Blob ) {
+			raw = toByteArray( (Blob) obj );
+		}
+		else {
+			throw new IllegalArgumentException( "Expected byte array or BLOB" );
+		}
+		return Decoders.decode( raw );
+	}
+
+	private byte[] toByteArray(Blob blob) {
+		try {
+			return blob.getBytes( 1, (int) blob.length() );
+		}
+		catch ( SQLException e ) {
+			throw new RuntimeException( "Error on transforming blob into array.", e );
+		}
 	}
 
 }

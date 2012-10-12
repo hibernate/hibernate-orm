@@ -235,11 +235,7 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	public String getDiscriminatorMatchValue() {
-		if ( discriminatorMatchValue == null) {
-			return getClassInfo().name().toString();
-		} else {
-			return discriminatorMatchValue;
-		}
+		return discriminatorMatchValue;
 	}
 
 	public List<JpaCallbackSource> getJpaCallbacks() {

@@ -675,7 +675,13 @@ public class Binder {
 		final EntityDiscriminator discriminator =
 				new EntityDiscriminator( value, discriminatorSource.isInserted(), discriminatorSource.isForced() );
 		rootEntityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
-		rootEntityBinding.setDiscriminatorMatchValue( rootEntitySource.getDiscriminatorMatchValue() );
+		final String discriminatorValue = rootEntitySource.getDiscriminatorMatchValue();
+		if ( discriminatorValue != null ) {
+			rootEntityBinding.setDiscriminatorMatchValue( discriminatorValue );
+		}
+		else {
+			rootEntityBinding.setDiscriminatorMatchValue( rootEntitySource.getEntityName() );
+		}
 		// Configure discriminator hibernate type
 		final String typeName =
 				discriminatorSource.getExplicitHibernateTypeName() != null
@@ -1776,6 +1782,9 @@ public class Binder {
 			final String discriminatorValue = entitySource.getDiscriminatorMatchValue();
 			if ( discriminatorValue != null ) {
 				entityBinding.setDiscriminatorMatchValue( discriminatorValue );
+			}
+			else {
+				entityBinding.setDiscriminatorMatchValue( entitySource.getEntityName() );
 			}
 		}
 		else {

@@ -23,9 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source;
 
-import java.util.Iterator;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.Iterator;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -47,14 +51,8 @@ import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -63,7 +61,6 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 	final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build() ;
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7679" )
 	public void testUserEntitySources() {
 		MetadataSources hbm = new MetadataSources( serviceRegistry );
 		hbm.addResource( getClass().getPackage().getName().replace( '.', '/' ) + "/User.hbm.xml" );

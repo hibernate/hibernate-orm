@@ -30,7 +30,6 @@ import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -41,9 +40,8 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttri
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -88,8 +86,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
 			final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
-		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+		if ( AggregatedCompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			AggregatedCompositeAttributeBinding compositeAttributeBinding = AggregatedCompositeAttributeBinding.class.cast(
 					referencedAttributeBinding
 			);
 			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>(  );

@@ -66,7 +66,7 @@ public interface AttributeContainer extends Type {
 	public IndexedPluralAttribute locateMap(String name);
 
 	public SingularAttribute createSingularAttribute(String name);
-	public SingularAttribute createCompositeAttribute(String name, Composite composite);
+	public SingularAttribute createCompositeAttribute(String name, Aggregate composite);
 	public PluralAttribute createBag(String name);
 	public PluralAttribute createSet(String name);
 	public IndexedPluralAttribute createList(String name);

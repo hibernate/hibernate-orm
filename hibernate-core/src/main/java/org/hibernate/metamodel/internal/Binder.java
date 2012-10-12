@@ -36,7 +36,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.FetchMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
@@ -56,7 +55,7 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
@@ -83,8 +82,8 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -278,8 +277,8 @@ public class Binder {
 			EntityBinding rootEntityBinding,
 			AggregatedCompositeIdentifierSource identifierSource ) {
 		// locate the attribute binding
-		final CompositeAttributeBinding idAttributeBinding =
-				(CompositeAttributeBinding) bindIdentifierAttribute(
+		final AggregatedCompositeAttributeBinding idAttributeBinding =
+				(AggregatedCompositeAttributeBinding) bindIdentifierAttribute(
 						rootEntityBinding, identifierSource.getIdentifierAttributeSource()
 				);
 
@@ -574,16 +573,16 @@ public class Binder {
 		}
 	}
 
-	private CompositeAttributeBinding bindAggregatedCompositeAttribute(
+	private AggregatedCompositeAttributeBinding bindAggregatedCompositeAttribute(
 			final MutableAttributeBindingContainer attributeBindingContainer,
 			final ComponentAttributeSource attributeSource,
 			SingularAttribute attribute,
 			boolean isAttributeIdentifier) {
-		final Composite composite;
+		final Aggregate composite;
 		ValueHolder<Class<?>> defaultJavaClassReference = null;
 		if ( attribute == null ) {
 			if ( attributeSource.getClassName() != null ) {
-				composite = new Composite(
+				composite = new Aggregate(
 						attributeSource.getPath(),
 						attributeSource.getClassName(),
 						attributeSource.getClassReference() != null ?
@@ -597,7 +596,7 @@ public class Binder {
 				defaultJavaClassReference = createSingularAttributeJavaType(
 						attributeBindingContainer.getClassReference(), attributeSource.getName()
 				);
-				composite = new Composite(
+				composite = new Aggregate(
 						attributeSource.getPath(),
 						defaultJavaClassReference.getValue().getName(),
 						defaultJavaClassReference,
@@ -610,7 +609,7 @@ public class Binder {
 			);
 		}
 		else {
-			composite = (Composite) attribute.getSingularAttributeType();
+			composite = (Aggregate) attribute.getSingularAttributeType();
 		}
 
 		final SingularAttribute referencingAttribute =
@@ -618,7 +617,7 @@ public class Binder {
 						null :
 						composite.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = attributeSource.getNaturalIdMutability();
-		final CompositeAttributeBinding attributeBinding =
+		final AggregatedCompositeAttributeBinding attributeBinding =
 				attributeBindingContainer.makeAggregatedCompositeAttributeBinding(
 						attribute,
 						referencingAttribute,
@@ -1232,10 +1231,8 @@ public class Binder {
 			final EntityBinding referencedEntityBinding,
 			final String defaultElementJavaTypeName) {
 
-		//referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().addEntityReferencingAttributeBinding(  );
-
-		elementBinding.setRelationalValueBindings(
-			referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getRelationalValueBindings()
+		elementBinding.setElementEntityIdentifier(
+			referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
 		bindHibernateTypeDescriptor(
@@ -1502,6 +1499,8 @@ public class Binder {
 						attribute
 				);
 			case COMPOSITE:
+				// TODO: should this deal with both aggregated and non-aggegated
+				//       attribute bindings?
 				return bindAggregatedCompositeAttribute(
 						attributeBindingContainer,
 						ComponentAttributeSource.class.cast( attributeSource ),
@@ -2307,7 +2306,7 @@ public class Binder {
 				pluralAttributeBinding.getAttribute().getName(),
 				getReferencedPropertyNameIfNotId( pluralAttributeBinding ),
 				pluralAttributeBinding.getPluralAttributeElementBinding()
-						.getNature() == PluralAttributeElementBinding.Nature.COMPOSITE
+						.getNature() == PluralAttributeElementBinding.Nature.AGGREGATION
 		);
 	}
 
@@ -2318,7 +2317,7 @@ public class Binder {
 			final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
 			final String role = pluralAttributeBinding.getAttribute().getRole();
 			final String propertyRef = getReferencedPropertyNameIfNotId( pluralAttributeBinding );
-			final boolean embedded = pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPOSITE;
+			final boolean embedded = pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.AGGREGATION;
 			switch ( nature ){
 				case BAG:
 					return typeFactory.bag( role, propertyRef, embedded );

@@ -70,7 +70,7 @@ public interface MutableAttributeBindingContainer extends AttributeBindingContai
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	public AggregatedCompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,

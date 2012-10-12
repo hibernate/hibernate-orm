@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
+
 /**
- * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#COMPOSITE} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATION} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -36,6 +38,11 @@ public class CompositePluralAttributeElementBinding extends AbstractPluralAttrib
 
 	@Override
 	public Nature getNature() {
-		return Nature.COMPOSITE;
+		return Nature.AGGREGATION;
+	}
+
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

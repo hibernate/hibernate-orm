@@ -31,8 +31,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
@@ -76,8 +76,12 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		hasCustomAccessors = foundCustomAccessor;
 	}
 
+	// TODO: Get rid of the need for isIdentifierMapper arg.
+	// Instead the CompositeAttributeBinding should be wrapped (e.g., by a proxy)
+	// so it can provide the information needed to create getters and setters
+	// for an identifier mapper.
 	protected AbstractComponentTuplizer(
-			AbstractCompositeAttributeBinding compositeAttributeBinding,
+			CompositeAttributeBinding compositeAttributeBinding,
 			boolean isIdentifierMapper
 	) {
 		propertySpan = compositeAttributeBinding.attributeBindingSpan();
@@ -86,7 +90,12 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 
 		boolean foundCustomAccessor=false;
 		int i = 0;
+		// TODO: when compositeAttributeBinding is wrapped for an identifier mapper
+		//       there will be no need for PropertyFactory.getIdentifierMapperGetter()
+		//       and PropertyFactory.getIdentifierMapperSetter
 		if ( isIdentifierMapper ) {
+			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
+			//             must be completely bound when this method is called.
 			final EntityMode entityMode =
 					compositeAttributeBinding.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode();
 			final EntityIdentifier entityIdentifier =

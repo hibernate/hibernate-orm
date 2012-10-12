@@ -34,7 +34,6 @@ import java.util.List;
 public abstract class AbstractPluralAttributeElementBinding implements PluralAttributeElementBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private List<RelationalValueBinding> relationalValueBindings;
 
 	AbstractPluralAttributeElementBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
 		this.pluralAttributeBinding = pluralAttributeBinding;
@@ -48,14 +47,5 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 	@Override
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		return hibernateTypeDescriptor;
-	}
-
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
-	}
-
-	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 	}
 }

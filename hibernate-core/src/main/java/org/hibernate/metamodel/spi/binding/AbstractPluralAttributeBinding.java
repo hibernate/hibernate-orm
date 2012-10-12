@@ -98,7 +98,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			case BASIC: {
 				return new BasicPluralAttributeElementBinding( this );
 			}
-			case COMPOSITE: {
+			case AGGREGATION: {
 				return new CompositePluralAttributeElementBinding( this );
 			}
 			case ONE_TO_MANY: {

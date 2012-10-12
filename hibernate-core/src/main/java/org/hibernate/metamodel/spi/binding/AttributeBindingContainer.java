@@ -30,7 +30,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * Common contract for {@link EntityBinding} and {@link AbstractCompositeAttributeBinding} in so far as they are both
+ * Common contract for {@link EntityBinding} and {@link CompositeAttributeBinding} in so far as they are both
  * containers for {@link AttributeBinding} descriptors
  *
  * @author Steve Ebersole
@@ -56,6 +56,15 @@ public interface AttributeBindingContainer {
 	 * @return All attribute bindings
 	 */
 	public Iterable<AttributeBinding> attributeBindings();
+
+	/**
+	 * Return the number of attribute bindings returned by
+	 * {@link #attributeBindings()}.
+	 *
+	 * @return the number of attribute bindings returned by
+	 * {@link #attributeBindings()}.
+	 */
+	public int attributeBindingSpan();
 
 	/**
 	 * Locate a specific attribute binding, by its local name.

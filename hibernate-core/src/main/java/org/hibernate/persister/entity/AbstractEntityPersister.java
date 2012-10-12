@@ -101,7 +101,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -2363,8 +2363,8 @@ public abstract class AbstractEntityPersister
 			}
 			SingularAttributeBinding singularProp = (SingularAttributeBinding) prop;
 			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
-			if ( prop instanceof AbstractCompositeAttributeBinding ) {
-				AbstractCompositeAttributeBinding component = (AbstractCompositeAttributeBinding) prop;
+			if ( prop instanceof CompositeAttributeBinding ) {
+				CompositeAttributeBinding component = (CompositeAttributeBinding) prop;
 				internalInitSubclassPropertyAliasesMap( propname, component.attributeBindings() );
 			}
 			else {

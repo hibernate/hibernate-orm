@@ -33,6 +33,13 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
+ * A composite attribute binding that contains an immutable tuple
+ * of attribute bindings that are mapped directly to the
+ * attribute binding's container. In other words, the tuple cannot
+ * be mapped to a single entity attribute.
+ *
+ *  @todo should this be named something like TupleAttributebinding instead?
+ *
  * @author Gail Badner
  */
 public class NonAggregatedCompositeAttributeBinding extends AbstractCompositeAttributeBinding {
@@ -55,7 +62,7 @@ public class NonAggregatedCompositeAttributeBinding extends AbstractCompositeAtt
 				metaAttributeContext
 		);
 		if ( !AttributeContainer.class.isInstance( attribute.getSingularAttributeType() ) ||
-				attribute.getSingularAttributeType().isComposite() ) {
+				attribute.getSingularAttributeType().isAggregate() ) {
 			throw new IllegalArgumentException(
 					"Expected the attribute type to be an non-component attribute container"
 			);

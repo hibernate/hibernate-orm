@@ -50,7 +50,7 @@ public class Entity extends AbstractAttributeContainer {
 	}
 
 	@Override
-	public boolean isComposite() {
+	public boolean isAggregate() {
 		return false;
 	}
 }

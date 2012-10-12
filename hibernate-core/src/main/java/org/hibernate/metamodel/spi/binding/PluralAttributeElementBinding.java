@@ -74,7 +74,7 @@ public interface PluralAttributeElementBinding {
 		/**
 		 * The collection elements are compositions.
 		 */
-		COMPOSITE( false ),
+		AGGREGATION( false ),
 		/**
 		 * The collection elements represent entity's in a one-to-many association.
 		 */

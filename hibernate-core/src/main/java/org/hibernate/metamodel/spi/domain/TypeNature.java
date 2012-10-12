@@ -32,7 +32,7 @@ package org.hibernate.metamodel.spi.domain;
  */
 public enum TypeNature {
 	BASIC( "basic" ),
-	COMPOSITE( "composite" ),
+	AGGREGATION( "aggregation" ),
 	ENTITY( "entity" ),
 	SUPERCLASS( "superclass" ),
 	NON_ENTITY( "non-entity" );

@@ -508,7 +508,7 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 	}
 
 	@Override
-	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	public AggregatedCompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
@@ -516,7 +516,7 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 			boolean lazy,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext) {
-		final CompositeAttributeBinding binding = new CompositeAttributeBinding(
+		final AggregatedCompositeAttributeBinding binding = new AggregatedCompositeAttributeBinding(
 				this,
 				attribute,
 				propertyAccessorName,
@@ -715,6 +715,11 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 	@Override
 	public Iterable<AttributeBinding> attributeBindings() {
 		return attributeBindingMap.values();
+	}
+
+	@Override
+	public int attributeBindingSpan() {
+		return attributeBindingMap.size();
 	}
 
 	/**

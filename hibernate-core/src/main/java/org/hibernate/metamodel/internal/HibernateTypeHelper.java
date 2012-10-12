@@ -38,7 +38,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
@@ -278,10 +278,10 @@ public class HibernateTypeHelper {
 					resolvedHibernateType
 			);
 		}
-		else if ( AbstractCompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
+		else if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
 			pushHibernateTypeInformationDown(
 					(ComponentAttributeSource) attributeSource,
-					(AbstractCompositeAttributeBinding) attributeBinding,
+					(CompositeAttributeBinding) attributeBinding,
 					resolvedHibernateType
 			);
 		}
@@ -305,7 +305,7 @@ public class HibernateTypeHelper {
 	@SuppressWarnings( {"UnusedParameters"})
 	private void pushHibernateTypeInformationDown(
 			ComponentAttributeSource attributeSource,
-			AbstractCompositeAttributeBinding attributeBinding,
+			CompositeAttributeBinding attributeBinding,
 			Type resolvedHibernateType) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		final SingularAttribute singularAttribute = SingularAttribute.class.cast( attributeBinding.getAttribute() );

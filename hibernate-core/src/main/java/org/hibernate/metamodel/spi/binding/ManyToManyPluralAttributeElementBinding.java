@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Value;
 
@@ -47,6 +48,11 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	@Override
 	public Nature getNature() {
 		return Nature.MANY_TO_MANY;
+	}
+
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public String getManyToManyWhere() {

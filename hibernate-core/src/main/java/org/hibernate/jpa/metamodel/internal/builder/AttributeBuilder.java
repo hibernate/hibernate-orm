@@ -45,7 +45,7 @@ import org.hibernate.jpa.metamodel.internal.MappedSuperclassTypeImpl;
 import org.hibernate.jpa.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.SingularAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.UnsupportedFeature;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -55,6 +55,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 
 import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
@@ -238,8 +239,10 @@ public class AttributeBuilder {
 						(ComponentType) attributeTypeDescriptor.getHibernateType()
 				);
 				context.registerEmbeddedableType( embeddableType );
-				AbstractCompositeAttributeBinding compositeAttributeBinding =
-						(AbstractCompositeAttributeBinding) attributeTypeDescriptor.getAttributeMetadata().getAttributeBinding();
+				AggregatedCompositeAttributeBinding compositeAttributeBinding =
+						(AggregatedCompositeAttributeBinding) attributeTypeDescriptor
+								.getAttributeMetadata()
+								.getAttributeBinding();
 				for ( AttributeBinding subAttributeBinding : compositeAttributeBinding.attributeBindings() ) {
 					final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
 					if ( attribute != null ) {
@@ -302,7 +305,7 @@ public class AttributeBuilder {
 			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 
 			final PersistentAttributeType jpaAttributeType;
-			if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isComposite() ) {
+			if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isAggregate() ) {
 				jpaAttributeType = PersistentAttributeType.EMBEDDED;
 			}
 			else if ( singularAttributeBinding.getAttribute().getSingularAttributeType().isAssociation() ) {
@@ -337,7 +340,7 @@ public class AttributeBuilder {
 				elementPersistentAttributeType = PersistentAttributeType.BASIC;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
-			else if ( elementNature == PluralAttributeElementBinding.Nature.COMPOSITE ) {
+			else if ( elementNature == PluralAttributeElementBinding.Nature.AGGREGATION ) {
 				elementPersistentAttributeType = PersistentAttributeType.EMBEDDED;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
@@ -362,7 +365,7 @@ public class AttributeBuilder {
 				else if ( indexNature == PluralAttributeIndexBinding.Nature.MANY_TO_MANY ) {
 					keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
 				}
-				else if ( indexNature == PluralAttributeIndexBinding.Nature.COMPOSITE ) {
+				else if ( indexNature == PluralAttributeIndexBinding.Nature.AGGREGATION ) {
 					keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
 				}
 				else {
@@ -446,11 +449,18 @@ public class AttributeBuilder {
 			final IdentifiableType identifiableType = (IdentifiableType) owner;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
-				throw new IllegalArgumentException( "expecting non-aggregated identifier mapping" );
+				throw new IllegalArgumentException( "expecting a virtual (non-aggregated composite) identifier mapping" );
 			}
 			org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
-			if ( ! ComponentType.class.isInstance( type ) ) {
-				throw new IllegalArgumentException( "expecting non-aggregated identifier mapping" );
+			if ( entityMetamodel.getIdentifierProperty().hasIdentifierMapper() ) {
+				if ( ! ComponentType.class.isInstance( type ) ) {
+					throw new IllegalArgumentException( "expecting an idclass identifier mapping" );
+				}
+			}
+			else {
+				if ( ! EmbeddedComponentType.class.isInstance( type ) ) {
+					throw new IllegalArgumentException( "expecting a non-aggregated composite identifier mapping" );
+				}
 			}
 
 			final ComponentType componentType = (ComponentType) type;

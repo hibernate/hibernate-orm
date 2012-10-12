@@ -36,7 +36,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  */
 public abstract class AbstractCompositeAttributeBinding
 		extends AbstractSingularAttributeBinding
-		implements SingularNonAssociationAttributeBinding, AttributeBindingContainer {
+		implements CompositeAttributeBinding {
 	private final String path;
 
 	protected AbstractCompositeAttributeBinding(
@@ -91,8 +91,6 @@ public abstract class AbstractCompositeAttributeBinding
 	public AttributeContainer getAttributeContainer() {
 		return (AttributeContainer) getAttribute().getSingularAttributeType();
 	}
-
-	public abstract boolean isAggregated();
 
 	@Override
 	public boolean isAssociation() {
@@ -174,6 +172,7 @@ public abstract class AbstractCompositeAttributeBinding
 		return null;
 	}
 
+	@Override
 	public int attributeBindingSpan() {
 		return attributeBindingMapInternal().size();
 	}

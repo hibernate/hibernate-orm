@@ -163,7 +163,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public SingularAttribute createCompositeAttribute(String name, Composite composite) {
+	public SingularAttribute createCompositeAttribute(String name, Aggregate composite) {
 		SingularAttributeImpl attribute = new SingularAttributeImpl( this, name, false );
 		attribute.resolveType( composite );
 		addAttribute( attribute );

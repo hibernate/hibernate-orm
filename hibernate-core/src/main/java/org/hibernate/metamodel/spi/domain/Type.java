@@ -60,5 +60,11 @@ public interface Type {
 
 	public boolean isAssociation();
 
-	public boolean isComposite();
+	/**
+	 * Is this attribute an aggregated composite (what JPA calls an Embeddable)?
+	 *
+	 * @return true, if this attribute is an aggregated composite;
+	 *         false, otherwise.
+	 */
+	public boolean isAggregate();
 }

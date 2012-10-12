@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,6 +36,7 @@ public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeE
 
 	private boolean hasDerivedValue;
 	private boolean isNullable = true;
+	private List<RelationalValueBinding> relationalValueBindings;
 
 	public BasicPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
@@ -45,8 +47,13 @@ public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeE
 		return Nature.BASIC;
 	}
 
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return relationalValueBindings;
+	}
+
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		super.setRelationalValueBindings( relationalValueBindings );
+		this.relationalValueBindings =  Collections.unmodifiableList( relationalValueBindings );
 		for ( RelationalValueBinding relationalValueBinding : getRelationalValueBindings() ) {
 			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
 			this.isNullable = this.isNullable && relationalValueBinding.isNullable();

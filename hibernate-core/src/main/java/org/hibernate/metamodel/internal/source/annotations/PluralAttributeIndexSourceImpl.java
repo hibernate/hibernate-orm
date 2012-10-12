@@ -50,7 +50,7 @@ public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSourc
 			case BASIC:
 				return PluralAttributeIndexBinding.Nature.BASIC;
 			case COMPONENT:
-				return PluralAttributeIndexBinding.Nature.COMPOSITE;
+				return PluralAttributeIndexBinding.Nature.AGGREGATION;
 			case MANY_TO_ANY:
 				return PluralAttributeIndexBinding.Nature.MANY_TO_ANY;
 			case MANY_TO_MANY:

@@ -194,7 +194,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertEquals( referencedEntityName, simpleEntityAttributeType.getName() );
 		Assert.assertEquals( referencedEntityName, simpleEntityAttributeType.getClassName());
 		Assert.assertTrue( simpleEntityAttributeType.isAssociation() );
-		assertFalse( simpleEntityAttributeType.isComposite() );
+		assertFalse( simpleEntityAttributeType.isAggregate() );
 
 		// relational
 		List<RelationalValueBinding> relationalValueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
@@ -240,8 +240,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		CompositeAttributeBinding compositeAttributeBinding =
-				(CompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		AggregatedCompositeAttributeBinding compositeAttributeBinding =
+				(AggregatedCompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
 		assertNotNull( compositeAttributeBinding );
 		assertSame( compositeAttributeBinding.getAttribute().getSingularAttributeType(), compositeAttributeBinding.getAttributeContainer() );
 		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", compositeAttributeBinding.getPathBase() );

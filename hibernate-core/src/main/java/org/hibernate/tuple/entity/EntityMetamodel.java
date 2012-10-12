@@ -52,13 +52,13 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.domain.Composite;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.PropertyFactory;
@@ -404,7 +404,7 @@ public class EntityMetamodel implements Serializable {
 		}
 		else if ( rootEntityIdentifier.isNonAggregatedComposite() ) {
 			identifierAttributeBindingSpan =
-			( (AbstractCompositeAttributeBinding) rootEntityIdentifier.getAttributeBinding() ).attributeBindingSpan();
+			( (CompositeAttributeBinding) rootEntityIdentifier.getAttributeBinding() ).attributeBindingSpan();
 		}
 		else {
 			identifierAttributeBindingSpan = 1;
@@ -708,9 +708,9 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Attribute attribute, int i) {
 		propertyIndexes.put( attribute.getName(), i );
 		if ( attribute.isSingular() &&
-				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComposite() ) {
-			Composite composite =
-					(Composite) ( (SingularAttribute) attribute ).getSingularAttributeType();
+				( ( SingularAttribute ) attribute ).getSingularAttributeType().isAggregate() ) {
+			Aggregate composite =
+					(Aggregate) ( (SingularAttribute) attribute ).getSingularAttributeType();
 			for ( Attribute subAttribute : composite.attributes() ) {
 				propertyIndexes.put(
 						attribute.getName() + '.' + subAttribute.getName(),

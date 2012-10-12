@@ -577,7 +577,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorInsertable = false;
 			}
 			else if ( entityBinding.isDiscriminatorMatchValueNotNull() ) {
-				discriminatorValue = NULL_DISCRIMINATOR;
+				discriminatorValue = NOT_NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NOT_NULL;
 				discriminatorInsertable = false;
 			}

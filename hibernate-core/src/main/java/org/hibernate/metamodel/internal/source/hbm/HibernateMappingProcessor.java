@@ -85,7 +85,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbUnionSubclassElement;
 import org.hibernate.jaxb.spi.hbm.QuerySourceElement;
 import org.hibernate.jaxb.spi.hbm.ReturnElement;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.AbstractCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
@@ -549,8 +549,8 @@ public class HibernateMappingProcessor {
 				String reducedName = name.substring( 0, dotIndex );
 				AttributeBinding value = getRecursiveAttributeBinding( entityBinding, reducedName );
 				Iterable<AttributeBinding> parentPropIter;
-				if ( AbstractCompositeAttributeBinding.class.isInstance( value ) ) {
-					AbstractCompositeAttributeBinding comp = (AbstractCompositeAttributeBinding) value;
+				if ( CompositeAttributeBinding.class.isInstance( value ) ) {
+					CompositeAttributeBinding comp = (CompositeAttributeBinding) value;
 					parentPropIter = comp.attributeBindings();
 				}
 				else if ( SingularAssociationAttributeBinding.class.isInstance( value ) ) {
@@ -558,7 +558,7 @@ public class HibernateMappingProcessor {
 					EntityBinding referencedEntityBinding = toOne.getReferencedEntityBinding();
 					SingularAttributeBinding referencedAttributeBinding = toOne.getReferencedAttributeBinding();
 					try {
-						parentPropIter = AbstractCompositeAttributeBinding.class.cast( referencedAttributeBinding )
+						parentPropIter = CompositeAttributeBinding.class.cast( referencedAttributeBinding )
 								.attributeBindings();
 					}
 					catch ( ClassCastException e ) {

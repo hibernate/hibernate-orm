@@ -32,8 +32,8 @@ import org.hibernate.internal.util.ValueHolder;
  *
  * @author Steve Ebersole
  */
-public class Composite extends AbstractAttributeContainer {
-	public Composite(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
+public class Aggregate extends AbstractAttributeContainer {
+	public Aggregate(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
 		super( name, className, classReference, superType );
 	}
 
@@ -43,7 +43,7 @@ public class Composite extends AbstractAttributeContainer {
 	}
 
 	@Override
-	public boolean isComposite() {
+	public boolean isAggregate() {
 		return true;
 	}
 

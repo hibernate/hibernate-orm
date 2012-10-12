@@ -49,7 +49,7 @@ public class NonEntity extends AbstractAttributeContainer {
 	}
 
 	@Override
-	public boolean isComposite() {
+	public boolean isAggregate() {
 		return false;
 	}
 }

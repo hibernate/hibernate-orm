@@ -54,6 +54,7 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.JpaCallbackSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
@@ -372,22 +373,24 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	private Caching determineCachingSettings() {
-		final AnnotationInstance hibernateCacheAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.CACHE
-		);
-		if ( hibernateCacheAnnotation != null ) {
-			final org.hibernate.cache.spi.access.AccessType accessType = hibernateCacheAnnotation.value( "usage" ) == null
-					? getLocalBindingContext().getMappingDefaults().getCacheAccessType()
-					: CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() )
-					.toAccessType();
-			return new Caching(
-					hibernateCacheAnnotation.value( "region" ) == null
-							? getName()
-							: hibernateCacheAnnotation.value( "region" ).asString(),
-					accessType,
-					hibernateCacheAnnotation.value( "include" ) != null
-							&& "all".equals( hibernateCacheAnnotation.value( "include" ).asString() )
-			);
+		final List<AnnotationInstance> annotationInstanceList = getClassInfo().annotations().get( HibernateDotNames.CACHE );
+		if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
+			for ( final AnnotationInstance hibernateCacheAnnotation : annotationInstanceList ) {
+				if ( ClassInfo.class.isInstance( hibernateCacheAnnotation.target() ) ) {
+					final org.hibernate.cache.spi.access.AccessType accessType = hibernateCacheAnnotation.value( "usage" ) == null
+							? getLocalBindingContext().getMappingDefaults().getCacheAccessType()
+							: CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() )
+							.toAccessType();
+					return new Caching(
+							hibernateCacheAnnotation.value( "region" ) == null
+									? getName()
+									: hibernateCacheAnnotation.value( "region" ).asString(),
+							accessType,
+							hibernateCacheAnnotation.value( "include" ) != null
+									&& "all".equals( hibernateCacheAnnotation.value( "include" ).asString() )
+					);
+				}
+			}
 		}
 
 		final AnnotationInstance jpaCacheableAnnotation = JandexHelper.getSingleAnnotation(

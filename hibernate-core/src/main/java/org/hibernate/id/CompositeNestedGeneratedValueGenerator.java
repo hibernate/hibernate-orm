@@ -102,7 +102,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List generationPlans = new ArrayList();
+	private List<GenerationPlan> generationPlans = new ArrayList<GenerationPlan>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -112,25 +112,18 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		generationPlans.add( plan );
 	}
 
+	@Override
 	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		final Serializable context = generationContextLocator.locateGenerationContext( session, object );
-
-		Iterator itr = generationPlans.iterator();
-		while ( itr.hasNext() ) {
-			final GenerationPlan plan = (GenerationPlan) itr.next();
+		for(final GenerationPlan plan : generationPlans){
 			plan.execute( session, object, context );
 		}
-
 		return context;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void registerPersistentGenerators(Map generatorMap) {
-		final Iterator itr = generationPlans.iterator();
-		while ( itr.hasNext() ) {
-			final GenerationPlan plan = (GenerationPlan) itr.next();
+		for(final GenerationPlan plan : generationPlans){
 			plan.registerPersistentGenerators( generatorMap );
 		}
 	}

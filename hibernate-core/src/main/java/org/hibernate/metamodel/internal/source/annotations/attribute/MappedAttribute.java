@@ -31,6 +31,8 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
@@ -76,6 +78,12 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 * column values in case of components or join columns etc
 	 */
 	private List<Column> columnValues = new ArrayList<Column>();
+
+	/**
+	 * Is this a formula property ( annotated w/ {@code Formula}).
+	 */
+	private final FormulaValue formulaValue;
+
 
 	/**
 	 * Is this property an id property (or part thereof).
@@ -132,6 +140,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		this.naturalIdMutability = checkNaturalId();
 		this.role = context.getOrigin().getName() + "#" + name;
 		checkColumnAnnotations( annotations );
+		this.formulaValue = checkFormulaValueAnnotation();
+
 	}
 
 	public String getName() {
@@ -186,6 +196,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return checkCondition;
 	}
 
+	public FormulaValue getFormulaValue() {
+		return formulaValue;
+	}
+
 	@Override
 	public int compareTo(MappedAttribute mappedProperty) {
 		return name.compareTo( mappedProperty.getName() );
@@ -238,6 +252,28 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
 	}
 
+	private FormulaValue checkFormulaValueAnnotation() {
+		AnnotationInstance formulaAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.FORMULA
+		);
+		if ( formulaAnnotation != null ) {
+			if ( !getColumnValues().isEmpty() ) {
+				throw new AnnotationException( "Can't having both @Formula and @Column on same attribute : " + getRole() );
+			}
+			final String expression = JandexHelper.getValue( formulaAnnotation, "value", String.class );
+			if ( StringHelper.isEmpty( expression ) ) {
+				throw new AnnotationException(
+						String.format(
+								"Formula expression defined on %s can't be empty string",
+								getRole()
+						)
+				);
+			}
+			return new FormulaValue( null, expression );
+		}
+		return null;
+	}
 	private void checkColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
 		// single @Column
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(

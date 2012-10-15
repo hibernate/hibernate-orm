@@ -100,6 +100,9 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 		else if ( attributeOverride != null && attributeOverride.getColumnValues() != null ) {
 			valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, null ) );
 		}
+		else if ( attribute.getFormulaValue() != null ){
+			valueSources.add( new DerivedValueSourceImpl( attribute.getFormulaValue() ) );
+		}
 		return valueSources;
 	}
 

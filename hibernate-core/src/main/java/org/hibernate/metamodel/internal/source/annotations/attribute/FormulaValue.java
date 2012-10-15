@@ -27,7 +27,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
  * @author Strong Liu
  */
 public class FormulaValue {
-    private String tableName;
+    private final String tableName;
     private final String expression;
 
     public FormulaValue(String tableName, String expression) {

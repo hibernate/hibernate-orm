@@ -71,7 +71,7 @@ public class BasicAttribute extends MappedAttribute {
 	private final IdGenerator idGenerator;
 
 	/**
-	 * Is this a versioned property (annotated w/ {@code @Version}.
+	 * Is this a versioned property (annotated w/ {@code @Version}).
 	 */
 	private final boolean isVersioned;
 
@@ -145,7 +145,6 @@ public class BasicAttribute extends MappedAttribute {
 
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
-
 		List<AnnotationInstance> columnTransformerAnnotations = getAllColumnTransformerAnnotations();
 		String[] readWrite = createCustomReadWrite( columnTransformerAnnotations );
 		this.customReadFragment = readWrite[0];

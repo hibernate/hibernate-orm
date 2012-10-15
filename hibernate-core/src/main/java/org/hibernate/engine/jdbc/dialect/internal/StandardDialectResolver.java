@@ -133,6 +133,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                 case 9:
                     return new SQLServer2005Dialect();
                 case 10:
+                case 11:
                     return new SQLServer2008Dialect();
                 default:
                     LOG.unknownSqlServerVersion(databaseMajorVersion);

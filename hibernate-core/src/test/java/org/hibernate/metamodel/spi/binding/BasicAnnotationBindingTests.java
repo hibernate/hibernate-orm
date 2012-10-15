@@ -23,9 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.MetadataSources;
+import org.junit.Test;
 
 /**
  * Basic tests of annotation based binding code
@@ -57,7 +56,6 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	@Override
 	@Test
-//	@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7549")
 	public void testEntityWithManyToOneMapping() {
 		super.testEntityWithManyToOneMapping();
 	}

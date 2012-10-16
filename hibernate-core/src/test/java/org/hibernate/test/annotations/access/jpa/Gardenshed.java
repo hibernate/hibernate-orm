@@ -41,8 +41,12 @@ import javax.persistence.Transient;
 public class Gardenshed
 		extends
 		Woody {
+	
 	private Integer id;
+	
 	private String brand;
+	
+	@Access(javax.persistence.AccessType.FIELD)
 	public long floors;
 
 	@Transient
@@ -66,7 +70,6 @@ public class Gardenshed
 
 	// These 2 functions should not return in Hibernate, but the value should come from the field "floors"
 
-	@Access(javax.persistence.AccessType.FIELD)
 	public long getFloors() {
 		return this.floors + 2;
 	}

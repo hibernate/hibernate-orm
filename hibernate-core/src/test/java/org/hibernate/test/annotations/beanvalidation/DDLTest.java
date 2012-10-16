@@ -41,7 +41,6 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@FailureExpectedWithNewMetamodel
 public class DDLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testBasicDDL() {
@@ -66,6 +65,7 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 		assertEquals( column.getSize().getLength(), 5 );
 	}
 
+	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testApplyOnManyToOne() throws Exception {
 		Column column = SchemaUtil.getColumn( TvOwner.class, "tv", metadata() );
@@ -78,6 +78,7 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "Notnull should not be applied on single tables", column.isNullable() );
 	}
 
+	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
 		Column column = SchemaUtil.getColumn( Tv.class, "tuner.frequency", metadata() );

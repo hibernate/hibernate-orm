@@ -23,29 +23,29 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.test.annotations.access.Closet;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.test.annotations.access.Closet;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@FailureExpectedWithNewMetamodel
 public class AccessTest extends BaseCoreFunctionalTestCase {
+	
+	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testDefaultConfigurationModeIsInherited() throws Exception {
 		User john = new User();

@@ -38,14 +38,10 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
-import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.jaxb.internal.JaxbMappingProcessor;
 import org.hibernate.jaxb.spi.JaxbRoot;
@@ -56,8 +52,11 @@ import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
+import org.jboss.logging.Logger;
+import org.w3c.dom.Document;
 
 /**
  * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate
@@ -508,6 +507,11 @@ public class MetadataSources {
 		// discovered while processing the annotations. To keep this behavior we index all classes in the
 		// hierarchy (see also HHH-7484)
 		indexClass( clazz.getSuperclass(), indexer, processedNames );
+		
+		// Similarly, add any inner classes (see HHH-7678).
+		for ( Class<?> declaredClass : clazz.getDeclaredClasses() ) {
+			indexClass( declaredClass, indexer, processedNames );
+		}
 	}
 
 	private void indexResource(String resourceName, Indexer indexer, Set<String> processedNames) {

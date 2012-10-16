@@ -427,18 +427,20 @@ public class ConfiguredClass {
 		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
 				.getMemberMethods();
 		ResolvedMember resolvedMember = findResolvedMember( member.getName(), resolvedMembers );
-		Class<?> referencedEntityType = resolveCollectionValuedReferenceType( resolvedMember );
+		Class<?> attributeType = resolvedMember.getType().getErasedType();
+		Class<?> referencedCollectionType = resolveCollectionValuedReferenceType( resolvedMember );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
 
-		MappedAttribute.Nature attributeNature = determineAttributeNature( annotations, referencedEntityType );
+		MappedAttribute.Nature attributeNature = determineAttributeNature( 
+				annotations, attributeType, referencedCollectionType );
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName,
-						resolvedMember.getType().getErasedType(),
+						attributeType,
 						attributeNature,
 						annotations,
 						accessTypeString,
@@ -463,7 +465,7 @@ public class ConfiguredClass {
 			case EMBEDDED_ID: {
 				final BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName,
-						resolvedMember.getType().getErasedType(),
+						attributeType,
 						attributeNature,
 						annotations,
 						accessTypeString,
@@ -471,13 +473,11 @@ public class ConfiguredClass {
 				);
 				idAttributeMap.put( attributeName, attribute );
 			}
-			//$FALL-THROUGH$
 			case EMBEDDED: {
 				final AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
 						getClassInfo(),
 						HibernateDotNames.TARGET
 				);
-				Class<?> attributeType = resolvedMember.getType().getErasedType();
 				if ( targetAnnotation != null ) {
 					attributeType = localBindingContext.locateClassByName(
 							JandexHelper.getValue( targetAnnotation, "value", String.class )
@@ -507,7 +507,7 @@ public class ConfiguredClass {
 						classInfo,
 						attributeName,
 						resolvedMember.getType().getErasedType(),
-						referencedEntityType,
+						referencedCollectionType,
 						attributeNature,
 						accessTypeString,
 						annotations,
@@ -563,11 +563,15 @@ public class ConfiguredClass {
 	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
 	 *
 	 * @param annotations the annotations defined on the persistent attribute
+	 * @param type the attribute's type
 	 * @param referencedCollectionType the type of the collection element in case the attribute is collection valued
 	 *
 	 * @return an instance of the {@code AttributeType} enum
 	 */
-	private MappedAttribute.Nature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations, Class<?> referencedCollectionType) {
+	private MappedAttribute.Nature determineAttributeNature( Map<DotName,
+			List<AnnotationInstance>> annotations,
+			Class<?> attributeType,
+			Class<?> referencedCollectionType ) {
 		EnumMap<MappedAttribute.Nature, AnnotationInstance> discoveredAttributeTypes =
 				new EnumMap<MappedAttribute.Nature, AnnotationInstance>( MappedAttribute.Nature.class );
 
@@ -591,14 +595,31 @@ public class ConfiguredClass {
 			discoveredAttributeTypes.put( MappedAttribute.Nature.MANY_TO_MANY, manyToMany );
 		}
 
-		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED );
-		if ( embedded != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED, embedded );
-		}
-
 		AnnotationInstance embeddedId = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
 		if ( embeddedId != null ) {
 			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED_ID, embeddedId );
+		}
+
+		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( 
+				annotations, JPADotNames.EMBEDDED );
+		if ( embedded != null ) {
+			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED, 
+					embedded );
+		} else if ( embeddedId == null ) {
+			// For backward compatibility, we're allowing attributes of an
+			// @Embeddable type to leave off @Embedded.  Check the type's
+			// annotations.  (see HHH-7678)
+			// However, it's important to ignore this if the field is
+			// annotated with @EmbeddedId.
+			ClassInfo typeClassInfo = localBindingContext.getIndex()
+					.getClassByName( DotName.createSimple( attributeType.getName() ) );
+			if ( typeClassInfo != null
+					&& JandexHelper.getSingleAnnotation( 
+							typeClassInfo.annotations(),
+							JPADotNames.EMBEDDABLE ) != null ) {
+				discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED,
+						null );
+			}
 		}
 
 		AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation(

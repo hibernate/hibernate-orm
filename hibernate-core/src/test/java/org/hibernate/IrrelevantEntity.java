@@ -28,6 +28,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.NotBlank;
 
 /**
  * A testing entity for cases where the entity definition itself is irrelevant (testing JDBC connection semantics, etc).
@@ -50,6 +51,7 @@ public class IrrelevantEntity {
 		this.id = id;
 	}
 
+	@NotBlank
 	public String getName() {
 		return name;
 	}

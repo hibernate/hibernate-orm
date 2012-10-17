@@ -21,32 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.engine.jdbc.internal;
 
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.engine.jdbc.BinaryStream;
 
 /**
- * Implementation of {@link CharacterStream}
+ * Implementation of {@link BinaryStream}
  *
  * @author Steve Ebersole
  */
-public class CharacterStreamImpl implements CharacterStream {
-	private final StringReader reader;
+public class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
 	private final int length;
 
-	public CharacterStreamImpl(String chars) {
-		reader = new StringReader( chars );
-		length = chars.length();
+	public BinaryStreamImpl(byte[] bytes) {
+		super( bytes );
+		this.length = bytes.length;
 	}
 
-	public Reader getReader() {
-		return reader;
+	public InputStream getInputStream() {
+		return this;
 	}
 
-	public int getLength() {
+	public byte[] getBytes() {
+		// from ByteArrayInputStream
+		return buf;
+	}
+
+	public long getLength() {
 		return length;
+	}
+
+	@Override
+	public void release() {
+		try {
+			super.close();
+		}
+		catch (IOException ignore) {
+		}
 	}
 }

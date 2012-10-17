@@ -21,7 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor;
+package org.hibernate.engine.jdbc;
+
+import java.io.InputStream;
 import java.io.Reader;
 
 /**
@@ -32,17 +34,28 @@ import java.io.Reader;
  */
 public interface CharacterStream {
 	/**
-	 * Retrieve the reader.
+	 * Provides access to the underlying data as a Reader.
 	 *
 	 * @return The reader.
 	 */
-	public Reader getReader();
+	public Reader asReader();
 
 	/**
-	 * Retrieve the number of characters.  JDBC 3 and earlier defined the length in terms of int type rather than
-	 * long type :(
+	 * Provides access to the underlying data as a String.
+	 *
+	 * @return The underlying String data
+	 */
+	public String asString();
+
+	/**
+	 * Retrieve the number of characters.
 	 *
 	 * @return The number of characters.
 	 */
-	public int getLength();
+	public long getLength();
+
+	/**
+	 * Release any underlying resources.
+	 */
+	public void release();
 }

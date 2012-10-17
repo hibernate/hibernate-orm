@@ -31,9 +31,11 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -117,16 +119,33 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 		try {
 			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
-			} else if ( byte[].class.isAssignableFrom( type )) {
-				return (X) DataHelper.extractBytes( value.getBinaryStream() );
-			} else if (Blob.class.isAssignableFrom( type )) {
+				if ( BlobImplementer.class.isInstance( value ) ) {
+					// if the incoming Blob is a wrapper, just pass along its BinaryStream
+					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
+				}
+				else {
+					// otherwise we need to build a BinaryStream...
+					return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+				}
+			}
+			else if ( byte[].class.isAssignableFrom( type )) {
+				if ( BlobImplementer.class.isInstance( value ) ) {
+					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
+					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
+				}
+				else {
+					// otherwise extract the bytes from the stream manually
+					return (X) DataHelper.extractBytes( value.getBinaryStream() );
+				}
+			}
+			else if (Blob.class.isAssignableFrom( type )) {
 				final Blob blob =  WrappedBlob.class.isInstance( value )
 						? ( (WrappedBlob) value ).getWrappedBlob()
 						: value;
 				return (X) blob;
 			}
-		} catch ( SQLException e ) {
+		}
+		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access blob stream", e );
 		}
 		
@@ -142,9 +161,11 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		// org.hibernate.type.descriptor.sql.BlobTypeDescriptor
 		if ( Blob.class.isAssignableFrom( value.getClass() ) ) {
 			return options.getLobCreator().wrap( (Blob) value );
-		} else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
+		}
+		else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
 			return options.getLobCreator().createBlob( ( byte[] ) value);
-		} else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
+		}
+		else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
 			InputStream inputStream = ( InputStream ) value;
 			try {
 				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
@@ -153,7 +174,6 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 				throw unknownWrap( value.getClass() );
 			}
 		}
-
 
 		throw unknownWrap( value.getClass() );
 	}

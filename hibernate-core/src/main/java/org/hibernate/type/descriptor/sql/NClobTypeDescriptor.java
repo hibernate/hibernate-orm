@@ -30,7 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -122,7 +122,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 								throws SQLException {
 							final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
-							st.setCharacterStream( index, characterStream.getReader(), characterStream.getLength() );
+							st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 						}
 					};
 				}

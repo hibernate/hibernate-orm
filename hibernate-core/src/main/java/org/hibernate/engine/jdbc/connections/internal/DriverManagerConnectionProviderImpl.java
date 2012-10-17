@@ -93,7 +93,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	public void configure(Map configurationValues) {
-        LOG.usingHibernateBuiltInConnectionPool();
+		LOG.usingHibernateBuiltInConnectionPool();
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
 		if ( driverClassName == null ) {
@@ -127,18 +127,19 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ); // default pool size 20
-        LOG.hibernateConnectionPoolSize(poolSize);
+		LOG.hibernateConnectionPoolSize( poolSize );
 
 		autocommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-        LOG.autoCommitMode( autocommit );
+		LOG.autoCommitMode( autocommit );
 
 		isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
-        if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
+		if ( isolation != null )
+			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation.intValue() ) );
 
 		url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
-            String msg = LOG.jdbcUrlNotSpecified(AvailableSettings.URL);
-            LOG.error(msg);
+			String msg = LOG.jdbcUrlNotSpecified( AvailableSettings.URL );
+			LOG.error( msg );
 			throw new HibernateException( msg );
 		}
 

@@ -480,10 +480,15 @@ public interface PersistenceContext {
 	 * Get the mapping from key value to entity instance
 	 */
 	public Map getEntitiesByKey();
-	
+
+	public Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
+
 	/**
 	 * Get the mapping from entity instance to entity entry
+	 *
+	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement
 	 */
+	@Deprecated
 	public Map getEntityEntries();
 
 	/**

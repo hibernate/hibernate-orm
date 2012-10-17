@@ -76,7 +76,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.sql.Select;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
 
@@ -98,7 +97,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-	private static final int INIT_COLL_SIZE = 8;
+	public static final int INIT_COLL_SIZE = 8;
 
 	private SessionImplementor session;
 
@@ -108,8 +107,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// Loaded entity instances, by EntityUniqueKey
 	private Map<EntityUniqueKey, Object> entitiesByUniqueKey;
 
-	// Identity map of EntityEntry instances, by the entity instance
-	private Map<Object,EntityEntry> entityEntries;
+	private EntityEntryContext entityEntryContext;
+//	private Map<Object,EntityEntry> entityEntries;
 
 	// Entity proxies, by EntityKey
 	private Map<EntityKey, Object> proxiesByKey;
@@ -156,7 +155,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private BatchFetchQueue batchFetchQueue;
 
 
-
 	/**
 	 * Constructs a PersistentContext, bound to the given session.
 	 *
@@ -171,9 +169,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>( INIT_COLL_SIZE, .75f, 1, ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK, null );
 		entitySnapshotsByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
 
-		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		entityEntryContext = new EntityEntryContext();
+//		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
-		parentsByChild = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		parentsByChild = new IdentityHashMap<Object,Object>( INIT_COLL_SIZE );
 
 		collectionsByKey = new HashMap<CollectionKey, PersistentCollection>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<Object, PersistentCollection>( INIT_COLL_SIZE );
@@ -242,7 +241,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		arrayHolders.clear();
 		entitiesByKey.clear();
 		entitiesByUniqueKey.clear();
-		entityEntries.clear();
+		entityEntryContext.clear();
+//		entityEntries.clear();
 		parentsByChild.clear();
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
@@ -293,10 +293,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void afterTransactionCompletion() {
 		cleanUpInsertedKeysAfterTransaction();
-		// Downgrade locks
-		for ( EntityEntry o : entityEntries.values() ) {
-			o.setLockMode( LockMode.NONE );
-		}
+		entityEntryContext.downgradeLocks();
+//		// Downgrade locks
+//		for ( EntityEntry o : entityEntries.values() ) {
+//			o.setLockMode( LockMode.NONE );
+//		}
 	}
 
 	/**
@@ -455,7 +456,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	public EntityEntry getEntry(Object entity) {
-		return entityEntries.get(entity);
+		return entityEntryContext.getEntityEntry( entity );
+//		return entityEntries.get(entity);
 	}
 
 	/**
@@ -463,7 +465,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	public EntityEntry removeEntry(Object entity) {
-		return entityEntries.remove(entity);
+		return entityEntryContext.removeEntityEntry( entity );
+//		return entityEntries.remove(entity);
 	}
 
 	/**
@@ -471,7 +474,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	public boolean isEntryFor(Object entity) {
-		return entityEntries.containsKey(entity);
+		return entityEntryContext.hasEntityEntry( entity );
+//		return entityEntries.containsKey(entity);
 	}
 
 	/**
@@ -547,7 +551,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				lazyPropertiesAreUnfetched,
 				this
 		);
-		entityEntries.put(entity, e);
+
+		entityEntryContext.addEntityEntry( entity, e );
+//		entityEntries.put(entity, e);
 
 		setHasNonReadOnlyEnties(status);
 		return e;
@@ -1148,7 +1154,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Map getEntityEntries() {
-		return entityEntries;
+		return entityEntryContext.getEntityEntryMap();
+//		return entityEntries;
 	}
 
 	@Override
@@ -1227,6 +1234,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				.toString();
 	}
 
+	@Override
+	public Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
+		return entityEntryContext.reentrantSafeEntityEntries();
+	}
+
 	/**
 	 * Search <tt>this</tt> persistence context for an associated entity instance which is considered the "owner" of
 	 * the given <tt>childEntity</tt>, and return that owner's id value.  This is performed in the scenario of a
@@ -1257,7 +1269,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 		Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
-			final EntityEntry entityEntry = entityEntries.get( parent );
+			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
+//			final EntityEntry entityEntry = entityEntries.get( parent );
 			//there maybe more than one parent, filter by type
 			if ( 	persister.isSubclassEntityName(entityEntry.getEntityName() )
 					&& isFoundInParent( propertyName, childEntity, persister, collectionPersister, parent ) ) {
@@ -1270,7 +1283,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		for ( Entry<Object,EntityEntry> me : IdentityMap.concurrentEntries( entityEntries ) ) {
+		for ( Entry<Object,EntityEntry> me : reentrantSafeEntityEntries() ) {
+//		for ( Entry<Object,EntityEntry> me : IdentityMap.concurrentEntries( entityEntries ) ) {
 			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
@@ -1370,7 +1384,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 	    Object parent = parentsByChild.get(childEntity);
 		if (parent != null) {
-			final EntityEntry entityEntry = entityEntries.get(parent);
+			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
+//			final EntityEntry entityEntry = entityEntries.get(parent);
 			//there maybe more than one parent, filter by type
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				Object index = getIndexInParent(property, childEntity, persister, cp, parent);
@@ -1392,7 +1407,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		for ( Entry<Object, EntityEntry> me : IdentityMap.concurrentEntries( entityEntries ) ) {
+		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
 			EntityEntry ee = me.getValue();
 			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
 				Object instance = me.getKey();
@@ -1516,8 +1531,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
-		Object entity = entitiesByKey.remove( oldKey );
-		EntityEntry oldEntry = entityEntries.remove( entity );
+		final Object entity = entitiesByKey.remove( oldKey );
+		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
 		parentsByChild.clear();
 
 		final EntityKey newKey = session.generateEntityKey( generatedId, oldEntry.getPersister() );
@@ -1587,14 +1602,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeObject( entry.getValue() );
 		}
 
-		oos.writeInt( entityEntries.size() );
-		if ( tracing ) LOG.trace("Starting serialization of [" + entityEntries.size() + "] entityEntries entries");
-		itr = entityEntries.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			Map.Entry entry = ( Map.Entry ) itr.next();
-			oos.writeObject( entry.getKey() );
-			( ( EntityEntry ) entry.getValue() ).serialize( oos );
-		}
+		entityEntryContext.serialize( oos );
+//		oos.writeInt( entityEntries.size() );
+//		if ( tracing ) LOG.trace("Starting serialization of [" + entityEntries.size() + "] entityEntries entries");
+//		itr = entityEntries.entrySet().iterator();
+//		while ( itr.hasNext() ) {
+//			Map.Entry entry = ( Map.Entry ) itr.next();
+//			oos.writeObject( entry.getKey() );
+//			( ( EntityEntry ) entry.getValue() ).serialize( oos );
+//		}
 
 		oos.writeInt( collectionsByKey.size() );
 		if ( tracing ) LOG.trace("Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries");
@@ -1691,14 +1707,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, session ), ois.readObject() );
 			}
 
-			count = ois.readInt();
-			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entityEntries entries");
-			rtn.entityEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
-			for ( int i = 0; i < count; i++ ) {
-				Object entity = ois.readObject();
-				EntityEntry entry = EntityEntry.deserialize( ois, rtn );
-				rtn.entityEntries.put( entity, entry );
-			}
+			rtn.entityEntryContext = EntityEntryContext.deserialize( ois, rtn );
+//			count = ois.readInt();
+//			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entityEntries entries");
+//			rtn.entityEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+//			for ( int i = 0; i < count; i++ ) {
+//				Object entity = ois.readObject();
+//				EntityEntry entry = EntityEntry.deserialize( ois, rtn );
+//				rtn.entityEntries.put( entity, entry );
+//			}
 
 			count = ois.readInt();
 			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] collectionsByKey entries");

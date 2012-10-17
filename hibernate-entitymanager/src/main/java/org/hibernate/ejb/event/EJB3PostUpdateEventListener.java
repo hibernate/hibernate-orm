@@ -68,8 +68,7 @@ public class EJB3PostUpdateEventListener
 	}
 
 	private void handlePostUpdate(Object entity, EventSource source) {
-		EntityEntry entry = (EntityEntry) source.getPersistenceContext()
-				.getEntityEntries().get(entity);
+		EntityEntry entry = (EntityEntry) source.getPersistenceContext().getEntry( entity );
 		// mimic the preUpdate filter
 		if ( Status.DELETED != entry.getStatus()) {
 			callbackHandler.postUpdate(entity);

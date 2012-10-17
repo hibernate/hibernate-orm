@@ -52,6 +52,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
  * Utility methods for working with the jandex annotation index.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class JandexHelper {
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
@@ -175,6 +176,17 @@ public class JandexHelper {
 			}
 			return propertyName;
 		}
+	}
+	
+	/**
+	 * @param classInfo the class info from which to retrieve the annotation instance
+	 * @param annotationName the annotation to retrieve from the class info
+	 * 
+	 * @return the list of annotations specified in the class
+	 */
+	public static List<AnnotationInstance> getAnnotations( 
+			ClassInfo classInfo, DotName annotationName ) {
+		return classInfo.annotations().get( annotationName );
 	}
 
 	/**

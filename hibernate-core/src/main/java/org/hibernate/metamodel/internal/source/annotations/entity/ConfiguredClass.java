@@ -72,6 +72,7 @@ import com.fasterxml.classmate.members.ResolvedMember;
  * Base class for a configured entity, mapped super class or embeddable
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class ConfiguredClass {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AssertionFailure.class.getName());
@@ -704,28 +705,36 @@ public class ConfiguredClass {
 	}
 
 	private Map<String, AttributeOverride> findAttributeOverrides() {
-		Map<String, AttributeOverride> attributeOverrideList = new HashMap<String, AttributeOverride>();
+		Map<String, AttributeOverride> attributeOverrideList
+				= new HashMap<String, AttributeOverride>();
 
-		AnnotationInstance attributeOverrideAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo,
-				JPADotNames.ATTRIBUTE_OVERRIDE
-		);
-		if ( attributeOverrideAnnotation != null ) {
-			String prefix = createPathPrefix( attributeOverrideAnnotation.target() );
-			AttributeOverride override = new AttributeOverride( prefix, attributeOverrideAnnotation );
-			attributeOverrideList.put( override.getAttributePath(), override );
+		// Add all instances of @AttributeOverride
+		List<AnnotationInstance> attributeOverrideAnnotations = JandexHelper
+				.getAnnotations(classInfo, JPADotNames.ATTRIBUTE_OVERRIDE );
+		if ( attributeOverrideAnnotations != null ) {
+			for ( AnnotationInstance annotation : attributeOverrideAnnotations ) {
+				AttributeOverride override = new AttributeOverride( 
+						createPathPrefix( annotation.target() ), annotation );
+				attributeOverrideList.put( 
+						override.getAttributePath(), override );
+			}
 		}
 
-		AnnotationInstance attributeOverridesAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo,
-				JPADotNames.ATTRIBUTE_OVERRIDES
-		);
-		if ( attributeOverridesAnnotation != null ) {
-			AnnotationInstance[] annotationInstances = attributeOverridesAnnotation.value().asNestedArray();
-			for ( AnnotationInstance annotationInstance : annotationInstances ) {
-				String prefix = createPathPrefix( attributeOverridesAnnotation.target() );
-				AttributeOverride override = new AttributeOverride( prefix, annotationInstance );
-				attributeOverrideList.put( override.getAttributePath(), override );
+		// Add all instances of @AttributeOverrides children
+		List<AnnotationInstance> attributeOverridesAnnotations = JandexHelper
+				.getAnnotations(classInfo, JPADotNames.ATTRIBUTE_OVERRIDES);
+		if ( attributeOverridesAnnotations != null ) {
+			for ( AnnotationInstance attributeOverridesAnnotation : attributeOverridesAnnotations ) {
+				AnnotationInstance[] annotationInstances
+						= attributeOverridesAnnotation.value().asNestedArray();
+				for ( AnnotationInstance annotation : annotationInstances ) {
+					AttributeOverride override = new AttributeOverride( 
+							createPathPrefix( 
+									attributeOverridesAnnotation.target() ),
+									annotation );
+					attributeOverrideList.put( 
+							override.getAttributePath(), override );
+				}
 			}
 		}
 		return attributeOverrideList;

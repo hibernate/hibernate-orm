@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.logging.Logger;
 
@@ -68,7 +69,7 @@ public class DriverManagerConnectionProviderImpl
 	private boolean autocommit;
 
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
-	private int checkedOut = 0;
+	private final AtomicInteger checkedOut = new AtomicInteger();
 
 	private boolean stopped;
 
@@ -170,7 +171,7 @@ public class DriverManagerConnectionProviderImpl
 
 	public Connection getConnection() throws SQLException {
 		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut );
+		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
@@ -184,7 +185,7 @@ public class DriverManagerConnectionProviderImpl
 				if ( pooled.getAutoCommit() != autocommit ) {
 					pooled.setAutoCommit( autocommit );
 				}
-				checkedOut++;
+				checkedOut.incrementAndGet();
 				return pooled;
 			}
 		}
@@ -206,12 +207,12 @@ public class DriverManagerConnectionProviderImpl
 			LOG.debugf( "Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation() );
 		}
 
-		checkedOut++;
+		checkedOut.incrementAndGet();
 		return conn;
 	}
 
 	public void closeConnection(Connection conn) throws SQLException {
-		checkedOut--;
+		checkedOut.decrementAndGet();
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		// add to the pool if the max size is not yet reached.

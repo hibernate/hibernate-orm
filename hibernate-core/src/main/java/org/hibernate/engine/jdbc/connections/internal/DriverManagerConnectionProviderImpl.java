@@ -169,13 +169,14 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	public Connection getConnection() throws SQLException {
-		LOG.tracev( "Total checked-out connections: {0}", checkedOut );
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut );
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
 				int last = pool.size() - 1;
-				LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
+				if ( traceEnabled ) LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
 				Connection pooled = pool.remove( last );
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
@@ -190,7 +191,9 @@ public class DriverManagerConnectionProviderImpl
 
 		// otherwise we open a new connection...
 
-		LOG.debug( "Opening new JDBC connection" );
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		if ( debugEnabled ) LOG.debug( "Opening new JDBC connection" );
+
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -199,7 +202,7 @@ public class DriverManagerConnectionProviderImpl
 			conn.setAutoCommit(autocommit);
 		}
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf( "Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation() );
 		}
 
@@ -210,12 +213,13 @@ public class DriverManagerConnectionProviderImpl
 	public void closeConnection(Connection conn) throws SQLException {
 		checkedOut--;
 
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		// add to the pool if the max size is not yet reached.
-		synchronized (pool) {
+		synchronized ( pool ) {
 			int currentSize = pool.size();
 			if ( currentSize < poolSize ) {
-				LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
-				pool.add(conn);
+				if ( traceEnabled ) LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
+				pool.add( conn );
 				return;
 			}
 		}

@@ -25,16 +25,16 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 
 /**
  * @author Hardy Ferentschik
  */
 public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSource {
-	private final AssociationAttribute attribute;
+	private final MappedAttribute attribute;
 
-	public ExplicitHibernateTypeSourceImpl(AssociationAttribute attribute) {
+	public ExplicitHibernateTypeSourceImpl(MappedAttribute attribute) {
 		this.attribute = attribute;
 	}
 

@@ -366,10 +366,9 @@ public class Binder {
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						attributeSource.getGeneration() );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		bindHibernateTypeDescriptor(
-				attributeBinding.getHibernateTypeDescriptor(),
-				attributeSource.getTypeInformation(),
-				createSingularAttributeJavaType( attributeBinding.getAttribute() ) );
+		typeHelper.bindSingularAttributeTypeInformation( attributeSource,
+				attributeBinding );
+		// TODO: Move heuristic type into typeHelper?
 		Type resolvedType = heuristicType( hibernateTypeDescriptor );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings );
@@ -845,6 +844,9 @@ public class Binder {
 		}
 	}
 
+	// TODO: The following 3 methods should eventually be replaced w/
+	// typeHelper use.
+	
 	private void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final ExplicitHibernateTypeSource explicitTypeSource,

@@ -28,28 +28,26 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.EnumType;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
-	private final MappedAttribute mappedAttribute;
 	private final boolean isMapKey;
+	private final boolean isEnum;
 
 	public EnumeratedTypeResolver(MappedAttribute mappedAttribute) {
-		if ( mappedAttribute == null ) {
-			throw new AssertionFailure( "MappedAttribute is null" );
-		}
-		this.mappedAttribute = mappedAttribute;
-		this.isMapKey = false;//todo
+		super( mappedAttribute );
+		isEnum = mappedAttribute.getAttributeType().isEnum();
+		isMapKey = false;//todo
 	}
 
 	@Override
@@ -61,17 +59,18 @@ public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
 	}
 
 	@Override
-	public String resolveHibernateTypeName(AnnotationInstance enumeratedAnnotation) {
-		boolean isEnum = mappedAttribute.getAttributeType().isEnum();
-		if ( !isEnum ) {
-			if ( enumeratedAnnotation != null ) {
+	public String resolveAnnotatedHibernateTypeName(AnnotationInstance enumeratedAnnotation) {
+		if ( enumeratedAnnotation != null ) {
+			if ( isEnum ) {
+				return EnumType.class.getName();
+			} else {
 				throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is not a Enumerated type, but has a @Enumerated annotation." );
 			}
-			else {
-				return null;
-			}
+		} 
+		else if ( !hasEntityTypeDef() && isEnum ) {
+			return EnumType.class.getName();
 		}
-		return EnumType.class.getName();
+		return null;
 	}
 
 	@Override

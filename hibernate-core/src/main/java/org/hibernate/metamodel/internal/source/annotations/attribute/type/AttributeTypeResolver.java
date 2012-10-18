@@ -41,6 +41,8 @@ public interface AttributeTypeResolver {
 	 *         {@link javax.persistence.Temporal}.
 	 */
 	String getExplicitHibernateTypeName();
+	
+	String getExplicitAnnotatedHibernateTypeName();
 
 	/**
 	 * @return Returns a map of optional type parameters. See {@link #getExplicitHibernateTypeName()}.

@@ -27,34 +27,62 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public abstract class AbstractAttributeTypeResolver implements AttributeTypeResolver {
-	protected abstract AnnotationInstance getTypeDeterminingAnnotationInstance();
+	
+	protected final MappedAttribute mappedAttribute;
 
-	protected abstract String resolveHibernateTypeName(AnnotationInstance annotationInstance);
-
-	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
-		return Collections.emptyMap();
+	public AbstractAttributeTypeResolver( MappedAttribute mappedAttribute ) {
+		this.mappedAttribute = mappedAttribute;
 	}
-
+	
 	@Override
 	final public String getExplicitHibernateTypeName() {
-		return resolveHibernateTypeName( getTypeDeterminingAnnotationInstance() );
+		String type = getExplicitAnnotatedHibernateTypeName();
+		// If the attribute is annotated with a type, use it.  Otherwise,
+		// check for a @TypeDef.
+		if ( !StringHelper.isEmpty( type ) ) {
+			return type;
+		} else {
+			return hasEntityTypeDef() ? mappedAttribute.getAttributeType().getName() : null;
+		}
+	}
+	
+	@Override
+	final public String getExplicitAnnotatedHibernateTypeName() {
+		return resolveAnnotatedHibernateTypeName( 
+				getTypeDeterminingAnnotationInstance() );
 	}
 
 	@Override
 	final public Map<String, String> getExplicitHibernateTypeParameters() {
 		if ( StringHelper.isNotEmpty( getExplicitHibernateTypeName() ) ) {
-			return resolveHibernateTypeParameters( getTypeDeterminingAnnotationInstance() );
+			return resolveHibernateTypeParameters( 
+					getTypeDeterminingAnnotationInstance() );
 		}
 		else {
 			return Collections.emptyMap();
 		}
+	}
+	
+	final protected boolean hasEntityTypeDef() {
+		return mappedAttribute.getContext()
+				.getMetadataImplementor().hasTypeDefinition( 
+						mappedAttribute.getAttributeType().getName() );
+	}
+	
+	protected abstract AnnotationInstance getTypeDeterminingAnnotationInstance();
+
+	protected abstract String resolveAnnotatedHibernateTypeName(AnnotationInstance annotationInstance);
+
+	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
+		return Collections.emptyMap();
 	}
 }

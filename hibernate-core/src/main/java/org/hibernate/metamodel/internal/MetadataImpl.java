@@ -29,13 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -83,8 +81,9 @@ import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
+import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -227,16 +226,29 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addTypeDefinition(TypeDefinition typeDefinition) {
+	public void addTypeDefinition( TypeDefinition typeDefinition ) {
 		if ( typeDefinition == null ) {
 			throw new IllegalArgumentException( "Type definition is null" );
 		}
 		else if ( typeDefinition.getName() == null ) {
 			throw new IllegalArgumentException( "Type definition name is null: " + typeDefinition.getTypeImplementorClass().getName() );
 		}
-		final TypeDefinition previous = typeDefinitionMap.put( typeDefinition.getName(), typeDefinition );
+		
+		// Need to register both by name and registration keys.
+		addTypeDefinition( typeDefinition.getName(), typeDefinition );
+		for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
+			addTypeDefinition( registrationKey, typeDefinition );
+		}
+	}
+	
+	private void addTypeDefinition( String registrationKey,
+			TypeDefinition typeDefinition ) {
+		final TypeDefinition previous = typeDefinitionMap.put( 
+				registrationKey, typeDefinition );
 		if ( previous != null ) {
-			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDefinition.getName(), typeDefinition.getTypeImplementorClass().getName() );
+			LOG.debugf( "Duplicate typedef name [%s] now -> %s", 
+					registrationKey,
+					typeDefinition.getTypeImplementorClass().getName() );
 		}
 	}
 
@@ -246,8 +258,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public TypeDefinition getTypeDefinition(String name) {
-		return typeDefinitionMap.get( name );
+	public boolean hasTypeDefinition(String registrationKey) {
+		return typeDefinitionMap.containsKey( registrationKey );
+	}
+
+	@Override
+	public TypeDefinition getTypeDefinition(String registrationKey) {
+		return typeDefinitionMap.get( registrationKey );
 	}
 
 

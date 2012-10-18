@@ -409,11 +409,8 @@ public class BasicAttribute extends MappedAttribute {
 	}
 
 	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
-		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
-				new AttributeTypeResolverImpl(
-						this
-				)
-		);
+		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver( this );
+		resolver.addHibernateTypeResolver( new AttributeTypeResolverImpl( this ) );
 		resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
 		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
 		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );

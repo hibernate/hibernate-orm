@@ -219,7 +219,7 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
-		return new CompositeAttributeTypeResolver( new AttributeTypeResolverImpl( this ) );
+		return new CompositeAttributeTypeResolver( this, new AttributeTypeResolverImpl( this ) );
 	}
 
 	private boolean determineNotFoundBehavior() {

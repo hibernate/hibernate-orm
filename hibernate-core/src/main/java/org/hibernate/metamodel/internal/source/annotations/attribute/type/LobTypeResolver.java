@@ -30,9 +30,6 @@ import java.sql.Clob;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -41,18 +38,16 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class LobTypeResolver extends AbstractAttributeTypeResolver {
-	private final MappedAttribute mappedAttribute;
 
 	public LobTypeResolver(MappedAttribute mappedAttribute) {
-		if ( mappedAttribute == null ) {
-			throw new AssertionFailure( "MappedAttribute is null" );
-		}
-		this.mappedAttribute = mappedAttribute;
+		super( mappedAttribute );
 	}
 
 	@Override
@@ -61,7 +56,7 @@ public class LobTypeResolver extends AbstractAttributeTypeResolver {
 	}
 
 	@Override
-	public String resolveHibernateTypeName(AnnotationInstance annotationInstance) {
+	public String resolveAnnotatedHibernateTypeName(AnnotationInstance annotationInstance) {
 		if ( annotationInstance == null ) {
 			return null;
 		}

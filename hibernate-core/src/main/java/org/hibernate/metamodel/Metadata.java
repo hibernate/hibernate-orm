@@ -24,10 +24,8 @@
 package org.hibernate.metamodel;
 
 import java.util.Map;
-import javax.persistence.SharedCacheMode;
 
-import org.jboss.jandex.IndexView;
-import org.xml.sax.EntityResolver;
+import javax.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
@@ -43,6 +41,8 @@ import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.jboss.jandex.IndexView;
+import org.xml.sax.EntityResolver;
 
 /**
  * @author Steve Ebersole
@@ -101,6 +101,8 @@ public interface Metadata {
 	public EntityBinding getRootEntityBinding(String entityName);
 
 	public Iterable<PluralAttributeBinding> getCollectionBindings();
+
+	public boolean hasTypeDefinition(String name);
 
 	public TypeDefinition getTypeDefinition(String name);
 

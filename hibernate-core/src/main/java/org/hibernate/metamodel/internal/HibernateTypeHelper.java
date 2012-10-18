@@ -31,16 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -58,6 +56,7 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate for handling:<ol>
@@ -80,12 +79,12 @@ import org.hibernate.type.Type;
  * <p/>
  * Currently the following methods are also required to be non-private because of handling discriminators which
  * are currently not modeled using attributes:<ul>
- *     <li>{@link #determineHibernateTypeFromDescriptor}</li>
  *     <li>{@link #bindJdbcDataType(org.hibernate.type.Type, org.hibernate.metamodel.spi.relational.Value)}</li>
  * </ul>
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public class HibernateTypeHelper {
 	private static final Logger log = Logger.getLogger( HibernateTypeHelper.class );
@@ -106,19 +105,25 @@ public class HibernateTypeHelper {
 	public void bindSingularAttributeTypeInformation(
 			SingularAttributeSource attributeSource,
 			SingularAttributeBinding attributeBinding) {
-		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding
+				.getHibernateTypeDescriptor();
 
-		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
+		final Class<?> attributeJavaType = determineJavaType( 
+				attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
-			attributeBinding.getAttribute().resolveType( makeJavaType( attributeJavaType.getName() ) );
+			attributeBinding.getAttribute().resolveType( makeJavaType( 
+					attributeJavaType.getName() ) );
 			if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
-				hibernateTypeDescriptor.setJavaTypeName( attributeJavaType.getName() );
+				hibernateTypeDescriptor.setJavaTypeName( 
+						attributeJavaType.getName() );
 			}
 		}
 
-		bindHibernateTypeInformation( attributeSource.getTypeInformation(), hibernateTypeDescriptor );
+		bindHibernateTypeInformation( attributeSource.getTypeInformation(), 
+				hibernateTypeDescriptor );
 
-		processSingularAttributeTypeInformation( attributeSource, attributeBinding );
+		processSingularAttributeTypeInformation( attributeSource, 
+				attributeBinding );
 	}
 
 	public ReflectedCollectionJavaTypes getReflectedCollectionJavaTypes(
@@ -168,21 +173,31 @@ public class HibernateTypeHelper {
 	 * @param hibernateTypeDescriptor The binding model hibernate type information
 	 */
 	private void bindHibernateTypeInformation(
-			ExplicitHibernateTypeSource typeSource,
-			HibernateTypeDescriptor hibernateTypeDescriptor) {
+			final ExplicitHibernateTypeSource typeSource,
+			final HibernateTypeDescriptor hibernateTypeDescriptor) {
+		
 		final String explicitTypeName = typeSource.getName();
+		
 		if ( explicitTypeName != null ) {
-			final TypeDefinition typeDefinition = metadata.getTypeDefinition( explicitTypeName );
+			final TypeDefinition typeDefinition = metadata.getTypeDefinition( 
+					explicitTypeName );
 			if ( typeDefinition != null ) {
-				hibernateTypeDescriptor.setExplicitTypeName( typeDefinition.getTypeImplementorClass().getName() );
-				hibernateTypeDescriptor.getTypeParameters().putAll( typeDefinition.getParameters() );
+				hibernateTypeDescriptor.setExplicitTypeName( 
+						typeDefinition.getTypeImplementorClass().getName() );
+				// Don't use set() -- typeDef#parameters is unmodifiable
+				hibernateTypeDescriptor.getTypeParameters().putAll( 
+						typeDefinition.getParameters() );
 			}
 			else {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
 			}
+			
+			// TODO: Should type parameters be used for @TypeDefs?
 			final Map<String, String> parameters = typeSource.getParameters();
 			if ( parameters != null ) {
-				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
+				// Don't use set() -- typeDef#parameters is unmodifiable
+				hibernateTypeDescriptor.getTypeParameters().putAll( 
+						parameters );
 			}
 		}
 	}
@@ -214,7 +229,7 @@ public class HibernateTypeHelper {
 		}
 	}
 
-	public Type determineHibernateTypeFromDescriptor(HibernateTypeDescriptor hibernateTypeDescriptor) {
+	private Type determineHibernateTypeFromDescriptor(HibernateTypeDescriptor hibernateTypeDescriptor) {
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() != null ) {
 			return hibernateTypeDescriptor.getResolvedTypeMapping();
 		}
@@ -344,6 +359,9 @@ public class HibernateTypeHelper {
 		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
 			hibernateTypeDescriptor.setJavaTypeName( resolvedHibernateType.getReturnedClass().getName() );
 		}
+		
+		hibernateTypeDescriptor.setToOne( resolvedHibernateType.isEntityType() );
+		
 		bindJdbcDataType( resolvedHibernateType, relationalValueBindings );
 	}
 

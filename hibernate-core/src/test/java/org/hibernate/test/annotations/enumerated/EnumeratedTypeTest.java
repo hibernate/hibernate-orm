@@ -7,13 +7,12 @@ import java.io.Serializable;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
 import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
 import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
 import org.junit.Test;
 
 /**
@@ -21,7 +20,6 @@ import org.junit.Test;
  * 
  * @author Janario Oliveira
  */
-@FailureExpectedWithNewMetamodel
 public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
@@ -29,34 +27,46 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 		EntityBinding binding = getEntityBinding( EntityEnum.class );
 
 		// ordinal default of EnumType
-		Type ordinalEnum = binding.locateAttributeBinding( "ordinal" )
-				.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		assertEquals( Common.class, ordinalEnum.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), ordinalEnum.getName() );
+		HibernateTypeDescriptor ordinalEnum = binding
+				.locateAttributeBinding( "ordinal" )
+				.getHibernateTypeDescriptor();
+		assertEquals( Common.class, ordinalEnum.getResolvedTypeMapping()
+				.getReturnedClass() );
+		assertEquals( EnumType.class.getName(), ordinalEnum.getExplicitTypeName() );
 
 		// string defined by Enumerated(STRING)
-		Type stringEnum = binding.locateAttributeBinding( "string" )
-				.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		assertEquals( Common.class, stringEnum.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), stringEnum.getName() );
+		HibernateTypeDescriptor stringEnum = binding
+				.locateAttributeBinding( "string" )
+				.getHibernateTypeDescriptor();
+		assertEquals( Common.class, stringEnum.getResolvedTypeMapping()
+				.getReturnedClass() );
+		assertEquals( EnumType.class.getName(), stringEnum.getExplicitTypeName() );
 
 		// explicit defined by @Type
-		Type first = binding.locateAttributeBinding( "firstLetter" )
-				.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		assertEquals( FirstLetter.class, first.getReturnedClass() );
-		assertEquals( FirstLetterType.class.getName(), first.getName() );
+		HibernateTypeDescriptor first = binding
+				.locateAttributeBinding( "firstLetter" )
+				.getHibernateTypeDescriptor();
+		assertEquals( FirstLetter.class, first.getResolvedTypeMapping()
+				.getReturnedClass() );
+		assertEquals( FirstLetterType.class.getName(), first.getExplicitTypeName() );
 
 		// implicit defined by @TypeDef in somewhere
-		Type last = binding.locateAttributeBinding( "lastNumber" )
-				.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		assertEquals( LastNumber.class, last.getReturnedClass() );
-		assertEquals( LastNumberType.class.getName(), last.getName() );
+		HibernateTypeDescriptor last = binding
+				.locateAttributeBinding( "lastNumber" )
+				.getHibernateTypeDescriptor();
+		assertEquals( LastNumber.class, last.getResolvedTypeMapping()
+				.getReturnedClass() );
+		assertEquals( LastNumberType.class.getName(), last.getExplicitTypeName() );
 
 		// implicit defined by @TypeDef in anywhere, but overrided by Enumerated(STRING)
-		Type implicitOverrideExplicit = binding.locateAttributeBinding( "explicitOverridingImplicit" )
-				.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		assertEquals( LastNumber.class, implicitOverrideExplicit.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), implicitOverrideExplicit.getName() );
+		HibernateTypeDescriptor implicitOverrideExplicit = binding
+				.locateAttributeBinding( "explicitOverridingImplicit" )
+				.getHibernateTypeDescriptor();
+		assertEquals( LastNumber.class,
+				implicitOverrideExplicit.getResolvedTypeMapping()
+						.getReturnedClass() );
+		assertEquals( EnumType.class.getName(), 
+				implicitOverrideExplicit.getExplicitTypeName() );
 	}
 
 	@Test

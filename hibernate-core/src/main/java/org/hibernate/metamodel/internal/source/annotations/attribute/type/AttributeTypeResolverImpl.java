@@ -38,32 +38,42 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
  * Type Resolver which checks {@link org.hibernate.annotations.Type} to find the type info.
  *
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class AttributeTypeResolverImpl extends AbstractAttributeTypeResolver {
-	private final MappedAttribute mappedAttribute;
-
+	
 	public AttributeTypeResolverImpl(MappedAttribute mappedAttribute) {
-		this.mappedAttribute = mappedAttribute;
+		super( mappedAttribute );
 	}
 
 	@Override
-	protected String resolveHibernateTypeName(AnnotationInstance typeAnnotation) {
-		return typeAnnotation != null ?  JandexHelper.getValue( typeAnnotation, "type", String.class ) : null;
+	protected String resolveAnnotatedHibernateTypeName(AnnotationInstance typeAnnotation) {
+		if ( typeAnnotation != null ) {
+			return JandexHelper.getValue( 
+					typeAnnotation, "type", String.class );
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance typeAnnotation) {
 		HashMap<String, String> typeParameters = new HashMap<String, String>();
-		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
-		if ( parameterAnnotationValue != null ) {
-			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
-			for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
-				typeParameters.put(
-						JandexHelper.getValue( parameterAnnotationInstance, "name", String.class ),
-						JandexHelper.getValue( parameterAnnotationInstance, "value", String.class )
-				);
+		
+		if ( typeAnnotation != null ) {
+			AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
+			if ( parameterAnnotationValue != null ) {
+				AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
+				for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
+					typeParameters.put(
+							JandexHelper.getValue( parameterAnnotationInstance, "name", String.class ),
+							JandexHelper.getValue( parameterAnnotationInstance, "value", String.class )
+					);
+				}
 			}
 		}
+		
 		return typeParameters;
 	}
 

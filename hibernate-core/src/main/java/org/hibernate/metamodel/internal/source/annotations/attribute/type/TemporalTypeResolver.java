@@ -44,23 +44,22 @@ import org.jboss.jandex.AnnotationInstance;
  * @author Brett Meyer
  */
 public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
-	private final BasicAttribute mappedAttribute;
+	private final BasicAttribute basicAttribute;
 	private final boolean isMapKey;
+	
 	public TemporalTypeResolver(BasicAttribute mappedAttribute) {
-		if ( mappedAttribute == null ) {
-			throw new AssertionFailure( "MappedAttribute is null" );
-		}
-		this.mappedAttribute = mappedAttribute;
+		super( mappedAttribute );
+		this.basicAttribute = mappedAttribute;
 		this.isMapKey = false;//todo
 	}
 
 	@Override
-	public String resolveHibernateTypeName(AnnotationInstance temporalAnnotation) {
+	public String resolveAnnotatedHibernateTypeName(AnnotationInstance temporalAnnotation) {
 		Class attributeType = mappedAttribute.getAttributeType();
 		
 		if ( isTemporalType( attributeType ) ) {
-			if ( mappedAttribute.isVersioned() && mappedAttribute.getVersionSourceType() != null ) {
-				return mappedAttribute.getVersionSourceType().typeName();
+			if ( basicAttribute.isVersioned() && basicAttribute.getVersionSourceType() != null ) {
+				return basicAttribute.getVersionSourceType().typeName();
 			}
 			if ( temporalAnnotation == null ) {
 				// Although JPA 2.1 states that @Temporal is required on

@@ -31,7 +31,6 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.ExplicitHibernateTypeSourceImpl;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -56,7 +55,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
-		return new ExplicitHibernateTypeSourceImpl( attribute.getHibernateTypeResolver() );
+		return new ExplicitHibernateTypeSourceImpl( attribute );
 	}
 
 	@Override

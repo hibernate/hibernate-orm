@@ -14,7 +14,11 @@ import org.hibernate.annotations.TypeDefs;
  * @author Janario Oliveira
  */
 @Entity
-@TypeDefs({ @TypeDef(typeClass = LastNumberType.class, defaultForType = EntityEnum.LastNumber.class) })
+@TypeDefs({ 
+	@TypeDef(name = "LastNumber",
+			typeClass = LastNumberType.class, 
+			defaultForType = EntityEnum.LastNumber.class)
+})
 public class EntityEnum {
 
 	enum Common {

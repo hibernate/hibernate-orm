@@ -706,6 +706,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 				ZipCode.class,
 				Flight.class,
 				Name.class,
+				LastName.class,
 				FormalLastName.class,
 				Car.class,
 				Peugot.class,

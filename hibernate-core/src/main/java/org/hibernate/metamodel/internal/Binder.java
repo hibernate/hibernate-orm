@@ -2315,7 +2315,7 @@ public class Binder {
 				pluralAttributeBinding.getAttribute().getName(),
 				getReferencedPropertyNameIfNotId( pluralAttributeBinding ),
 				pluralAttributeBinding.getPluralAttributeElementBinding()
-						.getNature() == PluralAttributeElementBinding.Nature.AGGREGATION
+						.getNature() == PluralAttributeElementBinding.Nature.COMPONENT
 		);
 	}
 
@@ -2326,7 +2326,7 @@ public class Binder {
 			final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
 			final String role = pluralAttributeBinding.getAttribute().getRole();
 			final String propertyRef = getReferencedPropertyNameIfNotId( pluralAttributeBinding );
-			final boolean embedded = pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.AGGREGATION;
+			final boolean embedded = pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.COMPONENT;
 			switch ( nature ){
 				case BAG:
 					return typeFactory.bag( role, propertyRef, embedded );

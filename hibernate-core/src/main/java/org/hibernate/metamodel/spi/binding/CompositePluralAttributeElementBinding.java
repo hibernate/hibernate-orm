@@ -26,7 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 /**
- * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATION} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#COMPONENT} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -38,7 +38,7 @@ public class CompositePluralAttributeElementBinding extends AbstractPluralAttrib
 
 	@Override
 	public Nature getNature() {
-		return Nature.AGGREGATION;
+		return Nature.COMPONENT;
 	}
 
 	@Override

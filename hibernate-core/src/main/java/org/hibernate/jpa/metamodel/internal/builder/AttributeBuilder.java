@@ -340,7 +340,7 @@ public class AttributeBuilder {
 				elementPersistentAttributeType = PersistentAttributeType.BASIC;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
-			else if ( elementNature == PluralAttributeElementBinding.Nature.AGGREGATION ) {
+			else if ( elementNature == PluralAttributeElementBinding.Nature.COMPONENT ) {
 				elementPersistentAttributeType = PersistentAttributeType.EMBEDDED;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}

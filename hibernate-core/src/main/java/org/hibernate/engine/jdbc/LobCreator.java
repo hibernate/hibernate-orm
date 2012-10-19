@@ -30,8 +30,6 @@ import java.sql.NClob;
 
 /**
  * Contract for creating various LOB references.
- *
- * @todo LobCreator really needs to be an api since we expose it to users.
  * 
  * @author Steve Ebersole
  * @author Gail Badner

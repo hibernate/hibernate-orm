@@ -21,33 +21,67 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor;
+package org.hibernate.engine.jdbc.internal;
+
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
- * Wraps a binary stream to also provide the length which is needed when binding.
+ * Implementation of {@link CharacterStream}
  *
  * @author Steve Ebersole
  */
-public interface BinaryStream {
-	/**
-	 * Retrieve the input stream.
-	 *
-	 * @return The input stream
-	 */
-	public InputStream getInputStream();
+public class CharacterStreamImpl implements CharacterStream {
+	private final long length;
 
-	/**
-	 * Access to the bytes.
-	 *
-	 * @return The bytes.
-	 */
-	public byte[] getBytes();
+	private Reader reader;
+	private String string;
 
-	/**
-	 * Retrieve the length of the input stream
-	 *
-	 * @return The input stream length
-	 */
-	public int getLength();
+	public CharacterStreamImpl(String chars) {
+		this.string = chars;
+		this.length = chars.length();
+	}
+
+	public CharacterStreamImpl(Reader reader, long length) {
+		this.reader = reader;
+		this.length = length;
+	}
+
+	@Override
+	public Reader asReader() {
+		if ( reader == null ) {
+			reader = new StringReader( string );
+		}
+		return reader;
+	}
+
+	@Override
+	public String asString() {
+		if ( string == null ) {
+			string = DataHelper.extractString( reader );
+		}
+		return string;
+	}
+
+	@Override
+	public long getLength() {
+		return length;
+	}
+
+	@Override
+	public void release() {
+		if ( reader == null ) {
+			return;
+		}
+		try {
+			reader.close();
+		}
+		catch (IOException ignore) {
+		}
+	}
 }

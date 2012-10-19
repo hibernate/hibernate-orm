@@ -59,9 +59,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		return lobCreationContext.execute( CREATE_BLOB_CALLBACK );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Blob createBlob(byte[] bytes) {
 		try {
 			Blob blob = createBlob();
@@ -73,25 +71,11 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Blob createBlob(InputStream inputStream, long length) {
-		try {
-			Blob blob = createBlob();
-			OutputStream byteStream = blob.setBinaryStream( 1 );
-			StreamUtils.copy( inputStream, byteStream );
-			byteStream.flush();
-			byteStream.close();
-			// todo : validate length written versus length given?
-			return blob;
-		}
-		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to prepare BLOB binary stream for writing",e );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to write stream contents to BLOB", e );
-		}
+		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
+		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
+		return NonContextualLobCreator.INSTANCE.createBlob( inputStream, length );
 	}
 
 	/**
@@ -103,9 +87,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		return lobCreationContext.execute( CREATE_CLOB_CALLBACK );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Clob createClob(String string) {
 		try {
 			Clob clob = createClob();
@@ -117,24 +99,11 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Clob createClob(Reader reader, long length) {
-		try {
-			Clob clob = createClob();
-			Writer writer = clob.setCharacterStream( 1 );
-			StreamUtils.copy( reader, writer );
-			writer.flush();
-			writer.close();
-			return clob;
-		}
-		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to prepare CLOB stream for writing", e );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to write CLOB stream content", e );
-		}
+		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
+		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
+		return NonContextualLobCreator.INSTANCE.createClob( reader, length );
 	}
 
 	/**
@@ -146,9 +115,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		return lobCreationContext.execute( CREATE_NCLOB_CALLBACK );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public NClob createNClob(String string) {
 		try {
 			NClob nclob = createNClob();
@@ -160,24 +127,11 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public NClob createNClob(Reader reader, long length) {
-		try {
-			NClob nclob = createNClob();
-			Writer writer = nclob.setCharacterStream( 1 );
-			StreamUtils.copy( reader, writer );
-			writer.flush();
-			writer.close();
-			return nclob;
-		}
-		catch ( SQLException e ) {
-			throw new JDBCException( "Unable to prepare NCLOB stream for writing", e );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to write NCLOB stream content", e );
-		}
+		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
+		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
+		return NonContextualLobCreator.INSTANCE.createNClob( reader, length );
 	}
 
 	public static final LobCreationContext.Callback<Blob> CREATE_BLOB_CALLBACK = new LobCreationContext.Callback<Blob>() {

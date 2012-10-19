@@ -27,9 +27,11 @@ import java.io.Serializable;
 import java.sql.Clob;
 import java.util.Comparator;
 
+import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -102,7 +104,14 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		}
 
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			return (X) new CharacterStreamImpl( DataHelper.extractString( value ) );
+			if ( ClobImplementer.class.isInstance( value ) ) {
+				// if the incoming Clob is a wrapper, just pass along its CharacterStream
+				return (X) ( (ClobImplementer) value ).getUnderlyingStream();
+			}
+			else {
+				// otherwise we need to build one...
+				return (X) new CharacterStreamImpl( DataHelper.extractString( value ) );
+			}
 		}
 
 		final Clob clob =  WrappedClob.class.isInstance( value )

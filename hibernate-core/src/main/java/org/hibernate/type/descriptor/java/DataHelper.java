@@ -34,8 +34,9 @@ import java.sql.SQLException;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.engine.jdbc.BinaryStream;
 
 /**
  * A help for dealing with BLOB and CLOB data

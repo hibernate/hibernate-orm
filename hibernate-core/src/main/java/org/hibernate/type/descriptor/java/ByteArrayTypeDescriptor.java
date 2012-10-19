@@ -29,7 +29,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

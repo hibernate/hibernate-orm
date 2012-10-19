@@ -21,36 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.engine.jdbc;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.hibernate.type.descriptor.BinaryStream;
-
 /**
- * Implementation of {@link BinaryStream}
+ * Wraps a binary stream to also provide the length which is needed when binding.
  *
  * @author Steve Ebersole
  */
-public class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
-	private final int length;
+public interface BinaryStream {
+	/**
+	 * Retrieve the input stream.
+	 *
+	 * @return The input stream
+	 */
+	public InputStream getInputStream();
 
-	public BinaryStreamImpl(byte[] bytes) {
-		super( bytes );
-		this.length = bytes.length;
-	}
+	/**
+	 * Access to the bytes.
+	 *
+	 * @return The bytes.
+	 */
+	public byte[] getBytes();
 
-	public InputStream getInputStream() {
-		return this;
-	}
+	/**
+	 * Retrieve the length of the input stream
+	 *
+	 * @return The input stream length
+	 */
+	public long getLength();
 
-	public byte[] getBytes() {
-		// from ByteArrayInputStream
-		return buf;
-	}
-
-	public int getLength() {
-		return length;
-	}
+	/**
+	 * Release any underlying resources.
+	 */
+	public void release();
 }

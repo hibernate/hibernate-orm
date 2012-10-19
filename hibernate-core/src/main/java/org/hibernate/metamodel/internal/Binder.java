@@ -365,14 +365,8 @@ public class Binder {
 						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						attributeSource.getGeneration() );
-		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		typeHelper.bindSingularAttributeTypeInformation( attributeSource,
 				attributeBinding );
-		// TODO: Move heuristic type into typeHelper?
-		Type resolvedType = heuristicType( hibernateTypeDescriptor );
-		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings );
-		attributeBinding.getAttribute().resolveType( bindingContext().makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		return attributeBinding;
 	}
 

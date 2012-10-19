@@ -33,6 +33,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
@@ -230,12 +231,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( typeDefinition == null ) {
 			throw new IllegalArgumentException( "Type definition is null" );
 		}
-		else if ( typeDefinition.getName() == null ) {
-			throw new IllegalArgumentException( "Type definition name is null: " + typeDefinition.getTypeImplementorClass().getName() );
-		}
 		
 		// Need to register both by name and registration keys.
-		addTypeDefinition( typeDefinition.getName(), typeDefinition );
+		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
+			addTypeDefinition( typeDefinition.getName(), typeDefinition );
+		}
+		
 		for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
 			addTypeDefinition( registrationKey, typeDefinition );
 		}

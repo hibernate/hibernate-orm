@@ -26,15 +26,15 @@ package org.hibernate.engine.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.LinkedHashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
-import org.hibernate.engine.ManagedEntity;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
@@ -43,22 +43,22 @@ import org.hibernate.engine.spi.EntityEntry;
  *         the entity->EntityEntry association is maintained in a Map within this class
  *     </li>
  *     <li>
- *         the EntityEntry is injected into the entity via it implementing the {@link org.hibernate.engine.ManagedEntity} contract,
+ *         the EntityEntry is injected into the entity via it implementing the {@link org.hibernate.engine.spi.ManagedEntity} contract,
  *         either directly or through bytecode enhancement.
  *     </li>
  * </ul>
  * <p/>
- * IMPL NOTE : This current implementation is not ideal in the {@link org.hibernate.engine.ManagedEntity} case.  The problem is that
- * the 'backingMap' is still the means to maintain ordering of the entries; but in the {@link org.hibernate.engine.ManagedEntity} case
- * the use of a Map is overkill, and double here so because of the need for wrapping the map keys.  But this is just
- * a quick prototype.
  *
  * @author Steve Ebersole
  */
 public class EntityEntryContext {
 	private static final Logger log = Logger.getLogger( EntityEntryContext.class );
 
-	private LinkedHashMap<KeyWrapper,EntityEntry> backingMap = new LinkedHashMap<KeyWrapper, EntityEntry>();
+	private transient ManagedEntity head;
+	private transient ManagedEntity tail;
+	private transient int count = 0;
+
+	private transient IdentityHashMap<Object,ManagedEntity> nonEnhancedEntityXref;
 
 	@SuppressWarnings( {"unchecked"})
 	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
@@ -67,193 +67,356 @@ public class EntityEntryContext {
 	public EntityEntryContext() {
 	}
 
-	/**
-	 * Private constructor used during deserialization
-	 *
-	 * @param backingMap The backing map re-built from the serial stream
-	 */
-	private EntityEntryContext(LinkedHashMap<KeyWrapper, EntityEntry> backingMap) {
-		this.backingMap = backingMap;
-		// mark dirty so we can rebuild the 'reentrantSafeEntries'
+	public void addEntityEntry(Object entity, EntityEntry entityEntry) {
+		// IMPORTANT!!!!!
+		//		add is called more than once of some entities.  In such cases the first
+		//		call is simply setting up a "marker" to avoid infinite looping from reentrancy
+		//
+		// any addition (even the double one described above) should invalidate the cross-ref array
 		dirty = true;
-	}
 
-	public void clear() {
-		dirty = true;
-		for ( Map.Entry<KeyWrapper,EntityEntry> mapEntry : backingMap.entrySet() ) {
-			final Object realKey = mapEntry.getKey().getRealKey();
-			if ( ManagedEntity.class.isInstance( realKey ) ) {
-				( (ManagedEntity) realKey ).hibernate_setEntityEntry( null );
-			}
+		// determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
+		// also track whether the entity was already associated with the context
+		final ManagedEntity managedEntity;
+		final boolean alreadyAssociated;
+		if ( ManagedEntity.class.isInstance( entity ) ) {
+			managedEntity = (ManagedEntity) entity;
+			alreadyAssociated = managedEntity.hibernate_getEntityEntry() != null;
 		}
-		backingMap.clear();
-		reentrantSafeEntries = null;
-	}
+		else {
+			ManagedEntity wrapper = null;
+			if ( nonEnhancedEntityXref == null ) {
+				nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+			}
+			else {
+				wrapper = nonEnhancedEntityXref.get( entity );
+			}
 
-	public void downgradeLocks() {
-		// Downgrade locks
-		for ( Map.Entry<KeyWrapper,EntityEntry> mapEntry : backingMap.entrySet() ) {
-			final Object realKey = mapEntry.getKey().getRealKey();
-			final EntityEntry entityEntry = ManagedEntity.class.isInstance( realKey )
-					? ( (ManagedEntity) realKey ).hibernate_getEntityEntry()
-					: mapEntry.getValue();
-			entityEntry.setLockMode( LockMode.NONE );
+			if ( wrapper == null ) {
+				wrapper = new ManagedEntityImpl( entity );
+				nonEnhancedEntityXref.put( entity, wrapper );
+				alreadyAssociated = false;
+			}
+			else {
+				alreadyAssociated = true;
+			}
+
+			managedEntity = wrapper;
+		}
+
+		// associate the EntityEntry with the entity
+		managedEntity.hibernate_setEntityEntry( entityEntry );
+
+		if ( alreadyAssociated ) {
+			// if the entity was already associated with the context, skip the linking step.
+			return;
+		}
+
+		// finally, set up linking and count
+		if ( tail == null ) {
+			assert head == null;
+			head = managedEntity;
+			tail = head;
+			count = 1;
+		}
+		else {
+			tail.hibernate_setNextManagedEntity( managedEntity );
+			managedEntity.hibernate_setPreviousManagedEntity( tail );
+			tail = managedEntity;
+			count++;
 		}
 	}
 
 	public boolean hasEntityEntry(Object entity) {
-		return ManagedEntity.class.isInstance( entity )
-				? ( (ManagedEntity) entity ).hibernate_getEntityEntry() == null
-				: backingMap.containsKey( new KeyWrapper<Object>( entity ) );
+		return getEntityEntry( entity ) != null;
 	}
 
 	public EntityEntry getEntityEntry(Object entity) {
-		return ManagedEntity.class.isInstance( entity )
-				? ( (ManagedEntity) entity ).hibernate_getEntityEntry()
-				: backingMap.get( new KeyWrapper<Object>( entity ) );
+		final ManagedEntity managedEntity;
+		if ( ManagedEntity.class.isInstance( entity ) ) {
+			managedEntity = (ManagedEntity) entity;
+		}
+		else if ( nonEnhancedEntityXref == null ) {
+			managedEntity = null;
+		}
+		else {
+			managedEntity = nonEnhancedEntityXref.get( entity );
+		}
+
+		return managedEntity == null
+				? null
+				: managedEntity.hibernate_getEntityEntry();
 	}
 
 	public EntityEntry removeEntityEntry(Object entity) {
 		dirty = true;
-		if ( ManagedEntity.class.isInstance( entity ) ) {
-			backingMap.remove( new KeyWrapper<Object>( entity ) );
-			final EntityEntry entityEntry = ( (ManagedEntity) entity ).hibernate_getEntityEntry();
-			( (ManagedEntity) entity ).hibernate_setEntityEntry( null );
-			return entityEntry;
-		}
-		else {
-			return backingMap.remove( new KeyWrapper<Object>( entity ) );
-		}
-	}
 
-	public void addEntityEntry(Object entity, EntityEntry entityEntry) {
-		dirty = true;
+		final ManagedEntity managedEntity;
 		if ( ManagedEntity.class.isInstance( entity ) ) {
-			backingMap.put( new KeyWrapper<Object>( entity ), null );
-			( (ManagedEntity) entity ).hibernate_setEntityEntry( entityEntry );
+			managedEntity = (ManagedEntity) entity;
+		}
+		else if ( nonEnhancedEntityXref == null ) {
+			managedEntity = null;
 		}
 		else {
-			backingMap.put( new KeyWrapper<Object>( entity ), entityEntry );
+			managedEntity = nonEnhancedEntityXref.remove( entity );
 		}
+
+		if ( managedEntity == null ) {
+			throw new AssertionFailure( "Unable to resolve entity reference to EntityEntry for removal" );
+		}
+
+		// prepare for re-linking...
+		ManagedEntity previous = managedEntity.hibernate_getPreviousManagedEntity();
+		ManagedEntity next = managedEntity.hibernate_getNextManagedEntity();
+		managedEntity.hibernate_setPreviousManagedEntity( null );
+		managedEntity.hibernate_setNextManagedEntity( null );
+
+		count--;
+
+		if ( count == 0 ) {
+			// handle as a special case...
+			head = null;
+			tail = null;
+
+			assert previous == null;
+			assert next == null;
+		}
+		else {
+			// otherwise, previous or next (or both) should be non-null
+			if ( previous == null ) {
+				// we are removing head
+				assert managedEntity == head;
+				head = next;
+			}
+			else {
+				previous.hibernate_setNextManagedEntity( next );
+			}
+
+			if ( next == null ) {
+				// we are removing tail
+				assert managedEntity == tail;
+				tail = previous;
+			}
+			else {
+				next.hibernate_setPreviousManagedEntity( previous );
+			}
+		}
+
+		EntityEntry theEntityEntry = managedEntity.hibernate_getEntityEntry();
+		managedEntity.hibernate_setEntityEntry( null );
+		return theEntityEntry;
 	}
 
 	public Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
 		if ( dirty ) {
-			reentrantSafeEntries = new MapEntryImpl[ backingMap.size() ];
+			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
 			int i = 0;
-			for ( Map.Entry<KeyWrapper,EntityEntry> mapEntry : backingMap.entrySet() ) {
-				final Object entity = mapEntry.getKey().getRealKey();
-				final EntityEntry entityEntry = ManagedEntity.class.isInstance( entity )
-						? ( (ManagedEntity) entity ).hibernate_getEntityEntry()
-						: mapEntry.getValue();
-				reentrantSafeEntries[i++] = new MapEntryImpl( entity, entityEntry );
+			ManagedEntity managedEntity = head;
+			while ( managedEntity != null ) {
+				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
+						managedEntity.hibernate_getEntityInstance(),
+						managedEntity.hibernate_getEntityEntry()
+				);
+				managedEntity = managedEntity.hibernate_getNextManagedEntity();
 			}
 			dirty = false;
 		}
 		return reentrantSafeEntries;
 	}
 
+	public void clear() {
+		dirty = true;
+
+		ManagedEntity node = head;
+		while ( node != null ) {
+			final ManagedEntity nextNode = node.hibernate_getNextManagedEntity();
+
+			node.hibernate_setEntityEntry( null );
+			node.hibernate_setPreviousManagedEntity( null );
+			node.hibernate_setNextManagedEntity( null );
+
+			node = nextNode;
+		}
+
+		if ( nonEnhancedEntityXref != null ) {
+			nonEnhancedEntityXref.clear();
+		}
+
+		head = null;
+		tail = null;
+		count = 0;
+
+		reentrantSafeEntries = null;
+	}
+
+	public void downgradeLocks() {
+		if ( head == null ) {
+			return;
+		}
+
+		ManagedEntity node = head;
+		while ( node != null ) {
+			node.hibernate_getEntityEntry().setLockMode( LockMode.NONE );
+
+			node = node.hibernate_getNextManagedEntity();
+		}
+	}
+
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		final int count = backingMap.size();
 		log.tracef( "Starting serialization of [%s] EntityEntry entries", count );
 		oos.writeInt( count );
-		for ( Map.Entry<KeyWrapper,EntityEntry> mapEntry : backingMap.entrySet() ) {
-			oos.writeObject( mapEntry.getKey().getRealKey() );
-			mapEntry.getValue().serialize( oos );
+		if ( count == 0 ) {
+			return;
+		}
+
+		ManagedEntity managedEntity = head;
+		while ( managedEntity != null ) {
+			// so we know whether or not to build a ManagedEntityImpl on deserialize
+			oos.writeBoolean( managedEntity == managedEntity.hibernate_getEntityInstance() );
+			oos.writeObject( managedEntity.hibernate_getEntityInstance() );
+			managedEntity.hibernate_getEntityEntry().serialize( oos );
+
+			managedEntity = managedEntity.hibernate_getNextManagedEntity();
 		}
 	}
 
 	public static EntityEntryContext deserialize(ObjectInputStream ois, StatefulPersistenceContext rtn) throws IOException, ClassNotFoundException {
 		final int count = ois.readInt();
 		log.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
-		final LinkedHashMap<KeyWrapper,EntityEntry> backingMap = new LinkedHashMap<KeyWrapper, EntityEntry>( count );
+
+		final EntityEntryContext context = new EntityEntryContext();
+		context.count = count;
+		context.dirty = true;
+
+		if ( count == 0 ) {
+			return context;
+		}
+
+		ManagedEntity previous = null;
+
 		for ( int i = 0; i < count; i++ ) {
+			final boolean isEnhanced = ois.readBoolean();
 			final Object entity = ois.readObject();
 			final EntityEntry entry = EntityEntry.deserialize( ois, rtn );
-			backingMap.put( new KeyWrapper<Object>( entity ), entry );
-		}
-		return new EntityEntryContext( backingMap );
-	}
-
-	/**
-	 * @deprecated Added to support (also deprecated) PersistenceContext.getEntityEntries method until it can be removed.  Safe to use for counts.
-	 *
-	 */
-	@Deprecated
-	public Map getEntityEntryMap() {
-		return backingMap;
-	}
-
-	/**
-	 * We need to base the identity on {@link System#identityHashCode(Object)} but
-	 * attempt to lazily initialize and cache this value: being a native invocation
-	 * it is an expensive value to retrieve.
-	 */
-	public static final class KeyWrapper<K> implements Serializable {
-		private final K realKey;
-		private int hash = 0;
-
-		KeyWrapper(K realKey) {
-			this.realKey = realKey;
-		}
-
-		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
-		@Override
-		public boolean equals(Object other) {
-			return realKey == ( (KeyWrapper) other ).realKey;
-		}
-
-		@Override
-		public int hashCode() {
-			if ( this.hash == 0 ) {
-				//We consider "zero" as non-initialized value
-				final int newHash = System.identityHashCode( realKey );
-				if ( newHash == 0 ) {
-					//So make sure we don't store zeros as it would trigger initialization again:
-					//any value is fine as long as we're deterministic.
-					this.hash = -1;
-				}
-				else {
-					this.hash = newHash;
-				}
+			final ManagedEntity managedEntity;
+			if ( isEnhanced ) {
+				managedEntity = (ManagedEntity) entity;
 			}
-			return hash;
+			else {
+				managedEntity = new ManagedEntityImpl( entity );
+				if ( context.nonEnhancedEntityXref == null ) {
+					context.nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+				}
+				context.nonEnhancedEntityXref.put( entity, managedEntity );
+			}
+			managedEntity.hibernate_setEntityEntry( entry );
+
+			if ( previous == null ) {
+				context.head = managedEntity;
+			}
+			else {
+				previous.hibernate_setNextManagedEntity( managedEntity );
+				managedEntity.hibernate_setPreviousManagedEntity( previous );
+			}
+
+			previous = managedEntity;
+		}
+
+		context.tail = previous;
+
+		return context;
+	}
+
+	public int getNumberOfManagedEntities() {
+		return count;
+	}
+
+	private static class ManagedEntityImpl implements ManagedEntity {
+		private final Object entityInstance;
+		private EntityEntry entityEntry;
+		private ManagedEntity previous;
+		private ManagedEntity next;
+
+		public ManagedEntityImpl(Object entityInstance) {
+			this.entityInstance = entityInstance;
 		}
 
 		@Override
-		public String toString() {
-			return realKey.toString();
+		public Object hibernate_getEntityInstance() {
+			return entityInstance;
 		}
 
-		public K getRealKey() {
-			return realKey;
+		@Override
+		public EntityEntry hibernate_getEntityEntry() {
+			return entityEntry;
+		}
+
+		@Override
+		public void hibernate_setEntityEntry(EntityEntry entityEntry) {
+			this.entityEntry = entityEntry;
+		}
+
+		@Override
+		public ManagedEntity hibernate_getNextManagedEntity() {
+			return next;
+		}
+
+		@Override
+		public void hibernate_setNextManagedEntity(ManagedEntity next) {
+			this.next = next;
+		}
+
+		@Override
+		public ManagedEntity hibernate_getPreviousManagedEntity() {
+			return previous;
+		}
+
+		@Override
+		public void hibernate_setPreviousManagedEntity(ManagedEntity previous) {
+			this.previous = previous;
 		}
 	}
 
-	private static class MapEntryImpl implements Map.Entry<Object,EntityEntry> {
-		private final Object key;
-		private EntityEntry value;
+	private static class EntityEntryCrossRefImpl implements EntityEntryCrossRef {
+		private final Object entity;
+		private EntityEntry entityEntry;
 
-		private MapEntryImpl(Object key, EntityEntry value) {
-			this.key = key;
-			this.value = value;
+		private EntityEntryCrossRefImpl(Object entity, EntityEntry entityEntry) {
+			this.entity = entity;
+			this.entityEntry = entityEntry;
+		}
+
+		@Override
+		public Object getEntity() {
+			return entity;
+		}
+
+		@Override
+		public EntityEntry getEntityEntry() {
+			return entityEntry;
 		}
 
 		@Override
 		public Object getKey() {
-			return key;
+			return getEntity();
 		}
 
 		@Override
 		public EntityEntry getValue() {
-			return value;
+			return getEntityEntry();
 		}
 
 		@Override
-		public EntityEntry setValue(EntityEntry value) {
-			final EntityEntry old = this.value;
-			this.value = value;
-			return value;
+		public EntityEntry setValue(EntityEntry entityEntry) {
+			final EntityEntry old = this.entityEntry;
+			this.entityEntry = entityEntry;
+			return old;
 		}
+	}
+
+	public static interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+		public Object getEntity();
+		public EntityEntry getEntityEntry();
 	}
 }

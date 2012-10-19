@@ -45,7 +45,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContext();
-		if ( persistenceContext.getEntityEntries().size() > 0 ||
+		if ( persistenceContext.getNumberOfManagedEntities() > 0 ||
 				persistenceContext.getCollectionEntries().size() > 0 ) {
 
 			flushEverythingToExecutions(event);

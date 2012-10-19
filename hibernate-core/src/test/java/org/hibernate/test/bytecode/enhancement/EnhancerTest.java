@@ -53,6 +53,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 /**
@@ -95,6 +96,9 @@ public class EnhancerTest extends BaseUnitTestCase {
 		assertNotNull( getter.invoke( simpleEntityInstance ) );
 		setter.invoke( simpleEntityInstance, new Object[] { null } );
 		assertNull( getter.invoke( simpleEntityInstance ) );
+
+		Method entityInstanceGetter = simpleEntityClass.getMethod( Enhancer.ENTITY_INSTANCE_GETTER_NAME );
+		assertSame( simpleEntityInstance, entityInstanceGetter.invoke( simpleEntityInstance ) );
 	}
 
 	private CtClass generateCtClassForAnEntity() throws IOException, NotFoundException {

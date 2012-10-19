@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine;
+package org.hibernate.engine.spi;
 
 /**
  * Specialized {@link Managed} contract for component/embeddable classes.

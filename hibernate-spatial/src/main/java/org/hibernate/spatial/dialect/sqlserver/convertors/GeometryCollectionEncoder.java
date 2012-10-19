@@ -23,9 +23,8 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryCollection;
 
 /**
  * <code>Encoder</code> for GeometryCollections.
@@ -45,7 +44,7 @@ class GeometryCollectionEncoder<T extends GeometryCollection> extends AbstractEn
 	}
 
 	@Override
-	protected void encode(Geometry geom, int parentShapeIndex, List<Coordinate> coordinates, List<Figure> figures, List<Shape> shapes) {
+	protected void encode(Geometry geom, int parentShapeIndex, CountingPointSequenceBuilder coordinates, List<Figure> figures, List<Shape> shapes) {
 		if ( geom.isEmpty() ) {
 			shapes.add( new Shape( parentShapeIndex, -1, this.openGisType ) );
 			return;
@@ -53,8 +52,12 @@ class GeometryCollectionEncoder<T extends GeometryCollection> extends AbstractEn
 		int thisShapeIndex = shapes.size();
 		Shape thisShape = createShape( parentShapeIndex, figures );
 		shapes.add( thisShape );
-		for ( int i = 0; i < geom.getNumGeometries(); i++ ) {
-			Geometry component = geom.getGeometryN( i );
+		if (! (geom instanceof GeometryCollection)) {
+			throw new IllegalArgumentException( "Expect GeometryCollection argument." );
+		}
+		GeometryCollection gc =  (GeometryCollection) geom;
+		for ( int i = 0; i < gc.getNumGeometries(); i++ ) {
+			Geometry component = gc.getGeometryN( i );
 			encodeComponent( component, thisShapeIndex, coordinates, figures, shapes );
 		}
 	}
@@ -64,7 +67,7 @@ class GeometryCollectionEncoder<T extends GeometryCollection> extends AbstractEn
 		return thisShape;
 	}
 
-	protected void encodeComponent(Geometry geom, int thisShapeIndex, List<Coordinate> coordinates, List<Figure> figures, List<Shape> shapes) {
+	protected void encodeComponent(Geometry geom, int thisShapeIndex, CountingPointSequenceBuilder coordinates, List<Figure> figures, List<Shape> shapes) {
 		AbstractEncoder<? extends Geometry> encoder = (AbstractEncoder<? extends Geometry>) Encoders.encoderFor( geom );
 		encoder.encode( geom, thisShapeIndex, coordinates, figures, shapes );
 	}

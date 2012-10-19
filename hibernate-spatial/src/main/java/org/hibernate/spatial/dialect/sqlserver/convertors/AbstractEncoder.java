@@ -24,31 +24,28 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.jts.mgeom.MGeometry;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.PointCollection;
 
 
 abstract class AbstractEncoder<G extends Geometry> implements Encoder<G> {
 
 	public SqlServerGeometry encode(G geom) {
 		SqlServerGeometry nativeGeom = new SqlServerGeometry();
-		nativeGeom.setSrid( geom.getSRID() );
-		if ( geom.isValid() ) {
-			nativeGeom.setIsValid();
-		}
+		int srid = geom.getSRID();
+		nativeGeom.setSrid( srid < 0 ? 0 : srid );
+		nativeGeom.setIsValid();
 
-		if ( hasMValues( geom ) ) {
+		if ( geom.isMeasured() ) {
 			nativeGeom.setHasMValues();
 		}
 
-		List<Coordinate> coordinates = new ArrayList<Coordinate>();
+        CountingPointSequenceBuilder coordinates = new CountingPointSequenceBuilder(geom.getDimensionalFlag());
 		List<Figure> figures = new ArrayList<Figure>();
 		List<Shape> shapes = new ArrayList<Shape>();
 
 		encode( geom, -1, coordinates, figures, shapes );
-		encodePoints( nativeGeom, coordinates );
+		encodePoints( nativeGeom, coordinates.toPointSequence() );
 		encodeFigures( nativeGeom, figures );
 		encodeShapes( nativeGeom, shapes );
 		return nativeGeom;
@@ -63,7 +60,7 @@ abstract class AbstractEncoder<G extends Geometry> implements Encoder<G> {
 	 * @param figures figure list to append to
 	 * @param shapes shape list to append to
 	 */
-	protected abstract void encode(Geometry geom, int parentShapeIndex, List<Coordinate> coordinates, List<Figure> figures, List<Shape> shapes);
+	protected abstract void encode(Geometry geom, int parentShapeIndex, CountingPointSequenceBuilder coordinates, List<Figure> figures, List<Shape> shapes);
 
 	protected void encodeShapes(SqlServerGeometry nativeGeom, List<Shape> shapes) {
 		nativeGeom.setNumberOfShapes( shapes.size() );
@@ -79,21 +76,17 @@ abstract class AbstractEncoder<G extends Geometry> implements Encoder<G> {
 		}
 	}
 
-	protected boolean hasMValues(G geom) {
-		return geom instanceof MGeometry;
-	}
 
-
-	protected void encodePoints(SqlServerGeometry nativeGeom, List<Coordinate> coordinates) {
+	protected void encodePoints(SqlServerGeometry nativeGeom, PointCollection coordinates) {
 		nativeGeom.setNumberOfPoints( coordinates.size() );
 		nativeGeom.allocateMValueArray();
 		for ( int i = 0; i < coordinates.size(); i++ ) {
-			setCoordinate( nativeGeom, i, coordinates.get( i ) );
+			setCoordinate( nativeGeom, i, coordinates);
 		}
 	}
 
-	protected void setCoordinate(SqlServerGeometry nativeGeom, int idx, Coordinate coordinate) {
-		if ( !nativeGeom.hasZValues() && !Double.isNaN( coordinate.z ) ) {
+	protected void setCoordinate(SqlServerGeometry nativeGeom, int idx, PointCollection coordinate) {
+		if ( !nativeGeom.hasZValues() && !Double.isNaN( coordinate.getZ(idx) ) ) {
 			nativeGeom.setHasZValues();
 			nativeGeom.allocateZValueArray();
 		}

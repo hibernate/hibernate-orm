@@ -36,12 +36,18 @@ import org.hibernate.spatial.jts.mgeom.MCoordinate;
 public class GeometryEquality {
 
 	public boolean test(Geometry geom1, Geometry geom2) {
+		return test( geom1, geom2, false );
+	}
+
+	private boolean test(Geometry geom1, Geometry geom2, boolean ignoreSRID) {
 		if ( geom1 == null ) {
 			return geom2 == null;
 		}
 		if ( geom1.isEmpty() ) {
-			return geom2.isEmpty() && equalSRID( geom1, geom2 );
+			return geom2.isEmpty();
 		}
+		if (!ignoreSRID && !equalSRID(geom1, geom2)) return false;
+
 		if ( geom1 instanceof GeometryCollection ) {
 			if ( !( geom2 instanceof GeometryCollection ) ) {
 				return false;
@@ -51,7 +57,7 @@ public class GeometryEquality {
 			for ( int partIndex = 0; partIndex < expectedCollection.getNumGeometries(); partIndex++ ) {
 				Geometry partExpected = expectedCollection.getGeometryN( partIndex );
 				Geometry partReceived = receivedCollection.getGeometryN( partIndex );
-				if ( !test( partExpected, partReceived ) ) {
+				if ( !test( partExpected, partReceived, true ) ) {
 					return false;
 				}
 			}
@@ -71,7 +77,7 @@ public class GeometryEquality {
 	 */
 	private boolean equalSRID(Geometry geom1, Geometry geom2) {
 		return geom1.getSRID() == geom2.getSRID() ||
-				( geom1.getSRID() <1 && geom2.getSRID() < 1);
+				( geom1.getSRID() < 1 && geom2.getSRID() < 1);
 	}
 
 	/**
@@ -84,7 +90,7 @@ public class GeometryEquality {
 	 */
 	protected boolean testSimpleGeometryEquality(Geometry geom1, Geometry geom2) {
 		//return geom1.equals(geom2);
-		return testTypeAndVertexEquality( geom1, geom2 ) && equalSRID( geom1, geom2 );
+		return testTypeAndVertexEquality( geom1, geom2);
 	}
 
 	protected boolean testTypeAndVertexEquality(Geometry geom1, Geometry geom2) {

@@ -21,7 +21,15 @@
 
 package org.hibernate.spatial.dialect.sqlserver;
 
-import com.vividsolutions.jts.geom.Geometry;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
+import org.geolatte.geom.Geometry;
+
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
@@ -31,8 +39,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
-
-import java.sql.*;
 
 /**
  * @author Karel Maesen, Geovise BVBA

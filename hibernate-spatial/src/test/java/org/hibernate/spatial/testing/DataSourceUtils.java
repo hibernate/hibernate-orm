@@ -21,31 +21,20 @@
 
 package org.hibernate.spatial.testing;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import javax.sql.DataSource;
-
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
-import org.geolatte.geom.jts.JTS;
-
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
+
+import javax.sql.DataSource;
+import java.io.*;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * <p>Unit testsuite-suite support class.</p>
@@ -221,8 +210,7 @@ public class DataSourceUtils {
 			cn.commit();
 			stmt.close();
 			LOG.info( "Loaded " + sum( insCounts ) + " rows." );
-		}
-		finally {
+		}finally {
 			try {
 				if ( cn != null ) {
 					cn.close();
@@ -363,7 +351,9 @@ public class DataSourceUtils {
 		for ( TestDataElement testDataElement : testData ) {
 			if ( testDataElement.type.equalsIgnoreCase( type ) ) {
 				try {
-					result.put( testDataElement.id, JTS.to( decoder.decode( testDataElement.wkt ) ) );
+                    //to ensure expected geometries have the correct SRID, we prepend to the WKT string
+                    String wkt = "SRID=" + testDataElement.srid + ";"+testDataElement.wkt;
+					result.put( testDataElement.id, decoder.decode( wkt ) );
 				}
 				catch ( WktDecodeException e ) {
 					System.out

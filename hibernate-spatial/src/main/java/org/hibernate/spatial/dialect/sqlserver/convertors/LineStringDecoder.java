@@ -21,18 +21,12 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.LineString;
-
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.LineString;
+import org.geolatte.geom.PointSequence;
+import org.geolatte.geom.crs.CrsId;
 
 class LineStringDecoder extends AbstractDecoder<LineString> {
 
-	public LineStringDecoder(MGeometryFactory factory) {
-		super( factory );
-	}
 
 	@Override
 	protected OpenGisType getOpenGisType() {
@@ -40,7 +34,7 @@ class LineStringDecoder extends AbstractDecoder<LineString> {
 	}
 
 	protected LineString createNullGeometry() {
-		return getGeometryFactory().createLineString( (CoordinateSequence) null );
+		return LineString.createEmpty();
 	}
 
 	protected LineString createGeometry(SqlServerGeometry nativeGeom) {
@@ -58,19 +52,7 @@ class LineStringDecoder extends AbstractDecoder<LineString> {
 	}
 
 	protected LineString createLineString(SqlServerGeometry nativeGeom, IndexRange pntIndexRange) {
-		Coordinate[] coordinates = nativeGeom.coordinateRange( pntIndexRange );
-		return createLineString( coordinates, nativeGeom.hasMValues() );
+		PointSequence coordinates = nativeGeom.coordinateRange( pntIndexRange );
+		return new LineString(coordinates, CrsId.valueOf(nativeGeom.getSrid()));
 	}
-
-	private LineString createLineString(Coordinate[] coords, boolean hasM) {
-		if ( hasM ) {
-			return getGeometryFactory().createMLineString( (MCoordinate[]) coords );
-		}
-		else {
-			return getGeometryFactory().createLineString( coords );
-		}
-
-	}
-
-
 }

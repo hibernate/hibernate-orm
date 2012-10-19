@@ -21,17 +21,18 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
+
+import org.geolatte.geom.DimensionalFlag;
+import org.geolatte.geom.LineString;
+import org.geolatte.geom.PointCollection;
+import org.geolatte.geom.PointSequenceBuilders;
 import org.junit.Test;
 
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 @RequiresDialect(SqlServer2008SpatialDialect.class)
@@ -65,53 +66,28 @@ public class LineStringConvertorTest extends AbstractConvertorTest {
 	@Test
 	public void test_coordinates() {
 
-		Coordinate[] received = decodedGeoms.get( 5 ).getCoordinates();
-		MCoordinate[] expected = new MCoordinate[] {
-				new MCoordinate( 10.0, 5.0 ),
-				new MCoordinate( 20.0, 15.0 )
-		};
-		assertArrayEquals( received, expected );
+		PointCollection received = decodedGeoms.get( 5 ).getPoints();
+		PointCollection expected = PointSequenceBuilders.fixedSized( 2, DimensionalFlag.XY ).add(10, 5).add(20,15).toPointSequence();
+		assertPointCollectionEquality( received, expected );
 
-		received = decodedGeoms.get( 6 ).getCoordinates();
-		expected = new MCoordinate[] {
-				new MCoordinate( 10.0, 5.0 ),
-				new MCoordinate( 20.0, 15.0 ),
-				new MCoordinate( 30.3, 22.4 ),
-				new MCoordinate( 10.0, 30.0 )
-		};
-		assertArrayEquals( expected, received );
+		received = decodedGeoms.get( 6 ).getPoints();
+		expected = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.XY).add(10,5).add(20,15).add(30.3, 22.4).add(10,30).toPointSequence();
+		assertPointCollectionEquality( received, expected );
 
-		received = decodedGeoms.get( 7 ).getCoordinates();
-		expected = new MCoordinate[] {
-				new MCoordinate( 10.0, 5.0 ),
-				new MCoordinate( 20.0, 15.0 )
-		};
-		expected[0].z = 0;
-		expected[1].z = 3;
-		assertArrayEquals( expected, received );
+
+		received = decodedGeoms.get( 7 ).getPoints();
+		expected = PointSequenceBuilders.fixedSized( 2, DimensionalFlag.XYZ).add(10,5,0).add(20,15,3).toPointSequence();
+		assertPointCollectionEquality( received, expected );
 
 		//case 9
-		received = decodedGeoms.get( 9 ).getCoordinates();
-		expected = new MCoordinate[] {
-				new MCoordinate( 10, 5 ),
-				new MCoordinate( 20, 15 ),
-				new MCoordinate( 30.3, 22.4 ),
-				new MCoordinate( 10, 30 )
-		};
-		expected[0].z = 1;
-		expected[1].z = 2;
-		expected[2].z = 5;
-		expected[3].z = 2;
-		assertArrayEquals( expected, received );
+		received = decodedGeoms.get( 9 ).getPoints();
+		expected = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.XYZ).add(10,5,1).add(20,15,2).add(30.3, 22.4,5).add(10,30,2).toPointSequence();
+		assertPointCollectionEquality( received, expected );
 
 		//case 10
-		received = decodedGeoms.get( 10 ).getCoordinates();
-		expected[0].m = 1;
-		expected[1].m = 3;
-		expected[2].m = 10;
-		expected[3].m = 12;
-		assertArrayEquals( expected, received );
-
+		received = decodedGeoms.get( 10 ).getPoints();
+		expected = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.XYZM).add(10,5,1,1).add(20,15,2,3).add(30.3, 22.4,5,10).add(10,30,2,12).toPointSequence();
+		assertPointCollectionEquality( received, expected );
 
 	}
 

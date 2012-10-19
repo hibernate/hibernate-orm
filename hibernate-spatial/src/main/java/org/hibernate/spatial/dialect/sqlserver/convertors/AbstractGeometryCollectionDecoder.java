@@ -24,16 +24,10 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryCollection;
 
 abstract class AbstractGeometryCollectionDecoder<T extends GeometryCollection> extends AbstractDecoder<T> {
-
-	public AbstractGeometryCollectionDecoder(MGeometryFactory factory) {
-		super( factory );
-	}
 
 	@Override
 	protected OpenGisType getOpenGisType() {

@@ -1153,9 +1153,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
+	public int getNumberOfManagedEntities() {
+		return entityEntryContext.getNumberOfManagedEntities();
+	}
+
+	@Override
 	public Map getEntityEntries() {
-		return entityEntryContext.getEntityEntryMap();
-//		return entityEntries;
+		return null;
 	}
 
 	@Override

@@ -52,7 +52,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.engine.Managed
+ * @see org.hibernate.engine.spi.Managed
  */
 public class EnhancementTask extends Task {
 	private List<FileSet> filesets = new ArrayList<FileSet>();

@@ -31,6 +31,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -46,13 +47,28 @@ public class MostBasicEnhancementTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		s.save( new MyEntity( 1L ) );
+		s.save( new MyEntity( 2L ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		MyEntity myEntity = (MyEntity) s.load( MyEntity.class, 1L );
+		MyEntity myEntity = (MyEntity) s.get( MyEntity.class, 1L );
+		MyEntity myEntity2 = (MyEntity) s.get( MyEntity.class, 2L );
+
+		assertNotNull( myEntity.hibernate_getEntityInstance() );
+		assertSame( myEntity, myEntity.hibernate_getEntityInstance() );
 		assertNotNull( myEntity.hibernate_getEntityEntry() );
+		assertNull( myEntity.hibernate_getPreviousManagedEntity() );
+		assertNotNull( myEntity.hibernate_getNextManagedEntity() );
+
+		assertNotNull( myEntity2.hibernate_getEntityInstance() );
+		assertSame( myEntity2, myEntity2.hibernate_getEntityInstance() );
+		assertNotNull( myEntity2.hibernate_getEntityEntry() );
+		assertNotNull( myEntity2.hibernate_getPreviousManagedEntity() );
+		assertNull( myEntity2.hibernate_getNextManagedEntity() );
+
+		s.createQuery( "delete MyEntity" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 

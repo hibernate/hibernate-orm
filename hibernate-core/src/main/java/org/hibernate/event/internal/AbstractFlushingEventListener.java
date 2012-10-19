@@ -120,7 +120,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				session.getActionQueue().numberOfInsertions(),
 				session.getActionQueue().numberOfUpdates(),
 				session.getActionQueue().numberOfDeletions(),
-				persistenceContext.getEntityEntries().size()
+				persistenceContext.getNumberOfManagedEntities()
 		);
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",

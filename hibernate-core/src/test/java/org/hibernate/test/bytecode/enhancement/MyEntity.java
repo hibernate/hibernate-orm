@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.engine.ManagedEntity;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.EntityEntry;
 
 /**
@@ -37,6 +37,10 @@ import org.hibernate.engine.spi.EntityEntry;
 public class MyEntity implements ManagedEntity {
 	@Transient
 	private transient EntityEntry entityEntry;
+	@Transient
+	private transient ManagedEntity previous;
+	@Transient
+	private transient ManagedEntity next;
 
 	private Long id;
 	private String name;
@@ -66,6 +70,11 @@ public class MyEntity implements ManagedEntity {
 	}
 
 	@Override
+	public Object hibernate_getEntityInstance() {
+		return this;
+	}
+
+	@Override
 	public EntityEntry hibernate_getEntityEntry() {
 		return entityEntry;
 	}
@@ -73,5 +82,25 @@ public class MyEntity implements ManagedEntity {
 	@Override
 	public void hibernate_setEntityEntry(EntityEntry entityEntry) {
 		this.entityEntry = entityEntry;
+	}
+
+	@Override
+	public ManagedEntity hibernate_getNextManagedEntity() {
+		return next;
+	}
+
+	@Override
+	public void hibernate_setNextManagedEntity(ManagedEntity next) {
+		this.next = next;
+	}
+
+	@Override
+	public ManagedEntity hibernate_getPreviousManagedEntity() {
+		return previous;
+	}
+
+	@Override
+	public void hibernate_setPreviousManagedEntity(ManagedEntity previous) {
+		this.previous = previous;
 	}
 }

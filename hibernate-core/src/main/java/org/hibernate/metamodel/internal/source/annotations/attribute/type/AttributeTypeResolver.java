@@ -35,13 +35,24 @@ import java.util.Map;
  */
 public interface AttributeTypeResolver {
 	/**
-	 * @return returns an explicit hibernate type name in case the mapped attribute has an additional
+	 * @return Returns an explicit hibernate type name in case the mapped attribute has an additional
 	 *         {@link org.hibernate.annotations.Type} annotation or an implicit type is given via the use of annotations like
 	 *         {@link javax.persistence.Lob}, {@link javax.persistence.Enumerated} and
-	 *         {@link javax.persistence.Temporal}.
+	 *         {@link javax.persistence.Temporal}.  If no annotated types are
+	 *         available, checks for type definitions in
+	 *         {@link javax.persistence.TypeDefs}.  Returns null if none of the
+	 *         above are found.
 	 */
 	String getExplicitHibernateTypeName();
 	
+	/**
+	 * @return Returns the same type name as
+	 * {@link #getExplicitHibernateTypeName}, but skips the
+	 * {@link javax.persistence.TypeDefs} check.  This is mainly for
+	 * {@link CompositeAttributeTypeResolver}, as it needs to check the
+	 * {@link javax.persistence.TypeDefs} only once at the very end if nothing
+	 * is returned by the list of resolvers.
+	 */
 	String getExplicitAnnotatedHibernateTypeName();
 
 	/**

@@ -21,7 +21,7 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.geolatte.geom.Geometry;
 
 /**
  * An <code>Encoder</code> can encode

@@ -21,12 +21,12 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.Point;
+import org.geolatte.geom.Points;
+import org.geolatte.geom.crs.CrsId;
 import org.junit.Test;
 
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 
@@ -48,7 +48,7 @@ public class PointConvertorTest extends AbstractConvertorTest {
 
 	@Test
 	public void test_verify_srid() {
-		assertEquals( 0, decodedGeoms.get( 1 ).getSRID() );
+		assertEquals( -1, decodedGeoms.get( 1 ).getSRID() );
 		assertEquals( 4326, decodedGeoms.get( 2 ).getSRID() );
 		assertEquals( 31370, decodedGeoms.get( 3 ).getSRID() );
 	}
@@ -62,16 +62,15 @@ public class PointConvertorTest extends AbstractConvertorTest {
 
 	@Test
 	public void test_coordinates() {
-		Coordinate expected;
-		Coordinate received;
-		expected = new Coordinate( 10.0, 5.0 );
-		assertEquals( expected, decodedGeoms.get( 1 ).getCoordinate() );
-		expected = new Coordinate( 52.25, 2.53 );
-		assertEquals( expected, decodedGeoms.get( 2 ).getCoordinate() );
-		expected = new Coordinate( 150000.0, 200000.0 );
-		assertEquals( expected, decodedGeoms.get( 3 ).getCoordinate() );
-		expected = new MCoordinate( 10.0, 2.0, 1.0, 3.0 );
-		assertEquals( expected, decodedGeoms.get( 4 ).getCoordinate() );
+		Point expected;
+		expected = Points.create( 10.0, 5.0);
+		assertEquals( expected, decodedGeoms.get( 1 ).getPointN(0) );
+		expected = Points.create(52.25, 2.53, CrsId.valueOf(4326));
+		assertEquals( expected, decodedGeoms.get( 2 ).getPointN( 0 ) );
+		expected = Points.create(150000.0, 200000.0, CrsId.valueOf(31370));
+		assertEquals( expected, decodedGeoms.get( 3 ).getPointN( 0 ) );
+		expected = Points.create(10.0, 2.0, 1.0, 3.0, CrsId.valueOf(4326));
+		assertEquals( expected, decodedGeoms.get( 4 ).getPointN( 0 ) );
 	}
 
 	@Test

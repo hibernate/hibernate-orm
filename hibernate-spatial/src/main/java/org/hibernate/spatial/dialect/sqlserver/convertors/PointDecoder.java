@@ -21,10 +21,11 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Point;
 
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.DimensionalFlag;
+import org.geolatte.geom.Point;
+import org.geolatte.geom.PointSequence;
+import org.geolatte.geom.crs.CrsId;
 
 /**
  * @author Karel Maesen, Geovise BVBA.
@@ -32,9 +33,6 @@ import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
  */
 class PointDecoder extends AbstractDecoder<Point> {
 
-	public PointDecoder(MGeometryFactory factory) {
-		super( factory );
-	}
 
 	@Override
 	protected OpenGisType getOpenGisType() {
@@ -42,7 +40,7 @@ class PointDecoder extends AbstractDecoder<Point> {
 	}
 
 	protected Point createNullGeometry() {
-		return getGeometryFactory().createPoint( (Coordinate) null );
+		return Point.createEmpty();
 	}
 
 	protected Point createGeometry(SqlServerGeometry nativeGeom) {
@@ -60,8 +58,10 @@ class PointDecoder extends AbstractDecoder<Point> {
 	}
 
 	private Point createPoint(SqlServerGeometry nativeGeom, int pntOffset) {
-		return getGeometryFactory().createPoint( nativeGeom.getCoordinate( pntOffset ) );
-	}
+        DimensionalFlag df = DimensionalFlag.valueOf(nativeGeom.hasZValues(), nativeGeom.hasMValues());
+        PointSequence pointSequence = nativeGeom.coordinateRange(new IndexRange(pntOffset, pntOffset + 1));
+        return new Point(pointSequence, CrsId.valueOf(nativeGeom.getSrid()));
+    }
 
 
 }

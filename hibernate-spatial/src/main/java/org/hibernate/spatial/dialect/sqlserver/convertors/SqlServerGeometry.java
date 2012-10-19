@@ -25,6 +25,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import org.geolatte.geom.DimensionalFlag;
+import org.geolatte.geom.PointCollection;
+import org.geolatte.geom.PointSequence;
+import org.geolatte.geom.PointSequenceBuilder;
+import org.geolatte.geom.PointSequenceBuilders;
 
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 
@@ -117,22 +122,18 @@ public class SqlServerGeometry {
 		return result;
 	}
 
-	Coordinate getCoordinate(int index) {
-		Coordinate coordinate;
-		if ( hasMValues() ) {
-			coordinate = new MCoordinate();
-			( (MCoordinate) coordinate ).m = mValues[index];
-		}
-		else {
-			coordinate = new Coordinate();
-		}
-		coordinate.x = points[2 * index];
-		coordinate.y = points[2 * index + 1];
-		if ( hasZValues() ) {
-			coordinate.z = zValues[index];
-		}
-		return coordinate;
-	}
+	void copyCoordinate(int index, double[] coords, DimensionalFlag df) {
+        coords[0] = points[2 * index];
+        coords[1] = points[2 * index + 1];
+        if (hasZValues()) {
+            assert(df.is3D());
+            coords[df.Z] = zValues[index];
+        }
+        if (hasMValues()) {
+            assert (df.isMeasured());
+            coords[df.M] = mValues[index];
+        }
+    }
 
 	boolean isParentShapeOf(int parent, int child) {
 		return getShape( child ).parentOffset == parent;
@@ -186,13 +187,16 @@ public class SqlServerGeometry {
 		return getShape( shpIdx ).openGisType;
 	}
 
-	Coordinate[] coordinateRange(IndexRange range) {
-		Coordinate[] coordinates = createCoordinateArray( range.end - range.start );
-		for ( int idx = range.start, i = 0; idx < range.end; idx++, i++ ) {
-			coordinates[i] = getCoordinate( idx );
-		}
-		return coordinates;
-	}
+	PointSequence coordinateRange(IndexRange range) {
+        DimensionalFlag df = DimensionalFlag.valueOf(hasZValues(), hasMValues());
+        PointSequenceBuilder psBuilder = PointSequenceBuilders.fixedSized(range.end - range.start, df);
+        double[] coordinates = new double[df.getCoordinateDimension()];
+        for (int idx = range.start, i = 0; idx < range.end; idx++, i++) {
+            copyCoordinate(idx, coordinates, df);
+            psBuilder.add(coordinates);
+        }
+        return psBuilder.toPointSequence();
+    }
 
 	private Coordinate[] createCoordinateArray(int size) {
 		if ( hasMValues() ) {
@@ -212,14 +216,14 @@ public class SqlServerGeometry {
 		return shapes[index];
 	}
 
-	void setCoordinate(int index, Coordinate coordinate) {
-		points[2 * index] = coordinate.x;
-		points[2 * index + 1] = coordinate.y;
+	void setCoordinate(int index, PointCollection coordinate) {
+		points[2 * index] = coordinate.getX(index);
+		points[2 * index + 1] = coordinate.getY(index);
 		if ( hasZValues() ) {
-			zValues[index] = coordinate.z;
+			zValues[index] = coordinate.getZ(index);
 		}
 		if ( hasMValues() ) {
-			mValues[index] = ( (MCoordinate) coordinate ).m;
+			mValues[index] = coordinate.getM(index);
 		}
 	}
 

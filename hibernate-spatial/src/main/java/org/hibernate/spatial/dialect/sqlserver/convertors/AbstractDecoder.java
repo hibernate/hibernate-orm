@@ -21,17 +21,10 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.Geometry;
 
 abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
-
-	private final MGeometryFactory geometryFactory;
-
-	public AbstractDecoder(MGeometryFactory factory) {
-		this.geometryFactory = factory;
-	}
 
 	public G decode(SqlServerGeometry nativeGeom) {
 		if ( !accepts( nativeGeom ) ) {
@@ -39,12 +32,9 @@ abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 		}
 		if ( nativeGeom.isEmpty() ) {
 			G nullGeom = createNullGeometry();
-			setSrid( nativeGeom, nullGeom );
 			return nullGeom;
 		}
-		G result = createGeometry( nativeGeom );
-		setSrid( nativeGeom, result );
-		return result;
+		return createGeometry( nativeGeom );
 	}
 
 	public boolean accepts(OpenGisType type) {
@@ -62,16 +52,5 @@ abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 	protected abstract G createGeometry(SqlServerGeometry nativeGeom);
 
 	protected abstract G createGeometry(SqlServerGeometry nativeGeom, int shapeIndex);
-
-	protected MGeometryFactory getGeometryFactory() {
-		return this.geometryFactory;
-	}
-
-	protected void setSrid(SqlServerGeometry sqlServerGeom, G result) {
-		if ( sqlServerGeom.getSrid() != null ) {
-			result.setSRID( sqlServerGeom.getSrid() );
-		}
-	}
-
 
 }

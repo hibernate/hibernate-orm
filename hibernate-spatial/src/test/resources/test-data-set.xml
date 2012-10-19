@@ -255,43 +255,43 @@
         <id>50</id>
         <type>POINT</type>
         <wkt>POINT EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>51</id>
         <type>LINESTRING</type>
         <wkt>LINESTRING EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>52</id>
         <type>POLYGON</type>
         <wkt>POLYGON EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>53</id>
         <type>MULTIPOINT</type>
         <wkt>MULTIPOINT EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>54</id>
         <type>MULTILINESTRING</type>
         <wkt>MULTILINESTRING EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>55</id>
         <type>MULTIPOLYGON</type>
         <wkt>MULTIPOLYGON EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
     <Element>
         <id>56</id>
         <type>GEOMETRYCOLLECTION</type>
         <wkt>GEOMETRYCOLLECTION EMPTY</wkt>
-        <srid>4326</srid>
+        <srid>0</srid>
     </Element>
 
 

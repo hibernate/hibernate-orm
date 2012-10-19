@@ -31,7 +31,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.PointCollection;
+import org.geolatte.geom.PointCollectionEquality;
+import org.geolatte.geom.PointCollectionPointEquality;
 
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
@@ -41,6 +44,7 @@ import org.hibernate.spatial.testing.TestData;
 import org.hibernate.spatial.testing.TestSupport;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerExpressionTemplate;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
+import org.hibernate.testing.AfterClassOnce;
 
 import static org.junit.Assert.assertTrue;
 
@@ -54,7 +58,8 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 
 	private final static TestSupport support = new SQLServerTestSupport();
 
-	private DataSourceUtils dataSourceUtils;
+	protected PointCollectionEquality pointCollectionEquality = new PointCollectionPointEquality();
+
 
 	Map<Integer, Geometry> decodedGeoms;
 	Map<Integer, Object> rawResults;
@@ -79,17 +84,6 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 			throw new RuntimeException( e );
 		}
 	}
-//
-//    public void afterClass() {
-//        try {
-//            String sql = dataSourceUtils.parseSqlIn("sqlserver/drop-sqlserver-test-schema.sql");
-//            dataSourceUtils.executeStatement(sql);
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
 	public void doDecoding(OpenGisType type) {
 		rawResults = dataSourceUtils.rawDbObjects( type.toString() );
@@ -107,7 +101,7 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 		encodedGeoms = new HashMap<Integer, byte[]>();
 		for ( Integer id : decodedGeoms.keySet() ) {
 			Geometry geom = decodedGeoms.get( id );
-			byte[] bytes = Encoders.encode( geom );
+			byte[] bytes = Encoders.encode(geom);
 			encodedGeoms.put( id, bytes );
 		}
 	}
@@ -125,8 +119,29 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 		for ( Integer id : decodedGeoms.keySet() ) {
 			Geometry expected = expectedGeoms.get( id );
 			Geometry received = decodedGeoms.get( id );
-			assertTrue( "Wrong decoding for case " + id, expected.equalsExact( received ) );
+			assertTrue( "Wrong decoding for case " + id, expected.equals( received ) );
 		}
+	}
+
+	@AfterClassOnce
+	public void afterClassOnce(){
+		try {
+			String sql = dataSourceUtils.parseSqlIn( "sqlserver/drop-sqlserver-test-schema.sql" );
+			dataSourceUtils.executeStatement( sql );
+		}
+		catch ( SQLException e ) {
+			throw new RuntimeException( e );
+		}
+		catch ( IOException e ) {
+			throw new RuntimeException( e );
+		}
+	}
+
+	public void prepareTest() {
+	}
+
+	public void assertPointCollectionEquality(PointCollection received, PointCollection expected) {
+		assertTrue( pointCollectionEquality.equals( received, expected ));
 	}
 
 	@Override

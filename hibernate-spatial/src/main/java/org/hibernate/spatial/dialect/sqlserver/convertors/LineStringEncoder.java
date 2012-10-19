@@ -23,14 +23,17 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.LineString;
+import org.geolatte.geom.Point;
+import org.geolatte.geom.PointCollection;
+import org.geolatte.geom.PointSequence;
+
 
 class LineStringEncoder extends AbstractEncoder<LineString> {
 
 	@Override
-	protected void encode(Geometry geom, int parentShapeIndex, List<Coordinate> coordinates, List<Figure> figures, List<Shape> shapes) {
+	protected void encode(Geometry geom, int parentShapeIndex, CountingPointSequenceBuilder coordinates, List<Figure> figures, List<Shape> shapes) {
 		if ( !( geom instanceof LineString ) ) {
 			throw new IllegalArgumentException( "Require LineString geometry" );
 		}
@@ -39,16 +42,16 @@ class LineStringEncoder extends AbstractEncoder<LineString> {
 			return;
 		}
 		int figureOffset = figures.size();
-		int pointOffset = coordinates.size();
-		for ( Coordinate coordinate : geom.getCoordinates() ) {
-			coordinates.add( coordinate );
+        int pointOffset = coordinates.getNumAdded();
+		for ( Point point : (PointSequence)geom.getPoints() ) {
+			coordinates.add( point );
 		}
 		figures.add( new Figure( FigureAttribute.Stroke, pointOffset ) );
 		shapes.add( new Shape( parentShapeIndex, figureOffset, OpenGisType.LINESTRING ) );
 	}
 
 	@Override
-	protected void encodePoints(SqlServerGeometry nativeGeom, List<Coordinate> coordinates) {
+	protected void encodePoints(SqlServerGeometry nativeGeom, PointCollection coordinates) {
 		super.encodePoints( nativeGeom, coordinates );
 		if ( coordinates.size() == 2 ) {
 			nativeGeom.setIsSingleLineSegment();

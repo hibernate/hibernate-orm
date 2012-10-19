@@ -23,18 +23,11 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.MultiPolygon;
+import org.geolatte.geom.Polygon;
 
 class MultiPolygonDecoder extends AbstractGeometryCollectionDecoder<MultiPolygon> {
-
-	public MultiPolygonDecoder(MGeometryFactory factory) {
-		super( factory );
-	}
-
 
 	@Override
 	protected OpenGisType getOpenGisType() {
@@ -44,7 +37,7 @@ class MultiPolygonDecoder extends AbstractGeometryCollectionDecoder<MultiPolygon
 	@Override
 	protected MultiPolygon createGeometry(List<Geometry> geometries, boolean hasM) {
 		Polygon[] polygons = geometries != null ? geometries.toArray( new Polygon[geometries.size()] ) : null;
-		return getGeometryFactory().createMultiPolygon( polygons );
+		return new MultiPolygon( polygons );
 	}
 
 

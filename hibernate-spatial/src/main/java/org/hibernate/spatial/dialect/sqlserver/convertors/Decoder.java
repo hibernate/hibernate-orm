@@ -21,7 +21,8 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
-import com.vividsolutions.jts.geom.Geometry;
+
+import org.geolatte.geom.Geometry;
 
 /**
  * Decodes native database objects to geometries of type T.

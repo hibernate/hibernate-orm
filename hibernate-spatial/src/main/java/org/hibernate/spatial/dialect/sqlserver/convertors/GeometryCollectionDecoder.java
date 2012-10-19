@@ -23,10 +23,8 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryCollection;
 
 /**
  * <code>Decoder</code> for GeometryCollections.
@@ -35,9 +33,6 @@ import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
  */
 class GeometryCollectionDecoder extends AbstractGeometryCollectionDecoder<GeometryCollection> {
 
-	public GeometryCollectionDecoder(MGeometryFactory factory) {
-		super( factory );
-	}
 
 	@Override
 	protected OpenGisType getOpenGisType() {
@@ -46,7 +41,7 @@ class GeometryCollectionDecoder extends AbstractGeometryCollectionDecoder<Geomet
 
 	protected GeometryCollection createGeometry(List<Geometry> geometries, boolean hasM) {
 		Geometry[] geomArray = geometries != null ? geometries.toArray( new Geometry[geometries.size()] ) : null;
-		return getGeometryFactory().createGeometryCollection( geomArray );
+		return new GeometryCollection( geomArray );
 	}
 
 

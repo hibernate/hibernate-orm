@@ -21,13 +21,10 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
+import org.geolatte.geom.Geometry;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.jts.JTS;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * Decodes SQL Server Geometry objects to JTS <code>Geometry</code>s.
@@ -39,16 +36,14 @@ public class Decoders {
 	final private static List<Decoder<? extends Geometry>> DECODERS = new ArrayList<Decoder<? extends Geometry>>();
 
 	static {
-		MGeometryFactory factory = JTS.getDefaultGeometryFactory();
-
 		//Decoders
-		DECODERS.add( new PointDecoder( factory ) );
-		DECODERS.add( new LineStringDecoder( factory ) );
-		DECODERS.add( new PolygonDecoder( factory ) );
-		DECODERS.add( new MultiLineStringDecoder( factory ) );
-		DECODERS.add( new MultiPolygonDecoder( factory ) );
-		DECODERS.add( new MultiPointDecoder( factory ) );
-		DECODERS.add( new GeometryCollectionDecoder( factory ) );
+		DECODERS.add( new PointDecoder() );
+		DECODERS.add( new LineStringDecoder() );
+		DECODERS.add( new PolygonDecoder() );
+		DECODERS.add( new MultiLineStringDecoder(  ) );
+		DECODERS.add( new MultiPolygonDecoder(  ) );
+		DECODERS.add( new MultiPointDecoder( ) );
+		DECODERS.add( new GeometryCollectionDecoder(  ) );
 	}
 
 

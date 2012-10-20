@@ -60,7 +60,6 @@ import static org.junit.Assert.assertTrue;
 public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAutoflushIsRequired() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -137,7 +136,6 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAutoflushIsNotRequiredWithUnrelatedCollectionChange() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

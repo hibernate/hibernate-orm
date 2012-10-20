@@ -38,7 +38,6 @@ import static org.junit.Assert.assertSame;
  * @author Dave Stephan
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel // NPE @ AbstractCollectionPersister.java:871
 public class CollectionAliasTest extends BaseCoreFunctionalTestCase {
 
 	@TestForIssue( jiraKey = "HHH-7545" )

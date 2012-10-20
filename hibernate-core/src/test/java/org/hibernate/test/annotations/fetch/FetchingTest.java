@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +62,6 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testExtraLazy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -89,7 +87,6 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testHibernateFetchingLazy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -116,7 +113,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 		assertFalse( "lazy extra is failing", Hibernate.isInitialized( p.getOldStays() ) );
 		s.clear();
 		stay = (Stay) s.get( Stay.class, stay.getId() );
-		assertTrue( ! Hibernate.isInitialized( stay.getOldPerson() ) );
+		assertFalse( Hibernate.isInitialized( stay.getOldPerson() ) );
 		s.clear();
 		stay3 = (Stay) s.get( Stay.class, stay3.getId() );
 		assertTrue( "FetchMode.JOIN should overrides lazy options", Hibernate.isInitialized( stay3.getVeryOldPerson() ) );

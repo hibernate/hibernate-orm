@@ -37,7 +37,6 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -48,7 +47,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-2763" )
-@FailureExpectedWithNewMetamodel
 public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testInitializationDuringFlush() {

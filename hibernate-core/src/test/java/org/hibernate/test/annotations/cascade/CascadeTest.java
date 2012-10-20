@@ -30,7 +30,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -68,7 +67,6 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMerge() {
 		Session s;
 		Transaction tx;
@@ -83,7 +81,6 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		tx.commit();
 		s.close();
-
 		s = openSession();
 		tx = s.beginTransaction();
 		tooth = (Tooth) s.get( Tooth.class, tooth.id );
@@ -107,7 +104,6 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testRemove() {
 		Session s;
 		Transaction tx;
@@ -140,7 +136,6 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDetach() {
 		Session s;
 		Transaction tx;

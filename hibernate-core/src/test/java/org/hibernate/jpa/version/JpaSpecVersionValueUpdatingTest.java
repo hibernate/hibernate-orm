@@ -26,7 +26,6 @@ package org.hibernate.jpa.version;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -43,7 +42,6 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded() {
 		Session session = openSession();
 		session.beginTransaction();

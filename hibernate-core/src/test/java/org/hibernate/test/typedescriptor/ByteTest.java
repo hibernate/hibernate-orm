@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -47,7 +46,6 @@ public class ByteTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6533" )
-	@FailureExpectedWithNewMetamodel
 	public void testByteDataPersistenceAndRetrieval() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();

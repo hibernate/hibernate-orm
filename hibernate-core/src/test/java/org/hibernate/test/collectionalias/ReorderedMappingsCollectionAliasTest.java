@@ -33,7 +33,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel // NPE @ AbstractCollectionPersister.java:871
 public class ReorderedMappingsCollectionAliasTest extends CollectionAliasTest {
 
 	@Override

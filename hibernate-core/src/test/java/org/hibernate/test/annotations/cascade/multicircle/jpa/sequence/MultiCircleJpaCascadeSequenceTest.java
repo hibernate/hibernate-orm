@@ -29,7 +29,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -80,7 +79,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * Entities are inserted in the following order:
  * c, e, d, b, g, f.
  */
-@FailureExpectedWithNewMetamodel
 public class MultiCircleJpaCascadeSequenceTest extends BaseCoreFunctionalTestCase {
 	private B b;
 	private C c;

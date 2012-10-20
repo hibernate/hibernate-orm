@@ -60,7 +60,6 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEnums() throws Exception {
 		Session s;
 		Transaction tx;
@@ -117,7 +116,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-
+	@Test
 	public void testAutoboxing() throws Exception {
 		Session s;
 		Transaction tx;

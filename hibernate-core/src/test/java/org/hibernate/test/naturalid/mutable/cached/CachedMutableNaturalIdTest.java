@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -62,7 +61,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdChangedWhileAttached() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -92,7 +90,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdChangedWhileDetached() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -171,7 +168,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@FailureExpectedWithNewMetamodel
 	public void testChangedNaturalIdCachedAfterTransactionSuccess() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -205,7 +201,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7278" )
-	@FailureExpectedWithNewMetamodel
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -239,7 +234,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdRecachingWhenNeeded() {
 		Session session = openSession();
 		session.getSessionFactory().getStatistics().clear();
@@ -276,7 +270,6 @@ public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7245" )
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdChangeAfterResolveEntityFrom2LCache() {
 			Session session = openSession();
 			session.beginTransaction();

@@ -43,6 +43,6 @@ public interface ToOneAttributeSource
 	 * @return The name of the referenced entity
 	 */
 	public String getReferencedEntityName();
-
+	public boolean isUnWrapProxy();
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding);
 }

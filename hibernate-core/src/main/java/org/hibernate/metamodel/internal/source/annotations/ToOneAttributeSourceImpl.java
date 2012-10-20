@@ -162,6 +162,11 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
+	public boolean isUnWrapProxy() {
+		return associationAttribute.isUnWrapProxy();
+	}
+
+	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ToOneAttributeSourceImpl" );

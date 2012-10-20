@@ -37,6 +37,8 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
@@ -69,6 +71,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final Set<CascadeType> cascadeTypes;
 	private final boolean isOptional;
 	private final boolean isLazy;
+	private final boolean isUnWrapProxy;
 	private final boolean isOrphanRemoval;
 	private final FetchStyle fetchStyle;
 	private final boolean mapsId;
@@ -116,6 +119,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
 		this.isOptional = determineOptionality( associationAnnotation );
 		this.isLazy = determineIsLazy( associationAnnotation );
+		this.isUnWrapProxy = determinIsUnwrapProxy();
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 		this.joinColumnValues = determineJoinColumnAnnotations( annotations );
@@ -180,6 +184,10 @@ public class AssociationAttribute extends MappedAttribute {
 		return isLazy;
 	}
 
+	public boolean isUnWrapProxy() {
+		return isUnWrapProxy;
+	}
+
 	@Override
 	public boolean isOptional() {
 		return isOptional;
@@ -238,6 +246,14 @@ public class AssociationAttribute extends MappedAttribute {
 		return NotFoundAction.IGNORE.equals( action );
 	}
 
+	private boolean determinIsUnwrapProxy() {
+		AnnotationInstance lazyToOne = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.LAZY_TO_ONE );
+		if ( lazyToOne != null ) {
+			return JandexHelper.getEnumValue( lazyToOne, "value", LazyToOneOption.class ) == LazyToOneOption.NO_PROXY;
+		}
+		return false;
+	}
+
 	private boolean determineOptionality(AnnotationInstance associationAnnotation) {
 		boolean optional = true;
 
@@ -260,7 +276,30 @@ public class AssociationAttribute extends MappedAttribute {
 
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
 		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class );
-		return FetchType.LAZY == fetchType;
+		boolean lazy = fetchType == FetchType.LAZY;
+		final AnnotationInstance lazyToOneAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.LAZY_TO_ONE
+		);
+		if ( lazyToOneAnnotation != null ) {
+			LazyToOneOption option = JandexHelper.getEnumValue( lazyToOneAnnotation, "value", LazyToOneOption.class );
+			lazy = option != LazyToOneOption.FALSE;
+		}
+
+		if ( associationAnnotation.value( "fetch" ) != null ) {
+			lazy = FetchType.LAZY == fetchType;
+		}
+		final AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.FETCH
+		);
+		if ( fetchAnnotation != null ) {
+			lazy = JandexHelper.getEnumValue( fetchAnnotation, "value", FetchMode.class ) != FetchMode.JOIN;
+		}
+		if ( getFetchStyle() != null ) {
+			lazy = getFetchStyle() != FetchStyle.JOIN;
+		}
+		return lazy;
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation, Class<?> referencedAttributeType) {

@@ -325,7 +325,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 			return existing;
 		}
-		LOG.trace( "Creating new proxy for entity" );
+		LOG.trace( "Creating new proxy for entity: " + event.getEntityClassName() );
 		// return new uninitialized proxy
 		Object proxy = persister.createProxy( event.getEntityId(), event.getSession() );
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );

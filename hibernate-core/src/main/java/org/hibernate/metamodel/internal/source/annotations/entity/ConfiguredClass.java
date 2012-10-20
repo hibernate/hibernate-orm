@@ -44,6 +44,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -526,10 +527,10 @@ public class ConfiguredClass {
 		if ( embeddableClassInfo == null ) {
 			final String msg = String.format(
 					"Attribute '%s#%s' is annotated with @Embedded, but '%s' does not seem to be annotated " +
-							"with @Embeddable. Are all annotated classes added to the configuration?",
-					getConfiguredClass().getSimpleName(),
+							"with @Embeddable.\n Are all annotated classes added to the configuration?",
+					getConfiguredClass().getName(),
 					attributeName,
-					type.getSimpleName()
+					type.getName()
 			);
 			throw new AnnotationException( msg );
 		}
@@ -669,6 +670,9 @@ public class ConfiguredClass {
 	}
 
 	private Class<?> resolveCollectionValuedReferenceType(ResolvedMember resolvedMember) {
+		if ( resolvedMember.getType().isArray() ) {
+			return resolvedMember.getType().getArrayElementType().getErasedType();
+		}
 		if ( resolvedMember.getType().getTypeParameters().isEmpty() ) {
 			return null; // no generic at all
 		}
@@ -752,28 +756,44 @@ public class ConfiguredClass {
 		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
 				classInfo, HibernateDotNames.TUPLIZERS
 		);
-		if ( tuplizersAnnotation == null ) {
-			return null;
-		}
-
-		AnnotationInstance[] annotations = JandexHelper.getValue(
-				tuplizersAnnotation,
-				"value",
-				AnnotationInstance[].class
+		final AnnotationInstance tuplizerAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo,
+				HibernateDotNames.TUPLIZER
 		);
-
-		AnnotationInstance pojoTuplizerAnnotation = null;
-		for ( AnnotationInstance tuplizerAnnotation : annotations ) {
-			if ( EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() ) == EntityMode.POJO ) {
-				pojoTuplizerAnnotation = tuplizerAnnotation;
-				break;
+		if ( tuplizersAnnotation != null ) {
+			AnnotationInstance[] annotations = JandexHelper.getValue(
+					tuplizersAnnotation,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( final AnnotationInstance annotationInstance : annotations ) {
+				final String impl = findTuplizerImpl( annotationInstance );
+				if ( StringHelper.isNotEmpty( impl ) ) {
+					return impl;
+				}
 			}
 		}
-
-		String customTuplizer = null;
-		if ( pojoTuplizerAnnotation != null ) {
-			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
+		else if ( tuplizerAnnotation != null ) {
+			final String impl = findTuplizerImpl( tuplizerAnnotation );
+			if ( StringHelper.isNotEmpty( impl ) ) {
+				return impl;
+			}
 		}
-		return customTuplizer;
+		return null;
+	}
+
+	private String findTuplizerImpl(final AnnotationInstance tuplizerAnnotation) {
+		EntityMode mode;
+		if ( tuplizerAnnotation.value( "entityModeType" ) != null ) {
+			mode = EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() );
+		}
+		else if ( tuplizerAnnotation.value( "entityMode" ) != null ) {
+			mode = EntityMode.parse( tuplizerAnnotation.value( "entityMode" ).asString() );
+		}
+		else {
+			mode = EntityMode.POJO;
+		}
+		return mode == EntityMode.POJO ? tuplizerAnnotation.value( "impl" ).asString() : null;
+
 	}
 }

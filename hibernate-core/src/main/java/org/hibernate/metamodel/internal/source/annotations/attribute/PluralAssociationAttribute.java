@@ -26,12 +26,15 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.FetchType;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SortType;
@@ -230,8 +233,11 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 		AnnotationInstance orderColumnAnnotation =  JandexHelper.getSingleAnnotation( annotations, JPADotNames.ORDER_COLUMN );
 		AnnotationInstance indexColumnAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.INDEX_COLUMN );
-		if(orderColumnAnnotation!=null && indexColumnAnnotation!=null){
-			throw new MappingException( "@OrderColumn and @IndexColumn can't be used together on property: " + getRole() ,getContext().getOrigin() );
+		if ( orderColumnAnnotation != null && indexColumnAnnotation != null ) {
+			throw new MappingException(
+					"@OrderColumn and @IndexColumn can't be used together on property: " + getRole(),
+					getContext().getOrigin()
+			);
 		}
 		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 
@@ -276,9 +282,11 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		return entityPersisterClass;
 	}
+
 	@Override
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
-		boolean lazy = super.determineIsLazy( associationAnnotation );
+		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class );
+		boolean lazy = fetchType == FetchType.LAZY;
 		final AnnotationInstance lazyCollectionAnnotationInstance = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.LAZY_COLLECTION
@@ -289,8 +297,18 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 					"value",
 					LazyCollectionOption.class
 			);
-			return lazyOption == LazyCollectionOption.TRUE;
+			lazy = !( lazyOption == LazyCollectionOption.FALSE );
 
+		}
+		final AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.FETCH
+		);
+		if ( fetchAnnotation != null && fetchAnnotation.value() != null ) {
+			FetchMode fetchMode = FetchMode.valueOf( fetchAnnotation.value( ).asEnum().toUpperCase() );
+			if ( fetchMode == FetchMode.JOIN ) {
+				lazy = false;
+			}
 		}
 		return lazy;
 	}

@@ -250,16 +250,25 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 	@Override
 	public String objectToSQLString(Object value) {
+		if(enumValueMapper==null){
+			guessTypeOfEnumValueMapper( sqlType );
+		}
 		return enumValueMapper.objectToSQLString( (Enum) value );
 	}
 
 	@Override
 	public String toXMLString(Object value) {
+		if(enumValueMapper==null){
+			guessTypeOfEnumValueMapper( sqlType );
+		}
 		return enumValueMapper.toXMLString( (Enum) value );
 	}
 
 	@Override
 	public Object fromXMLString(String xmlValue) {
+		if(enumValueMapper==null){
+			guessTypeOfEnumValueMapper( sqlType );
+		}
 		return enumValueMapper.fromXMLString( xmlValue );
 	}
 

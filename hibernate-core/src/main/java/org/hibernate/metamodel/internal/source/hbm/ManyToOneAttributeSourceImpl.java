@@ -128,6 +128,14 @@ class ManyToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOn
 	}
 
 	@Override
+	public boolean isUnWrapProxy() {
+		final String lazySelection = manyToOneElement.getLazy() != null
+				? manyToOneElement.getLazy().value()
+				: null;
+		return lazySelection != null && lazySelection.equals( "no-proxy" );
+	}
+
+	@Override
 	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}

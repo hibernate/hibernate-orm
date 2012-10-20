@@ -82,7 +82,7 @@ public class EntityClass extends ConfiguredClass {
 	private final List<String> synchronizedTableNames;
 	private final int batchSize;
 
-	private boolean isMutable;
+	private boolean isImmutable;
 	private boolean isExplicitPolymorphism;
 	private OptimisticLockStyle optimisticLockStyle;
 	private String whereClause;
@@ -152,7 +152,7 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	public boolean isMutable() {
-		return isMutable;
+		return !isImmutable;
 	}
 
 	public OptimisticLockStyle getOptimisticLockStyle() {
@@ -287,11 +287,16 @@ public class EntityClass extends ConfiguredClass {
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
 
 		AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.IMMUTABLE, ClassInfo.class );
-		isMutable = hibernateImmutableAnnotation == null
-				&& hibernateEntityAnnotation != null
-				&& hibernateEntityAnnotation.value( "mutable" ) != null
-				&& hibernateEntityAnnotation.value( "mutable" ).asBoolean();
+		if ( hibernateImmutableAnnotation != null ) {
+			isImmutable = true;
+		}
+		else if (hibernateEntityAnnotation != null
+				&& hibernateEntityAnnotation.value( "mutable" ) != null){
 
+			isImmutable = !hibernateEntityAnnotation.value( "mutable" ).asBoolean();
+		} else {
+			isImmutable = false;
+		}
 
 		final AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), HibernateDotNames.WHERE

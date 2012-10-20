@@ -28,6 +28,7 @@ import java.util.Collections;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 
 /**
@@ -52,8 +53,7 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		// TODO
-		return Collections.emptyList();
+		return EnumConversionHelper.cascadeTypeToCascadeStyleSet( associationAttribute.getCascadeTypes(), associationAttribute.getContext() );
 	}
 
 	@Override

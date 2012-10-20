@@ -53,7 +53,7 @@ public class ManyToOneAttributeBinding
 	private CascadeStyle cascadeStyle;
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
-
+	private boolean isUnWrapProxy;
 	public ManyToOneAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
@@ -178,6 +178,14 @@ public class ManyToOneAttributeBinding
 			default:
 				throw new AssertionFailure( "Unexpected fetch style : " + fetchStyle.name() );
 		}
+	}
+
+	public boolean isUnWrapProxy() {
+		return isUnWrapProxy;
+	}
+
+	public void setUnWrapProxy(boolean unWrapProxy) {
+		isUnWrapProxy = unWrapProxy;
 	}
 
 	@Override

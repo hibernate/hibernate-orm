@@ -73,6 +73,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		return elementSource;
 	}
 
+	@Override
+	public String getMappedBy() {
+		return associationAttribute.getMappedBy();
+	}
+
 	private PluralAttributeElementSource determineElementSource() {
 		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:

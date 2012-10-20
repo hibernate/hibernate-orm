@@ -49,18 +49,6 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 		this.deleteAction = attribute.getOnDeleteAction() == OnDeleteAction.CASCADE
 				? ForeignKey.ReferentialAction.CASCADE : ForeignKey.ReferentialAction.NO_ACTION;
 	}
-
-	@Override
-	public List<RelationalValueSource> getValueSources() {
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		if ( !attribute.getJoinColumnValues().isEmpty() ) {
-			for ( Column columnValues : attribute.getColumnValues() ) {
-				valueSources.add( new ColumnSourceImpl( attribute, null, columnValues ) );
-			}
-		}
-		return valueSources;
-	}
-
 	@Override
 	public ForeignKey.ReferentialAction getOnDeleteAction() {
 		return deleteAction;

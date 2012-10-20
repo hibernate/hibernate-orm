@@ -149,6 +149,11 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
+	public String getMappedBy() {
+		return null;
+	}
+
+	@Override
 	public String inferInLineViewName() {
 		return container().getPath() + "." + pluralAttributeElement.getName();
 	}

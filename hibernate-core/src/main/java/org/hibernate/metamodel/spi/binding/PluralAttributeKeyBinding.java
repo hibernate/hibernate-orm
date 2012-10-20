@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -43,7 +41,7 @@ public class PluralAttributeKeyBinding {
 	private boolean isIncludedInUpdate;
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
+	private HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
@@ -100,6 +98,10 @@ public class PluralAttributeKeyBinding {
 
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		return hibernateTypeDescriptor;
+	}
+
+	public void setHibernateTypeDescriptor(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		this.hibernateTypeDescriptor = hibernateTypeDescriptor;
 	}
 
 	public void setForeignKey(ForeignKey foreignKey) {

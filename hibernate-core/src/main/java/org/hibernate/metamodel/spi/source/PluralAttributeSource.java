@@ -66,6 +66,8 @@ public interface PluralAttributeSource
 
 	public CustomSQL getCustomSqlDeleteAll();
 
+	public String getMappedBy();
+
 	/**
 	 * Describes the nature of the collection itself as declared by the metadata.
 	 *

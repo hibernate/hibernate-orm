@@ -82,11 +82,6 @@ public class PluralAttributeKeySourceImpl
 	}
 
 	@Override
-	public List<RelationalValueSource> getValueSources() {
-		return valueSources;
-	}
-
-	@Override
 	public String getExplicitForeignKeyName() {
 		return keyElement.getForeignKey();
 	}

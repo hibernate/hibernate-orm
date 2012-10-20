@@ -111,7 +111,7 @@ public class JandexHelper {
 		catch ( ClassCastException e ) {
 			throw new AssertionFailure(
 					String.format(
-							"the annotation property %s of annotation %s is not of type %s",
+							"the annotation property [%s] of annotation [@%s] is not of type %s",
 							element,
 							annotation.name(),
 							type.getName()

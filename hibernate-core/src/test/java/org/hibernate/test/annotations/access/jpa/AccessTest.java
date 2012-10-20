@@ -35,7 +35,6 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.access.Closet;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -45,7 +44,6 @@ import org.junit.Test;
  */
 public class AccessTest extends BaseCoreFunctionalTestCase {
 	
-	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testDefaultConfigurationModeIsInherited() throws Exception {
 		User john = new User();

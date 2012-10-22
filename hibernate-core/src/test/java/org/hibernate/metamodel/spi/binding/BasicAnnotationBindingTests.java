@@ -23,8 +23,9 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.hibernate.metamodel.MetadataSources;
 import org.junit.Test;
+
+import org.hibernate.metamodel.MetadataSources;
 
 /**
  * Basic tests of annotation based binding code

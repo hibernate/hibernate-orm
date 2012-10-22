@@ -25,8 +25,8 @@ package org.hibernate.test.engine.jdbc.env;
 
 import org.junit.Test;
 
-import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.engine.jdbc.env.spi.StandardQualifiedObjectNameSupportImpl;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

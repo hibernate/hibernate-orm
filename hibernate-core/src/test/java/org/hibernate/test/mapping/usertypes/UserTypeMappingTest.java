@@ -3,6 +3,10 @@ package org.hibernate.test.mapping.usertypes;
 
 import java.util.Properties;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -10,9 +14,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Test for read-order independent resolution of user-defined types

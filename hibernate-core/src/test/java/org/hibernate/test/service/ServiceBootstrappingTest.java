@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.service;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Properties;
+
+import org.junit.Test;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
@@ -39,7 +38,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

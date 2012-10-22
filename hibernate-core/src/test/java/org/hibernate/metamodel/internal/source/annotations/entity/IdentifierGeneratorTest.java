@@ -24,16 +24,12 @@
 
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+
+import org.junit.Test;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -52,7 +48,11 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 /**
  * @author Hardy Ferentschik

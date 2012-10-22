@@ -23,9 +23,7 @@
  */
 package org.hibernate.test.annotations.various;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -33,7 +31,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for the @Timestamp annotation.

@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
 import java.math.BigDecimal;
-
 import javax.validation.ConstraintViolationException;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -39,7 +37,9 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vladimir Klyushnikov

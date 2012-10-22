@@ -23,9 +23,7 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
@@ -33,7 +31,10 @@ import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator are enabled.

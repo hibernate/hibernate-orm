@@ -6,8 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

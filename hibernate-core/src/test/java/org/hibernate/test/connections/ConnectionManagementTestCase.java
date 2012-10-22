@@ -23,16 +23,16 @@
  */
 package org.hibernate.test.connections;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Common test cases relating to session management and how the sessions

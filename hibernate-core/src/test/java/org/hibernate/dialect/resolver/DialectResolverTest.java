@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.resolver;
+
 import java.sql.SQLException;
 
 import org.junit.Test;
@@ -29,10 +30,10 @@ import org.junit.Test;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.TestingDialects;
-import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

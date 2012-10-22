@@ -33,11 +33,9 @@ import javax.persistence.JoinTable;
 
 import org.junit.Test;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.ListBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MappingException;

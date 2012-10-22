@@ -23,15 +23,10 @@
  */
 package org.hibernate.test.propertyref.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -45,7 +40,13 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King

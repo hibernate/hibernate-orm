@@ -23,14 +23,14 @@
  */
 package org.hibernate.test.fetchprofiles.join.selfReferencing;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;

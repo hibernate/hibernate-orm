@@ -27,10 +27,10 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 

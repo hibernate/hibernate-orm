@@ -23,15 +23,14 @@
  */
 package org.hibernate.test.annotations.dataTypes;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
@@ -42,7 +41,9 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

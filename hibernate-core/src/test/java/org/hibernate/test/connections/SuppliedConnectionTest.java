@@ -27,6 +27,8 @@ package org.hibernate.test.connections;
 import java.sql.Connection;
 import java.sql.ResultSet;
 
+import org.junit.Test;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -41,7 +43,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.junit.Test;
 
 /**
  * Implementation of SuppliedConnectionTest.

@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Comparator;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;

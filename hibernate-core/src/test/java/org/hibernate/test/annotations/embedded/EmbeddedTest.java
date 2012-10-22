@@ -23,14 +23,12 @@
  */
 package org.hibernate.test.annotations.embedded;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import org.junit.Test;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -40,7 +38,10 @@ import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard

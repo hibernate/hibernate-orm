@@ -23,13 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
+
+import org.junit.Test;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -52,7 +48,12 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

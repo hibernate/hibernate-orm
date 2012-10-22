@@ -23,14 +23,15 @@
  */
 package org.hibernate.test.annotations.persister;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Shawn Clowater

@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.collectionalias;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
 /**
  * The bug fixed by HHH-7545 showed showed different results depending on the order
  * in which entity mappings were processed.

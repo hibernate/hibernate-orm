@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.MappingException;
-
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 
 import static junit.framework.Assert.assertEquals;

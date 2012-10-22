@@ -30,16 +30,15 @@ import org.jboss.jandex.Index;
 import org.junit.After;
 import org.junit.Before;
 
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableHierarchy;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**

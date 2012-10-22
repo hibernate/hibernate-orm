@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,7 +37,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;

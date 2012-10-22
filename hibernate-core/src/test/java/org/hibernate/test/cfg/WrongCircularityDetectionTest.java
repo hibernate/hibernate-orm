@@ -1,8 +1,5 @@
 package org.hibernate.test.cfg;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -10,10 +7,14 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test illustrates the problem when two related (in terms of joins)

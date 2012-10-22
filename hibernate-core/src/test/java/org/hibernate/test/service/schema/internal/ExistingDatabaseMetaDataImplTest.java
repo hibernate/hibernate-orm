@@ -29,6 +29,10 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -37,16 +41,11 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformationBuilder;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

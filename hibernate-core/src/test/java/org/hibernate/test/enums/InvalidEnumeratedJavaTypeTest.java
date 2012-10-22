@@ -27,11 +27,10 @@ import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.cfg.Configuration;
-
 import org.junit.Test;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.fail;

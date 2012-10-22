@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.collection.map.hhh7557;
 
+import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,7 +33,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Map;
 
 /**
  * @author Elizabeth Chatman

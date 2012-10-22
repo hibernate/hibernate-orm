@@ -23,10 +23,6 @@
  */
 package org.hibernate.test.legacy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,6 +31,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -53,7 +51,10 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipLog;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @FailureExpectedWithNewMetamodel

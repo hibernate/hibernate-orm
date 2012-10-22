@@ -23,15 +23,16 @@
  */
 package org.hibernate.test.reattachment;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test of proxy reattachment semantics

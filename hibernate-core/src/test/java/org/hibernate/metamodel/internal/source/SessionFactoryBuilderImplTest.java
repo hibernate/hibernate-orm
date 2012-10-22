@@ -41,7 +41,6 @@ import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.SessionFactoryBuilderImpl;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.Type;
 

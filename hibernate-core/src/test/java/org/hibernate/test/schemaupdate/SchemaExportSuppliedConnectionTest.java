@@ -23,13 +23,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**

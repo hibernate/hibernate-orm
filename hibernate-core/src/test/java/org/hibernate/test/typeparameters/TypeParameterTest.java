@@ -23,19 +23,20 @@
  */
 package org.hibernate.test.typeparameters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for parameterizable types.

@@ -22,15 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.bag;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentBag;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests related to operations on a PersistentBag.

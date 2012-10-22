@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.stats;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.HashSet;
 import java.util.Iterator;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -44,7 +42,10 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Show the difference between fetch and load

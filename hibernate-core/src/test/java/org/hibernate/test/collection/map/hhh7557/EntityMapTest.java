@@ -26,11 +26,10 @@ package org.hibernate.test.collection.map.hhh7557;
 import java.util.HashMap;
 import java.util.List;
 
-import org.hibernate.Session;
-
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

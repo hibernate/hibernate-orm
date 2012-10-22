@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.math.BigDecimal;
-
 import javax.validation.ConstraintViolationException;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -36,7 +34,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard

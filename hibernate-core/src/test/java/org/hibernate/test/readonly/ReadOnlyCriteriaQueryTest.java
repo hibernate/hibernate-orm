@@ -43,7 +43,6 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 
 import static org.junit.Assert.assertEquals;

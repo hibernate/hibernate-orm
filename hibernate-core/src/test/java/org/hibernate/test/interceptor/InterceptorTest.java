@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.interceptor;
+
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +36,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

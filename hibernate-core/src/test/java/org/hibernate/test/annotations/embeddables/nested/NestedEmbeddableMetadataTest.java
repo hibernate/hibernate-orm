@@ -23,11 +23,7 @@
  */
 package org.hibernate.test.annotations.embeddables.nested;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Test;
 

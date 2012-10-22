@@ -23,9 +23,10 @@
  */
 package org.hibernate.test.reattachment;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 /**
  * Test of collection reattachment semantics

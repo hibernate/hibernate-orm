@@ -1,8 +1,8 @@
 package org.hibernate.test.annotations.enumerated;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.Serializable;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -13,7 +13,8 @@ import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
 import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EnumType;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test type definition for enum

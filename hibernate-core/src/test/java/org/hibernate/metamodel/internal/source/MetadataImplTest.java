@@ -33,10 +33,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.SessionFactoryBuilderImpl;
-
+import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;

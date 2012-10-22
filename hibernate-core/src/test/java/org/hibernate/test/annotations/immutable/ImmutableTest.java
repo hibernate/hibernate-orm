@@ -23,13 +23,11 @@
  */
 package org.hibernate.test.annotations.immutable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
@@ -39,8 +37,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.jboss.logging.Logger;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for <code>Immutable</code> annotation.

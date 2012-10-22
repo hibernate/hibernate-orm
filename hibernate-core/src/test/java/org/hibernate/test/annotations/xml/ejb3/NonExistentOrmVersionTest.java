@@ -23,15 +23,16 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.InputStream;
+
+import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-6271")
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {

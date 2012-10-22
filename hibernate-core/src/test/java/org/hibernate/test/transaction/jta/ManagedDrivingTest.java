@@ -23,19 +23,17 @@
  */
 package org.hibernate.test.transaction.jta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.transaction.TransactionManager;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -54,9 +52,11 @@ import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Testing transaction facade handling when the transaction is being driven by something other than the facade.

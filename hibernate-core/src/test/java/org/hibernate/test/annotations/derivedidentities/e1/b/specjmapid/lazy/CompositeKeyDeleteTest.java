@@ -28,13 +28,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 @FailureExpectedWithNewMetamodel // i think the whole SpecJ "partially generated id" thing causes problems in the new code
 public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {

@@ -237,7 +237,7 @@ public class HibernateMappingProcessor {
 			);
 
 			// processing fetch profiles defined in the <joined-subclass>
-			processFetchProfilesInJoinedSubclass(classElement.getJoinedSubclass());
+			processFetchProfilesInJoinedSubclass( classElement.getJoinedSubclass() );
 			// <union-subclass>
 			processFetchProfilesInUnionSubclass( classElement.getUnionSubclass() );
 			// <subclass>
@@ -777,7 +777,7 @@ public class HibernateMappingProcessor {
 			String query = "";
 			boolean isQueryDefined = false;
 			for ( Serializable obj : contents ) {
-				if(obj == null){
+				if ( obj == null ) {
 					continue;
 				}
 				else if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
@@ -786,7 +786,7 @@ public class HibernateMappingProcessor {
 				}
 				else if ( String.class.isInstance( obj ) ) {
 					if ( !isQueryDefined ) {
-						if( StringHelper.isNotEmpty( obj.toString().trim() )){
+						if ( StringHelper.isNotEmpty( obj.toString().trim() ) ) {
 							query = obj.toString().trim();
 							isQueryDefined = true;
 						}

@@ -26,8 +26,6 @@ package org.hibernate.service.jdbc.dialect.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -54,6 +52,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
 
 /**
  * The standard Hibernate Dialect resolver.
@@ -133,6 +132,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                 case 9:
                     return new SQLServer2005Dialect();
                 case 10:
+                case 11:
                     return new SQLServer2008Dialect();
                 default:
                     LOG.unknownSqlServerVersion(databaseMajorVersion);

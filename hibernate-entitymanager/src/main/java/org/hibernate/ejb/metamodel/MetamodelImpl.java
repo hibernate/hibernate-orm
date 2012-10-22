@@ -21,24 +21,20 @@
  */
 package org.hibernate.ejb.metamodel;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.Metamodel;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 
+import javax.persistence.metamodel.*;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 /**
- * Hibernate implementation of the JPA {@link Metamodel} contract.
+ * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -47,6 +43,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
     private final Map<Class<?>,EntityTypeImpl<?>> entities;
     private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
     private final Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap;
+    private final Map<String, EntityTypeImpl<?>> entityTypesByEntityName;
 
     /**
      * Build the metamodel using the information from the collection of Hibernate
@@ -84,7 +81,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
             locateOrBuildEntityType( pc, context );
         }
         context.wrapUp();
-        return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap(), context.getMappedSuperclassTypeMap() );
+        return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap(), context.getMappedSuperclassTypeMap(), context.getEntityTypesByEntityName() );
     }
 
     private static EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {
@@ -171,10 +168,12 @@ public class MetamodelImpl implements Metamodel, Serializable {
     private MetamodelImpl(
             Map<Class<?>, EntityTypeImpl<?>> entities,
             Map<Class<?>, EmbeddableTypeImpl<?>> embeddables,
-            Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap) {
+            Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap,
+            Map<String, EntityTypeImpl<?>> entityTypesByEntityName) {
         this.entities = entities;
         this.embeddables = embeddables;
         this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
+        this.entityTypesByEntityName = entityTypesByEntityName;
     }
 
     @Override
@@ -227,7 +226,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 
     @Override
     public Set<EntityType<?>> getEntities() {
-        return new HashSet<EntityType<?>>( entities.values() );
+        return new HashSet<EntityType<?>>( entityTypesByEntityName.values() );
     }
 
     @Override

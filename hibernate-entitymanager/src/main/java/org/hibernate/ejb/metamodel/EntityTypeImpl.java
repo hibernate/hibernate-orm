@@ -20,48 +20,49 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-import java.io.Serializable;
+
 import javax.persistence.metamodel.EntityType;
+import java.io.Serializable;
 
 /**
- * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
+ * Defines the Hibernate implementation of the JPA {@link javax.persistence.metamodel.EntityType} contract.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-public class EntityTypeImpl<X> 
-		extends AbstractIdentifiableType<X>
-		implements EntityType<X>, Serializable {
-	private final String jpaEntityName;
+public class EntityTypeImpl<X>
+        extends AbstractIdentifiableType<X>
+        implements EntityType<X>, Serializable {
+    private final String jpaEntityName;
 
-	public EntityTypeImpl(
-			Class<X> javaType,
-			AbstractIdentifiableType<? super X> superType, 
-			String jpaEntityName,
-			boolean hasIdentifierProperty,
-			boolean isVersioned) {
-		super( javaType, superType, hasIdentifierProperty, isVersioned );
-		this.jpaEntityName = jpaEntityName;
-	}
+    public EntityTypeImpl(
+            Class<X> javaType,
+            AbstractIdentifiableType<? super X> superType,
+            String jpaEntityName,
+            boolean hasIdentifierProperty,
+            boolean isVersioned) {
+        super( javaType, superType, hasIdentifierProperty, isVersioned );
+        this.jpaEntityName = jpaEntityName;
+    }
 
-	public String getName() {
-		return jpaEntityName;
-	}
+    public String getName() {
+        return jpaEntityName;
+    }
 
-	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
-	}
+    public BindableType getBindableType() {
+        return BindableType.ENTITY_TYPE;
+    }
 
-	public Class<X> getBindableJavaType() {
-		return getJavaType();
-	}
+    public Class<X> getBindableJavaType() {
+        return getJavaType();
+    }
 
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
+    public PersistenceType getPersistenceType() {
+        return PersistenceType.ENTITY;
+    }
 
-	@Override
-	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
-		return true;
-	}
+    @Override
+    protected boolean requiresSupertypeForNonDeclaredIdentifier() {
+        return true;
+    }
 }

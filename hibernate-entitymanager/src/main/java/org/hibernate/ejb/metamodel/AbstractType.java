@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-import java.io.Serializable;
+
 import javax.persistence.metamodel.Type;
+import java.io.Serializable;
 
 /**
- * Defines commonality for the JPA {@link Type} hierarchy of interfaces.
+ * Defines commonality for the JPA {@link javax.persistence.metamodel.Type} hierarchy of interfaces.
  *
  * This adds a type name so we don't rely on the class name. That allows
  * for non-class-based (metadata-driven) models. --koehn

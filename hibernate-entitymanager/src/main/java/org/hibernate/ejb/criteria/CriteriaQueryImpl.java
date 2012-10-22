@@ -23,27 +23,20 @@
  */
 package org.hibernate.ejb.criteria;
 
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.type.Type;
+
+import javax.persistence.Tuple;
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.EntityType;
-
-import org.hibernate.ejb.HibernateEntityManagerImplementor;
-import org.hibernate.type.Type;
 
 /**
- * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostly a set of delegation to its
+ * The Hibernate implementation of the JPA {@link javax.persistence.criteria.CriteriaQuery} contract.  Mostly a set of delegation to its
  * internal {@link QueryStructure}.
  *
  * @author Steve Ebersole
@@ -121,13 +114,13 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
      */
     @SuppressWarnings({ "unchecked" })
     public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
-		final Selection<? extends T> selection;
+        final Selection<?> selection;
 
         if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
             selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
         }
         else if ( getResultType().isArray() ) {
-			selection = ( Selection<? extends T> )  criteriaBuilder().array(
+            selection = criteriaBuilder().array(
                     ( Class<? extends Object[]> ) getResultType(),
                     selections
             );
@@ -144,14 +137,14 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
                     break;
                 }
                 default: {
-					selection = ( Selection<? extends T> ) criteriaBuilder().array( selections );
+                    selection = criteriaBuilder().array( selections );
                 }
             }
         }
         else {
             selection = criteriaBuilder().construct( getResultType(), selections );
         }
-		applySelection( selection );
+        applySelection( (Selection<? extends T>) selection );
         return this;
     }
 
@@ -312,7 +305,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
     /**
      * If no explicit selection was defined, we have a condition called an implicit selection if the query specified
-     * a single {@link Root} and the java type of that {@link Root root's} model is the same as this criteria's
+     * a single {@link javax.persistence.criteria.Root} and the java type of that {@link javax.persistence.criteria.Root root's} model is the same as this criteria's
      * {@link #getResultType() result type}.
      *
      * @return True if there is an explicit selection; false otherwise.
@@ -345,7 +338,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
             String sep = "";
             for ( Order orderSpec : getOrderList() ) {
                 jpaqlQuery.append( sep )
-                        .append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
+                        .append( ( (Renderable) orderSpec.getExpression() ).render( renderingContext ) )
                         .append( orderSpec.isAscending() ? " asc" : " desc" );
                 sep = ", ";
             }

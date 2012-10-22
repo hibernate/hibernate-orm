@@ -23,37 +23,25 @@
  */
 package org.hibernate.ejb.metamodel;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.util.Iterator;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.Type;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Map;
-import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
+import org.hibernate.mapping.*;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
+import org.jboss.logging.Logger;
+
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
+import java.lang.reflect.*;
+import java.util.Iterator;
 
 /**
- * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
+ * A factory for building {@link javax.persistence.metamodel.Attribute} instances.  Exposes 3 main services for building<ol>
  * <li>{@link #buildAttribute normal attributes}</li>
  * <li>{@link #buildIdAttribute id attributes}</li>
  * <li>{@link #buildVersionAttribute version attributes}</li>
@@ -188,7 +176,7 @@ public class AttributeFactory {
         final Type<E> elementType = getMetaModelType( attributeMetadata.getElementValueContext() );
         if ( java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
             final Type<K> keyType = getMetaModelType( attributeMetadata.getMapKeyValueContext() );
-            return PluralAttributeImpl.create( attributeMetadata.getOwnerType(), elementType, attributeMetadata.getJavaType(), keyType )
+            return PluralAttributeImpl.create(attributeMetadata.getOwnerType(), elementType, attributeMetadata.getJavaType(), keyType)
                     .member( attributeMetadata.getMember() )
                     .property( attributeMetadata.getPropertyMapping() )
                     .persistentAttributeType( attributeMetadata.getPersistentAttributeType() )
@@ -418,7 +406,7 @@ public class AttributeFactory {
     }
 
     /**
-     * Contract for how we resolve the {@link Member} for a give attribute context.
+     * Contract for how we resolve the {@link java.lang.reflect.Member} for a give attribute context.
      */
     private interface MemberResolver {
         public Member resolveMember(AttributeContext attributeContext);
@@ -553,6 +541,8 @@ public class AttributeFactory {
             return ( (Field) member ).getAnnotation( OneToOne.class ) != null
                     ? Attribute.PersistentAttributeType.ONE_TO_ONE
                     : Attribute.PersistentAttributeType.MANY_TO_ONE;
+        } else if (MapMember.class.isInstance( member ))  {
+            return  Attribute.PersistentAttributeType.MANY_TO_ONE; // curious to see how this works for non-annotated methods
         }
         else {
             return ( (Method) member ).getAnnotation( OneToOne.class ) != null
@@ -849,9 +839,14 @@ public class AttributeFactory {
     }
 
     public static ParameterizedType getSignatureType(Member member) {
-        final java.lang.reflect.Type type = Field.class.isInstance( member )
-                ? ( ( Field ) member ).getGenericType()
-                : ( ( Method ) member ).getGenericReturnType();
+        final java.lang.reflect.Type type;
+        if (Field.class.isInstance( member )) {
+              type =  ( ( Field ) member ).getGenericType();
+        } else if (Method.class.isInstance(member)) {
+            type = ( ( Method ) member ).getGenericReturnType();
+        } else {
+            type = ( (MapMember) member ).getType();
+        }
         //this is a raw type
         if ( type instanceof Class ) return null;
         return (ParameterizedType) type;
@@ -876,9 +871,13 @@ public class AttributeFactory {
     }
 
     public static boolean isManyToMany(Member member) {
-        return Field.class.isInstance( member )
-                ? ( (Field) member ).getAnnotation( ManyToMany.class ) != null
-                : ( (Method) member ).getAnnotation( ManyToMany.class ) != null;
+        if (Field.class.isInstance( member )) {
+            return ( (Field) member ).getAnnotation( ManyToMany.class ) != null;
+        } else if (Method.class.isInstance( member )) {
+            return ( (Method) member ).getAnnotation( ManyToMany.class ) != null;
+        }
+
+        return false;
     }
 
     private final MemberResolver EMBEDDED_MEMBER_RESOLVER = new MemberResolver() {
@@ -886,7 +885,7 @@ public class AttributeFactory {
          * {@inheritDoc}
          */
         public Member resolveMember(AttributeContext attributeContext) {
-            final EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) attributeContext.getOwnerType();
+            final EmbeddableTypeImpl embeddableType = (EmbeddableTypeImpl<?>) attributeContext.getOwnerType();
             final String attributeName = attributeContext.getPropertyMapping().getName();
             return embeddableType.getHibernateType()
                     .getComponentTuplizer()
@@ -920,7 +919,7 @@ public class AttributeFactory {
     };
 
     /**
-     * A {@link Member} resolver for normal attributes.
+     * A {@link java.lang.reflect.Member} resolver for normal attributes.
      */
     private final MemberResolver NORMAL_MEMBER_RESOLVER = new MemberResolver() {
         /**

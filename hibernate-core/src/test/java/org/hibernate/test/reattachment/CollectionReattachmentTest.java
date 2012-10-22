@@ -24,7 +24,6 @@
 package org.hibernate.test.reattachment;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,7 +32,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7680" )
 public class CollectionReattachmentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

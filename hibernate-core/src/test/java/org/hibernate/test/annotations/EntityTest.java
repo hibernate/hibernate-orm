@@ -30,8 +30,6 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -39,9 +37,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
@@ -52,14 +48,17 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class EntityTest extends BaseCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", getEntityBinding( Flight.class ).getPrimaryTableName() );
+		if ( isMetadataUsed ) {
+			assertEquals( "Flight", getEntityBinding( Flight.class ).getPrimaryTableName() );
+		}
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -314,7 +313,9 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", getEntityBinding( Company.class ).getPrimaryTableName() );
+		if ( isMetadataUsed ) {
+			assertEquals( "Corporation", getEntityBinding( Company.class ).getPrimaryTableName() );
+		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();
@@ -421,27 +422,5 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 				Sky.class
 		};
 	}
-
-	// tests are leaving data around, so drop/recreate schema for now.  this is wha the old tests did
-
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
-
-	@Before
-	public void runCreateSchema() {
-		schemaExport().create( false, true );
-	}
-
-	private SchemaExport schemaExport() {
-		return new SchemaExport( serviceRegistry(), configuration() );
-	}
-
-	@After
-	public void runDropSchema() {
-		schemaExport().drop( false, true );
-	}
-
 }
 

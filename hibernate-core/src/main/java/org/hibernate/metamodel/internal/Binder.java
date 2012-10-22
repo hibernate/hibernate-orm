@@ -1424,13 +1424,20 @@ public class Binder {
 	}
 
 	private void bindPrimaryTable( final EntityBinding entityBinding, final EntitySource entitySource ) {
-		entityBinding.setPrimaryTable( createTable( entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
+		final TableSpecification table =  createTable(
+				entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
 
 			@Override
 			public String defaultName() {
-				return bindingContexts.peek().getNamingStrategy().classToTableName( entityBinding.getEntity().getClassName() );
+				String name = StringHelper.isNotEmpty( entityBinding.getJpaEntityName() ) ? entityBinding.getJpaEntityName() : entityBinding
+						.getEntity()
+						.getClassName();
+				return bindingContexts.peek().getNamingStrategy().classToTableName( name );
 			}
-		} ) );
+		}
+		);
+		entityBinding.setPrimaryTable( table );
+		entityBinding.setPrimaryTableName( table.getLogicalName().getText() );
 	}
 
 	private void bindSecondaryTables( final EntityBinding entityBinding, final EntitySource entitySource ) {
@@ -1587,13 +1594,14 @@ public class Binder {
 	}
 
 	private void bindUniqueConstraints( final EntityBinding entityBinding, final EntitySource entitySource ) {
+		int uniqueIndexPerTable = 0;
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
 				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
-				final String constraintName = constraintSource.name();
-				if ( constraintName == null ) {
-					throw new NotYetImplementedException( "create default constraint name" );
-				}
+				uniqueIndexPerTable++;
+				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
+						? "key" + uniqueIndexPerTable
+						: constraintSource.name();
 				final UniqueKey uniqueKey = table.getOrCreateUniqueKey( constraintName );
 				for ( final String columnName : constraintSource.columnNames() ) {
 					uniqueKey.addColumn( table.locateOrCreateColumn( quotedIdentifier( columnName ) ) );
@@ -1808,6 +1816,18 @@ public class Binder {
 				entityClassName,
 				bindingContext.makeClassReference( entityClassName ),
 				superEntityBinding == null ? null : superEntityBinding.getEntity() ) );
+		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );          //must before creating primary table
+		entityBinding.setDynamicUpdate( entitySource.isDynamicUpdate() );
+		entityBinding.setDynamicInsert( entitySource.isDynamicInsert() );
+		entityBinding.setBatchSize( entitySource.getBatchSize() );
+		entityBinding.setSelectBeforeUpdate( entitySource.isSelectBeforeUpdate() );
+		entityBinding.setAbstract( entitySource.isAbstract() );
+
+		entityBinding.setCustomLoaderName( entitySource.getCustomLoaderName() );
+		entityBinding.setCustomInsert( entitySource.getCustomSqlInsert() );
+		entityBinding.setCustomUpdate( entitySource.getCustomSqlUpdate() );
+		entityBinding.setCustomDelete( entitySource.getCustomSqlDelete() );
+		entityBinding.setJpaCallbackClasses( entitySource.getJpaCallbackClasses() );
 		// Create relational table
 		if ( superEntityBinding != null && inheritanceType == InheritanceType.SINGLE_TABLE ) {
 			entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
@@ -1851,18 +1871,7 @@ public class Binder {
 				entitySource.getMetaAttributeSources(),
 				true,
 				metadata.getGlobalMetaAttributeContext() ) );
-		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );
-		entityBinding.setDynamicUpdate( entitySource.isDynamicUpdate() );
-		entityBinding.setDynamicInsert( entitySource.isDynamicInsert() );
-		entityBinding.setBatchSize( entitySource.getBatchSize() );
-		entityBinding.setSelectBeforeUpdate( entitySource.isSelectBeforeUpdate() );
-		entityBinding.setAbstract( entitySource.isAbstract() );
 
-		entityBinding.setCustomLoaderName( entitySource.getCustomLoaderName() );
-		entityBinding.setCustomInsert( entitySource.getCustomSqlInsert() );
-		entityBinding.setCustomUpdate( entitySource.getCustomSqlUpdate() );
-		entityBinding.setCustomDelete( entitySource.getCustomSqlDelete() );
-		entityBinding.setJpaCallbackClasses( entitySource.getJpaCallbackClasses() );
 		if ( entitySource.getSynchronizedTableNames() != null ) {
 			entityBinding.addSynchronizedTableNames( entitySource.getSynchronizedTableNames() );
 		}

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -38,7 +37,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7680" )
 public class PersistentBagTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

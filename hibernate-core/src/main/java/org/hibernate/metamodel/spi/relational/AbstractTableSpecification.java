@@ -40,7 +40,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	private final int tableNumber;
 
 	private final List<Value> valueList = new ArrayList<Value>();
-	private final LinkedHashMap<String, Value> valueMap = new LinkedHashMap<String, Value>();
+	private final LinkedHashMap<Identifier, Value> valueMap = new LinkedHashMap<Identifier, Value>();
 
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
 	private final List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
@@ -61,19 +61,22 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public Column locateOrCreateColumn(String name) {
-		if ( valueMap.containsKey( name ) ) {
-			return (Column) valueMap.get( name );
+		Column column = locateColumn( name );
+		if(column == null){
+			column = createColumn( name );
 		}
-		return createColumn( name );
+		return column;
 	}
 
 	@Override
 	public Column locateColumn(String name) {
-		if ( valueMap.containsKey( name ) ) {
-			return (Column) valueMap.get( name );
+		final Identifier identifier = Identifier.toIdentifier( name );
+		if ( valueMap.containsKey( identifier ) ) {
+			return (Column) valueMap.get( identifier );
 		}
 		return null;
 	}
+
 
 	@Override
 	public Column createColumn(String name) {
@@ -83,18 +86,19 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	@Override
 	public Column createColumn(Identifier name) {
 		final Column column = new Column( this, valueList.size(), name );
-		valueMap.put( name.getText(), column );
+		valueMap.put( name, column );
 		valueList.add( column );
 		return column;
 	}
 
 	@Override
 	public DerivedValue locateOrCreateDerivedValue(String fragment) {
-		if ( valueMap.containsKey( fragment ) ) {
-			return (DerivedValue) valueMap.get( fragment );
+		final Identifier identifier = Identifier.toIdentifier( fragment );
+		if ( valueMap.containsKey( identifier ) ) {
+			return (DerivedValue) valueMap.get( identifier );
 		}
 		final DerivedValue value = new DerivedValue( this, valueList.size(), fragment );
-		valueMap.put( fragment, value );
+		valueMap.put( identifier, value );
 		valueList.add( value );
 		return value;
 	}

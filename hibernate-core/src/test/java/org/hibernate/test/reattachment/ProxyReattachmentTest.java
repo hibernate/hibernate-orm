@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -39,7 +38,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7680" )
 public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -100,7 +98,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testIterateWithClearTopOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -142,7 +139,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testIterateWithClearBottomOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -184,7 +180,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testIterateWithEvictTopOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -222,7 +217,6 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testIterateWithEvictBottomOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();

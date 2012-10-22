@@ -87,7 +87,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "PostgreSQL".equals( databaseName ) ) {
 			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-			if (databaseMajorVersion >= 8 && databaseMinorVersion >= 2) {
+			if ( databaseMajorVersion > 8 || ( databaseMajorVersion == 8 && databaseMinorVersion >= 2 ) ) {
 				return new PostgreSQL82Dialect();
 			}
 			return new PostgreSQL81Dialect();
@@ -110,7 +110,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-            switch( databaseMajorVersion ) {
+            switch ( databaseMajorVersion ) {
                 case 9:
                     int databaseMinorVersion = metaData.getDatabaseMinorVersion();
                     if (databaseMinorVersion > 2) {

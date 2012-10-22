@@ -24,20 +24,22 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit test of the {@link StandardDialectResolver} class.
@@ -71,6 +73,41 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
         runSQLServerDialectTest(7, SQLServerDialect.class);
     }
 
+    @Test
+    public void testResolveDialectInternalForPostgres81() throws SQLException {
+        runPostgresDialectTest(8, 1, PostgreSQL81Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres82() throws SQLException {
+        runPostgresDialectTest(8, 2, PostgreSQL82Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres83() throws SQLException {
+        runPostgresDialectTest(8, 3, PostgreSQL82Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres84() throws SQLException {
+        runPostgresDialectTest(8, 4, PostgreSQL82Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres9() throws SQLException {
+        runPostgresDialectTest(9, 0, PostgreSQL82Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres91() throws SQLException {
+        runPostgresDialectTest(9, 1, PostgreSQL82Dialect.class);
+    }
+
+    @Test
+    public void testResolveDialectInternalForPostgres92() throws SQLException {
+        runPostgresDialectTest(9, 2, PostgreSQL82Dialect.class);
+    }
+    
     private static void runSQLServerDialectTest(int version, Class<? extends SQLServerDialect> expectedDialect)
             throws SQLException {
         DatabaseMetaData metaData = mock(DatabaseMetaData.class);
@@ -81,5 +118,32 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
         assertNotNull("Dialect for SQL Server version " + version + " should not be null", dialect);
         assertTrue("Dialect for SQL Server version " + version + " should be " + expectedDialect.getSimpleName(),
                 expectedDialect.isInstance(dialect));
+    }
+
+    private static void runPostgresDialectTest(int majorVersion, int minorVersion,
+    		Class<? extends Dialect> expectedDialect) throws SQLException {
+    	runDialectTest("PostgreSQL", majorVersion, minorVersion, expectedDialect);
+    }
+
+    private static void runDialectTest(String productName, int majorVersion, int minorVersion,
+    		Class<? extends Dialect> expectedDialect) throws SQLException {
+    	DatabaseMetaData metaData = mock(DatabaseMetaData.class);
+    	when(metaData.getDatabaseProductName()).thenReturn(productName);
+    	when(metaData.getDatabaseMajorVersion()).thenReturn(majorVersion);
+    	when(metaData.getDatabaseMinorVersion()).thenReturn(minorVersion);
+
+    	Dialect dialect = new StandardDialectResolver().resolveDialectInternal(metaData);
+
+    	StringBuilder builder = new StringBuilder(productName)
+		    	.append(" ")
+		    	.append(majorVersion);
+    	if (minorVersion > 0) {
+    		builder.append(".").append(minorVersion);
+    	}
+    	String dbms = builder.toString();
+
+    	assertNotNull("Dialect for " + dbms + " should not be null", dialect);
+    	assertTrue("Dialect for " + dbms + " should be " + expectedDialect.getSimpleName(),
+    			expectedDialect.isInstance(dialect));
     }
 }

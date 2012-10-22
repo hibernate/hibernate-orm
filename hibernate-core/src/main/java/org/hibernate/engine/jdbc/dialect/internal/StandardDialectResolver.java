@@ -63,7 +63,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class StandardDialectResolver extends AbstractDialectResolver {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       StandardDialectResolver.class.getName());
+                                                                         StandardDialectResolver.class.getName());
 
 	@Override
     protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
@@ -88,7 +88,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "PostgreSQL".equals( databaseName ) ) {
 			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-			if (databaseMajorVersion >= 8 && databaseMinorVersion >= 2) {
+			if ( databaseMajorVersion > 8 || ( databaseMajorVersion == 8 && databaseMinorVersion >= 2 ) ) {
 				return new PostgreSQL82Dialect();
 			}
 			return new PostgreSQL81Dialect();
@@ -111,7 +111,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-            switch( databaseMajorVersion ) {
+            switch ( databaseMajorVersion ) {
                 case 9:
                     int databaseMinorVersion = metaData.getDatabaseMinorVersion();
                     if (databaseMinorVersion > 2) {

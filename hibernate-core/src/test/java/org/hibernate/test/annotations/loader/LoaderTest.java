@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class LoaderTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getXmlFiles() {

@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.xml.bind.JAXBElement;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.CacheMode;
@@ -775,13 +777,20 @@ public class HibernateMappingProcessor {
 			String query = "";
 			boolean isQueryDefined = false;
 			for ( Serializable obj : contents ) {
-				if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
+				if(obj == null){
+					continue;
+				}
+				else if ( JaxbQueryParamElement.class.isInstance( obj ) ) {
 					JaxbQueryParamElement element = JaxbQueryParamElement.class.cast( obj );
 					queryParam.put( element.getName(), element.getType() );
 				}
 				else if ( String.class.isInstance( obj ) ) {
 					if ( !isQueryDefined ) {
-						query = obj.toString();
+						if( StringHelper.isNotEmpty( obj.toString().trim() )){
+							query = obj.toString().trim();
+							isQueryDefined = true;
+						}
+
 					}
 					else {
 						throw new MappingException(
@@ -816,23 +825,30 @@ public class HibernateMappingProcessor {
 
 		@Override
 		protected void parseExtra(String queryName, Serializable obj, NamedQueryDefinitionBuilder builder) {
+			if ( !JAXBElement.class.isInstance( obj ) ) {
+				return;
+			}
 			NamedSQLQueryDefinitionBuilder sqlBuilder = NamedSQLQueryDefinitionBuilder.class.cast( builder );
-			if ( JaxbSynchronizeElement.class.isInstance( obj ) ) {
-				JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( obj );
+			JAXBElement jaxbElement = JAXBElement.class.cast( obj );
+			Class targetType = jaxbElement.getDeclaredType();
+			Object value = jaxbElement.getValue();
+			if ( JaxbSynchronizeElement.class == targetType ) {
+				JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( value );
 				synchronizedTables.add( element.getTable() );
 			}
-			else if ( JaxbLoadCollectionElement.class.isInstance( obj ) ) {
-				loadCollectionElements.add( JaxbLoadCollectionElement.class.cast( obj ) );
+			else if ( JaxbLoadCollectionElement.class == targetType ) {
+				loadCollectionElements.add( JaxbLoadCollectionElement.class.cast( value ) );
 			}
-			else if ( JaxbReturnScalarElement.class.isInstance( obj ) ) {
-				returnScalarElements.add( JaxbReturnScalarElement.class.cast( obj ) );
+			else if ( JaxbReturnScalarElement.class == targetType ) {
+				returnScalarElements.add( JaxbReturnScalarElement.class.cast( value ) );
 			}
-			else if ( JaxbReturnElement.class.isInstance( obj ) ) {
-				returnElements.add( JaxbReturnElement.class.cast( obj ) );
+			else if ( JaxbReturnElement.class == targetType ) {
+				returnElements.add( JaxbReturnElement.class.cast( value ) );
 			}
-			else if ( JaxbReturnJoinElement.class.isInstance( obj ) ) {
-				returnJoinElements.add( JaxbReturnJoinElement.class.cast( obj ) );
+			else if ( JaxbReturnJoinElement.class == targetType ) {
+				returnJoinElements.add( JaxbReturnJoinElement.class.cast( value ) );
 			}
+
 		}
 	}
 

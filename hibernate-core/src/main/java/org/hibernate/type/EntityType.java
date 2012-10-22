@@ -207,13 +207,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private Class determineAssociatedEntityClass() {
-		try {
-			return ReflectHelper.classForName( getAssociatedEntityName() );
-		}
-		catch ( ClassNotFoundException cnfe ) {
-			return java.util.Map.class;
-		}
-	}
+        final String entityName = getAssociatedEntityName();
+        try {
+            return ReflectHelper.classForName(entityName);
+        }
+        catch ( ClassNotFoundException cnfe ) {
+            return this.scope.resolveFactory().getEntityPersister(entityName).
+                    getEntityTuplizer().getMappedClass();
+        }
+    }
 
 	/**
 	 * {@inheritDoc}

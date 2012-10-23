@@ -19,6 +19,8 @@ import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.config.Configuration;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -382,11 +384,34 @@ public class InfinispanRegionFactory implements RegionFactory {
    protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
       try {
          String configLoc = ConfigurationHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
+
          EmbeddedCacheManager manager = new DefaultCacheManager(configLoc, false);
          String globalStats = extractProperty(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
          if (globalStats != null) {
-            manager.getGlobalConfiguration().setExposeGlobalJmxStatistics(Boolean.parseBoolean(globalStats));
+            // Hack to enable global JMX stats being enabled in both 5.1 and 5.2
+
+            // 1. Create a configuration builder holder
+            ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
+
+            // 2. Build global configuration with custom settings
+            GlobalConfigurationBuilder globalBuilder = holder.getGlobalConfigurationBuilder();
+            globalBuilder.read(manager.getCacheManagerConfiguration());
+            globalBuilder.globalJmxStatistics().enabled(Boolean.parseBoolean(globalStats));
+
+            // 3. Build default configuration
+            holder.getDefaultConfigurationBuilder().read(manager.getDefaultCacheConfiguration());
+
+            // 4. Build all defined caches
+            for (String cacheName : manager.getCacheNames()){
+               ConfigurationBuilder builder = holder.newConfigurationBuilder(cacheName);
+               builder.read(manager.getCacheConfiguration(cacheName));
+            }
+
+            // 5. Discard existing cache manager and create a brand new one
+            manager.stop();
+            manager = new DefaultCacheManager(holder, false);
          }
+
          manager.start();
          return manager;
       } catch (IOException e) {

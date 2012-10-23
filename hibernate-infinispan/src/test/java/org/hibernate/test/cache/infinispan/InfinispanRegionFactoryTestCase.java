@@ -30,6 +30,8 @@ import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.CacheManagerCallable;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.junit.Test;
 
 import org.hibernate.cache.CacheException;
@@ -44,6 +46,7 @@ import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
+import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -279,18 +282,23 @@ public class InfinispanRegionFactoryTestCase  {
       }
    }
    @Test
-   public void testTimestampValidation() {
-      Properties p = new Properties();
-      final DefaultCacheManager manager = new DefaultCacheManager();
-      InfinispanRegionFactory factory = createRegionFactory(manager, p);
-      Configuration config = new Configuration();
-      config.setCacheMode(CacheMode.INVALIDATION_SYNC);
-      manager.defineConfiguration("timestamps", config);
-      try {
-         factory.start(null, p);
-         fail("Should have failed saying that invalidation is not allowed for timestamp caches.");
-      } catch(CacheException ce) {
-      }
+   public void testTimestampValidation() throws Exception {
+      final Properties p = new Properties();
+      withCacheManager(new CacheManagerCallable(
+            TestCacheManagerFactory.createLocalCacheManager(false)) {
+         @Override
+         public void call() {
+            InfinispanRegionFactory factory = createRegionFactory(cm, p);
+            Configuration config = new Configuration();
+            config.setCacheMode(CacheMode.INVALIDATION_SYNC);
+            cm.defineConfiguration("timestamps", config);
+            try {
+               factory.start(null, p);
+               fail("Should have failed saying that invalidation is not allowed for timestamp caches.");
+            } catch(CacheException ce) {
+            }
+         }
+      });
    }
     @Test
    public void testBuildDefaultTimestampsRegion() {

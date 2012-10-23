@@ -142,7 +142,7 @@ public class OneToOneType extends EntityType {
 	}
 
 	protected boolean isNullable() {
-		return foreignKeyType==ForeignKeyDirection.FOREIGN_KEY_TO_PARENT;
+		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
 	}
 
 	public boolean useLHSPrimaryKey() {

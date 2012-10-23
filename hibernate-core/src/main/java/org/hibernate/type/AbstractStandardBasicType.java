@@ -383,7 +383,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT == foreignKeyDirection
+		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
 				? getReplacement( (T) original, (T) target, session )
 				: target;
 	}

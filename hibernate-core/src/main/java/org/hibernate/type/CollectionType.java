@@ -321,7 +321,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_TO_PARENT;
+		return ForeignKeyDirection.TO_PARENT;
 	}
 
 	/**

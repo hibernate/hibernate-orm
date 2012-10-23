@@ -143,7 +143,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT;
+		return ForeignKeyDirection.FROM_PARENT;
 	}
 
 	public Object hydrate(

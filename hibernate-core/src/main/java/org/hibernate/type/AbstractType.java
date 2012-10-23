@@ -173,7 +173,7 @@ public abstract class AbstractType implements Type {
 			include = atype.getForeignKeyDirection()==foreignKeyDirection;
 		}
 		else {
-			include = ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT==foreignKeyDirection;
+			include = ForeignKeyDirection.FROM_PARENT ==foreignKeyDirection;
 		}
 		return include ? replace(original, target, session, owner, copyCache) : target;
 	}

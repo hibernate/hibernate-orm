@@ -327,8 +327,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	public ForeignKeyDirection getForeignKeyDirection() {
-		//return AssociationType.FOREIGN_KEY_TO_PARENT; //this is better but causes a transient object exception...
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT;
+		//return AssociationType.TO_PARENT; //this is better but causes a transient object exception...
+		return ForeignKeyDirection.FROM_PARENT;
 	}
 
 	public boolean isAssociationType() {

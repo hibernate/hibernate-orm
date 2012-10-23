@@ -28,11 +28,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.IdentityHashMap;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
+import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.bytecode.AnnotationsAttribute;
@@ -44,7 +46,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.EnhancementException;
-import org.hibernate.bytecode.internal.javassist.FieldHandled;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.EntityEntry;
@@ -56,6 +58,9 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class Enhancer  {
 	private static final CoreMessageLogger log = Logger.getMessageLogger( CoreMessageLogger.class, Enhancer.class.getName() );
+
+	private static final String PERSISTENT_FIELD_READER_PREFIX = "$hibernate_read_";
+	private static final String PERSISTENT_FIELD_WRITER_PREFIX = "$hibernate_write_";
 
 	public static final String ENTITY_INSTANCE_GETTER_NAME = "hibernate_getEntityInstance";
 
@@ -168,7 +173,7 @@ public class Enhancer  {
 
 		final String[] interfaceNames = managedCtClass.getClassFile2().getInterfaces();
 		for ( String interfaceName : interfaceNames ) {
-			if ( FieldHandled.class.getName().equals( interfaceName ) ) {
+			if ( Managed.class.getName().equals( interfaceName ) ) {
 				log.debug( "skipping enhancement : already enhanced" );
 				return;
 			}
@@ -191,13 +196,18 @@ public class Enhancer  {
 		// add the ManagedEntity interface
 		managedCtClass.addInterface( managedEntityCtClass );
 
-		addEntityInstanceHandling( managedCtClass, constPool );
-		addEntityEntryHandling( managedCtClass, constPool );
-		addLinkedPreviousHandling( managedCtClass, constPool );
-		addLinkedNextHandling( managedCtClass, constPool );
+//		enhancePersistentAttributes( managedCtClass );
+
+		addEntityInstanceHandling( managedCtClass );
+		addEntityEntryHandling( managedCtClass );
+		addLinkedPreviousHandling( managedCtClass );
+		addLinkedNextHandling( managedCtClass );
 	}
 
-	private void addEntityInstanceHandling(CtClass managedCtClass, ConstPool constPool) {
+	private void enhanceAsComposite(CtClass classFile) {
+	}
+
+	private void addEntityInstanceHandling(CtClass managedCtClass) {
 		// add the ManagedEntity#hibernate_getEntityInstance method
 		try {
 			managedCtClass.addMethod(
@@ -224,7 +234,9 @@ public class Enhancer  {
 		// essentially add `return this;`
 	}
 
-	private void addEntityEntryHandling(CtClass managedCtClass, ConstPool constPool) {
+	private void addEntityEntryHandling(CtClass managedCtClass) {
+		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+
 		// add field to hold EntityEntry
 		final CtField entityEntryField;
 		try {
@@ -243,6 +255,7 @@ public class Enhancer  {
 
 		// make that new field transient and @Transient
 		entityEntryField.setModifiers( entityEntryField.getModifiers() | Modifier.TRANSIENT );
+		entityEntryField.setModifiers( Modifier.setPrivate( entityEntryField.getModifiers() ) );
 		AnnotationsAttribute annotationsAttribute = getVisibleAnnotations( entityEntryField.getFieldInfo() );
 		annotationsAttribute.addAnnotation( new Annotation( Transient.class.getName(), constPool ) );
 
@@ -279,11 +292,13 @@ public class Enhancer  {
 		}
 	}
 
-	private void addLinkedPreviousHandling(CtClass managedCtClass, ConstPool constPool) {
+	private void addLinkedPreviousHandling(CtClass managedCtClass) {
+		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+
 		// add field to hold "previous" ManagedEntity
 		final CtField previousField;
 		try {
-			previousField = new CtField( managedCtClass, PREVIOUS_FIELD_NAME, managedCtClass );
+			previousField = new CtField( managedEntityCtClass, PREVIOUS_FIELD_NAME, managedCtClass );
 			managedCtClass.addField( previousField );
 		}
 		catch (CannotCompileException e) {
@@ -298,6 +313,7 @@ public class Enhancer  {
 
 		// make that new field transient and @Transient
 		previousField.setModifiers( previousField.getModifiers() | Modifier.TRANSIENT );
+		previousField.setModifiers( Modifier.setPrivate( previousField.getModifiers() ) );
 		AnnotationsAttribute annotationsAttribute = getVisibleAnnotations( previousField.getFieldInfo() );
 		annotationsAttribute.addAnnotation( new Annotation( Transient.class.getName(), constPool ) );
 
@@ -330,11 +346,13 @@ public class Enhancer  {
 		}
 	}
 
-	private void addLinkedNextHandling(CtClass managedCtClass, ConstPool constPool) {
+	private void addLinkedNextHandling(CtClass managedCtClass) {
+		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+
 		// add field to hold "next" ManagedEntity
 		final CtField nextField;
 		try {
-			nextField = new CtField( managedCtClass, NEXT_FIELD_NAME, managedCtClass );
+			nextField = new CtField( managedEntityCtClass, NEXT_FIELD_NAME, managedCtClass );
 			managedCtClass.addField( nextField );
 		}
 		catch (CannotCompileException e) {
@@ -347,8 +365,9 @@ public class Enhancer  {
 			);
 		}
 
-		// make that new field transient and @Transient
+		// make that new field (1) private, (2) transient and (3) @Transient
 		nextField.setModifiers( nextField.getModifiers() | Modifier.TRANSIENT );
+		nextField.setModifiers( Modifier.setPrivate( nextField.getModifiers() ) );
 		AnnotationsAttribute annotationsAttribute = getVisibleAnnotations( nextField.getFieldInfo() );
 		annotationsAttribute.addAnnotation( new Annotation( Transient.class.getName(), constPool ) );
 
@@ -390,8 +409,84 @@ public class Enhancer  {
 		return annotationsAttribute;
 	}
 
-	private void enhanceAsComposite(CtClass classFile) {
+	private void enhancePersistentAttributes(CtClass managedCtClass) {
+		final IdentityHashMap<CtField,FieldVirtualReadWritePair> fieldToMethodsXref = new IdentityHashMap<CtField, FieldVirtualReadWritePair>();
+
+		for ( CtField ctField : managedCtClass.getFields() ) {
+			if ( ! enhancementContext.isPersistentField( ctField ) ) {
+				continue;
+			}
+
+			final FieldVirtualReadWritePair methodPair = addReadAndWriteMethod( managedCtClass, ctField );
+			fieldToMethodsXref.put( ctField, methodPair );
+		}
+
+		transformFieldAccessesIntoReadsAndWrites( managedCtClass, fieldToMethodsXref );
 	}
 
+	private FieldVirtualReadWritePair addReadAndWriteMethod(CtClass managedCtClass, CtField persistentField) {
+		// add the "reader"
+		final CtMethod reader = generateFieldReader( managedCtClass, persistentField );
+
+		// add the "writer"
+		final CtMethod writer = generateFieldWriter( managedCtClass, persistentField );
+
+		return new FieldVirtualReadWritePair( reader, writer );
+	}
+
+	private CtMethod generateFieldReader(CtClass managedCtClass, CtField persistentField) {
+		// todo : temporary; still need to add hooks into lazy-loading
+		try {
+			final String name = PERSISTENT_FIELD_READER_PREFIX + persistentField.getName();
+			CtMethod reader = CtNewMethod.getter( name, persistentField );
+			managedCtClass.addMethod( reader );
+			return reader;
+		}
+		catch (CannotCompileException e) {
+			throw new EnhancementException(
+					String.format(
+							"Could not enhance entity class [%s] to add virtual reader method for field [%s]",
+							managedCtClass.getName(),
+							persistentField.getName()
+					),
+					e
+			);
+		}
+	}
+
+	private CtMethod generateFieldWriter(CtClass managedCtClass, CtField persistentField) {
+		// todo : temporary; still need to add hooks into lazy-loading and dirtying
+		try {
+			final String name = PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName();
+			CtMethod writer = CtNewMethod.setter( name, persistentField );
+			managedCtClass.addMethod( writer );
+			return writer;
+		}
+		catch (CannotCompileException e) {
+			throw new EnhancementException(
+					String.format(
+							"Could not enhance entity class [%s] to add virtual writer method for field [%s]",
+							managedCtClass.getName(),
+							persistentField.getName()
+					),
+					e
+			);
+		}
+	}
+
+	private void transformFieldAccessesIntoReadsAndWrites(
+			CtClass managedCtClass,
+			IdentityHashMap<CtField, FieldVirtualReadWritePair> fieldToMethodsXref) {
+	}
+
+	private static class FieldVirtualReadWritePair {
+		private final CtMethod readMethod;
+		private final CtMethod writeMethod;
+
+		private FieldVirtualReadWritePair(CtMethod readMethod, CtMethod writeMethod) {
+			this.readMethod = readMethod;
+			this.writeMethod = writeMethod;
+		}
+	}
 
 }

@@ -23,12 +23,40 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import java.security.ProtectionDomain;
+import javassist.CtField;
 
 /**
  * @author Steve Ebersole
  */
 public interface EnhancementContext {
+	/**
+	 * Does the given class name represent a entity class?
+	 *
+	 * @param className The name of the class to check.
+	 *
+	 * @return {@code true} if the class is an entity; {@code false} otherwise.
+	 */
 	public boolean isEntityClass(String className);
+
+	/**
+	 * Does the given class name represent an embeddable/component class?
+	 *
+	 * @param className The name of the class to check.
+	 *
+	 * @return {@code true} if the class is an embeddable/component; {@code false} otherwise.
+	 */
 	public boolean isCompositeClass(String className);
+
+	/**
+	 * Does the field represent persistent state?  Persistent fields will be "enhanced".
+	 * <p/>
+	 * todo : not sure its a great idea to expose Javassist classes this way.
+	 // 		may be better to perform basic checks in the caller (non-static, etc) and call out with just the
+	 // 		Class name and field name...
+
+	 * @param ctField The field reference.
+	 *
+	 * @return {@code true} if the field is ; {@code false} otherwise.
+	 */
+ 	public boolean isPersistentField(CtField ctField);
 }

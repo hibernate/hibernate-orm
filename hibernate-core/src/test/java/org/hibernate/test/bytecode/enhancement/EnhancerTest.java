@@ -36,6 +36,7 @@ import java.util.Arrays;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
 
@@ -44,68 +45,92 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.Status;
 
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.ExtraAssertions;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
 public class EnhancerTest extends BaseUnitTestCase {
-	@Test
-	public void testEnhancement()
-			throws IOException, CannotCompileException, NotFoundException,
-			NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
-		EnhancementContext enhancementContext = new EnhancementContext() {
-			@Override
-			public boolean isEntityClass(String className) {
-				return true;
-			}
+	private static EnhancementContext enhancementContext = new EnhancementContext() {
+		@Override
+		public boolean isEntityClass(String className) {
+			return true;
+		}
 
-			@Override
-			public boolean isCompositeClass(String className) {
-				return false;
-			}
-		};
+		@Override
+		public boolean isCompositeClass(String className) {
+			return false;
+		}
+
+		@Override
+		public boolean isPersistentField(CtField ctField) {
+			return true;
+		}
+	};
+
+	@Test
+	public void testEnhancement() throws Exception {
+		testFor( SimpleEntity.class );
+		testFor( SubEntity.class );
+	}
+
+	private void testFor(Class entityClassToEnhance) throws Exception {
 		Enhancer enhancer = new Enhancer( enhancementContext );
-		CtClass anEntityCtClass = generateCtClassForAnEntity();
-		byte[] original = anEntityCtClass.toBytecode();
-		byte[] enhanced = enhancer.enhance( anEntityCtClass.getName(), original );
+		CtClass entityCtClass = generateCtClassForAnEntity( entityClassToEnhance );
+		byte[] original = entityCtClass.toBytecode();
+		byte[] enhanced = enhancer.enhance( entityCtClass.getName(), original );
 		assertFalse( "entity was not enhanced", Arrays.equals( original, enhanced ) );
 
 		ClassLoader cl = new ClassLoader() { };
 		ClassPool cp2 = new ClassPool( false );
 		cp2.appendClassPath( new LoaderClassPath( cl ) );
 		CtClass enhancedCtClass = cp2.makeClass( new ByteArrayInputStream( enhanced ) );
-		Class simpleEntityClass = enhancedCtClass.toClass( cl, this.getClass().getProtectionDomain() );
-		Object simpleEntityInstance = simpleEntityClass.newInstance();
+		Class entityClass = enhancedCtClass.toClass( cl, this.getClass().getProtectionDomain() );
+		Object entityInstance = entityClass.newInstance();
+
+		assertTyping( ManagedEntity.class, entityInstance );
 
 		// call the new methods
-		Method setter = simpleEntityClass.getMethod( Enhancer.ENTITY_ENTRY_SETTER_NAME, EntityEntry.class );
-		Method getter = simpleEntityClass.getMethod( Enhancer.ENTITY_ENTRY_GETTER_NAME );
-		assertNull( getter.invoke( simpleEntityInstance ) );
-		setter.invoke( simpleEntityInstance, makeEntityEntry() );
-		assertNotNull( getter.invoke( simpleEntityInstance ) );
-		setter.invoke( simpleEntityInstance, new Object[] { null } );
-		assertNull( getter.invoke( simpleEntityInstance ) );
+		//
+		Method setter = entityClass.getMethod( Enhancer.ENTITY_ENTRY_SETTER_NAME, EntityEntry.class );
+		Method getter = entityClass.getMethod( Enhancer.ENTITY_ENTRY_GETTER_NAME );
+		assertNull( getter.invoke( entityInstance ) );
+		setter.invoke( entityInstance, makeEntityEntry() );
+		assertNotNull( getter.invoke( entityInstance ) );
+		setter.invoke( entityInstance, new Object[] {null} );
+		assertNull( getter.invoke( entityInstance ) );
 
-		Method entityInstanceGetter = simpleEntityClass.getMethod( Enhancer.ENTITY_INSTANCE_GETTER_NAME );
-		assertSame( simpleEntityInstance, entityInstanceGetter.invoke( simpleEntityInstance ) );
+		Method entityInstanceGetter = entityClass.getMethod( Enhancer.ENTITY_INSTANCE_GETTER_NAME );
+		assertSame( entityInstance, entityInstanceGetter.invoke( entityInstance ) );
+
+		Method previousGetter = entityClass.getMethod( Enhancer.PREVIOUS_GETTER_NAME );
+		Method previousSetter = entityClass.getMethod( Enhancer.PREVIOUS_SETTER_NAME, ManagedEntity.class );
+		previousSetter.invoke( entityInstance, entityInstance );
+		assertSame( entityInstance, previousGetter.invoke( entityInstance ) );
+
+		Method nextGetter = entityClass.getMethod( Enhancer.PREVIOUS_GETTER_NAME );
+		Method nextSetter = entityClass.getMethod( Enhancer.PREVIOUS_SETTER_NAME, ManagedEntity.class );
+		nextSetter.invoke( entityInstance, entityInstance );
+		assertSame( entityInstance, nextGetter.invoke( entityInstance ) );
 	}
 
-	private CtClass generateCtClassForAnEntity() throws IOException, NotFoundException {
+	private CtClass generateCtClassForAnEntity(Class entityClassToEnhance) throws Exception {
 		ClassPool cp = new ClassPool( false );
 		return cp.makeClass(
 				getClass().getClassLoader().getResourceAsStream(
-						SimpleEntity.class.getName().replace( '.', '/' ) + ".class"
+						entityClassToEnhance.getName().replace( '.', '/' ) + ".class"
 				)
 		);
 	}

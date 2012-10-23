@@ -24,6 +24,7 @@
 package org.hibernate.tool.enhance;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -33,7 +34,10 @@ import java.util.List;
 
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.NotFoundException;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.annotation.Annotation;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -73,6 +77,12 @@ public class EnhancementTask extends Task {
 			@Override
 			public boolean isCompositeClass(String className) {
 				return false;
+			}
+
+			@Override
+			public boolean isPersistentField(CtField ctField) {
+				// current check is to look for @Transient
+				return ! ctField.hasAnnotation( Transient.class );
 			}
 		};
 

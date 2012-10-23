@@ -36,6 +36,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -108,6 +109,27 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         // drop tables
         schemaExport.execute( false, true, true, false );
         assertEquals( 0, schemaExport.getExceptions().size() );
+    }
+
+    @Test
+    public void testGenerateDdlToFile() {
+        Configuration cfg = new Configuration();
+        cfg.addResource( MAPPING );
+        SchemaExport schemaExport = createSchemaExport( cfg );
+        java.io.File outFile = new java.io.File("schema.ddl");
+        schemaExport.setOutputFile(outFile.getPath());
+        // do not script to console or export to database
+        schemaExport.execute( false, false, false, true );
+        if ( doesDialectSupportDropTableIfExist() ) {
+            assertEquals( 0, schemaExport.getExceptions().size() );
+        }
+        else {
+            assertEquals( 2, schemaExport.getExceptions().size() );
+        }
+        assertTrue( outFile.exists() );
+	//check file is not empty
+        assertTrue( outFile.length() > 0 );
+	outFile.delete();
     }
 
     @Test

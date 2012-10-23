@@ -242,6 +242,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
          assertEquals(30000, cacheCfg.eviction().maxEntries());
+         // Max idle value comes from base XML configuration
          assertEquals(100000, cacheCfg.expiration().maxIdle());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
@@ -394,7 +395,7 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "timestamps-none-eviction");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.strategy", "NONE");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.wake_up_interval", "3000");
-      p.setProperty("hibernate.cache.infinispan.timestamps.eviction.max_entries", "10000");
+      p.setProperty("hibernate.cache.infinispan.timestamps.eviction.max_entries", "0");
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
          factory.buildTimestampsRegion(timestamps, p);

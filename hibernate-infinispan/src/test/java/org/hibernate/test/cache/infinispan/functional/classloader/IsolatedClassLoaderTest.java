@@ -69,7 +69,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 
    private static ClassLoader originalTCCL;
 
-   private static ClassLoader visibleClassesCl;
+//   private static ClassLoader visibleClassesCl;
 
 	@BeforeClass
 	public static void prepareClassLoader() {
@@ -200,12 +200,10 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		if ( useNamedRegion ) {
 			cacheName = "AccountRegion"; // As defined by ClassLoaderTestDAO via calls to query.setCacheRegion
 			// Define cache configurations for region early to avoid ending up with local caches for this region
-			localManager.defineConfiguration(
-					cacheName, "replicated-query", new org.infinispan.config.Configuration()
-			);
-			remoteManager.defineConfiguration(
-					cacheName, "replicated-query", new org.infinispan.config.Configuration()
-			);
+         localManager.defineConfiguration(cacheName,
+               localManager.getCacheConfiguration("replicated-query"));
+         remoteManager.defineConfiguration(cacheName,
+               remoteManager.getCacheConfiguration("replicated-query"));
 		}
 		else {
 			cacheName = "replicated-query";

@@ -1680,6 +1680,10 @@ public abstract class Loader {
 				getFactory().getSettings().isScrollableResultSetsEnabled();
 		ScrollMode scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;
 
+		if (queryParameters.getQueryHint() != null) {
+			sql = dialect.getQueryHintString(sql, queryParameters.getQueryHint());
+		}
+		
 		if ( useLimit ) {
 			sql = dialect.getLimitString( 
 					sql.trim(), //use of trim() here is ugly?

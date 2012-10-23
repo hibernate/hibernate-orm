@@ -255,6 +255,29 @@ public class Oracle8iDialect extends Dialect {
 		return pagingSelect.toString();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.hibernate.dialect.Dialect#getQueryHintString(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public String getQueryHintString(String sql, String hint) {
+		if (hint == null || hint.length() == 0) {
+			return sql;
+		}
+	    
+		int pos = sql.indexOf("select");
+		if (pos != -1) {
+			StringBuilder buffer = new StringBuilder(sql.length() + hint.length() + 8);
+	        	if (pos > 0) {
+				buffer.append(sql.substring(0, pos));
+			}
+			buffer.append("select /*+ ").append(hint).append(" */").append(sql.substring(pos + "select".length()));
+			sql = buffer.toString();
+		}
+	    
+		return sql;
+	}
+	
 	/**
 	 * Allows access to the basic {@link Dialect#getSelectClauseNullString}
 	 * implementation...

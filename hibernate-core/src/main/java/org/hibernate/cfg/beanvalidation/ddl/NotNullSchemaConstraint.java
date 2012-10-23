@@ -24,6 +24,7 @@
 package org.hibernate.cfg.beanvalidation.ddl;
 
 import java.util.Iterator;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
@@ -33,6 +34,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 
@@ -74,15 +76,34 @@ public class NotNullSchemaConstraint implements SchemaConstraint {
 		if(InheritanceType.SINGLE_TABLE.equals( inheritanceType )) {
 			return false;
 		}
-
-		org.hibernate.metamodel.spi.relational.Column column = SchemaModificationHelper.getSingleColumn( attributeBinding );
-		if ( column == null ) {
-			return false;
+		
+		// If a Composite (Embeddable static type, etc.), use the attribute's
+		// nullability on the static type's fields.
+		
+		// TODO: Is this the correct place to do this?  Higher up in
+		// TypeSafeActivator?
+		if ( attributeBinding instanceof CompositeAttributeBinding ) {
+			Iterator<AttributeBinding> iter
+					= ( ( CompositeAttributeBinding ) attributeBinding)
+							.attributeBindings().iterator();
+			while( iter.hasNext() ) {
+				applyNullConstraint( iter.next() );
+			}
+		} else {
+			applyNullConstraint( attributeBinding );
 		}
 
-		// TODO check with components as in the old configuration approach. see above (HF)
-		column.setNullable( false );
+		
 
 		return true;
+	}
+	
+	private void applyNullConstraint(AttributeBinding attributeBinding) {
+		org.hibernate.metamodel.spi.relational.Column column
+				= SchemaModificationHelper.getSingleColumn( attributeBinding );
+		if ( column != null ) {
+			// TODO check with components as in the old configuration approach. see above (HF)
+			column.setNullable( false );
+		}
 	}
 }

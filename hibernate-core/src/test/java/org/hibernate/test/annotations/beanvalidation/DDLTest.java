@@ -79,17 +79,16 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "Notnull should not be applied on single tables", column.isNullable() );
 	}
 
-	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
-		Column column = SchemaUtil.getColumn( Tv.class, "tuner.frequency", metadata() );
+		Column column = SchemaUtil.getColumn( Tv.class, "frequency", metadata() );
 		assertEquals(
 				"Validator annotations are applied on tuner as it is @NotNull", false, column.isNullable()
 		);
 
-		column = SchemaUtil.getColumn( Tv.class, "recorder.time", metadata() );
+		column = SchemaUtil.getColumn( Tv.class, "time", metadata() );
 		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", true, column.isNullable()
+				"Validator annotations were not applied on recorder", true, column.isNullable()
 		);
 	}
 

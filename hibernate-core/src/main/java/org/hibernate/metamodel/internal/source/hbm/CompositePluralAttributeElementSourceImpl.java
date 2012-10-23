@@ -27,33 +27,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbCompositeElementElement;
+import org.hibernate.jaxb.spi.hbm.JaxbManyToOneElement;
+import org.hibernate.jaxb.spi.hbm.JaxbNestedCompositeElementElement;
+import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
+import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class CompositePluralAttributeElementSourceImpl
 		extends AbstractHbmSourceNode
 		implements CompositePluralAttributeElementSource {
 
+	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbCompositeElementElement compositeElement;
+	private final List<AttributeSource> attributeSources;
 
 	public CompositePluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
+			PluralAttributeElement pluralAttributeElement,
 			JaxbCompositeElementElement compositeElement) {
 		super( mappingDocument );
+		this.pluralAttributeElement = pluralAttributeElement;
 		this.compositeElement = compositeElement;
+		this.attributeSources = buildAttributeSources( mappingDocument, compositeElement );
 	}
 
 	@Override
 	public Nature getNature() {
-		return Nature.COMPONENT;
+		return Nature.AGGREGATE;
 	}
 
 	@Override
@@ -95,15 +110,25 @@ public class CompositePluralAttributeElementSourceImpl
 
 	@Override
 	public List<AttributeSource> attributeSources() {
+		return attributeSources;
+	}
+
+	private static List<AttributeSource> buildAttributeSources(
+			MappingDocument mappingDocument,
+			JaxbCompositeElementElement compositeElement) {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-//		for ( Object attribute : compositeElement .getPropertyOrManyToOneOrAny() ) {
-//
-//		}
-		compositeElement.getAny();
-		compositeElement.getManyToOne();
-		compositeElement.getNestedCompositeElement();
-		compositeElement.getProperty();
-		//todo implement
+		for( final JaxbAnyElement element : compositeElement.getAny() ) {
+			attributeSources.add( buildAttributeSource( mappingDocument, element ) );
+		}
+		for( final JaxbManyToOneElement element : compositeElement.getManyToOne() ) {
+			attributeSources.add( buildAttributeSource( mappingDocument, element ) );
+		}
+		for( final JaxbNestedCompositeElementElement element : compositeElement.getNestedCompositeElement() ) {
+			attributeSources.add( buildAttributeSource( mappingDocument, element ) );
+		}
+		for( final JaxbPropertyElement element : compositeElement.getProperty() ) {
+			attributeSources.add( buildAttributeSource( mappingDocument, element ) );
+		}
 		return attributeSources;
 	}
 
@@ -111,4 +136,46 @@ public class CompositePluralAttributeElementSourceImpl
 	public LocalBindingContext getLocalBindingContext() {
 		return bindingContext();
 	}
+
+	@Override
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
+	}
+
+	private static AttributeSource buildAttributeSource(
+			MappingDocument sourceMappingDocument,
+			JaxbAnyElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+
+	private static SingularAttributeSource buildAttributeSource(
+			MappingDocument sourceMappingDocument,
+			JaxbPropertyElement attributeElement) {
+		return new PropertyAttributeSourceImpl(
+				sourceMappingDocument,
+				attributeElement,
+				null,
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+		);
+	}
+
+	private static AttributeSource buildAttributeSource(
+			MappingDocument sourceMappingDocument,
+			JaxbManyToOneElement attributeElement) {
+		return new ManyToOneAttributeSourceImpl(
+				sourceMappingDocument,
+				JaxbManyToOneElement.class.cast( attributeElement ),
+				null,
+				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+		);
+	}
+
+	private static AttributeSource buildAttributeSource(
+			MappingDocument sourceMappingDocument,
+			JaxbNestedCompositeElementElement attributeElement) {
+		// todo : implement
+		throw new NotYetImplementedException();
+	}
+
 }

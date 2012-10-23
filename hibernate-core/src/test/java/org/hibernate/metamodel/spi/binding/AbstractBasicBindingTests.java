@@ -39,6 +39,7 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Entity;
@@ -240,13 +241,13 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		AggregatedCompositeAttributeBinding compositeAttributeBinding =
-				(AggregatedCompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		CompositeAttributeBinding compositeAttributeBinding =
+				(CompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
 		assertNotNull( compositeAttributeBinding );
 		assertSame( compositeAttributeBinding.getAttribute().getSingularAttributeType(), compositeAttributeBinding.getAttributeContainer() );
 		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", compositeAttributeBinding.getPathBase() );
 		assertSame( entityBinding, compositeAttributeBinding.seekEntityBinding() );
-		assertNotNull( compositeAttributeBinding.getComposite() );
+		assertTrue( compositeAttributeBinding.getAttribute().getSingularAttributeType() instanceof Aggregate );
 	}
 
 	public abstract void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);

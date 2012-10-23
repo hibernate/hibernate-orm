@@ -53,7 +53,7 @@ public interface PluralAttributeIndexBinding {
 		/**
 		 * The map key is an aggregated composite
 		 */
-		AGGREGATION,
+		AGGREGATE,
 		/**
 		 * The map key is an association identified by a column(s) on the collection table.
 		 */

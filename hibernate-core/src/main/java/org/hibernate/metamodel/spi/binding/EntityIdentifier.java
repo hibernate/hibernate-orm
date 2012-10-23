@@ -80,7 +80,7 @@ public class EntityIdentifier {
 	}
 
 	public void prepareAsAggregatedCompositeIdentifier(
-			SingularNonAssociationAttributeBinding attributeBinding,
+			CompositeAttributeBinding attributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue) {
 		ensureNotBound();
@@ -89,7 +89,7 @@ public class EntityIdentifier {
 	}
 
 	public void prepareAsNonAggregatedCompositeIdentifier(
-			NonAggregatedCompositeAttributeBinding compositeAttributeBinding,
+			CompositeAttributeBinding compositeAttributeBinding,
 			IdGenerator idGenerator,
 			String unsavedValue,
 			Class<?> externalAggregatingClass,
@@ -319,10 +319,18 @@ public class EntityIdentifier {
 
 	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {
 		AggregatedComponentIdentifierBindingImpl(
-				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				CompositeAttributeBinding identifierAttributeBinding,
 				IdGenerator idGenerator,
 				String unsavedValue) {
 			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+			if ( ! identifierAttributeBinding.isAggregated() ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"identifierAttributeBinding must be an aggregated CompositeAttributeBinding: %s",
+								identifierAttributeBinding.getAttribute().getName()
+						)
+				);
+			}
 		}
 
 		public IdentifierGenerator createIdentifierGenerator(
@@ -354,12 +362,20 @@ public class EntityIdentifier {
 		private final String externalAggregatingPropertyAccessorName;
 
 		NonAggregatedCompositeIdentifierBindingImpl(
-				NonAggregatedCompositeAttributeBinding identifierAttributeBinding,
+				CompositeAttributeBinding identifierAttributeBinding,
 				IdGenerator idGenerator,
 				String unsavedValue,
 				Class<?> externalAggregatingClass,
 				String externalAggregatingPropertyAccessorName) {
 			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+			if ( identifierAttributeBinding.isAggregated() ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"identifierAttributeBinding must be a non-aggregated CompositeAttributeBinding: %s",
+								identifierAttributeBinding.getAttribute().getName()
+						)
+				);
+			}
 			this.externalAggregatingClass = externalAggregatingClass;
 			this.externalAggregatingPropertyAccessorName = externalAggregatingPropertyAccessorName;
 			if ( identifierAttributeBinding.attributeBindingSpan() == 0 ) {
@@ -389,8 +405,8 @@ public class EntityIdentifier {
 			}
 		}
 
-		private NonAggregatedCompositeAttributeBinding getNonAggregatedCompositeAttributeBinding() {
-			return (NonAggregatedCompositeAttributeBinding) getAttributeBinding();
+		private CompositeAttributeBinding getNonAggregatedCompositeAttributeBinding() {
+			return (CompositeAttributeBinding) getAttributeBinding();
 		}
 		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
 			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().attributeBindings() ) {

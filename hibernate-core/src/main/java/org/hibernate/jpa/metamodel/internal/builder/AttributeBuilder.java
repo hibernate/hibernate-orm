@@ -37,6 +37,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.metamodel.internal.AbstractIdentifiableType;
 import org.hibernate.jpa.metamodel.internal.AbstractManagedType;
@@ -46,9 +47,12 @@ import org.hibernate.jpa.metamodel.internal.MappedSuperclassTypeImpl;
 import org.hibernate.jpa.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.SingularAttributeImpl;
 import org.hibernate.jpa.metamodel.internal.UnsupportedFeature;
-import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
@@ -123,7 +127,7 @@ public class AttributeBuilder {
 			return buildPluralAttribute( (PluralAttributeMetadata) attributeMetadata );
 		}
 		final SingularAttributeMetadata singularAttributeMetadata = (SingularAttributeMetadata)attributeMetadata;
-		final Type metaModelType = getMetaModelType( singularAttributeMetadata.getAttributeTypeDescriptor() );
+		final Type metaModelType = getSingularAttributeMetaModelType( singularAttributeMetadata.getAttributeTypeDescriptor() );
 		//noinspection unchecked
 		return new SingularAttributeImpl(
 				attributeMetadata.getName(),
@@ -157,7 +161,7 @@ public class AttributeBuilder {
 				attributeBinding,
 				IDENTIFIER_MEMBER_RESOLVER
 		);
-		final Type metaModelType = getMetaModelType( attributeMetadata.getAttributeTypeDescriptor() );
+		final Type metaModelType = getSingularAttributeMetaModelType( attributeMetadata.getAttributeTypeDescriptor() );
 		return new SingularAttributeImpl.Identifier(
 				attributeBinding.getAttribute().getName(),
 				attributeMetadata.getJavaType(),
@@ -184,7 +188,7 @@ public class AttributeBuilder {
 				attributeBinding,
 				VERSION_MEMBER_RESOLVER
 		);
-		final Type<Y> metaModelType = getMetaModelType( attributeMetadata.getAttributeTypeDescriptor() );
+		final Type<Y> metaModelType = getSingularAttributeMetaModelType( attributeMetadata.getAttributeTypeDescriptor() );
 		return new SingularAttributeImpl.Version(
 				attributeBinding.getAttribute().getName(),
 				attributeMetadata.getJavaType(),
@@ -197,15 +201,22 @@ public class AttributeBuilder {
 
 	@SuppressWarnings( "unchecked" )
 	private PluralAttribute buildPluralAttribute(PluralAttributeMetadata attributeMetadata) {
-		final Type elementType = getMetaModelType( attributeMetadata.getElementAttributeTypeDescriptor() );
+		final PluralAttributeBinding pluralAttributeBinding =
+				(PluralAttributeBinding) attributeMetadata.getAttributeBinding();
+
+		final Type elementType = getPluralAttributeElementMetaModelType(
+				attributeMetadata.getElementAttributeTypeDescriptor()
+		);
 		if ( java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
-			final Type keyType = getMetaModelType( attributeMetadata.getMapKeyAttributeTypeDescriptor() );
+			final Type keyType = getPluralAttributeMapKeyMetaModelType(
+					attributeMetadata.getMapKeyAttributeTypeDescriptor()
+			);
 			return PluralAttributeImpl.builder( attributeMetadata.getJavaType() )
 					.owner( attributeMetadata.getOwnerType() )
 					.elementType( elementType )
 					.keyType( keyType )
 					.member( attributeMetadata.getMember() )
-					.binding( (PluralAttributeBinding) attributeMetadata.getAttributeBinding() )
+					.binding( pluralAttributeBinding )
 					.persistentAttributeType( attributeMetadata.getPersistentAttributeType() )
 					.build();
 		}
@@ -213,47 +224,189 @@ public class AttributeBuilder {
 				.owner( attributeMetadata.getOwnerType() )
 				.elementType( elementType )
 				.member( attributeMetadata.getMember() )
-				.binding( (PluralAttributeBinding) attributeMetadata.getAttributeBinding() )
+				.binding( pluralAttributeBinding )
 				.persistentAttributeType( attributeMetadata.getPersistentAttributeType() )
 				.build();
 	}
 
 	@SuppressWarnings( "unchecked" )
-	private <Y> Type<Y> getMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+	private <Y> Type<Y> getSingularAttributeMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+		AttributeBinding attributeBinding =
+				attributeTypeDescriptor
+						.getAttributeMetadata()
+						.getAttributeBinding();
+		if ( !attributeBinding.getAttribute().isSingular() ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expected singular attribute binding, but it was plural: %s",
+							attributeBinding.getAttribute().getName()
+					)
+			);
+		}
 		switch ( attributeTypeDescriptor.getValueClassification() ) {
 			case BASIC: {
-				return new BasicTypeImpl<Y>(
-						attributeTypeDescriptor.getBindableType(),
-						Type.PersistenceType.BASIC
-				);
+				return getBasicAttributeMetaModelType( attributeTypeDescriptor );
 			}
 			case ENTITY: {
-				final org.hibernate.type.EntityType type = (org.hibernate.type.EntityType) attributeTypeDescriptor.getHibernateType();
-				return (Type<Y>) context.locateEntityTypeByName( type.getAssociatedEntityName() );
+				return getEntityAttributeMetaModelType( attributeTypeDescriptor );
 			}
 			case EMBEDDABLE: {
-				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
-						attributeTypeDescriptor.getBindableType(),
-						attributeTypeDescriptor.getAttributeMetadata().getOwnerType(),
-						(ComponentType) attributeTypeDescriptor.getHibernateType()
-				);
-				context.registerEmbeddedableType( embeddableType );
-				AggregatedCompositeAttributeBinding compositeAttributeBinding =
-						(AggregatedCompositeAttributeBinding) attributeTypeDescriptor
-								.getAttributeMetadata()
-								.getAttributeBinding();
-				for ( AttributeBinding subAttributeBinding : compositeAttributeBinding.attributeBindings() ) {
-					final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
-					if ( attribute != null ) {
-						embeddableType.getBuilder().addAttribute( attribute );
-					}
+				if ( ! ( attributeBinding instanceof CompositeAttributeBinding ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Unexpected type of attribute binding. Expected: %s; Actual: %s",
+									CompositeAttributeBinding.class.getName(),
+									attributeBinding.getClass().getName()
+							)
+					);
 				}
-				embeddableType.lock();
-				return embeddableType;
+				return getEmbeddableAttributeMetaModelType(
+						attributeTypeDescriptor,
+						(CompositeAttributeBinding) attributeBinding
+				);
 			}
 			default: {
 				throw new AssertionFailure( "Unknown type : " + attributeTypeDescriptor.getValueClassification() );
 			}
+		}
+	}
+
+	@SuppressWarnings( "unchecked" )
+	private <Y> Type<Y> getPluralAttributeElementMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+		final AttributeBinding attributeBinding =
+				attributeTypeDescriptor
+						.getAttributeMetadata()
+						.getAttributeBinding();
+		if ( attributeBinding.getAttribute().isSingular() ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Expected plural attribute binding, but it was singular: %s",
+								attributeBinding.getAttribute().getName()
+						)
+				);
+		}
+		switch ( attributeTypeDescriptor.getValueClassification() ) {
+			case BASIC: {
+				return getBasicAttributeMetaModelType( attributeTypeDescriptor );
+			}
+			case ENTITY: {
+				return getEntityAttributeMetaModelType( attributeTypeDescriptor );
+			}
+			case EMBEDDABLE: {
+				final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
+				final CompositePluralAttributeElementBinding compositePluralAttributeElementBinding =
+						(CompositePluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding();
+				return getEmbeddableAttributeMetaModelType(
+						attributeTypeDescriptor,
+						compositePluralAttributeElementBinding.getCompositeAttributeBindingContainer()
+				);
+			}
+			default: {
+				throw new AssertionFailure( "Unknown type : " + attributeTypeDescriptor.getValueClassification() );
+			}
+		}
+	}
+
+	@SuppressWarnings( "unchecked" )
+	private <Y> Type<Y> getPluralAttributeMapKeyMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+		final AttributeBinding attributeBinding =
+				attributeTypeDescriptor
+						.getAttributeMetadata()
+						.getAttributeBinding();
+		if ( attributeBinding.getAttribute().isSingular() ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expected plural attribute binding, but it was singular: %s",
+							attributeBinding.getAttribute().getName()
+					)
+			);
+		}
+		if ( ! ( attributeBinding instanceof MapBinding ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expected a map binding: %s",
+							attributeBinding.getAttribute().getName()
+					)
+			);
+		}
+		switch ( attributeTypeDescriptor.getValueClassification() ) {
+			case BASIC: {
+				return getBasicAttributeMetaModelType( attributeTypeDescriptor );
+			}
+			case ENTITY: {
+				return getEntityAttributeMetaModelType( attributeTypeDescriptor );
+			}
+			case EMBEDDABLE: {
+				// TODO: Need to implement CompositePluralAttributeIndexBinding
+				// final MapBinding mapBinding = (MapBinding) attributeBinding;
+				// final CompositePluralAttributeIndexBinding pluralAttributeIndexBinding =
+				//		(CompositePluralAttributeIndexBinding) mapBinding.getPluralAttributeIndexBinding();
+				// return getEmbeddableAttributeMetaModelType(
+				//		attributeTypeDescriptor,
+				//		pluralAttributeIndexBinding.getCompositeAttributeBindingContainer();
+				//);
+				throw new NotYetImplementedException( "Composite map indexes are not implemented yet." );
+			}
+			default: {
+				throw new AssertionFailure( "Unknown type : " + attributeTypeDescriptor.getValueClassification() );
+			}
+		}
+	}
+
+	@SuppressWarnings( "unchecked" )
+	private <Y> Type<Y> getBasicAttributeMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+		checkCorrectValueClassification( attributeTypeDescriptor, AttributeTypeDescriptor.ValueClassification.BASIC );
+		return new BasicTypeImpl<Y>(
+				attributeTypeDescriptor.getBindableType(),
+				Type.PersistenceType.BASIC
+		);
+	}
+
+	@SuppressWarnings( "unchecked" )
+	private <Y> Type<Y> getEntityAttributeMetaModelType(AttributeTypeDescriptor attributeTypeDescriptor) {
+		checkCorrectValueClassification( attributeTypeDescriptor, AttributeTypeDescriptor.ValueClassification.ENTITY );
+		final org.hibernate.type.EntityType type = (org.hibernate.type.EntityType) attributeTypeDescriptor.getHibernateType();
+		return (Type<Y>) context.locateEntityTypeByName( type.getAssociatedEntityName() );
+	}
+
+	@SuppressWarnings( "unchecked" )
+	private <Y> Type<Y> getEmbeddableAttributeMetaModelType(
+			AttributeTypeDescriptor attributeTypeDescriptor,
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer) {
+		checkCorrectValueClassification( attributeTypeDescriptor, AttributeTypeDescriptor.ValueClassification.EMBEDDABLE );
+		if ( ! compositeAttributeBindingContainer.isAggregated() ) {
+			throw new IllegalArgumentException(
+					"Composite attribute binding is not aggregated."
+			);
+		}
+		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
+				attributeTypeDescriptor.getBindableType(),
+				attributeTypeDescriptor.getAttributeMetadata().getOwnerType(),
+				(ComponentType) attributeTypeDescriptor.getHibernateType()
+		);
+		context.registerEmbeddedableType( embeddableType );
+		for ( AttributeBinding subAttributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
+			final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
+			if ( attribute != null ) {
+				embeddableType.getBuilder().addAttribute( attribute );
+			}
+		}
+		embeddableType.lock();
+		return embeddableType;
+	}
+
+	private void checkCorrectValueClassification(
+			AttributeTypeDescriptor attributeTypeDescriptor,
+			AttributeTypeDescriptor.ValueClassification expectedValueClassification) {
+		if ( attributeTypeDescriptor.getValueClassification() != expectedValueClassification ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Unexpected value classification for [%s]; expected:[%s] actual:[%s]",
+							attributeTypeDescriptor,
+							expectedValueClassification,
+							attributeTypeDescriptor.getValueClassification()
+					)
+			);
 		}
 	}
 
@@ -344,7 +497,7 @@ public class AttributeBuilder {
 				elementPersistentAttributeType = PersistentAttributeType.BASIC;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
-			else if ( elementNature == PluralAttributeElementBinding.Nature.COMPONENT ) {
+			else if ( elementNature == PluralAttributeElementBinding.Nature.AGGREGATE ) {
 				elementPersistentAttributeType = PersistentAttributeType.EMBEDDED;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
@@ -369,7 +522,7 @@ public class AttributeBuilder {
 				else if ( indexNature == PluralAttributeIndexBinding.Nature.MANY_TO_MANY ) {
 					keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
 				}
-				else if ( indexNature == PluralAttributeIndexBinding.Nature.AGGREGATION ) {
+				else if ( indexNature == PluralAttributeIndexBinding.Nature.AGGREGATE ) {
 					keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
 				}
 				else {

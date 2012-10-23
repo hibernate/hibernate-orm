@@ -23,32 +23,13 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public abstract class AbstractPluralAttributeAssociationElementBinding
-		extends AbstractPluralAttributeElementBinding
-		implements PluralAttributeAssociationElementBinding {
-
-	private CascadeStyle cascadeStyle;
-
-	AbstractPluralAttributeAssociationElementBinding(AbstractPluralAttributeBinding pluralAttributeBinding) {
-		super( pluralAttributeBinding );
-	}
-
-	@Override
-	public CascadeStyle getCascadeStyle() {
-		return cascadeStyle;
-	}
-
-	@Override
-	public void setCascadeStyle(CascadeStyle cascadeStyle) {
-		this.cascadeStyle = cascadeStyle;
-	}
+public interface CompositeAttributeBindingContainer
+		extends AttributeBindingContainer {
+	boolean isAggregated();
+	SingularAttribute getParentReference();
 }

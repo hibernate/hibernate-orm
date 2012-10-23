@@ -122,24 +122,8 @@ public class ManyToOneAttributeBinding
 	}
 
 	@Override
-	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles) {
-		List<CascadeStyle> cascadeStyleList = new ArrayList<CascadeStyle>();
-		for ( CascadeStyle style : cascadeStyles ) {
-			if ( style != CascadeStyles.NONE ) {
-				cascadeStyleList.add( style );
-			}
-		}
-		if ( cascadeStyleList.isEmpty() ) {
-			cascadeStyle = CascadeStyles.NONE;
-		}
-		else if ( cascadeStyleList.size() == 1 ) {
-			cascadeStyle = cascadeStyleList.get( 0 );
-		}
-		else {
-			cascadeStyle = new CascadeStyles.MultipleCascadeStyle(
-					cascadeStyleList.toArray( new CascadeStyle[cascadeStyleList.size()] )
-			);
-		}
+	public void setCascadeStyle(CascadeStyle cascadeStyle) {
+		this.cascadeStyle = cascadeStyle;
 	}
 
 	@Override

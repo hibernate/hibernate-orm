@@ -35,10 +35,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.JoinedIterable;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
@@ -54,7 +52,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-public class EntityBinding implements MutableAttributeBindingContainer {
+public class EntityBinding extends AbstractAttributeBindingContainer {
 	private static final String NULL_DISCRIMINATOR_MATCH_VALUE = "null";
 	private static final String NOT_NULL_DISCRIMINATOR_MATCH_VALUE = "not null";
 
@@ -223,6 +221,7 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 		this.entity = entity;
 	}
 
+	@Override
 	public TableSpecification getPrimaryTable() {
 		return primaryTable;
 	}
@@ -299,17 +298,13 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 	}
 
 	@Override
-	public Class<?> getClassReference() {
-		return getEntity().getClassReference();
-	}
-
-	@Override
 	public AttributeContainer getAttributeContainer() {
 		return getEntity();
 	}
 
-	protected void registerAttributeBinding(String name, AttributeBinding attributeBinding) {
-		attributeBindingMap.put( name, attributeBinding );
+	@Override
+	protected Map<String, AttributeBinding> attributeBindingMapInternal() {
+		return attributeBindingMap;
 	}
 
 	@Override
@@ -491,72 +486,26 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 		return sb.toString();
 	}
 
-	@Override
-	public BasicAttributeBinding makeBasicAttributeBinding(
-			SingularAttribute attribute,
-			List<RelationalValueBinding> relationalValueBindings,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext,
-			PropertyGeneration generation) {
-		final BasicAttributeBinding binding = new BasicAttributeBinding(
-				this,
-				attribute,
-				relationalValueBindings,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
-				naturalIdMutability,
-				metaAttributeContext,
-				generation
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public AggregatedCompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
-			SingularAttribute attribute,
-			SingularAttribute parentReferenceAttribute,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext) {
-		final AggregatedCompositeAttributeBinding binding = new AggregatedCompositeAttributeBinding(
-				this,
-				attribute,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
-				naturalIdMutability,
-				metaAttributeContext,
-				parentReferenceAttribute
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	public NonAggregatedCompositeAttributeBinding makeVirtualCompositeAttributeBinding(
+	public CompositeAttributeBinding makeVirtualCompositeAttributeBinding(
 			SingularAttribute syntheticAttribute,
-			List<SingularAttributeBinding> subAttributeBindings,
-			MetaAttributeContext metaAttributeContext) {
+			MetaAttributeContext metaAttributeContext,
+			List<SingularAttributeBinding> idAttributeBindings) {
 		if ( !syntheticAttribute.isSynthetic() ) {
 			throw new AssertionFailure(
 					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
 			);
 		}
-		final NonAggregatedCompositeAttributeBinding binding = new NonAggregatedCompositeAttributeBinding(
-				this,
-				syntheticAttribute,
-				PropertyAccessorFactory.EMBEDDED_ACCESSOR_NAME,
-				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
-				metaAttributeContext,
-				subAttributeBindings
-		);
-		registerAttributeBinding( syntheticAttribute.getName(), binding );
+		// TODO: make sure all attributes are singular
+		final CompositeAttributeBinding binding =
+				CompositeAttributeBinding.createNonAggregatedCompositeAttributeBinding(
+						this,
+						syntheticAttribute,
+						PropertyAccessorFactory.EMBEDDED_ACCESSOR_NAME,
+						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
+						metaAttributeContext,
+						idAttributeBindings
+				);
+		registerAttributeBinding( binding );
 		return binding;
 	}
 
@@ -573,162 +522,8 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 				pluralAttributeBinding
 		);
 
-		registerAttributeBinding( syntheticAttribute.getName(), binding );
+		registerAttributeBinding( binding );
 		return binding;
-	}
-
-	@Override
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
-			SingularAttribute attribute,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext,
-			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> valueBindings) {
-		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
-				this,
-				attribute,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
-				naturalIdMutability,
-				metaAttributeContext,
-				referencedEntityBinding,
-				referencedAttributeBinding,
-				valueBindings
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public BagBinding makeBagAttributeBinding(
-			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
-			SingularAttributeBinding referencedAttributeBinding,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.BAG );
-		final BagBinding binding = new BagBinding(
-				this,
-				attribute,
-				nature,
-				referencedAttributeBinding,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				metaAttributeContext
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public ListBinding makeListAttributeBinding(
-			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
-			SingularAttributeBinding referencedAttributeBinding,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext,
-			int base) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.LIST );
-		final ListBinding binding = new ListBinding(
-				this,
-				attribute,
-				nature,
-				referencedAttributeBinding,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				metaAttributeContext,
-				base
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public MapBinding makeMapAttributeBinding(
-			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature elementNature,
-			PluralAttributeIndexBinding.Nature indexNature,
-			SingularAttributeBinding referencedAttributeBinding,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.MAP );
-		final MapBinding binding = new MapBinding(
-				this,
-				attribute,
-				elementNature,
-				indexNature,
-				referencedAttributeBinding,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				metaAttributeContext
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public SetBinding makeSetAttributeBinding(
-			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
-			SingularAttributeBinding referencedAttributeBinding,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.SET );
-		final SetBinding binding = new SetBinding(
-				this,
-				attribute,
-				nature,
-				referencedAttributeBinding,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				metaAttributeContext
-		);
-		registerAttributeBinding( attribute.getName(), binding );
-		return binding;
-	}
-
-	@Override
-	public AttributeBinding locateAttributeBinding(String name) {
-		return attributeBindingMap.get( name );
-	}
-
-	@Override
-	public AttributeBinding locateAttributeBinding(List<org.hibernate.metamodel.spi.relational.Value> values) {
-		for ( AttributeBinding attributeBinding : attributeBindingMap.values() ) {
-			if ( !SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
-				continue;
-			}
-			SingularAttributeBinding basicAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<org.hibernate.metamodel.spi.relational.Value>();
-			for ( RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings() ) {
-				attributeValues.add( relationalBinding.getValue() );
-			}
-
-			if ( attributeValues.equals( values ) ) {
-				return attributeBinding;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public Iterable<AttributeBinding> attributeBindings() {
-		return attributeBindingMap.values();
-	}
-
-	@Override
-	public int attributeBindingSpan() {
-		return attributeBindingMap.size();
 	}
 
 	/**

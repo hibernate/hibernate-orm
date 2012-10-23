@@ -32,7 +32,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 
 /**
  * A registry allowing users to define the default {@link ComponentTuplizer} class to use per {@link EntityMode}.
@@ -42,7 +42,7 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
 	private static final Class[] COMPONENT_TUP_CTOR_SIG_NEW = new Class[] {
-			CompositeAttributeBinding.class,
+			CompositeAttributeBindingContainer.class,
 			boolean.class
 	};
 
@@ -102,7 +102,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	@SuppressWarnings({ "unchecked" })
 	public ComponentTuplizer constructTuplizer(
 			String tuplizerClassName,
-			CompositeAttributeBinding metadata,
+			CompositeAttributeBindingContainer metadata,
 			boolean isIdentifierMapper) {
 		try {
 			Class<? extends ComponentTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
@@ -146,7 +146,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	 */
 	public ComponentTuplizer constructTuplizer(
 			Class<? extends ComponentTuplizer> tuplizerClass,
-			CompositeAttributeBinding metadata,
+			CompositeAttributeBindingContainer metadata,
 			boolean isIdentifierMapper) {
 		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass, COMPONENT_TUP_CTOR_SIG_NEW );
 		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
@@ -191,7 +191,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	 */
 	public ComponentTuplizer constructDefaultTuplizer(
 			EntityMode entityMode,
-			CompositeAttributeBinding metadata,
+			CompositeAttributeBindingContainer metadata,
 			boolean isIdentifierMapper) {
 		Class<? extends ComponentTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
 		if ( tuplizerClass == null ) {

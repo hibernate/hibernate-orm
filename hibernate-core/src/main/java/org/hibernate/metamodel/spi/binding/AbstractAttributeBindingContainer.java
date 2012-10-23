@@ -23,71 +23,71 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * A composite attribute binding for an attribute that can be mapped
- * to a single entity attribute by means of an actual component class
- * that aggregates the tuple values.
- *
- * @todo should this be named something like AggregationAttributebinding instead?
- *
  * @author Gail Badner
  */
-public class AggregatedCompositeAttributeBinding
-		extends AbstractCompositeAttributeBinding
-		implements MutableAttributeBindingContainer {
-	private final Map<String, AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
-	private final SingularAttribute parentReference;
+public abstract class AbstractAttributeBindingContainer implements AttributeBindingContainer {
 
-	public AggregatedCompositeAttributeBinding(
-			AttributeBindingContainer container,
-			SingularAttribute attribute,
-			String propertyAccessorName,
-			boolean includedInOptimisticLocking,
-			boolean lazy,
-			NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext,
-			SingularAttribute parentReference) {
-		super(
-				container,
-				attribute,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
-				naturalIdMutability,
-				metaAttributeContext
-		);
-		if ( ! attribute.getSingularAttributeType().isAggregate() ) {
-			throw new IllegalArgumentException( "Expected the attribute type to be a component" );
+	protected abstract Map<String, AttributeBinding> attributeBindingMapInternal();
+
+	@Override
+	public AttributeBinding locateAttributeBinding(String name) {
+		return attributeBindingMapInternal().get( name );
+	}
+
+	@Override
+	public AttributeBinding locateAttributeBinding(List<Value> values) {
+		for ( AttributeBinding attributeBinding : attributeBindingMapInternal().values() ) {
+			if ( !SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+				continue;
+			}
+			SingularAttributeBinding basicAttributeBinding = (SingularAttributeBinding) attributeBinding;
+
+			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<Value>();
+			for ( RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings() ) {
+				attributeValues.add( relationalBinding.getValue() );
+			}
+
+			if ( attributeValues.equals( values ) ) {
+				return attributeBinding;
+			}
 		}
-		this.parentReference = parentReference;
+		return null;
 	}
 
 	@Override
-	public boolean isAggregated() {
-		return true;
+	public Class<?> getClassReference() {
+		return getAttributeContainer().getClassReference();
 	}
 
-	public Aggregate getComposite() {
-		return (Aggregate) getAttribute().getSingularAttributeType();
-	}
 
-	public SingularAttribute getParentReference() {
-		return parentReference;
+	@Override
+	public int attributeBindingSpan() {
+		return attributeBindingMapInternal().size();
 	}
 
 	@Override
-	protected Map<String, AttributeBinding> attributeBindingMapInternal() {
-		return attributeBindingMap;
+	public Iterable<AttributeBinding> attributeBindings() {
+		return attributeBindingMapInternal().values();
+	}
+
+	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
+		for ( AttributeBinding subAttributeBinding : attributeBindings() ) {
+			if ( AbstractSingularAttributeBinding.class.isInstance( subAttributeBinding ) ) {
+				( (AbstractSingularAttributeBinding) subAttributeBinding ).collectRelationalValueBindings( valueBindings );
+			}
+		}
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class AggregatedCompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			NaturalIdMutability naturalIdMutability,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			PropertyGeneration generation) {
 		final BasicAttributeBinding binding = new BasicAttributeBinding(
@@ -117,28 +117,29 @@ public class AggregatedCompositeAttributeBinding
 
 	protected void registerAttributeBinding(AttributeBinding attributeBinding) {
 		// todo : hook this into the EntityBinding notion of "entity referencing attribute bindings"
-		attributeBindingMap.put( attributeBinding.getAttribute().getName(), attributeBinding );
+		attributeBindingMapInternal().put( attributeBinding.getAttribute().getName(), attributeBinding );
 	}
 
 	@Override
-	public AggregatedCompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			NaturalIdMutability naturalIdMutability,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext) {
-		final AggregatedCompositeAttributeBinding binding = new AggregatedCompositeAttributeBinding(
-				this,
-				attribute,
-				propertyAccessorName,
-				includedInOptimisticLocking,
-				lazy,
-				naturalIdMutability,
-				metaAttributeContext,
-				parentReferenceAttribute
-		);
+		final CompositeAttributeBinding binding =
+				CompositeAttributeBinding.createAggregatedCompositeAttributeBinding(
+						this,
+						attribute,
+						propertyAccessorName,
+						includedInOptimisticLocking,
+						lazy,
+						naturalIdMutability,
+						metaAttributeContext,
+						parentReferenceAttribute
+				);
 		registerAttributeBinding( binding );
 		return binding;
 	}
@@ -149,7 +150,7 @@ public class AggregatedCompositeAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			NaturalIdMutability naturalIdMutability,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,

@@ -31,7 +31,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 			return Nature.BASIC;
 		}
 		else if ( MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE.equals( associationAttribute.getNature() ) ) {
-			return Nature.COMPONENT;
+			return Nature.AGGREGATE;
 		}
 		else {
 			throw new AssertionError(

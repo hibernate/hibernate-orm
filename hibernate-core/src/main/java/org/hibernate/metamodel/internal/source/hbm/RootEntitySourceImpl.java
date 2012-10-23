@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
@@ -449,7 +450,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
 			}
 			for (JaxbKeyManyToOneElement element : compositeIdElement().getKeyManyToOne()){
-				//todo: implement
+				throw new NotYetImplementedException( "key-many-to-one is not supported yet" );
 			}
 			return attributeSources;
 		}

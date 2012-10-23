@@ -32,7 +32,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
@@ -81,10 +81,10 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	// so it can provide the information needed to create getters and setters
 	// for an identifier mapper.
 	protected AbstractComponentTuplizer(
-			CompositeAttributeBinding compositeAttributeBinding,
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
 			boolean isIdentifierMapper
 	) {
-		propertySpan = compositeAttributeBinding.attributeBindingSpan();
+		propertySpan = compositeAttributeBindingContainer.attributeBindingSpan();
 		getters = new Getter[propertySpan];
 		setters = new Setter[propertySpan];
 
@@ -97,10 +97,10 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
 			//             must be completely bound when this method is called.
 			final EntityMode entityMode =
-					compositeAttributeBinding.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode();
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityMode();
 			final EntityIdentifier entityIdentifier =
-					compositeAttributeBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-			for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			for ( AttributeBinding attributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
 				getters[i] = PropertyFactory.getIdentifierMapperGetter(
 						attributeBinding.getAttribute().getName(),
 						entityIdentifier.getIdClassPropertyAccessorName(),
@@ -119,7 +119,7 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 			}
 		}
 		else {
-			for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+			for ( AttributeBinding attributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
 				getters[i] = PropertyFactory.getGetter( attributeBinding );
 				setters[i] = PropertyFactory.getSetter( attributeBinding );
 				if ( !attributeBinding.isBasicPropertyAccessor() ) {

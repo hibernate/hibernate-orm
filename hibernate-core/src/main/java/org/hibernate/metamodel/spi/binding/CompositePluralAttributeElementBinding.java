@@ -23,26 +23,90 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.spi.domain.Aggregate;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#COMPONENT} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATE} elements
  *
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class CompositePluralAttributeElementBinding extends AbstractPluralAttributeElementBinding {
+public class CompositePluralAttributeElementBinding
+		extends AbstractPluralAttributeElementBinding
+		implements Cascadeable {
+
+	private AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
+	private CascadeStyle cascadeStyle;
+
 	public CompositePluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
 	}
 
 	@Override
 	public Nature getNature() {
-		return Nature.COMPONENT;
+		return Nature.AGGREGATE;
+	}
+
+	public CompositeAttributeBindingContainer createCompositeAttributeBindingContainer(
+			Aggregate aggregate,
+			MetaAttributeContext metaAttributeContext,
+			SingularAttribute parentReference
+	) {
+		compositeAttributeBindingContainer =
+				new AbstractCompositeAttributeBindingContainer(
+						getPluralAttributeBinding().getContainer().seekEntityBinding(),
+						aggregate,
+						getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
+						aggregate.getRoleBaseName(),
+						metaAttributeContext,
+						parentReference
+				) {
+					final Map<String,AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
+
+					@Override
+					protected boolean isModifiable() {
+						return true;
+					}
+
+					@Override
+					protected Map<String, AttributeBinding> attributeBindingMapInternal() {
+						return attributeBindingMap;
+					}
+
+					@Override
+					public boolean isAggregated() {
+						return true;
+					}
+				};
+		return compositeAttributeBindingContainer;
+	}
+
+	public CompositeAttributeBindingContainer getCompositeAttributeBindingContainer() {
+		return compositeAttributeBindingContainer;
 	}
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		final List<RelationalValueBinding> bindings = new ArrayList<RelationalValueBinding>();
+		compositeAttributeBindingContainer.collectRelationalValueBindings( bindings );
+		return bindings;
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle() {
+		return cascadeStyle;
+	}
+
+	@Override
+	public void setCascadeStyle(CascadeStyle cascadeStyle) {
+		this.cascadeStyle = cascadeStyle;
 	}
 }

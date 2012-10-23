@@ -40,7 +40,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttri
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
@@ -86,8 +86,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
 			final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
-		if ( AggregatedCompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-			AggregatedCompositeAttributeBinding compositeAttributeBinding = AggregatedCompositeAttributeBinding.class.cast(
+		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
 					referencedAttributeBinding
 			);
 			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>(  );

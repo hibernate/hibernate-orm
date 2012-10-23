@@ -99,6 +99,11 @@ public abstract class AbstractSingularAttributeBinding
 	}
 
 	@Override
+	public boolean isCascadeable() {
+		return isAssociation();
+	}
+
+	@Override
 	public boolean isLazy() {
 		return isLazy;
 	}

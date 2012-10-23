@@ -49,8 +49,8 @@ public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSourc
 		switch ( indexedPluralAttributeSource.getElementSource().getNature() ) {
 			case BASIC:
 				return PluralAttributeIndexBinding.Nature.BASIC;
-			case COMPONENT:
-				return PluralAttributeIndexBinding.Nature.AGGREGATION;
+			case AGGREGATE:
+				return PluralAttributeIndexBinding.Nature.AGGREGATE;
 			case MANY_TO_ANY:
 				return PluralAttributeIndexBinding.Nature.MANY_TO_ANY;
 			case MANY_TO_MANY:

@@ -70,11 +70,11 @@ public interface PluralAttributeElementBinding {
 		/**
 		 * The collection elements are basic, simple values.
 		 */
-		BASIC( false ),
+		BASIC( false, false ),
 		/**
 		 * The collection elements are compositions.
 		 */
-		COMPONENT( false ),
+		AGGREGATE( false, true ),
 		/**
 		 * The collection elements represent entity's in a one-to-many association.
 		 */
@@ -89,17 +89,23 @@ public interface PluralAttributeElementBinding {
 		MANY_TO_ANY;
 
 		private final boolean isAssociation;
+		private final boolean isCascadeable;
 
 		private Nature() {
-			this( true );
+			this( true, true );
 		}
 
-		private Nature(boolean association) {
+		private Nature(boolean association, boolean cascadeable) {
 			this.isAssociation = association;
+			this.isCascadeable = cascadeable;
 		}
 
 		public boolean isAssociation() {
 			return isAssociation;
+		}
+
+		public boolean isCascadeable() {
+			return isCascadeable;
 		}
 	}
 }

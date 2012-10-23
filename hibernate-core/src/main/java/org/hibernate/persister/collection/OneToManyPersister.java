@@ -52,7 +52,6 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -112,8 +111,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
 		cascadeDeleteEnabled = keyBinding.getForeignKey().getDeleteRule() == ForeignKey.ReferentialAction.CASCADE &&
 				factory.getDialect().supportsCascadeDelete();;
-		final SingularAttributeBinding referencedAttributeBinding =
-				keyBinding.getReferencedAttributeBinding();
 		keyIsNullable = keyBinding.isNullable();
 		keyIsUpdateable = keyBinding.isUpdatable();
 	}

@@ -98,7 +98,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			case BASIC: {
 				return new BasicPluralAttributeElementBinding( this );
 			}
-			case COMPONENT: {
+			case AGGREGATE: {
 				return new CompositePluralAttributeElementBinding( this );
 			}
 			case ONE_TO_MANY: {
@@ -124,6 +124,11 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	@Override
 	public boolean isAssociation() {
 		return pluralAttributeElementBinding.getNature().isAssociation();
+	}
+
+	@Override
+	public boolean isCascadeable() {
+		return pluralAttributeElementBinding.getNature().isCascadeable();
 	}
 
 	@Override

@@ -31,5 +31,5 @@ import org.hibernate.engine.spi.CascadeStyle;
 public interface Cascadeable {
 	public CascadeStyle getCascadeStyle();
 
-	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
+	public void setCascadeStyle(CascadeStyle cascadeStyle);
 }

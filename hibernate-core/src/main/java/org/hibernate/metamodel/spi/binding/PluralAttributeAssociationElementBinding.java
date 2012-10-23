@@ -30,5 +30,4 @@ package org.hibernate.metamodel.spi.binding;
  */
 public interface PluralAttributeAssociationElementBinding
 		extends PluralAttributeElementBinding, Cascadeable {
-	public boolean isOrphanDeleteEnabled();
 }

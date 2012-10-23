@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class PersistentSetTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

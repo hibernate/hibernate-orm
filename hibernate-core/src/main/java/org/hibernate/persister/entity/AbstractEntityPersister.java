@@ -101,6 +101,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
@@ -1074,14 +1075,14 @@ public abstract class AbstractEntityPersister
 			propFormulaNumbers.add( formnos );
 
 			CascadeStyle cascadeStyle = null;
-			if ( attributeBinding.isAssociation() ) {
+			if ( attributeBinding.isCascadeable() ) {
 				if ( attributeBinding.getAttribute().isSingular() ) {
-					cascadeStyle = ( ( SingularAssociationAttributeBinding) attributeBinding ).getCascadeStyle();
+					cascadeStyle = ( (Cascadeable) attributeBinding ).getCascadeStyle();
 				}
 				else {
 					PluralAttributeElementBinding pluralAttributeElementBinding =
 							( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding();
-					cascadeStyle = ( (PluralAttributeAssociationElementBinding) pluralAttributeElementBinding).getCascadeStyle();
+					cascadeStyle = ( (Cascadeable) pluralAttributeElementBinding).getCascadeStyle();
 				}
 			}
 			if ( cascadeStyle == null ) {

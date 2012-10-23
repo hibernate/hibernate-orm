@@ -36,7 +36,7 @@ public interface PluralAttributeElementSource {
 	 */
 	enum Nature {
 		BASIC,
-		COMPONENT,
+		AGGREGATE,
 		ONE_TO_MANY,
 		MANY_TO_MANY,
 		MANY_TO_ANY

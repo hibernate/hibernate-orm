@@ -33,7 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 
@@ -84,7 +84,7 @@ public class ComponentMetamodel implements Serializable {
 	}
 
 	public ComponentMetamodel(
-			CompositeAttributeBinding component,
+			CompositeAttributeBindingContainer component,
 			boolean isIdentifierAttributeBinding,
 			boolean isIdentifierMapper) {
 		this.isKey = isIdentifierAttributeBinding;

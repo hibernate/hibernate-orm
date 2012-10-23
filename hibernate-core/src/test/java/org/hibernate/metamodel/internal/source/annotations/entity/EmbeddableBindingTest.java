@@ -35,9 +35,8 @@ import org.junit.Test;
 
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
-import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
@@ -332,7 +331,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		final String componentName = "embedded";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
 		assertTrue( binding.locateAttributeBinding( componentName ) instanceof CompositeAttributeBinding );
-		AggregatedCompositeAttributeBinding compositeBinding = (AggregatedCompositeAttributeBinding) binding.locateAttributeBinding(
+		CompositeAttributeBinding compositeBinding = (CompositeAttributeBinding) binding.locateAttributeBinding(
 				componentName
 		);
 
@@ -390,7 +389,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				componentName
 		);
 
-		BasicAttributeBinding attribute = (BasicAttributeBinding) compositeBinding.locateAttributeBinding( "horsePower" );
+		BasicAttributeBinding attribute = (BasicAttributeBinding) compositeBinding.locateAttributeBinding(
+				"horsePower"
+		);
 		assertTrue( attribute.getAttribute().isTypeResolved() );
 		assertEquals(
 				"Wrong resolved type",

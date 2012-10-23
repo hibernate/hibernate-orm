@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.Collections;
 import java.util.Map;
 
-import org.hibernate.FetchMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -101,6 +100,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		else if ( pluralAttributeElement.getCompositeElement() != null ) {
 			return new CompositePluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
+					pluralAttributeElement,
 					pluralAttributeElement.getCompositeElement()
 			);
 		}

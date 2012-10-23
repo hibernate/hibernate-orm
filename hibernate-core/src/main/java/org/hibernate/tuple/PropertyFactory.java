@@ -40,13 +40,13 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.NonAggregatedCompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
@@ -133,7 +133,7 @@ public class PropertyFactory {
 		final Type type;
 		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper() ) {
 			type = sessionFactory.getTypeResolver().getTypeFactory().component(
-					new ComponentMetamodel( (NonAggregatedCompositeAttributeBinding) attributeBinding, true, true )
+					new ComponentMetamodel( ( (CompositeAttributeBinding) attributeBinding ), true, true )
 			);
 		}
 		else {
@@ -229,8 +229,8 @@ public class PropertyFactory {
 
 		boolean lazy = lazyAvailable && property.isLazy();
 
-		final CascadeStyle cascadeStyle = property.isAssociation()
-				? ( (SingularAssociationAttributeBinding) property ).getCascadeStyle()
+		final CascadeStyle cascadeStyle = property.isCascadeable()
+				? ( (Cascadeable) property ).getCascadeStyle()
 				: CascadeStyles.NONE;
 
 		return new VersionProperty(
@@ -313,8 +313,8 @@ public class PropertyFactory {
 
 		if ( property.getAttribute().isSingular() ) {
 			final SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) property;
-			final CascadeStyle cascadeStyle = singularAttributeBinding.isAssociation()
-					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
+			final CascadeStyle cascadeStyle = singularAttributeBinding.isCascadeable()
+					? ( (Cascadeable) singularAttributeBinding ).getCascadeStyle()
 					: CascadeStyles.NONE;
 			final FetchMode fetchMode = singularAttributeBinding.isAssociation()
 					? ( (SingularAssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
@@ -342,9 +342,15 @@ public class PropertyFactory {
 		}
 		else {
 			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
-			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
-					? ( (PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCascadeStyle()
-					: CascadeStyles.NONE;
+			final CascadeStyle cascadeStyle;
+			if ( pluralAttributeBinding.isCascadeable() ) {
+				final Cascadeable elementBinding =
+						(Cascadeable) pluralAttributeBinding.getPluralAttributeElementBinding();
+				cascadeStyle = elementBinding.getCascadeStyle();
+			}
+			else {
+				cascadeStyle = CascadeStyles.NONE;
+			}
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
 					? pluralAttributeBinding.getFetchMode()
 					: FetchMode.DEFAULT;

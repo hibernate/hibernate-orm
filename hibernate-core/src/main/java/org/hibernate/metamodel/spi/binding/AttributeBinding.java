@@ -58,6 +58,8 @@ public interface AttributeBinding {
 
 	public boolean isAssociation();
 
+	public boolean isCascadeable();
+
 	public boolean isBackRef();
 
 	public boolean isBasicPropertyAccessor();

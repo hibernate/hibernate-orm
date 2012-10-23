@@ -72,7 +72,7 @@ public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPlura
 				return Nature.BASIC;
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				return Nature.COMPONENT;
+				return Nature.AGGREGATE;
 			}
 			default: {
 				throw new AssertionFailure( "Unexpected attribute nature: " + associationAttribute.getNature() );

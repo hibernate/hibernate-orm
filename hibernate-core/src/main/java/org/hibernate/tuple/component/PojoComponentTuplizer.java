@@ -36,8 +36,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.binding.AggregatedCompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
@@ -99,7 +98,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	public PojoComponentTuplizer(
-			CompositeAttributeBinding component,
+			CompositeAttributeBindingContainer component,
 			boolean isIdentifierMapper) {
 		super( component, isIdentifierMapper );
 
@@ -121,10 +120,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 
 		final String parentPropertyName =
-				component.isAggregated() &&
-						( (AggregatedCompositeAttributeBinding) component ).getParentReference() != null ?
-						( (AggregatedCompositeAttributeBinding) component ).getParentReference().getName() :
-						null;
+				component.getParentReference() == null ? null : component.getParentReference().getName();
 		if ( parentPropertyName == null ) {
 			parentSetter = null;
 			parentGetter = null;
@@ -145,7 +141,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 					componentClass, getterNames, setterNames, propTypes
 			);
 		}
-		instantiator = buildInstantiator( componentClass, component.getAttribute().isSynthetic(), optimizer );
+		instantiator = buildInstantiator( componentClass, !component.isAggregated(), optimizer );
 	}
 
 	public Class getMappedClass() {

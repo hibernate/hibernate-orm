@@ -34,7 +34,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ValuesBagCollectionEventTest extends AbstractCollectionEventTest {
 	@Override
 	public String[] getMappings() {

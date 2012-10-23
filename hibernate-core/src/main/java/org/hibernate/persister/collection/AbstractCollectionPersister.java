@@ -80,12 +80,11 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ListBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -728,8 +727,8 @@ public abstract class AbstractCollectionPersister
 				null;
 
 		hasOrphanDelete =
-				collection.getPluralAttributeElementBinding().getNature().isAssociation() &&
-						( ( PluralAttributeAssociationElementBinding ) collection.getPluralAttributeElementBinding() ).isOrphanDeleteEnabled();
+				collection.getPluralAttributeElementBinding() instanceof Cascadeable &&
+						( (Cascadeable) collection.getPluralAttributeElementBinding() ).getCascadeStyle().hasOrphanDelete();
 
 		int batch = collection.getBatchSize();
 		if ( batch == -1 ) {

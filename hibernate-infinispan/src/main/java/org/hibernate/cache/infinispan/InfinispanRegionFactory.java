@@ -394,15 +394,21 @@ public class InfinispanRegionFactory implements RegionFactory {
          ConfigurationBuilderHolder holder = parserRegistry.parse(is);
 
          // Override global jmx statistics exposure
-         String globalStats = extractProperty(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
+         String globalStats = extractProperty(
+               INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
          if (globalStats != null)
             holder.getGlobalConfigurationBuilder().globalJmxStatistics()
                   .enabled(Boolean.parseBoolean(globalStats));
 
-         return new DefaultCacheManager(holder, true);
+         return createCacheManager(holder);
       } catch (IOException e) {
          throw new CacheException("Unable to create default cache manager", e);
       }
+   }
+
+   protected EmbeddedCacheManager createCacheManager(
+         ConfigurationBuilderHolder holder) {
+      return new DefaultCacheManager(holder, true);
    }
 
    private void startRegion(BaseRegion region, String regionName) {

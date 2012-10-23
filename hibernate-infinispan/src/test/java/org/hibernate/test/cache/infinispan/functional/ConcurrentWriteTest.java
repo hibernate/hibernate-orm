@@ -44,8 +44,6 @@ import org.junit.Test;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -102,11 +100,6 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 	@Override
 	protected TransactionManager getTransactionManager() {
 		return DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.LOCAL );
-	}
-
-	@Override
-	protected Class<? extends RegionFactory> getCacheRegionFactory() {
-		return InfinispanRegionFactory.class;
 	}
 
 	@Override

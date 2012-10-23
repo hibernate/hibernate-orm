@@ -33,7 +33,8 @@ import javax.transaction.TransactionManager;
 
 import junit.framework.AssertionFailedError;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.test.CacheManagerCallable;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.After;
@@ -54,6 +55,7 @@ import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
+import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -162,61 +164,70 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
       final TransactionManager remoteTm = remoteCollectionRegion.getTransactionManager();
-      PutFromLoadValidator validator = new PutFromLoadValidator(
-            new DefaultCacheManager(), remoteTm, 20000) {
-			@Override
-			public boolean acquirePutFromLoadLock(Object key) {
-				boolean acquired = super.acquirePutFromLoadLock( key );
-				try {
-					removeLatch.countDown();
-					pferLatch.await( 2, TimeUnit.SECONDS );
-				}
-				catch (InterruptedException e) {
-					log.debug( "Interrupted" );
-					Thread.currentThread().interrupt();
-				}
-				catch (Exception e) {
-					log.error( "Error", e );
-					throw new RuntimeException( "Error", e );
-				}
-				return acquired;
-			}
-		};
-
-		final TransactionalAccessDelegate delegate =
-            new TransactionalAccessDelegate(localCollectionRegion, validator);
-      final TransactionManager localTm = localCollectionRegion.getTransactionManager();
-
-		Callable<Void> pferCallable = new Callable<Void>() {
-			public Void call() throws Exception {
-				delegate.putFromLoad( "k1", "v1", 0, null );
-				return null;
-			}
-		};
-
-		Callable<Void> removeCallable = new Callable<Void>() {
-			public Void call() throws Exception {
-				removeLatch.await();
-            Caches.withinTx(localTm, new Callable<Void>() {
+      withCacheManager(new CacheManagerCallable(TestCacheManagerFactory.createLocalCacheManager(false)) {
+         @Override
+         public void call() {
+            PutFromLoadValidator validator = new PutFromLoadValidator(cm,
+                  remoteTm, 20000) {
                @Override
+               public boolean acquirePutFromLoadLock(Object key) {
+                  boolean acquired = super.acquirePutFromLoadLock( key );
+                  try {
+                     removeLatch.countDown();
+                     pferLatch.await( 2, TimeUnit.SECONDS );
+                  }
+                  catch (InterruptedException e) {
+                     log.debug( "Interrupted" );
+                     Thread.currentThread().interrupt();
+                  }
+                  catch (Exception e) {
+                     log.error( "Error", e );
+                     throw new RuntimeException( "Error", e );
+                  }
+                  return acquired;
+               }
+            };
+
+            final TransactionalAccessDelegate delegate =
+                  new TransactionalAccessDelegate(localCollectionRegion, validator);
+            final TransactionManager localTm = localCollectionRegion.getTransactionManager();
+
+            Callable<Void> pferCallable = new Callable<Void>() {
                public Void call() throws Exception {
-                  delegate.remove("k1");
+                  delegate.putFromLoad( "k1", "v1", 0, null );
                   return null;
                }
-            });
-				pferLatch.countDown();
-				return null;
-			}
-		};
+            };
 
-		ExecutorService executorService = Executors.newCachedThreadPool();
-		Future<Void> pferFuture = executorService.submit( pferCallable );
-		Future<Void> removeFuture = executorService.submit( removeCallable );
+            Callable<Void> removeCallable = new Callable<Void>() {
+               public Void call() throws Exception {
+                  removeLatch.await();
+                  Caches.withinTx(localTm, new Callable<Void>() {
+                     @Override
+                     public Void call() throws Exception {
+                        delegate.remove("k1");
+                        return null;
+                     }
+                  });
+                  pferLatch.countDown();
+                  return null;
+               }
+            };
 
-		pferFuture.get();
-		removeFuture.get();
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            Future<Void> pferFuture = executorService.submit( pferCallable );
+            Future<Void> removeFuture = executorService.submit( removeCallable );
 
-		assertFalse(localCollectionRegion.getCache().containsKey("k1"));
+            try {
+               pferFuture.get();
+               removeFuture.get();
+            } catch (Exception e) {
+               throw new RuntimeException(e);
+            }
+
+            assertFalse(localCollectionRegion.getCache().containsKey("k1"));
+         }
+      });
 	}
 
 	@Test

@@ -23,14 +23,7 @@
  */
 package org.hibernate.test.cache.infinispan.util;
 
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -38,6 +31,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 
 /**
  * Utilities for cache testing.
@@ -46,7 +40,8 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class CacheTestUtil {
 
-   public static Configuration buildConfiguration(String regionPrefix, Class regionFactory, boolean use2ndLevel, boolean useQueries) {
+   public static Configuration buildConfiguration(String regionPrefix,
+         Class regionFactory, boolean use2ndLevel, boolean useQueries) {
       Configuration cfg = new Configuration();
       cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
       cfg.setProperty(Environment.USE_STRUCTURED_CACHE, "true");
@@ -60,83 +55,45 @@ public class CacheTestUtil {
       return cfg;
    }
 
-   public static Configuration buildLocalOnlyConfiguration(String regionPrefix, boolean use2ndLevel, boolean useQueries) {
-      Configuration cfg = buildConfiguration(regionPrefix, InfinispanRegionFactory.class, use2ndLevel, useQueries);
-      cfg.setProperty(InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP,
-               InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE);
-      return cfg;
-   }
-   
    public static Configuration buildCustomQueryCacheConfiguration(String regionPrefix, String queryCacheName) {
       Configuration cfg = buildConfiguration(regionPrefix, InfinispanRegionFactory.class, true, true);
       cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, queryCacheName);
       return cfg;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(
-		   ServiceRegistry serviceRegistry,
-		   Configuration cfg) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
+         Configuration cfg){
+      try {
+         Settings settings = cfg.buildSettings(reg);
+         Properties properties = cfg.getProperties();
 
-      Settings settings = cfg.buildSettings( serviceRegistry );
-      Properties properties = cfg.getProperties();
-
-      String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
-      Class factoryClass = Thread.currentThread().getContextClassLoader().loadClass(factoryType);
-      InfinispanRegionFactory regionFactory = (InfinispanRegionFactory) factoryClass.newInstance();
-      regionFactory.start(settings, properties);
-      return regionFactory;
+         String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
+         Class clazz = Thread.currentThread()
+               .getContextClassLoader().loadClass(factoryType);
+         InfinispanRegionFactory regionFactory;
+         if (clazz == InfinispanRegionFactory.class) {
+            regionFactory = new SingleNodeTestCase.TestInfinispanRegionFactory();
+         } else {
+            regionFactory = (InfinispanRegionFactory) clazz.newInstance();
+         }
+         regionFactory.start(settings, properties);
+         return regionFactory;
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
-   public static InfinispanRegionFactory startRegionFactory(
-		   ServiceRegistry serviceRegistry,
-		   Configuration cfg,
-		   CacheTestSupport testSupport) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-      InfinispanRegionFactory factory = startRegionFactory( serviceRegistry, cfg );
+   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
+         Configuration cfg, CacheTestSupport testSupport) {
+      InfinispanRegionFactory factory = startRegionFactory(reg, cfg);
       testSupport.registerFactory(factory);
       return factory;
    }
 
-   public static void stopRegionFactory(InfinispanRegionFactory factory, CacheTestSupport testSupport) {
+   public static void stopRegionFactory(InfinispanRegionFactory factory,
+         CacheTestSupport testSupport) {
       factory.stop();
       testSupport.unregisterFactory(factory);
-   }
-
-   /**
-    * Supports easy creation of a TestSuite where a subclass' "FailureExpected" version of a base
-    * test is included in the suite, while the base test is excluded. E.g. test class FooTestCase
-    * includes method testBar(), while test class SubFooTestCase extends FooTestCase includes method
-    * testBarFailureExcluded(). Passing SubFooTestCase.class to this method will return a suite that
-    * does not include testBar().
-    * 
-    * FIXME Move this to UnitTestCase
-    */
-   public static TestSuite createFailureExpectedSuite(Class testClass) {
-
-      TestSuite allTests = new TestSuite(testClass);
-      Set failureExpected = new HashSet();
-      Enumeration tests = allTests.tests();
-      while (tests.hasMoreElements()) {
-         Test t = (Test) tests.nextElement();
-         if (t instanceof TestCase) {
-            String name = ((TestCase) t).getName();
-            if (name.endsWith("FailureExpected"))
-               failureExpected.add(name);
-         }
-      }
-
-      TestSuite result = new TestSuite();
-      tests = allTests.tests();
-      while (tests.hasMoreElements()) {
-         Test t = (Test) tests.nextElement();
-         if (t instanceof TestCase) {
-            String name = ((TestCase) t).getName();
-            if (!failureExpected.contains(name + "FailureExpected")) {
-               result.addTest(t);
-            }
-         }
-      }
-
-      return result;
    }
 
    /**

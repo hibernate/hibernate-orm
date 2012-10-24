@@ -244,7 +244,12 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public String getForUpdateString() {
+		if ( hsqldbVersion >= 20 ) {
+			return " for update";
+		}
+		else {
 		return "";
+		}
 	}
 
 	public boolean supportsUnique() {

@@ -319,10 +319,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return entityMetamodel.getSubclassEntityNames();
 	}
 
-	public Serializable getIdentifier(Object entity) throws HibernateException {
-		return getIdentifier( entity, null );
-	}
-
 	public Serializable getIdentifier(Object entity, SessionImplementor session) {
 		final Object id;
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
@@ -356,16 +352,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			throw new ClassCastException( msg.toString() );
 		}
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void setIdentifier(Object entity, Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
-		// interpretations of JPA 2 "derived identity" support
-		setIdentifier( entity, id, null );
-	}
-
 
 	/**
 	 * {@inheritDoc}
@@ -417,8 +403,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		return wereAllEquivalent
-				? (MappedIdentifierValueMarshaller) new NormalMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType )
-				: (MappedIdentifierValueMarshaller) new IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType );
+				? new NormalMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType )
+				: new IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType );
 	}
 
 	private static class NormalMappedIdentifierValueMarshaller implements MappedIdentifierValueMarshaller {
@@ -548,16 +534,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				.getEventListenerGroup( EventType.PERSIST )
 				.listeners();
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
-		// interpretations of JPA 2 "derived identity" support
-		resetIdentifier( entity, currentId, currentVersion, null );
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -724,12 +700,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	public void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException {
 		setters[ entityMetamodel.getPropertyIndex( propertyName ) ].set( entity, value, getFactory() );
-	}
-
-	public final Object instantiate(Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
-		// interpretations of JPA 2 "derived identity" support
-		return instantiate( id, null );
 	}
 
 	public final Object instantiate(Serializable id, SessionImplementor session) {

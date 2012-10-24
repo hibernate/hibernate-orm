@@ -57,37 +57,11 @@ public interface EntityTuplizer extends Tuplizer {
      * Create an entity instance initialized with the given identifier.
      *
      * @param id The identifier value for the entity to be instantiated.
-     * @return The instantiated entity.
-     * @throws HibernateException
-	 *
-	 * @deprecated Use {@link #instantiate(Serializable, SessionImplementor)} instead.
-     */
-	@SuppressWarnings( {"JavaDoc"})
-	public Object instantiate(Serializable id) throws HibernateException;
-
-    /**
-     * Create an entity instance initialized with the given identifier.
-     *
-     * @param id The identifier value for the entity to be instantiated.
 	 * @param session The session from which is requests originates
 	 *
      * @return The instantiated entity.
      */
 	public Object instantiate(Serializable id, SessionImplementor session);
-
-    /**
-     * Extract the identifier value from the given entity.
-     *
-     * @param entity The entity from which to extract the identifier value.
-	 *
-     * @return The identifier value.
-	 *
-     * @throws HibernateException If the entity does not define an identifier property, or an
-     * error occurs accessing its value.
-	 *
-	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead.
-     */
-	public Serializable getIdentifier(Object entity) throws HibernateException;
 
     /**
      * Extract the identifier value from the given entity.
@@ -106,35 +80,9 @@ public interface EntityTuplizer extends Tuplizer {
      *
      * @param entity The entity to inject with the identifier value.
      * @param id The value to be injected as the identifier.
-	 *
-	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SessionImplementor)} instead.
-     */
-	@SuppressWarnings( {"JavaDoc"})
-	public void setIdentifier(Object entity, Serializable id) throws HibernateException;
-
-    /**
-     * Inject the identifier value into the given entity.
-     * </p>
-     * Has no effect if the entity does not define an identifier property
-     *
-     * @param entity The entity to inject with the identifier value.
-     * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
      */
 	public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
-
-	/**
-	 * Inject the given identifier and version into the entity, in order to
-	 * "roll back" to their original values.
-	 *
-	 * @param entity The entity for which to reset the id/version values
-	 * @param currentId The identifier value to inject into the entity.
-	 * @param currentVersion The version value to inject into the entity.
-	 *
-	 * @deprecated Use {@link #resetIdentifier(Object, Serializable, Object, SessionImplementor)} instead
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion);
 
 	/**
 	 * Inject the given identifier and version into the entity, in order to

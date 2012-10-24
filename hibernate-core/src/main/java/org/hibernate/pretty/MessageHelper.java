@@ -258,11 +258,7 @@ public final class MessageHelper {
 			s.append( persister.getRole() );
 			s.append( "#<" );
 			for ( int i = 0; i < ids.length; i++ ) {
-				// Need to use the identifier type of the collection owner
-				// since the incoming is value is actually the owner's id.
-				// Using the collection's key type causes problems with
-				// property-ref keys...
-				s.append( persister.getOwnerEntityPersister().getIdentifierType().toLoggableString( ids[i], factory ) );
+				addIdToCollectionInfoString( persister, ids[i], factory, s );
 				if ( i < ids.length-1 ) {
 					s.append( ", " );
 				}
@@ -299,16 +295,33 @@ public final class MessageHelper {
 				s.append( "<null>" );
 			}
 			else {
-				// Need to use the identifier type of the collection owner
-				// since the incoming is value is actually the owner's id.
-				// Using the collection's key type causes problems with
-				// property-ref keys...
-				s.append( persister.getOwnerEntityPersister().getIdentifierType().toLoggableString( id, factory ) );
+				addIdToCollectionInfoString( persister, id, factory, s );
 			}
 		}
 		s.append( ']' );
 
 		return s.toString();
+	}
+	
+	private static void addIdToCollectionInfoString(
+			CollectionPersister persister,
+			Serializable id,
+			SessionFactoryImplementor factory,
+			StringBuilder s ) {
+		// Need to use the identifier type of the collection owner
+		// since the incoming is value is actually the owner's id.
+		// Using the collection's key type causes problems with
+		// property-ref keys.
+		// Also need to check that the expected identifier type matches
+		// the given ID.  Due to property-ref keys, the collection key
+		// may not be the owner key.
+		Type identifierType = persister.getOwnerEntityPersister()
+				.getIdentifierType();
+		if ( id.getClass().isAssignableFrom( 
+				identifierType.getReturnedClass() ) ) {
+			s.append( identifierType.toLoggableString( id, factory ) );
+		}
+		// TODO: If the collection key was not the owner key, 
 	}
 
 	/**

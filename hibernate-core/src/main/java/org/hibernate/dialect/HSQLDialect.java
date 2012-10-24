@@ -248,7 +248,7 @@ public class HSQLDialect extends Dialect {
 			return " for update";
 		}
 		else {
-		return "";
+			return "";
 		}
 	}
 

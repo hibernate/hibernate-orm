@@ -48,11 +48,12 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
 public final class OneAuditEntityQueryGenerator implements RelationQueryGenerator {
     private final String queryString;
     private final MiddleIdData referencingIdData;
+    private final GlobalConfiguration globalCfg;
 
     public OneAuditEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg, 
-                                        AuditStrategy auditStrategy,
-                                        MiddleIdData referencingIdData,
+                                        AuditStrategy auditStrategy, MiddleIdData referencingIdData,
                                         String referencedEntityName, MiddleIdData referencedIdData) {
+        this.globalCfg = globalCfg;
         this.referencingIdData = referencingIdData;
 
         /*
@@ -92,8 +93,10 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
         		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
 				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
 
-        // e.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
+        if (!globalCfg.isStoreDataAtDelete()) {
+            // e.revision_type != DEL
+            rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
+        }
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
@@ -103,7 +106,9 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
         query.setParameter(REVISION_PARAMETER, revision);
-        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
+        if (!globalCfg.isStoreDataAtDelete()) {
+            query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
+        }
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

@@ -28,6 +28,7 @@ import java.util.Collections;
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
@@ -47,12 +48,12 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
 public final class OneEntityQueryGenerator implements RelationQueryGenerator {
     private final String queryString;
     private final MiddleIdData referencingIdData;
+    private final GlobalConfiguration globalCfg;
 
-    public OneEntityQueryGenerator(AuditEntitiesConfiguration verEntCfg,
-                                   AuditStrategy auditStrategy,
-                                   String versionsMiddleEntityName,
-                                   MiddleIdData referencingIdData,
-                                   MiddleComponentData... componentDatas) {
+    public OneEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
+                                   AuditStrategy auditStrategy, String versionsMiddleEntityName,
+                                   MiddleIdData referencingIdData, MiddleComponentData... componentDatas) {
+        this.globalCfg = globalCfg;
         this.referencingIdData = referencingIdData;
 
         /*
@@ -93,8 +94,10 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
          		verEntCfg.getRevisionEndFieldName(), true,referencingIdData, versionsMiddleEntityName, 
          		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
          
-        // ee.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
+        if (!globalCfg.isStoreDataAtDelete()) {
+            // ee.revision_type != DEL
+            rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
+        }
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
@@ -104,7 +107,9 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
         query.setParameter(REVISION_PARAMETER, revision);
-        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
+        if (!globalCfg.isStoreDataAtDelete()) {
+            query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
+        }
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

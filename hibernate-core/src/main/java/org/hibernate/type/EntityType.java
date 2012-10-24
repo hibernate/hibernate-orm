@@ -505,6 +505,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					throw new ClassCastException( value.getClass().getName() );
 				}
 				id = ( Serializable ) value;
+			} else if ( value instanceof HibernateProxy ) {
+				HibernateProxy proxy = ( HibernateProxy ) value;
+				id = proxy.getHibernateLazyInitializer().getIdentifier();
 			}
 			else {
 				id = persister.getIdentifier( value );

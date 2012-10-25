@@ -61,6 +61,7 @@ import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.DiscriminatorType;
@@ -1819,6 +1820,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect(
+            value = CUBRIDDialect.class,
+            comment = "As of version 8.4.1 CUBRID does not support temporary tables." +
+                    " This test somehow calls MultiTableDeleteExecutor which raises an" +
+                    " exception saying 'cannot doAfterTransactionCompletion multi-table" +
+                    " deletes using dialect not supporting temp tables'."
+    )
 	public void testParameterMixing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

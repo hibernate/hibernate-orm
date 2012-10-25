@@ -111,7 +111,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		coll.setFetchStyle( FetchStyle.JOIN );
 		// TODO: Is there a way to set this on the metamodel?
 //		coll.setLazy(false);
-		SessionFactory sf = configuration().buildSessionFactory();
+		SessionFactory sf = sessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -135,7 +135,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		coll.setFetchStyle( FetchStyle.SELECT	 );
 		// TODO: Is there a way to set this on the metamodel?
 //		coll.setLazy(false);
-		sf = configuration().buildSessionFactory();
+		sf = sessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);

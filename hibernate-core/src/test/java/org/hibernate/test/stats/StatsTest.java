@@ -52,7 +52,6 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class StatsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -67,6 +66,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

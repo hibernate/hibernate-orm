@@ -301,7 +301,7 @@ public class HibernateMappingProcessor {
 					.qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
-			metadata.addImport( className, rename );
+			metadata.addImport( rename, className );
 		}
 		if ( root.isAutoImport() ) {
 			processEntityElementsImport( root.getClazz() );

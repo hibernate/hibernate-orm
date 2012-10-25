@@ -64,7 +64,7 @@ public final class IdMetadataGenerator {
             if (!"_identifierMapper".equals(property.getName())) {
                 boolean added = false;
                 if (propertyType instanceof ManyToOneType) {
-                    added = mainGenerator.getBasicMetadataGenerator().addKeyManyToOne(parent,
+                    added = mainGenerator.getBasicMetadataGenerator().addManyToOne(parent,
                             getIdPersistentPropertyAuditingData(property),
                             property.getValue(), mapper);
                 } else {

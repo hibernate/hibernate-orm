@@ -90,11 +90,12 @@ public final class BasicMetadataGenerator {
 	}
 
     @SuppressWarnings({"unchecked"})
-    boolean addKeyManyToOne(Element parent, PropertyAuditingData propertyAuditingData, Value value,
-                            SimpleMapperBuilder mapper) {
+    boolean addManyToOne(Element parent, PropertyAuditingData propertyAuditingData, Value value,
+                         SimpleMapperBuilder mapper) {
         Type type = value.getType();
 
-        Element manyToOneElement = parent.addElement("key-many-to-one");
+        // A null mapper occurs when adding to composite-id element
+        Element manyToOneElement = parent.addElement(mapper != null ? "many-to-one" : "key-many-to-one");
         manyToOneElement.addAttribute("name", propertyAuditingData.getName());
         manyToOneElement.addAttribute("class", type.getName());
         MetadataTools.addColumns(manyToOneElement, value.getColumnIterator());

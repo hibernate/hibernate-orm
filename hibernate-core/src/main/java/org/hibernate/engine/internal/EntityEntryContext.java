@@ -81,7 +81,7 @@ public class EntityEntryContext {
 		final boolean alreadyAssociated;
 		if ( ManagedEntity.class.isInstance( entity ) ) {
 			managedEntity = (ManagedEntity) entity;
-			alreadyAssociated = managedEntity.hibernate_getEntityEntry() != null;
+			alreadyAssociated = managedEntity.$$_hibernate_getEntityEntry() != null;
 		}
 		else {
 			ManagedEntity wrapper = null;
@@ -105,7 +105,7 @@ public class EntityEntryContext {
 		}
 
 		// associate the EntityEntry with the entity
-		managedEntity.hibernate_setEntityEntry( entityEntry );
+		managedEntity.$$_hibernate_setEntityEntry( entityEntry );
 
 		if ( alreadyAssociated ) {
 			// if the entity was already associated with the context, skip the linking step.
@@ -120,8 +120,8 @@ public class EntityEntryContext {
 			count = 1;
 		}
 		else {
-			tail.hibernate_setNextManagedEntity( managedEntity );
-			managedEntity.hibernate_setPreviousManagedEntity( tail );
+			tail.$$_hibernate_setNextManagedEntity( managedEntity );
+			managedEntity.$$_hibernate_setPreviousManagedEntity( tail );
 			tail = managedEntity;
 			count++;
 		}
@@ -145,7 +145,7 @@ public class EntityEntryContext {
 
 		return managedEntity == null
 				? null
-				: managedEntity.hibernate_getEntityEntry();
+				: managedEntity.$$_hibernate_getEntityEntry();
 	}
 
 	public EntityEntry removeEntityEntry(Object entity) {
@@ -167,10 +167,10 @@ public class EntityEntryContext {
 		}
 
 		// prepare for re-linking...
-		ManagedEntity previous = managedEntity.hibernate_getPreviousManagedEntity();
-		ManagedEntity next = managedEntity.hibernate_getNextManagedEntity();
-		managedEntity.hibernate_setPreviousManagedEntity( null );
-		managedEntity.hibernate_setNextManagedEntity( null );
+		ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
+		ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
+		managedEntity.$$_hibernate_setPreviousManagedEntity( null );
+		managedEntity.$$_hibernate_setNextManagedEntity( null );
 
 		count--;
 
@@ -190,7 +190,7 @@ public class EntityEntryContext {
 				head = next;
 			}
 			else {
-				previous.hibernate_setNextManagedEntity( next );
+				previous.$$_hibernate_setNextManagedEntity( next );
 			}
 
 			if ( next == null ) {
@@ -199,12 +199,12 @@ public class EntityEntryContext {
 				tail = previous;
 			}
 			else {
-				next.hibernate_setPreviousManagedEntity( previous );
+				next.$$_hibernate_setPreviousManagedEntity( previous );
 			}
 		}
 
-		EntityEntry theEntityEntry = managedEntity.hibernate_getEntityEntry();
-		managedEntity.hibernate_setEntityEntry( null );
+		EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
+		managedEntity.$$_hibernate_setEntityEntry( null );
 		return theEntityEntry;
 	}
 
@@ -215,10 +215,10 @@ public class EntityEntryContext {
 			ManagedEntity managedEntity = head;
 			while ( managedEntity != null ) {
 				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
-						managedEntity.hibernate_getEntityInstance(),
-						managedEntity.hibernate_getEntityEntry()
+						managedEntity.$$_hibernate_getEntityInstance(),
+						managedEntity.$$_hibernate_getEntityEntry()
 				);
-				managedEntity = managedEntity.hibernate_getNextManagedEntity();
+				managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 			}
 			dirty = false;
 		}
@@ -230,11 +230,11 @@ public class EntityEntryContext {
 
 		ManagedEntity node = head;
 		while ( node != null ) {
-			final ManagedEntity nextNode = node.hibernate_getNextManagedEntity();
+			final ManagedEntity nextNode = node.$$_hibernate_getNextManagedEntity();
 
-			node.hibernate_setEntityEntry( null );
-			node.hibernate_setPreviousManagedEntity( null );
-			node.hibernate_setNextManagedEntity( null );
+			node.$$_hibernate_setEntityEntry( null );
+			node.$$_hibernate_setPreviousManagedEntity( null );
+			node.$$_hibernate_setNextManagedEntity( null );
 
 			node = nextNode;
 		}
@@ -257,9 +257,9 @@ public class EntityEntryContext {
 
 		ManagedEntity node = head;
 		while ( node != null ) {
-			node.hibernate_getEntityEntry().setLockMode( LockMode.NONE );
+			node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
 
-			node = node.hibernate_getNextManagedEntity();
+			node = node.$$_hibernate_getNextManagedEntity();
 		}
 	}
 
@@ -273,11 +273,11 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
-			oos.writeBoolean( managedEntity == managedEntity.hibernate_getEntityInstance() );
-			oos.writeObject( managedEntity.hibernate_getEntityInstance() );
-			managedEntity.hibernate_getEntityEntry().serialize( oos );
+			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
+			oos.writeObject( managedEntity.$$_hibernate_getEntityInstance() );
+			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
 
-			managedEntity = managedEntity.hibernate_getNextManagedEntity();
+			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 		}
 	}
 
@@ -310,14 +310,14 @@ public class EntityEntryContext {
 				}
 				context.nonEnhancedEntityXref.put( entity, managedEntity );
 			}
-			managedEntity.hibernate_setEntityEntry( entry );
+			managedEntity.$$_hibernate_setEntityEntry( entry );
 
 			if ( previous == null ) {
 				context.head = managedEntity;
 			}
 			else {
-				previous.hibernate_setNextManagedEntity( managedEntity );
-				managedEntity.hibernate_setPreviousManagedEntity( previous );
+				previous.$$_hibernate_setNextManagedEntity( managedEntity );
+				managedEntity.$$_hibernate_setPreviousManagedEntity( previous );
 			}
 
 			previous = managedEntity;
@@ -343,37 +343,37 @@ public class EntityEntryContext {
 		}
 
 		@Override
-		public Object hibernate_getEntityInstance() {
+		public Object $$_hibernate_getEntityInstance() {
 			return entityInstance;
 		}
 
 		@Override
-		public EntityEntry hibernate_getEntityEntry() {
+		public EntityEntry $$_hibernate_getEntityEntry() {
 			return entityEntry;
 		}
 
 		@Override
-		public void hibernate_setEntityEntry(EntityEntry entityEntry) {
+		public void $$_hibernate_setEntityEntry(EntityEntry entityEntry) {
 			this.entityEntry = entityEntry;
 		}
 
 		@Override
-		public ManagedEntity hibernate_getNextManagedEntity() {
+		public ManagedEntity $$_hibernate_getNextManagedEntity() {
 			return next;
 		}
 
 		@Override
-		public void hibernate_setNextManagedEntity(ManagedEntity next) {
+		public void $$_hibernate_setNextManagedEntity(ManagedEntity next) {
 			this.next = next;
 		}
 
 		@Override
-		public ManagedEntity hibernate_getPreviousManagedEntity() {
+		public ManagedEntity $$_hibernate_getPreviousManagedEntity() {
 			return previous;
 		}
 
 		@Override
-		public void hibernate_setPreviousManagedEntity(ManagedEntity previous) {
+		public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
 			this.previous = previous;
 		}
 	}

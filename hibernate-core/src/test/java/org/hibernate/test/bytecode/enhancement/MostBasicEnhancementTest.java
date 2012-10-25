@@ -56,23 +56,23 @@ public class MostBasicEnhancementTest extends BaseCoreFunctionalTestCase {
 		MyEntity myEntity = (MyEntity) s.get( MyEntity.class, 1L );
 		MyEntity myEntity2 = (MyEntity) s.get( MyEntity.class, 2L );
 
-		assertNotNull( myEntity.hibernate_getEntityInstance() );
-		assertSame( myEntity, myEntity.hibernate_getEntityInstance() );
-		assertNotNull( myEntity.hibernate_getEntityEntry() );
-		assertNull( myEntity.hibernate_getPreviousManagedEntity() );
-		assertNotNull( myEntity.hibernate_getNextManagedEntity() );
+		assertNotNull( myEntity.$$_hibernate_getEntityInstance() );
+		assertSame( myEntity, myEntity.$$_hibernate_getEntityInstance() );
+		assertNotNull( myEntity.$$_hibernate_getEntityEntry() );
+		assertNull( myEntity.$$_hibernate_getPreviousManagedEntity() );
+		assertNotNull( myEntity.$$_hibernate_getNextManagedEntity() );
 
-		assertNotNull( myEntity2.hibernate_getEntityInstance() );
-		assertSame( myEntity2, myEntity2.hibernate_getEntityInstance() );
-		assertNotNull( myEntity2.hibernate_getEntityEntry() );
-		assertNotNull( myEntity2.hibernate_getPreviousManagedEntity() );
-		assertNull( myEntity2.hibernate_getNextManagedEntity() );
+		assertNotNull( myEntity2.$$_hibernate_getEntityInstance() );
+		assertSame( myEntity2, myEntity2.$$_hibernate_getEntityInstance() );
+		assertNotNull( myEntity2.$$_hibernate_getEntityEntry() );
+		assertNotNull( myEntity2.$$_hibernate_getPreviousManagedEntity() );
+		assertNull( myEntity2.$$_hibernate_getNextManagedEntity() );
 
 		s.createQuery( "delete MyEntity" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 
-		assertNull( myEntity.hibernate_getEntityEntry() );
+		assertNull( myEntity.$$_hibernate_getEntityEntry() );
 	}
 
 

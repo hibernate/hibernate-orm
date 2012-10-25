@@ -23,34 +23,58 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import javassist.CtClass;
 import javassist.CtField;
 
 /**
+ * todo : not sure its a great idea to expose Javassist classes this way.
+ * 		maybe wrap them in our own contracts?
+ *
  * @author Steve Ebersole
  */
 public interface EnhancementContext {
 	/**
-	 * Does the given class name represent a entity class?
+	 * Obtain access to the ClassLoader that can be used to load Class references.  In JPA SPI terms, this
+	 * should be a "temporary class loader" as defined by
+	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}
+	 */
+	public ClassLoader getLoadingClassLoader();
+
+	/**
+	 * Does the given class descriptor represent a entity class?
 	 *
-	 * @param className The name of the class to check.
+	 * @param classDescriptor The descriptor of the class to check.
 	 *
 	 * @return {@code true} if the class is an entity; {@code false} otherwise.
 	 */
-	public boolean isEntityClass(String className);
+	public boolean isEntityClass(CtClass classDescriptor);
 
 	/**
 	 * Does the given class name represent an embeddable/component class?
 	 *
-	 * @param className The name of the class to check.
+	 * @param classDescriptor The descriptor of the class to check.
 	 *
 	 * @return {@code true} if the class is an embeddable/component; {@code false} otherwise.
 	 */
-	public boolean isCompositeClass(String className);
+	public boolean isCompositeClass(CtClass classDescriptor);
+
+	/**
+	 * Should we in-line dirty checking for persistent attributes for this class?
+	 *
+	 * @param classDescriptor The descriptor of the class to check.
+	 *
+	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
+	 * indicates it should not.  In-lined is more easily serializable and probably more performant.
+	 */
+	public boolean doDirtyCheckingInline(CtClass classDescriptor);
+
+	public boolean hasLazyLoadableAttributes(CtClass classDescriptor);
+
+	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite
 
 	/**
 	 * Does the field represent persistent state?  Persistent fields will be "enhanced".
 	 * <p/>
-	 * todo : not sure its a great idea to expose Javassist classes this way.
 	 // 		may be better to perform basic checks in the caller (non-static, etc) and call out with just the
 	 // 		Class name and field name...
 
@@ -59,4 +83,16 @@ public interface EnhancementContext {
 	 * @return {@code true} if the field is ; {@code false} otherwise.
 	 */
  	public boolean isPersistentField(CtField ctField);
+
+	/**
+	 * For fields which are persistent (according to {@link #isPersistentField}), determine the corresponding ordering
+	 * maintained within the Hibernate metamodel.
+
+	 * @param persistentFields The persistent field references.
+	 *
+	 * @return The ordered references.
+	 */
+	public CtField[] order(CtField[] persistentFields);
+
+	public boolean isLazyLoadable(CtField field);
 }

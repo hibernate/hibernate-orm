@@ -21,51 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bytecode.enhancement;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
+package org.hibernate.engine.spi;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
-public class SimpleEntity {
-	private Long id;
-	private String name;
-	private boolean active;
-	private long someNumber;
-
-	@Id
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	public long getSomeNumber() {
-		return someNumber;
-	}
-
-	public void setSomeNumber(long someNumber) {
-		this.someNumber = someNumber;
-	}
+public interface PersistentAttributeInterceptable {
+	public PersistentAttributeInterceptor $$_hibernate_getInterceptor();
+	public void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor);
 }

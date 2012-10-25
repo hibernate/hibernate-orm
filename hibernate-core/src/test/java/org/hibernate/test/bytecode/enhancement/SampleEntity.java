@@ -23,50 +23,75 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
-public class MyEntity implements ManagedEntity {
+public class SampleEntity implements ManagedEntity, PersistentAttributeInterceptable {
 	@Transient
 	private transient EntityEntry entityEntry;
 	@Transient
 	private transient ManagedEntity previous;
 	@Transient
 	private transient ManagedEntity next;
+	@Transient
+	private transient PersistentAttributeInterceptor interceptor;
 
 	private Long id;
 	private String name;
 
-	public MyEntity() {
-	}
-
-	public MyEntity(Long id) {
-		this.id = id;
-	}
-
 	@Id
 	public Long getId() {
-		return id;
+		return hibernate_read_id();
 	}
 
 	public void setId(Long id) {
-		this.id = id;
+		hibernate_write_id( id );
 	}
 
 	public String getName() {
-		return name;
+		return hibernate_read_name();
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		hibernate_write_name( name );
+	}
+
+	private Long hibernate_read_id() {
+		if ( $$_hibernate_getInterceptor() != null ) {
+			this.id = (Long) $$_hibernate_getInterceptor().readObject( this, "id", this.id );
+		}
+		return id;
+	}
+
+	private void hibernate_write_id(Long id) {
+		Long localVar = id;
+		if ( $$_hibernate_getInterceptor() != null ) {
+			localVar = (Long) $$_hibernate_getInterceptor().writeObject( this, "id", this.id, id );
+		}
+		this.id = localVar;
+	}
+
+	private String hibernate_read_name() {
+		if ( $$_hibernate_getInterceptor() != null ) {
+			this.name = (String) $$_hibernate_getInterceptor().readObject( this, "name", this.name );
+		}
+		return name;
+	}
+
+	private void hibernate_write_name(String name) {
+		String localName = name;
+		if ( $$_hibernate_getInterceptor() != null ) {
+			localName = (String) $$_hibernate_getInterceptor().writeObject( this, "name", this.name, name );
+		}
+		this.name = localName;
 	}
 
 	@Override
@@ -102,5 +127,15 @@ public class MyEntity implements ManagedEntity {
 	@Override
 	public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
 		this.previous = previous;
+	}
+
+	@Override
+	public PersistentAttributeInterceptor $$_hibernate_getInterceptor() {
+		return interceptor;
+	}
+
+	@Override
+	public void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor) {
+		this.interceptor = interceptor;
 	}
 }

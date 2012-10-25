@@ -284,7 +284,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		catch ( SQLException sqle ) {
 			throw getSQLExceptionHelper().convert(
 					sqle,
-					"could not update collection rows: " + MessageHelper.collectionInfoString( this, id, getFactory() ),
+					"could not update collection rows: " + MessageHelper.collectionInfoString( this, collection, id, session ),
 					getSQLUpdateRowString()
 				);
 		}

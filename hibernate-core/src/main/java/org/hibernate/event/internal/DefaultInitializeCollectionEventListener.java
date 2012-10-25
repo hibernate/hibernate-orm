@@ -25,8 +25,6 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -40,6 +38,7 @@ import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -62,8 +61,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		if ( !collection.wasInitialized() ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Initializing collection {0}",
-						MessageHelper.collectionInfoString( ce.getLoadedPersister(), ce.getLoadedKey(),
-						source.getFactory() ) );
+						MessageHelper.collectionInfoString( ce.getLoadedPersister(), collection, ce.getLoadedKey(), source ) );
 			}
 
 			LOG.trace( "Checking second-level cache" );

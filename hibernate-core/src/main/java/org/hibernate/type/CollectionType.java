@@ -35,7 +35,6 @@ import java.util.Map;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -47,6 +46,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
@@ -54,8 +54,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.jboss.logging.Logger;
 
 /**
  * A type that handles Hibernate <tt>PersistentCollection</tt>s (including arrays).
@@ -63,6 +65,8 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
 
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -622,6 +626,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			if ( collection == null ) {
 				// create a new collection wrapper, to be initialized later
 				collection = instantiate( session, persister, key );
+				
 				collection.setOwner(owner);
 	
 				persistenceContext.addUninitializedCollection( persister, collection, key );
@@ -638,6 +643,12 @@ public abstract class CollectionType extends AbstractType implements Association
 					session.getPersistenceContext().addCollectionHolder( collection );
 				}
 				
+			}
+			
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Created collection wrapper: %s",
+						MessageHelper.collectionInfoString( persister, collection,
+								key, session ) );
 			}
 			
 		}

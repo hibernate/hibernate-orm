@@ -643,9 +643,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					throw new HibernateException(
 							"Illegal attempt to associate a collection with two open sessions: " +
 									MessageHelper.collectionInfoString(
-											ce.getLoadedPersister(),
-											ce.getLoadedKey(),
-											session.getFactory()
+											ce.getLoadedPersister(), this,
+											ce.getLoadedKey(), session
 									)
 					);
 				}

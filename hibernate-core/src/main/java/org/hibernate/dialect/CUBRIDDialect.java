@@ -194,6 +194,37 @@ public class CUBRIDDialect extends Dialect {
         registerFunction("user",              new NoArgSQLFunction("user",                StandardBasicTypes.STRING,   false)  );
         registerFunction("rownum",            new NoArgSQLFunction("rownum",              StandardBasicTypes.LONG,     false)  );
         registerFunction("concat",            new VarArgsSQLFunction(StandardBasicTypes.STRING, "", "||", ""));
+
+        registerKeyword( "TYPE" );
+        registerKeyword( "YEAR" );
+        registerKeyword( "MONTH" );
+        registerKeyword( "ALIAS" );
+        registerKeyword( "VALUE" );
+        registerKeyword( "FIRST" );
+        registerKeyword( "ROLE" );
+        registerKeyword( "CLASS" );
+        registerKeyword( "BIT" );
+        registerKeyword( "TIME" );
+        registerKeyword( "QUERY" );
+        registerKeyword( "DATE" );
+        registerKeyword( "USER" );
+        registerKeyword( "ACTION" );
+        registerKeyword( "SYS_USER" );
+        registerKeyword( "ZONE" );
+        registerKeyword( "LANGUAGE" );
+        registerKeyword( "DICTIONARY" );
+        registerKeyword( "DATA" );
+        registerKeyword( "TEST" );
+        registerKeyword( "SUPERCLASS" );
+        registerKeyword( "SECTION" );
+        registerKeyword( "LOWER" );
+        registerKeyword( "LIST" );
+        registerKeyword( "OID" );
+        registerKeyword( "DAY" );
+        registerKeyword( "IF" );
+        registerKeyword( "ATTRIBUTE" );
+        registerKeyword( "STRING" );
+        registerKeyword( "SEARCH" );
     }
 	
 	public boolean supportsIdentityColumns() {

@@ -28,6 +28,7 @@ import javax.persistence.Transient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +36,6 @@ import java.util.List;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
-import javassist.NotFoundException;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.annotation.Annotation;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -58,8 +56,12 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  *
  * @see org.hibernate.engine.spi.Managed
  */
-public class EnhancementTask extends Task {
+public class EnhancementTask extends Task implements EnhancementContext {
 	private List<FileSet> filesets = new ArrayList<FileSet>();
+
+	// Enhancer also builds CtClass instances.  Might make sense to share these (ClassPool).
+	private final ClassPool classPool = new ClassPool( false );
+	private final Enhancer enhancer = new Enhancer( this );
 
 	public void addFileset(FileSet set) {
 		this.filesets.add( set );
@@ -67,52 +69,12 @@ public class EnhancementTask extends Task {
 
 	@Override
 	public void execute() throws BuildException {
-		EnhancementContext enhancementContext = new EnhancementContext() {
-			@Override
-			public boolean isEntityClass(String className) {
-				// currently we only call enhance on the classes with @Entity, so here we always return true
-				return true;
-			}
-
-			@Override
-			public boolean isCompositeClass(String className) {
-				return false;
-			}
-
-			@Override
-			public boolean isPersistentField(CtField ctField) {
-				// current check is to look for @Transient
-				return ! ctField.hasAnnotation( Transient.class );
-			}
-		};
+		log( "Starting Hibernate EnhancementTask execution", Project.MSG_INFO );
 
 		// we use the CtClass stuff here just as a simple vehicle for obtaining low level information about
 		// the class(es) contained in a file while still maintaining easy access to the underlying byte[]
-		//
-		// Enhancer also builds CtClass instances.  Might make sense to share these (ClassPool).
-		final ClassPool classPool = new ClassPool( false );
-		final List<CtClass> ctClassList = collectCtClasses( classPool );
-
-		final Enhancer enhancer = new Enhancer( enhancementContext );
-		for ( CtClass ctClass : ctClassList ) {
-			try {
-				enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
-			}
-			catch (Exception e) {
-				log(
-						"Unable to enhance class : " + ctClass.getName(),
-						e,
-						Project.MSG_WARN
-				);
-			}
-
-		}
-	}
-
-	private List<CtClass> collectCtClasses(ClassPool classPool) {
-		final List<CtClass> ctClassList = new ArrayList<CtClass>();
-
 		final Project project = getProject();
+
 		for ( FileSet fileSet : filesets ) {
 			final File fileSetBaseDir = fileSet.getDir( project );
 			final DirectoryScanner directoryScanner = fileSet.getDirectoryScanner( project );
@@ -121,40 +83,110 @@ public class EnhancementTask extends Task {
 				if ( ! javaClassFile.exists() ) {
 					continue;
 				}
-				try {
-					final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
-					collectCtClasses( ctClassList, ctClass );
-				}
-				catch (FileNotFoundException ignore) {
-					// should not ever happen because of explicit check above
-				}
-				catch (IOException e) {
-					throw new BuildException(
-							String.format(
-									"Error processing included file [%s : %s]",
-									fileSetBaseDir.getAbsolutePath(),
-									relativeIncludedFileName
-							),
-							e
-					);
-				}
+
+				processClassFile( javaClassFile );
 			}
 		}
-
-		return ctClassList;
 	}
 
-	private void collectCtClasses(List<CtClass> ctClassList, CtClass ctClass) {
-		if ( ctClass.hasAnnotation( Entity.class ) ) {
-			ctClassList.add( ctClass );
-		}
-
+	private void processClassFile(File javaClassFile) {
 		try {
-			for ( CtClass nestedCtClass : ctClass.getNestedClasses() ) {
-				collectCtClasses( ctClassList, nestedCtClass );
+			final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
+			if ( ! shouldInclude( ctClass ) ) {
+				return;
+			}
+
+			final byte[] enhancedBytecode;
+			try {
+				enhancedBytecode = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+			}
+			catch (Exception e) {
+				log( "Unable to enhance class [" + ctClass.getName() + "]", e, Project.MSG_WARN );
+				return;
+			}
+
+			if ( javaClassFile.delete() ) {
+				if ( ! javaClassFile.createNewFile() ) {
+					log( "Unable to recreate class file [" + ctClass.getName() + "]", Project.MSG_INFO );
+				}
+			}
+			else {
+				log( "Unable to delete class file [" + ctClass.getName() + "]", Project.MSG_INFO );
+			}
+
+			FileOutputStream outputStream = new FileOutputStream( javaClassFile, false );
+			try {
+				outputStream.write( enhancedBytecode );
+				outputStream.flush();
+			}
+			finally {
+				try {
+					outputStream.close();
+				}
+				catch ( IOException ignore) {
+				}
 			}
 		}
-		catch (NotFoundException ignore) {
+		catch (FileNotFoundException ignore) {
+			// should not ever happen because of explicit checks
 		}
+		catch (IOException e) {
+			throw new BuildException(
+					String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ),
+					e
+			);
+		}
+	}
+
+	private boolean shouldInclude(CtClass ctClass) {
+		// we currently only handle entity enhancement
+		return ! ctClass.hasAnnotation( Entity.class );
+	}
+
+
+	// EnhancementContext impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public ClassLoader getLoadingClassLoader() {
+		return getClass().getClassLoader();
+	}
+
+	@Override
+	public boolean isEntityClass(CtClass classDescriptor) {
+		// currently we only call enhance on the classes with @Entity, so here we always return true
+		return true;
+	}
+
+	@Override
+	public boolean isCompositeClass(CtClass classDescriptor) {
+		return false;
+	}
+
+	@Override
+	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+		return false;
+	}
+
+	@Override
+	public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+		return true;
+	}
+
+	@Override
+	public boolean isLazyLoadable(CtField field) {
+		return true;
+	}
+
+	@Override
+	public boolean isPersistentField(CtField ctField) {
+		// current check is to look for @Transient
+		return ! ctField.hasAnnotation( Transient.class );
+	}
+
+	@Override
+	public CtField[] order(CtField[] persistentFields) {
+		// for now...
+		return persistentFields;
+		// eventually needs to consult the Hibernate metamodel for proper ordering
 	}
 }

@@ -63,7 +63,9 @@ public class CUBRIDDialect extends Dialect {
         registerColumnType( Types.TIMESTAMP, "timestamp" );
         registerColumnType( Types.TINYINT, "short" );
 		registerColumnType( Types.VARBINARY, 2000, "bit varying($l)" );
-        registerColumnType( Types.VARCHAR, 4000, "varchar($l)" );
+	    registerColumnType( Types.VARCHAR, "string" );
+	    registerColumnType( Types.VARCHAR, 2000, "varchar($l)" );
+	    registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 
         getDefaultProperties().setProperty(Environment.USE_STREAMS_FOR_BINARY, "true");
         getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);

@@ -79,8 +79,9 @@ public class EvictVisitor extends AbstractVisitor {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Evicting collection: %s",
 					MessageHelper.collectionInfoString( ce.getLoadedPersister(),
+							collection,
 							ce.getLoadedKey(),
-							getSession().getFactory() ) );
+							getSession() ) );
 		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?

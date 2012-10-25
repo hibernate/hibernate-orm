@@ -106,6 +106,11 @@ import static org.junit.Assert.fail;
  *
  * @author Steve
  */
+@SkipForDialect(
+        value = CUBRIDDialect.class,
+        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+)
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 

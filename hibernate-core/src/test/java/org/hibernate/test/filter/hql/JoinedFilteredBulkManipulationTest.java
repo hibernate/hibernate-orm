@@ -24,6 +24,8 @@
 package org.hibernate.test.filter.hql;
 import java.util.Date;
 
+import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -34,6 +36,11 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@SkipForDialect(
+        value = CUBRIDDialect.class,
+        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+)
 public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {

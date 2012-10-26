@@ -361,7 +361,7 @@ public class SessionFactoryHelper {
 	 * @return The sql function, or null if not found.
 	 */
 	public SQLFunction findSQLFunction(String functionName) {
-		return sfi.getSqlFunctionRegistry().findSQLFunction( functionName.toLowerCase() );
+		return sfi.getSqlFunctionRegistry().findSQLFunction( functionName );
 	}
 
 	/**

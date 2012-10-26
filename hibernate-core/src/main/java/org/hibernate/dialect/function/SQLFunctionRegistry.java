@@ -38,7 +38,6 @@ public class SQLFunctionRegistry {
 	}
 	
 	public SQLFunction findSQLFunction(String functionName) {
-		// TODO: lower casing done here. Was done "at random" before; maybe not needed at all ?
 		String name = functionName.toLowerCase();
 		SQLFunction userFunction = userFunctions.get( name );
 		return userFunction != null
@@ -47,7 +46,6 @@ public class SQLFunctionRegistry {
 	}
 
 	public boolean hasFunction(String functionName) {
-		// TODO: toLowerCase was not done before. Only used in Template.
 		String name = functionName.toLowerCase();
 		return userFunctions.containsKey( name ) || dialect.getFunctions().containsKey( name );
 	}

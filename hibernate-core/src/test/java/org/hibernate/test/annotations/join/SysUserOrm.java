@@ -11,7 +11,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity( name = "sys_user" )
-@Table( name = "SYS_USER" )
+@Table( name = "`SYS_USER`" )
 public class SysUserOrm {
 
 	private long userid;

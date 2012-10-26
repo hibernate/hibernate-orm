@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.onetoone;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -35,6 +36,7 @@ public class SerialNumber {
 		this.id = id;
 	}
 
+    @Column(name="`value`")
 	public String getValue() {
 		return value;
 	}

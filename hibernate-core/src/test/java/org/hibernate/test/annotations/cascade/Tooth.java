@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -14,6 +15,7 @@ public class Tooth {
 	@Id
 	@GeneratedValue
 	public Integer id;
+    @Column(name = "`type`")
 	public String type;
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	public Tooth leftNeighbour;

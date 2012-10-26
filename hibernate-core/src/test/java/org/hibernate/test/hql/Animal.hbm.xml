@@ -77,7 +77,7 @@
 				</set>
 				<map name="addresses" table="addresses">
 					<key column="human"/>
-					<map-key type="string" column="type"/>
+					<map-key type="string" column="`type`"/>
 					<composite-element class="Address">
 						<property name="street"/>
 						<property name="city"/>

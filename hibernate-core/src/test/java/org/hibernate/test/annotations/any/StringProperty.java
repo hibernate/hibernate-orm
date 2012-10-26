@@ -3,12 +3,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Column;
 
 @Entity
 @Table(name="string_property")
 public class StringProperty implements Property {
 	private Integer id;
 	private String name;
+    @Column(name = "`value`")
 	private String value;
 
 	public StringProperty() {

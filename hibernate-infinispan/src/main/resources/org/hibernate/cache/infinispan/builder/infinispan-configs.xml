@@ -12,7 +12,7 @@
          <properties>
             <!--<property name="configurationFile" value="jgroups-tcp.xml"/>-->
             <property name="configurationFile"
-                      value="${hibernate.cache.infinispan.jgroups_cfg:tcp.xml}"/>
+                      value="${hibernate.cache.infinispan.jgroups_cfg:jgroups-tcp.xml}"/>
          </properties>
          <!-- See the JGroupsTransport javadocs for more flags -->
       </transport>

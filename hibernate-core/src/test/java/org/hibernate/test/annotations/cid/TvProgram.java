@@ -28,6 +28,7 @@ public class TvProgram {
 	public TvMagazinPk id;
 
 	@Temporal( TemporalType.TIME )
+    @Column(name="`time`")
 	Date time;
 
 	@Column( name = "TXT", table = "TV_PROGRAM_EXT" )

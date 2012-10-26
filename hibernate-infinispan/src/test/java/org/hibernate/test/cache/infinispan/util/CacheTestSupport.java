@@ -64,7 +64,6 @@ public class CacheTestSupport {
     }
 
     public void setUp() throws Exception {
-
         // Try to ensure we use IPv4; otherwise cluster formation is very slow
         preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
         System.setProperty(PREFER_IPV4STACK, "true");
@@ -74,7 +73,6 @@ public class CacheTestSupport {
     }
 
     public void tearDown() throws Exception {
-
         if (preferIPv4Stack == null)
             System.clearProperty(PREFER_IPV4STACK);
         else

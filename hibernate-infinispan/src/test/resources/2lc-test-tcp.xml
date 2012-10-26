@@ -1,0 +1,90 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2012 Red Hat Inc. and/or its affiliates and other
+  ~ contributors as indicated by the @author tags. All rights reserved.
+  ~ See the copyright.txt in the distribution for a full listing of
+  ~ individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+<config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:org:jgroups file:schema/JGroups-3.2.xsd">
+   <TCP bind_port="7800"
+        loopback="true"
+        port_range="30"
+        recv_buf_size="20000000"
+        send_buf_size="640000"
+        max_bundle_size="64000"
+        max_bundle_timeout="30"
+        enable_bundling="true"
+        use_send_queues="true"
+        sock_conn_timeout="300"
+        enable_diagnostics="false"
+        bundler_type="old"
+        send_queue_size="0"
+
+        thread_pool.enabled="true"
+        thread_pool.min_threads="1"
+        thread_pool.max_threads="8"
+        thread_pool.keep_alive_time="5000"
+        thread_pool.queue_enabled="false"
+        thread_pool.queue_max_size="100"
+        thread_pool.rejection_policy="Run"
+
+        oob_thread_pool.enabled="true"
+        oob_thread_pool.min_threads="1"
+        oob_thread_pool.max_threads="8"
+        oob_thread_pool.keep_alive_time="5000"
+        oob_thread_pool.queue_enabled="false"
+        oob_thread_pool.queue_max_size="100"
+        oob_thread_pool.rejection_policy="Run"/>
+
+   <org.infinispan.test.fwk.TEST_PING ergonomics="false" testName=""/>
+
+   <MERGE2 max_interval="10000"
+           min_interval="3000"/>
+   <FD_SOCK/>
+   <!--
+       Note that this is an atypically short timeout and a small number of retries
+       configured this way to speed up unit testing, since we know all nodes run in the same JVM
+       and hence failure detections will be very quick.
+          -->
+   <FD timeout="3000" max_tries="3"/>
+   <VERIFY_SUSPECT timeout="1500"/>
+   <pbcast.NAKACK2
+         use_mcast_xmit="false"
+         xmit_interval="1000"
+         xmit_table_num_rows="100"
+         xmit_table_msgs_per_row="10000"
+         xmit_table_max_compaction_time="10000"
+         max_msg_batch_size="100"
+         become_server_queue_size="0"/>
+
+   <UNICAST2
+         max_bytes="20M"
+         xmit_table_num_rows="20"
+         xmit_table_msgs_per_row="10000"
+         xmit_table_max_compaction_time="10000"
+         max_msg_batch_size="100"/>
+   <pbcast.STABLE stability_delay="1000" desired_avg_gossip="5000"
+                  max_bytes="400000"/>
+   <pbcast.GMS print_local_addr="false" join_timeout="7000" view_bundling="true"/>
+   <FC max_credits="2000000"
+       min_threshold="0.10"/>
+   <FRAG2 frag_size="60000"/>
+
+</config>

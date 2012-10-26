@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -10,6 +11,7 @@ import javax.persistence.Id;
 @Entity
 public class CorpType {
 	private Integer id;
+    @Column(name = "`type`")
 	private String type;
 
 	@Id

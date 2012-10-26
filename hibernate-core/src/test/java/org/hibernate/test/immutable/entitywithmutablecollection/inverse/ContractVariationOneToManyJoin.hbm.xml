@@ -56,7 +56,7 @@
 			<generator class="increment"/>
 		</id>
 		<property name="customerName" not-null="true"/>
-		<property name="type" not-null="true"/>
+		<property name="type" column="`type`" not-null="true"/>
 		<bag name="variations" inverse="true" order-by="id asc"
 				mutable="true" cascade="all-delete-orphan" fetch="join">
 			<key column="contract"/>

@@ -10,7 +10,7 @@
             <key-property name="key1" type="string"/>
             <key-property name="key2" type="string"/>
         </composite-id>
-        <discriminator column="TYPE" type="string" length="10"/>
+        <discriminator column="`TYPE`" type="string" length="10"/>
         <property name="name" type="string"/>
     </class>
 

@@ -25,6 +25,7 @@ package org.hibernate.test.cache.infinispan.timestamp;
 
 import java.util.Properties;
 
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
@@ -124,13 +125,9 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
       return CacheTestUtil.buildConfiguration("test", MockInfinispanRegionFactory.class, false, true);
    }
 
-   public static class MockInfinispanRegionFactory extends InfinispanRegionFactory {
+   public static class MockInfinispanRegionFactory extends SingleNodeTestCase.TestInfinispanRegionFactory {
 
       public MockInfinispanRegionFactory() {
-      }
-
-      public MockInfinispanRegionFactory(Properties props) {
-         super(props);
       }
 
 //      @Override
@@ -148,20 +145,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
          };
       }
 
-      //      @Override
-//      protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
-//         try {
-//            EmbeddedCacheManager manager = new DefaultCacheManager(InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE);
-//            org.infinispan.config.Configuration ispnCfg = new org.infinispan.config.Configuration();
-//            ispnCfg.setCacheMode(org.infinispan.config.Configuration.CacheMode.REPL_SYNC);
-//            manager.defineConfiguration("timestamps", ispnCfg);
-//            return manager;
-//         } catch (IOException e) {
-//            throw new CacheException("Unable to create default cache manager", e);
-//         }
-//      }
-
-      @Listener      
+      @Listener
       public static class MockClassLoaderAwareListener extends ClassLoaderAwareCache.ClassLoaderAwareListener {
          MockClassLoaderAwareListener(Object listener, ClassLoaderAwareCache cache) {
             super(listener, cache);

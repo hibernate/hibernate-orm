@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.cache.infinispan.tm;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Properties;
 import javax.naming.Context;
@@ -34,10 +32,9 @@ import javax.naming.NameNotFoundException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.transaction.Status;
-import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
-import org.enhydra.jdbc.standard.StandardXADataSource;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -62,8 +59,6 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -90,7 +85,7 @@ public class JBossStandaloneJtaExampleTest {
       jndiServer = startJndiServer();
       ctx = createJndiContext();
       // Inject configuration to initialise transaction manager from config classloader
-      lookup.init( new org.infinispan.config.Configuration() );
+      lookup.init(new ConfigurationBuilder().build());
       bindTransactionManager();
       bindUserTransaction();
    }
@@ -98,6 +93,8 @@ public class JBossStandaloneJtaExampleTest {
    @After
    public void tearDown() throws Exception {
       try {
+         unbind("UserTransaction", ctx);
+         unbind("java:/TransactionManager", ctx);
          ctx.close();
          jndiServer.stop();
 	  }
@@ -255,7 +252,8 @@ public class JBossStandaloneJtaExampleTest {
       cfg.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY, "org.hibernate.cache.infinispan.InfinispanRegionFactory");
+      cfg.setProperty(Environment.CACHE_REGION_FACTORY,
+            "org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory");
 
       Properties envProps = Environment.getProperties();
       envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());

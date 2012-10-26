@@ -59,7 +59,7 @@
         </fetch-profile>
     </class>
 
-    <class name="CourseOffering" table="SECTION">
+    <class name="CourseOffering" table="`SECTION`">
         <id name="id" type="long">
             <generator class="increment"/>
         </id>

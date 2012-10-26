@@ -4,11 +4,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(name="`Zone`")
 public class Zone {
 	private Integer id;
 

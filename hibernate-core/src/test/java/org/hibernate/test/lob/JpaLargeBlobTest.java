@@ -32,6 +32,8 @@ import org.hibernate.LobHelper;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -40,6 +42,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @TestForIssue( jiraKey = "HHH-7698" )
+@RequiresDialect( value = H2Dialect.class, jiraKey = "HHH-7724" )
 public class JpaLargeBlobTest extends BaseCoreFunctionalTestCase {
     
     @Override

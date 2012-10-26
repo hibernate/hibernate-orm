@@ -598,7 +598,9 @@ public abstract class Dialect implements ConversionContext {
 	// function support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected void registerFunction(String name, SQLFunction function) {
-		sqlFunctions.put( name, function );
+		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
+		// just in case a user's customer dialect uses mixed cases.
+		sqlFunctions.put( name.toLowerCase(), function );
 	}
 
 	/**

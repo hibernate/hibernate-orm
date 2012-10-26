@@ -25,7 +25,7 @@ import javax.persistence.SqlResultSetMapping;
 		@FieldResult(name = "name", column = "name"),
 		@FieldResult(name = "editor", column = "editor")
 				},
-		discriminatorColumn = "type"
+		discriminatorColumn = "`type`"
 )
 		}
 )

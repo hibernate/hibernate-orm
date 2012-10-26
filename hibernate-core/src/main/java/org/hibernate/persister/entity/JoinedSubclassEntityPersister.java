@@ -565,7 +565,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}*/
 
 	public String getSubclassPropertyTableName(int i) {
-		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
+		return subclassTableNameClosure[ subclassPropertyTableNumberClosure[i] ];
 	}
 
 	public Type getDiscriminatorType() {

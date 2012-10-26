@@ -870,7 +870,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassPropertyTableName(int i) {
-		return subclassTableNameClosure[ subclassPropertyTableNumberClosure[i] ];
+		if ( i >= 0 ) {
+			return subclassTableNameClosure[ subclassPropertyTableNumberClosure[i] ];
+		}
+
+		return "";
 	}
 
 	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
@@ -887,7 +891,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected int getSubclassPropertyTableNumber(int i) {
-		return subclassPropertyTableNumberClosure[i];
+		if ( i >= 0 ) {
+			return subclassPropertyTableNumberClosure[i];
+		}
+
+		return 0;
 	}
 
 	public int getTableSpan() {

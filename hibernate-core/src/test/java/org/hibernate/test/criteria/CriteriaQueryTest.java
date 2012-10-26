@@ -2018,7 +2018,6 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
     
     @Test
     @TestForIssue( jiraKey = "HHH-1570" )
-    @FailureExpected( jiraKey = "HHH-1570" )
 	public void testJoinKeyManyToOne() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

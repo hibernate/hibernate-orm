@@ -108,5 +108,10 @@ public interface OuterJoinLoadable extends Loadable, Joinable {
 	public String getPropertyTableName(String propertyName);
 	
 	public EntityType getEntityType();
+	
+	/**
+	 * return the alised identifier column names
+	 */
+	public String[] toIdentifierColumns(String alias);
 
 }

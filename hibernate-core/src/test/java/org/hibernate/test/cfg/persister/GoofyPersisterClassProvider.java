@@ -802,5 +802,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
+
+		@Override
+		public int getBatchSize() {
+			return 0;
+		}
 	}
 }

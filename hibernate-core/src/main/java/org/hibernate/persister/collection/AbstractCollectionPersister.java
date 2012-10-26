@@ -1913,6 +1913,11 @@ public abstract class AbstractCollectionPersister
 		return initializer;
 	}
 
+	@Override
+	public int getBatchSize() {
+		return batchSize;
+	}
+
 	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
 		private final String rootAlias;
 

@@ -23,6 +23,13 @@
  */
 package org.hibernate.test.criteria;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,8 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -61,6 +66,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -68,13 +74,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -85,7 +85,11 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] {
-				"criteria/Enrolment.hbm.xml", "criteria/Foo.hbm.xml", "hql/Animal.hbm.xml", "criteria/Person.hbm.xml"
+				"criteria/Enrolment.hbm.xml",
+				"criteria/Foo.hbm.xml",
+				"hql/Animal.hbm.xml",
+				"criteria/Person.hbm.xml",
+				"criteria/KeyManyToOne.hbm.xml"
 		};
 	}
 
@@ -1960,7 +1964,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-        @Test
+    @Test
 	public void testCriteriaFetchMode() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -2010,6 +2014,22 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 		
+	}
+    
+    @Test
+    @TestForIssue( jiraKey = "HHH-1570" )
+    @FailureExpected( jiraKey = "HHH-1570" )
+	public void testJoinKeyManyToOne() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		session.createCriteria( LeftTable.class )
+				.createCriteria("middleTables", "mid" )
+				.createCriteria( "mid.right", "right" )
+				.add( Restrictions.eq( "right.value", "foo" ) ).list();
+
+		t.commit();
+		session.close();
 	}
 
 }

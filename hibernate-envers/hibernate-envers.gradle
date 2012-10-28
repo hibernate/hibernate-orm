@@ -17,6 +17,16 @@ sourceSets {
             srcDir generatedJpaMetamodelSrcDir
         }
     }
+    test {
+        ext.enversDemoJavaDir = file( "src/demo/java" )
+        ext.enversDemoResourcesDir = file( "src/demo/resources" )
+        java {
+            srcDir enversDemoJavaDir
+        }
+        resources {
+            srcDir enversDemoResourcesDir
+        }
+    }
 }
 
 // Generate JPA2 static metamodel for default revision entities

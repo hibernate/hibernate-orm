@@ -20,7 +20,6 @@
  * Red Hat Author(s): Adam Warski
  */
 package org.hibernate.envers.demo;
-import java.io.File;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -451,8 +450,6 @@ public class TestConsole {
     }
 
     public static void main(String[] args) {
-        String userDbFile = System.getProperty("java.io.tmpdir") + File.separator + "_versions_demo.db";
-
         Map<String, String> configurationOverrides = new HashMap<String, String>();
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConsolePU", configurationOverrides);
         EntityManager entityManager = emf.createEntityManager();
@@ -461,7 +458,10 @@ public class TestConsole {
 
         System.out.println("");
         System.out.println("Welcome to EntityVersions demo!");
-        System.out.println("HSQLDB database file location: " + userDbFile);
+//      If you would like to use HSQLDB, uncomment relevant entries in
+//      hibernate-envers/src/demo/resources/META-INF/persistence.xml descriptor and add required JAR libraries.
+//        String userDbFile = System.getProperty("java.io.tmpdir") + File.separator + "_versions_demo.db";
+//        System.out.println("HSQLDB database file location: " + userDbFile);
 
         console.populateTestData();
         console.start();

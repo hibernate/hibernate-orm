@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://java.sun.com/xml/ns/persistence" version="1.0">
     <persistence-unit name="ConsolePU">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>org.hibernate.envers.demo.Address</class>
         <class>org.hibernate.envers.demo.Person</class>
         <exclude-unlisted-classes />
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.connection.url" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.username" value="sa"/>
+            <property name="hibernate.connection.password" value=""/>
+
+            <!--<property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
             <property name="hibernate.connection.url" value="jdbc:hsqldb:file:${java.io.tmpdir}/_versions_demo.db"/>
             <property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/>
             <property name="hibernate.connection.username" value="sa"/>
-            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.connection.password" value=""/>-->
 
             <!--<property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.connection.url" value="jdbc:mysql:///hibernate_tests?useUnicode=true&amp;characterEncoding=UTF-8"/>

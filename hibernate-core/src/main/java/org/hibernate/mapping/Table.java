@@ -328,6 +328,27 @@ public class Table implements RelationalModel, Serializable {
 				&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
 	}
 
+	@Override
+	public int hashCode() {
+		return isQuoted() ? name.hashCode() : name.toLowerCase().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof Table && equals((Table) object);
+	}
+
+	public boolean equals(Table table) {
+		if (null == table) {
+			return false;
+		}
+		if (this == table) {
+			return true;
+		}
+
+		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName());
+	}
+	
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {

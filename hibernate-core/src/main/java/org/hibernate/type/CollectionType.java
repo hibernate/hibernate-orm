@@ -518,8 +518,11 @@ public abstract class CollectionType extends AbstractType implements Association
 					( ( PersistentCollection ) result ).clearDirty();
 				}
 
-				if (elemType instanceof AssociationType) {
-					preserveSnapshot(( PersistentCollection )original, ( PersistentCollection ) result, (AssociationType) elemType, owner, copyCache, session);
+				if ( elemType instanceof AssociationType ) {
+					preserveSnapshot( (PersistentCollection) original,
+							(PersistentCollection) result,
+							(AssociationType) elemType, owner, copyCache,
+							session );
 				}
 			}
 		}
@@ -527,61 +530,77 @@ public abstract class CollectionType extends AbstractType implements Association
 		return result;
 	}
 
-	private void preserveSnapshot(PersistentCollection original ,PersistentCollection result, AssociationType elemType, Object owner,
-			Map copyCache, SessionImplementor session) {
+	private void preserveSnapshot(PersistentCollection original,
+			PersistentCollection result, AssociationType elemType,
+			Object owner, Map copyCache, SessionImplementor session) {
 		Serializable originalSnapshot = original.getStoredSnapshot();
 		Serializable resultSnapshot = result.getStoredSnapshot();
 		Serializable targetSnapshot;
-		
-		if (originalSnapshot instanceof List) {
-			targetSnapshot = new ArrayList(((List) originalSnapshot).size()); 
-			for (Object obj : (List) originalSnapshot) {
-				((List) targetSnapshot).add(elemType.replace(obj, null, session, owner, copyCache));
-			}
-		
-		} else if (originalSnapshot instanceof Map) {
-			if (originalSnapshot instanceof SortedMap) {
-				targetSnapshot = new TreeMap(((SortedMap) originalSnapshot).comparator());
-			} else {
-				targetSnapshot = new HashMap(
-						CollectionHelper.determineProperSizing( ((Map) originalSnapshot).size()), 
-						CollectionHelper.LOAD_FACTOR);
-			}
-			
-			for (Map.Entry<Object, Object> entry : ((Map<Object,Object>) originalSnapshot).entrySet()) {
-				Object key = entry.getKey();
-				Object value = entry.getValue();
-				Object resultSnapshotValue = (resultSnapshot == null) ? null : ((Map<Object,Object>) resultSnapshot).get(key);
-				
-				if (key == value) { 
-					Object newValue = elemType.replace(value, resultSnapshotValue, session, owner, copyCache );
-					((Map) targetSnapshot).put(newValue, newValue);
-						
-				} else {
-					Object newValue = elemType.replace(value, resultSnapshotValue, session, owner, copyCache );
-					((Map) targetSnapshot).put(key, newValue);
-				}
-				
+
+		if ( originalSnapshot instanceof List ) {
+			targetSnapshot = new ArrayList(
+					( (List) originalSnapshot ).size() );
+			for ( Object obj : (List) originalSnapshot ) {
+				( (List) targetSnapshot ).add( elemType.replace(
+						obj, null, session, owner, copyCache ) );
 			}
 
-		} else if (originalSnapshot instanceof Object []) {
-			Object [] arr = ( Object []) originalSnapshot;
-			for (int i=0; i< arr.length; i++) {
-				arr[i] = elemType.replace(arr[i], null, session, owner, copyCache );
+		}
+		else if ( originalSnapshot instanceof Map ) {
+			if ( originalSnapshot instanceof SortedMap ) {
+				targetSnapshot = new TreeMap(
+						( (SortedMap) originalSnapshot ).comparator() );
+			}
+			else {
+				targetSnapshot = new HashMap(
+						CollectionHelper.determineProperSizing(
+								( (Map) originalSnapshot ).size() ),
+						CollectionHelper.LOAD_FACTOR );
+			}
+
+			for ( Map.Entry<Object, Object> entry : (
+					(Map<Object, Object>) originalSnapshot ).entrySet() ) {
+				Object key = entry.getKey();
+				Object value = entry.getValue();
+				Object resultSnapshotValue = ( resultSnapshot == null ) ? null
+						: ( (Map<Object, Object>) resultSnapshot ).get( key );
+
+				if ( key == value ) {
+					Object newValue = elemType.replace( value,
+							resultSnapshotValue, session, owner, copyCache );
+					( (Map) targetSnapshot ).put( newValue, newValue );
+
+				}
+				else {
+					Object newValue = elemType.replace( value,
+							resultSnapshotValue, session, owner, copyCache );
+					( (Map) targetSnapshot ).put( key, newValue );
+				}
+
+			}
+
+		}
+		else if ( originalSnapshot instanceof Object[] ) {
+			Object[] arr = (Object[]) originalSnapshot;
+			for ( int i = 0; i < arr.length; i++ ) {
+				arr[i] = elemType.replace(
+						arr[i], null, session, owner, copyCache );
 			}
 			targetSnapshot = originalSnapshot;
-		
-		} else {
+
+		}
+		else {
 			// retain the same snapshot
 			targetSnapshot = resultSnapshot;
-			
+
 		}
-		
-		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry(result);
-		if (ce != null) {
-			ce.resetStoredSnapshot(result, targetSnapshot);
+
+		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry(
+				result );
+		if ( ce != null ) {
+			ce.resetStoredSnapshot( result, targetSnapshot );
 		}
-		
+
 	}
 
 	/**

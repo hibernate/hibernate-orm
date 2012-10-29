@@ -343,7 +343,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	/**
 	 * Shallow copy, the value is not copied
 	 */
-	protected Object clone() {
+	@Override
+	public Column clone() {
 		Column copy = new Column();
 		copy.setLength( length );
 		copy.setScale( scale );

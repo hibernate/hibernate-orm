@@ -31,6 +31,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -88,6 +90,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Association;
@@ -481,6 +485,15 @@ public final class SessionFactoryImpl
 
 		LOG.debug( "Instantiated session factory" );
 
+		settings.getMultiTableBulkIdStrategy().prepare(
+				dialect,
+				buildLocalConnectionAccess(),
+				cfg.createMappings(),
+				cfg.buildMapping(),
+				properties
+		);
+
+
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( serviceRegistry, cfg )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
@@ -554,6 +567,32 @@ public final class SessionFactoryImpl
 		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( cfg.getCurrentTenantIdentifierResolver() );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	private JdbcConnectionAccess buildLocalConnectionAccess() {
+		return new JdbcConnectionAccess() {
+			@Override
+			public Connection obtainConnection() throws SQLException {
+				return settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE
+						? serviceRegistry.getService( ConnectionProvider.class ).getConnection()
+						: serviceRegistry.getService( MultiTenantConnectionProvider.class ).getAnyConnection();
+			}
+
+			@Override
+			public void releaseConnection(Connection connection) throws SQLException {
+				if ( settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE ) {
+					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
+				}
+				else {
+					serviceRegistry.getService( MultiTenantConnectionProvider.class ).releaseAnyConnection( connection );
+				}
+			}
+
+			@Override
+			public boolean supportsAggressiveRelease() {
+				return false;
+			}
+		};
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -1343,6 +1382,8 @@ public final class SessionFactoryImpl
 		LOG.closing();
 
 		isClosed = true;
+
+		settings.getMultiTableBulkIdStrategy().release( dialect, buildLocalConnectionAccess() );
 
 		Iterator iter = entityPersisters.values().iterator();
 		while ( iter.hasNext() ) {

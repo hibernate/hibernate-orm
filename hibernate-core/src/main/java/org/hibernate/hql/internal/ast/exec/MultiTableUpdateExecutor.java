@@ -24,178 +24,44 @@
  */
 package org.hibernate.hql.internal.ast.exec;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
-import org.hibernate.hql.internal.ast.tree.FromElement;
-import org.hibernate.hql.internal.ast.tree.UpdateStatement;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.param.ParameterSpecification;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.Update;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 
 /**
  * Implementation of MultiTableUpdateExecutor.
  *
  * @author Steve Ebersole
  */
-public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       MultiTableUpdateExecutor.class.getName());
-
-	private final Queryable persister;
-	private final String idInsertSelect;
-	private final String[] updates;
-	private final ParameterSpecification[][] hqlParameters;
+public class MultiTableUpdateExecutor implements StatementExecutor {
+	private final MultiTableBulkIdStrategy.UpdateHandler updateHandler;
 
 	public MultiTableUpdateExecutor(HqlSqlWalker walker) {
-        super(walker, null);
-
-		if ( !walker.getSessionFactoryHelper().getFactory().getDialect().supportsTemporaryTables() ) {
-			throw new HibernateException( "cannot doAfterTransactionCompletion multi-table updates using dialect not supporting temp tables" );
-		}
-
-		UpdateStatement updateStatement = ( UpdateStatement ) walker.getAST();
-		FromElement fromElement = updateStatement.getFromClause().getFromElement();
-		String bulkTargetAlias = fromElement.getTableAlias();
-		this.persister = fromElement.getQueryable();
-
-		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, updateStatement.getWhereClause() );
-		LOG.tracev( "Generated ID-INSERT-SELECT SQL (multi-table update) : {0}", idInsertSelect );
-
-		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
-		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();
-
-		String idSubselect = generateIdSubselect( persister );
-		List assignmentSpecifications = walker.getAssignmentSpecifications();
-
-		updates = new String[tableNames.length];
-		hqlParameters = new ParameterSpecification[tableNames.length][];
-		for ( int tableIndex = 0; tableIndex < tableNames.length; tableIndex++ ) {
-			boolean affected = false;
-			List parameterList = new ArrayList();
-			Update update = new Update( getFactory().getDialect() )
-					.setTableName( tableNames[tableIndex] )
-					.setWhere( "(" + StringHelper.join( ", ", columnNames[tableIndex] ) + ") IN (" + idSubselect + ")" );
-			if ( getFactory().getSettings().isCommentsEnabled() ) {
-				update.setComment( "bulk update" );
-			}
-			final Iterator itr = assignmentSpecifications.iterator();
-			while ( itr.hasNext() ) {
-				final AssignmentSpecification specification = ( AssignmentSpecification ) itr.next();
-				if ( specification.affectsTable( tableNames[tableIndex] ) ) {
-					affected = true;
-					update.appendAssignmentFragment( specification.getSqlAssignmentFragment() );
-					if ( specification.getParameters() != null ) {
-						for ( int paramIndex = 0; paramIndex < specification.getParameters().length; paramIndex++ ) {
-							parameterList.add( specification.getParameters()[paramIndex] );
-						}
-					}
-				}
-			}
-			if ( affected ) {
-				updates[tableIndex] = update.toStatementString();
-				hqlParameters[tableIndex] = ( ParameterSpecification[] ) parameterList.toArray( new ParameterSpecification[0] );
-			}
-		}
-	}
-
-	public Queryable getAffectedQueryable() {
-		return persister;
+		MultiTableBulkIdStrategy strategy = walker.getSessionFactoryHelper()
+				.getFactory()
+				.getSettings()
+				.getMultiTableBulkIdStrategy();
+		this.updateHandler = strategy.buildUpdateHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
 	public String[] getSqlStatements() {
-		return updates;
+		return updateHandler.getSqlStatements();
 	}
 
 	public int execute(QueryParameters parameters, SessionImplementor session) throws HibernateException {
-		coordinateSharedCacheCleanup( session );
+		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, updateHandler.getTargetedQueryable() );
 
-		createTemporaryTableIfNecessary( persister, session );
-
-		try {
-			// First, save off the pertinent ids, as the return value
-			PreparedStatement ps = null;
-			int resultCount = 0;
-			try {
-				try {
-					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
-//					int parameterStart = getWalker().getNumberOfParametersInSetClause();
-//					List allParams = getIdSelectParameterSpecifications();
-//					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
-					Iterator whereParams = getIdSelectParameterSpecifications().iterator();
-					int sum = 1; // jdbc params are 1-based
-					while ( whereParams.hasNext() ) {
-						sum += ( ( ParameterSpecification ) whereParams.next() ).bind( ps, parameters, session, sum );
-					}
-					resultCount = ps.executeUpdate();
-				}
-				finally {
-					if ( ps != null ) {
-						ps.close();
-					}
-				}
-			}
-			catch( SQLException e ) {
-				throw getFactory().getSQLExceptionHelper().convert(
-				        e,
-				        "could not insert/select ids for bulk update",
-				        idInsertSelect
-					);
-			}
-
-			// Start performing the updates
-			for ( int i = 0; i < updates.length; i++ ) {
-				if ( updates[i] == null ) {
-					continue;
-				}
-				try {
-					try {
-						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
-						if ( hqlParameters[i] != null ) {
-							int position = 1; // jdbc params are 1-based
-							for ( int x = 0; x < hqlParameters[i].length; x++ ) {
-								position += hqlParameters[i][x].bind( ps, parameters, session, position );
-							}
-						}
-						ps.executeUpdate();
-					}
-					finally {
-						if ( ps != null ) {
-							ps.close();
-						}
-					}
-				}
-				catch( SQLException e ) {
-					throw getFactory().getSQLExceptionHelper().convert(
-					        e,
-					        "error performing bulk update",
-					        updates[i]
-						);
-				}
-			}
-
-			return resultCount;
+		if ( session.isEventSource() ) {
+			( (EventSource) session ).getActionQueue().addAction( action );
 		}
-		finally {
-			dropTemporaryTableIfNecessary( persister, session );
+		else {
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
 		}
-	}
 
-	@Override
-    protected Queryable[] getAffectedQueryables() {
-		return new Queryable[] { persister };
+		return updateHandler.execute( session, parameters );
 	}
 }

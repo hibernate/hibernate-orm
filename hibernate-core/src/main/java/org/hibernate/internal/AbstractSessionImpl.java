@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -52,6 +53,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
+import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
@@ -315,6 +317,15 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			}
 		}
 		return jdbcConnectionAccess;
+	}
+
+	private UUID sessionIdentifier;
+
+	public UUID getSessionIdentifier() {
+		if ( sessionIdentifier == null ) {
+			sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( this );
+		}
+		return sessionIdentifier;
 	}
 
 	private static class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {

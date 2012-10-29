@@ -30,6 +30,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -88,6 +89,9 @@ public final class Settings {
 	private MultiTenancyStrategy multiTenancyStrategy;
 
 	private JtaPlatform jtaPlatform;
+
+	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+
 
 	/**
 	 * Package protected constructor
@@ -467,5 +471,13 @@ public final class Settings {
 
 	void setInitializeLazyStateOutsideTransactions(boolean initializeLazyStateOutsideTransactions) {
 		this.initializeLazyStateOutsideTransactions = initializeLazyStateOutsideTransactions;
+	}
+
+	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
+		return multiTableBulkIdStrategy;
+	}
+
+	void setMultiTableBulkIdStrategy(MultiTableBulkIdStrategy multiTableBulkIdStrategy) {
+		this.multiTableBulkIdStrategy = multiTableBulkIdStrategy;
 	}
 }

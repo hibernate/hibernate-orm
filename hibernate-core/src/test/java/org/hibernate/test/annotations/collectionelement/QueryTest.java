@@ -44,7 +44,6 @@ public class QueryTest extends BaseCoreFunctionalTestCase {
 	public void testMemberOfSyntax() {
 		// performs syntax checking of the MEMBER OF predicate against a basic collection
 		Session s = openSession();
-//		s.createQuery( "from EntityWithAnElementCollection e where 'abc' in elements( e.someStrings )" ).list();
 		s.createQuery( "from EntityWithAnElementCollection e where 'abc' member of e.someStrings" ).list();
 		s.close();
 	}

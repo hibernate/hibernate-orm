@@ -53,7 +53,7 @@
 		<property name="endDate" column="ENDDATE" insert="false"/>
 		<property name="regionCode" column="REGIONCODE" update="false"/>
 	    <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
-			<column name="`VALUE`" sql-type="float"/>
+			<column name="AMOUNT" sql-type="float"/>
 			<column name="CURRENCY"/>			
 		</property>
 	</class>
@@ -246,7 +246,7 @@
 			<return-property name="element.regionCode" column="REGIONCODE"/>			
 			<return-property name="element.employmentId" column="EMPID"/>						
 			<return-property name="element.salary">
-                <return-column name="`VALUE`"/>
+                <return-column name="AMOUNT"/>
                 <return-column name="CURRENCY"/>
 			</return-property>
 		</return-join>
@@ -259,7 +259,7 @@
             emp.STARTDATE as xstartDate,
             emp.ENDDATE as endDate,
             emp.REGIONCODE as regionCode,
-            emp.VALUE as VALUE,
+            emp.AMOUNT as AMOUNT,
             emp.CURRENCY as CURRENCY
         FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
@@ -279,7 +279,7 @@
             emp.STARTDATE as startDate,
             emp.ENDDATE as endDate,
             emp.REGIONCODE as regionCode,
-            emp.VALUE as VALUE,
+            emp.AMOUNT as AMOUNT,
             emp.CURRENCY as CURRENCY
 		FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER

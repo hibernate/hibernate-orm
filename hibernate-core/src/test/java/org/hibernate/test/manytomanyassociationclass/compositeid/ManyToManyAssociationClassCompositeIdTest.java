@@ -24,7 +24,9 @@
 package org.hibernate.test.manytomanyassociationclass.compositeid;
 
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
+import org.hibernate.test.manytomanyassociationclass.Group;
 import org.hibernate.test.manytomanyassociationclass.Membership;
+import org.hibernate.test.manytomanyassociationclass.User;
 
 /**
  * Tests on many-to-many association using an association class with a composite ID containing
@@ -42,4 +44,15 @@ public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToMan
 	public Membership createMembership( String name ) {
 		return new MembershipWithCompositeId( name );
 	}
+	
+	@Override
+	public void deleteMembership(User u, Group g, Membership ug) {
+		if ( u == null || g == null ) {
+			throw new IllegalArgumentException();
+		}
+		u.getMemberships().remove( ug );
+		g.getMemberships().remove( ug );
+		ug.setId(null);
+	}
+
 }

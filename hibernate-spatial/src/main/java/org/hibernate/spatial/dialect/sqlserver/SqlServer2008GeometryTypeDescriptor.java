@@ -68,8 +68,8 @@ public class SqlServer2008GeometryTypeDescriptor extends GeometrySqlTypeDescript
 		return new BasicBinder<X>(javaTypeDescriptor, this){
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				Geometry jtsGeom = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				byte[] bytes = Encoders.encode( jtsGeom );
+				Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				byte[] bytes = Encoders.encode( geometry );
 				st.setObject( index, bytes );
 			}
 
@@ -82,23 +82,23 @@ public class SqlServer2008GeometryTypeDescriptor extends GeometrySqlTypeDescript
 
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toJTS( rs.getObject( name ) ), options );
+				return getJavaDescriptor().wrap( toGeometry( rs.getObject( name ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toJTS( statement.getObject( index ) ), options );
+				return getJavaDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaDescriptor().wrap( toJTS( statement.getObject( name ) ), options );
+				return getJavaDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}
 
-	private Geometry toJTS(Object obj) {
+	private Geometry toGeometry(Object obj) {
 		byte[] raw = null;
 		if ( obj == null ) {
 			return null;

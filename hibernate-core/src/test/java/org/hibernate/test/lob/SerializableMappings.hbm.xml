@@ -5,7 +5,9 @@
 
 <hibernate-mapping package="org.hibernate.test.lob">
 
-	<class name="SerializableHolder" table="LOB_ENTITY">
+    <!-- HHH-7734: Don't use LOB_ENTITY as the table name.  Others use it
+    and there were some odd locking issue with 1 version of Oracle. -->
+	<class name="SerializableHolder" table="SerializableHolder">
 		<id name="id" type="long" column="ID">
 			<generator class="increment"/>
 		</id>

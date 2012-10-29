@@ -38,7 +38,7 @@ Executing Tasks
 Gradle uses the concept of build tasks (equivalent to Ant targets). You can get a list of available tasks 
 via 
 
-    gradle --tasks
+    gradlew tasks
     
 ### Executing Tasks Across All Modules
 

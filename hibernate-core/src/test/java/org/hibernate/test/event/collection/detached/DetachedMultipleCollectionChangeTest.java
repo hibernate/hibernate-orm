@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.event.collection.detached;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +36,9 @@ import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.jboss.logging.Logger;
-
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 /**
  * Test HHH-6361: Collection events may contain wrong stored snapshot after
@@ -47,10 +46,8 @@ import static org.junit.Assert.assertSame;
  * 
  * @author Erik-Berndt Scheper
  */
-public class DetachedMultipleCollectionChangeTest extends AbstractJPATest {
-
-	private final Logger log = Logger
-			.getLogger(DetachedMultipleCollectionChangeTest.class);
+@TestForIssue( jiraKey = "HHH-6361" )
+public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public String[] getMappings() {
@@ -73,19 +70,15 @@ public class DetachedMultipleCollectionChangeTest extends AbstractJPATest {
 	public void testMergeMultipleCollectionChangeEvents() {
 		MultipleCollectionListeners listeners = new MultipleCollectionListeners(
 				sessionFactory());
-
-		List<MultipleCollectionRefEntity1> oldRefentities1;
-		List<MultipleCollectionRefEntity2> oldRefentities2;
-		int eventCount;
-		Session s;
-
-		oldRefentities1 = new ArrayList<MultipleCollectionRefEntity1>();
-		oldRefentities2 = new ArrayList<MultipleCollectionRefEntity2>();
-
 		listeners.clear();
-		eventCount = 0;
+		int eventCount = 0;
 
-		s = openSession();
+		List<MultipleCollectionRefEntity1> oldRefentities1
+				= new ArrayList<MultipleCollectionRefEntity1>();
+		List<MultipleCollectionRefEntity2> oldRefentities2
+				= new ArrayList<MultipleCollectionRefEntity2>();
+
+		Session s = openSession();
 		s.beginTransaction();
 
 		MultipleCollectionEntity mce = new MultipleCollectionEntity();
@@ -224,9 +217,6 @@ public class DetachedMultipleCollectionChangeTest extends AbstractJPATest {
 		mce.addRefEntity2(re2_3);
 
 		mce = (MultipleCollectionEntity) s.merge(mce);
-
-		// assertEquals(2, mce.getRefEntities1().size());
-		// assertEquals(2, mce.getRefEntities2().size());
 
 		s.getTransaction().commit();
 

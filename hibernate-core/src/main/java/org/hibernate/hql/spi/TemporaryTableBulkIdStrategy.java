@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -55,7 +56,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	);
 
 	@Override
-	public void prepare(Dialect dialect, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping) {
+	public void prepare(Dialect dialect, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings) {
 		// nothing to do
 	}
 

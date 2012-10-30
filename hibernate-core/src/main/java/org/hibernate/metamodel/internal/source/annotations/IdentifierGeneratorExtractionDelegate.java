@@ -188,12 +188,12 @@ public class IdentifierGeneratorExtractionDelegate {
 
 				parameterMap.put(
 						TableGenerator.INCREMENT_PARAM,
-						String.valueOf( JandexHelper.getValue( generatorAnnotation, "allocationSize", String.class ) )
+						String.valueOf( JandexHelper.getValue( generatorAnnotation, "allocationSize", Integer.class ) )
 				);
 
 				parameterMap.put(
 						TableGenerator.INITIAL_PARAM,
-						String.valueOf( JandexHelper.getValue( generatorAnnotation, "initialValue", String.class ) + 1 )
+						String.valueOf( JandexHelper.getValue( generatorAnnotation, "initialValue", Integer.class ) + 1 )
 				);
 			}
 			else {

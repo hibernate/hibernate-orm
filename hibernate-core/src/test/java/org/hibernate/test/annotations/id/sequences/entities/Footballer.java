@@ -10,7 +10,7 @@ import javax.persistence.IdClass;
  */
 @Entity
 @IdClass(FootballerPk.class)
-@DiscriminatorColumn(name = "bibi")
+@DiscriminatorColumn(name = "bibi", length=63)
 public class Footballer {
 	private String firstname;
 	private String lastname;

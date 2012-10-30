@@ -222,7 +222,7 @@ public class RootEntityClass extends EntityClass {
 		discriminatorColumnValues = new Column( null ); //(stliu) give null here, will populate values below
 		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
 		if ( discriminatorColumnAnnotation != null ) {
-			DiscriminatorType discriminatorType = JandexHelper.getValue( 
+			DiscriminatorType discriminatorType = JandexHelper.getEnumValue( 
 					discriminatorColumnAnnotation,
 					"discriminatorType", DiscriminatorType.class );
 			switch ( discriminatorType ) {

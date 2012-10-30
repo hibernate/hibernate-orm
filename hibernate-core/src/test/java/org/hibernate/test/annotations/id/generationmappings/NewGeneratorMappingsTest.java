@@ -48,7 +48,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@FailureExpectedWithNewMetamodel
 public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -134,6 +133,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6790")
+	@FailureExpectedWithNewMetamodel
 	public void testSequencePerEntity() {
 		// Checking first entity.
 		EntityPersister persister = sessionFactory().getEntityPersister( DedicatedSequenceEntity1.class.getName() );

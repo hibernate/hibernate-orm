@@ -23,11 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+
 import java.util.Iterator;
 
-import org.junit.Test;
-
-import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.Metadata;
@@ -37,11 +39,7 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.SessionFactoryBuilderImpl;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
@@ -59,13 +57,6 @@ public class MetadataImplTest extends BaseUnitTestCase {
 	public void testAddingNullPackageName() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addPackage( null );
-		sources.buildMetadata();
-	}
-
-	@Test(expected = HibernateException.class)
-	public void testAddingNonExistingPackageName() {
-		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
-		sources.addPackage( "not.a.package" );
 		sources.buildMetadata();
 	}
 

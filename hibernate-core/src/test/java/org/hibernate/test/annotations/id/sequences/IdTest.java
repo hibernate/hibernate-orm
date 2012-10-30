@@ -23,7 +23,8 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -53,9 +54,7 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -63,7 +62,6 @@ import static junit.framework.Assert.assertNotNull;
  */
 @SuppressWarnings("unchecked")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-@FailureExpectedWithNewMetamodel
 public class IdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testGenericGenerator() throws Exception {
@@ -300,6 +298,7 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6790")
+	@FailureExpectedWithNewMetamodel
 	public void testSequencePerEntity() {
 		Session session = openSession();
 		session.beginTransaction();

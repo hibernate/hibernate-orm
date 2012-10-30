@@ -9,12 +9,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Version;
 
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
 @Entity
-@org.hibernate.envers.Audited
+@Audited
 public class MultipleCollectionRefEntity2 {
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", length = 10)
@@ -29,7 +30,7 @@ public class MultipleCollectionRefEntity2 {
 
 	@ManyToOne
 	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false)
-	@org.hibernate.annotations.ForeignKey(name = "FK_RE2_MCE")
+	@ForeignKey(name = "FK_RE2_MCE")
 	@NotAudited
 	private MultipleCollectionEntity multipleCollectionEntity;
 
@@ -57,8 +58,7 @@ public class MultipleCollectionRefEntity2 {
 		return multipleCollectionEntity;
 	}
 
-	public void setMultipleCollectionEntity(
-			MultipleCollectionEntity multipleCollectionEntity) {
+	public void setMultipleCollectionEntity(MultipleCollectionEntity multipleCollectionEntity) {
 		this.multipleCollectionEntity = multipleCollectionEntity;
 	}
 
@@ -78,28 +78,25 @@ public class MultipleCollectionRefEntity2 {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((text == null) ? 0 : text.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object o) {
+		if ( this == o ) {
 			return true;
-		if (obj == null)
+		}
+		if ( ! ( o instanceof MultipleCollectionRefEntity2 ) ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+
+		MultipleCollectionRefEntity2 that = (MultipleCollectionRefEntity2) o;
+
+		if ( text != null ? !text.equals( that.text ) : that.text != null ) {
 			return false;
-		MultipleCollectionRefEntity2 other = (MultipleCollectionRefEntity2) obj;
-		if (text == null) {
-			if (other.text != null)
-				return false;
-		} else if (!text.equals(other.text))
-			return false;
+		}
+
 		return true;
 	}
 
+	@Override
+	public int hashCode() {
+		return text != null ? text.hashCode() : 0;
+	}
 }

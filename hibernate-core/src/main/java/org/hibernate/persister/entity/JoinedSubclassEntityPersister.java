@@ -51,10 +51,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 /**
  * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"
@@ -103,7 +104,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
-	private final Map subclassesByDiscriminatorValue = new HashMap();
+	private final Map<Object,String> subclassesByDiscriminatorValue = new HashMap<Object, String>();
 	private final String[] discriminatorValues;
 	private final String[] notNullColumnNames;
 	private final int[] notNullColumnTableNumbers;
@@ -120,7 +121,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 
 	//INITIALIZATION:
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public JoinedSubclassEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -505,15 +506,57 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		postConstruct( mapping );
 
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public JoinedSubclassEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final SessionFactoryImplementor factory,
 			final Mapping mapping) throws HibernateException {
+
 		super( entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
-		// TODO: implement!!! initializing final fields to null to make compiler happy
+		// DISCRIMINATOR
+		if ( entityBinding.isPolymorphic() ) {
+			EntityDiscriminator discriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator();
+			discriminator.getRelationalValue();
+			Type discriminatorType = discriminator
+					.getExplicitHibernateTypeDescriptor()
+					.getResolvedTypeMapping();
+			try {
+				org.hibernate.type.DiscriminatorType dtype = (org.hibernate.type.DiscriminatorType) discriminatorType;
+				discriminatorValue = dtype.stringToObject( entityBinding.getDiscriminatorMatchValue() );
+				discriminatorSQLString = dtype.objectToSQLString( discriminatorValue, factory.getDialect() );
+			}
+			catch ( ClassCastException cce ) {
+				throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
+			}
+			catch ( Exception e ) {
+				throw new MappingException( "Could not format discriminator value to SQL string", e );
+			}
+		}
+		else {
+			discriminatorValue = null;
+			discriminatorSQLString = null;
+		}
+
+
+		if ( optimisticLockStyle() == OptimisticLockStyle.ALL || optimisticLockStyle() == OptimisticLockStyle.DIRTY ) {
+			throw new MappingException( "optimistic-lock=all|dirty not supported for joined-subclass mappings [" + getEntityName() + "]" );
+		}
+
+		final int idColumnSpan = getIdentifierColumnSpan();
+
+		ArrayList tables = new ArrayList();
+		ArrayList keyColumns = new ArrayList();
+		ArrayList keyColumnReaders = new ArrayList();
+		ArrayList keyColumnReaderTemplates = new ArrayList();
+		ArrayList cascadeDeletes = new ArrayList();
+//		Iterator titer = persistentClass.getTableClosureIterator();
+//		Iterator kiter = persistentClass.getKeyClosureIterator();
+
+
+		//----------------------------------------------
+
 		tableSpan = -1;
 		tableNames = null;
 		naturalOrderTableNames = null;
@@ -541,10 +584,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		notNullColumnTableNumbers = null;
 		constraintOrderedTableNames = null;
 		constraintOrderedKeyColumnNames = null;
-		discriminatorValue = null;
-		discriminatorSQLString = null;
 		coreTableSpan = -1;
 		isNullableTable = null;
+		//-----------------------------
+		initLockers();
+		initSubclassPropertyAliasesMap( entityBinding );
+
+		postConstruct( mapping );
 	}
 
 	protected boolean isNullableTable(int j) {
@@ -581,7 +627,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassesByDiscriminatorValue.get( value );
+		return subclassesByDiscriminatorValue.get( value );
 	}
 
 	public Serializable[] getPropertySpaces() {

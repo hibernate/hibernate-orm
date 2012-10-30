@@ -457,7 +457,6 @@ public final class SessionFactoryImpl
 				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 			}
 			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
-					cfg,
 					model,
 					accessStrategy,
 					this

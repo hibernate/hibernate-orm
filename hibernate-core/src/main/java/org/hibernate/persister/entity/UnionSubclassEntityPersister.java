@@ -81,7 +81,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//INITIALIZATION:
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public UnionSubclassEntityPersister(
 			final PersistentClass persistentClass, 
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -241,7 +241,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		postConstruct(mapping);
 
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public UnionSubclassEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,

@@ -57,6 +57,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.JpaCallbackSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.PrimaryKeyJoinColumnSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -66,6 +67,7 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/orm-xml.
@@ -104,6 +106,7 @@ public class EntityClass extends ConfiguredClass {
 	private String discriminatorMatchValue;
 
 	private final List<JpaCallbackSource> jpaCallbacks;
+	private final List<PrimaryKeyJoinColumnSource> joinedSubclassPrimaryKeyJoinColumnSources;
 
 	/**
 	 * Constructor used for entities within a hierarchy (non entity roots)
@@ -142,6 +145,7 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo().annotations()
 		);
 
+		this.joinedSubclassPrimaryKeyJoinColumnSources = determinPrimaryKeyJoinColumns();
 		processHibernateEntitySpecificAnnotations();
 		processProxyGeneration();
 		processDiscriminatorValue();
@@ -215,6 +219,10 @@ public class EntityClass extends ConfiguredClass {
 		return synchronizedTableNames;
 	}
 
+	public List<PrimaryKeyJoinColumnSource> getJoinedSubclassPrimaryKeyJoinColumnSources() {
+		return joinedSubclassPrimaryKeyJoinColumnSources;
+	}
+
 	public String getCustomPersister() {
 		return customPersister;
 	}
@@ -254,6 +262,38 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
+	private List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
+		if ( inheritanceType != InheritanceType.JOINED ) {
+			return null;
+		}
+		final AnnotationInstance primaryKeyJoinColumns = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				JPADotNames.PRIMARY_KEY_JOIN_COLUMNS,
+				ClassInfo.class
+		);
+		final AnnotationInstance primaryKeyJoinColumn = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				JPADotNames.PRIMARY_KEY_JOIN_COLUMN,
+				ClassInfo.class
+		);
+		final List<PrimaryKeyJoinColumnSource> results;
+		if ( primaryKeyJoinColumns != null ) {
+			AnnotationInstance[] values = primaryKeyJoinColumns.value().asNestedArray();
+			results = new ArrayList<PrimaryKeyJoinColumnSource>( values.length );
+			for ( final AnnotationInstance annotationInstance : values ) {
+				results.add( new PrimaryKeyJoinColumnSourceImpl( annotationInstance ) );
+			}
+		}
+		else if ( primaryKeyJoinColumn != null ) {
+			results = new ArrayList<PrimaryKeyJoinColumnSource>( 1 );
+			results.add( new PrimaryKeyJoinColumnSourceImpl( primaryKeyJoinColumn ) );
+		}
+		else {
+			results = null;
+		}
+		return results;
+	}
+
 
 	private void processDiscriminatorValue() {
 		final AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
@@ -271,14 +311,30 @@ public class EntityClass extends ConfiguredClass {
 
 		// see HHH-6400
 		PolymorphismType polymorphism = PolymorphismType.IMPLICIT;
-		if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "polymorphism" ) != null ) {
+		final AnnotationInstance polymorphismAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.POLYMORPHISM );
+		if ( polymorphismAnnotation != null && polymorphismAnnotation.value( "type" ) != null ) {
+			polymorphism = PolymorphismType.valueOf( polymorphismAnnotation.value( "type" ).asEnum() );
+		}
+		else if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "polymorphism" ) != null ) {
 			polymorphism = PolymorphismType.valueOf( hibernateEntityAnnotation.value( "polymorphism" ).asEnum() );
 		}
 		isExplicitPolymorphism = polymorphism == PolymorphismType.EXPLICIT;
 
 		// see HHH-6401
 		OptimisticLockType optimisticLockType = OptimisticLockType.VERSION;
-		if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
+		final AnnotationInstance optimisticLockAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.OPTIMISTIC_LOCK,
+				ClassInfo.class
+		);
+		if ( optimisticLockAnnotation != null ) {
+			optimisticLockType = JandexHelper.getEnumValue(
+					optimisticLockAnnotation,
+					"type",
+					OptimisticLockType.class
+			);
+		}
+		else if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
 			optimisticLockType = OptimisticLockType.valueOf(
 					hibernateEntityAnnotation.value( "optimisticLock" )
 							.asEnum()
@@ -286,7 +342,7 @@ public class EntityClass extends ConfiguredClass {
 		}
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
 
-		AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.IMMUTABLE, ClassInfo.class );
+		final AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.IMMUTABLE, ClassInfo.class );
 		if ( hibernateImmutableAnnotation != null ) {
 			isImmutable = true;
 		}
@@ -315,23 +371,50 @@ public class EntityClass extends ConfiguredClass {
 		naturalIdCaching = determineNaturalIdCachingSettings( caching );
 
 		// see HHH-6397
-		isDynamicInsert =
-				hibernateEntityAnnotation != null
-						&& hibernateEntityAnnotation.value( "dynamicInsert" ) != null
-						&& hibernateEntityAnnotation.value( "dynamicInsert" ).asBoolean();
+		final AnnotationInstance dynamicInsertAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.DYNAMIC_INSERT
+		);
+		if ( dynamicInsertAnnotation != null ) {
+			isDynamicInsert = JandexHelper.getValue( dynamicInsertAnnotation, "value", Boolean.class );
+		}
+		else {
+			isDynamicInsert =
+					hibernateEntityAnnotation != null
+							&& hibernateEntityAnnotation.value( "dynamicInsert" ) != null
+							&& hibernateEntityAnnotation.value( "dynamicInsert" ).asBoolean();
+		}
 
 		// see HHH-6398
-		isDynamicUpdate =
-				hibernateEntityAnnotation != null
-						&& hibernateEntityAnnotation.value( "dynamicUpdate" ) != null
-						&& hibernateEntityAnnotation.value( "dynamicUpdate" ).asBoolean();
+		final AnnotationInstance dynamicUpdateAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.DYNAMIC_UPDATE
+		);
+		if ( dynamicUpdateAnnotation != null ) {
+			isDynamicUpdate = JandexHelper.getValue( dynamicUpdateAnnotation, "value", Boolean.class );
+		}
+		else {
+			isDynamicUpdate =
+					hibernateEntityAnnotation != null
+							&& hibernateEntityAnnotation.value( "dynamicUpdate" ) != null
+							&& hibernateEntityAnnotation.value( "dynamicUpdate" ).asBoolean();
+		}
 
 
 		// see HHH-6399
-		isSelectBeforeUpdate =
-				hibernateEntityAnnotation != null
-						&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ) != null
-						&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ).asBoolean();
+		final AnnotationInstance selectBeforeUpdateAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.SELECT_BEFORE_UPDATE
+		);
+		if ( selectBeforeUpdateAnnotation != null ) {
+			isSelectBeforeUpdate = JandexHelper.getValue( selectBeforeUpdateAnnotation, "value", Boolean.class );
+		}
+		else {
+			isSelectBeforeUpdate =
+					hibernateEntityAnnotation != null
+							&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ) != null
+							&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ).asBoolean();
+		}
 
 		// Custom persister
 		final String entityPersisterClass;

@@ -133,7 +133,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
 
 	//INITIALIZATION:
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public SingleTableEntityPersister(
 			final PersistentClass persistentClass, 
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -449,7 +449,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		postConstruct(mapping);
 
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public SingleTableEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,

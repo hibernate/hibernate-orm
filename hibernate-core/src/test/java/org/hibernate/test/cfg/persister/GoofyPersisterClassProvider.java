@@ -578,229 +578,227 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public NoopCollectionPersister(org.hibernate.mapping.Collection collection,
 									   org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,
-									   org.hibernate.cfg.Configuration configuration,
 									   SessionFactoryImplementor sf) {
 			throw new GoofyException(NoopCollectionPersister.class);
 		}
 
 		public void initialize(Serializable key, SessionImplementor session) throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
 		public boolean hasCache() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
 		public CollectionRegionAccessStrategy getCacheAccessStrategy() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
 		public CacheEntryStructure getCacheEntryStructure() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
 		public CollectionType getCollectionType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
 		public Type getKeyType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Type getIndexType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Type getElementType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Class getElementClass() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Object readKey(ResultSet rs, String[] keyAliases, SessionImplementor session)
 				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Object readElement(ResultSet rs, Object owner, String[] columnAliases, SessionImplementor session)
 				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Object readIndex(ResultSet rs, String[] columnAliases, SessionImplementor session)
 				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Object readIdentifier(ResultSet rs, String columnAlias, SessionImplementor session)
 				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean isPrimitiveArray() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isArray() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isOneToMany() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isManyToMany() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean hasIndex() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isLazy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isInverse() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public void remove(Serializable id, SessionImplementor session) throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+			
 		}
 
 		public void recreate(PersistentCollection collection, Serializable key, SessionImplementor session)
 				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
 		public void deleteRows(PersistentCollection collection, Serializable key, SessionImplementor session)
 				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
 		public void updateRows(PersistentCollection collection, Serializable key, SessionImplementor session)
 				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
 		public void insertRows(PersistentCollection collection, Serializable key, SessionImplementor session)
 				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
 		public String getRole() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public EntityPersister getOwnerEntityPersister() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public IdentifierGenerator getIdentifierGenerator() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public Type getIdentifierType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean hasOrphanDelete() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean hasOrdering() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean hasManyToManyOrdering() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public Serializable[] getCollectionSpaces() {
-			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Serializable[0]; 
 		}
 
 		public CollectionMetadata getCollectionMetadata() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean isCascadeDeleteEnabled() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isVersioned() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean isMutable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public String getNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public String getElementNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public String getIndexNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public void postInstantiate() throws MappingException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
 		public SessionFactoryImplementor getFactory() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean isAffectedByEnabledFilters(SessionImplementor session) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public String[] getKeyColumnAliases(String suffix) {
-			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new String[0]; 
 		}
 
 		public String[] getIndexColumnAliases(String suffix) {
-			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new String[0]; 
 		}
 
 		public String[] getElementColumnAliases(String suffix) {
-			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new String[0]; 
 		}
 
 		public String getIdentifierColumnAlias(String suffix) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 
 		public boolean isExtraLazy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public int getSize(Serializable key, SessionImplementor session) {
-			return 0;  //To change body of implemented methods use File | Settings | File Templates.
+			return 0; 
 		}
 
 		public boolean indexExists(Serializable key, Object index, SessionImplementor session) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public boolean elementExists(Serializable key, Object element, SessionImplementor session) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false; 
 		}
 
 		public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null; 
 		}
 	}
 }

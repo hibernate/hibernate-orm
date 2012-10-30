@@ -23,12 +23,17 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.List;
+
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
  * @author Hardy Ferentschik
+ * @author Strong Liu
  */
 public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
 
@@ -48,6 +53,11 @@ public class SubclassEntitySourceImpl extends EntitySourceImpl implements Subcla
 	@Override
 	public String getJoinedForeignKeyName() {
 		return null;
+	}
+
+	@Override
+	public List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources() {
+		return getEntityClass().getJoinedSubclassPrimaryKeyJoinColumnSources();
 	}
 }
 

@@ -87,9 +87,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public OneToManyPersister(
 			Collection collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			Configuration cfg,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, cfg, factory );
+		super( collection, cacheAccessStrategy,  factory );
 		cascadeDeleteEnabled = collection.getKey().isCascadeDeleteEnabled() &&
 				factory.getDialect().supportsCascadeDelete();
 		keyIsNullable = collection.getKey().isNullable();
@@ -99,9 +98,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public OneToManyPersister(
 			AbstractPluralAttributeBinding collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			MetadataImplementor metadata,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, metadata, factory );
+		super( collection, cacheAccessStrategy,  factory );
 		if ( collection.getPluralAttributeElementBinding().getNature() !=
 				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
 			throw new AssertionError(

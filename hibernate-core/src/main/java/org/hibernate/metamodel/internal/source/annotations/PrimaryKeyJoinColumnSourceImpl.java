@@ -36,7 +36,7 @@ public class PrimaryKeyJoinColumnSourceImpl implements PrimaryKeyJoinColumnSourc
 	private final String referencedColumnName;
 	private final String columnDefinition;
 
-	PrimaryKeyJoinColumnSourceImpl(AnnotationInstance joinColumnAnnotation) {
+	public PrimaryKeyJoinColumnSourceImpl(AnnotationInstance joinColumnAnnotation) {
 		this(
 				JandexHelper.getValue( joinColumnAnnotation, "name", String.class ),
 				JandexHelper.getValue( joinColumnAnnotation, "referencedColumnName", String.class ),

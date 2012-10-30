@@ -33,9 +33,9 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class Property implements Serializable {
-	private String name;
-	private String node;
-	private Type type;
+	private final String name;
+	private final String node;
+	private final Type type;
 
 	/**
 	 * Constructor for Property instances.

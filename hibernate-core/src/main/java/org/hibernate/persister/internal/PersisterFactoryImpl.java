@@ -93,7 +93,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
 			CollectionRegionAccessStrategy.class,
-			Configuration.class,
 			SessionFactoryImplementor.class
 	};
 
@@ -109,7 +108,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW = new Class[] {
 			AbstractPluralAttributeBinding.class,
 			CollectionRegionAccessStrategy.class,
-			MetadataImplementor.class,
 			SessionFactoryImplementor.class
 	};
 
@@ -190,7 +188,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
-			Configuration cfg,
 			Collection collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
@@ -199,7 +196,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}
 
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS, cfg, collectionMetadata, cacheAccessStrategy, factory );
+		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS, collectionMetadata, cacheAccessStrategy, factory );
 	}
 
 	@Override
@@ -214,7 +211,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}
 
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, collectionMetadata, cacheAccessStrategy, factory );
+		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW,  collectionMetadata, cacheAccessStrategy, factory );
 	}
 
 	// TODO: change collectionMetadata arg type to AbstractPluralAttributeBinding when new metadata is integrated
@@ -222,14 +219,14 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private static CollectionPersister create(
 			Class<? extends CollectionPersister> persisterClass,
 			Class[] persisterConstructorArgs,
-			Object cfg,
+//			Object cfg,
 			Object collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
 		try {
 			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( persisterConstructorArgs );
 			try {
-				return constructor.newInstance( collectionMetadata, cacheAccessStrategy, cfg, factory );
+				return constructor.newInstance( collectionMetadata, cacheAccessStrategy, factory );
 			}
 			catch (MappingException e) {
 				throw e;

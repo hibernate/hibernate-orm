@@ -44,10 +44,6 @@ import org.hibernate.property.Getter;
  * <li>extract and inject values through getters/setter, or by direct field access, etc
  * </ul>
  * </p>
- * That same piece of data might also be represented as a DOM structure, using
- * the tuplizer associated with the DOM4J entity-mode, which would generate instances
- * of {@link org.dom4j.Element} as the data structure and know how to access the
- * values as either nested {@link org.dom4j.Element}s or as {@link org.dom4j.Attribute}s.
  *
  * @see org.hibernate.tuple.entity.EntityTuplizer
  * @see org.hibernate.tuple.component.ComponentTuplizer
@@ -88,8 +84,8 @@ public interface Tuplizer {
 	public Object instantiate();
 	
 	/**
-	 * Is the given object considered an instance of the the entity (acconting
-	 * for entity-mode) managed by this tuplizer.
+	 * Is the given object considered an instance of the the entity (according
+	 * to entity-mode) managed by this tuplizer.
 	 *
 	 * @param object The object to be checked.
 	 * @return True if the object is considered as an instance of this entity

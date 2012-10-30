@@ -43,11 +43,11 @@ public class ReflectionOptimizerImpl implements ReflectionOptimizer, Serializabl
 		this.instantiationOptimizer = instantiationOptimizer;
 		this.accessOptimizer = accessOptimizer;
 	}
-
+	@Override
 	public InstantiationOptimizer getInstantiationOptimizer() {
 		return instantiationOptimizer;
 	}
-
+	@Override
 	public AccessOptimizer getAccessOptimizer() {
 		return accessOptimizer;
 	}

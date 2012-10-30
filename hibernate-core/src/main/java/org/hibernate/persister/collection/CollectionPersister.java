@@ -252,14 +252,6 @@ public interface CollectionPersister {
 	 */
 	public boolean isMutable();
 	
-	//public boolean isSubselectLoadable();
-	
-	public String getNodeName();
-	
-	public String getElementNodeName();
-	
-	public String getIndexNodeName();
-
 	public void postInstantiate() throws MappingException;
 	
 	public SessionFactoryImplementor getFactory();

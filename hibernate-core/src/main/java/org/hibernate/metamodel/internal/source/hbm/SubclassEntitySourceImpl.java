@@ -23,11 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.List;
+
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.TableInformationSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
@@ -73,6 +76,11 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		if ( JaxbJoinedSubclassElement.class.isInstance( entityElement() ) ) {
 			return ( (JaxbJoinedSubclassElement) entityElement() ).getKey().getForeignKey();
 		}
+		return null;
+	}
+
+	@Override
+	public List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources() {
 		return null;
 	}
 }

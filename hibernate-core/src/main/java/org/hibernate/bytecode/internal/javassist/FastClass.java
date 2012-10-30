@@ -36,10 +36,7 @@ public class FastClass implements Serializable {
 
 	private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
 
-	private Class type;
-
-	private FastClass() {
-	}
+	private final Class type;
 
 	private FastClass(Class type) {
 		this.type = type;
@@ -187,7 +184,6 @@ public class FastClass implements Serializable {
 	}
 
 	public static FastClass create(Class type) {
-		FastClass fc = new FastClass( type );
-		return fc;
+		return new FastClass( type );
 	}
 }

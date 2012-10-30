@@ -96,7 +96,6 @@ public interface PersisterFactory extends Service {
 	/**
 	 * Create a collection persister instance.
 	 *
-	 * @param cfg The configuration
 	 * @param model The O/R mapping metamodel definition for the collection
 	 * @param cacheAccessStrategy The caching strategy for this collection
 	 * @param factory The session factory
@@ -106,7 +105,6 @@ public interface PersisterFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	public CollectionPersister createCollectionPersister(
-			Configuration cfg,
 			Collection model,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException;

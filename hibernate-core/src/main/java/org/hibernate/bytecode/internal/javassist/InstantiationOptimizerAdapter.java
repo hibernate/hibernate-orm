@@ -40,7 +40,7 @@ public class InstantiationOptimizerAdapter implements ReflectionOptimizer.Instan
 	public InstantiationOptimizerAdapter(FastClass fastClass) {
 		this.fastClass = fastClass;
 	}
-
+	@Override
 	public Object newInstance() {
 		try {
 			return fastClass.newInstance();

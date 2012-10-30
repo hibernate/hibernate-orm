@@ -63,6 +63,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -152,10 +153,6 @@ public abstract class AbstractCollectionPersister
 	private final OrderByTranslation manyToManyOrderByTranslation;
 
 	private final int baseIndex;
-
-	private final String nodeName;
-	private final String elementNodeName;
-	private final String indexNodeName;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
@@ -250,7 +247,6 @@ public abstract class AbstractCollectionPersister
 	public AbstractCollectionPersister(
 			final Collection collection,
 			final CollectionRegionAccessStrategy cacheAccessStrategy,
-			final Configuration cfg,
 			final SessionFactoryImplementor factory) throws MappingException, CacheException {
 
 		this.factory = factory;
@@ -271,7 +267,6 @@ public abstract class AbstractCollectionPersister
 		entityName = collection.getOwnerEntityName();
 		ownerPersister = factory.getEntityPersister( entityName );
 		queryLoaderName = collection.getLoaderName();
-		nodeName = collection.getNodeName();
 		isMutable = collection.isMutable();
 
 		Table table = collection.getCollectionTable();
@@ -333,20 +328,13 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		String elemNode = collection.getElementNodeName();
 		if ( elementType.isEntityType() ) {
 			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
 			elementPersister = factory.getEntityPersister( entityName );
-			if ( elemNode == null ) {
-				elemNode = cfg.getClassMapping( entityName ).getNodeName();
-			}
-			// NativeSQL: collect element column and auto-aliases
-
 		}
 		else {
 			elementPersister = null;
 		}
-		elementNodeName = elemNode;
 
 		int elementSpan = collection.getElement().getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -429,9 +417,6 @@ public abstract class AbstractCollectionPersister
 			indexContainsFormula = hasFormula;
 			baseIndex = indexedCollection.isList() ?
 					( (List) indexedCollection ).getBaseIndex() : 0;
-
-			indexNodeName = indexedCollection.getIndexNodeName();
-
 		}
 		else {
 			indexContainsFormula = false;
@@ -442,7 +427,6 @@ public abstract class AbstractCollectionPersister
 			indexColumnNames = null;
 			indexColumnAliases = null;
 			baseIndex = 0;
-			indexNodeName = null;
 		}
 
 		hasIdentifier = collection.isIdentified();
@@ -458,18 +442,17 @@ public abstract class AbstractCollectionPersister
 			identifierColumnAlias = col.getAlias( dialect );
 			// unquotedIdentifierColumnName = identifierColumnAlias;
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
-					cfg.getIdentifierGeneratorFactory(),
+					factory.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class ),
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName(),
 					null
-					);
+			);
 		}
 		else {
 			identifierType = null;
 			identifierColumnName = null;
 			identifierColumnAlias = null;
-			// unquotedIdentifierColumnName = null;
 			identifierGenerator = null;
 		}
 
@@ -676,7 +659,6 @@ public abstract class AbstractCollectionPersister
 	public AbstractCollectionPersister(
 		AbstractPluralAttributeBinding collection,
 		CollectionRegionAccessStrategy cacheAccessStrategy,
-		MetadataImplementor metadata,
 		SessionFactoryImplementor factory) throws MappingException, CacheException {
 
 		this.factory = factory;
@@ -708,7 +690,7 @@ public abstract class AbstractCollectionPersister
 		queryLoaderName = collection.getCustomLoaderName();
 		// TODO: is nodeName obsolete?
 		//nodeName = collection.getNodeName();
-		nodeName = null;
+//		nodeName = null;
 		isMutable = collection.isMutable();
 
 		TableSpecification table = collection.getPluralAttributeKeyBinding().getCollectionTable();
@@ -780,24 +762,13 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		// PluralAttributeElementBinding elementBinding = collection.getPluralAttributeElementBinding();
-		//TODO: is elemNode needed?
-		String elemNode = null;
-		//String elemNode = collection.getElementNodeName();
 		if ( elementType.isEntityType() ) {
 			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
 			elementPersister = factory.getEntityPersister( entityName );
-			//if ( elemNode == null ) {
-			//	elemNode = cfg.getClassMapping( entityName ).getNodeName();
-			//}
-			// NativeSQL: collect element column and auto-aliases
-
 		}
 		else {
 			elementPersister = null;
 		}
-		elementNodeName = elemNode;
-
 		int elementSpan = collection.getPluralAttributeElementBinding().getRelationalValueBindings() == null ?
 				0 :
 				collection.getPluralAttributeElementBinding().getRelationalValueBindings().size();
@@ -853,11 +824,9 @@ public abstract class AbstractCollectionPersister
 
 		hasIndex = collection.getAttribute().getNature().isIndexable();
 		indexContainsFormula = false;
-		indexNodeName = null;
 		if ( hasIndex ) {
 			// NativeSQL: collect index column and auto-aliases
 			IndexedPluralAttributeBinding indexedBinding = (IndexedPluralAttributeBinding) collection;
-			// TODO: indexNodeName = indexedBinding.getIndexNodeName();
 			PluralAttributeIndexBinding indexBinding = indexedBinding.getPluralAttributeIndexBinding();
 			indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 			baseIndex = indexBinding instanceof ListBinding ? ( ( ListBinding ) indexBinding ).base() : 0;
@@ -2096,18 +2065,6 @@ public abstract class AbstractCollectionPersister
 
 	public boolean isVersioned() {
 		return isVersioned && getOwnerEntityPersister().isVersioned();
-	}
-
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public String getElementNodeName() {
-		return elementNodeName;
-	}
-
-	public String getIndexNodeName() {
-		return indexNodeName;
 	}
 
 	// TODO: deprecate???

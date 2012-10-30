@@ -23,8 +23,11 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
 /**
  * @author Steve Ebersole
+ * @author Strong Liu
  */
 public interface SubclassEntitySource extends EntitySource {
     /**
@@ -38,5 +41,14 @@ public interface SubclassEntitySource extends EntitySource {
 	 *
 	 * @return The configured FK name.
 	 */
-	public String getJoinedForeignKeyName();
+	String getJoinedForeignKeyName();
+
+	/**
+	 * The {@code PrimaryKeyJoinColumns} mapping for the joined-subclass.
+	 *
+	 * @return The {@code PrimaryKeyJoinColumnSource} lists defined on the joined subclass or <code>null</code> otherwise.
+	 */
+	List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources();
+
+
 }

@@ -145,7 +145,7 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 	}
 
 	public boolean hasSubEntityBindings() {
-		return subEntityBindings.size() > 0;
+		return !subEntityBindings.isEmpty();
 	}
 
 	public int getSubEntityBindingClosureSpan() {

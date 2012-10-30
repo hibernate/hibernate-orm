@@ -173,15 +173,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 */
 	public AbstractEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappingInfo) {
 		this.entityMetamodel = entityMetamodel;
-
-		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getIdentifierProperty(), mappingInfo );
-			idSetter = buildPropertySetter( mappingInfo.getIdentifierProperty(), mappingInfo );
-		}
-		else {
-			idGetter = null;
-			idSetter = null;
-		}
+		boolean isVirtualIdentifier = entityMetamodel.getIdentifierProperty().isVirtual();
+		idGetter = isVirtualIdentifier ? null : buildPropertyGetter( mappingInfo.getIdentifierProperty(), mappingInfo );
+		idSetter = isVirtualIdentifier ? null : buildPropertySetter( mappingInfo.getIdentifierProperty(), mappingInfo );
 
 		propertySpan = entityMetamodel.getPropertySpan();
 
@@ -237,16 +231,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 */
 	public AbstractEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappingInfo) {
 		this.entityMetamodel = entityMetamodel;
-
-		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
-			idSetter = buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
-		}
-		else {
-			idGetter = null;
-			idSetter = null;
-		}
-
+		boolean isVirtualIdentifier = entityMetamodel.getIdentifierProperty().isVirtual();
+		idGetter = isVirtualIdentifier ? null : buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
+		idSetter = isVirtualIdentifier ? null : buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
 		propertySpan = entityMetamodel.getPropertySpan();
 
 		getters = new Getter[ propertySpan ];
@@ -315,7 +302,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 *
 	 * @return Any subclass entity-names.
 	 */
-	protected Set getSubclassEntityNames() {
+	protected Set<String> getSubclassEntityNames() {
 		return entityMetamodel.getSubclassEntityNames();
 	}
 

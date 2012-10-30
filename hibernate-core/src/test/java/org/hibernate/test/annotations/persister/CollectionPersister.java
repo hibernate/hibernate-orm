@@ -11,8 +11,9 @@ import org.hibernate.persister.collection.OneToManyPersister;
  * @author Shawn Clowater
  */
 public class CollectionPersister extends OneToManyPersister {
-	public CollectionPersister(Collection collection, CollectionRegionAccessStrategy cache, Configuration cfg,
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public CollectionPersister(Collection collection, CollectionRegionAccessStrategy cache,
 							   SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cache, cfg, factory );
+		super( collection, cache,  factory );
 	}
 }

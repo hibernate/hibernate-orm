@@ -75,21 +75,21 @@ public abstract class BulkAccessor implements Serializable {
 	 * Returns the types of properties.
 	 */
 	public Class[] getPropertyTypes() {
-		return ( Class[] ) types.clone();
+		return types.clone();
 	}
 
 	/**
 	 * Returns the setter names of properties.
 	 */
 	public String[] getGetters() {
-		return ( String[] ) getters.clone();
+		return getters.clone();
 	}
 
 	/**
 	 * Returns the getter names of the properties.
 	 */
 	public String[] getSetters() {
-		return ( String[] ) setters.clone();
+		return setters.clone();
 	}
 
 	/**

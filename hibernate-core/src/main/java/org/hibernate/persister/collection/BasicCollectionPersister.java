@@ -68,21 +68,19 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	public boolean isCascadeDeleteEnabled() {
 		return false;
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public BasicCollectionPersister(
 			Collection collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			Configuration cfg,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, cfg, factory );
+		super( collection, cacheAccessStrategy,  factory );
 	}
-
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public BasicCollectionPersister(
 			AbstractPluralAttributeBinding collection,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			MetadataImplementor metadata,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, metadata, factory );
+		super( collection, cacheAccessStrategy,  factory );
 	}
 
 	/**

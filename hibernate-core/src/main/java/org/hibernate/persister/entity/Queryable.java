@@ -172,16 +172,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	String[][] getSubclassPropertyFormulaTemplateClosure();
 
-	public static class Declarer {
-		public static final Declarer CLASS = new Declarer( "class" );
-		public static final Declarer SUBCLASS = new Declarer( "subclass" );
-		public static final Declarer SUPERCLASS = new Declarer( "superclass" );
-		private final String name;
-		public Declarer(String name) {
-			this.name = name;
-		}
-		public String toString() {
-			return name;
-		}
+	public enum Declarer {
+		CLASS, SUBCLASS, SUPERCLASS;
 	}
 }

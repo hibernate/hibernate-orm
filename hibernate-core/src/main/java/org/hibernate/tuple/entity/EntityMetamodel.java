@@ -132,8 +132,8 @@ public class EntityMetamodel implements Serializable {
 	private final boolean explicitPolymorphism;
 	private final boolean inherited;
 	private final boolean hasSubclasses;
-	private final Set subclassEntityNames = new HashSet();
-	private final Map entityNameByInheritenceClassMap = new HashMap();
+	private final Set<String> subclassEntityNames = new HashSet<String>();
+	private final Map<Class<?>, String> entityNameByInheritenceClassMap = new HashMap<Class<?>, String>();
 
 	private final EntityMode entityMode;
 	private final EntityTuplizer entityTuplizer;
@@ -740,7 +740,7 @@ public class EntityMetamodel implements Serializable {
 		return hasImmutableNaturalId;
 	}
 
-	public Set getSubclassEntityNames() {
+	public Set<String> getSubclassEntityNames() {
 		return subclassEntityNames;
 	}
 
@@ -809,7 +809,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public Integer getPropertyIndexOrNull(String propertyName) {
-		return (Integer) propertyIndexes.get( propertyName );
+		return propertyIndexes.get( propertyName );
 	}
 
 	public boolean hasCollections() {
@@ -895,7 +895,7 @@ public class EntityMetamodel implements Serializable {
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
 	public String findEntityNameByEntityClass(Class inheritenceClass) {
-		return ( String ) entityNameByInheritenceClassMap.get( inheritenceClass );
+		return entityNameByInheritenceClassMap.get( inheritenceClass );
 	}
 
 	@Override

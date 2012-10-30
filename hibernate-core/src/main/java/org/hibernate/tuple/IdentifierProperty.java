@@ -36,12 +36,12 @@ import org.hibernate.type.Type;
  */
 public class IdentifierProperty extends Property {
 
-	private boolean virtual;
-	private boolean embedded;
-	private IdentifierValue unsavedValue;
-	private IdentifierGenerator identifierGenerator;
-	private boolean identifierAssignedByInsert;
-	private boolean hasIdentifierMapper;
+	private final boolean virtual;
+	private final boolean embedded;
+	private final IdentifierValue unsavedValue;
+	private final IdentifierGenerator identifierGenerator;
+	private final boolean identifierAssignedByInsert;
+	private final boolean hasIdentifierMapper;
 
 	/**
 	 * Construct a non-virtual identifier property.
@@ -57,12 +57,12 @@ public class IdentifierProperty extends Property {
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
 	public IdentifierProperty(
-			String name,
-			String node,
-			Type type,
-			boolean embedded,
-			IdentifierValue unsavedValue,
-			IdentifierGenerator identifierGenerator) {
+			final String name,
+			final String node,
+			final Type type,
+			final boolean embedded,
+			final IdentifierValue unsavedValue,
+			final IdentifierGenerator identifierGenerator) {
 		super(name, node, type);
 		this.virtual = false;
 		this.embedded = embedded;
@@ -82,11 +82,11 @@ public class IdentifierProperty extends Property {
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
 	public IdentifierProperty(
-	        Type type,
-	        boolean embedded,
-			boolean hasIdentifierMapper,
-			IdentifierValue unsavedValue,
-	        IdentifierGenerator identifierGenerator) {
+	        final Type type,
+	        final boolean embedded,
+			final boolean hasIdentifierMapper,
+			final IdentifierValue unsavedValue,
+	        final IdentifierGenerator identifierGenerator) {
 		super(null, null, type);
 		this.virtual = true;
 		this.embedded = embedded;

@@ -32,8 +32,8 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
  */
 public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
 	
-	private String[] tables;
-	private String rootAlias;
+	private final String[] tables;
+	private final String rootAlias;
 
 	public DynamicFilterAliasGenerator(String[] tables, String rootAlias) {
 		this.tables = tables;

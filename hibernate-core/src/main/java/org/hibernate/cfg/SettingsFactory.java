@@ -33,7 +33,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
@@ -101,12 +100,18 @@ public class SettingsFactory implements Serializable {
 		// Transaction settings:
 		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
-		MultiTableBulkIdStrategy multiTableBulkIdStrategy = serviceRegistry.getService( StrategySelector.class )
-				.resolveStrategy(
-						MultiTableBulkIdStrategy.class,
-						properties.getProperty( AvailableSettings.HQL_BULK_ID_STRATEGY )
-				);
-		if ( multiTableBulkIdStrategy == null ) {
+        String bulkIdStrategyName = ConfigurationHelper.getString(AvailableSettings.HQL_BULK_ID_STRATEGY, properties);
+        MultiTableBulkIdStrategy multiTableBulkIdStrategy = null;
+        if (bulkIdStrategyName != null) {
+            try {
+                multiTableBulkIdStrategy = (MultiTableBulkIdStrategy) serviceRegistry.getService( ClassLoaderService.class )
+                        .classForName( bulkIdStrategyName )
+                        .newInstance();
+            } catch (Exception e) {
+                throw new HibernateException( "could not instantiate MultiTableBulkIdStrategy: " + bulkIdStrategyName, e );
+            }
+        }
+        if ( multiTableBulkIdStrategy == null ) {
 			multiTableBulkIdStrategy = jdbcServices.getDialect().supportsTemporaryTables()
 					? TemporaryTableBulkIdStrategy.INSTANCE
 					: new PersistentTableBulkIdStrategy();

@@ -23,7 +23,6 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import org.geolatte.geom.LineString;
 import org.geolatte.geom.PointSequence;
-import org.geolatte.geom.crs.CrsId;
 
 class LineStringDecoder extends AbstractDecoder<LineString> {
 
@@ -53,6 +52,6 @@ class LineStringDecoder extends AbstractDecoder<LineString> {
 
 	protected LineString createLineString(SqlServerGeometry nativeGeom, IndexRange pntIndexRange) {
 		PointSequence coordinates = nativeGeom.coordinateRange( pntIndexRange );
-		return new LineString(coordinates, CrsId.valueOf(nativeGeom.getSrid()));
+		return new LineString(coordinates);
 	}
 }

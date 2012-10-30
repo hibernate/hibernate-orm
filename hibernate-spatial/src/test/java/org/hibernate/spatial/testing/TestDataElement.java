@@ -31,14 +31,12 @@ public class TestDataElement {
 
 	final public String wkt;
 	final public int id;
-	final public int srid;
 	final public String type;
 
-	protected TestDataElement(int id, String type, String wkt, int srid) {
+	protected TestDataElement(int id, String type, String wkt) {
 		this.wkt = wkt;
 		this.id = id;
 		this.type = type;
-		this.srid = srid;
 	}
 
 }

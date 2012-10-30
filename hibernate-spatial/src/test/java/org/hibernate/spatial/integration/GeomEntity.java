@@ -73,11 +73,10 @@ public class GeomEntity {
 	}
 
 	public static GeomEntity createFrom(TestDataElement element) throws ParseException {
-		WktDecoder<org.geolatte.geom.Geometry> decoder = Wkt.newWktDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
-		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
+		WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
+		Geometry geom = JTS.to( decoder.decode( element.wkt) );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );
-		geom.setSRID( element.srid );
 		result.setGeom( geom );
 		result.setType( element.type );
 		return result;

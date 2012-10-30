@@ -1,6 +1,7 @@
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import org.geolatte.geom.*;
+import org.geolatte.geom.crs.CrsId;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -11,8 +12,8 @@ public class CountingPointSequenceBuilder implements PointSequenceBuilder {
     final private PointSequenceBuilder delegate;
     private int num = 0;
 
-    public CountingPointSequenceBuilder(DimensionalFlag df) {
-        delegate = PointSequenceBuilders.variableSized(df);
+    public CountingPointSequenceBuilder(DimensionalFlag df, CrsId crsId) {
+        delegate = PointSequenceBuilders.variableSized(df, crsId);
     }
 
     @Override
@@ -50,7 +51,12 @@ public class CountingPointSequenceBuilder implements PointSequenceBuilder {
         return delegate.getDimensionalFlag();
     }
 
-    @Override
+	@Override
+	public CrsId getCrsId() {
+		return delegate.getCrsId();
+	}
+
+	@Override
     public PointSequence toPointSequence() {
         return delegate.toPointSequence();
     }

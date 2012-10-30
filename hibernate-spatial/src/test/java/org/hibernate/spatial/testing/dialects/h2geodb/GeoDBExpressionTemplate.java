@@ -23,6 +23,7 @@ package org.hibernate.spatial.testing.dialects.h2geodb;
 
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestDataElement;
+import org.hibernate.spatial.testing.WktUtility;
 
 /**
  * This is the template for insert SQL statements into the geomtest test table
@@ -41,10 +42,14 @@ public class GeoDBExpressionTemplate implements SQLExpressionTemplate {
 		  * hibernatespatial.test.TestDataElement)
 		  */
 	public String toInsertSql(TestDataElement testDataElement) {
+		String wkt = WktUtility.getWkt( testDataElement.wkt );
+		int srid = WktUtility.getSRID( testDataElement.wkt );
 		return String
-				.format(
-						SQL_TEMPLATE, testDataElement.id, testDataElement.type,
-						testDataElement.wkt, testDataElement.srid
+				.format( SQL_TEMPLATE,
+						testDataElement.id,
+						testDataElement.type,
+						wkt,
+						srid
 				);
 	}
 

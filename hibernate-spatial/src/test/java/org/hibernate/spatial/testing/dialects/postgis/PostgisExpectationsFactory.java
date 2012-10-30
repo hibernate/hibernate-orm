@@ -23,9 +23,14 @@ package org.hibernate.spatial.testing.dialects.postgis;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.ByteBuffer;
+import org.geolatte.geom.codec.Wkb;
+import org.geolatte.geom.codec.WkbDecoder;
+import org.geolatte.geom.jts.JTS;
+import org.postgresql.util.PGobject;
 
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.dialect.postgis.PGGeometryValueExtractor;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -37,7 +42,8 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final PGGeometryValueExtractor decoder = new PGGeometryValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE);
+	private static final Log LOG = LogFactory.make();
+
 
 	public PostgisExpectationsFactory(DataSourceUtils utils) {
 		super( utils );
@@ -245,9 +251,20 @@ public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
+	//remove redundancy with toGeometry function in PGGeometryTypeDescriptor
 	@Override
-	protected Geometry decode(Object o) {
-		return decoder.toJTS( o );
+	protected Geometry decode(Object object) {
+		ByteBuffer buffer = null;
+		if (object instanceof PGobject ) {
+			buffer = ByteBuffer.from( ( (PGobject) object ).getValue() );
+		} else if ( object instanceof byte[] ) {
+			byte[] bytes = (byte[]) object;
+			ByteBuffer.from( bytes );
+		} else {
+			throw new IllegalStateException( "Received object of type " + object.getClass().getCanonicalName() );
+		}
+		WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+		return JTS.to(decoder.decode( buffer));
 	}
 
 }

@@ -26,9 +26,9 @@ package org.hibernate.spatial.testing.dialects.h2geodb;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.jts.JTS;
 
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.dialect.h2geodb.GeoDBValueExtractor;
+import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
@@ -41,42 +41,19 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final GeoDBValueExtractor decoder = new GeoDBValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE );
-
 	public GeoDBExpectationsFactory(GeoDBDataSourceUtils dataSourceUtils) {
 		super( dataSourceUtils );
 	}
-
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeAsBinaryStatement()
-		  */
 
 	@Override
 	protected NativeSQLStatement createNativeAsBinaryStatement() {
 		return createNativeSQLStatement( "select id, ST_AsEWKB(geom) from GEOMTEST" );
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeAsTextStatement()
-		  */
-
 	@Override
 	protected NativeSQLStatement createNativeAsTextStatement() {
 		return createNativeSQLStatement( "select id, ST_AsText(geom) from GEOMTEST" );
 	}
-
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeBoundaryStatement()
-		  */
 
 	@Override
 	protected NativeSQLStatement createNativeBoundaryStatement() {
@@ -84,13 +61,6 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 				"Method ST_Bounday() is not implemented in the current version of GeoDB."
 		);
 	}
-
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeBufferStatement(java.lang.Double)
-		  */
 
 	@Override
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
@@ -100,13 +70,6 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeContainsStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
-
 	@Override
 	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
@@ -115,26 +78,12 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeConvexHullStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
-
 	@Override
 	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_ConvexHull() is not implemented in the current version of GeoDB."
 		);
 	}
-
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeCrossesStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
 
 	@Override
 	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
@@ -144,13 +93,6 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeDifferenceStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
-
 	@Override
 	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
@@ -158,26 +100,12 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeDimensionSQL()
-		  */
-
 	@Override
 	protected NativeSQLStatement createNativeDimensionSQL() {
 		throw new UnsupportedOperationException(
 				"Method ST_Dimension() is not implemented in the current version of GeoDB."
 		);
 	}
-
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @seeorg.hibernatespatial.test.AbstractExpectationsFactory#
-		  * createNativeDisjointStatement(com.vividsolutions.jts.geom.Geometry)
-		  */
 
 	@Override
 	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
@@ -439,17 +367,9 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @see
-		  * org.hibernatespatial.test.AbstractExpectationsFactory#decode(java.lang
-		  * .Object)
-		  */
-
 	@Override
 	protected Geometry decode(Object o) {
-		return decoder.toJTS( o );
+		return JTS.to( GeoDbWkb.from( o ) );
 	}
 
 }

@@ -38,11 +38,8 @@ public class MySQLTestSupport extends TestSupport {
 
 	@Override
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		if ( testcase.getClass().getCanonicalName().contains( "TestSpatialFunctions" ) ||
-				testcase.getClass().getCanonicalName().contains( "TestSpatialRestrictions" ) ) {
-			return TestData.fromFile( "mysql/test-mysql-functions-data-set.xml" );
-		}
-		return TestData.fromFile( "test-data-set.xml" );
+		return TestData.fromFile( "mysql/test-mysql-functions-data-set.xml" );
+
 	}
 
 	@Override

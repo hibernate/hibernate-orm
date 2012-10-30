@@ -38,9 +38,12 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
 import org.hibernate.metamodel.internal.source.annotations.RootEntitySourceImpl;
@@ -59,6 +62,8 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Hardy Ferentschik
  */
 public class EntityHierarchyBuilder {
+	private static final Logger LOG = Logger.getLogger(
+			EntityHierarchyBuilder.class);
 	private static final DotName OBJECT = DotName.createSimple( Object.class.getName() );
 
 	/**
@@ -421,11 +426,10 @@ public class EntityHierarchyBuilder {
 					info, JPADotNames.INHERITANCE
 			);
 			if ( inheritanceAnnotation != null ) {
-//			if ( inheritanceAnnotation != null && !inheritanceAnnotation.value( "strategy" ).asString().equals( inheritanceType.toString() ) ) {
-				throw new AnnotationException(
+				LOG.warn(
 						String.format(
-								"The inheritance type for %s must be specified on the root entity %s",
-								hierarchyListString( classes ),
+								"The inheritance type for %s should be specified only on the root entity %s.  Ignoring...",
+								info.name(),
 								rootClassInfo.name().toString()
 						)
 				);

@@ -23,18 +23,16 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import org.junit.Test;
-
-import org.hibernate.mapping.RootClass;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.junit.Assert.assertEquals;
+
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -48,14 +46,14 @@ public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTes
 
 	@Test
 	public void testSameMappingValues() {
-		// TODO: These need to use the new metamodel, but the information
+		EntityBinding forest = SchemaUtil.getEntityBinding( Forest.class, metadata() );
+		EntityBinding forest2 = SchemaUtil.getEntityBinding( Forest2.class, metadata() );
+		assertEquals( forest.isDynamicInsert(), forest2.isDynamicInsert() );
+		assertEquals( forest.isDynamicUpdate(), forest2.isDynamicUpdate() );
+		assertEquals( forest.isSelectBeforeUpdate(), forest2.isSelectBeforeUpdate() );
+		// TODO: This needs to use the new metamodel, but the information
 		// is not available in EntityBinding.
-		RootClass forest = (RootClass) configuration().getClassMapping( Forest.class.getName() );
-		RootClass forest2 = (RootClass) configuration().getClassMapping( Forest2.class.getName() );
-		assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );
-		assertEquals( forest.useDynamicUpdate(), forest2.useDynamicUpdate() );
-		assertEquals( forest.hasSelectBeforeUpdate(), forest2.hasSelectBeforeUpdate() );
-		assertEquals( forest.getOptimisticLockMode(), forest2.getOptimisticLockMode() );
-		assertEquals( forest.isExplicitPolymorphism(), forest2.isExplicitPolymorphism() );
+//		assertEquals( forest.getOptimisticLockMode(), forest2.getOptimisticLockMode() );
+		assertEquals( forest.isPolymorphic(), forest2.isPolymorphic() );
 	}
 }

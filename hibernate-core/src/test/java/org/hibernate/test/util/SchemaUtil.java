@@ -60,7 +60,7 @@ public abstract class SchemaUtil {
 		}
 	}
 	
-	private static EntityBinding getEntityBinding( 
+	public static EntityBinding getEntityBinding( 
 			Class<?> entityClass, Metadata metadata ) {
 		return metadata.getEntityBinding( entityClass.getName() );
 	}

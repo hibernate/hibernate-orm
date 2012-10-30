@@ -93,7 +93,7 @@ public class TableProcessor {
 				"indexes",
 				AnnotationInstance[].class
 		) ) {
-			bindIndexAnnotation( table, indexAnnotation );
+			bindIndexAnnotation( table, tableAnnotation, indexAnnotation );
 		}
 		String comment = JandexHelper.getValue( tableAnnotation, "comment", String.class );
 		if ( StringHelper.isNotEmpty( comment ) ) {
@@ -101,8 +101,8 @@ public class TableProcessor {
 		}
 	}
 
-	private static void bindIndexAnnotation(Table table, AnnotationInstance indexAnnotation) {
-		String indexName = JandexHelper.getValue( indexAnnotation, "appliesTo", String.class );
+	private static void bindIndexAnnotation(Table table, AnnotationInstance tableAnnotation, AnnotationInstance indexAnnotation) {
+		String indexName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
 		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class );
 		if ( columnNames == null ) {
 			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );

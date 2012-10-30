@@ -49,7 +49,7 @@ public class MetadataTools {
         if (useRevisionEntityWithNativeId) {
             generator_mapping.addAttribute("class", "native");
         } else {
-            generator_mapping.addAttribute("class", "org.hibernate.id.enhanced.SequenceStyleGenerator");
+            generator_mapping.addAttribute("class", "org.hibernate.envers.enhanced.OrderedSequenceGenerator");
             generator_mapping.addElement("param").addAttribute("name", "sequence_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "table_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "initial_value").setText("1");

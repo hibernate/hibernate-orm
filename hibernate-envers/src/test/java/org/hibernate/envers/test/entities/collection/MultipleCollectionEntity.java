@@ -3,7 +3,6 @@ package org.hibernate.envers.test.entities.collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,10 +14,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
-@Entity
-@org.hibernate.envers.Audited
-public class MultipleCollectionEntity {
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.Audited;
 
+@Entity
+@Audited
+public class MultipleCollectionEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", length = 10)
@@ -33,12 +34,12 @@ public class MultipleCollectionEntity {
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "MCE_ID", nullable = false)
-	@org.hibernate.envers.AuditJoinTable(name = "MCE_RE1_AUD", inverseJoinColumns = @JoinColumn(name = "RE1_ID"))
+	@AuditJoinTable(name = "MCE_RE1_AUD", inverseJoinColumns = @JoinColumn(name = "RE1_ID"))
 	private List<MultipleCollectionRefEntity1> refEntities1 = new ArrayList<MultipleCollectionRefEntity1>();
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "MCE_ID", nullable = false)
-	@org.hibernate.envers.AuditJoinTable(name = "MCE_RE2_AUD", inverseJoinColumns = @JoinColumn(name = "RE2_ID"))
+	@AuditJoinTable(name = "MCE_RE2_AUD", inverseJoinColumns = @JoinColumn(name = "RE2_ID"))
 	private List<MultipleCollectionRefEntity2> refEntities2 = new ArrayList<MultipleCollectionRefEntity2>();
 
 	public Long getId() {
@@ -89,42 +90,34 @@ public class MultipleCollectionEntity {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((text == null) ? 0 : text.hashCode());
-		result = prime * result
-				+ ((refEntities1 == null) ? 0 : refEntities1.hashCode());
-		result = prime * result
-				+ ((refEntities2 == null) ? 0 : refEntities2.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object o) {
+		if ( this == o ) {
 			return true;
-		if (obj == null)
+		}
+		if ( ! ( o instanceof MultipleCollectionEntity ) ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+
+		MultipleCollectionEntity that = (MultipleCollectionEntity) o;
+
+		if ( refEntities1 != null ? !refEntities1.equals( that.refEntities1 ) : that.refEntities1 != null ) {
 			return false;
-		MultipleCollectionEntity other = (MultipleCollectionEntity) obj;
-		if (text == null) {
-			if (other.text != null)
-				return false;
-		} else if (!text.equals(other.text))
+		}
+		if ( refEntities2 != null ? !refEntities2.equals( that.refEntities2 ) : that.refEntities2 != null ) {
 			return false;
-		if (refEntities1 == null) {
-			if (other.refEntities1 != null)
-				return false;
-		} else if (!refEntities1.equals(other.refEntities1))
+		}
+		if ( text != null ? !text.equals( that.text ) : that.text != null ) {
 			return false;
-		if (refEntities2 == null) {
-			if (other.refEntities2 != null)
-				return false;
-		} else if (!refEntities2.equals(other.refEntities2))
-			return false;
+		}
+
 		return true;
 	}
 
+	@Override
+	public int hashCode() {
+		int result = text != null ? text.hashCode() : 0;
+		result = 31 * result + ( refEntities1 != null ? refEntities1.hashCode() : 0 );
+		result = 31 * result + ( refEntities2 != null ? refEntities2.hashCode() : 0 );
+		return result;
+	}
 }

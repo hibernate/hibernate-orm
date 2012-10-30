@@ -496,7 +496,7 @@ public class MetadataSources {
 	}
 
 	private void indexClass(Class clazz, Indexer indexer, Set<String> processedNames) {
-		if ( clazz == null ) {
+		if ( clazz == null || clazz == Object.class ) {
 			return;
 		}
 
@@ -515,12 +515,16 @@ public class MetadataSources {
 	}
 
 	private void indexResource(String resourceName, Indexer indexer, Set<String> processedNames) {
-		InputStream stream = serviceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
-		try {
-			indexer.index( stream );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to open input stream for resource " + resourceName, e );
+		ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		
+		if ( cls.locateResource( resourceName ) != null ) {
+			InputStream stream = cls.locateResourceStream( resourceName );
+			try {
+				indexer.index( stream );
+			}
+			catch ( IOException e ) {
+				throw new HibernateException( "Unable to open input stream for resource " + resourceName, e );
+			}
 		}
 	}
 }

@@ -27,14 +27,12 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Tests for various JPAQL compliance issues
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	public void testAliasNameSameAsUnqualifiedEntityName() {

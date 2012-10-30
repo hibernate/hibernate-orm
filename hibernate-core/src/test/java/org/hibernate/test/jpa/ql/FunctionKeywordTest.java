@@ -27,14 +27,12 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Test use of the JPA 2.1 FUNCTION keyword.
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class FunctionKeywordTest extends AbstractJPATest {
 
 	@Test

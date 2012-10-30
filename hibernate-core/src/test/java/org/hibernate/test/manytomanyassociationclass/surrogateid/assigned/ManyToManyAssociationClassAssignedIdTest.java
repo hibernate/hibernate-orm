@@ -25,14 +25,12 @@ package org.hibernate.test.manytomanyassociationclass.surrogateid.assigned;
 
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Tests on many-to-many association using an association class with a surrogate ID that is assigned.
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManyAssociationClassAssignedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

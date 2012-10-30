@@ -196,7 +196,7 @@ public class Helper {
 				}
 		);
 	}
-	
+
 	/**
 	 * Qualify a (supposed class) name with the unqualified-class package name if it is not already qualified
 	 *
@@ -252,7 +252,7 @@ public class Helper {
 		if ( StringHelper.isEmpty( cascades ) ) {
 			cascades = bindingContext.getMappingDefaults().getCascadeStyle();
 		}
-		for ( String cascade : StringHelper.split( ",", cascades ) ) {
+		for ( String cascade : StringHelper.split( " ,", cascades ) ) {
 			cascadeStyles.add( CascadeStyles.getCascadeStyle( cascade ) );
 		}
 		return cascadeStyles;

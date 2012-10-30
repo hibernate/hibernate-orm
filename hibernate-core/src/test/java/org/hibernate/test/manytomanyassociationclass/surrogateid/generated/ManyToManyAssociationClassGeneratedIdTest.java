@@ -39,7 +39,6 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {
@@ -53,6 +52,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Override
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemoveAndAddEqualElement() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		addMembership( getUser(), getGroup(), createMembership( "membership" ) );
@@ -80,10 +80,11 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Override
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemoveAndAddEqualCollection() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
-		getUser().setMemberships( new HashSet() );
-		getGroup().setMemberships( new HashSet() );
+		getUser().setMemberships( new HashSet< Membership >() );
+		getGroup().setMemberships( new HashSet< Membership >() );
 		addMembership( getUser(), getGroup(), createMembership( "membership" ) );
 
 		Session s = openSession();
@@ -109,6 +110,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Override
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRemoveAndAddEqualElementNonKeyModified() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		Membership membershipNew = createMembership( "membership" );

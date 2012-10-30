@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -212,7 +213,10 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 		return new TableBasedDeleteHandlerImpl( factory, walker ) {
 			@Override
 			protected String extraIdSelectValues() {
-				return "cast(? as char)";
+				final Dialect dialect = factory().getDialect();
+				return dialect.requiresCastingOfParametersInSelectClause()
+						? dialect.cast( "?", Types.CHAR, 36 )
+						: "?";
 			}
 
 			@Override

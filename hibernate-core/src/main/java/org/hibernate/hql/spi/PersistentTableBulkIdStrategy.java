@@ -36,6 +36,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -58,7 +59,11 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	private static final Logger log = Logger.getLogger( PersistentTableBulkIdStrategy.class );
 
 	public static final String CLEAN_UP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.clean_up";
+	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
+	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
 
+	private String catalog;
+	private String schema;
 	private boolean cleanUpTables;
 	private List<String> tableCleanUpDdl;
 
@@ -69,7 +74,18 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			Mappings mappings,
 			Mapping mapping,
 			Map settings) {
-		cleanUpTables = ConfigurationHelper.getBoolean( CLEAN_UP_ID_TABLES, settings, false );
+		this.catalog = ConfigurationHelper.getString(
+				CATALOG,
+				settings,
+				ConfigurationHelper.getString( AvailableSettings.DEFAULT_CATALOG, settings )
+		);
+		this.schema = ConfigurationHelper.getString(
+				SCHEMA,
+				settings,
+				ConfigurationHelper.getString( AvailableSettings.DEFAULT_SCHEMA, settings )
+		);
+		this.cleanUpTables = ConfigurationHelper.getBoolean( CLEAN_UP_ID_TABLES, settings, false );
+
 		final Iterator<PersistentClass> entityMappings = mappings.iterateClasses();
 		final List<Table> idTableDefinitions = new ArrayList<Table>();
 		while ( entityMappings.hasNext() ) {
@@ -82,6 +98,12 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	protected Table generateIdTableDefinition(PersistentClass entityMapping) {
 		Table idTable = new Table( entityMapping.getTemporaryIdTableName() );
+		if ( catalog != null ) {
+			idTable.setCatalog( catalog );
+		}
+		if ( schema != null ) {
+			idTable.setSchema( schema );
+		}
 		Iterator itr = entityMapping.getIdentityTable().getPrimaryKey().getColumnIterator();
 		while( itr.hasNext() ) {
 			Column column = (Column) itr.next();

@@ -54,6 +54,7 @@ import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -401,7 +402,7 @@ public class HibernateTypeHelper {
 		if ( !ComponentType.class.isInstance( resolvedRelationalType ) ) {
 			binder.bindingContext().makeMappingException( "Column number mismatch" ); // todo refine the exception message
 		}
-		Type[] subTypes = ComponentType.class.cast( resolvedRelationalType ).getSubtypes();
+		Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
 		for ( int i = 0; i < subTypes.length; i++ ) {
 			bindJdbcDataType( subTypes[i], relationalValueBindings.get( i ).getValue() );
 		}

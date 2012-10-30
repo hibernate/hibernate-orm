@@ -23,7 +23,8 @@
  */
 package org.hibernate.test.annotations.id;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -46,17 +47,13 @@ import org.hibernate.test.annotations.id.entities.SoundSystem;
 import org.hibernate.test.annotations.id.entities.Store;
 import org.hibernate.test.annotations.id.entities.Tree;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class IdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testGenericGenerator() throws Exception {

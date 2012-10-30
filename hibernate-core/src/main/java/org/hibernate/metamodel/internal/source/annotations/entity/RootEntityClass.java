@@ -222,10 +222,9 @@ public class RootEntityClass extends EntityClass {
 		discriminatorColumnValues = new Column( null ); //(stliu) give null here, will populate values below
 		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
 		if ( discriminatorColumnAnnotation != null ) {
-
-			DiscriminatorType discriminatorType = Enum.valueOf(
-					DiscriminatorType.class, discriminatorColumnAnnotation.value( "discriminatorType" ).asEnum()
-			);
+			DiscriminatorType discriminatorType = JandexHelper.getValue( 
+					discriminatorColumnAnnotation,
+					"discriminatorType", DiscriminatorType.class );
 			switch ( discriminatorType ) {
 				case STRING: {
 					type = String.class;

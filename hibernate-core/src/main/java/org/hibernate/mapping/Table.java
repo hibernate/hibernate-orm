@@ -346,7 +346,9 @@ public class Table implements RelationalModel, Serializable {
 			return true;
 		}
 
-		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName());
+		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName())
+			&& isSchemaQuoted() ? schema.equals(table.getSchema()) : schema.equalsIgnoreCase(table.getSchema())
+			&& isCatalogQuoted() ? catalog.equals(table.getCatalog()) : catalog.equalsIgnoreCase(table.getCatalog());
 	}
 	
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {

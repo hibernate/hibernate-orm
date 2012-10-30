@@ -266,8 +266,10 @@ subprojects { subProject ->
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-                repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-                snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                //repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+                //snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                repository(id: "release", url: "http://maven.polarislabs.com/content/repositories/releases")
+                snapshotRepository(id: "snapshots", url: "http://maven.polarislabs.com/content/repositories/snapshots")
             }
         }
 

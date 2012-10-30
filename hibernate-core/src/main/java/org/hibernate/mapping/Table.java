@@ -330,7 +330,14 @@ public class Table implements RelationalModel, Serializable {
 
 	@Override
 	public int hashCode() {
-		return isQuoted() ? name.hashCode() : name.toLowerCase().hashCode();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+			+ ((catalog == null) ? 0 : isCatalogQuoted() ? catalog.hashCode() : catalog.toLowerCase().hashCode());
+		result = prime * result + ((name == null) ? 0 : isQuoted() ? name.hashCode() : name.toLowerCase().hashCode());
+		result = prime * result
+			+ ((schema == null) ? 0 : isSchemaQuoted() ? schema.hashCode() : schema.toLowerCase().hashCode());
+		return result;
 	}
 
 	@Override

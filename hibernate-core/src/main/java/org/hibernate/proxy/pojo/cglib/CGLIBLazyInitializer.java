@@ -158,6 +158,14 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
   		e.setCallbackFilter(FINALIZE_FILTER);
   		e.setUseFactory(false);
 		e.setInterceptDuringConstruction( false );
+		e.setClassLoader(new ClassLoader(persistentClass.getClassLoader()) {
+			private final ClassLoader platformClassLoader = getClass().getClassLoader();
+
+			@Override
+			protected Class<?> findClass(String name) throws ClassNotFoundException {
+				return platformClassLoader.loadClass(name);
+			}
+		});
 		return e.createClass();
 	}
 

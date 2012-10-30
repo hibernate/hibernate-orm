@@ -155,7 +155,20 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		// note: interfaces is assumed to already contain HibernateProxy.class
 
 		try {
-			ProxyFactory factory = new ProxyFactory();
+			final ClassLoader platformDelegatingClassLoader = new ClassLoader(persistentClass.getClassLoader()) {
+				private final ClassLoader platformClassLoader = getClass().getClassLoader();
+
+				@Override
+				protected Class<?> findClass(String name) throws ClassNotFoundException {
+					return platformClassLoader.loadClass(name);
+				}
+			};
+			ProxyFactory factory = new ProxyFactory() {
+				@Override
+				protected ClassLoader getClassLoader() {
+					return platformDelegatingClassLoader;
+				}
+			};
 			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
 			factory.setInterfaces( interfaces );
 			factory.setFilter( FINALIZE_FILTER );

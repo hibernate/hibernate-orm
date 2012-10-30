@@ -24,7 +24,6 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import org.geolatte.geom.LinearRing;
 import org.geolatte.geom.PointSequence;
 import org.geolatte.geom.Polygon;
-import org.geolatte.geom.crs.CrsId;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -67,7 +66,7 @@ class PolygonDecoder extends AbstractDecoder<Polygon> {
 
 	private LinearRing toLinearRing(SqlServerGeometry nativeGeom, IndexRange range) {
         PointSequence pointSequence = nativeGeom.coordinateRange(range);
-        return new LinearRing(pointSequence, CrsId.valueOf(nativeGeom.getSrid()));
+        return new LinearRing(pointSequence);
 	}
 
 }

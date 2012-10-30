@@ -63,13 +63,13 @@ public class PointConvertorTest extends AbstractConvertorTest {
 	@Test
 	public void test_coordinates() {
 		Point expected;
-		expected = Points.create( 10.0, 5.0);
+		expected = Points.create2D( 10.0, 5.0);
 		assertEquals( expected, decodedGeoms.get( 1 ).getPointN(0) );
-		expected = Points.create(52.25, 2.53, CrsId.valueOf(4326));
+		expected = Points.create2D(52.25, 2.53, CrsId.valueOf(4326));
 		assertEquals( expected, decodedGeoms.get( 2 ).getPointN( 0 ) );
-		expected = Points.create(150000.0, 200000.0, CrsId.valueOf(31370));
+		expected = Points.create2D(150000.0, 200000.0, CrsId.valueOf(31370));
 		assertEquals( expected, decodedGeoms.get( 3 ).getPointN( 0 ) );
-		expected = Points.create(10.0, 2.0, 1.0, 3.0, CrsId.valueOf(4326));
+		expected = Points.create3DM(10.0, 2.0, 1.0, 3.0, CrsId.valueOf(4326));
 		assertEquals( expected, decodedGeoms.get( 4 ).getPointN( 0 ) );
 	}
 

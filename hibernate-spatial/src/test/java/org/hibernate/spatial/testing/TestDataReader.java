@@ -61,8 +61,7 @@ public class TestDataReader {
 		int id = Integer.valueOf( element.selectSingleNode( "id" ).getText() );
 		String type = element.selectSingleNode( "type" ).getText();
 		String wkt = element.selectSingleNode( "wkt" ).getText();
-		int srid = Integer.valueOf( element.selectSingleNode( "srid" ).getText() );
-		TestDataElement testDataElement = new TestDataElement( id, type, wkt, srid );
+		TestDataElement testDataElement = new TestDataElement( id, type, wkt);
 		testDataElements.add( testDataElement );
 	}
 

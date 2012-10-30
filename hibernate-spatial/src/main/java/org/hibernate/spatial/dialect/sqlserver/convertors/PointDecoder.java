@@ -25,7 +25,6 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import org.geolatte.geom.DimensionalFlag;
 import org.geolatte.geom.Point;
 import org.geolatte.geom.PointSequence;
-import org.geolatte.geom.crs.CrsId;
 
 /**
  * @author Karel Maesen, Geovise BVBA.
@@ -60,7 +59,7 @@ class PointDecoder extends AbstractDecoder<Point> {
 	private Point createPoint(SqlServerGeometry nativeGeom, int pntOffset) {
         DimensionalFlag df = DimensionalFlag.valueOf(nativeGeom.hasZValues(), nativeGeom.hasMValues());
         PointSequence pointSequence = nativeGeom.coordinateRange(new IndexRange(pntOffset, pntOffset + 1));
-        return new Point(pointSequence, CrsId.valueOf(nativeGeom.getSrid()));
+        return new Point(pointSequence);
     }
 
 

@@ -40,7 +40,7 @@ abstract class AbstractEncoder<G extends Geometry> implements Encoder<G> {
 			nativeGeom.setHasMValues();
 		}
 
-        CountingPointSequenceBuilder coordinates = new CountingPointSequenceBuilder(geom.getDimensionalFlag());
+        CountingPointSequenceBuilder coordinates = new CountingPointSequenceBuilder(geom.getDimensionalFlag(), geom.getCrsId());
 		List<Figure> figures = new ArrayList<Figure>();
 		List<Shape> shapes = new ArrayList<Shape>();
 

@@ -31,15 +31,14 @@ import org.hibernate.spatial.testing.TestDataElement;
  */
 public class PostgisExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', GeomFromText('%s', %d))";
+	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', GeomFromText('%s'))";
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		return String.format(
 				SQL_TEMPLATE,
 				testDataElement.id,
 				testDataElement.type,
-				testDataElement.wkt,
-				testDataElement.srid
+				testDataElement.wkt
 		);
 	}
 }

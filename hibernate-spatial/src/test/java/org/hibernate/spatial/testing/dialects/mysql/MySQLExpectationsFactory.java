@@ -23,9 +23,11 @@ package org.hibernate.spatial.testing.dialects.mysql;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import org.geolatte.geom.ByteBuffer;
+import org.geolatte.geom.codec.Wkb;
+import org.geolatte.geom.codec.WkbDecoder;
+import org.geolatte.geom.jts.JTS;
 
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.dialect.mysql.MySQLGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -38,8 +40,6 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 
 public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
-
-	private final MySQLGeometryValueExtractor decoder = new MySQLGeometryValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE);
 
 	public MySQLExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super( dataSourceUtils );
@@ -245,7 +245,12 @@ public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected Geometry decode(Object o) {
-		return decoder.toJTS( o );
+	protected Geometry decode(Object bytes) {
+		if ( bytes == null ) {
+			return null;
+		}
+		ByteBuffer buffer = ByteBuffer.from( (byte[])bytes );
+		WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
+		return JTS.to( decoder.decode( buffer ) );
 	}
 }

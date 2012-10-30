@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.criteria">
+   <class name="LeftTable" table="LEFT">
+       <id name="id" access="field">
+           <column name="ID" />
+           <generator class="native" />
+       </id>
+
+       <set name="middleTables" access="field">
+            <key>
+                <column name="ID"></column>
+            </key>
+            <one-to-many class="MiddleTable"/>
+        </set>
+   </class>
+    <class name="MiddleTable" table="MIDDLE">
+        <composite-id>
+            <key-many-to-one name="left" access="field">
+                <column name="LEFT_ID"></column>
+            </key-many-to-one>
+            <key-many-to-one name="right" access="field">
+                <column name="RIGHT_ID"></column>
+            </key-many-to-one>
+        </composite-id>
+    </class>
+    <class name="RightTable" table="RIGHT">
+        <id name="id" access="field">
+            <column name="ID"/>
+            <generator class="native" />
+        </id>
+        <property name="value" access="field"></property>
+    </class>
+</hibernate-mapping>

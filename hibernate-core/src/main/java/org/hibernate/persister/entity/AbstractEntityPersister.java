@@ -121,6 +121,7 @@ import org.hibernate.sql.Update;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -1344,6 +1345,16 @@ public abstract class AbstractEntityPersister
 	protected String[] getIdentifierAliases() {
 		return identifierAliases;
 	}
+	
+	public String[] toIdentifierColumns(String name) {
+		final String alias = generateTableAlias( name, 0 );
+		String[] cols = getIdentifierColumnNames();
+		String[] result = new String[cols.length];
+		for ( int j = 0; j < cols.length; j++ ) {
+			result[j] = StringHelper.qualify( alias, cols[j] );
+		}
+		return result;
+	}
 
 	public String getVersionColumnName() {
 		return versionColumnName;
@@ -2064,7 +2075,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getSubclassPropertyName(int i) {
-		return subclassPropertyNameClosure[i];
+		if ( i >= 0 ) {
+			return subclassPropertyNameClosure[i];
+		}
+		Type t = this.getEntityMetamodel().getIdentifierProperty().getType();
+		if ( t.isComponentType() ) {
+			ComponentType ct = (ComponentType) t;
+			return ct.getPropertyNames()[-i - 1];
+		}
+
+		return this.getIdentifierPropertyName();
 	}
 
 	public int countSubclassProperties() {
@@ -2072,7 +2092,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String[] getSubclassPropertyColumnNames(int i) {
-		return subclassPropertyColumnNameClosure[i];
+		if ( i >= 0 ) {
+			return subclassPropertyColumnNameClosure[i];
+		}
+		// id case
+		i = -i - 1;
+		return new String[] { this.getKeyColumnNames()[i] };
 	}
 
 	public boolean isDefinedOnSubclass(int i) {
@@ -3946,7 +3971,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isSubclassPropertyNullable(int i) {
-		return subclassPropertyNullabilityClosure[i];
+		if ( i >= 0 ) {
+			return subclassPropertyNullabilityClosure[i];
+		}
+		// an identifier cannot be null
+		return false;
 	}
 
 	/**

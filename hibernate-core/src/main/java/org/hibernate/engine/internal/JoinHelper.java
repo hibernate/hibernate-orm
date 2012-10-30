@@ -85,7 +85,7 @@ public final class JoinHelper {
 			String propertyName = type.getLHSPropertyName();
 			if (propertyName==null) {
 				return ArrayHelper.slice( 
-						lhsPersister.toColumns(alias, property), 
+						property < 0 ? lhsPersister.toIdentifierColumns(alias) : lhsPersister.toColumns(alias, property),
 						begin, 
 						type.getColumnSpan(mapping) 
 					);
@@ -117,7 +117,7 @@ public final class JoinHelper {
 				//slice, to get the columns for this component
 				//property
 				return ArrayHelper.slice( 
-						lhsPersister.getSubclassPropertyColumnNames(property),
+						property < 0 ? lhsPersister.getIdentifierColumnNames() : lhsPersister.getSubclassPropertyColumnNames(property),
 						begin, 
 						type.getColumnSpan(mapping) 
 					);
@@ -135,7 +135,7 @@ public final class JoinHelper {
 		int property, 
 		OuterJoinLoadable lhsPersister
 	) {
-		if ( type.useLHSPrimaryKey() ) {
+		if ( type.useLHSPrimaryKey() || property < 0 ) {
 			return lhsPersister.getTableName();
 		}
 		else {

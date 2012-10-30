@@ -36,6 +36,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -53,6 +54,7 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -396,18 +398,34 @@ public class JoinWalker {
 		String lhsTable = JoinHelper.getLHSTableName(associationType, propertyNumber, persister);
 
 		PropertyPath subPath = path.append( persister.getSubclassPropertyName(propertyNumber) );
-		JoinType joinType = getJoinType(
-				persister,
-				subPath,
-				propertyNumber,
-				associationType,
-				persister.getFetchMode( propertyNumber ),
-				persister.getCascadeStyle( propertyNumber ),
-				lhsTable,
-				lhsColumns,
-				nullable,
-				currentDepth
-		);
+		JoinType joinType;
+		if (propertyNumber >= 0) {
+			joinType = getJoinType(
+					persister,
+					subPath,
+					propertyNumber,
+					associationType,
+					persister.getFetchMode( propertyNumber ),
+					persister.getCascadeStyle( propertyNumber ),
+					lhsTable,
+					lhsColumns,
+					nullable,
+					currentDepth
+					);
+		} else {
+			joinType = getJoinType(
+					persister,
+					subPath,
+					propertyNumber,
+					associationType,
+					FetchMode.DEFAULT,
+					CascadeStyles.NONE,
+					lhsTable,
+					lhsColumns,
+					nullable,
+					currentDepth
+					);
+		}
 		addAssociationToJoinTreeIfNecessary(
 				associationType,
 				aliasedLhsColumns,
@@ -415,7 +433,7 @@ public class JoinWalker {
 				subPath,
 				currentDepth,
 				joinType
-		);
+				);
 	}
 
 	/**
@@ -508,36 +526,48 @@ public class JoinWalker {
 	 * @param currentDepth The current join depth
 	 * @throws org.hibernate.MappingException ???
 	 */
-	private void walkEntityTree(
-			final OuterJoinLoadable persister,
-			final String alias,
-			final PropertyPath path,
+	private void walkEntityTree(final OuterJoinLoadable persister, final String alias, final PropertyPath path,
 			final int currentDepth) throws MappingException {
 		int n = persister.countSubclassProperties();
 		for ( int i = 0; i < n; i++ ) {
-			Type type = persister.getSubclassPropertyType(i);
-			if ( type.isAssociationType() ) {
-				walkEntityAssociationTree(
-					( AssociationType ) type,
-					persister,
-					i,
-					alias,
-					path,
-					persister.isSubclassPropertyNullable(i),
-					currentDepth
-				);
+			Type type = persister.getSubclassPropertyType( i );
+			walkSingleType( persister, alias, path, currentDepth, i, type );
+		}
+
+		Type type = persister.getIdentifierType();
+		if ( type.isComponentType() ) {
+			CompositeType cType = (CompositeType) type;
+			int j = -1;
+			Type[] types = cType.getSubtypes();
+			for ( int i = 0; i < types.length; i++ ) {
+				walkSingleType( persister, alias, path, currentDepth, j--, types[i] );
 			}
-			else if ( type.isComponentType() ) {
-				walkComponentTree(
-						( CompositeType ) type,
-						i,
-						0,
-						persister,
-						alias,
-						path.append( persister.getSubclassPropertyName(i) ),
-						currentDepth
-				);
+		}
+		else if ( type.isAssociationType() ) {
+			walkSingleType( persister, alias, path, currentDepth, -1, type );
+		}
+	}
+
+	private void walkSingleType(final OuterJoinLoadable persister, final String alias, final PropertyPath path,
+			final int currentDepth, int i, Type type) {
+		if ( type.isAssociationType() ) {
+			walkEntityAssociationTree( (AssociationType) type, persister, i, alias, path,
+					persister.isSubclassPropertyNullable( i ), currentDepth );
+		}
+		else if ( type.isComponentType() ) {
+			String propertyName;
+			if ( i < 0 ) {
+				if ( type instanceof EmbeddedComponentType ) {
+					propertyName = "";
+				} else {
+					propertyName = persister.getIdentifierPropertyName();
+				}
+			} else {
+				propertyName = persister.getSubclassPropertyName(i);
 			}
+			PropertyPath subPath = path.append( propertyName );
+			walkComponentTree( (CompositeType) type, i, 0, persister, alias,
+					subPath, currentDepth );
 		}
 	}
 

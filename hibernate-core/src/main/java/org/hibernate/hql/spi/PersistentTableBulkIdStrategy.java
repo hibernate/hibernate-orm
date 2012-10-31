@@ -160,6 +160,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 						log.debugf( "Error attempting to export id-table [%s] : %s", idTableDefinition.getName(), e.getMessage() );
 					}
 				}
+				
+				statement.close();
 			}
 			catch (SQLException e) {
 				log.error( "Unable to use JDBC Connection to create Statement", e );
@@ -198,6 +200,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 						log.debugf( "Error attempting to cleanup id-table : [%s]", e.getMessage() );
 					}
 				}
+				
+				statement.close();
 			}
 			catch (SQLException e) {
 				log.error( "Unable to use JDBC Connection to create Statement", e );

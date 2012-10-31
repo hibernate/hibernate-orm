@@ -36,27 +36,33 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.AbstractSessionImpl;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.sql.SelectValues;
 import org.hibernate.type.UUIDCharType;
 
 /**
  * @author Steve Ebersole
  */
 public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
-	private static final Logger log = Logger.getLogger( PersistentTableBulkIdStrategy.class );
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			PersistentTableBulkIdStrategy.class.getName()
+	);
 
 	public static final String CLEAN_UP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.clean_up";
 	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
@@ -69,7 +75,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	@Override
 	public void prepare(
-			Dialect dialect,
+			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			Mappings mappings,
 			Mapping mapping,
@@ -93,7 +99,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			final Table idTableDefinition = generateIdTableDefinition( entityMapping );
 			idTableDefinitions.add( idTableDefinition );
 		}
-		exportTableDefinitions( idTableDefinitions, dialect, connectionAccess, mappings, mapping );
+		exportTableDefinitions( idTableDefinitions, jdbcServices, connectionAccess, mappings, mapping );
 	}
 
 	protected Table generateIdTableDefinition(PersistentClass entityMapping) {
@@ -104,7 +110,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 		if ( schema != null ) {
 			idTable.setSchema( schema );
 		}
-		Iterator itr = entityMapping.getIdentityTable().getPrimaryKey().getColumnIterator();
+		Iterator itr = entityMapping.getTable().getPrimaryKey().getColumnIterator();
 		while( itr.hasNext() ) {
 			Column column = (Column) itr.next();
 			idTable.addColumn( column.clone()  );
@@ -120,12 +126,20 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	protected void exportTableDefinitions(
 			List<Table> idTableDefinitions,
-			Dialect dialect,
+			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			Mappings mappings,
 			Mapping mapping) {
 		try {
-			Connection connection = connectionAccess.obtainConnection();
+			Connection connection;
+			try {
+				connection = connectionAccess.obtainConnection();
+			}
+			catch (UnsupportedOperationException e) {
+				// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
+				log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+				return;
+			}
 
 			try {
 				Statement statement = connection.createStatement();
@@ -135,10 +149,12 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 						if ( tableCleanUpDdl == null ) {
 							tableCleanUpDdl = new ArrayList<String>();
 						}
-						tableCleanUpDdl.add( idTableDefinition.sqlDropString( dialect, null, null  ) );
+						tableCleanUpDdl.add( idTableDefinition.sqlDropString( jdbcServices.getDialect(), null, null  ) );
 					}
 					try {
-						statement.execute( idTableDefinition.sqlCreateString( dialect, mapping, null, null ) );
+						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), mapping, null, null );
+						jdbcServices.getSqlStatementLogger().logStatement( sql );
+						statement.execute( sql );
 					}
 					catch (SQLException e) {
 						log.debugf( "Error attempting to export id-table [%s] : %s", idTableDefinition.getName(), e.getMessage() );
@@ -162,8 +178,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	}
 
 	@Override
-	public void release(Dialect dialect, JdbcConnectionAccess connectionAccess) {
-		if ( ! cleanUpTables ) {
+	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
+		if ( ! cleanUpTables || tableCleanUpDdl == null ) {
 			return;
 		}
 
@@ -175,6 +191,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 				for ( String cleanupDdl : tableCleanUpDdl ) {
 					try {
+						jdbcServices.getSqlStatementLogger().logStatement( cleanupDdl );
 						statement.execute( cleanupDdl );
 					}
 					catch (SQLException e) {
@@ -202,8 +219,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	public UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
 		return new TableBasedUpdateHandlerImpl( factory, walker ) {
 			@Override
-			protected String extraIdSelectValues() {
-				return "cast(? as char)";
+			protected void addAnyExtraIdSelectValues(SelectValues selectClause) {
+				selectClause.addParameter( Types.CHAR, 36 );
 			}
 
 			@Override
@@ -213,32 +230,65 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 			@Override
 			protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SessionImplementor session, int pos) throws SQLException {
-				if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
-					throw new HibernateException( "Only available on SessionImpl instances" );
-				}
-				UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), pos, session );
+				bindSessionIdentifier( ps, session, pos );
 				return 1;
 			}
 
 			@Override
 			protected void handleAddedParametersOnUpdate(PreparedStatement ps, SessionImplementor session, int position) throws SQLException {
-				if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
-					throw new HibernateException( "Only available on SessionImpl instances" );
-				}
-				UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), position, session );
+				bindSessionIdentifier( ps, session, position );
+			}
+
+			@Override
+			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+				// clean up our id-table rows
+				cleanUpRows( determineIdTableName( persister ), session );
 			}
 		};
+	}
+
+	private void bindSessionIdentifier(PreparedStatement ps, SessionImplementor session, int position) throws SQLException {
+		if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
+			throw new HibernateException( "Only available on SessionImpl instances" );
+		}
+		UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), position, session );
+	}
+
+	private void cleanUpRows(String tableName, SessionImplementor session) {
+		final String sql = "delete from " + tableName + " where hib_sess_id=?";
+		try {
+			PreparedStatement ps = null;
+			try {
+				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+				bindSessionIdentifier( ps, session, 1 );
+				ps.executeUpdate();
+			}
+			finally {
+				if ( ps != null ) {
+					try {
+						ps.close();
+					}
+					catch( Throwable ignore ) {
+						// ignore
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw convert( session.getFactory(), e, "Unable to clean up id table [" + tableName + "]", sql );
+		}
+	}
+
+	protected JDBCException convert(SessionFactoryImplementor factory, SQLException e, String message, String sql) {
+		throw factory.getSQLExceptionHelper().convert( e, message, sql );
 	}
 
 	@Override
 	public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
 		return new TableBasedDeleteHandlerImpl( factory, walker ) {
 			@Override
-			protected String extraIdSelectValues() {
-				final Dialect dialect = factory().getDialect();
-				return dialect.requiresCastingOfParametersInSelectClause()
-						? dialect.cast( "?", Types.CHAR, 36 )
-						: "?";
+			protected void addAnyExtraIdSelectValues(SelectValues selectClause) {
+				selectClause.addParameter( Types.CHAR, 36 );
 			}
 
 			@Override
@@ -248,19 +298,19 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 			@Override
 			protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SessionImplementor session, int pos) throws SQLException {
-				if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
-					throw new HibernateException( "Only available on SessionImpl instances" );
-				}
-				UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), pos, session );
+				bindSessionIdentifier( ps, session, pos );
 				return 1;
 			}
 
 			@Override
 			protected void handleAddedParametersOnDelete(PreparedStatement ps, SessionImplementor session) throws SQLException {
-				if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
-					throw new HibernateException( "Only available on SessionImpl instances" );
-				}
-				UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), 1, session );
+				bindSessionIdentifier( ps, session, 1 );
+			}
+
+			@Override
+			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+				// clean up our id-table rows
+				cleanUpRows( determineIdTableName( persister ), session );
 			}
 		};
 	}

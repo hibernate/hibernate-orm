@@ -32,16 +32,18 @@ import antlr.collections.AST;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
-import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.SelectValues;
 
 /**
  * @author Steve Ebersole
@@ -50,9 +52,22 @@ public class AbstractTableBasedBulkIdHandler {
 	private final SessionFactoryImplementor sessionFactory;
 	private final HqlSqlWalker walker;
 
+	private final String catalog;
+	private final String schema;
+
 	public AbstractTableBasedBulkIdHandler(SessionFactoryImplementor sessionFactory, HqlSqlWalker walker) {
+		this( sessionFactory, walker, null, null );
+	}
+
+	public AbstractTableBasedBulkIdHandler(
+			SessionFactoryImplementor sessionFactory,
+			HqlSqlWalker walker,
+			String catalog,
+			String schema) {
 		this.sessionFactory = sessionFactory;
 		this.walker = walker;
+		this.catalog = catalog;
+		this.schema = schema;
 	}
 
 	protected SessionFactoryImplementor factory() {
@@ -115,9 +130,10 @@ public class AbstractTableBasedBulkIdHandler {
 
 	protected String generateIdInsertSelect(Queryable persister, String tableAlias, ProcessedWhereClause whereClause) {
 		Select select = new Select( sessionFactory.getDialect() );
-		SelectFragment selectFragment = new SelectFragment()
+		SelectValues selectClause = new SelectValues( sessionFactory.getDialect() )
 				.addColumns( tableAlias, persister.getIdentifierColumnNames(), persister.getIdentifierColumnNames() );
-		select.setSelectClause( selectFragment.toFragmentString().substring( 2 ) + extraIdSelectValues() );
+		addAnyExtraIdSelectValues( selectClause );
+		select.setSelectClause( selectClause.render() );
 
 		String rootTableName = persister.getTableName();
 		String fromJoinFragment = persister.fromJoinFragment( tableAlias, true, false );
@@ -135,13 +151,12 @@ public class AbstractTableBasedBulkIdHandler {
 			}
 		}
 
-		if ( whereClause.userWhereClauseFragment.length() > 0 ) {
+		if ( whereClause.getUserWhereClauseFragment().length() > 0 ) {
 			if ( whereJoinFragment.length() > 0 ) {
 				whereJoinFragment += " and ";
 			}
 		}
-
-		select.setWhereClause( whereJoinFragment + whereClause.userWhereClauseFragment );
+		select.setWhereClause( whereJoinFragment + whereClause.getUserWhereClauseFragment() );
 
 		InsertSelect insert = new InsertSelect( sessionFactory.getDialect() );
 		if ( sessionFactory.getSettings().isCommentsEnabled() ) {
@@ -152,12 +167,12 @@ public class AbstractTableBasedBulkIdHandler {
 		return insert.toStatementString();
 	}
 
-	protected String extraIdSelectValues() {
-		return "";
+	protected void addAnyExtraIdSelectValues(SelectValues selectClause) {
 	}
 
 	protected String determineIdTableName(Queryable persister) {
-		return persister.getTemporaryIdTableName();
+		// todo : use the identifier/name qualifier service once we pull that over to master
+		return Table.qualify( catalog, schema, persister.getTemporaryIdTableName() );
 	}
 
 	protected String generateIdSubselect(Queryable persister) {

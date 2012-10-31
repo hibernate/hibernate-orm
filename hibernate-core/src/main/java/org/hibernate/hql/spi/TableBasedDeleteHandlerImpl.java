@@ -43,7 +43,7 @@ import org.hibernate.sql.Delete;
 /**
 * @author Steve Ebersole
 */
-class TableBasedDeleteHandlerImpl
+public class TableBasedDeleteHandlerImpl
 		extends AbstractTableBasedBulkIdHandler
 		implements MultiTableBulkIdStrategy.DeleteHandler {
 	private static final Logger log = Logger.getLogger( TableBasedDeleteHandlerImpl.class );

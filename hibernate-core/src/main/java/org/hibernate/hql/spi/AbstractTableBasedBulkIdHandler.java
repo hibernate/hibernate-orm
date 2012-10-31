@@ -55,10 +55,6 @@ public class AbstractTableBasedBulkIdHandler {
 	private final String catalog;
 	private final String schema;
 
-	public AbstractTableBasedBulkIdHandler(SessionFactoryImplementor sessionFactory, HqlSqlWalker walker) {
-		this( sessionFactory, walker, null, null );
-	}
-
 	public AbstractTableBasedBulkIdHandler(
 			SessionFactoryImplementor sessionFactory,
 			HqlSqlWalker walker,

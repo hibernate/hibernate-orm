@@ -33,12 +33,12 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -101,16 +101,11 @@ public class SettingsFactory implements Serializable {
 		// Transaction settings:
 		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
-		MultiTableBulkIdStrategy multiTableBulkIdStrategy = serviceRegistry.getService( StrategySelector.class )
-				.resolveStrategy(
-						MultiTableBulkIdStrategy.class,
-						properties.getProperty( AvailableSettings.HQL_BULK_ID_STRATEGY )
-				);
-		if ( multiTableBulkIdStrategy == null ) {
-			multiTableBulkIdStrategy = jdbcServices.getDialect().supportsTemporaryTables()
-					? TemporaryTableBulkIdStrategy.INSTANCE
-					: new PersistentTableBulkIdStrategy();
-		}
+		final MultiTableBulkIdStrategy multiTableBulkIdStrategy = getMultiTableBulkIdStrategy(
+				properties,
+				jdbcServices.getDialect(),
+				serviceRegistry.getService( ClassLoaderService.class )
+		);
 		settings.setMultiTableBulkIdStrategy( multiTableBulkIdStrategy );
 
 		boolean flushBeforeCompletion = ConfigurationHelper.getBoolean(AvailableSettings.FLUSH_BEFORE_COMPLETION, properties);
@@ -373,6 +368,36 @@ public class SettingsFactory implements Serializable {
 
 		return settings;
 
+	}
+
+	private MultiTableBulkIdStrategy getMultiTableBulkIdStrategy(
+			Properties properties,
+			Dialect dialect,
+			ClassLoaderService classLoaderService) {
+		final Object setting = properties.get( AvailableSettings.HQL_BULK_ID_STRATEGY );
+		if ( setting != null ) {
+			if ( MultiTableBulkIdStrategy.class.isInstance( setting ) ) {
+				return (MultiTableBulkIdStrategy) setting;
+			}
+			final Class strategyClass;
+			if ( Class.class.isInstance( setting ) ) {
+				strategyClass = (Class) setting;
+			}
+			else {
+				strategyClass = classLoaderService.classForName( setting.toString() );
+			}
+			try {
+				return (MultiTableBulkIdStrategy) strategyClass.newInstance();
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Unable to interpret MultiTableBulkIdStrategy setting [" + setting + "]", e );
+			}
+		}
+		else {
+			return dialect.supportsTemporaryTables()
+					? TemporaryTableBulkIdStrategy.INSTANCE
+					: new PersistentTableBulkIdStrategy();
+		}
 	}
 
 //	protected BytecodeProvider buildBytecodeProvider(String providerName) {

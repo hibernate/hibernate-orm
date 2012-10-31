@@ -117,7 +117,8 @@ public class AbstractTableBasedBulkIdHandler {
 		Select select = new Select( sessionFactory.getDialect() );
 		SelectFragment selectFragment = new SelectFragment()
 				.addColumns( tableAlias, persister.getIdentifierColumnNames(), persister.getIdentifierColumnNames() );
-		select.setSelectClause( selectFragment.toFragmentString().substring( 2 ) + extraIdSelectValues() );
+		String extraIdSelectValues = extraIdSelectValues();
+		select.setSelectClause( selectFragment.toFragmentString().substring( 2 ) + ("".equals(extraIdSelectValues) ? extraIdSelectValues : (", " + extraIdSelectValues)) );
 
 		String rootTableName = persister.getTableName();
 		String fromJoinFragment = persister.fromJoinFragment( tableAlias, true, false );

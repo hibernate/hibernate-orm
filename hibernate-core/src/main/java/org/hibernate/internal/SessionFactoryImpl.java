@@ -486,7 +486,7 @@ public final class SessionFactoryImpl
 		LOG.debug( "Instantiated session factory" );
 
 		settings.getMultiTableBulkIdStrategy().prepare(
-				dialect,
+				jdbcServices,
 				buildLocalConnectionAccess(),
 				cfg.createMappings(),
 				cfg.buildMapping(),
@@ -1383,7 +1383,7 @@ public final class SessionFactoryImpl
 
 		isClosed = true;
 
-		settings.getMultiTableBulkIdStrategy().release( dialect, buildLocalConnectionAccess() );
+		settings.getMultiTableBulkIdStrategy().release( jdbcServices, buildLocalConnectionAccess() );
 
 		Iterator iter = entityPersisters.values().iterator();
 		while ( iter.hasNext() ) {

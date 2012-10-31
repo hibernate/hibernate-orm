@@ -178,6 +178,10 @@ subprojects { subProject ->
         )
 
         test {
+            // pass along command line defined system props (-D) to the test
+            //      pretty sure I used to have this limited to just certain prefixes, but that is no longer here
+            //      and  I no longer remember that groovy-magic needed to accomplish that
+            systemProperties = System.properties
             systemProperties['hibernate.test.validatefailureexpected'] = true
             maxHeapSize = "1024m"
         }

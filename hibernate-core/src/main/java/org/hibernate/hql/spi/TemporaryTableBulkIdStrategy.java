@@ -32,7 +32,6 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -56,12 +55,12 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	);
 
 	@Override
-	public void prepare(Dialect dialect, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings) {
+	public void prepare(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings) {
 		// nothing to do
 	}
 
 	@Override
-	public void release(Dialect dialect, JdbcConnectionAccess connectionAccess) {
+	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
 		// nothing to do
 	}
 

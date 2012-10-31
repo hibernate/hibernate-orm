@@ -28,6 +28,7 @@ import java.util.Map;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -47,21 +48,21 @@ public interface MultiTableBulkIdStrategy {
 	 *     <li>Manually creating the tables immediately through the passed JDBC Connection access</li>
 	 * </ul>
 	 *
-	 * @param dialect The dialect
+	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
 	 * @param mappings The Hibernate Mappings object, for access to O/RM mapping information
 	 * @param mapping The Hibernate Mapping contract, mainly for use in DDL generation
 	 * @param settings Configuration settings
 	 */
-	public void prepare(Dialect dialect, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings);
+	public void prepare(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings);
 
 	/**
 	 * Release the strategy.   Called as the SessionFactory is being shut down.
 	 *
-	 * @param dialect The dialect
+	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
 	 */
-	public void release(Dialect dialect, JdbcConnectionAccess connectionAccess);
+	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess);
 
 	/**
 	 * Handler for dealing with multi-table HQL bulk update statements.

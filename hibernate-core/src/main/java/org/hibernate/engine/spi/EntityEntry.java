@@ -270,8 +270,14 @@ public final class EntityEntry implements Serializable {
 	}
 	
 	public Object getLoadedValue(String propertyName) {
-		int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex(propertyName);
-		return loadedState[propertyIndex];
+		if ( loadedState == null ) {
+			return null;
+		}
+		else {
+			int propertyIndex = ( (UniqueKeyLoadable) persister )
+					.getPropertyIndex( propertyName );
+			return loadedState[propertyIndex];
+		}
 	}
 
 	/**

@@ -54,8 +54,8 @@ class TableBasedDeleteHandlerImpl
 	private final List<ParameterSpecification> idSelectParameterSpecifications;
 	private final String[] deletes;
 
-	TableBasedDeleteHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		super( factory, walker );
+	TableBasedDeleteHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker, String catalog, String schema) {
+		super( factory, walker, catalog, schema );
 
 		DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
 		FromElement fromElement = deleteStatement.getFromClause().getFromElement();

@@ -67,7 +67,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	@Override
 	public UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		return new TableBasedUpdateHandlerImpl( factory, walker ) {
+		return new TableBasedUpdateHandlerImpl( factory, walker, null, null ) {
 			@Override
 			protected void prepareForUse(Queryable persister, SessionImplementor session) {
 				createTempTable( persister, session );
@@ -82,7 +82,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	@Override
 	public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		return new TableBasedDeleteHandlerImpl( factory, walker ) {
+		return new TableBasedDeleteHandlerImpl( factory, walker, null, null ) {
 			@Override
 			protected void prepareForUse(Queryable persister, SessionImplementor session) {
 				createTempTable( persister, session );

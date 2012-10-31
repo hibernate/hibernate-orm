@@ -200,7 +200,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	@Override
 	public UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		return new TableBasedUpdateHandlerImpl( factory, walker ) {
+		return new TableBasedUpdateHandlerImpl( factory, walker, catalog, schema ) {
 			@Override
 			protected String extraIdSelectValues() {
 				return "cast(? as char)";
@@ -232,7 +232,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	@Override
 	public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		return new TableBasedDeleteHandlerImpl( factory, walker ) {
+		return new TableBasedDeleteHandlerImpl( factory, walker, catalog, schema ) {
 			@Override
 			protected String extraIdSelectValues() {
 				final Dialect dialect = factory().getDialect();

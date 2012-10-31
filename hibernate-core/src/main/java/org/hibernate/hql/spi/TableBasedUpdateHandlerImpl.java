@@ -60,8 +60,8 @@ public class TableBasedUpdateHandlerImpl
 	private final ParameterSpecification[][] assignmentParameterSpecifications;
 
 	@SuppressWarnings("unchecked")
-	TableBasedUpdateHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		super( factory, walker );
+	TableBasedUpdateHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker, String catalog, String schema) {
+		super( factory, walker, catalog, schema );
 
 		UpdateStatement updateStatement = ( UpdateStatement ) walker.getAST();
 		FromElement fromElement = updateStatement.getFromClause().getFromElement();

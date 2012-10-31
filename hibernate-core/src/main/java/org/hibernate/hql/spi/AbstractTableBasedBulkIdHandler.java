@@ -49,10 +49,14 @@ import org.hibernate.sql.SelectFragment;
 public class AbstractTableBasedBulkIdHandler {
 	private final SessionFactoryImplementor sessionFactory;
 	private final HqlSqlWalker walker;
+    private final String catalog;
+    private final String schema;
 
-	public AbstractTableBasedBulkIdHandler(SessionFactoryImplementor sessionFactory, HqlSqlWalker walker) {
+	public AbstractTableBasedBulkIdHandler(SessionFactoryImplementor sessionFactory, HqlSqlWalker walker, String catalog, String schema) {
 		this.sessionFactory = sessionFactory;
 		this.walker = walker;
+        this.catalog = catalog;
+        this.schema = schema;
 	}
 
 	protected SessionFactoryImplementor factory() {
@@ -158,7 +162,14 @@ public class AbstractTableBasedBulkIdHandler {
 	}
 
 	protected String determineIdTableName(Queryable persister) {
-		return persister.getTemporaryIdTableName();
+        StringBuilder tempIdTableName = new StringBuilder();
+        if (catalog != null && !"".equals(catalog)) {
+            tempIdTableName.append(catalog).append(".");
+        }
+        if (schema != null && !"".equals(schema)) {
+            tempIdTableName.append(schema).append(".");
+        }
+        return tempIdTableName.append(persister.getTemporaryIdTableName()).toString();
 	}
 
 	protected String generateIdSubselect(Queryable persister) {

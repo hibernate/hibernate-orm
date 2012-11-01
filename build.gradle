@@ -184,8 +184,8 @@ subprojects { subProject ->
             // TODO: Temporarily removing -- was causing issues with
             // entitymanager tests.
             //systemProperties = System.properties
-            //systemProperties['hibernate.test.validatefailureexpected'] = true
-            //maxHeapSize = "1024m"
+            systemProperties['hibernate.test.validatefailureexpected'] = true
+            maxHeapSize = "1024m"
         }
 
 

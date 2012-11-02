@@ -44,7 +44,7 @@ public abstract class CollectionJoinWalker extends JoinWalker {
 
 	protected StringBuilder whereString(String alias, String[] columnNames, String subselect, int batchSize) {
 		if (subselect==null) {
-			return super.whereString(alias, columnNames, batchSize);
+			return whereString(alias, columnNames, batchSize);
 		}
 		else {
 			StringBuilder buf = new StringBuilder();

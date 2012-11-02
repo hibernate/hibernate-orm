@@ -119,7 +119,7 @@ public abstract class Loader {
 	 *
 	 * @return The sql command this loader should use to get its {@link ResultSet}.
 	 */
-	protected abstract String getSQLString();
+	public abstract String getSQLString();
 
 	/**
 	 * An array of persisters of entity classes contained in each row of results;
@@ -256,7 +256,7 @@ public abstract class Loader {
 	 * persister from each row of the <tt>ResultSet</tt>. If an object is supplied, will attempt to
 	 * initialize that object. If a collection is supplied, attempt to initialize that collection.
 	 */
-	private List doQueryAndInitializeNonLazyCollections(
+	public List doQueryAndInitializeNonLazyCollections(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final boolean returnProxies) throws HibernateException, SQLException {
@@ -268,7 +268,7 @@ public abstract class Loader {
 		);
 	}
 
-	private List doQueryAndInitializeNonLazyCollections(
+	public List doQueryAndInitializeNonLazyCollections(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final boolean returnProxies,
@@ -1722,8 +1722,17 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final boolean scroll,
 			final SessionImplementor session) throws SQLException {
+		return executeQueryStatement( getSQLString(), queryParameters, scroll, session );
+	}
+
+	protected ResultSet executeQueryStatement(
+			final String sqlStatement,
+			final QueryParameters queryParameters,
+			final boolean scroll,
+			final SessionImplementor session) throws SQLException {
+
 		// Processing query filters.
-		queryParameters.processFilters( getSQLString(), session );
+		queryParameters.processFilters( sqlStatement, session );
 
 		// Applying LIMIT clause.
 		final LimitHandler limitHandler = getLimitHandler(

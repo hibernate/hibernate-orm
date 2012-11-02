@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.collection;
+package org.hibernate.test.batchfetch;
 
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+import org.hibernate.annotations.BatchSize;
 
 /**
- * The base contract for loaders capable of performing batch-fetch loading of collections using multiple foreign key
- * values in the SQL <tt>WHERE</tt> clause.
- *
- * @author Gavin King
  * @author Steve Ebersole
- *
- * @see BatchingCollectionInitializerBuilder
- * @see BasicCollectionLoader
- * @see OneToManyLoader
  */
-public abstract class BatchingCollectionInitializer implements CollectionInitializer {
-	private final QueryableCollection collectionPersister;
+@Entity
+@BatchSize( size = 32 )
+public class BatchLoadableEntity {
+	private Integer id;
+	private String name;
 
-	public BatchingCollectionInitializer(QueryableCollection collectionPersister) {
-		this.collectionPersister = collectionPersister;
+	public BatchLoadableEntity() {
 	}
 
-	public CollectionPersister getCollectionPersister() {
-		return collectionPersister;
+	public BatchLoadableEntity(int id) {
+		this.id = id;
+		this.name = "Entity #" + id;
 	}
 
-	public QueryableCollection collectionPersister() {
-		return collectionPersister;
+	@Id
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

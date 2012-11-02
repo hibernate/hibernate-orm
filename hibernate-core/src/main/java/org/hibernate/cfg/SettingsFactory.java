@@ -49,6 +49,7 @@ import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -198,6 +199,11 @@ public class SettingsFactory implements Serializable {
 			}
 		}
 		settings.setConnectionReleaseMode( releaseMode );
+
+		final BatchFetchStyle batchFetchStyle = BatchFetchStyle.interpret( properties.get( AvailableSettings.BATCH_FETCH_STYLE ) );
+		LOG.debugf( "Using BatchFetchStyle : " + batchFetchStyle.name() );
+		settings.setBatchFetchStyle( batchFetchStyle );
+
 
 		//SQL Generation settings:
 

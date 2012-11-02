@@ -33,6 +33,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
@@ -91,6 +92,7 @@ public final class Settings {
 	private JtaPlatform jtaPlatform;
 
 	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+	private BatchFetchStyle batchFetchStyle;
 
 
 	/**
@@ -479,5 +481,13 @@ public final class Settings {
 
 	void setMultiTableBulkIdStrategy(MultiTableBulkIdStrategy multiTableBulkIdStrategy) {
 		this.multiTableBulkIdStrategy = multiTableBulkIdStrategy;
+	}
+
+	public BatchFetchStyle getBatchFetchStyle() {
+		return batchFetchStyle;
+	}
+
+	void setBatchFetchStyle(BatchFetchStyle batchFetchStyle) {
+		this.batchFetchStyle = batchFetchStyle;
 	}
 }

@@ -294,7 +294,7 @@ public class CustomLoader extends Loader {
 	}
 
 	@Override
-    protected String getSQLString() {
+    public String getSQLString() {
 		return sql;
 	}
 

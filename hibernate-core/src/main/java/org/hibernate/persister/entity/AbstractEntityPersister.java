@@ -90,6 +90,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.entity.BatchingEntityLoader;
+import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
@@ -2440,26 +2441,16 @@ public abstract class AbstractEntityPersister
 			LockMode lockMode,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		//TODO: disable batch loading if lockMode > READ?
-		return BatchingEntityLoader.createBatchingEntityLoader(
-				this,
-				batchSize,
-				lockMode,
-				getFactory(),
-				loadQueryInfluencers
-		);
+		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
+				.buildLoader( this, batchSize, lockMode, getFactory(), loadQueryInfluencers );
 	}
 
 	protected UniqueEntityLoader createEntityLoader(
 			LockOptions lockOptions,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		//TODO: disable batch loading if lockMode > READ?
-		return BatchingEntityLoader.createBatchingEntityLoader(
-				this,
-				batchSize,
-			lockOptions,
-				getFactory(),
-				loadQueryInfluencers
-		);
+		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
+				.buildLoader( this, batchSize, lockOptions, getFactory(), loadQueryInfluencers );
 	}
 
 	protected UniqueEntityLoader createEntityLoader(LockMode lockMode) throws MappingException {

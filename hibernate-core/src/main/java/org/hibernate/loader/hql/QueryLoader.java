@@ -240,7 +240,7 @@ public class QueryLoader extends BasicLoader {
 	/**
 	 * The SQL query string to be called.
 	 */
-	protected String getSQLString() {
+	public String getSQLString() {
 		return queryTranslator.getSQLString();
 	}
 

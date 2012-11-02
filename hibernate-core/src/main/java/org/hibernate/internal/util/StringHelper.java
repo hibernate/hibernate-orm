@@ -24,6 +24,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -66,6 +67,17 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	public static String joinWithQualifier(String[] values, String qualifier, String deliminator) {
+		int length = values.length;
+		if ( length == 0 ) return "";
+		StringBuilder buf = new StringBuilder( length * values[0].length() )
+				.append( qualify( qualifier, values[0] ) );
+		for ( int i = 1; i < length; i++ ) {
+			buf.append( deliminator ).append( qualify( qualifier, values[i] ) );
+		}
+		return buf.toString();
+	}
+
 	public static String join(String seperator, Iterator objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) buf.append( objects.next() );
@@ -86,6 +98,15 @@ public final class StringHelper {
 	public static String repeat(String string, int times) {
 		StringBuilder buf = new StringBuilder( string.length() * times );
 		for ( int i = 0; i < times; i++ ) buf.append( string );
+		return buf.toString();
+	}
+
+	public static String repeat(String string, int times, String deliminator) {
+		StringBuilder buf = new StringBuilder(  ( string.length() * times ) + ( deliminator.length() * (times-1) ) )
+				.append( string );
+		for ( int i = 1; i < times; i++ ) {
+			buf.append( deliminator ).append( string );
+		}
 		return buf.toString();
 	}
 
@@ -660,5 +681,70 @@ public final class StringHelper {
 			unquoted[i] = unquote( names[i], dialect );
 		}
 		return unquoted;
+	}
+
+
+	public static final String BATCH_ID_PLACEHOLDER = "$$BATCH_ID_PLACEHOLDER$$";
+
+	public static StringBuilder buildBatchFetchRestrictionFragment(
+			String alias,
+			String[] columnNames,
+			Dialect dialect) {
+		// the general idea here is to just insert a placeholder that we can easily find later...
+		if ( columnNames.length == 1 ) {
+			// non-composite key
+			return new StringBuilder( StringHelper.qualify( alias, columnNames[0] ) )
+					.append( " in (" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+		}
+		else {
+			// composite key - the form to use here depends on what the dialect supports.
+			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
+				// use : (col1, col2) in ( (?,?), (?,?), ... )
+				StringBuilder builder = new StringBuilder();
+				builder.append( "(" );
+				boolean firstPass = true;
+				String deliminator = "";
+				for ( String columnName : columnNames ) {
+					builder.append( deliminator ).append( StringHelper.qualify( alias, columnName ) );
+					if ( firstPass ) {
+						firstPass = false;
+						deliminator = ",";
+					}
+				}
+				builder.append( ") in (" );
+				builder.append( BATCH_ID_PLACEHOLDER );
+				builder.append( ")" );
+				return builder;
+			}
+			else {
+				// use : ( (col1 = ? and col2 = ?) or (col1 = ? and col2 = ?) or ... )
+				//		unfortunately most of this building needs to be held off until we know
+				//		the exact number of ids :(
+				return new StringBuilder( "(" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+			}
+		}
+	}
+
+	public static String expandBatchIdPlaceholder(
+			String sql,
+			Serializable[] ids,
+			String alias,
+			String[] keyColumnNames,
+			Dialect dialect) {
+		if ( keyColumnNames.length == 1 ) {
+			// non-composite
+			return StringHelper.replace( sql, BATCH_ID_PLACEHOLDER, repeat( "?", ids.length, "," ) );
+		}
+		else {
+			// composite
+			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
+				final String tuple = "(" + StringHelper.repeat( "?", keyColumnNames.length, "," );
+				return StringHelper.replace( sql, BATCH_ID_PLACEHOLDER, repeat( tuple, ids.length, "," ) );
+			}
+			else {
+				final String keyCheck = joinWithQualifier( keyColumnNames, alias, " and " );
+				return replace( sql, BATCH_ID_PLACEHOLDER, repeat( keyCheck, ids.length, " or " ) );
+			}
+		}
 	}
 }

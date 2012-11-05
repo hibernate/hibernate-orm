@@ -1,0 +1,14 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.shards.example">
+    <class name="WeatherReport" table="WEATHER_REPORT">
+        <id name="reportId" column="REPORT_ID" type="big_integer">
+          <generator class="org.hibernate.shards.id.ShardedUUIDGenerator"/>
+        </id>
+        <property name="continent" column="CONTINENT"/>
+        <property name="latitude" column="LATITUDE"/>
+        <property name="longitude" column="LONGITUDE"/>
+        <property name="temperature" column="TEMPERATURE"/>
+        <property name="reportTime" type="timestamp" column="REPORT_TIME"/>
+    </class>
+</hibernate-mapping>

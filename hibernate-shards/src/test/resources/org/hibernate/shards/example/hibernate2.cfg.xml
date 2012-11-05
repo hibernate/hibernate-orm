@@ -1,0 +1,16 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory name="HibernateSessionFactory2">
+    <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+    <property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
+    <property name="connection.url">jdbc:hsqldb:mem:shard2</property>
+    <property name="connection.username">sa</property>
+    <property name="connection.password"></property>
+    <property name="hibernate.connection.shard_id">2</property>
+    <property name="hibernate.shard.enable_cross_shard_relationship_checks">
+      true
+    </property>
+  </session-factory>
+</hibernate-configuration>

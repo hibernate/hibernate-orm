@@ -69,6 +69,7 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 
 	private ValueHolder<Class<?>> proxyInterfaceType;
 
+	private String entityName;
 	private String jpaEntityName;
 
 	private Class<? extends EntityPersister> customEntityPersisterClass;
@@ -431,6 +432,14 @@ public class EntityBinding implements MutableAttributeBindingContainer {
 
 	public void addSynchronizedTableNames(java.util.Collection<String> synchronizedTableNames) {
 		this.synchronizedTableNames.addAll( synchronizedTableNames );
+	}
+
+	public String getEntityName() {
+		return entityName;
+	}
+
+	public void setEntityName(String entityName) {
+		this.entityName = entityName;
 	}
 
 	public String getJpaEntityName() {

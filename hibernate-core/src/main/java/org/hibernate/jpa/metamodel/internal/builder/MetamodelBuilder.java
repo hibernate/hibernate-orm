@@ -113,7 +113,7 @@ public class MetamodelBuilder {
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
 				superType,
-				entityBinding.getJpaEntityName(),
+				entityBinding.getEntityName(),
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
 				entityBinding.isVersioned()
 		);

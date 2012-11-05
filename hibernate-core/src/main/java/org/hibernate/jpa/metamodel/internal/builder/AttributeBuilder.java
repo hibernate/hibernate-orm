@@ -27,13 +27,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -56,9 +57,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.EntityType;
-
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import org.jboss.logging.Logger;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services:<ol>
@@ -229,7 +228,7 @@ public class AttributeBuilder {
 				);
 			}
 			case ENTITY: {
-				final org.hibernate.type.EntityType type = (EntityType) attributeTypeDescriptor.getHibernateType();
+				final org.hibernate.type.EntityType type = (org.hibernate.type.EntityType) attributeTypeDescriptor.getHibernateType();
 				return (Type<Y>) context.locateEntityTypeByName( type.getAssociatedEntityName() );
 			}
 			case EMBEDDABLE: {
@@ -261,9 +260,14 @@ public class AttributeBuilder {
 	private EntityMetamodel getDeclarerEntityMetamodel(IdentifiableType<?> ownerType) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY) {
+			String entityName;
+			if ( ownerType instanceof EntityType<?> ) {
+				entityName = ( ( EntityType<?> ) ownerType ).getName();
+			} else {
+				entityName = ownerType.getJavaType().getName();
+			}
 			return context.getSessionFactory()
-					.getEntityPersister( ownerType.getJavaType().getName() )
-					.getEntityMetamodel();
+					.getEntityPersister( entityName ).getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS) {
 			return context.getSubClassEntityPersister( (MappedSuperclassTypeImpl) ownerType ).getEntityMetamodel();

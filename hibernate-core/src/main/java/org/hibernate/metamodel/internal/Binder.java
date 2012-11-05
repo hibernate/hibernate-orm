@@ -1816,6 +1816,7 @@ public class Binder {
 				entityClassName,
 				bindingContext.makeClassReference( entityClassName ),
 				superEntityBinding == null ? null : superEntityBinding.getEntity() ) );
+		entityBinding.setEntityName( entitySource.getEntityName() );  
 		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );          //must before creating primary table
 		entityBinding.setDynamicUpdate( entitySource.isDynamicUpdate() );
 		entityBinding.setDynamicInsert( entitySource.isDynamicInsert() );

@@ -22,18 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.entityname;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author stliu
  */
-@FailureExpectedWithNewMetamodel
 public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -23,20 +23,17 @@
  */
 package org.hibernate.test.component.cascading.collection;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Locale;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class CascadeToComponentCollectionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

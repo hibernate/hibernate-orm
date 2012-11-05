@@ -106,7 +106,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	protected AttributeSource buildAttributeSource(JaxbManyToOneElement attributeElement) {
 		return new ManyToOneAttributeSourceImpl(
 				sourceMappingDocument(),
-				JaxbManyToOneElement.class.cast( attributeElement ),
+				attributeElement,
 				logicalTableName,
 				naturalIdMutability
 		);
@@ -133,20 +133,32 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 	// todo duplicated with org.hibernate.metamodel.internal.source.hbm.AbstractEntitySourceImpl
 	protected AttributeSource buildAttributeSource(JaxbMapElement attributeElement){
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new MapAttributeSource(
+				sourceMappingDocument(),
+				attributeElement,
+				parentContainer
+		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbSetElement attributeElement) {
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new SetAttributeSourceImpl(
+				sourceMappingDocument(),
+				attributeElement,
+				parentContainer
+		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbListElement attributeElement) {
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new ListAttributeSource(
+				sourceMappingDocument(),
+				attributeElement,
+				parentContainer
+		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbBagElement attributeElement) {
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new BagAttributeSourceImpl(
+				sourceMappingDocument(),
+				attributeElement,
+				parentContainer
+		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbArrayElement attributeElement) {
 		// todo : implement

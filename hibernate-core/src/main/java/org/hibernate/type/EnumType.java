@@ -474,6 +474,10 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 	}
 
+	public boolean isOrdinal() {
+		return isOrdinal( sqlType );
+	}
+
 	private boolean isOrdinal(int paramType) {
 		switch ( paramType ) {
 			case Types.INTEGER:

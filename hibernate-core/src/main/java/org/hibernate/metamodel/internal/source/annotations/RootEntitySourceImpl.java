@@ -58,6 +58,7 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntitySource {
 	private final RootEntityClass rootEntityClass;
@@ -238,10 +239,10 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		@Override
 		public Class getLookupIdClass() {
-			final AnnotationInstance idClassAnnotation = JandexHelper.getSingleAnnotation(
-					rootEntitySource.getEntityClass().getClassInfo(),
-					JPADotNames.ID_CLASS
-			);
+			final AnnotationInstance idClassAnnotation = ( 
+					( RootEntityClass ) rootEntitySource.getEntityClass() )
+							.getIdClassAnnotation();
+			
 			if ( idClassAnnotation == null ) {
 				return null;
 			}
@@ -253,8 +254,9 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		@Override
 		public String getIdClassPropertyAccessorName() {
-			// TODO: retrieve property accessor name for IdClass
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			// TODO: Should we retrieve property accessor name for the ID Class?
+			return rootEntitySource.getEntityClass().getClassAccessType().name()
+					.toLowerCase();
 		}
 
 		@Override

@@ -23,22 +23,19 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.id.sequences.entities.Location;
 import org.hibernate.test.annotations.id.sequences.entities.Tower;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class IdClassTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIdClassInSuperclass() throws Exception {

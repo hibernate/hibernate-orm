@@ -39,7 +39,6 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-@FailureExpectedWithNewMetamodel
 public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SuppressWarnings({ "unchecked" })
@@ -67,6 +66,7 @@ public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
+	@FailureExpectedWithNewMetamodel
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -92,6 +92,7 @@ public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
+	@FailureExpectedWithNewMetamodel
 	public void testMultipleGeneratedValue() {
 		Session s = openSession();
 		s.beginTransaction();

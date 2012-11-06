@@ -48,6 +48,7 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
  * Represents an root entity configured via annotations/orm-xml.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class RootEntityClass extends EntityClass {
 
@@ -158,6 +159,15 @@ public class RootEntityClass extends EntityClass {
 		}
 
 		return attributes;
+	}
+	
+	public AnnotationInstance getIdClassAnnotation() {
+		// TODO: refactor
+		final List<AnnotationInstance> idClassAnnotations = findIdAnnotations(
+				JPADotNames.ID_CLASS
+		);
+		
+		return ( idClassAnnotations.size() > 0 ) ? idClassAnnotations.get( 0 ) : null;
 	}
 
 	private IdType determineIdType() {

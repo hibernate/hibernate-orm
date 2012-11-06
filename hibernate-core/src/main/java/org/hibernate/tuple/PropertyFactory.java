@@ -354,15 +354,12 @@ public class PropertyFactory {
 					null,
 					type,
 					lazyAvailable && pluralAttributeBinding.isLazy(),
-					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
-					true, // pluralAttributeBinding.isInsertable(),
-					true, //pluralAttributeBinding.isUpdatable(),
+					pluralAttributeBinding.getPluralAttributeKeyBinding().isInsertable(),
+					pluralAttributeBinding.getPluralAttributeKeyBinding().isUpdatable(),
 					false,
 					false,
 					true, // plural attributes are nullable
-					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
-					//alwaysDirtyCheck || pluralAttributeBinding.isUpdatable(),
-					true,
+					alwaysDirtyCheck || pluralAttributeBinding.getPluralAttributeKeyBinding().isUpdatable(),
 					pluralAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode

@@ -38,7 +38,8 @@ public class PluralAttributeKeyBinding {
 	private final SingularAttributeBinding referencedAttributeBinding;
 	private ForeignKey foreignKey;
 	private boolean inverse;
-	private boolean isIncludedInUpdate;
+	private boolean insertable;
+	private boolean updatable;
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -130,14 +131,22 @@ public class PluralAttributeKeyBinding {
 		return false;
 	}
 
-	public void setIncludedInUpdate(boolean isIncludedInUpdate){
+	public void setInsertable( boolean insertable ){
+		this.insertable = insertable;
+	}
+
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	public void setUpdatable( boolean updatable ){
 		// The key is updatable if the foreign key *source* columns are updatable;
 		// We don't have the RelationalValueBindings for the FK source columns stored in ForeignKey
 		// so it needs to be set explicitly.
-		this.isIncludedInUpdate = isIncludedInUpdate;
+		this.updatable = updatable;
 	}
 
 	public boolean isUpdatable() {
-		return isIncludedInUpdate;
+		return updatable;
 	}
 }

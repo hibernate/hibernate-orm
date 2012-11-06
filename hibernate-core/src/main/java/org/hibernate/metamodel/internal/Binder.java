@@ -161,6 +161,7 @@ import static org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.Jo
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public class Binder {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
@@ -496,6 +497,7 @@ public class Binder {
 				bindValues( attributeBindingContainer, keySource, attributeBinding.getAttribute(), collectionTable );
 		// Determine if the foreign key (source) column is updatable and also extract the columns out
 		// of the RelationalValueBindings.
+		boolean isInsertable = false;
 		boolean isUpdatable = false;
 		List<Column> sourceColumns = new ArrayList<Column>( sourceColumnBindings.size() );
 		for ( RelationalValueBinding relationalValueBinding : sourceColumnBindings ) {
@@ -505,10 +507,12 @@ public class Binder {
 				throw new NotYetImplementedException(
 						"Derived values are not supported when creating a foreign key that targets columns." );
 			}
+			isInsertable = isInsertable || relationalValueBinding.isIncludeInInsert();
 			isUpdatable = isUpdatable || relationalValueBinding.isIncludeInUpdate();
 			sourceColumns.add( (Column) value );
 		}
-		keyBinding.setIncludedInUpdate( isUpdatable );
+		keyBinding.setInsertable( isInsertable );
+		keyBinding.setUpdatable( isUpdatable );
 
 		List<Column> targetColumns =
 				determineForeignKeyTargetColumns(
@@ -1309,7 +1313,7 @@ public class Binder {
 					keyBinding.setForeignKey( fk );
 				}
 			}
-			keyBinding.setIncludedInUpdate( isUpdatable );
+			keyBinding.setUpdatable( isUpdatable );
 		}
 		else {
 			bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );

@@ -22,6 +22,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -51,977 +52,567 @@ import java.util.Map;
  * limits and aggregation. Its approach is simply to execute the query on
  * each shard and compile the results in a list, or if a unique result is
  * desired, the fist non-null result is returned.
- *
+ * <p/>
  * The setFoo methods are implemented using a set of classes that implement
  * the QueryEvent interface and are called SetFooEvent. These query events
  * are used to call setFoo with the appropriate arguments on each Query that
  * is executed on a shard.
  *
- * @see org.hibernate.shards.query.QueryEvent
- *
- * {@inheritDoc}
- *
  * @author Maulik Shah
+ * @see org.hibernate.shards.query.QueryEvent
  */
 public class ShardedQueryImpl implements ShardedQuery {
-  private final QueryId queryId;
-  private final List<Shard> shards;
-  private final QueryFactory queryFactory;
-  private final ShardAccessStrategy shardAccessStrategy;
 
-  /**
-   * The queryCollector is not used in ShardedQueryImpl as it would require
-   * this implementation to parse the query string and extract which exit
-   * operations would be appropriate. This member is a place holder for
-   * future development.
-   */
-  private final ExitOperationsQueryCollector queryCollector;
+    private final QueryId queryId;
+    private final List<Shard> shards;
+    private final QueryFactory queryFactory;
+    private final ShardAccessStrategy shardAccessStrategy;
 
-  /**
-   * Constructor for ShardedQueryImpl
-   *
-   * @param queryId the id of the query
-   * @param shards list of shards on which this query will be executed
-   * @param queryFactory factory that knows how to create the actual query we'll execute
-   * @param shardAccessStrategy the shard strategy for this query
-   */
-  public ShardedQueryImpl(QueryId queryId,
-                          List<Shard> shards,
-                          QueryFactory queryFactory,
-                          ShardAccessStrategy shardAccessStrategy) {
-    this.queryId = queryId;
-    this.shards = shards;
-    this.queryFactory = queryFactory;
-    this.shardAccessStrategy = shardAccessStrategy;
-    this.queryCollector = new ExitOperationsQueryCollector();
+    /**
+     * The queryCollector is not used in ShardedQueryImpl as it would require
+     * this implementation to parse the query string and extract which exit
+     * operations would be appropriate. This member is a place holder for
+     * future development.
+     */
+    private final ExitOperationsQueryCollector queryCollector;
 
-    Preconditions.checkState(!shards.isEmpty());
-    for (Shard shard : shards) {
-      Preconditions.checkNotNull(shard);
+    /**
+     * Constructor for ShardedQueryImpl
+     *
+     * @param queryId             the id of the query
+     * @param shards              list of shards on which this query will be executed
+     * @param queryFactory        factory that knows how to create the actual query we'll execute
+     * @param shardAccessStrategy the shard strategy for this query
+     */
+    public ShardedQueryImpl(final QueryId queryId,
+                            final List<Shard> shards,
+                            final QueryFactory queryFactory,
+                            final ShardAccessStrategy shardAccessStrategy) {
+
+        this.queryId = queryId;
+        this.shards = shards;
+        this.queryFactory = queryFactory;
+        this.shardAccessStrategy = shardAccessStrategy;
+        this.queryCollector = new ExitOperationsQueryCollector();
+
+        Preconditions.checkState(!shards.isEmpty());
+        for (Shard shard : shards) {
+            Preconditions.checkNotNull(shard);
+        }
     }
-  }
 
-  public QueryId getQueryId() {
-    return queryId;
-  }
+    @Override
+    public QueryId getQueryId() {
+        return queryId;
+    }
 
-  public QueryFactory getQueryFactory() {
-    return queryFactory;
-  }
+    @Override
+    public QueryFactory getQueryFactory() {
+        return queryFactory;
+    }
 
-  private Query getSomeQuery() {
-    for (Shard shard : shards) {
-      Query query = shard.getQueryById(queryId);
-      if (query != null) {
+    @Override
+    public String getQueryString() {
+        return getOrEstablishSomeQuery().getQueryString();
+    }
+
+    @Override
+    public Type[] getReturnTypes() throws HibernateException {
+        return getOrEstablishSomeQuery().getReturnTypes();
+    }
+
+    @Override
+    public String[] getReturnAliases() throws HibernateException {
+        return getOrEstablishSomeQuery().getReturnAliases();
+    }
+
+    @Override
+    public String[] getNamedParameters() throws HibernateException {
+        return getOrEstablishSomeQuery().getNamedParameters();
+    }
+
+    /**
+     * This method currently wraps list().
+     * <p/>
+     * {@inheritDoc}
+     *
+     * @return an iterator over the results of the query
+     * @throws HibernateException
+     */
+    @Override
+    public Iterator iterate() throws HibernateException {
+        /**
+         * TODO(maulik) Hibernate in Action says these two methods are equivalent
+         * in what the content that they return but are implemented differently.
+         * We should figure out the difference and implement correctly.
+         */
+        return list().iterator();
+    }
+
+    /**
+     * Scrolling is unsupported. Current implementation throws an
+     * UnsupportedOperationException. A dumb implementation of scroll might be
+     * possible; however it would provide no performance benefit. An intelligent
+     * implementation would require re-querying shards frequently and a
+     * deterministic way to complie results.
+     */
+    @Override
+    public ScrollableResults scroll() throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Scrolling is unsupported. Current implementation throws an
+     * UnsupportedOperationException. A dumb implementation of scroll might be
+     * possible; however it would provide no performance benefit. An intelligent
+     * implementation would require re-querying shards frequently and a
+     * deterministic way to complie results.
+     */
+    @Override
+    public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * The implementation executes the query on each shard and concatenates the
+     * results.
+     * @return a list containing the concatenated results of executing the
+     *         query on all shards
+     * @throws HibernateException
+     */
+    @Override
+    public List list() throws HibernateException {
+        final ShardOperation<List<Object>> shardOp = new ShardOperation<List<Object>>() {
+            public List<Object> execute(final Shard shard) {
+                shard.establishQuery(ShardedQueryImpl.this);
+                return shard.list(queryId);
+            }
+
+            public String getOperationName() {
+                return "list()";
+            }
+        };
+
+        /**
+         * We don't support shard selection for HQL queries.  If you want
+         * custom shards, create a ShardedSession with only the shards you want.
+         */
+        return shardAccessStrategy.apply(
+                shards,
+                shardOp,
+                new ConcatenateListsExitStrategy(),
+                queryCollector);
+    }
+
+    /**
+     * The implementation executes the query on each shard and returns the first
+     * non-null result.
+     * <p/>
+     * {@inheritDoc}
+     *
+     * @return the first non-null result, or null if no non-null result found
+     * @throws HibernateException
+     */
+    @Override
+    public Object uniqueResult() throws HibernateException {
+        final ShardOperation<Object> shardOp = new ShardOperation<Object>() {
+            public Object execute(final Shard shard) {
+                shard.establishQuery(ShardedQueryImpl.this);
+                return shard.uniqueResult(queryId);
+            }
+
+            public String getOperationName() {
+                return "uniqueResult()";
+            }
+        };
+
+        /**
+         * We don't support shard selection for HQL queries.  If you want
+         * custom shards, create a ShardedSession with only the shards you want.
+         */
+        return shardAccessStrategy.apply(
+                shards,
+                shardOp,
+                new FirstNonNullResultExitStrategy<Object>(),
+                queryCollector);
+    }
+
+    /**
+     * ExecuteUpdate is not supported and throws an
+     * UnsupportedOperationException.
+     *
+     * @throws HibernateException
+     */
+    @Override
+    public int executeUpdate() throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Query setMaxResults(int maxResults) {
+        queryCollector.setMaxResults(maxResults);
+        return this;
+    }
+
+    @Override
+    public Query setFirstResult(int firstResult) {
+        queryCollector.setFirstResult(firstResult);
+        return this;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Query setReadOnly(final boolean readOnly) {
+        return setQueryEvent(new SetReadOnlyEvent(readOnly));
+    }
+
+    @Override
+    public Query setCacheable(final boolean cacheable) {
+        return setQueryEvent(new SetCacheableEvent(cacheable));
+    }
+
+    @Override
+    public Query setCacheRegion(final String cacheRegion) {
+        return setQueryEvent(new SetCacheRegionEvent(cacheRegion));
+    }
+
+    @Override
+    public Query setTimeout(final int timeout) {
+        return setQueryEvent(new SetTimeoutEvent(timeout));
+    }
+
+    @Override
+    public Query setFetchSize(final int fetchSize) {
+        return setQueryEvent(new SetFetchSizeEvent(fetchSize));
+    }
+
+    @Override
+    public Query setLockOptions(final LockOptions lockOptions) {
+        return setQueryEvent(new SetLockOptionsEvent(lockOptions));
+    }
+
+    @Override
+    public Query setLockMode(final String alias, final LockMode lockMode) {
+        return setQueryEvent(new SetLockModeEvent(alias, lockMode));
+    }
+
+    @Override
+    public Query setComment(final String comment) {
+        return setQueryEvent(new SetCommentEvent(comment));
+    }
+
+    @Override
+    public Query setFlushMode(final FlushMode flushMode) {
+        return setQueryEvent(new SetFlushModeEvent(flushMode));
+    }
+
+    @Override
+    public Query setCacheMode(final CacheMode cacheMode) {
+        return setQueryEvent(new SetCacheModeEvent(cacheMode));
+    }
+
+    @Override
+    public Query setParameter(final int position, final Object val, final Type type) {
+        return setQueryEvent(new SetParameterEvent(position, val, type));
+    }
+
+    @Override
+    public Query setParameter(final String name, final Object val, final Type type) {
+        return setQueryEvent(new SetParameterEvent(name, val, type));
+    }
+
+    @Override
+    public Query setParameter(final int position, final Object val) throws HibernateException {
+        return setQueryEvent(new SetParameterEvent(position, val));
+    }
+
+    @Override
+    public Query setParameter(final String name, final Object val) throws HibernateException {
+        return setQueryEvent(new SetParameterEvent(name, val));
+    }
+
+    @Override
+    public Query setParameters(final Object[] values, final Type[] types) throws HibernateException {
+        return setQueryEvent(new SetParametersEvent(values, types));
+    }
+
+    @Override
+    public Query setParameterList(final String name, final Collection vals, final Type type) throws HibernateException {
+        return setQueryEvent(new SetParameterListEvent(name, vals, type));
+    }
+
+    @Override
+    public Query setParameterList(final String name, final Collection vals) throws HibernateException {
+        return setQueryEvent(new SetParameterListEvent(name, vals));
+    }
+
+    @Override
+    public Query setParameterList(final String name, final Object[] vals, final Type type) throws HibernateException {
+        return setQueryEvent(new SetParameterListEvent(name, vals, type));
+    }
+
+    @Override
+    public Query setParameterList(final String name, final Object[] vals) throws HibernateException {
+        return setQueryEvent(new SetParameterListEvent(name, vals));
+    }
+
+    @Override
+    public Query setProperties(final Object bean) throws HibernateException {
+        return setQueryEvent(new SetPropertiesEvent(bean));
+    }
+
+    @Override
+    public Query setString(final int position, final String val) {
+        return setQueryEvent(new SetStringEvent(position, val));
+    }
+
+    @Override
+    public Query setCharacter(final int position, final char val) {
+        return setQueryEvent(new SetCharacterEvent(position, val));
+    }
+
+    @Override
+    public Query setBoolean(final int position, final boolean val) {
+        return setQueryEvent(new SetBooleanEvent(position, val));
+    }
+
+    @Override
+    public Query setByte(int position, byte val) {
+        return setQueryEvent(new SetByteEvent(position, val));
+    }
+
+    @Override
+    public Query setShort(final int position, final short val) {
+        return setQueryEvent(new SetShortEvent(position, val));
+    }
+
+    @Override
+    public Query setInteger(final int position, final int val) {
+        return setQueryEvent(new SetIntegerEvent(position, val));
+    }
+
+    @Override
+    public Query setLong(final int position, final long val) {
+        return setQueryEvent(new SetLongEvent(position, val));
+    }
+
+    @Override
+    public Query setFloat(final int position, final float val) {
+        return setQueryEvent(new SetFloatEvent(position, val));
+    }
+
+    @Override
+    public Query setDouble(final int position, final double val) {
+        return setQueryEvent(new SetDoubleEvent(position, val));
+    }
+
+    @Override
+    public Query setBinary(final int position, final byte[] val) {
+        return setQueryEvent(new SetBinaryEvent(position, val));
+    }
+
+    @Override
+    public Query setText(final int position, final String val) {
+        final QueryEvent event = new SetTextEvent(position, val);
+        return setQueryEvent(event);
+    }
+
+    @Override
+    public Query setSerializable(final int position, final Serializable val) {
+        return setQueryEvent(new SetSerializableEvent(position, val));
+    }
+
+    @Override
+    public Query setLocale(int position, Locale locale) {
+        return setQueryEvent(new SetLocaleEvent(position, locale));
+    }
+
+    @Override
+    public Query setBigDecimal(final int position, final BigDecimal number) {
+        return setQueryEvent(new SetBigDecimalEvent(position, number));
+    }
+
+    @Override
+    public Query setBigInteger(final int position, final BigInteger number) {
+        return setQueryEvent(new SetBigIntegerEvent(position, number));
+    }
+
+    @Override
+    public Query setDate(final int position, final Date date) {
+        return setQueryEvent(new SetDateEvent(position, date));
+    }
+
+    @Override
+    public Query setTime(final int position, final Date date) {
+        return setQueryEvent(new SetTimeEvent(position, date));
+    }
+
+    @Override
+    public Query setTimestamp(final int position, final Date date) {
+        return setQueryEvent(new SetTimestampEvent(position, date));
+    }
+
+    @Override
+    public Query setCalendar(final int position, final Calendar calendar) {
+        return setQueryEvent(new SetCalendarEvent(position, calendar));
+    }
+
+    @Override
+    public Query setCalendarDate(int position, Calendar calendar) {
+        return setQueryEvent(new SetCalendarDateEvent(position, calendar));
+    }
+
+    @Override
+    public Query setString(String name, String val) {
+        return setQueryEvent(new SetStringEvent(name, val));
+    }
+
+    @Override
+    public Query setCharacter(final String name, final char val) {
+        return setQueryEvent(new SetCharacterEvent(name, val));
+    }
+
+    public Query setBoolean(String name, boolean val) {
+        return setQueryEvent(new SetBooleanEvent(name, val));
+    }
+
+    @Override
+    public Query setByte(String name, byte val) {
+        return setQueryEvent(new SetByteEvent(name, val));
+    }
+
+    @Override
+    public Query setShort(String name, short val) {
+        return setQueryEvent(new SetShortEvent(name, val));
+    }
+
+    @Override
+    public Query setInteger(String name, int val) {
+        return setQueryEvent(new SetIntegerEvent(name, val));
+    }
+
+    @Override
+    public Query setLong(String name, long val) {
+        return setQueryEvent(new SetLongEvent(name, val));
+    }
+
+    @Override
+    public Query setFloat(String name, float val) {
+        return setQueryEvent(new SetFloatEvent(name, val));
+    }
+
+    @Override
+    public Query setDouble(String name, double val) {
+        return setQueryEvent(new SetDoubleEvent(name, val));
+    }
+
+    @Override
+    public Query setBinary(String name, byte[] val) {
+        return setQueryEvent(new SetBinaryEvent(name, val));
+    }
+
+    @Override
+    public Query setText(String name, String val) {
+        return setQueryEvent(new SetTextEvent(name, val));
+    }
+
+    @Override
+    public Query setSerializable(String name, Serializable val) {
+        return setQueryEvent(new SetSerializableEvent(name, val));
+    }
+
+    @Override
+    public Query setLocale(final String name, final Locale locale) {
+        return setQueryEvent(new SetLocaleEvent(name, locale));
+    }
+
+    @Override
+    public Query setBigDecimal(final String name, final BigDecimal number) {
+        return setQueryEvent(new SetBigDecimalEvent(name, number));
+    }
+
+    @Override
+    public Query setBigInteger(String name, BigInteger number) {
+        return setQueryEvent(new SetBigIntegerEvent(name, number));
+    }
+
+    @Override
+    public Query setDate(final String name, final Date date) {
+        return setQueryEvent(new SetDateEvent(name, date));
+    }
+
+    @Override
+    public Query setTime(final String name, final Date date) {
+        return setQueryEvent(new SetTimeEvent(name, date));
+    }
+
+    @Override
+    public Query setTimestamp(final String name, final Date date) {
+        return setQueryEvent(new SetTimestampEvent(name, date));
+    }
+
+    @Override
+    public Query setCalendar(final String name, final Calendar calendar) {
+        return setQueryEvent(new SetCalendarEvent(name, calendar));
+    }
+
+    @Override
+    public Query setCalendarDate(final String name, final Calendar calendar) {
+        return setQueryEvent(new SetCalendarDateEvent(name, calendar));
+    }
+
+    @Override
+    public Query setEntity(final int position, final Object val) {
+        return setQueryEvent(new SetEntityEvent(position, val));
+    }
+
+    @Override
+    public Query setEntity(final String name, final Object val) {
+        return setQueryEvent(new SetEntityEvent(name, val));
+    }
+
+    @Override
+    public Query setResultTransformer(final ResultTransformer transformer) {
+        return setQueryEvent(new SetResultTransformerEvent(transformer));
+    }
+
+    @Override
+    public Query setProperties(final Map map) throws HibernateException {
+        final QueryEvent event = new SetPropertiesEvent(map);
+        return setQueryEvent(event);
+    }
+
+    private Query setQueryEvent(final QueryEvent queryEvent) throws HibernateException {
+        for (final Shard shard : shards) {
+            if (shard.getQueryById(queryId) != null) {
+                queryEvent.onEvent(shard.getQueryById(queryId));
+            } else {
+                shard.addQueryEvent(queryId, queryEvent);
+            }
+        }
+        return this;
+    }
+
+    private Query getSomeQuery() {
+        for (final Shard shard : shards) {
+            final Query query = shard.getQueryById(queryId);
+            if (query != null) {
+                return query;
+            }
+        }
+        return null;
+    }
+
+    private Query getOrEstablishSomeQuery() {
+        Query query = getSomeQuery();
+        if (query == null) {
+            final Shard shard = shards.get(0);
+            query = shard.establishQuery(this);
+        }
         return query;
-      }
     }
-    return null;
-  }
-
-  private Query getOrEstablishSomeQuery() {
-    Query query = getSomeQuery();
-    if (query == null) {
-      Shard shard = shards.get(0);
-      query = shard.establishQuery(this);
-    }
-    return query;
-  }
-
-  public String getQueryString() {
-    return getOrEstablishSomeQuery().getQueryString();
-  }
-
-  public Type[] getReturnTypes() throws HibernateException {
-    return getOrEstablishSomeQuery().getReturnTypes();
-  }
-
-  public String[] getReturnAliases() throws HibernateException {
-    return getOrEstablishSomeQuery().getReturnAliases();
-  }
-
-  public String[] getNamedParameters() throws HibernateException {
-    return getOrEstablishSomeQuery().getNamedParameters();
-  }
-
-  /**
-   * This method currently wraps list().
-   *
-   * {@inheritDoc}
-   *
-   * @return an iterator over the results of the query
-   * @throws HibernateException
-   */
-  public Iterator iterate() throws HibernateException {
-    /**
-     * TODO(maulik) Hibernate in Action says these two methods are equivalent
-     * in what the content that they return but are implemented differently.
-     * We should figure out the difference and implement correctly.
-     */
-    return list().iterator();
-  }
-
-  /**
-   * Scrolling is unsupported. Current implementation throws an
-   * UnsupportedOperationException. A dumb implementation of scroll might be
-   * possible; however it would provide no performance benefit. An intelligent
-   * implementation would require re-querying shards frequently and a
-   * deterministic way to complie results.
-   */
-  public ScrollableResults scroll() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Scrolling is unsupported. Current implementation throws an
-   * UnsupportedOperationException. A dumb implementation of scroll might be
-   * possible; however it would provide no performance benefit. An intelligent
-   * implementation would require re-querying shards frequently and a
-   * deterministic way to complie results.
-   */
-  public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * The implementation executes the query on each shard and concatenates the
-   * results.
-   *
-   * {@inheritDoc}
-   *
-   * @return a list containing the concatenated results of executing the
-   * query on all shards
-   * @throws HibernateException
-   */
-  public List list() throws HibernateException {
-    ShardOperation<List<Object>> shardOp = new ShardOperation<List<Object>>() {
-      public List<Object> execute(Shard shard) {
-        shard.establishQuery(ShardedQueryImpl.this);
-        return shard.list(queryId);
-      }
-
-      public String getOperationName() {
-        return "list()";
-      }
-    };
-    /**
-     * We don't support shard selection for HQL queries.  If you want
-     * custom shards, create a ShardedSession with only the shards you want.
-     */
-    return
-      shardAccessStrategy.apply(
-              shards,
-              shardOp,
-              new ConcatenateListsExitStrategy(),
-              queryCollector);
-
-  }
-
-  /**
-   * The implementation executes the query on each shard and returns the first
-   * non-null result.
-   *
-   * {@inheritDoc}
-   *
-   * @return the first non-null result, or null if no non-null result found
-   * @throws HibernateException
-   */
-  public Object uniqueResult() throws HibernateException {
-    ShardOperation<Object> shardOp = new ShardOperation<Object>() {
-      public Object execute(Shard shard) {
-        shard.establishQuery(ShardedQueryImpl.this);
-        return shard.uniqueResult(queryId);
-      }
-
-      public String getOperationName() {
-        return "uniqueResult()";
-      }
-    };
-   /**
-    * We don't support shard selection for HQL queries.  If you want
-    * custom shards, create a ShardedSession with only the shards you want.
-    */
-    return
-      shardAccessStrategy.apply(
-              shards,
-              shardOp,
-              new FirstNonNullResultExitStrategy<Object>(),
-              queryCollector);
-  }
-
-  /**
-   * ExecuteUpdate is not supported and throws an
-   * UnsupportedOperationException.
-   *
-   * @throws HibernateException
-   */
-  public int executeUpdate() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Query setMaxResults(int maxResults) {
-    queryCollector.setMaxResults(maxResults);
-    return this;
-  }
-
-  public Query setFirstResult(int firstResult) {
-    queryCollector.setFirstResult(firstResult);
-    return this;
-  }
-
-  public Query setReadOnly(boolean readOnly) {
-    QueryEvent event = new SetReadOnlyEvent(readOnly);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setReadOnly(readOnly);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCacheable(boolean cacheable) {
-    QueryEvent event = new SetCacheableEvent(cacheable);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCacheable(cacheable);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCacheRegion(String cacheRegion) {
-    QueryEvent event = new SetCacheRegionEvent(cacheRegion);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCacheRegion(cacheRegion);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setTimeout(int timeout) {
-    QueryEvent event = new SetTimeoutEvent(timeout);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setTimeout(timeout);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setFetchSize(int fetchSize) {
-    QueryEvent event = new SetFetchSizeEvent(fetchSize);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setFetchSize(fetchSize);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setLockMode(String alias, LockMode lockMode) {
-    QueryEvent event = new SetLockModeEvent(alias, lockMode);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setLockMode(alias, lockMode);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setComment(String comment) {
-    QueryEvent event = new SetCommentEvent(comment);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setComment(comment);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setFlushMode(FlushMode flushMode) {
-    QueryEvent event = new SetFlushModeEvent(flushMode);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setFlushMode(flushMode);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCacheMode(CacheMode cacheMode) {
-    QueryEvent event = new SetCacheModeEvent(cacheMode);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCacheMode(cacheMode);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameter(int position, Object val, Type type) {
-    QueryEvent event = new SetParameterEvent(position, val, type);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameter(position, val, type);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameter(String name, Object val, Type type) {
-    QueryEvent event = new SetParameterEvent(name, val, type);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameter(name, val, type);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameter(int position, Object val) throws HibernateException {
-    QueryEvent event = new SetParameterEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameter(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameter(String name, Object val) throws HibernateException {
-    QueryEvent event = new SetParameterEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameter(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameters(Object[] values, Type[] types) throws HibernateException {
-    QueryEvent event = new SetParametersEvent(values, types);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameters(values, types);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameterList(String name, Collection vals, Type type) throws HibernateException {
-    QueryEvent event = new SetParameterListEvent(name, vals, type);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameterList(name, vals, type);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameterList(String name, Collection vals) throws HibernateException {
-    QueryEvent event = new SetParameterListEvent(name, vals);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameterList(name, vals);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameterList(String name, Object[] vals, Type type) throws HibernateException {
-    QueryEvent event = new SetParameterListEvent(name, vals, type);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameterList(name, vals, type);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setParameterList(String name, Object[] vals) throws HibernateException {
-    QueryEvent event = new SetParameterListEvent(name, vals);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setParameterList(name, vals);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setProperties(Object bean) throws HibernateException {
-    QueryEvent event = new SetPropertiesEvent(bean);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setProperties(bean);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setString(int position, String val) {
-    QueryEvent event = new SetStringEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setString(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCharacter(int position, char val) {
-    QueryEvent event = new SetCharacterEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCharacter(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBoolean(int position, boolean val) {
-    QueryEvent event = new SetBooleanEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBoolean(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setByte(int position, byte val) {
-    QueryEvent event = new SetByteEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setByte(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setShort(int position, short val) {
-    QueryEvent event = new SetShortEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setShort(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setInteger(int position, int val) {
-    QueryEvent event = new SetIntegerEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setInteger(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setLong(int position, long val) {
-    QueryEvent event = new SetLongEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setLong(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setFloat(int position, float val) {
-    QueryEvent event = new SetFloatEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setFloat(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setDouble(int position, double val) {
-    QueryEvent event = new SetDoubleEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setDouble(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBinary(int position, byte[] val) {
-    QueryEvent event = new SetBinaryEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBinary(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setText(int position, String val) {
-    QueryEvent event = new SetTextEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setText(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setSerializable(int position, Serializable val) {
-    QueryEvent event = new SetSerializableEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setSerializable(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setLocale(int position, Locale locale) {
-    QueryEvent event = new SetLocaleEvent(position, locale);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setLocale(position, locale);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBigDecimal(int position, BigDecimal number) {
-    QueryEvent event = new SetBigDecimalEvent(position, number);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBigDecimal(position, number);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBigInteger(int position, BigInteger number) {
-    QueryEvent event = new SetBigIntegerEvent(position, number);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBigInteger(position, number);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setDate(int position, Date date) {
-    QueryEvent event = new SetDateEvent(position, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setDate(position, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setTime(int position, Date date) {
-    QueryEvent event = new SetTimeEvent(position, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setTime(position, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setTimestamp(int position, Date date) {
-    QueryEvent event = new SetTimestampEvent(position, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setTimestamp(position, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCalendar(int position, Calendar calendar) {
-    QueryEvent event = new SetCalendarEvent(position, calendar);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCalendar(position, calendar);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCalendarDate(int position, Calendar calendar) {
-    QueryEvent event = new SetCalendarDateEvent(position, calendar);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCalendarDate(position, calendar);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setString(String name, String val) {
-    QueryEvent event = new SetStringEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setString(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCharacter(String name, char val) {
-    QueryEvent event = new SetCharacterEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCharacter(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBoolean(String name, boolean val) {
-    QueryEvent event = new SetBooleanEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBoolean(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setByte(String name, byte val) {
-    QueryEvent event = new SetByteEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setByte(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setShort(String name, short val) {
-    QueryEvent event = new SetShortEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setShort(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setInteger(String name, int val) {
-    QueryEvent event = new SetIntegerEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setInteger(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setLong(String name, long val) {
-    QueryEvent event = new SetLongEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setLong(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setFloat(String name, float val) {
-    QueryEvent event = new SetFloatEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setFloat(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setDouble(String name, double val) {
-    QueryEvent event = new SetDoubleEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setDouble(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBinary(String name, byte[] val) {
-    QueryEvent event = new SetBinaryEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBinary(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setText(String name, String val) {
-    QueryEvent event = new SetTextEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setText(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setSerializable(String name, Serializable val) {
-    QueryEvent event = new SetSerializableEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setSerializable(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setLocale(String name, Locale locale) {
-    QueryEvent event = new SetLocaleEvent(name, locale);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setLocale(name, locale);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBigDecimal(String name, BigDecimal number) {
-    QueryEvent event = new SetBigDecimalEvent(name, number);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBigDecimal(name, number);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setBigInteger(String name, BigInteger number) {
-    QueryEvent event = new SetBigIntegerEvent(name, number);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setBigInteger(name, number);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setDate(String name, Date date) {
-    QueryEvent event = new SetDateEvent(name, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setDate(name, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setTime(String name, Date date) {
-    QueryEvent event = new SetTimeEvent(name, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setTime(name, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setTimestamp(String name, Date date) {
-    QueryEvent event = new SetTimestampEvent(name, date);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setTimestamp(name, date);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCalendar(String name, Calendar calendar) {
-    QueryEvent event = new SetCalendarEvent(name, calendar);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCalendar(name, calendar);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setCalendarDate(String name, Calendar calendar) {
-    QueryEvent event = new SetCalendarDateEvent(name, calendar);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setCalendarDate(name, calendar);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setEntity(int position, Object val) {
-    QueryEvent event = new SetEntityEvent(position, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setEntity(position, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setEntity(String name, Object val) {
-    QueryEvent event = new SetEntityEvent(name, val);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setEntity(name, val);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setResultTransformer(ResultTransformer transformer) {
-    QueryEvent event = new SetResultTransformerEvent(transformer);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setResultTransformer(transformer);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
-
-  public Query setProperties(Map map) throws HibernateException {
-    QueryEvent event = new SetPropertiesEvent(map);
-    for (Shard shard : shards) {
-      if (shard.getQueryById(queryId) != null) {
-        shard.getQueryById(queryId).setProperties(map);
-      } else {
-        shard.addQueryEvent(queryId, event);
-      }
-    }
-    return this;
-  }
 }

@@ -23,19 +23,16 @@
  */
 package org.hibernate.test.annotations.type;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class TypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIdWithMulticolumns() throws Exception {

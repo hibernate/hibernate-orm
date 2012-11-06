@@ -23,6 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
@@ -37,11 +41,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.type.ComponentType;
-
-import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
-import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
-import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 
 /**
  * Hold information about the entity identifier.  At a high-level, can be one of 2-types:<ul>
@@ -264,12 +263,10 @@ public class EntityIdentifier {
 				Properties properties) {
 			final List<RelationalValueBinding> relationalValueBindings =
 					getAttributeBinding().getRelationalValueBindings();
-			if ( relationalValueBindings.size() > 1 ) {
-				throw new MappingException(
-						"A SimpleAttributeBinding used for an identifier has more than 1 Value: " +
-								getAttributeBinding().getAttribute().getName()
-				);
-			}
+			
+			// TODO: If multiple @Column annotations exist within an id's
+			// @Columns, we need a more solid solution than simply grabbing
+			// the first one to get the TableSpecification.
 
 			final RelationalValueBinding relationalValueBinding = relationalValueBindings.get( 0 );
 			final TableSpecification table = relationalValueBinding.getValue().getTable();

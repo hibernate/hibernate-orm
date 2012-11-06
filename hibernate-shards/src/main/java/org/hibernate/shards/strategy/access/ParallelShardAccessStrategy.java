@@ -18,14 +18,14 @@
 
 package org.hibernate.shards.strategy.access;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardOperation;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.strategy.exit.ExitOperationsCollector;
 import org.hibernate.shards.strategy.exit.ExitStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Preconditions;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -39,9 +39,9 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class ParallelShardAccessStrategy implements ShardAccessStrategy {
 
-  private final ThreadPoolExecutor executor;
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ParallelShardAccessStrategy.class.getName());
 
-  private final Log log = LogFactory.getLog(getClass());
+  private final ThreadPoolExecutor executor;
 
   public ParallelShardAccessStrategy(ThreadPoolExecutor executor) {
     Preconditions.checkNotNull(executor);
@@ -87,7 +87,7 @@ public class ParallelShardAccessStrategy implements ShardAccessStrategy {
     // the tasks List is populated, release the threads!
     startSignal.countDown();
     try {
-      log.debug("Waiting for threads to complete processing before proceeding.");
+      LOG.waitingForThreadsToComplete();
       //TODO(maxr) let users customize timeout behavior
       /*
       if(!doneSignal.await(10, TimeUnit.SECONDS)) {
@@ -100,9 +100,9 @@ public class ParallelShardAccessStrategy implements ShardAccessStrategy {
       doneSignal.await();
     } catch (InterruptedException e) {
       // not sure why this would happen or what we should do if it does
-      log.error("Received unexpected exception while waiting for done signal.", e);
+      LOG.receivedUnexpectedException();
     }
-    log.debug("Compiling results.");
+    LOG.compilingResults();
     return exitStrategy.compileResults(exitOperationsCollector);
   }
 }

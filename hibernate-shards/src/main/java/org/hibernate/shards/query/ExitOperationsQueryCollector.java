@@ -18,7 +18,7 @@
 
 package org.hibernate.shards.query;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.shards.strategy.exit.ExitOperationsCollector;
 import org.hibernate.shards.strategy.exit.FirstResultExitOperation;
 import org.hibernate.shards.strategy.exit.MaxResultsExitOperation;

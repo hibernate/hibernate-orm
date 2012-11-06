@@ -21,7 +21,7 @@ package org.hibernate.shards.strategy.exit;
 import org.hibernate.criterion.AggregateProjection;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.RowCountProjection;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * @author Maulik Shah

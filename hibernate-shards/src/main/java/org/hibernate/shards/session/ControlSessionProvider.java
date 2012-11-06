@@ -18,7 +18,7 @@
 
 package org.hibernate.shards.session;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Interface for any entity that can provide the control session.

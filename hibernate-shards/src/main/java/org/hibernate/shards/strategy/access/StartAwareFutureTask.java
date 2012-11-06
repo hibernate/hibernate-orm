@@ -18,8 +18,8 @@
 
 package org.hibernate.shards.strategy.access;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.hibernate.shards.internal.ShardsMessageLogger;
+import org.jboss.logging.Logger;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -50,13 +50,13 @@ import java.util.concurrent.FutureTask;
  */
 class StartAwareFutureTask extends FutureTask<Void> {
 
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, StartAwareFutureTask.class.getName());
+
   boolean runCalled;
 
   boolean cancelled;
 
   private final int id;
-
-  private final Log log = LogFactory.getLog(getClass());
 
   public StartAwareFutureTask(Callable<Void> callable, int id) {
     super(callable);
@@ -66,15 +66,15 @@ class StartAwareFutureTask extends FutureTask<Void> {
   @Override
   public void run() {
 
-    log.debug(String.format("Task %d: Run invoked.", id));
+    LOG.taskRunInvoked(id);
     synchronized(this) {
       if (cancelled) {
-        log.debug(String.format("Task %d: Task will not run.", id));
+        LOG.taskWillNotRun(id);
         return;
       }
       runCalled = true;
     }
-    log.debug(String.format("Task %d: Task will run.", id));
+    LOG.taskWillNotRun(id);
     super.run();
   }
 
@@ -95,7 +95,7 @@ class StartAwareFutureTask extends FutureTask<Void> {
     }
     boolean result = superCancel(mayInterruptIfRunning);
     cancelled = true;
-    log.debug(String.format("Task %d: Task cancelled.", id));
+    LOG.taskWasCancelled(id);
     return result;
   }
 

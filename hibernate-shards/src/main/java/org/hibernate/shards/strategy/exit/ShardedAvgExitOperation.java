@@ -18,11 +18,11 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.Projection;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Pair;
+import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,10 +32,10 @@ import java.util.List;
  */
 public class ShardedAvgExitOperation implements ProjectionExitOperation {
 
-  private final Log log = LogFactory.getLog(getClass());
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, CountExitOperation.class.getName());
 
   public ShardedAvgExitOperation(Projection projection) {
-    log.error("not ready to use!");
+    LOG.exitOperationNotReadyToUse();
     throw new UnsupportedOperationException();
   }
 

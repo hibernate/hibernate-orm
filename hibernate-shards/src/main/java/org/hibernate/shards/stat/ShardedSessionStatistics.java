@@ -19,8 +19,8 @@
 package org.hibernate.shards.stat;
 
 import org.hibernate.Session;
-import org.hibernate.engine.CollectionKey;
-import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.engine.ShardedSessionImplementor;
 import org.hibernate.shards.session.OpenSessionEvent;

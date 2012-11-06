@@ -18,8 +18,8 @@
 
 package org.hibernate.shards.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.hibernate.shards.internal.ShardsMessageLogger;
+import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,7 +34,7 @@ import java.sql.Statement;
  */
 public class JdbcUtil {
 
-  private static final Log LOG = LogFactory.getLog(JdbcUtil.class);
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, JdbcUtil.class.getName());
 
   public static int executeUpdate(
       Connection conn,

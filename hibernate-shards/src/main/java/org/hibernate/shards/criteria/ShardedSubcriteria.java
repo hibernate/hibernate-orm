@@ -19,7 +19,7 @@
 package org.hibernate.shards.criteria;
 
 import org.hibernate.Criteria;
-import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl;
 
 /**
  * Interface describing a {@link CriteriaImpl.Subcriteria}

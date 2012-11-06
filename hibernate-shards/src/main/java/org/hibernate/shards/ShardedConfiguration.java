@@ -18,24 +18,24 @@
 
 package org.hibernate.shards;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.shards.cfg.ShardConfiguration;
 import org.hibernate.shards.cfg.ShardedEnvironment;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.session.ShardedSessionFactory;
 import org.hibernate.shards.session.ShardedSessionFactoryImpl;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Preconditions;
 import org.hibernate.shards.util.Sets;
-import org.hibernate.util.PropertiesHelper;
+import org.jboss.logging.Logger;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -54,6 +54,8 @@ import java.util.Set;
  */
 public class ShardedConfiguration {
 
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedConfiguration.class.getName());
+
   // the prototype config that we'll use when constructing the shard-specific
   // configs
   private final Configuration prototypeConfiguration;
@@ -69,9 +71,6 @@ public class ShardedConfiguration {
 
   // maps physical shard ids to sets of virtual shard ids
   private final Map<Integer, Set<ShardId>> shardToVirtualShardIdMap;
-
-  // our lovely logger
-  private final Log log = LogFactory.getLog(getClass());
 
   /**
    * Constructs a ShardedConfiguration.
@@ -160,9 +159,8 @@ public class ShardedConfiguration {
       // get the shardId from the shard-specific config
       Integer shardId = config.getShardId();
       if(shardId == null) {
-        final String msg = "Attempt to build a ShardedSessionFactory using a "
-            + "ShardConfiguration that has a null shard id.";
-        log.fatal(msg);
+        final String msg = "Attempt to build a ShardedSessionFactory using a ShardConfiguration that has a null shard id.";
+        LOG.attempToBuildShardedSessionFactoryWithNullShardId();
         throw new NullPointerException(msg);
       }
       Set<ShardId> virtualShardIds;
@@ -177,10 +175,10 @@ public class ShardedConfiguration {
       sessionFactories.put(buildSessionFactory(), virtualShardIds);
     }
     final boolean doFullCrossShardRelationshipChecking =
-        PropertiesHelper.getBoolean(
-            ShardedEnvironment.CHECK_ALL_ASSOCIATED_OBJECTS_FOR_DIFFERENT_SHARDS,
-            prototypeConfiguration.getProperties(),
-            true);
+        ConfigurationHelper.getBoolean(
+                ShardedEnvironment.CHECK_ALL_ASSOCIATED_OBJECTS_FOR_DIFFERENT_SHARDS,
+                prototypeConfiguration.getProperties(),
+                true);
     return
         new ShardedSessionFactoryImpl(
             sessionFactories,
@@ -200,7 +198,7 @@ public class ShardedConfiguration {
       for(Iterator<Property> propIter = pc.getPropertyIterator(); propIter.hasNext(); ) {
         if(doesNotSupportTopLevelSave(propIter.next())) {
           Class<?> mappedClass = pc.getMappedClass();
-          log.info(String.format("Class %s does not support top-level saves.", mappedClass.getName()));
+          LOG.classDoesNotSupportTopLevelSaves(mappedClass.getName());
           classesWithoutTopLevelSaveSupport.add(mappedClass);
           break;
         }

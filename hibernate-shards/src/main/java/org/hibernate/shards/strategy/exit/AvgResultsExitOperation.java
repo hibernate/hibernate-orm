@@ -17,9 +17,9 @@
  */
 package org.hibernate.shards.strategy.exit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.util.Pair;
+import org.jboss.logging.Logger;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class AvgResultsExitOperation implements ExitOperation {
 
-  private final Log log = LogFactory.getLog(getClass());
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, AvgResultsExitOperation.class.getName());
 
   public List<Object> apply(List<Object> results) {
     List<Object> nonNullResults = ExitOperationUtils.getNonNullList(results);
@@ -81,7 +81,7 @@ public class AvgResultsExitOperation implements ExitOperation {
       final String msg =
           "Wrong type in result list.  Expected " + Object[].class +
               " but found " + result.getClass();
-      log.error(msg);
+      LOG.error(msg);
       throw new IllegalStateException(msg);
     }
     Object[] resultArr = (Object[]) result;
@@ -89,7 +89,7 @@ public class AvgResultsExitOperation implements ExitOperation {
       final String msg =
           "Result array is wrong size.  Expected 2 " +
               " but found " + resultArr.length;
-      log.error(msg);
+      LOG.resultArrayIsWrongSize(resultArr.length);
       throw new IllegalStateException(msg);
     }
     return Pair.of((Double) resultArr[0], (Integer) resultArr[1]);

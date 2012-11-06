@@ -25,7 +25,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
 import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;

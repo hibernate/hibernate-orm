@@ -18,8 +18,6 @@
 
 package org.hibernate.shards.transaction;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -27,9 +25,11 @@ import org.hibernate.TransactionException;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardedTransaction;
 import org.hibernate.shards.engine.ShardedSessionImplementor;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.session.OpenSessionEvent;
 import org.hibernate.shards.session.SetupTransactionOpenSessionEvent;
 import org.hibernate.shards.util.Lists;
+import org.jboss.logging.Logger;
 
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class ShardedTransactionImpl implements ShardedTransaction {
 
-  private final Log log = LogFactory.getLog(getClass());
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedTransactionImpl.class.getName());
 
   private final List<Transaction> transactions;
 
@@ -68,7 +68,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
   }
 
   public void setupTransaction(Session session) {
-    log.debug("Setting up transaction");
+    LOG.debug("Setting up transaction");
     transactions.add(session.getTransaction());
     if (begun) {
      session.beginTransaction();
@@ -90,7 +90,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
       try {
         t.begin();
       } catch (HibernateException he) {
-        log.warn("exception starting underlying transaction", he);
+        LOG.warn("exception starting underlying transaction", he);
         beginException = true;
       }
     }
@@ -100,9 +100,9 @@ public class ShardedTransactionImpl implements ShardedTransaction {
           try {
             t.rollback();
           } catch (HibernateException he) {
+            LOG.fatal("Unable to rollback sharded transaction.");
             // TODO(maxr) What do we do?
           }
-
         }
       }
       throw new TransactionException("Begin failed");
@@ -116,7 +116,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
     if (!begun) {
       throw new TransactionException("Transaction not succesfully started");
     }
-    log.debug("Starting transaction commit");
+    LOG.debug("Starting transaction commit");
     beforeTransactionCompletion();
     boolean commitException = false;
     HibernateException firstCommitException = null;
@@ -124,7 +124,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
       try {
         t.commit();
       } catch (HibernateException he) {
-        log.warn("exception commiting underlying transaction", he);
+        LOG.warn("exception commiting underlying transaction", he);
         commitException = true;
         // we're only going to rethrow the first commit exception we receive
         if(firstCommitException == null) {
@@ -154,7 +154,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
       try {
         t.rollback();
       } catch (HibernateException he) {
-        log.warn("exception rolling back underlying transaction", he);
+        LOG.warn("exception rolling back underlying transaction", he);
         rollbackException = true;
         if(firstRollbackException == null) {
           firstRollbackException = he;
@@ -205,7 +205,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
         try {
           sync.beforeCompletion();
         } catch (Throwable t) {
-          log.warn("exception calling user Synchronization", t);
+          LOG.warn("exception calling user Synchronization", t);
         }
       }
     }
@@ -218,7 +218,7 @@ public class ShardedTransactionImpl implements ShardedTransaction {
         try {
           sync.afterCompletion(status);
         } catch (Throwable t) {
-          log.warn("exception calling user Synchronization", t);
+          LOG.warn("exception calling user Synchronization", t);
         }
       }
     }

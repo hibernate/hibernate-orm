@@ -18,11 +18,11 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.CountProjection;
 import org.hibernate.criterion.Projection;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.util.Preconditions;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -31,11 +31,11 @@ import java.util.List;
  */
 public class CountExitOperation implements ProjectionExitOperation {
 
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, CountExitOperation.class.getName());
+
   private final boolean distinct;
 
-  private final Log log = LogFactory.getLog(getClass());
-
-  public CountExitOperation(Projection projection) {
+  public CountExitOperation(final Projection projection) {
     Preconditions.checkState(projection instanceof CountProjection);
 
     distinct = projection.toString().indexOf("distinct") != -1;
@@ -46,13 +46,14 @@ public class CountExitOperation implements ProjectionExitOperation {
      * shard, however, without knowing which elements it has seen, we cannot
      * aggregate the counts.
      */
-    log.error("not ready to use!");
+
+    LOG.exitOperationNotReadyToUse();
     throw new UnsupportedOperationException();
   }
 
   public List<Object> apply(List<Object> results) {
     // TODO(maulik) implement this
-    log.error("not ready to use!");
+    LOG.exitOperationNotReadyToUse();
     throw new UnsupportedOperationException();
   }
 }

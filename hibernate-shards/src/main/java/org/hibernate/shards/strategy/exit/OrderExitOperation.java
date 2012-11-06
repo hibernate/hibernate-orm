@@ -34,9 +34,8 @@ public class OrderExitOperation implements ExitOperation {
   private final String propertyName;
 
   public OrderExitOperation(Order order) {
-    //TODO(maulik) support Ignore case!
-    Preconditions.checkState(order.toString().endsWith("asc") ||
-                             order.toString().endsWith("desc"));
+    Preconditions.checkState(order.toString().toLowerCase().endsWith("asc") ||
+                             order.toString().toLowerCase().endsWith("desc"));
 
     this.order = order;
     this.propertyName = getSortingProperty(order);
@@ -74,6 +73,4 @@ public class OrderExitOperation implements ExitOperation {
     String str = order.toString();
     return str.substring(0, str.indexOf(' '));
   }
-
-  
 }

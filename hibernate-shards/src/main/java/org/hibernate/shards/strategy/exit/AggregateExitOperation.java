@@ -18,9 +18,9 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.AggregateProjection;
+import org.hibernate.shards.internal.ShardsMessageLogger;
+import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -31,11 +31,10 @@ import java.util.List;
  */
 public class AggregateExitOperation implements ProjectionExitOperation {
 
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, AggregateExitOperation.class.getName());
+
   private final SupportedAggregations aggregate;
-
   private final String fieldName;
-
-  private final Log log = LogFactory.getLog(getClass());
 
   private enum SupportedAggregations {
 
@@ -52,7 +51,6 @@ public class AggregateExitOperation implements ProjectionExitOperation {
     public String getAggregate() {
       return aggregate;
     }
-
   }
 
   public AggregateExitOperation(AggregateProjection projection) {
@@ -68,7 +66,7 @@ public class AggregateExitOperation implements ProjectionExitOperation {
     try {
       this.aggregate = SupportedAggregations.valueOf(aggregateName.toUpperCase());
     } catch (IllegalArgumentException e) {
-      log.error("Use of unsupported aggregate: "+ aggregateName);
+      LOG.useOfUnsupportedAggregate(aggregateName);
       throw e;
     }
   }
@@ -85,7 +83,7 @@ public class AggregateExitOperation implements ProjectionExitOperation {
       case SUM:
         return Collections.<Object>singletonList(getSum(nonNullResults, fieldName));
       default:
-        log.error("Aggregation Projection is unsupported: "+aggregate);
+        LOG.unsupportedAggregateProjection(aggregate.getAggregate());
         throw new UnsupportedOperationException("Aggregation Projection is unsupported: "+ aggregate);
     }
   }

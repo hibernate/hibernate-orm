@@ -18,14 +18,13 @@
 
 package org.hibernate.shards.criteria;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.AggregateProjection;
 import org.hibernate.criterion.Distinct;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.RowCountProjection;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.strategy.exit.AvgResultsExitOperation;
 import org.hibernate.shards.strategy.exit.DistinctExitOperation;
 import org.hibernate.shards.strategy.exit.ExitOperationsCollector;
@@ -34,6 +33,7 @@ import org.hibernate.shards.strategy.exit.MaxResultsExitOperation;
 import org.hibernate.shards.strategy.exit.OrderExitOperation;
 import org.hibernate.shards.strategy.exit.ProjectionExitOperationFactory;
 import org.hibernate.shards.util.Lists;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -43,6 +43,8 @@ import java.util.List;
  * @author Maulik Shah
  */
 public class ExitOperationsCriteriaCollector implements ExitOperationsCollector {
+
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ExitOperationsCriteriaCollector.class.getName());
 
   // maximum number of results requested by the client
   private Integer maxResults = null;
@@ -67,9 +69,6 @@ public class ExitOperationsCriteriaCollector implements ExitOperationsCollector 
 
   // Order operations applied to the Criteria
   private List<Order> orders = Lists.newArrayList();
-
-  // Our friendly neighborhood logger
-  private final Log log = LogFactory.getLog(getClass());
 
   /**
    * Sets the maximum number of results requested by the client
@@ -103,7 +102,7 @@ public class ExitOperationsCriteriaCollector implements ExitOperationsCollector 
     if (projection instanceof Distinct) {
       this.distinct = (Distinct)projection;
       // TODO(maulik) Distinct doesn't work yet
-      log.error("Distinct is not ready yet");
+      LOG.distinctIsNotReadyYet();
       throw new UnsupportedOperationException();
     } else if(projection instanceof RowCountProjection) {
       this.rowCountProjection = (RowCountProjection) projection;
@@ -114,7 +113,7 @@ public class ExitOperationsCriteriaCollector implements ExitOperationsCollector 
         this.aggregateProjection = (AggregateProjection) projection;
       }
     } else {
-      log.error("Adding an unsupported Projection: " + projection.getClass().getName());
+      LOG.addingUnsupportedProjection(projection.getClass().getName());
       throw new UnsupportedOperationException();
     }
     return this;

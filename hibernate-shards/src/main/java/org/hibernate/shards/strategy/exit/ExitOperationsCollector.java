@@ -18,7 +18,7 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.util.List;
 

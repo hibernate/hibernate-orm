@@ -18,8 +18,6 @@
 
 package org.hibernate.shards.session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
@@ -35,9 +33,9 @@ import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.classic.Session;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
@@ -53,6 +51,7 @@ import org.hibernate.shards.criteria.ShardedCriteriaImpl;
 import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
 import org.hibernate.shards.engine.ShardedSessionImplementor;
 import org.hibernate.shards.id.ShardEncodingIdentifierGenerator;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.query.AdHocQueryFactoryImpl;
 import org.hibernate.shards.query.ExitOperationsQueryCollector;
 import org.hibernate.shards.query.NamedQueryFactoryImpl;
@@ -72,6 +71,7 @@ import org.hibernate.shards.util.Preconditions;
 import org.hibernate.shards.util.Sets;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -93,6 +93,8 @@ import java.util.Set;
  */
 public class ShardedSessionImpl implements ShardedSession, ShardedSessionImplementor,
     ShardIdResolver {
+
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedSessionImpl.class.getName());
 
   private static ThreadLocal<ShardId> currentSubgraphShardId = new ThreadLocal<ShardId>();
 
@@ -120,8 +122,6 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
   // counter for criteria ids or query ids
   private int nextCriteriaId = 0;
   private int nextQueryId = 0;
-
-  private final Log log = LogFactory.getLog(getClass());
 
   /**
    * Constructor used for openSession(...) processing.
@@ -638,7 +638,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
     Preconditions.checkNotNull(shardId);
     setCurrentSubgraphShardId(shardId);
-    log.debug(String.format("Saving object of type %s to shard %s", object.getClass(), shardId));
+    LOG.debugf("Saving object of type %s to shard %s", object.getClass(), shardId);
     return shardIdsToShards.get(shardId).establishSession().save(entityName, object);
   }
 
@@ -666,7 +666,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     if(lockedShard) {
       lockedShardId = shardId;
     }
-    log.debug(String.format("Selected shard %d for object of type %s", shardId.getId(), obj.getClass().getName()));
+    LOG.debugf("Selected shard %d for object of type %s", shardId.getId(), obj.getClass().getName());
     return shardId;
   }
 
@@ -680,11 +680,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
    */
   private void checkForUnsupportedTopLevelSave(Class<?> clazz) {
     if(classesWithoutTopLevelSaveSupport.contains(clazz)) {
-      final String msg = String.format(
-          "Attempt to save object of type %s as a top-level object.",
-          clazz.getName());
-      log.error(msg);
-      throw new HibernateException(msg);
+      LOG.attemptToSaveObjectAsTopLevelObject(clazz.getName());
+      throw new HibernateException(
+              String.format("Attempt to save object of type %s as a top-level object.", clazz.getName()));
     }
   }
 
@@ -751,7 +749,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
             existingShardId.getId(),
             associatedObject.getClass().getName(),
             localShardId.getId());
-        log.error(msg);
+        LOG.error(msg);
         throw new CrossShardAssociationException(msg);
       }
     }
@@ -944,7 +942,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
     Preconditions.checkNotNull(shardId);
     setCurrentSubgraphShardId(shardId);
-    log.debug(String.format("Persisting object of type %s to shard %s", object.getClass(), shardId));
+    LOG.debugf("Persisting object of type %s to shard %s", object.getClass(), shardId);
     shardIdsToShards.get(shardId).establishSession().persist(entityName, object);
   }
 
@@ -1153,7 +1151,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
   }
 
   /**
-   * The {@link org.hibernate.impl.SessionImpl#createFilter(Object, String)} implementation
+   * The {@link org.hibernate.internal.SessionImpl#createFilter(Object, String)} implementation
    * requires that the collection that is passed in is a persistent collection.
    * Since we don't support cross-shard relationships, if we receive a persistent
    * collection that collection is guaranteed to be associated with a single
@@ -1565,11 +1563,11 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
   protected void finalize() throws Throwable {
     try {
       if(!closed) {
-        log.warn("ShardedSessionImpl is being garbage collected but it was never properly closed.");
+        LOG.shardedSessionImplIsBeingGCButWasNotClosedProperly();
         try {
           close();
         } catch (Exception e) {
-          log.warn("Caught exception trying to close.", e);
+          LOG.caughtExceptionWhenTryingToClose();
         }
       }
     } finally {
@@ -1602,7 +1600,4 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
     return so.execute(shardToUse);
   }
-
-
-
 }

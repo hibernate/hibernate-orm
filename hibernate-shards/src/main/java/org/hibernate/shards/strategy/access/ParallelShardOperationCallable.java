@@ -18,12 +18,12 @@
 
 package org.hibernate.shards.strategy.access;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardOperation;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.strategy.exit.ExitStrategy;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -40,9 +40,9 @@ import java.util.concurrent.CountDownLatch;
  */
 class ParallelShardOperationCallable<T> implements Callable<Void> {
 
-  private static final boolean INTERRUPT_IF_RUNNING = false;
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ParallelShardOperationCallable.class.getName());
 
-  private final Log log = LogFactory.getLog(getClass());
+  private static final boolean INTERRUPT_IF_RUNNING = false;
 
   private final CountDownLatch startSignal;
 
@@ -74,26 +74,23 @@ class ParallelShardOperationCallable<T> implements Callable<Void> {
   public Void call() throws Exception {
     try {
       waitForStartSignal();
-      log.debug(String.format("Starting execution of %s against shard %s",  operation.getOperationName(), shard));
+      LOG.debugf("Starting execution of %s against shard %s",  operation.getOperationName(), shard);
       /**
        * If addResult() returns true it means there is no more work to be
        * performed.  Cancel all the outstanding tasks.
        */
       if(exitStrategy.addResult(operation.execute(shard), shard)) {
-        log.debug(
-            String.format(
-                "Short-circuiting execution of %s on other threads after execution against shard %s",
-                operation.getOperationName(),
-                shard));
+        LOG.shortCircuitingOperationAfterExecutionAgainstShard(operation.getOperationName(),
+                shard.toString());
         /**
          * It's ok to cancel ourselves because StartAwareFutureTask.cancel()
          * will return false if a task has already started executing, and we're
          * already executing.
          */
 
-        log.debug(String.format("Checking %d future tasks to see if they need to be cancelled.", futureTasks.size()));
+        LOG.debugf("Checking %d future tasks to see if they need to be cancelled.", futureTasks.size());
         for(StartAwareFutureTask ft : futureTasks) {
-          log.debug(String.format("Preparing to cancel future task %d.", ft.getId()));
+          LOG.debugf("Preparing to cancel future task %d.", ft.getId());
           /**
            * If a task was successfully cancelled that means it had not yet
            * started running.  Since the task won't run, the task won't be
@@ -101,22 +98,20 @@ class ParallelShardOperationCallable<T> implements Callable<Void> {
            * it on behalf of the cancelled task.
            */
           if(ft.cancel(INTERRUPT_IF_RUNNING)) {
-            log.debug("Task cancel returned true, decrementing counter on its behalf.");
+            LOG.debug("Task cancel returned true, decrementing counter on its behalf.");
             doneSignal.countDown();
           } else {
-            log.debug("Task cancel returned false, not decrementing counter on its behalf.");
+            LOG.debug("Task cancel returned false, not decrementing counter on its behalf.");
           }
         }
       } else {
-        log.debug(
-            String.format(
-                "No need to short-cirtcuit execution of %s on other threads after execution against shard %s",
+        LOG.debugf("No need to short-cirtcuit execution of %s on other threads after execution against shard %s",
                 operation.getOperationName(),
-                shard));
+                shard);
       }
     } finally {
       // counter must get decremented no matter what
-      log.debug(String.format("Decrementing counter for operation %s on shard %s", operation.getOperationName(), shard));
+      LOG.debugf("Decrementing counter for operation %s on shard %s", operation.getOperationName(), shard);
       doneSignal.countDown();
     }
     return null;
@@ -128,7 +123,7 @@ class ParallelShardOperationCallable<T> implements Callable<Void> {
     } catch (InterruptedException e) {
       // I see no reason why this should happen
       final String msg = String.format("Received interrupt while waiting to begin execution of %s against shard %s", operation.getOperationName(), shard);
-      log.error(msg);
+      LOG.error(msg);
       throw new HibernateException(msg);
     }
   }

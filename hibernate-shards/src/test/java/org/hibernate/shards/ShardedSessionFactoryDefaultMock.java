@@ -24,22 +24,22 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.cache.Cache;
-import org.hibernate.cache.QueryCache;
-import org.hibernate.cache.UpdateTimestampsCache;
+import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cfg.Settings;
-import org.hibernate.classic.Session;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.Session;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.FilterDefinition;
-import org.hibernate.engine.NamedQueryDefinition;
-import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.exception.SQLExceptionConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -51,7 +51,7 @@ import org.hibernate.shards.session.ShardedSession;
 import org.hibernate.shards.session.ShardedSessionFactory;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 import javax.naming.NamingException;
@@ -108,7 +108,7 @@ public class ShardedSessionFactoryDefaultMock implements ShardedSessionFactoryIm
     throw new UnsupportedOperationException();
   }
 
-  public Map getAllClassMetadata() throws HibernateException {
+  public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
     throw new UnsupportedOperationException();
   }
 
@@ -275,7 +275,7 @@ public class ShardedSessionFactoryDefaultMock implements ShardedSessionFactoryIm
     throw new UnsupportedOperationException();
   }
 
-  public Cache getSecondLevelCacheRegion(String regionName) {
+  public Region getSecondLevelCacheRegion(String regionName) {
     throw new UnsupportedOperationException();
   }
 
@@ -303,7 +303,7 @@ public class ShardedSessionFactoryDefaultMock implements ShardedSessionFactoryIm
     throw new UnsupportedOperationException();
   }
 
-  public Set getCollectionRolesByEntityParticipant(String entityName) {
+  public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
     throw new UnsupportedOperationException();
   }
 

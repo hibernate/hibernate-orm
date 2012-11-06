@@ -18,7 +18,7 @@
 
 package org.hibernate.shards.engine;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.session.ShardedSessionFactory;
 

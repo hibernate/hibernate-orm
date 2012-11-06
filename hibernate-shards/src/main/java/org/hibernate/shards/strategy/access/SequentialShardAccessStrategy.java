@@ -18,12 +18,12 @@
 
 package org.hibernate.shards.strategy.access;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardOperation;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.strategy.exit.ExitOperationsCollector;
 import org.hibernate.shards.strategy.exit.ExitStrategy;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -32,16 +32,12 @@ import java.util.List;
  */
 public class SequentialShardAccessStrategy implements ShardAccessStrategy {
 
-  private final Log log = LogFactory.getLog(getClass());
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, SequentialShardAccessStrategy.class.getName());
 
   public <T> T apply(List<Shard> shards, ShardOperation<T> operation, ExitStrategy<T> exitStrategy, ExitOperationsCollector exitOperationsCollector) {
     for(Shard shard : getNextOrderingOfShards(shards)) {
       if(exitStrategy.addResult(operation.execute(shard), shard)) {
-        log.debug(
-            String.format(
-                "Short-circuiting operation %s after execution against shard %s",
-                operation.getOperationName(),
-                shard));
+        LOG.shortCircuitingOperationAfterExecutionAgainstShard(operation.getOperationName(), shard.toString());
         break;
       }
     }

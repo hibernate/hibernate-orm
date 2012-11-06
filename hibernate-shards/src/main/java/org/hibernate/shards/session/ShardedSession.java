@@ -18,7 +18,7 @@
 
 package org.hibernate.shards.session;
 
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.hibernate.shards.ShardId;
 
 

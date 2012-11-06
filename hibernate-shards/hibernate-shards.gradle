@@ -1,22 +1,13 @@
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( project( ':hibernate-entitymanager' ) )
-    provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
-    provided( libraries.ant )
-    testCompile( project(':hibernate-testing') )
-    testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
+    provided( libraries.validation )
+    compile project( ':hibernate-core' )
+
+    testCompile( libraries.validator ) {
+        // for test runtime
+        transitive = true
+    }
+    testCompile project( ':hibernate-testing' )
     testRuntime( libraries.javassist )
-}
-
-sourceSets.main {
-    ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
-    java.srcDir jaxbTargetDir
-	originalJavaSrcDirs = java.srcDirs
-}
-
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java','src/test/resources'] )
 }

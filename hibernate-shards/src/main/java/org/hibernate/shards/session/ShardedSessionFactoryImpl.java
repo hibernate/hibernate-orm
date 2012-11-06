@@ -18,30 +18,28 @@
 
 package org.hibernate.shards.session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.cache.Cache;
-import org.hibernate.cache.QueryCache;
-import org.hibernate.cache.UpdateTimestampsCache;
+import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cfg.Settings;
-import org.hibernate.classic.Session;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.Session;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.FilterDefinition;
-import org.hibernate.engine.NamedQueryDefinition;
-import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.exception.SQLExceptionConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -51,6 +49,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
 import org.hibernate.shards.id.GeneratorRequiringControlSessionProvider;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.shards.util.Iterables;
@@ -59,9 +58,10 @@ import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Preconditions;
 import org.hibernate.shards.util.Sets;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.StatisticsImpl;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -79,6 +79,8 @@ import java.util.Set;
  * @author maxr@google.com (Max Ross)
  */
 public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplementor, ControlSessionProvider {
+
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedSessionFactoryImpl.class.getName());
 
   // the id of the control shard
   private static final int CONTROL_SHARD_ID = 0;
@@ -107,10 +109,7 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
   private final boolean checkAllAssociatedObjectsForDifferentShards;
 
   // Statistics aggregated across all contained SessionFactories
-  private final Statistics statistics = new StatisticsImpl(this);
-
-  // our lovely logger
-  private final Log log = LogFactory.getLog(getClass());
+  private final Statistics statistics = new ConcurrentStatisticsImpl(this);
 
   /**
    * Constructs a ShardedSessionFactoryImpl
@@ -157,9 +156,8 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
           controlSessionFactoryToSet = implementor;
         }
         if(!uniqueShardIds.add(shardId)) {
-          final String msg = String.format("Cannot have more than one shard with shard id %d.", shardId.getId());
-          log.error(msg);
-          throw new HibernateException(msg);
+          LOG.cannotHaveMoreThanOneShardWithSameId(shardId.getId());
+          throw new HibernateException(String.format("Cannot have more than one shard with shard id %d.", shardId.getId()));
         }
         if (shardIds.contains(shardId)) {
           if (!this.sessionFactoryShardIdMap.containsKey(implementor)) {
@@ -309,7 +307,7 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
     return getAnyFactory().getCollectionMetadata(roleName);
   }
 
-  public Map getAllClassMetadata() throws HibernateException {
+  public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
     // assumption is that all session factories are configured the same way,
     // so it doesn't matter which session factory answers this question
     return getAnyFactory().getAllClassMetadata();
@@ -435,7 +433,7 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
   public SessionImplementor openControlSession() {
     Preconditions.checkState(controlSessionFactory != null);
     Session session = controlSessionFactory.openSession();
-    return  (SessionImplementor)session;
+    return (SessionImplementor)session;
   }
 
   public boolean containsFactory(SessionFactoryImplementor factory) {
@@ -476,11 +474,11 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
     try {
       // try to be helpful to apps that don't clean up properly
       if(!isClosed()) {
-        log.warn("ShardedSessionFactoryImpl is being garbage collected but it was never properly closed.");
+        LOG.shardedSessionFactoryImplIsBeingGCButWasNotClosedProperly();
         try {
           close();
         } catch (Exception e) {
-          log.warn("Caught exception trying to close.", e);
+          LOG.caughtExceptionWhenTryingToClose();
         }
       }
     } finally {
@@ -599,7 +597,7 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
     return getAnyFactory().getResultSetMapping(name);
   }
 
-  public Cache getSecondLevelCacheRegion(String regionName) {
+  public Region getSecondLevelCacheRegion(String regionName) {
     // assumption is that all session factories are configured the same way,
     // so it doesn't matter which session factory answers this question
     return getAnyFactory().getSecondLevelCacheRegion(regionName);
@@ -639,7 +637,7 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
     throw new UnsupportedOperationException();
   }
 
-  public Set getCollectionRolesByEntityParticipant(String entityName) {
+  public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
     // assumption is that all session factories are configured the same way,
     // so it doesn't matter which session factory answers this question
     return getAnyFactory().getCollectionRolesByEntityParticipant(entityName);
@@ -677,4 +675,3 @@ public class ShardedSessionFactoryImpl implements ShardedSessionFactoryImplement
     return getAnyFactory().getSqlFunctionRegistry();
   }
 }
-

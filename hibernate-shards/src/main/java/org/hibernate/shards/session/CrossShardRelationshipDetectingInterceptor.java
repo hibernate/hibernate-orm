@@ -18,20 +18,20 @@
 
 package org.hibernate.shards.session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.shards.CrossShardAssociationException;
 import org.hibernate.shards.ShardId;
+import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.util.Iterables;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Pair;
 import org.hibernate.shards.util.Preconditions;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -47,9 +47,9 @@ import java.util.List;
  */
 class CrossShardRelationshipDetectingInterceptor extends EmptyInterceptor {
 
-  private final ShardIdResolver shardIdResolver;
+  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, CrossShardRelationshipDetectingInterceptor.class.getName());
 
-  private final Log log = LogFactory.getLog(getClass());
+  private final ShardIdResolver shardIdResolver;
 
   public CrossShardRelationshipDetectingInterceptor(ShardIdResolver shardIdResolver) {
     Preconditions.checkNotNull(shardIdResolver);
@@ -127,26 +127,30 @@ class CrossShardRelationshipDetectingInterceptor extends EmptyInterceptor {
       try {
         hp.getHibernateLazyInitializer().initialize();
       } catch(ObjectNotFoundException e) {
+        LOG.objectOfTypeIsOnOneShardButAssociatedObjectIsOnADifferentShard(classOfUpdatedObject, expectedShardId.getId(),
+                hp.getHibernateLazyInitializer().getPersistentClass().getName(), e);
+
         final String msg = String.format(
-            "Object of type %s is on shard %d but an associated object of type %s is on different shard.",
-            classOfUpdatedObject,
-            expectedShardId.getId(),
-            hp.getHibernateLazyInitializer().getPersistentClass().getName());
-        log.error(msg);
+                "Object of type %s is on shard %d but an associated object of type %s is on different shard.",
+                classOfUpdatedObject,
+                expectedShardId.getId(),
+                hp.getHibernateLazyInitializer().getPersistentClass().getName());
         throw new CrossShardAssociationException(msg);
       }
     }
     localShardId = shardIdResolver.getShardIdForObject(associatedObject);
     if(localShardId != null) {
       if(!localShardId.equals(expectedShardId)) {
-        final String msg = String.format(
-            "Object of type %s is on shard %d but an associated object of type %s is on shard %d.",
-            classOfUpdatedObject,
-            expectedShardId.getId(),
-            associatedObject.getClass().getName(),
-            localShardId.getId());
-        log.error(msg);
-        throw new CrossShardAssociationException(msg);
+          LOG.objectOfTypeIsOnOneShardButAssociatedObjectIsOnShard(classOfUpdatedObject,
+                  expectedShardId.getId(),
+                  associatedObject.getClass().getName(),
+                  localShardId.getId());
+        throw new CrossShardAssociationException(String.format(
+                "Object of type %s is on shard %d but an associated object of type %s is on shard %d.",
+                classOfUpdatedObject,
+                expectedShardId.getId(),
+                associatedObject.getClass().getName(),
+                localShardId.getId()));
       }
     }
   }

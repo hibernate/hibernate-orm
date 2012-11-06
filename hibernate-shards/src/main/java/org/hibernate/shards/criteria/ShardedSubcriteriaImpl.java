@@ -149,6 +149,7 @@ class ShardedSubcriteriaImpl implements ShardedSubcriteria {
     }
 
     @Override
+    @Deprecated
     public Criteria createAlias(final String associationPath, final String alias, final int joinType,
                                 final Criterion withClause) throws HibernateException {
         return createAlias(associationPath, alias, JoinType.parse(joinType), withClause);

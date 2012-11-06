@@ -123,15 +123,7 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public Criteria add(final Criterion criterion) {
-        CriteriaEvent event = new AddCriterionEvent(criterion);
-        for (Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).add(criterion);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new AddCriterionEvent(criterion));
     }
 
     @Override
@@ -142,99 +134,48 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public Criteria setFetchMode(final String associationPath, final FetchMode mode) throws HibernateException {
-        final CriteriaEvent event = new SetFetchModeEvent(associationPath, mode);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setFetchMode(associationPath, mode);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetFetchModeEvent(associationPath, mode));
     }
 
     @Override
     public Criteria setLockMode(final LockMode lockMode) {
-        final CriteriaEvent event = new SetLockModeEvent(lockMode);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setLockMode(lockMode);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetLockModeEvent(lockMode));
     }
 
     @Override
     public Criteria setLockMode(final String alias, final LockMode lockMode) {
-        CriteriaEvent event = new SetLockModeEvent(lockMode, alias);
-        for (Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setLockMode(lockMode);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetLockModeEvent(lockMode, alias));
     }
 
     @Override
     public Criteria createAlias(final String associationPath, final String alias) throws HibernateException {
-        final CriteriaEvent event = new CreateAliasEvent(associationPath, alias);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).createAlias(associationPath, alias);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new CreateAliasEvent(associationPath, alias));
     }
 
     @Override
     public Criteria createAlias(final String associationPath, final String alias, final JoinType joinType)
             throws HibernateException {
-
-        final CriteriaEvent event = new CreateAliasEvent(associationPath, alias, joinType);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).createAlias(associationPath, alias, joinType);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-
-        return this;
+        return setCriteriaEvent(new CreateAliasEvent(associationPath, alias, joinType));
     }
 
     @Override
     @Deprecated
     public Criteria createAlias(final String associationPath, final String alias, final int joinType)
             throws HibernateException {
-
         return createAlias(associationPath, alias, JoinType.parse(joinType));
     }
 
     @Override
     public Criteria createAlias(final String associationPath, final String alias, final JoinType joinType,
                                 final Criterion withClause) throws HibernateException {
-
-        final CriteriaEvent event = new CreateAliasEvent(associationPath, alias, joinType, withClause);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).createAlias(associationPath, alias, joinType);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-
-        return this;
+        return setCriteriaEvent(new CreateAliasEvent(associationPath, alias, joinType, withClause));
     }
 
     @Override
-    public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    @Deprecated
+    public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause)
+            throws HibernateException {
+        return createAlias(associationPath, alias, JoinType.parse(joinType), withClause);
     }
 
     @Override
@@ -264,22 +205,20 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
     @Override
     public Criteria createCriteria(final String associationPath, final String alias, final JoinType joinType)
             throws HibernateException {
-
         final SubcriteriaFactory factory = new SubcriteriaFactoryImpl(associationPath, alias, joinType);
         return createSubcriteria(factory);
     }
 
     @Override
+    @Deprecated
     public Criteria createCriteria(final String associationPath, final String alias, final int joinType)
             throws HibernateException {
-
         return createCriteria(associationPath, alias, JoinType.parse(joinType));
     }
 
     @Override
     public Criteria createCriteria(final String associationPath, final String alias, final JoinType joinType,
                                    final Criterion withClause) throws HibernateException {
-
         final SubcriteriaFactory factory = new SubcriteriaFactoryImpl(associationPath, alias, joinType, withClause);
         return createSubcriteria(factory);
     }
@@ -292,15 +231,7 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public Criteria setResultTransformer(final ResultTransformer resultTransformer) {
-        final CriteriaEvent event = new SetResultTransformerEvent(resultTransformer);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setResultTransformer(resultTransformer);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetResultTransformerEvent(resultTransformer));
     }
 
     @Override
@@ -322,7 +253,7 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public boolean isReadOnly() {
-        if ( ! isReadOnlyInitialized() && (shards == null || shards.isEmpty()) ) {
+        if (!isReadOnlyInitialized() && (shards == null || shards.isEmpty())) {
             throw new IllegalStateException(
                     "cannot determine readOnly/modifiable setting when it is not initialized and is not initialized and getSession() == null"
             );
@@ -330,13 +261,13 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
         boolean defaultReadOnly = true;
         for (final Shard shard : shards) {
-            final SessionImplementor session = (SessionImplementor)shard.getSessionFactoryImplementor().getCurrentSession();
+            final SessionImplementor session = (SessionImplementor) shard.getSessionFactoryImplementor().getCurrentSession();
             if (session != null) {
                 defaultReadOnly &= session.getPersistenceContext().isDefaultReadOnly();
             }
         }
 
-        return ( isReadOnlyInitialized() ? readOnly : defaultReadOnly );
+        return (isReadOnlyInitialized() ? readOnly : defaultReadOnly);
     }
 
     @Override
@@ -347,93 +278,37 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public Criteria setFetchSize(final int fetchSize) {
-        final CriteriaEvent event = new SetFetchSizeEvent(fetchSize);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setFetchSize(fetchSize);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetFetchSizeEvent(fetchSize));
     }
 
     @Override
     public Criteria setTimeout(final int timeout) {
-        final CriteriaEvent event = new SetTimeoutEvent(timeout);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setTimeout(timeout);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetTimeoutEvent(timeout));
     }
 
     @Override
     public Criteria setCacheable(final boolean cacheable) {
-        final CriteriaEvent event = new SetCacheableEvent(cacheable);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setCacheable(cacheable);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetCacheableEvent(cacheable));
     }
 
     @Override
     public Criteria setCacheRegion(final String cacheRegion) {
-        final CriteriaEvent event = new SetCacheRegionEvent(cacheRegion);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setCacheRegion(cacheRegion);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetCacheRegionEvent(cacheRegion));
     }
 
     @Override
     public Criteria setComment(final String comment) {
-        final CriteriaEvent event = new SetCommentEvent(comment);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setComment(comment);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetCommentEvent(comment));
     }
 
     @Override
     public Criteria setFlushMode(final FlushMode flushMode) {
-        final CriteriaEvent event = new SetFlushModeEvent(flushMode);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setFlushMode(flushMode);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetFlushModeEvent(flushMode));
     }
 
     @Override
     public Criteria setCacheMode(final CacheMode cacheMode) {
-        final CriteriaEvent event = new SetCacheModeEvent(cacheMode);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setCacheMode(cacheMode);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
-        return this;
+        return setCriteriaEvent(new SetCacheModeEvent(cacheMode));
     }
 
     /**
@@ -541,15 +416,7 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
         final ProjectionList projectionList = Projections.projectionList();
         projectionList.add(projection);
         projectionList.add(Projections.rowCount());
-
-        final CriteriaEvent event = new SetProjectionEvent(projectionList);
-        for (final Shard shard : shards) {
-            if (shard.getCriteriaById(criteriaId) != null) {
-                shard.getCriteriaById(criteriaId).setProjection(projectionList);
-            } else {
-                shard.addCriteriaEvent(criteriaId, event);
-            }
-        }
+        setCriteriaEvent(new SetProjectionEvent(projectionList));
     }
 
     /**
@@ -574,5 +441,16 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
             }
         }
         return subcrit;
+    }
+
+    private ShardedCriteriaImpl setCriteriaEvent(final CriteriaEvent event) {
+        for (final Shard shard : shards) {
+            if (shard.getCriteriaById(criteriaId) != null) {
+                event.onEvent(shard.getCriteriaById(criteriaId));
+            } else {
+                shard.addCriteriaEvent(criteriaId, event);
+            }
+        }
+        return this;
     }
 }

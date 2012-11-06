@@ -91,8 +91,7 @@ import java.util.Set;
  * @author maxr@google.com (Max Ross)
  *         Tomislav Nad
  */
-public class ShardedSessionImpl implements ShardedSession, ShardedSessionImplementor,
-    ShardIdResolver {
+public class ShardedSessionImpl implements ShardedSession, ShardedSessionImplementor, ShardIdResolver {
 
   public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedSessionImpl.class.getName());
 
@@ -693,8 +692,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
   ShardId getShardIdOfRelatedObject(Object obj) {
     ClassMetadata cmd = getClassMetadata(obj.getClass());
     Type[] types = cmd.getPropertyTypes();
-    // TODO(maxr) fix hard-coded entity mode
-    Object[] values = cmd.getPropertyValues(obj, EntityMode.POJO);
+    Object[] values = cmd.getPropertyValues(obj);
     ShardId shardId = null;
     List<Collection<Object>> collections = null;
     for(Pair<Type, Object> pair : CrossShardRelationshipDetectingInterceptor.buildListOfAssociations(types, values)) {
@@ -818,7 +816,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
   Serializable extractId(Object object) {
     ClassMetadata cmd = shardedSessionFactory.getClassMetadata(object.getClass());
     // I'm just guessing about the EntityMode
-    return cmd.getIdentifier(object, EntityMode.POJO);
+    return cmd.getIdentifier(object);
   }
 
   private interface UpdateOperation {

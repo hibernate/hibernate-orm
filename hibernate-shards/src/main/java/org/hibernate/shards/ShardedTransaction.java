@@ -20,20 +20,21 @@ package org.hibernate.shards;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 
 /**
  * Simple interface to represent a shard-aware {@link Transaction}.
  *
  * @author Tomislav Nad
  */
-public interface ShardedTransaction extends Transaction {
+public interface ShardedTransaction extends TransactionImplementor {
 
-  /**
-   * If a new Session is opened while ShardedTransaction exists, this method is
-   * called with the Session as argument. Implementations should set up a
-   * transaction for this session and sync it with ShardedTransaction
-   *
-   * @param session the Session on which the Transaction should be setup
-   */
-  void setupTransaction(Session session);
+    /**
+     * If a new Session is opened while ShardedTransaction exists, this method is
+     * called with the Session as argument. Implementations should set up a
+     * transaction for this session and sync it with ShardedTransaction
+     *
+     * @param session the Session on which the Transaction should be setup
+     */
+    void setupTransaction(Session session);
 }

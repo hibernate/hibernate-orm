@@ -22,205 +22,248 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.transaction.spi.AbstractTransactionImpl;
+import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.engine.transaction.spi.JoinStatus;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardedTransaction;
 import org.hibernate.shards.engine.ShardedSessionImplementor;
 import org.hibernate.shards.internal.ShardsMessageLogger;
 import org.hibernate.shards.session.OpenSessionEvent;
 import org.hibernate.shards.session.SetupTransactionOpenSessionEvent;
-import org.hibernate.shards.util.Lists;
 import org.jboss.logging.Logger;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Tomislav Nad
+ * @author Adriano Machado
  */
-public class ShardedTransactionImpl implements ShardedTransaction {
+public class ShardedTransactionImpl extends AbstractTransactionImpl implements ShardedTransaction {
 
-  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedTransactionImpl.class.getName());
+    public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, ShardedTransactionImpl.class.getName());
 
-  private final List<Transaction> transactions;
+    private final List<TransactionImplementor> transactions;
 
-  private boolean begun;
-  private boolean rolledBack;
-  private boolean committed;
-  private boolean commitFailed;
-  private List<Synchronization> synchronizations;
-  private boolean timeoutSet;
-  private int timeout;
+    private boolean begun;
+    private boolean commitFailed;
+    private boolean timeoutSet;
+    private int timeout;
+    private boolean initiator;
 
+    public ShardedTransactionImpl(final ShardedSessionImplementor ssi,
+                                  final TransactionCoordinator transactionCoordinator) {
 
-  public ShardedTransactionImpl(ShardedSessionImplementor ssi) {
-    OpenSessionEvent osEvent = new SetupTransactionOpenSessionEvent(this);
-    transactions = Collections.synchronizedList(new ArrayList<Transaction>());
-    for(Shard shard : ssi.getShards()) {
-      if (shard.getSession() != null) {
-        transactions.add(shard.getSession().getTransaction());
-      } else {
-        shard.addOpenSessionEvent(osEvent);
-      }
-    }
-  }
+        super(transactionCoordinator);
 
-  public void setupTransaction(Session session) {
-    LOG.debug("Setting up transaction");
-    transactions.add(session.getTransaction());
-    if (begun) {
-     session.beginTransaction();
-    }
-    if (timeoutSet) {
-      session.getTransaction().setTimeout(timeout);
-    }
-  }
-
-  public void begin() throws HibernateException {
-    if (begun) {
-      return;
-    }
-    if (commitFailed) {
-      throw new TransactionException("cannot re-start transaction after failed commit");
-    }
-    boolean beginException = false;
-    for (Transaction t : transactions) {
-      try {
-        t.begin();
-      } catch (HibernateException he) {
-        LOG.warn("exception starting underlying transaction", he);
-        beginException = true;
-      }
-    }
-    if (beginException) {
-      for (Transaction t : transactions) {
-        if (t.isActive()) {
-          try {
-            t.rollback();
-          } catch (HibernateException he) {
-            LOG.fatal("Unable to rollback sharded transaction.");
-            // TODO(maxr) What do we do?
-          }
+        final OpenSessionEvent osEvent = new SetupTransactionOpenSessionEvent(this);
+        transactions = Collections.synchronizedList(new ArrayList<TransactionImplementor>());
+        for (final Shard shard : ssi.getShards()) {
+            if (shard.getSession() != null) {
+                final TransactionImplementor transaction = (TransactionImplementor)shard.getSession().getTransaction();
+                transactions.add(transaction);
+                if (!initiator && transaction.isInitiator()) {
+                    this.initiator = true;
+                }
+            } else {
+                shard.addOpenSessionEvent(osEvent);
+            }
         }
-      }
-      throw new TransactionException("Begin failed");
     }
-    begun = true;
-    committed = false;
-    rolledBack = false;
-  }
 
-  public void commit() throws HibernateException {
-    if (!begun) {
-      throw new TransactionException("Transaction not succesfully started");
-    }
-    LOG.debug("Starting transaction commit");
-    beforeTransactionCompletion();
-    boolean commitException = false;
-    HibernateException firstCommitException = null;
-    for(Transaction t : transactions) {
-      try {
-        t.commit();
-      } catch (HibernateException he) {
-        LOG.warn("exception commiting underlying transaction", he);
-        commitException = true;
-        // we're only going to rethrow the first commit exception we receive
-        if(firstCommitException == null) {
-          firstCommitException = he;
+    @Override
+    public void setupTransaction(final Session session) {
+
+        LOG.debug("Setting up transaction");
+
+        transactions.add((TransactionImplementor)session.getTransaction());
+
+        if (begun) {
+            session.beginTransaction();
         }
-      }
-    }
-    if (commitException) {
-      commitFailed  = true;
-      afterTransactionCompletion(Status.STATUS_UNKNOWN);
-      throw new TransactionException("Commit failed", firstCommitException);
-    }
-    afterTransactionCompletion(Status.STATUS_COMMITTED);
-    committed = true;
-  }
 
-  public void rollback() throws HibernateException {
-    if (!begun && !commitFailed) {
-      throw new TransactionException("Transaction not successfully started");
-    }
-    boolean rollbackException = false;
-    HibernateException firstRollbackException = null;
-    for(Transaction t : transactions) {
-      if (t.wasCommitted()) {
-        continue;
-      }
-      try {
-        t.rollback();
-      } catch (HibernateException he) {
-        LOG.warn("exception rolling back underlying transaction", he);
-        rollbackException = true;
-        if(firstRollbackException == null) {
-          firstRollbackException = he;
+        if (timeoutSet) {
+            session.getTransaction().setTimeout(timeout);
         }
-      }
     }
-    if (rollbackException) {
-      // we're only going to rethrow the first rollback exception
-      throw new TransactionException("Rollback failed", firstRollbackException);
+
+    @Override
+    public boolean isInitiator() {
+        return initiator;
     }
-    rolledBack = true;
-  }
 
-  public boolean wasRolledBack() throws HibernateException {
-    return rolledBack;
-  }
-
-  public boolean wasCommitted() throws HibernateException {
-    return committed;
-  }
-
-  public boolean isActive() throws HibernateException {
-    return begun && !(rolledBack || committed || commitFailed);
-  }
-
-  public void registerSynchronization(Synchronization sync)
-      throws HibernateException {
-    if (sync == null) {
-      throw new NullPointerException("null Synchronization");
-    }
-    if (synchronizations == null) {
-      synchronizations = Lists.newArrayList();
-    }
-    synchronizations.add(sync);
-  }
-
-  public void setTimeout(int seconds) {
-    timeoutSet = true;
-    timeout = seconds;
-    for(Transaction t : transactions) {
-      t.setTimeout(timeout);
-    }
-  }
-
-  private void beforeTransactionCompletion() {
-    if (synchronizations != null) {
-      for (Synchronization sync : synchronizations) {
-        try {
-          sync.beforeCompletion();
-        } catch (Throwable t) {
-          LOG.warn("exception calling user Synchronization", t);
+    @Override
+    public void setTimeout(final int seconds) {
+        timeoutSet = true;
+        timeout = seconds;
+        for (final Transaction t : transactions) {
+            t.setTimeout(timeout);
         }
-      }
     }
-  }
 
-  private void afterTransactionCompletion(int status) {
-    begun = false;
-    if (synchronizations != null) {
-      for (Synchronization sync : synchronizations) {
-        try {
-          sync.afterCompletion(status);
-        } catch (Throwable t) {
-          LOG.warn("exception calling user Synchronization", t);
+    @Override
+    protected void doBegin() {
+
+        boolean beginException = false;
+        for (final Transaction t : transactions) {
+            try {
+                t.begin();
+            } catch (HibernateException he) {
+                LOG.warn("exception starting underlying transaction", he);
+                beginException = true;
+            }
         }
-      }
+
+        if (beginException) {
+            for (final Transaction t : transactions) {
+                if (t.isActive()) {
+                    try {
+                        t.rollback();
+                    } catch (HibernateException he) {
+                        LOG.fatal("Unable to rollback sharded transaction.");
+                        // TODO(maxr) What do we do?
+                    }
+                }
+            }
+            throw new TransactionException("Begin failed");
+        }
     }
-  }
+
+    @Override
+    protected void doCommit() {
+        LOG.debug("Starting transaction commit");
+
+        boolean commitException = false;
+        HibernateException firstCommitException = null;
+        for (Transaction t : transactions) {
+            try {
+                t.commit();
+            } catch (HibernateException he) {
+                LOG.warn("exception commiting underlying transaction", he);
+                commitException = true;
+                // we're only going to rethrow the first commit exception we receive
+                if (firstCommitException == null) {
+                    firstCommitException = he;
+                }
+            }
+        }
+
+        if (commitException) {
+            throw firstCommitException;
+        }
+    }
+
+    @Override
+    protected void doRollback() {
+        if (!begun && !commitFailed) {
+            throw new TransactionException("Transaction not successfully started");
+        }
+
+        boolean rollbackException = false;
+        HibernateException firstRollbackException = null;
+        for (final Transaction t : transactions) {
+            if (t.wasCommitted()) {
+                continue;
+            }
+            try {
+                t.rollback();
+            } catch (HibernateException he) {
+                LOG.warn("exception rolling back underlying transaction", he);
+                rollbackException = true;
+                if (firstRollbackException == null) {
+                    firstRollbackException = he;
+                }
+            }
+        }
+
+        if (rollbackException) {
+            // we're only going to rethrow the first rollback exception
+            throw new TransactionException("Rollback failed", firstRollbackException);
+        }
+    }
+
+    @Override
+    protected void afterTransactionBegin() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void beforeTransactionCommit() {
+        transactionCoordinator().getSynchronizationRegistry().notifySynchronizationsBeforeTransactionCompletion();
+    }
+
+    @Override
+    protected void beforeTransactionRollBack() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void afterTransactionCompletion(int status) {
+        begun = false;
+        transactionCoordinator().getSynchronizationRegistry().notifySynchronizationsAfterTransactionCompletion(status);
+    }
+
+    @Override
+    protected void afterAfterCompletion() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public IsolationDelegate createIsolationDelegate() {
+        return new ShardsIsolationDelegate(transactionCoordinator());
+    }
+
+    @Override
+    public JoinStatus getJoinStatus() {
+        return isActive() ? JoinStatus.JOINED : JoinStatus.NOT_JOINED;
+    }
+
+    @Override
+    public void markRollbackOnly() {
+        for (final TransactionImplementor t : transactions) {
+            try {
+                t.markRollbackOnly();
+            } catch (HibernateException he) {
+                LOG.warn("exception on mark rollback only on underlying transaction", he);
+            }
+        }
+    }
+
+    @Override
+    public void markForJoin() {
+        for (final TransactionImplementor t : transactions) {
+            try {
+                t.markForJoin();
+            } catch (HibernateException he) {
+                LOG.warn("exception on mark rollback only on underlying transaction", he);
+            }
+        }
+    }
+
+    @Override
+    public void join() {
+        for (final TransactionImplementor t : transactions) {
+            try {
+                t.join();
+            } catch (HibernateException he) {
+                LOG.warn("exception on mark rollback only on underlying transaction", he);
+            }
+        }
+    }
+
+    @Override
+    public void resetJoinStatus() {
+        for (final TransactionImplementor t : transactions) {
+            try {
+                t.resetJoinStatus();
+            } catch (HibernateException he) {
+                LOG.warn("exception on mark rollback only on underlying transaction", he);
+            }
+        }
+    }
 }

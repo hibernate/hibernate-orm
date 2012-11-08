@@ -2092,6 +2092,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		public void cleanupFromSynchronizations() {
 			naturalIdXrefDelegate.unStashInvalidNaturalIdReferences();
 		}
+
+		@Override
+		public void handleEviction(Object object, EntityPersister persister, Serializable identifier) {
+			naturalIdXrefDelegate.removeNaturalIdCrossReference(
+					persister,
+					identifier,
+					findCachedNaturalId( persister, identifier )
+			);
+		}
 	};
 
 	@Override

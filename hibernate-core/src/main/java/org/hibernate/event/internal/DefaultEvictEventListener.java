@@ -80,7 +80,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			if ( !li.isUninitialized() ) {
 				final Object entity = persistenceContext.removeEntity( key );
 				if ( entity != null ) {
-					EntityEntry e = event.getSession().getPersistenceContext().removeEntry( entity );
+					EntityEntry e = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, e.getPersister(), event.getSession() );
 				}
 			}
@@ -104,6 +104,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
+		}
+
+		if ( persister.hasNaturalIdentifier() ) {
+			session.getPersistenceContext().getNaturalIdHelper().handleEviction( object, persister, key.getIdentifier() );
 		}
 
 		// remove all collections for the entity from the session-level cache

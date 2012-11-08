@@ -1,3 +1,4 @@
+//$Id$
 package org.hibernate.test.annotations.idmanytoone;
 
 import java.io.Serializable;
@@ -8,6 +9,9 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+/**
+ * @author Alex Kalashnikov
+ */
 @Entity
 @Table(name = "idmanytoone_student")
 public class Student implements Serializable {

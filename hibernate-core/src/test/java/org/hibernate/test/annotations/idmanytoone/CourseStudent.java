@@ -1,3 +1,4 @@
+//$Id$
 package org.hibernate.test.annotations.idmanytoone;
 
 import java.io.Serializable;

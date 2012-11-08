@@ -2513,12 +2513,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				// synchronization (this process) was disabled
 				return;
 			}
-			if ( ! isTransactionInProgress() ) {
-				// not in a transaction so skip synchronization
+			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
+				// only mutable natural-ids need this processing
 				return;
 			}
-			if ( entityPersister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// only mutable natural-ids need this processing 
+			if ( ! isTransactionInProgress() ) {
+				// not in a transaction so skip synchronization
 				return;
 			}
 
@@ -2526,6 +2526,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
 				final Object entity = getPersistenceContext().getEntity( entityKey );
 				final EntityEntry entry = getPersistenceContext().getEntry( entity );
+
+				if ( entry == null ) {
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug(
+								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
+										+ MessageHelper.infoString( entityPersister, pk, getFactory() )
+						);
+					}
+					continue;
+				}
 
 				if ( !entry.requiresDirtyCheck( entity ) ) {
 					continue;

@@ -82,7 +82,8 @@ public class BindHelper {
 	}
 
 	public static void bindNamedSQLQuery(final JaxbSqlQueryElement queryElement,
-			Origin origin, MetadataImplementor metadata) {
+			Origin origin, BindingContext bindingContext,
+			MetadataImplementor metadata) {
 		final NamedSQLQueryDefinitionBuilder builder
 				= new NamedSQLQueryDefinitionBuilder();
 		SQLQueryElementContentParser parser = new SQLQueryElementContentParser();
@@ -98,7 +99,7 @@ public class BindHelper {
 		}
 		else {
 			namedQuery = parser.buildQueryReturns( queryElement.getName(),
-					builder, origin, metadata );
+					builder, origin, bindingContext, metadata );
 
 		}
 		metadata.addNamedNativeQuery( namedQuery );

@@ -187,7 +187,9 @@ public class HierarchyBuilder {
 		for ( final JaxbSqlQueryElement element : entityElement.getSqlQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
 			BindHelper.bindNamedSQLQuery( element,
-					currentMappingDocument.getOrigin(), metadata );
+					currentMappingDocument.getOrigin(),
+					currentMappingDocument.getMappingLocalBindingContext(),
+					metadata );
 		}
 	}
 

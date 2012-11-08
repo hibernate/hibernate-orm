@@ -335,7 +335,8 @@ public class HibernateMappingProcessor {
 			BindHelper.bindNamedQuery( element, metadata );
 		}
 		for ( final JaxbSqlQueryElement element : mappingRoot().getSqlQuery() ) {
-			BindHelper.bindNamedSQLQuery( element, origin(), metadata );
+			BindHelper.bindNamedSQLQuery( element, origin(), bindingContext(),
+					metadata );
 		}
 	}
 

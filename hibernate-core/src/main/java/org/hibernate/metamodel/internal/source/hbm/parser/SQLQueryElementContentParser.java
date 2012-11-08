@@ -40,6 +40,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbReturnScalarElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSynchronizeElement;
 import org.hibernate.metamodel.internal.source.hbm.BindHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.source.BindingContext;
 import org.hibernate.type.Type;
 
 /**
@@ -86,7 +87,8 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 
 	public NamedSQLQueryDefinition buildQueryReturns( String name,
 			NamedSQLQueryDefinitionBuilder builder, 
-			Origin origin, MetadataImplementor metadata ) {
+			Origin origin, BindingContext bindingContext,
+			MetadataImplementor metadata ) {
 		final ResultSetMappingDefinition definition
 				= new ResultSetMappingDefinition( name );
 		int cnt = 0;
@@ -107,7 +109,7 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 		for ( final JaxbLoadCollectionElement r : loadCollectionElements ) {
 			definition.addQueryReturn( 
 					BindHelper.bindLoadCollection(
-							r, cnt++, origin, metadata ) );
+							r, cnt++, origin, bindingContext ) );
 
 		}
 		for ( final JaxbReturnElement r : returnElements ) {

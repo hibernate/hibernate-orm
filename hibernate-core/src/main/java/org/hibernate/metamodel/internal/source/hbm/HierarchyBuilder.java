@@ -30,12 +30,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
+import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbUnionSubclassElement;
 import org.hibernate.jaxb.spi.hbm.SubEntityElement;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntityContainer;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -44,6 +48,8 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Steve Ebersole
  */
 public class HierarchyBuilder {
+	private final MetadataImplementor metadata;
+	
 	private final List<EntityHierarchyImpl> entityHierarchies = new ArrayList<EntityHierarchyImpl>();
 
 	// process state
@@ -52,6 +58,10 @@ public class HierarchyBuilder {
 
 	// mapping file specific state
 	private MappingDocument currentMappingDocument;
+	
+	public HierarchyBuilder( MetadataImplementor metadata ) {
+		this.metadata = metadata;
+	}
 
 	public void processMappingDocument(MappingDocument mappingDocument) {
 		this.currentMappingDocument = mappingDocument;
@@ -153,6 +163,7 @@ public class HierarchyBuilder {
 			final JaxbUnionSubclassElement jaxbUnionSubclass = (JaxbUnionSubclassElement) entityElement;
 			processElements( jaxbUnionSubclass.getUnionSubclass(), container );
 		}
+		processNamedQueries( entityElement );
 	}
 
 	private void processElements(List subElements, SubclassEntityContainer container) {
@@ -162,6 +173,21 @@ public class HierarchyBuilder {
 			container.add( subclassEntitySource );
 			final String subEntityName = subclassEntitySource.getEntityName();
 			subEntityContainerMap.put( subEntityName, subclassEntitySource );
+		}
+	}
+
+	private void processNamedQueries( EntityElement entityElement ) {
+		// For backward compatibility, store named queries prefixed with
+		// the class name.
+		String queryNamePrefix = entityElement.getEntityName();
+		for ( final JaxbQueryElement element : entityElement.getQuery() ) {
+			element.setName( queryNamePrefix + "." + element.getName() );
+			BindHelper.bindNamedQuery( element, metadata );
+		}
+		for ( final JaxbSqlQueryElement element : entityElement.getSqlQuery() ) {
+			element.setName( queryNamePrefix + "." + element.getName() );
+			BindHelper.bindNamedSQLQuery( element,
+					currentMappingDocument.getOrigin(), metadata );
 		}
 	}
 

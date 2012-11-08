@@ -56,7 +56,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<JaxbRoot> jaxbRoots) {
 		this.metadata = metadata;
 
-		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder();
+		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( metadata );
 
 		for ( JaxbRoot jaxbRoot : jaxbRoots ) {
 			if ( ! JaxbHibernateMapping.class.isInstance( jaxbRoot.getRoot() ) ) {

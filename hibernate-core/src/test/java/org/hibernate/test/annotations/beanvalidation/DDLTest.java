@@ -69,7 +69,7 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testApplyOnManyToOne() throws Exception {
-		Column column = SchemaUtil.getColumn( TvOwner.class, "tv", metadata() );
+		Column column = SchemaUtil.getColumn( TvOwner.class, "tv_serial", metadata() );
 		assertEquals( "Validator annotations not applied on associations", false, column.isNullable() );
 	}
 

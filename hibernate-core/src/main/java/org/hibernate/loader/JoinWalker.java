@@ -561,7 +561,7 @@ public class JoinWalker {
 							0,
 							persister,
 							alias,
-							path.append( "" ),
+							path,
 							currentDepth
 					);
 				}

@@ -64,6 +64,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			PersistentTableBulkIdStrategy.class.getName()
 	);
 
+	public static final String SHORT_NAME = "persistent";
+
 	public static final String CLEAN_UP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.clean_up";
 	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
 	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";

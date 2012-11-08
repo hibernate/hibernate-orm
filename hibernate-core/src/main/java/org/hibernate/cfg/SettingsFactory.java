@@ -384,7 +384,14 @@ public class SettingsFactory implements Serializable {
 				strategyClass = (Class) setting;
 			}
 			else {
-				strategyClass = classLoaderService.classForName( setting.toString() );
+				final String settingStr = setting.toString();
+				if ( PersistentTableBulkIdStrategy.SHORT_NAME.equals( settingStr ) ) {
+					return new PersistentTableBulkIdStrategy();
+				}
+				else if ( TemporaryTableBulkIdStrategy.SHORT_NAME.equals( settingStr ) ) {
+					return TemporaryTableBulkIdStrategy.INSTANCE;
+				}
+				strategyClass = classLoaderService.classForName( settingStr );
 			}
 			try {
 				return (MultiTableBulkIdStrategy) strategyClass.newInstance();

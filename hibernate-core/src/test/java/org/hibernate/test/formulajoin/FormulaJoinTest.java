@@ -22,19 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.formulajoin;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -69,7 +67,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		if ( getDialect() instanceof PostgreSQLDialect  || getDialect() instanceof PostgreSQL81Dialect ) return;
+		if ( getDialect() instanceof PostgreSQL81Dialect ) return;
 
 		s = openSession();
 		tx = s.beginTransaction();

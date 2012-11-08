@@ -25,8 +25,6 @@ package org.hibernate.test.legacy;
 
 import java.util.List;
 
-import org.junit.Before;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -35,11 +33,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
+import org.junit.Before;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +55,7 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 
 	protected boolean supportsLockingNullableSideOfJoin(Dialect dialect) {
 		// db2 and pgsql do *NOT*
-		return ! ( DB2Dialect.class.isInstance( dialect ) || PostgreSQL81Dialect.class.isInstance( dialect ) || PostgreSQLDialect.class.isInstance( dialect ));
+		return ! ( DB2Dialect.class.isInstance( dialect ) || PostgreSQL81Dialect.class.isInstance( dialect ));
 	}
 
 	protected static String extractFromSystem(String systemPropertyName) {

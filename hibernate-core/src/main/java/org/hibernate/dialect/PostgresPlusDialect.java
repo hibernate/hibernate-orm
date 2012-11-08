@@ -37,7 +37,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Jim Mlodgenski
  */
-public class PostgresPlusDialect extends PostgreSQLDialect {
+public class PostgresPlusDialect extends PostgreSQL82Dialect {
 
 	public PostgresPlusDialect() {
 		super();

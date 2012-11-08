@@ -23,23 +23,21 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Date;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -47,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 @FailureExpectedWithNewMetamodel
 public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },
+	@SkipForDialect(value = { PostgreSQL81Dialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testEjb3Xml() throws Exception {
 		Session s = openSession();

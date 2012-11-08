@@ -1,12 +1,16 @@
 //$Id: SQLLoaderTest.java 11383 2007-04-02 15:34:02Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -16,18 +20,12 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 @FailureExpectedWithNewMetamodel
 public class SQLLoaderTest extends LegacyTestCase {
@@ -376,7 +374,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { HSQLDialect.class, PostgreSQL81Dialect.class, PostgreSQLDialect.class } )
+	@SkipForDialect( { HSQLDialect.class, PostgreSQL81Dialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
 		Session session = openSession();
 		session.beginTransaction();

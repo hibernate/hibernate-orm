@@ -22,23 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.bidi;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.Date;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -52,7 +50,7 @@ public class AuctionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, comment = "doesn't like boolean=1" )
+	@SkipForDialect( value = {PostgreSQL81Dialect.class}, comment = "doesn't like boolean=1" )
 	public void testLazy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

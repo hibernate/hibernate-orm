@@ -100,22 +100,22 @@ public abstract class AbstractPluralAttributeSourceImpl
 		else if ( pluralAttributeElement.getCompositeElement() != null ) {
 			return new CompositePluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
-					pluralAttributeElement,
-					pluralAttributeElement.getCompositeElement()
+					pluralAttributeElement.getCompositeElement(),
+					pluralAttributeElement.getCascade()
 			);
 		}
 		else if ( pluralAttributeElement.getOneToMany() != null ) {
 			return new OneToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
-					pluralAttributeElement,
-					pluralAttributeElement.getOneToMany()
+					pluralAttributeElement.getOneToMany(),
+					pluralAttributeElement.getCascade()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToMany() != null ) {
 			return new ManyToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
-					pluralAttributeElement,
-					pluralAttributeElement.getManyToMany()
+					pluralAttributeElement.getManyToMany(),
+					pluralAttributeElement.getCascade()
 			);
 		}
 		else if ( pluralAttributeElement.getManyToAny() != null ) {

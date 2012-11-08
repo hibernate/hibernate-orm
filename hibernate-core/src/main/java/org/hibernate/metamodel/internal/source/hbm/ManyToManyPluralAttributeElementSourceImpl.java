@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;
-import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -41,18 +40,18 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 public class ManyToManyPluralAttributeElementSourceImpl
 		extends AbstractHbmSourceNode
 		implements ManyToManyPluralAttributeElementSource {
-	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbManyToManyElement manyToManyElement;
+	private final Iterable<CascadeStyle> cascadeStyles;
 
 	private final List<RelationalValueSource> valueSources;
 
 	public ManyToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
-			final PluralAttributeElement pluralAttributeElement,
-			final JaxbManyToManyElement manyToManyElement) {
+			final JaxbManyToManyElement manyToManyElement,
+			String cascadeString) {
 		super( mappingDocument );
-		this.pluralAttributeElement = pluralAttributeElement;
 		this.manyToManyElement = manyToManyElement;
+		this.cascadeStyles = Helper.interpretCascadeStyles( cascadeString, bindingContext() );
 
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
@@ -145,7 +144,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
+		return cascadeStyles;
 	}
 
 	@Override

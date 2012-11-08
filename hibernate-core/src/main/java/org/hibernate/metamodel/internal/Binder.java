@@ -520,7 +520,10 @@ public class Binder {
 		final CompositeAttributeBindingContainer compositeAttributeBindingContainer =
 				elementBinding.createCompositeAttributeBindingContainer(
 						aggregate,
-						pluralAttributeBinding.getMetaAttributeContext(), // TODO: should get this from elementSource
+						createMetaAttributeContext(
+								pluralAttributeBinding.getContainer(),
+								elementSource.getMetaAttributeSources()
+						),
 						parentAttribute
 				);
 

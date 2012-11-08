@@ -37,11 +37,11 @@ import org.hibernate.jaxb.spi.hbm.JaxbManyToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbNestedCompositeElementElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
-import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
@@ -52,17 +52,17 @@ public class CompositePluralAttributeElementSourceImpl
 		extends AbstractHbmSourceNode
 		implements CompositePluralAttributeElementSource {
 
-	private final PluralAttributeElement pluralAttributeElement;
 	private final JaxbCompositeElementElement compositeElement;
+	private final Iterable<CascadeStyle> cascadeStyles;
 	private final List<AttributeSource> attributeSources;
 
 	public CompositePluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
-			PluralAttributeElement pluralAttributeElement,
-			JaxbCompositeElementElement compositeElement) {
+			JaxbCompositeElementElement compositeElement,
+			String cascadeString) {
 		super( mappingDocument );
-		this.pluralAttributeElement = pluralAttributeElement;
 		this.compositeElement = compositeElement;
+		this.cascadeStyles = Helper.interpretCascadeStyles( cascadeString, bindingContext() );
 		this.attributeSources = buildAttributeSources( mappingDocument, compositeElement );
 	}
 
@@ -139,7 +139,7 @@ public class CompositePluralAttributeElementSourceImpl
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
+		return cascadeStyles;
 	}
 
 	private static AttributeSource buildAttributeSource(
@@ -178,4 +178,8 @@ public class CompositePluralAttributeElementSourceImpl
 		throw new NotYetImplementedException();
 	}
 
+	@Override
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return compositeElement.getMeta();
+	}
 }

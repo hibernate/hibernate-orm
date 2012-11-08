@@ -43,6 +43,7 @@ public class CompositePluralAttributeElementBinding
 		extends AbstractPluralAttributeElementBinding
 		implements Cascadeable {
 
+	// TODO: Come up with a more descriptive name for compositeAttributeBindingContainer.
 	private AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
 	private CascadeStyle cascadeStyle;
 

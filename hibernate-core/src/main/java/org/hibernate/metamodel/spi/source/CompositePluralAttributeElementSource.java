@@ -29,7 +29,7 @@ import org.hibernate.internal.util.ValueHolder;
  * @author Steve Ebersole
  */
 public interface CompositePluralAttributeElementSource
-		extends PluralAttributeElementSource, AttributeSourceContainer, CascadeStyleSource {
+		extends PluralAttributeElementSource, AttributeSourceContainer, CascadeStyleSource, MetaSource {
 	public String getClassName();
 
 	public ValueHolder<Class<?>> getClassReference();

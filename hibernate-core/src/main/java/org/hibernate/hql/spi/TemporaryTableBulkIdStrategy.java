@@ -49,6 +49,8 @@ import org.hibernate.persister.entity.Queryable;
 public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	public static final TemporaryTableBulkIdStrategy INSTANCE = new TemporaryTableBulkIdStrategy();
 
+	public static final String SHORT_NAME = "temporary";
+
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TemporaryTableBulkIdStrategy.class.getName()

@@ -23,7 +23,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
-import org.hibernate.impl.SessionImpl;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.shards.integration.BaseShardingIntegrationTestCase;
 import org.hibernate.shards.model.Building;
 import org.hibernate.shards.session.BaseStatefulInterceptorFactory;

@@ -1,13 +1,10 @@
 package org.hibernate.shards.internal;
 
-import org.hibernate.shards.Shard;
-import org.hibernate.shards.strategy.exit.AggregateExitOperation;
+import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Cause;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
-
-import org.hibernate.internal.CoreMessageLogger;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -96,7 +93,7 @@ public interface ShardsMessageLogger extends CoreMessageLogger {
                                                                         @Cause Exception e);
 
     @LogMessage( level = WARN )
-    @Message( value = "Object of type %s is on shard %d but an associated object of type %s is on different shard.", id = 75018 )
+    @Message( value = "Object of type %s is on shard %d but an associated object of type %s is on shard %d.", id = 75018 )
     void objectOfTypeIsOnOneShardButAssociatedObjectIsOnShard(String classOfUpdatedObject,
                                                               int expectedShardId,
                                                               String classOfAssociatedObject,

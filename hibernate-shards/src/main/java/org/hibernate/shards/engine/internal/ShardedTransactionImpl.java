@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards.transaction;
+package org.hibernate.shards.engine.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -35,7 +35,6 @@ import org.hibernate.shards.session.OpenSessionEvent;
 import org.hibernate.shards.session.SetupTransactionOpenSessionEvent;
 import org.jboss.logging.Logger;
 
-import javax.transaction.SystemException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

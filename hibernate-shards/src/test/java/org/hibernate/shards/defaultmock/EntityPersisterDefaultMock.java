@@ -21,17 +21,22 @@ package org.hibernate.shards.defaultmock;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.cache.CacheConcurrencyStrategy;
-import org.hibernate.cache.entry.CacheEntryStructure;
-import org.hibernate.engine.CascadeStyle;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.ValueInclusion;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -44,400 +49,494 @@ import java.util.Map;
  */
 public class EntityPersisterDefaultMock implements EntityPersister {
 
-  public void postInstantiate() throws MappingException {
-    throw new UnsupportedOperationException();
-  }
-
-  public SessionFactoryImplementor getFactory() {
-    throw new UnsupportedOperationException();
-  }
-
-  public String getRootEntityName() {
-    throw new UnsupportedOperationException();
-  }
-
-  public String getEntityName() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isSubclassEntityName(String entityName) {
-    throw new UnsupportedOperationException();
-  }
-
-  public Serializable[] getPropertySpaces() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Serializable[] getQuerySpaces() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasProxy() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasCollections() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasMutableProperties() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasSubselectLoadableCollections() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasCascades() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isMutable() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isInherited() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isIdentifierAssignedByInsert() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Type getPropertyType(String propertyName) throws MappingException {
-    throw new UnsupportedOperationException();
-  }
-
-  public int[] findDirty(Object[] x, Object[] y, Object owner,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public int[] findModified(Object[] old, Object[] current, Object object,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasIdentifierProperty() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean canExtractIdOutOfEntity() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isVersioned() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Comparator getVersionComparator() {
-    throw new UnsupportedOperationException();
-  }
-
-  public VersionType getVersionType() {
-    throw new UnsupportedOperationException();
-  }
-
-  public int getVersionProperty() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasNaturalIdentifier() {
-    throw new UnsupportedOperationException();
-  }
-
-  public int[] getNaturalIdentifierProperties() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object[] getNaturalIdentifierSnapshot(Serializable id,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public IdentifierGenerator getIdentifierGenerator()
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasLazyProperties() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object load(Serializable id, Object optionalObject, LockMode lockMode,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void lock(Serializable id, Object version, Object object,
-      LockMode lockMode, SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void insert(Serializable id, Object[] fields, Object object,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Serializable insert(Object[] fields, Object object,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void delete(Serializable id, Object version, Object object,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void update(Serializable id, Object[] fields, int[] dirtyFields,
-      boolean hasDirtyCollection, Object[] oldFields, Object oldVersion,
-      Object object, Object rowId, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Type[] getPropertyTypes() {
-    throw new UnsupportedOperationException();
-  }
-
-  public String[] getPropertyNames() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyInsertability() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyInsertGeneration() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyUpdateGeneration() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyUpdateability() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyCheckability() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyNullability() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyVersionability() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean[] getPropertyLaziness() {
-    throw new UnsupportedOperationException();
-  }
-
-  public CascadeStyle[] getPropertyCascadeStyles() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Type getIdentifierType() {
-    throw new UnsupportedOperationException();
-  }
-
-  public String getIdentifierPropertyName() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isCacheInvalidationRequired() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isLazyPropertiesCacheable() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasCache() {
-    throw new UnsupportedOperationException();
-  }
-
-  public CacheConcurrencyStrategy getCache() {
-    throw new UnsupportedOperationException();
-  }
-
-  public CacheEntryStructure getCacheEntryStructure() {
-    throw new UnsupportedOperationException();
-  }
-
-  public ClassMetadata getClassMetadata() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isBatchLoadable() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isSelectBeforeUpdateRequired() {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object[] getDatabaseSnapshot(Serializable id,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object getCurrentVersion(Serializable id, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object forceVersionIncrement(Serializable id, Object currentVersion,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public EntityMode guessEntityMode(Object object) {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isInstrumented(EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasInsertGeneratedProperties() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasUpdateGeneratedProperties() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isVersionPropertyGenerated() {
-    throw new UnsupportedOperationException();
-  }
-
-  public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched,
-      SessionImplementor session) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void afterReassociate(Object entity, SessionImplementor session) {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object createProxy(Serializable id, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Boolean isTransient(Object object, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object[] getPropertyValuesToInsert(Object object, Map mergeMap,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void processInsertGeneratedProperties(Serializable id, Object entity,
-      Object[] state, SessionImplementor session) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void processUpdateGeneratedProperties(Serializable id, Object entity,
-      Object[] state, SessionImplementor session) {
-    throw new UnsupportedOperationException();
-  }
-
-  public Class getMappedClass(EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean implementsLifecycle(EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean implementsValidatable(EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public Class getConcreteProxyClass(EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void setPropertyValues(Object object, Object[] values,
-      EntityMode entityMode) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void setPropertyValue(Object object, int i, Object value,
-      EntityMode entityMode) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object[] getPropertyValues(Object object, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object getPropertyValue(Object object, int i, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object getPropertyValue(Object object, String propertyName,
-      EntityMode entityMode) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Serializable getIdentifier(Object object, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void setIdentifier(Object object, Serializable id,
-      EntityMode entityMode) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object getVersion(Object object, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Object instantiate(Serializable id, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isInstance(Object object, EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean hasUninitializedLazyProperties(Object object,
-      EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void resetIdentifier(Object entity, Serializable currentId,
-      Object currentVersion, EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public EntityPersister getSubclassEntityPersister(Object instance,
-      SessionFactoryImplementor factory, EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
-
-  public EntityMetamodel getEntityMetamodel() {
-    throw new UnsupportedOperationException();
-  }
-
-  public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-    throw new UnsupportedOperationException();
-  }
-
-  public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void postInstantiate() throws MappingException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SessionFactoryImplementor getFactory() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getRootEntityName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getEntityName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityMetamodel getEntityMetamodel() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isSubclassEntityName(String entityName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable[] getPropertySpaces() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable[] getQuerySpaces() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasProxy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasCollections() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasMutableProperties() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasSubselectLoadableCollections() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasCascades() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isMutable() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isInherited() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isIdentifierAssignedByInsert() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Type getPropertyType(String propertyName) throws MappingException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int[] findModified(Object[] old, Object[] current, Object object, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasIdentifierProperty() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean canExtractIdOutOfEntity() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isVersioned() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Comparator getVersionComparator() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VersionType getVersionType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getVersionProperty() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNaturalIdentifier() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int[] getNaturalIdentifierProperties() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public IdentifierGenerator getIdentifierGenerator() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasLazyProperties() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable loadEntityIdByNaturalId(Object[] naturalIdValues, LockOptions lockOptions, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable insert(Object[] fields, Object object, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void delete(Serializable id, Object version, Object object, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Type[] getPropertyTypes() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String[] getPropertyNames() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyInsertability() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ValueInclusion[] getPropertyInsertGenerationInclusions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyUpdateability() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyCheckability() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyNullability() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyVersionability() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] getPropertyLaziness() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CascadeStyle[] getPropertyCascadeStyles() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Type getIdentifierType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getIdentifierPropertyName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isCacheInvalidationRequired() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isLazyPropertiesCacheable() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasCache() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityRegionAccessStrategy getCacheAccessStrategy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CacheEntryStructure getCacheEntryStructure() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNaturalIdCache() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ClassMetadata getClassMetadata() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isBatchLoadable() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isSelectBeforeUpdateRequired() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object forceVersionIncrement(Serializable id, Object currentVersion, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isInstrumented() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasInsertGeneratedProperties() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasUpdateGeneratedProperties() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isVersionPropertyGenerated() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void afterReassociate(Object entity, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Boolean isTransient(Object object, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Class getMappedClass() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean implementsLifecycle() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Class getConcreteProxyClass() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setPropertyValues(Object object, Object[] values) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setPropertyValue(Object object, int i, Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object[] getPropertyValues(Object object) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getPropertyValue(Object object, int i) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getPropertyValue(Object object, String propertyName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public Serializable getIdentifier(Object object) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Serializable getIdentifier(Object entity, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getVersion(Object object) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object instantiate(Serializable id, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isInstance(Object object) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasUninitializedLazyProperties(Object object) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityMode getEntityMode() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityTuplizer getEntityTuplizer() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityInstrumentationMetadata getInstrumentationMetadata() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+        throw new UnsupportedOperationException();
+    }
 }

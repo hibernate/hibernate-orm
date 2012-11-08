@@ -29,35 +29,34 @@ import java.io.Serializable;
 /**
  * TableHiLoGenerator which uses control shard to store table with hi values.
  *
- * @see org.hibernate.id.TableHiLoGenerator
  * @author Tomislav Nad
+ * @see org.hibernate.id.TableHiLoGenerator
  */
-
 public class ShardedTableHiLoGenerator extends TableHiLoGenerator implements GeneratorRequiringControlSessionProvider {
 
-  private ControlSessionProvider controlSessionProvider;
+    private ControlSessionProvider controlSessionProvider;
 
-  @Override
-  public Serializable generate(SessionImplementor session, Object obj)
-      throws HibernateException {
-    Serializable id;
-    SessionImplementor controlSession = null;
-    try {
-      controlSession = controlSessionProvider.openControlSession();
-      id = superGenerate(controlSession, obj);
-    } finally {
-      if (controlSession != null) {
-        ((Session)controlSession).close();
-      }
+    @Override
+    public Serializable generate(final SessionImplementor session, final Object obj) throws HibernateException {
+
+        Serializable id;
+        SessionImplementor controlSession = null;
+        try {
+            controlSession = controlSessionProvider.openControlSession();
+            id = superGenerate(controlSession, obj);
+        } finally {
+            if (controlSession != null) {
+                ((Session) controlSession).close();
+            }
+        }
+        return id;
     }
-    return id;
-  }
 
-  public void setControlSessionProvider(ControlSessionProvider provider) {
-    this.controlSessionProvider = provider;
-  }
+    public void setControlSessionProvider(final ControlSessionProvider provider) {
+        this.controlSessionProvider = provider;
+    }
 
-  Serializable superGenerate(SessionImplementor controlSession, Object obj) {
-    return super.generate(controlSession, obj);
-  }
+    Serializable superGenerate(final SessionImplementor controlSession, final Object obj) {
+        return super.generate(controlSession, obj);
+    }
 }

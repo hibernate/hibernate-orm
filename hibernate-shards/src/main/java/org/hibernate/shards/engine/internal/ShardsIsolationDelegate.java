@@ -1,4 +1,4 @@
-package org.hibernate.shards.transaction;
+package org.hibernate.shards.engine.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;

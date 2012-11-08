@@ -5,6 +5,7 @@ ext {
 slf4jVersion = '1.6.1'
 junitVersion = '4.10'
 h2Version = '1.2.145'
+hsqldbVersion = '2.2.9'
 bytemanVersion = '1.5.2'
 infinispanVersion = '5.2.0.Beta3'
 jnpVersion = '5.0.6.CR1'
@@ -61,6 +62,7 @@ libraries = [
         shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
         validator:       'org.hibernate:hibernate-validator:4.2.0.Final',
         h2:              "com.h2database:h2:${h2Version}",
+        hsqldb:          "org.hsqldb:hsqldb:${hsqldbVersion}",
         jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
         xapool:          "com.experlog:xapool:1.5.0",
         mockito:         'org.mockito:mockito-core:1.9.0',

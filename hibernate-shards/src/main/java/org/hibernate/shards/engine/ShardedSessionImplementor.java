@@ -18,6 +18,7 @@
 
 package org.hibernate.shards.engine;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.session.ShardedSession;
 
@@ -32,7 +33,7 @@ import java.util.List;
  *
  * @author Tomislav Nad
  */
-public interface ShardedSessionImplementor {
+public interface ShardedSessionImplementor extends SessionImplementor {
 
   /**
    * Gets all the shards the ShardedSession is spanning.

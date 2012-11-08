@@ -29,6 +29,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
+import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
 import java.util.List;
@@ -38,119 +39,193 @@ import java.util.List;
  */
 public class CriteriaDefaultMock implements Criteria {
 
-  public String getAlias() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public String getAlias() {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setProjection(Projection projection) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setProjection(Projection projection) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria add(Criterion criterion) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria add(Criterion criterion) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria addOrder(Order order) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria addOrder(Order order) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setFetchMode(String associationPath, FetchMode mode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setFetchMode(String associationPath, FetchMode mode) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setLockMode(LockMode lockMode) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setLockMode(LockMode lockMode) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setLockMode(String alias, LockMode lockMode) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setLockMode(String alias, LockMode lockMode) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createAlias(String associationPath, String alias)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createAlias(String associationPath, String alias) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createAlias(String associationPath, String alias,
-      int joinType) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createCriteria(String associationPath)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    @Deprecated
+    public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createCriteria(String associationPath, int joinType)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createCriteria(String associationPath, String alias)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    @Deprecated
+    public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria createCriteria(String associationPath, String alias,
-      int joinType) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createCriteria(String associationPath) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setResultTransformer(ResultTransformer resultTransformer) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createCriteria(String associationPath, JoinType joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setMaxResults(int maxResults) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    @Deprecated
+    public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setFirstResult(int firstResult) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createCriteria(String associationPath, String alias) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setFetchSize(int fetchSize) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setTimeout(int timeout) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    @Deprecated
+    public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setCacheable(boolean cacheable) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setCacheRegion(String cacheRegion) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    @Deprecated
+    public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setComment(String comment) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setResultTransformer(ResultTransformer resultTransformer) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setFlushMode(FlushMode flushMode) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setMaxResults(int maxResults) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Criteria setCacheMode(CacheMode cacheMode) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setFirstResult(int firstResult) {
+        throw new UnsupportedOperationException();
+    }
 
-  public List list() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isReadOnlyInitialized() {
+        throw new UnsupportedOperationException();
+    }
 
-  public ScrollableResults scroll() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isReadOnly() {
+        throw new UnsupportedOperationException();
+    }
 
-  public ScrollableResults scroll(ScrollMode scrollMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setReadOnly(boolean readOnly) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object uniqueResult() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Criteria setFetchSize(int fetchSize) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setTimeout(int timeout) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setCacheable(boolean cacheable) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setCacheRegion(String cacheRegion) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setComment(String comment) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setFlushMode(FlushMode flushMode) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Criteria setCacheMode(CacheMode cacheMode) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List list() throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ScrollableResults scroll() throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object uniqueResult() throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 }

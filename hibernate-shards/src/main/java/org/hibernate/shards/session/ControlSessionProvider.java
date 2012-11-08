@@ -29,10 +29,10 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public interface ControlSessionProvider {
 
-  /**
-   * Opens control session.
-   *
-   * @return control session
-   */
-  SessionImplementor openControlSession();
+    /**
+     * Opens control session.
+     *
+     * @return control session
+     */
+    SessionImplementor openControlSession();
 }

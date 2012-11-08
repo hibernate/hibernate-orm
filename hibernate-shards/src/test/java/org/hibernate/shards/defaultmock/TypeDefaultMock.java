@@ -19,12 +19,12 @@
 package org.hibernate.shards.defaultmock;
 
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.Mapping;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
@@ -39,185 +39,203 @@ import java.util.Map;
  */
 public class TypeDefaultMock implements Type {
 
-  public boolean isAssociationType() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isAssociationType() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isCollectionType() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isCollectionType() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isComponentType() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isEntityType() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isEntityType() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isAnyType() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isAnyType() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isComponentType() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isXMLElement() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public int getColumnSpan(Mapping mapping) throws MappingException {
+        throw new UnsupportedOperationException();
+    }
 
-  public int[] sqlTypes(Mapping mapping) throws MappingException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public int[] sqlTypes(Mapping mapping) throws MappingException {
+        throw new UnsupportedOperationException();
+    }
 
-  public int getColumnSpan(Mapping mapping) throws MappingException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Class getReturnedClass() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Size[] defaultSizes(Mapping mapping) throws MappingException {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isSame(Object x, Object y, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Class getReturnedClass() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isEqual(Object x, Object y, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isXMLElement() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isEqual(Object x, Object y, EntityMode entityMode,
-      SessionFactoryImplementor factory) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isSame(Object x, Object y) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public int getHashCode(Object x, EntityMode entityMode)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isEqual(Object x, Object y) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public int getHashCode(Object x, EntityMode entityMode,
-      SessionFactoryImplementor factory) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public int compare(Object x, Object y, EntityMode entityMode) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public int getHashCode(Object x) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isDirty(Object old, Object current, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isDirty(Object old, Object current, boolean[] checkable,
-      SessionImplementor session) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public int compare(Object x, Object y) {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isModified(Object oldHydratedState, Object currentState,
-      boolean[] checkable, SessionImplementor session)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isDirty(Object old, Object current, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object nullSafeGet(ResultSet rs, String[] names,
-      SessionImplementor session, Object owner)
-      throws HibernateException, SQLException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object nullSafeGet(ResultSet rs, String name,
-      SessionImplementor session, Object owner)
-      throws HibernateException, SQLException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isModified(Object dbState, Object currentState, boolean[] checkable, SessionImplementor session) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public void nullSafeSet(PreparedStatement st, Object value, int index,
-      boolean[] settable, SessionImplementor session)
-      throws HibernateException, SQLException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+        throw new UnsupportedOperationException();
+    }
 
-  public void nullSafeSet(PreparedStatement st, Object value, int index,
-      SessionImplementor session) throws HibernateException, SQLException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+        throw new UnsupportedOperationException();
+    }
 
-  public void setToXMLNode(Node node, Object value,
-      SessionFactoryImplementor factory) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session) throws HibernateException, SQLException {
+        throw new UnsupportedOperationException();
+    }
 
-  public String toLoggableString(Object value,
-      SessionFactoryImplementor factory) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object fromXMLNode(Node xml, Mapping factory)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public String getName() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object deepCopy(Object value, EntityMode entityMode,
-      SessionFactoryImplementor factory) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isMutable() {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public String getName() {
+        throw new UnsupportedOperationException();
+    }
 
-  public Serializable disassemble(Object value, SessionImplementor session,
-      Object owner) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object assemble(Serializable cached, SessionImplementor session,
-      Object owner) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isMutable() {
+        throw new UnsupportedOperationException();
+    }
 
-  public void beforeAssemble(Serializable cached, SessionImplementor session) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object hydrate(ResultSet rs, String[] names,
-      SessionImplementor session, Object owner)
-      throws HibernateException, SQLException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object resolve(Object value, SessionImplementor session, Object owner)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void beforeAssemble(Serializable cached, SessionImplementor session) {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object semiResolve(Object value, SessionImplementor session,
-      Object owner) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Type getSemiResolvedType(SessionFactoryImplementor factory) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object replace(Object original, Object target,
-      SessionImplementor session, Object owner, Map copyCache)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object semiResolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
 
-  public Object replace(Object original, Object target,
-      SessionImplementor session, Object owner, Map copyCache,
-      ForeignKeyDirection foreignKeyDirection) throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Type getSemiResolvedType(SessionFactoryImplementor factory) {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean[] toColumnNullness(Object value, Mapping mapping) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache, ForeignKeyDirection foreignKeyDirection) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean[] toColumnNullness(Object value, Mapping mapping) {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -9,5 +9,7 @@ dependencies {
         transitive = true
     }
     testCompile project( ':hibernate-testing' )
+    testCompile( libraries.hsqldb )
+    testCompile( libraries.mockito )
     testRuntime( libraries.javassist )
 }

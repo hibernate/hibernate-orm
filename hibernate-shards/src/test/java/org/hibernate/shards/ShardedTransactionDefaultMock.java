@@ -20,6 +20,9 @@ package org.hibernate.shards;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.engine.transaction.spi.JoinStatus;
+import org.hibernate.engine.transaction.spi.LocalStatus;
 
 import javax.transaction.Synchronization;
 
@@ -28,40 +31,103 @@ import javax.transaction.Synchronization;
  */
 public class ShardedTransactionDefaultMock implements ShardedTransaction {
 
-  public void setupTransaction(Session session) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void setupTransaction(Session session) {
+        throw new UnsupportedOperationException();
+    }
 
-  public void begin() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public IsolationDelegate createIsolationDelegate() {
+        throw new UnsupportedOperationException();
+    }
 
-  public void commit() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public JoinStatus getJoinStatus() {
+        throw new UnsupportedOperationException();
+    }
 
-  public void rollback() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void markForJoin() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean wasRolledBack() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void join() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean wasCommitted() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void resetJoinStatus() {
+        throw new UnsupportedOperationException();
+    }
 
-  public boolean isActive() throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void markRollbackOnly() {
+        throw new UnsupportedOperationException();
+    }
 
-  public void registerSynchronization(Synchronization synchronization)
-      throws HibernateException {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void invalidate() {
+        throw new UnsupportedOperationException();
+    }
 
-  public void setTimeout(int seconds) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public boolean isInitiator() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void begin() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void commit() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void rollback() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public LocalStatus getLocalStatus() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isActive() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isParticipating() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean wasCommitted() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean wasRolledBack() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void registerSynchronization(Synchronization synchronization) throws HibernateException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setTimeout(int seconds) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTimeout() {
+        throw new UnsupportedOperationException();
+    }
 }

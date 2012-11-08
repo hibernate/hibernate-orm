@@ -22,39 +22,39 @@ import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.hibernate.sql.JoinType;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
 public class CreateAliasEventTest extends TestCase {
 
-  public void testOnOpenSession() {
-    CreateAliasEvent event = new CreateAliasEvent(null, null);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria createAlias(String associationPath, String alias)
-          throws HibernateException {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+    public void testOnOpenSession() {
+        final CreateAliasEvent event = new CreateAliasEvent(null, null);
+        final boolean[] called = {false};
+        final Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria createAlias(String associationPath, String alias) throws HibernateException {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        assertTrue(called[0]);
+    }
 
-  public void testOnOpenSessionWithJoinType() {
-    CreateAliasEvent event = new CreateAliasEvent(null, null, 0);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria createAlias(String associationPath, String alias,
-          int joinType) throws HibernateException {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+    public void testOnOpenSessionWithJoinType() {
+        final CreateAliasEvent event = new CreateAliasEvent(null, null, JoinType.INNER_JOIN);
+        final boolean[] called = {false};
+        final Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria createAlias(String associationPath, String alias,
+                                        JoinType joinType) throws HibernateException {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        assertTrue(called[0]);
+    }
 }

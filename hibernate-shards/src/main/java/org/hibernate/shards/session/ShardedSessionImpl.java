@@ -19,12 +19,26 @@
 package org.hibernate.shards.session;
 
 import org.hibernate.*;
+import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.NonFlushedChanges;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.shards.CrossShardAssociationException;
 import org.hibernate.shards.Shard;
@@ -49,13 +63,12 @@ import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.exit.FirstNonNullResultExitStrategy;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyDataImpl;
-import org.hibernate.shards.transaction.ShardedTransactionImpl;
+import org.hibernate.shards.engine.internal.ShardedTransactionImpl;
 import org.hibernate.shards.util.Iterables;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Pair;
 import org.hibernate.shards.util.Preconditions;
-import org.hibernate.shards.util.Sets;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -164,18 +177,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    @Deprecated
     public Object get(final Class clazz, final Serializable id, final LockMode lockMode) throws HibernateException {
-        final ShardOperation<Object> shardOp = new ShardOperation<Object>() {
-            public Object execute(Shard shard) {
-                return shard.establishSession().get(clazz, id, lockMode);
-            }
-
-            public String getOperationName() {
-                return "get(Class class, Serializable id, LockMode lockMode)";
-            }
-        };
-        // we're not letting people customize shard selection by lockMode
-        return applyGetOperation(shardOp, new ShardResolutionStrategyDataImpl(clazz, id));
+        return get(clazz, id, new LockOptions(lockMode));
     }
 
     @Override
@@ -206,18 +210,10 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         return applyGetOperation(shardOp, new ShardResolutionStrategyDataImpl(entityName, id));
     }
 
+    @Override
+    @Deprecated
     public Object get(final String entityName, final Serializable id, final LockMode lockMode) throws HibernateException {
-        final ShardOperation<Object> shardOp = new ShardOperation<Object>() {
-            public Object execute(final Shard shard) {
-                return shard.establishSession().get(entityName, id, lockMode);
-            }
-
-            public String getOperationName() {
-                return "get(String entityName, Serializable id, LockMode lockMode)";
-            }
-        };
-        // we're not letting people customize shard selection by lockMode
-        return applyGetOperation(shardOp, new ShardResolutionStrategyDataImpl(entityName, id));
+        return get(entityName, id, new LockOptions(lockMode));
     }
 
     @Override
@@ -260,6 +256,11 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
                 shard.addOpenSessionEvent(event);
             }
         }
+    }
+
+    @Override
+    public Connection connection() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -421,19 +422,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    @Deprecated
     public Object load(final Class clazz, final Serializable id, final LockMode lockMode) throws HibernateException {
-        final List<ShardId> shardIds = selectShardIdsFromShardResolutionStrategyData(new
-                ShardResolutionStrategyDataImpl(clazz, id));
-
-        if (shardIds.size() == 1) {
-            return shardIdsToShards.get(shardIds.get(0)).establishSession().load(clazz, id, lockMode);
-        } else {
-            final Object result = get(clazz, id, lockMode);
-            if (result == null) {
-                shardedSessionFactory.getEntityNotFoundDelegate().handleEntityNotFound(clazz.getName(), id);
-            }
-            return result;
-        }
+        return load(clazz, id, new LockOptions(lockMode));
     }
 
     @Override
@@ -453,20 +444,10 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    @Deprecated
     public Object load(final String entityName, final Serializable id, final LockMode lockMode)
             throws HibernateException {
-        final List<ShardId> shardIds = selectShardIdsFromShardResolutionStrategyData(new
-                ShardResolutionStrategyDataImpl(entityName, id));
-
-        if (shardIds.size() == 1) {
-            return shardIdsToShards.get(shardIds.get(0)).establishSession().load(entityName, id, lockMode);
-        } else {
-            final Object result = get(entityName, id, lockMode);
-            if (result == null) {
-                shardedSessionFactory.getEntityNotFoundDelegate().handleEntityNotFound(entityName, id);
-            }
-            return result;
-        }
+        return load(entityName, id, new LockOptions(lockMode));
     }
 
     @Override
@@ -685,6 +666,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    @Deprecated
     public void lock(final Object object, final LockMode lockMode) throws HibernateException {
         final ShardOperation<Void> op = new ShardOperation<Void>() {
             public Void execute(Shard s) {
@@ -700,7 +682,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    @Deprecated
     public void lock(final String entityName, final Object object, final LockMode lockMode) throws HibernateException {
+        //lock(entityName, object, new LockOptions(lockMode));
         final ShardOperation<Void> op = new ShardOperation<Void>() {
             public Void execute(Shard s) {
                 s.establishSession().lock(entityName, object, lockMode);
@@ -734,13 +718,10 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    @Override
+    @Deprecated
     public void refresh(final Object object, final LockMode lockMode) throws HibernateException {
-        final RefreshOperation op = new RefreshOperation() {
-            public void refresh(Shard shard, Object object) {
-                shard.establishSession().refresh(object, lockMode);
-            }
-        };
-        applyRefreshOperation(op, object);
+        refresh(object, new LockOptions(lockMode));
     }
 
     @Override
@@ -773,6 +754,199 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
+    public JdbcConnectionAccess getJdbcConnectionAccess() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Interceptor getInterceptor() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setAutoClear(boolean enabled) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void disableTransactionAutoJoin() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean isTransactionInProgress() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void initializeCollection(PersistentCollection collection, boolean writing) throws HibernateException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public long getTimestamp() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public SessionFactoryImplementor getFactory() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List list(String query, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List list(CriteriaImpl criteria) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Serializable getContextEntityIdentifier(Object object) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String bestGuessEntityName(Object object) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String guessEntityName(Object entity) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Object instantiate(String entityName, Serializable id) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @Deprecated
+    public Object getFilterParameterValue(String filterParameterName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @Deprecated
+    public Type getFilterParameterType(String filterParameterName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @Deprecated
+    public Map getEnabledFilters() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public int getDontFlushFromFind() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public PersistenceContext getPersistenceContext() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Transaction beginTransaction() throws HibernateException {
         errorIfClosed();
         Transaction result = getTransaction();
@@ -784,7 +958,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     public Transaction getTransaction() {
         errorIfClosed();
         if (transaction == null) {
-            transaction = new ShardedTransactionImpl(this);
+            transaction = new ShardedTransactionImpl(this, null);
         }
         return transaction;
     }
@@ -815,7 +989,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
-    public Criteria createCriteria(String entityName, String alias) {
+    public Criteria createCriteria(final String entityName, String alias) {
         return new ShardedCriteriaImpl(
                 new CriteriaId(nextCriteriaId++),
                 shards,
@@ -824,7 +998,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     }
 
     @Override
-    public Query createQuery(String queryString) throws HibernateException {
+    public Query createQuery(final String queryString) throws HibernateException {
         return new ShardedQueryImpl(new QueryId(nextQueryId++),
                 shards,
                 new AdHocQueryFactoryImpl(queryString),
@@ -835,7 +1009,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
      * Unsupported.  This is a scope decision, not a technical decision.
      */
     @Override
-    public SQLQuery createSQLQuery(String queryString) throws HibernateException {
+    public SQLQuery createSQLQuery(final String queryString) throws HibernateException {
         throw new UnsupportedOperationException();
     }
 
@@ -871,6 +1045,48 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
                 shards,
                 new NamedQueryFactoryImpl(queryName),
                 shardStrategy.getShardAccessStrategy());
+    }
+
+    @Override
+    public Query getNamedSQLQuery(String name) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean isEventSource() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void afterScrollOperation() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @Deprecated
+    public String getFetchProfile() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    @Deprecated
+    public void setFetchProfile(String name) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public TransactionCoordinator getTransactionCoordinator() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public LoadQueryInfluencers getLoadQueryInfluencers() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -1393,6 +1609,11 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         }
     };
 
+    @Override
+    public <T> T execute(Callback<T> callback) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 
     private interface RefreshOperation {
         void refresh(Shard shard, Object object);
@@ -1482,7 +1703,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
             op.update(shardIdsToShards.get(shardId), object);
             return;
         }
-        List<Shard> potentialShards = determineShardsObjectViaResolutionStrategy(object);
+        final List<Shard> potentialShards = determineShardsObjectViaResolutionStrategy(object);
         if (potentialShards.size() == 1) {
             op.update(potentialShards.get(0), object);
             return;

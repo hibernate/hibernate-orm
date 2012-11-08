@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -49,10 +50,14 @@ import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
@@ -63,6 +68,7 @@ import org.w3c.dom.Document;
  * about sources and then call {@link #buildMetadata()}.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
@@ -477,54 +483,75 @@ public class MetadataSources {
 		// create a jandex index from the annotated classes
 
 		Indexer indexer = new Indexer();
-		Set<String> processedNames = new HashSet<String>();
-
+		
+		Set<Class<?>> processedClasses = new HashSet<Class<?>>();
 		for ( Class<?> clazz : getAnnotatedClasses() ) {
-			indexClass( clazz, indexer, processedNames );
+			indexClass( clazz, indexer, processedClasses );
 		}
 
 		for ( String className : getAnnotatedClassNames() ) {
-			indexResource( className.replace( '.', '/' ) + ".class", indexer, processedNames );
+			indexResource( className.replace( '.', '/' ) + ".class", indexer );
 		}
 
 		// add package-info from the configured packages
 		for ( String packageName : getAnnotatedPackages() ) {
-			indexResource( packageName.replace( '.', '/' ) + "/package-info.class", indexer, processedNames );
+			indexResource( packageName.replace( '.', '/' ) + "/package-info.class", indexer );
 		}
 
 		return wrapJandexView( indexer.complete() );
 	}
 
-	private void indexClass(Class clazz, Indexer indexer, Set<String> processedNames) {
-		if ( clazz == null || clazz == Object.class ) {
+	private void indexClass(Class clazz, Indexer indexer, Set<Class<?>> processedClasses) {
+		if ( clazz == null || clazz == Object.class
+				|| processedClasses.contains( clazz ) ) {
 			return;
 		}
+		
+		processedClasses.add( clazz );
 
-		indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer, processedNames );
+		ClassInfo indexed = indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer );
 
 		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
 		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
 		// discovered while processing the annotations. To keep this behavior we index all classes in the
 		// hierarchy (see also HHH-7484)
-		indexClass( clazz.getSuperclass(), indexer, processedNames );
+		indexClass( clazz.getSuperclass(), indexer, processedClasses );
 		
-		// Similarly, add any inner classes (see HHH-7678).
-		for ( Class<?> declaredClass : clazz.getDeclaredClasses() ) {
-			indexClass( declaredClass, indexer, processedNames );
+		// For backward compatibility, don't require @Embeddable
+		// classes to be explicitly identified.
+		// Automatically find them by checking the fields' types.
+		// TODO: There's got to be a better way to do this.  Should it be moved?
+		for ( Field declaredField : clazz.getDeclaredFields() ) {
+			Class<?> fieldClass = declaredField.getType();
+			if ( !fieldClass.isPrimitive() && fieldClass != Object.class ) {
+				try {
+					Index fieldIndex = JandexHelper.indexForClass(
+							serviceRegistry.getService( ClassLoaderService.class ),
+							fieldClass );
+					if ( !fieldIndex.getAnnotations(
+							JPADotNames.EMBEDDABLE ).isEmpty() ) {
+						indexClass( declaredField.getType(), indexer, processedClasses );
+					}
+				} catch ( Exception e ) {
+					// do nothing
+				}
+			}
 		}
 	}
 
-	private void indexResource(String resourceName, Indexer indexer, Set<String> processedNames) {
+	private ClassInfo indexResource(String resourceName, Indexer indexer) {
 		ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 		
 		if ( cls.locateResource( resourceName ) != null ) {
 			InputStream stream = cls.locateResourceStream( resourceName );
 			try {
-				indexer.index( stream );
+				return indexer.index( stream );
 			}
 			catch ( IOException e ) {
 				throw new HibernateException( "Unable to open input stream for resource " + resourceName, e );
 			}
 		}
+		
+		return null;
 	}
 }

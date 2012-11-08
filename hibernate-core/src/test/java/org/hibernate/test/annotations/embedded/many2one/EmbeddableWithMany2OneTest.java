@@ -23,20 +23,17 @@
  */
 package org.hibernate.test.annotations.embedded.many2one;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class EmbeddableWithMany2OneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

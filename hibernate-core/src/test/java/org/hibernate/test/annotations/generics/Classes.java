@@ -41,7 +41,6 @@ public class Classes {
 		
 		@ElementCollection
 		@JoinTable(name="PopularBook_Editions",joinColumns={@JoinColumn(name="PopularBook_id")})
-
 		Set<Edition<String>> editions = new HashSet<Edition<String>>();
 	}
 }

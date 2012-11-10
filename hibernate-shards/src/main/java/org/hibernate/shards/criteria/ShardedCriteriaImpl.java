@@ -26,12 +26,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.criterion.AggregateProjection;
 import org.hibernate.criterion.AvgProjection;
+import org.hibernate.criterion.CountProjection;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardOperation;
@@ -71,6 +74,10 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
     // the criteria collector we use to process the results of executing
     // the Criteria across multiple shards
     private final ExitOperationsCriteriaCollector criteriaCollector;
+
+    // Since we need to initiate the projection lazily we need to know
+    // that the last projection is a PropertyProjection else we dont care
+    private boolean propertyProjectionIsLast = false;
 
     private Boolean readOnly;
 
@@ -113,10 +120,23 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public Criteria setProjection(final Projection projection) {
+        propertyProjectionIsLast = false;
         criteriaCollector.addProjection(projection);
+        CriteriaEvent criteriaEvent = null;
         if (projection instanceof AvgProjection) {
             setAvgProjection(projection);
+        } else if (projection instanceof CountProjection) {
+            criteriaEvent = new CountProjectionEvent(projection);
+        } else if (projection instanceof AggregateProjection) {
+            criteriaEvent = new AggregateProjectionEvent(projection);
+        } else if (projection instanceof PropertyProjection) {
+            propertyProjectionIsLast = true;
         }
+
+        if (criteriaEvent != null) {
+            setCriteriaEvent(criteriaEvent);
+        }
+
         // TODO - handle ProjectionList
         return this;
     }
@@ -329,6 +349,16 @@ public class ShardedCriteriaImpl implements ShardedCriteria {
 
     @Override
     public List list() throws HibernateException {
+
+        if (propertyProjectionIsLast) {
+            final Projection projection = criteriaCollector.getReadyPropertyProjection();
+            if (projection != null) {
+                final CriteriaEvent event = new GeneralProjectionEvent(projection);
+                setCriteriaEvent(event);
+            } else {
+                // This should never happen since the propertyProjectionIsLast is set to true.
+            }
+        }
 
         // build a shard operation and apply it across all shards
         final ShardOperation<List<Object>> shardOp = new ShardOperation<List<Object>>() {

@@ -18,27 +18,29 @@
 
 package org.hibernate.shards.query;
 
-import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
 import org.hibernate.transform.ResultTransformer;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Maulik Shah
  */
-public class SetResultTransformerEventTest extends TestCase {
+public class SetResultTransformerEventTest {
 
-   public void testSetResultTransformerEventTransformer() {
-     SetResultTransformerEvent event = new SetResultTransformerEvent(null);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setResultTransformer(ResultTransformer transformer) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetResultTransformerEventTransformer() {
+        SetResultTransformerEvent event = new SetResultTransformerEvent(null);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setResultTransformer(ResultTransformer transformer) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

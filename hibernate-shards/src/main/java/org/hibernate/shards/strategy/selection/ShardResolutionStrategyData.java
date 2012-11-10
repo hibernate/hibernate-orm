@@ -25,7 +25,9 @@ import java.io.Serializable;
  */
 public interface ShardResolutionStrategyData {
 
-  String getEntityName();
+    String getEntityName();
 
-  Serializable getId();
+    Serializable getId();
+
+    //Object getInstance();
 }

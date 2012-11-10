@@ -19,6 +19,7 @@
 package org.hibernate.shards.query;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 /**
@@ -26,5 +27,7 @@ import org.hibernate.Session;
  */
 public interface QueryFactory {
 
-  Query createQuery(Session session);
+    Query createQuery(Session session);
+
+    SQLQuery createSQLQuery(Session session);
 }

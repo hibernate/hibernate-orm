@@ -18,30 +18,31 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.AggregateProjection;
 import org.hibernate.criterion.Projection;
-import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
- * @author maxr@google.com (Max Ross)
+ * Event that allows a Projection (valid only for max/min projection) to be lazily added to a Criteria).
+ *
+ * @author aviadl@sentrigo.com (Aviad Lichtenstadt)
+ * @see org.hibernate.Criteria#setProjection(org.hibernate.criterion.Projection)
  */
-public class SetProjectionEventTest {
+class AggregateProjectionEvent implements CriteriaEvent {
 
-    @Test
-    public void testOnOpenSession() {
-        SetProjectionEvent event = new SetProjectionEvent(null);
-        final boolean[] called = {false};
-        Criteria crit = new CriteriaDefaultMock() {
-            @Override
-            public Criteria setProjection(Projection projection) {
-                called[0] = true;
-                return null;
-            }
-        };
-        event.onEvent(crit);
-        Assert.assertTrue(called[0]);
+    // the Projection we're going to add when the event fires
+    private final Projection projection;
+
+    public AggregateProjectionEvent(Projection projection) {
+        if (projection instanceof AggregateProjection) {
+            this.projection = projection;
+        } else {
+            throw new RuntimeException("Event valid only for max/min projections");
+        }
+    }
+
+    @Override
+    public void onEvent(final Criteria crit) {
+        crit.setProjection(projection);
     }
 }

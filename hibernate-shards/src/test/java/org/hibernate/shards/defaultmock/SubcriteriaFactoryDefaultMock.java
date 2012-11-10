@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards.criteria;
+package org.hibernate.shards.defaultmock;
 
 import org.hibernate.Criteria;
+import org.hibernate.shards.criteria.CriteriaEvent;
+import org.hibernate.shards.criteria.SubcriteriaFactory;
 
 /**
  * @author maxr@google.com (Max Ross)

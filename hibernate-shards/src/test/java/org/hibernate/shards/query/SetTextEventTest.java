@@ -18,40 +18,43 @@
 
 package org.hibernate.shards.query;
 
-import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Maulik Shah
  */
- public class SetTextEventTest extends TestCase {
+public class SetTextEventTest {
 
-   public void testSetTextEventPositionVal() {
-     SetTextEvent event = new SetTextEvent(-1, "");
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setText(int position, String val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetTextEventPositionVal() {
+        SetTextEvent event = new SetTextEvent(-1, "");
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setText(int position, String val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 
-   public void testSetTextEventNameVal() {
-     SetTextEvent event = new SetTextEvent(null, "");
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setText(String name, String val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetTextEventNameVal() {
+        SetTextEvent event = new SetTextEvent(null, "");
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setText(String name, String val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

@@ -24,24 +24,35 @@ import java.io.Serializable;
  * @author maxr@google.com (Max Ross)
  */
 public class ShardResolutionStrategyDataImpl implements ShardResolutionStrategyData {
-  private final String entityName;
-  private final Serializable id;
 
-  public ShardResolutionStrategyDataImpl(Class<?> clazz, Serializable id) {
-    this(clazz.getName(), id);
-  }
+    private final String entityName;
+    private final Serializable id;
+    //private final Object instance;
 
-  public ShardResolutionStrategyDataImpl(String entityName, Serializable id) {
-    this.entityName = entityName;
-    this.id = id;
-  }
+    public ShardResolutionStrategyDataImpl(final Class<?> clazz, final Serializable id/*, final Object instance*/) {
+        this(clazz.getName(), id/*, instance*/);
+    }
 
-  public String getEntityName() {
-    return entityName;
-  }
+    public ShardResolutionStrategyDataImpl(final String entityName, final Serializable id/*, final Object instance*/) {
+        this.entityName = entityName;
+        this.id = id;
+        //this.instance = instance;
+    }
 
-  public Serializable getId() {
-    return id;
-  }
+    @Override
+    public String getEntityName() {
+        return entityName;
+    }
 
+    @Override
+    public Serializable getId() {
+        return id;
+    }
+
+    /*
+    @Override
+    public Object getInstance() {
+        return instance;
+    }
+    */
 }

@@ -16,16 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards.criteria;
+package org.hibernate.shards.defaultmock;
 
-import org.hibernate.Criteria;
+import org.hibernate.shards.Shard;
+import org.hibernate.shards.ShardOperation;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class CriteriaEventDefaultMock implements CriteriaEvent {
+public class ShardOperationDefaultMock<T> implements ShardOperation<T> {
 
-  public void onEvent(Criteria crit) {
+  public T execute(Shard shard) {
+    throw new UnsupportedOperationException();
+  }
+
+  public String getOperationName() {
     throw new UnsupportedOperationException();
   }
 }

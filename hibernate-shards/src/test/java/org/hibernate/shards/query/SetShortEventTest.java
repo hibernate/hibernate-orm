@@ -18,40 +18,43 @@
 
 package org.hibernate.shards.query;
 
-import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Maulik Shah
  */
- public class SetShortEventTest extends TestCase {
+public class SetShortEventTest {
 
-   public void testSetShortEventPositionVal() {
-     SetShortEvent event = new SetShortEvent(-1, (short) 0);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setShort(int position, short val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetShortEventPositionVal() {
+        SetShortEvent event = new SetShortEvent(-1, (short) 0);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setShort(int position, short val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 
-   public void testSetShortEventNameVal() {
-     SetShortEvent event = new SetShortEvent(null, (short) 0);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setShort(String name, short val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetShortEventNameVal() {
+        SetShortEvent event = new SetShortEvent(null, (short) 0);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setShort(String name, short val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

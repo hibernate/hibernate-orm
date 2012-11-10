@@ -43,7 +43,7 @@ public class ShardedTableHiLoGenerator extends TableHiLoGenerator implements Gen
         SessionImplementor controlSession = null;
         try {
             controlSession = controlSessionProvider.openControlSession();
-            id = superGenerate(controlSession, obj);
+            id = super.generate(controlSession, obj);
         } finally {
             if (controlSession != null) {
                 ((Session) controlSession).close();

@@ -18,27 +18,29 @@
 
 package org.hibernate.shards.session;
 
-import junit.framework.TestCase;
 import org.hibernate.Session;
 import org.hibernate.shards.defaultmock.SessionDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SetSessionOnRequiresSessionEventTest extends TestCase {
+public class SetSessionOnRequiresSessionEventTest {
 
-  public void testOnOpenSession() {
-    class MyRequiresSession implements RequiresSession {
-      private Session session;
-      public void setSession(Session session) {
-        this.session = session;
-      }
+    @Test
+    public void testOnOpenSession() {
+        class MyRequiresSession implements RequiresSession {
+            private Session session;
+
+            public void setSession(Session session) {
+                this.session = session;
+            }
+        }
+        MyRequiresSession requiresSession = new MyRequiresSession();
+        SetSessionOnRequiresSessionEvent event = new SetSessionOnRequiresSessionEvent(requiresSession);
+        Session session = new SessionDefaultMock();
+        event.onOpenSession(session);
+        Assert.assertSame(requiresSession.session, session);
     }
-    MyRequiresSession requiresSession = new MyRequiresSession();
-    SetSessionOnRequiresSessionEvent event = new SetSessionOnRequiresSessionEvent(requiresSession);
-    Session session = new SessionDefaultMock();
-    event.onOpenSession(session);
-    assertSame(requiresSession.session, session);
-  }
-
 }

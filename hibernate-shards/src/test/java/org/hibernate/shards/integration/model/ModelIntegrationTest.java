@@ -20,48 +20,53 @@ package org.hibernate.shards.integration.model;
 import org.hibernate.HibernateException;
 import org.hibernate.shards.integration.BaseShardingIntegrationTestCase;
 import org.hibernate.shards.model.IdIsBaseType;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
 public class ModelIntegrationTest extends BaseShardingIntegrationTestCase {
 
-  public void testSaveIdIsBaseType() {
-    IdIsBaseType hli = new IdIsBaseType();
-    session.beginTransaction();
-    hli.setValue("yamma");
-    session.save(hli);
-    commitAndResetSession();
-    hli = reload(hli);
-    assertNotNull(hli);
-  }
-
-  public void testSaveOrUpdateIdIsBasetype() {
-    IdIsBaseType hli = new IdIsBaseType();
-    session.beginTransaction();
-    hli.setValue("yamma");
-    session.saveOrUpdate(hli);
-    commitAndResetSession();
-    hli = reload(hli);
-    assertNotNull(hli);
-  }
-
-  public void testUpdateIdIsBasetype() {
-    IdIsBaseType hli = new IdIsBaseType();
-    session.beginTransaction();
-    hli.setValue("yamma");
-    session.update(hli);
-    try {
-      session.getTransaction().commit();
-      fail("expected he");
-    } catch (HibernateException he) {
-      // good
+    @Test
+    public void testSaveIdIsBaseType() {
+        IdIsBaseType hli = new IdIsBaseType();
+        session.beginTransaction();
+        hli.setValue("yamma");
+        session.save(hli);
+        commitAndResetSession();
+        hli = reload(hli);
+        Assert.assertNotNull(hli);
     }
-    resetSession();
-    session.beginTransaction();
-    session.saveOrUpdate(hli);
-    commitAndResetSession();
-    hli = reload(hli);
-    assertNotNull(hli);
-  }
+
+    @Test
+    public void testSaveOrUpdateIdIsBasetype() {
+        IdIsBaseType hli = new IdIsBaseType();
+        session.beginTransaction();
+        hli.setValue("yamma");
+        session.saveOrUpdate(hli);
+        commitAndResetSession();
+        hli = reload(hli);
+        Assert.assertNotNull(hli);
+    }
+
+    @Test
+    public void testUpdateIdIsBasetype() {
+        IdIsBaseType hli = new IdIsBaseType();
+        session.beginTransaction();
+        hli.setValue("yamma");
+        session.update(hli);
+        try {
+            session.getTransaction().commit();
+            Assert.fail("expected he");
+        } catch (HibernateException he) {
+            // good
+        }
+        resetSession();
+        session.beginTransaction();
+        session.saveOrUpdate(hli);
+        commitAndResetSession();
+        hli = reload(hli);
+        Assert.assertNotNull(hli);
+    }
 }

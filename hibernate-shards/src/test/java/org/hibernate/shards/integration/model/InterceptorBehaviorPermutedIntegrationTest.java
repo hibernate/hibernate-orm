@@ -31,6 +31,8 @@ import org.hibernate.shards.session.RequiresSession;
 import org.hibernate.shards.session.ShardedSession;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.type.Type;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.Serializable;
 import java.util.List;
@@ -40,111 +42,116 @@ import java.util.List;
  */
 public class InterceptorBehaviorPermutedIntegrationTest extends BaseShardingIntegrationTestCase {
 
-  private Interceptor interceptor;
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    interceptor = new ExplosiveUpdateInterceptor();
-  }
-
-  @Override
-  protected ShardedSession openSession() {
-    return sf.openSession(interceptor);
-  }
-
-  public void testInterceptorBehaviorOnCommit() {
-    session.beginTransaction();
-    Building b = ModelDataFactory.building("b");
-    session.save(b);
-    session.getTransaction().commit();
-    resetSession();
-    session.beginTransaction();
-    b = reload(b);
-    b.setName("updated b");
-    try {
-      session.getTransaction().commit();
-      fail("expected TransactionException");
-    } catch (TransactionException te) {
-      // good
-    }
-    resetSession();
-    b = reload(b);
-    assertEquals("b", b.getName());
-  }
-
-  public void testInterceptorBehaviorOnFlush() {
-    session.beginTransaction();
-    Building b = ModelDataFactory.building("b");
-    session.save(b);
-    session.getTransaction().commit();
-    resetSession();
-    session.beginTransaction();
-    b = reload(b);
-    b.setName("updated b");
-    try {
-      session.flush();
-      fail("expected CallbackException");
-    } catch (CallbackException ce) {
-      // good
-    }
-    resetSession();
-    b = reload(b);
-    assertEquals("b", b.getName());
-  }
-
-  public void testStatefulInterceptorBehavior() {
-    final int[] calls = {0};
-    interceptor = new BaseStatefulInterceptorFactory() {
-      public Interceptor newInstance() {
-        calls[0]++;
-        return new ExplosiveUpdateInterceptor();
-      }
-    };
-    resetSession();
-
-    // this is how we know we were getting different interceptors
-    // for each shard
-    assertEquals(getNumDatabases(), calls[0]);
-  }
-
-  public void testStatefulInterceptorWithRequiresSessionBehavior() {
-    final List<Interceptor> interceptors = Lists.newArrayList();
-    class MyInterceptor extends EmptyInterceptor implements RequiresSession {
-      private boolean[] wasCalled = {false};
-      public void setSession(Session session) {
-        assertTrue(session instanceof SessionImpl);
-        wasCalled[0] = true;
-      }
-    }
-
-    final int[] calls = {0};
-    interceptor = new BaseStatefulInterceptorFactory() {
-      public Interceptor newInstance() {
-        calls[0]++;
-        Interceptor interceptor = new MyInterceptor();
-        interceptors.add(interceptor);
-        return interceptor;
-      }
-    };
-    resetSession();
-    session.createCriteria(Building.class).list(); // force the session to init
-    // this is how we know we were getting different interceptors
-    // for each shard
-    assertEquals(getNumDatabases(), calls[0]);
-    for(Interceptor interceptor : interceptors) {
-      assertTrue(((MyInterceptor)interceptor).wasCalled[0]);
-    }
-
-  }
-
-  private static final class ExplosiveUpdateInterceptor extends EmptyInterceptor {
+    private Interceptor interceptor;
 
     @Override
-    public boolean onFlushDirty(Object entity, Serializable id,
-        Object[] currentState, Object[] previousState, String[] propertyNames,
-        Type[] types) {
-      throw new CallbackException("boom");
+    protected void setUp() throws Exception {
+        super.setUp();
+        interceptor = new ExplosiveUpdateInterceptor();
     }
-  }
+
+    @Override
+    protected ShardedSession openSession() {
+        return sf.openSession(interceptor);
+    }
+
+    @Test
+    public void testInterceptorBehaviorOnCommit() {
+        session.beginTransaction();
+        Building b = ModelDataFactory.building("b");
+        session.save(b);
+        session.getTransaction().commit();
+        resetSession();
+        session.beginTransaction();
+        b = reload(b);
+        b.setName("updated b");
+        try {
+            session.getTransaction().commit();
+            Assert.fail("expected TransactionException");
+        } catch (TransactionException te) {
+            // good
+        }
+        resetSession();
+        b = reload(b);
+        Assert.assertEquals("b", b.getName());
+    }
+
+    @Test
+    public void testInterceptorBehaviorOnFlush() {
+        session.beginTransaction();
+        Building b = ModelDataFactory.building("b");
+        session.save(b);
+        session.getTransaction().commit();
+        resetSession();
+        session.beginTransaction();
+        b = reload(b);
+        b.setName("updated b");
+        try {
+            session.flush();
+            Assert.fail("expected CallbackException");
+        } catch (CallbackException ce) {
+            // good
+        }
+        resetSession();
+        b = reload(b);
+        Assert.assertEquals("b", b.getName());
+    }
+
+    @Test
+    public void testStatefulInterceptorBehavior() {
+        final int[] calls = {0};
+        interceptor = new BaseStatefulInterceptorFactory() {
+            public Interceptor newInstance() {
+                calls[0]++;
+                return new ExplosiveUpdateInterceptor();
+            }
+        };
+        resetSession();
+
+        // this is how we know we were getting different interceptors
+        // for each shard
+        Assert.assertEquals(getNumDatabases(), calls[0]);
+    }
+
+    @Test
+    public void testStatefulInterceptorWithRequiresSessionBehavior() {
+        final List<Interceptor> interceptors = Lists.newArrayList();
+        class MyInterceptor extends EmptyInterceptor implements RequiresSession {
+            private boolean[] wasCalled = {false};
+
+            public void setSession(Session session) {
+                Assert.assertTrue(session instanceof SessionImpl);
+                wasCalled[0] = true;
+            }
+        }
+
+        final int[] calls = {0};
+        interceptor = new BaseStatefulInterceptorFactory() {
+            public Interceptor newInstance() {
+                calls[0]++;
+                Interceptor interceptor = new MyInterceptor();
+                interceptors.add(interceptor);
+                return interceptor;
+            }
+        };
+        resetSession();
+        session.createCriteria(Building.class).list(); // force the session to init
+        // this is how we know we were getting different interceptors
+        // for each shard
+        Assert.assertEquals(getNumDatabases(), calls[0]);
+        for (final Interceptor interceptor : interceptors) {
+            Assert.assertTrue(((MyInterceptor) interceptor).wasCalled[0]);
+        }
+
+    }
+
+    private static final class ExplosiveUpdateInterceptor extends EmptyInterceptor {
+
+        @Override
+        public boolean onFlushDirty(Object entity, Serializable id,
+                                    Object[] currentState, Object[] previousState, String[] propertyNames,
+                                    Type[] types) {
+            throw new CallbackException("boom");
+        }
+    }
 }

@@ -43,7 +43,7 @@ public class DistinctExitOperation implements ExitOperation {
     uniqueSet.addAll(ExitOperationUtils.getNonNullList(results));
 
     List<Object> uniqueList = Lists.newArrayList(uniqueSet);
-    
+
     return uniqueList;
   }
 }

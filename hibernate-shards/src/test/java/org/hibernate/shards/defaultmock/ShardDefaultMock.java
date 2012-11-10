@@ -16,118 +16,108 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards;
+package org.hibernate.shards.defaultmock;
 
-import org.hibernate.HibernateException;
+import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.JoinStatus;
-import org.hibernate.engine.transaction.spi.LocalStatus;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.shards.Shard;
+import org.hibernate.shards.ShardId;
+import org.hibernate.shards.criteria.CriteriaEvent;
+import org.hibernate.shards.criteria.CriteriaId;
+import org.hibernate.shards.criteria.ShardedCriteria;
+import org.hibernate.shards.query.QueryEvent;
+import org.hibernate.shards.query.QueryId;
+import org.hibernate.shards.query.ShardedQuery;
+import org.hibernate.shards.session.OpenSessionEvent;
 
-import javax.transaction.Synchronization;
+import java.util.List;
+import java.util.Set;
 
 /**
- * @author Tomislav Nad
+ * @author maxr@google.com (Max Ross)
+ *         Tomislav Nad
  */
-public class ShardedTransactionDefaultMock implements ShardedTransaction {
+public class ShardDefaultMock implements Shard {
 
     @Override
-    public void setupTransaction(Session session) {
+    public SessionFactoryImplementor getSessionFactoryImplementor() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IsolationDelegate createIsolationDelegate() {
+    public Session getSession() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public JoinStatus getJoinStatus() {
+    public void addOpenSessionEvent(OpenSessionEvent event) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void markForJoin() {
+    public Session establishSession() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void join() {
+    public Criteria getCriteriaById(CriteriaId id) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void resetJoinStatus() {
+    public void addCriteriaEvent(CriteriaId id, CriteriaEvent event) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void markRollbackOnly() {
+    public Criteria establishCriteria(ShardedCriteria shardedCriteria) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void invalidate() {
+    public List<Object> list(CriteriaId criteriaId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isInitiator() {
+    public Object uniqueResult(CriteriaId criteriaId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void begin() {
+    public Set<ShardId> getShardIds() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void commit() {
+    public Query getQueryById(QueryId queryId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void rollback() {
+    public void addQueryEvent(QueryId id, QueryEvent event) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public LocalStatus getLocalStatus() {
+    public Query establishQuery(ShardedQuery shardedQuery) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isActive() {
+    public List<Object> list(QueryId queryId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isParticipating() {
+    public int executeUpdate(QueryId queryId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean wasCommitted() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean wasRolledBack() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void registerSynchronization(Synchronization synchronization) throws HibernateException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setTimeout(int seconds) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getTimeout() {
+    public Object uniqueResult(QueryId queryId) {
         throw new UnsupportedOperationException();
     }
 }

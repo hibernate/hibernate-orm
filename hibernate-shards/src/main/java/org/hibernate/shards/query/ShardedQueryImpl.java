@@ -40,6 +40,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -238,14 +239,36 @@ public class ShardedQueryImpl implements ShardedQuery {
     }
 
     /**
-     * ExecuteUpdate is not supported and throws an
-     * UnsupportedOperationException.
-     *
      * @throws HibernateException
      */
     @Override
     public int executeUpdate() throws HibernateException {
-        throw new UnsupportedOperationException();
+
+        final ShardOperation<List<Object>> shardOp = new ShardOperation<List<Object>>() {
+
+            @Override
+            public List<Object> execute(Shard shard) {
+                shard.establishQuery(ShardedQueryImpl.this);
+                int tmp = shard.executeUpdate(queryId);
+                return Collections.singletonList((Object) tmp);
+            }
+
+            @Override
+            public String getOperationName() {
+                return "executeUpdate()";
+            }
+        };
+
+        final List<Object> rets = shardAccessStrategy.apply(shards, shardOp, new ConcatenateListsExitStrategy(),
+                queryCollector);
+
+        int sum = 0;
+
+        for (final Object i : rets) {
+            sum += (Integer) i;
+        }
+
+        return sum;
     }
 
     @Override

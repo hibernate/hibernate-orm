@@ -21,25 +21,24 @@ package org.hibernate.shards.strategy.selection;
 import junit.framework.TestCase;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.loadbalance.ShardLoadBalancer;
-
-import java.util.Collections;
-import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class LoadBalancedShardSelectionStrategyTest extends TestCase {
+public class LoadBalancedShardSelectionStrategyTest {
 
-  public void testSelectShardForNewObject() {
-    final List<ShardId> shardIds = Collections.emptyList();
-    final ShardId shardId = new ShardId(1);
-    ShardLoadBalancer balancer = new ShardLoadBalancer() {
-      public ShardId getNextShardId() {
-        return shardId;
-      }
-    };
-    LoadBalancedShardSelectionStrategy strategy = new LoadBalancedShardSelectionStrategy(balancer);
-    assertSame(shardId, strategy.selectShardIdForNewObject(null));
-    assertSame(shardId, strategy.selectShardIdForNewObject(null));
-  }
+    @Test
+    public void testSelectShardForNewObject() {
+        final ShardId shardId = new ShardId(1);
+        ShardLoadBalancer balancer = new ShardLoadBalancer() {
+            public ShardId getNextShardId() {
+                return shardId;
+            }
+        };
+        LoadBalancedShardSelectionStrategy strategy = new LoadBalancedShardSelectionStrategy(balancer);
+        Assert.assertSame(shardId, strategy.selectShardIdForNewObject(null));
+        Assert.assertSame(shardId, strategy.selectShardIdForNewObject(null));
+    }
 }

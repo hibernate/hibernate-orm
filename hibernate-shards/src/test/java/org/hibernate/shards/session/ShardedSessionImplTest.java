@@ -18,21 +18,19 @@
 
 package org.hibernate.shards.session;
 
-import junit.framework.TestCase;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.shards.Shard;
-import org.hibernate.shards.ShardDefaultMock;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.ShardImpl;
-import org.hibernate.shards.ShardedSessionFactoryDefaultMock;
 import org.hibernate.shards.defaultmock.ClassMetadataDefaultMock;
 import org.hibernate.shards.defaultmock.InterceptorDefaultMock;
 import org.hibernate.shards.defaultmock.SessionFactoryDefaultMock;
+import org.hibernate.shards.defaultmock.ShardDefaultMock;
+import org.hibernate.shards.defaultmock.ShardedSessionFactoryDefaultMock;
 import org.hibernate.shards.defaultmock.TypeDefaultMock;
 import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
 import org.hibernate.shards.strategy.ShardStrategy;
@@ -44,6 +42,8 @@ import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Pair;
 import org.hibernate.shards.util.Sets;
 import org.hibernate.type.Type;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -55,7 +55,7 @@ import java.util.Set;
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class ShardedSessionImplTest extends TestCase {
+public class ShardedSessionImplTest {
 
     private static class MyShardedSessionImpl extends ShardedSessionImpl {
 
@@ -73,6 +73,7 @@ public class ShardedSessionImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testApplySaveOrUpdateOperation() {
         final List<ShardId> shardIdToReturn = Lists.newArrayList(new ShardId(0));
         final List<Shard> shardListToReturn = Lists.<Shard>newArrayList(new ShardDefaultMock());
@@ -101,42 +102,48 @@ public class ShardedSessionImplTest extends TestCase {
 
         final boolean[] saveOrUpdateCalled = {false};
         final boolean[] mergeCalled = {false};
+
         ShardedSessionImpl.SaveOrUpdateOperation op = new ShardedSessionImpl.SaveOrUpdateOperation() {
+
+            @Override
             public void saveOrUpdate(Shard shard, Object object) {
                 saveOrUpdateCalled[0] = true;
             }
 
+            @Override
             public void merge(Shard shard, Object object) {
                 mergeCalled[0] = true;
             }
-
         };
+
         ssi.applySaveOrUpdateOperation(op, null);
-        assertTrue(saveOrUpdateCalled[0]);
-        assertFalse(mergeCalled[0]);
+        Assert.assertTrue(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
         shardIdToReturn.set(0, null);
         saveOrUpdateCalled[0] = false;
 
         ssi.applySaveOrUpdateOperation(op, null);
-        assertTrue(saveOrUpdateCalled[0]);
-        assertFalse(mergeCalled[0]);
+        Assert.assertTrue(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
         shardIdToReturn.set(0, null);
         saveOrUpdateCalled[0] = false;
 
         shardListToReturn.add(new ShardDefaultMock());
         ssi.applySaveOrUpdateOperation(op, null);
-        assertFalse(saveOrUpdateCalled[0]);
-        assertFalse(mergeCalled[0]);
-        assertTrue(saveCalled[0]);
+        Assert.assertFalse(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
+        Assert.assertTrue(saveCalled[0]);
 
         //TODO(maxr) write test for when we call merge()
     }
 
+    @Test
     public void testClose() {
         ShardedSessionImpl ssi = new MyShardedSessionImpl();
         ssi.close();
     }
 
+    @Test
     public void testShardLock() {
         final ShardId shardIdToReturn = new ShardId(0);
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -153,10 +160,11 @@ public class ShardedSessionImplTest extends TestCase {
         };
         ssi.lockShard();
         Object obj = new Object();
-        assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
-        assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
     }
 
+    @Test
     public void testLackingShardLock() {
         ShardedSessionFactoryImplementor ssf = new ShardedSessionFactoryDefaultMock() {
             @Override
@@ -187,10 +195,10 @@ public class ShardedSessionImplTest extends TestCase {
                         return null;
                     }
                 };
-        assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(new Object()));
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(new Object()));
         try {
             ssi.selectShardIdForNewObject(3);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
@@ -201,6 +209,7 @@ public class ShardedSessionImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithNullAssociation() {
         // the mapping has an association, but the value for that association is null
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -229,10 +238,12 @@ public class ShardedSessionImplTest extends TestCase {
         };
 
         Object obj = new Object();
+
         // test an association
-        assertNull(ssi.getShardIdOfRelatedObject(obj));
+        Assert.assertNull(ssi.getShardIdOfRelatedObject(obj));
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithAssociation() {
         // the mapping has an assocation and the association is not null
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -263,9 +274,10 @@ public class ShardedSessionImplTest extends TestCase {
         Object obj = new Object();
 
         // test an association
-        assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithBadAssociation() {
         // the mapping has an association that is not null, and the shard id
         // for that assocation does not match
@@ -298,12 +310,13 @@ public class ShardedSessionImplTest extends TestCase {
         // test a bad association (objects split across multiple shards)
         try {
             ssi.getShardIdOfRelatedObject(obj);
-            fail("expecte he");
+            Assert.fail("expecte he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithNullCollection() {
         final ShardedSessionImpl ssi = new MyShardedSessionImpl() {
             final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
@@ -331,10 +344,12 @@ public class ShardedSessionImplTest extends TestCase {
         };
 
         Object obj = new Object();
+
         // test a collection
-        assertNull(ssi.getShardIdOfRelatedObject(obj));
+        Assert.assertNull(ssi.getShardIdOfRelatedObject(obj));
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithCollection() {
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
             final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
@@ -364,9 +379,10 @@ public class ShardedSessionImplTest extends TestCase {
         Object obj = new Object();
 
         // test a collection
-        assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithBadCollection() {
         final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -397,12 +413,13 @@ public class ShardedSessionImplTest extends TestCase {
         // test a bad association (objects split across multiple shards)
         try {
             ssi.getShardIdOfRelatedObject(obj);
-            fail("expecte he");
+            Assert.fail("expecte he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithBadCollections() {
         final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -433,12 +450,13 @@ public class ShardedSessionImplTest extends TestCase {
         // test a bad association (objects split across multiple shards)
         try {
             ssi.getShardIdOfRelatedObject(obj);
-            fail("expecte he");
+            Assert.fail("expecte he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithAssociationAndCollection() {
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
             final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
@@ -468,9 +486,10 @@ public class ShardedSessionImplTest extends TestCase {
         Object obj = new Object();
 
         // test a collection
-        assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
     }
 
+    @Test
     public void testGetShardIdOfRelatedObjectWithBadAssociationCollection() {
         final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -501,12 +520,13 @@ public class ShardedSessionImplTest extends TestCase {
         // test a bad association (objects split across multiple shards)
         try {
             ssi.getShardIdOfRelatedObject(obj);
-            fail("expecte he");
+            Assert.fail("expecte he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testCheckForConflictingShardId() {
         final ShardId[] shardIdToReturn = new ShardId[1];
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -516,60 +536,62 @@ public class ShardedSessionImplTest extends TestCase {
             }
         };
         Object obj = new Object();
-        assertNull(ssi.checkForConflictingShardId(null, Object.class, obj));
+        Assert.assertNull(ssi.checkForConflictingShardId(null, Object.class, obj));
         ShardId shardId = new ShardId(0);
         shardIdToReturn[0] = shardId;
-        assertSame(shardId, ssi.checkForConflictingShardId(null, Object.class, obj));
-        assertSame(shardId, ssi.checkForConflictingShardId(shardId, Object.class, obj));
+        Assert.assertSame(shardId, ssi.checkForConflictingShardId(null, Object.class, obj));
+        Assert.assertSame(shardId, ssi.checkForConflictingShardId(shardId, Object.class, obj));
         ShardId anotherShardId = new ShardId(1);
         try {
             ssi.checkForConflictingShardId(anotherShardId, Object.class, obj);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testBuildShardListFromSessionFactoryShardIdMap() {
 
         final Map<SessionFactoryImplementor, Set<ShardId>> sessionFactoryShardIdMap = Maps.newHashMap();
         final ShardIdResolver resolver = new ShardIdResolverDefaultMock();
 
-        assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, null).isEmpty());
-        assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, null).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, null).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, null).isEmpty());
 
         final Interceptor interceptor = new InterceptorDefaultMock();
-        assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, interceptor).isEmpty());
-        assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, interceptor).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, interceptor).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, interceptor).isEmpty());
 
         sessionFactoryShardIdMap.put(new SessionFactoryDefaultMock(), Sets.newHashSet(new ShardId(0)));
         sessionFactoryShardIdMap.put(new SessionFactoryDefaultMock(), Sets.newHashSet(new ShardId(1)));
 
         List<Shard> shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, null);
-        assertEquals(2, shards.size());
+        Assert.assertEquals(2, shards.size());
         for (final Shard shard : shards) {
-            assertNull(((ShardImpl) shard).getInterceptor());
+            Assert.assertNull(((ShardImpl) shard).getInterceptor());
         }
 
         shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, interceptor);
-        assertEquals(2, shards.size());
+        Assert.assertEquals(2, shards.size());
         for (Shard shard : shards) {
-            assertSame(interceptor, ((ShardImpl) shard).getInterceptor());
+            Assert.assertSame(interceptor, ((ShardImpl) shard).getInterceptor());
         }
 
         shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, null);
-        assertEquals(2, shards.size());
+        Assert.assertEquals(2, shards.size());
         for (final Shard shard : shards) {
-            assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptor);
+            Assert.assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptor);
         }
 
         shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, interceptor);
-        assertEquals(2, shards.size());
+        Assert.assertEquals(2, shards.size());
         for (final Shard shard : shards) {
-            assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+            Assert.assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptorDecorator);
         }
     }
 
+    @Test
     public void testFinalizeOnOpenSession() throws Throwable {
         final boolean[] closeCalled = {false};
         ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -580,9 +602,10 @@ public class ShardedSessionImplTest extends TestCase {
             }
         };
         ssi.finalize();
-        assertTrue(closeCalled[0]);
+        Assert.assertTrue(closeCalled[0]);
     }
 
+    @Test
     public void testFinalizeOnClosedSession() throws Throwable {
         final boolean[] closeCalled = {false};
         final ShardedSessionImpl ssi = new MyShardedSessionImpl() {
@@ -593,23 +616,24 @@ public class ShardedSessionImplTest extends TestCase {
             }
         };
         ssi.close();
-        assertTrue(closeCalled[0]);
+        Assert.assertTrue(closeCalled[0]);
         closeCalled[0] = false;
         ssi.finalize();
-        assertFalse(closeCalled[0]);
+        Assert.assertFalse(closeCalled[0]);
     }
 
+    @Test
     public void testNonStatefulInterceptorWrapping() {
         final CrossShardRelationshipDetectingInterceptor csrdi =
                 new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
         final Interceptor stateless = new InterceptorDefaultMock();
         final Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, stateless);
-        assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
-        assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
         final CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
-        assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
-        assertSame(stateless, csrdid.getDelegate());
-        assertNull(result.second);
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(stateless, csrdid.getDelegate());
+        Assert.assertNull(result.second);
     }
 
     private static class Factory extends InterceptorDefaultMock implements StatefulInterceptorFactory {
@@ -625,20 +649,22 @@ public class ShardedSessionImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testStatefulInterceptorWrapping() {
         CrossShardRelationshipDetectingInterceptor csrdi =
                 new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
         Interceptor interceptorToReturn = new InterceptorDefaultMock();
         Interceptor factory = new Factory(interceptorToReturn);
         Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, factory);
-        assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
-        assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
         CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
-        assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
-        assertSame(interceptorToReturn, csrdid.getDelegate());
-        assertNull(result.second);
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(interceptorToReturn, csrdid.getDelegate());
+        Assert.assertNull(result.second);
     }
 
+    @Test
     public void testStatefulInterceptorWrappingWithRequiresSession() {
         CrossShardRelationshipDetectingInterceptor csrdi =
                 new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
@@ -652,12 +678,12 @@ public class ShardedSessionImplTest extends TestCase {
         Interceptor interceptorToReturn = new RequiresSessionInterceptor();
         Interceptor factory = new Factory(interceptorToReturn);
         Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, factory);
-        assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
-        assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
         CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
-        assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
-        assertSame(interceptorToReturn, csrdid.getDelegate());
-        assertNotNull(result.second);
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(interceptorToReturn, csrdid.getDelegate());
+        Assert.assertNotNull(result.second);
     }
 
     private static final class MyType extends TypeDefaultMock {

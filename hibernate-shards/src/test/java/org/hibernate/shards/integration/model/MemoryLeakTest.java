@@ -18,7 +18,6 @@
 
 package org.hibernate.shards.integration.model;
 
-import junit.framework.TestCase;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -32,6 +31,10 @@ import org.hibernate.shards.model.Person;
 import org.hibernate.shards.model.Tenant;
 import org.hibernate.shards.util.JdbcUtil;
 import org.hibernate.shards.util.Lists;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -46,7 +49,7 @@ import static org.hibernate.shards.integration.model.ModelDataFactory.tenant;
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class MemoryLeakTest extends TestCase {
+public class MemoryLeakTest {
 
     private SessionFactory sf;
     private Session session;
@@ -84,9 +87,8 @@ public class MemoryLeakTest extends TestCase {
         }
     }
 
-    @Override
+    @Before
     protected void setUp() throws Exception {
-        super.setUp();
         DatabasePlatform dbPlatform = DatabasePlatformFactory.FACTORY.getDatabasePlatform();
         deleteDatabase(dbPlatform);
         createDatabase(dbPlatform);
@@ -100,7 +102,7 @@ public class MemoryLeakTest extends TestCase {
         session = sf.openSession();
     }
 
-    @Override
+    @After
     protected void tearDown() throws Exception {
         try {
             MemoryLeakPlugger.plug((SessionImpl) session);
@@ -108,9 +110,9 @@ public class MemoryLeakTest extends TestCase {
         } finally {
             sf.close();
         }
-        super.tearDown();
     }
 
+    @Test
     public void testLeak() throws SQLException, ClassNotFoundException,
             NoSuchFieldException, IllegalAccessException, NoSuchMethodException,
             InvocationTargetException {
@@ -132,7 +134,7 @@ public class MemoryLeakTest extends TestCase {
         try {
             final SessionImpl sessionImpl = (SessionImpl) session;
             final Map map = (Map) f.get(sessionImpl.getPersistenceContext());
-            assertEquals(1, map.size());
+            Assert.assertEquals(1, map.size());
         } finally {
             f.setAccessible(isAccessible);
         }

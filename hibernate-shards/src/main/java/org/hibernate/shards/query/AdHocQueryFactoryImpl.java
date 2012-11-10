@@ -19,6 +19,7 @@
 package org.hibernate.shards.query;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 /**
@@ -26,14 +27,19 @@ import org.hibernate.Session;
  */
 public class AdHocQueryFactoryImpl implements QueryFactory {
 
-  private final String queryString;
+    private final String queryString;
 
-  public AdHocQueryFactoryImpl(String queryString) {
-    this.queryString = queryString;
-  }
+    public AdHocQueryFactoryImpl(final String queryString) {
+        this.queryString = queryString;
+    }
 
-  public Query createQuery(Session session) {
-    return session.createQuery(queryString);
-  }
+    @Override
+    public Query createQuery(final Session session) {
+        return session.createQuery(queryString);
+    }
 
+    @Override
+    public SQLQuery createSQLQuery(final Session session) {
+        return session.createSQLQuery(queryString);
+    }
 }

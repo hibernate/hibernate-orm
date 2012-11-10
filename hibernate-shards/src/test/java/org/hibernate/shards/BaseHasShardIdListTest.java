@@ -18,48 +18,51 @@
 
 package org.hibernate.shards;
 
-import junit.framework.TestCase;
 import org.hibernate.shards.util.Lists;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.List;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class BaseHasShardIdListTest extends TestCase {
+public class BaseHasShardIdListTest {
 
-  public void testShardIdListUnmodifiable() {
-    List<ShardId> shardIdList = null;
-    try {
-      new MyBaseHasShardIdList(shardIdList);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-    shardIdList = Lists.newArrayList();
-    try {
-      new MyBaseHasShardIdList(shardIdList);
-      fail("expected iae");
-    } catch (IllegalArgumentException iae) {
-      // good
-    }
-    shardIdList.add(new ShardId(0));
-    BaseHasShardIdList bhsil = new MyBaseHasShardIdList(shardIdList);
-    ShardId anotherId = new ShardId(1);
-    shardIdList.add(anotherId);
-    // demonstrate that external changes to the list that was passed in
-    // aren't reflected inside the object
-    assertFalse(bhsil.shardIds.contains(anotherId));
-  }
+    @Test
+    public void testShardIdListUnmodifiable() {
+        List<ShardId> shardIdList = null;
+        try {
+            new MyBaseHasShardIdList(shardIdList);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+        shardIdList = Lists.newArrayList();
+        try {
+            new MyBaseHasShardIdList(shardIdList);
+            Assert.fail("expected iae");
+        } catch (IllegalArgumentException iae) {
+            // good
+        }
+        shardIdList.add(new ShardId(0));
+        BaseHasShardIdList bhsil = new MyBaseHasShardIdList(shardIdList);
+        ShardId anotherId = new ShardId(1);
+        shardIdList.add(anotherId);
 
-  private static final class MyBaseHasShardIdList extends BaseHasShardIdList {
-
-    protected MyBaseHasShardIdList(List<ShardId> shardIds) {
-      super(shardIds);
+        // demonstrate that external changes to the list that was passed in
+        // aren't reflected inside the object
+        Assert.assertFalse(bhsil.shardIds.contains(anotherId));
     }
 
-    public ShardId selectShardIdForNewObject(Object obj) {
-      throw new UnsupportedOperationException();
+    private static final class MyBaseHasShardIdList extends BaseHasShardIdList {
+
+        protected MyBaseHasShardIdList(List<ShardId> shardIds) {
+            super(shardIds);
+        }
+
+        public ShardId selectShardIdForNewObject(Object obj) {
+            throw new UnsupportedOperationException();
+        }
     }
-  }
 }

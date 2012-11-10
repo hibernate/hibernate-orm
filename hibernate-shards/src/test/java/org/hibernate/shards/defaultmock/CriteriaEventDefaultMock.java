@@ -16,33 +16,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards;
+package org.hibernate.shards.defaultmock;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.hibernate.Criteria;
+import org.hibernate.shards.criteria.CriteriaEvent;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class AllFastTests extends TestSuite {
+public class CriteriaEventDefaultMock implements CriteriaEvent {
 
-  public static Test suite() {
-    TestSuite suite = new TestSuite();
-    for(Class<? extends TestCase> testClass : getAllFastTestClasses()) {
-      suite.addTestSuite(testClass);
-    }
-    return suite;
-  }
-
-  private static List<Class<? extends TestCase>> getAllFastTestClasses() {
-    List<Class<? extends TestCase>> allFastTestClasses = new ArrayList<Class<? extends TestCase>>();
-    for(Class<? extends TestCase> testClass : NonPermutedTests.CLASSES) {
-      allFastTestClasses.add(testClass);
-    }
-    return allFastTestClasses;
+  public void onEvent(Criteria crit) {
+    throw new UnsupportedOperationException();
   }
 }

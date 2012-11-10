@@ -18,42 +18,45 @@
 
 package org.hibernate.shards.query;
 
-import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.math.BigInteger;
 
 /**
  * @author Maulik Shah
  */
-public class SetBigIntegerEventTest extends TestCase {
+public class SetBigIntegerEventTest {
 
-   public void testSetBigIntegerEventPositionVal() {
-     SetBigIntegerEvent event = new SetBigIntegerEvent(-1, null);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setBigInteger(int position, BigInteger val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetBigIntegerEventPositionVal() {
+        SetBigIntegerEvent event = new SetBigIntegerEvent(-1, null);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setBigInteger(int position, BigInteger val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 
-   public void testSetBigIntegerEventNameVal() {
-     SetBigIntegerEvent event = new SetBigIntegerEvent(null, null);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setBigInteger(String name, BigInteger val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetBigIntegerEventNameVal() {
+        SetBigIntegerEvent event = new SetBigIntegerEvent(null, null);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setBigInteger(String name, BigInteger val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

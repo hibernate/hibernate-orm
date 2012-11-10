@@ -19,13 +19,16 @@
 package org.hibernate.shards.integration;
 
 import org.hibernate.shards.session.ShardedSessionImpl;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
 public class ConfigPermutedIntegrationTest extends BaseShardingIntegrationTestCase {
 
-  public void testShardedEnvironment() {
-    assertTrue(((ShardedSessionImpl)session).getCheckAllAssociatedObjectsForDifferentShards());
-  }
+    @Test
+    public void testShardedEnvironment() {
+        Assert.assertTrue(((ShardedSessionImpl) session).getCheckAllAssociatedObjectsForDifferentShards());
+    }
 }

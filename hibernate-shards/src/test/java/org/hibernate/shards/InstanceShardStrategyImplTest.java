@@ -18,7 +18,6 @@
 
 package org.hibernate.shards;
 
-import junit.framework.TestCase;
 import org.hibernate.shards.strategy.ShardStrategyImpl;
 import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.strategy.access.ShardAccessStrategyDefaultMock;
@@ -26,58 +25,61 @@ import org.hibernate.shards.strategy.resolution.ShardResolutionStrategy;
 import org.hibernate.shards.strategy.resolution.ShardResolutionStrategyDefaultMock;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategyDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class InstanceShardStrategyImplTest extends TestCase {
+public class InstanceShardStrategyImplTest {
 
-  public void testCtor() {
-    try {
-      new ShardStrategyImpl(null, null, null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
+    @Test
+    public void testCtor() {
+        try {
+            new ShardStrategyImpl(null, null, null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        ShardSelectionStrategy sss = new ShardSelectionStrategyDefaultMock();
+        ShardResolutionStrategy srs = new ShardResolutionStrategyDefaultMock();
+        ShardAccessStrategy sas = new ShardAccessStrategyDefaultMock();
+        try {
+            new ShardStrategyImpl(sss, null, null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        try {
+            new ShardStrategyImpl(null, srs, null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        try {
+            new ShardStrategyImpl(null, null, sas);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        try {
+            new ShardStrategyImpl(sss, srs, null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        try {
+            new ShardStrategyImpl(null, srs, sas);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
+
+        new ShardStrategyImpl(sss, srs, sas);
     }
-
-    ShardSelectionStrategy sss = new ShardSelectionStrategyDefaultMock();
-    ShardResolutionStrategy srs = new ShardResolutionStrategyDefaultMock();
-    ShardAccessStrategy sas = new ShardAccessStrategyDefaultMock();
-    try {
-      new ShardStrategyImpl(sss, null, null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-
-    try {
-      new ShardStrategyImpl(null, srs, null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-
-    try {
-      new ShardStrategyImpl(null, null, sas);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-
-    try {
-      new ShardStrategyImpl(sss, srs, null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-
-
-    try {
-      new ShardStrategyImpl(null, srs, sas);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
-    }
-    new ShardStrategyImpl(sss, srs, sas);
-  }
 }

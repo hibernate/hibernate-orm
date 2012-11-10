@@ -18,21 +18,21 @@
 
 package org.hibernate.shards.strategy.access;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class ParallelShardAccessStrategyTest extends TestCase {
+public class ParallelShardAccessStrategyTest {
 
-  public void testCtor() {
-    try {
-      new ParallelShardAccessStrategy(null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
+    @Test
+    public void testCtor() {
+        try {
+            new ParallelShardAccessStrategy(null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
     }
-  }
-
-  
 }

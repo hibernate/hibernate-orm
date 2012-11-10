@@ -18,40 +18,43 @@
 
 package org.hibernate.shards.query;
 
-import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Maulik Shah
  */
- public class SetCharacterEventTest extends TestCase {
+public class SetCharacterEventTest {
 
-   public void testSetCharacterEventPositionVal() {
-     SetCharacterEvent event = new SetCharacterEvent(-1, 'a');
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setCharacter(int position, char val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetCharacterEventPositionVal() {
+        SetCharacterEvent event = new SetCharacterEvent(-1, 'a');
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setCharacter(int position, char val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 
-   public void testSetCharacterEventNameVal() {
-     SetCharacterEvent event = new SetCharacterEvent(null, 'a');
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setCharacter(String name, char val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetCharacterEventNameVal() {
+        SetCharacterEvent event = new SetCharacterEvent(null, 'a');
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setCharacter(String name, char val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

@@ -17,42 +17,45 @@
  */
 package org.hibernate.shards.strategy.exit;
 
-import junit.framework.TestCase;
 import org.hibernate.shards.Shard;
-import org.hibernate.shards.ShardDefaultMock;
+import org.hibernate.shards.defaultmock.ShardDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class FirstNonNullResultExitStrategyTest extends TestCase {
+public class FirstNonNullResultExitStrategyTest {
 
-  public void testNullShard() {
-    FirstNonNullResultExitStrategy<Object> fnnres = new FirstNonNullResultExitStrategy<Object>();
-    try {
-      fnnres.addResult(null, null);
-      fail("expected npe");
-    } catch (NullPointerException npe) {
-      // good
+    @Test
+    public void testNullShard() {
+        FirstNonNullResultExitStrategy<Object> fnnres = new FirstNonNullResultExitStrategy<Object>();
+        try {
+            fnnres.addResult(null, null);
+            Assert.fail("expected npe");
+        } catch (NullPointerException npe) {
+            // good
+        }
     }
-  }
 
-  public void testAddResult() {
-    FirstNonNullResultExitStrategy<Object> fnnres = new FirstNonNullResultExitStrategy<Object>();
-    Shard shard1 = new ShardDefaultMock();
-    fnnres.addResult(null, shard1);
-    assertNull(fnnres.compileResults(null));
-    assertNull(fnnres.getShardOfResult());
+    @Test
+    public void testAddResult() {
+        FirstNonNullResultExitStrategy<Object> fnnres = new FirstNonNullResultExitStrategy<Object>();
+        Shard shard1 = new ShardDefaultMock();
+        fnnres.addResult(null, shard1);
+        Assert.assertNull(fnnres.compileResults(null));
+        Assert.assertNull(fnnres.getShardOfResult());
 
-    Object result = new Object();
-    Shard shard2 = new ShardDefaultMock();
-    fnnres.addResult(result, shard2);
-    assertSame(result, fnnres.compileResults(null));
-    assertSame(shard2, fnnres.getShardOfResult());
+        Object result = new Object();
+        Shard shard2 = new ShardDefaultMock();
+        fnnres.addResult(result, shard2);
+        Assert.assertSame(result, fnnres.compileResults(null));
+        Assert.assertSame(shard2, fnnres.getShardOfResult());
 
-    Object anotherResult = new Object();
-    Shard shard3 = new ShardDefaultMock();
-    fnnres.addResult(anotherResult, shard3);
-    assertSame(result, fnnres.compileResults(null));
-    assertSame(shard2, fnnres.getShardOfResult());
-  }
+        Object anotherResult = new Object();
+        Shard shard3 = new ShardDefaultMock();
+        fnnres.addResult(anotherResult, shard3);
+        Assert.assertSame(result, fnnres.compileResults(null));
+        Assert.assertSame(shard2, fnnres.getShardOfResult());
+    }
 }

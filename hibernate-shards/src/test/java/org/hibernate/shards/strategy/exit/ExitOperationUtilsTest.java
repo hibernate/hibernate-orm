@@ -18,47 +18,48 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Maulik Shah
  */
-public class ExitOperationUtilsTest extends TestCase {
+public class ExitOperationUtilsTest {
 
     private class MyInt {
-      private final Integer i;
+        private final Integer i;
 
-      private final String name;
+        private final String name;
 
-      private MyInt innerMyInt;
+        private MyInt innerMyInt;
 
-      public MyInt(int i, String name) {
-        this.i = i;
-        this.name = name;
-      }
+        public MyInt(int i, String name) {
+            this.i = i;
+            this.name = name;
+        }
 
-      public MyInt getInnerMyInt() {
-        return innerMyInt;
-      }
+        public MyInt getInnerMyInt() {
+            return innerMyInt;
+        }
 
-      public void setInnerMyInt(MyInt innerMyInt) {
-        this.innerMyInt = innerMyInt;
-      }
+        public void setInnerMyInt(MyInt innerMyInt) {
+            this.innerMyInt = innerMyInt;
+        }
 
-      public Number getValue() {
-        return i;
-      }
+        public Number getValue() {
+            return i;
+        }
 
-      public String getName() {
-        return name;
-      }
-
+        public String getName() {
+            return name;
+        }
     }
 
-  public void testGetPropertyValue() throws Exception {
-    MyInt myInt = new MyInt(1,"one");
-    myInt.setInnerMyInt(new MyInt(5, "five"));
-    assertEquals(5, ExitOperationUtils.getPropertyValue(myInt,"innerMyInt.value"));
-    assertEquals("five", ExitOperationUtils.getPropertyValue(myInt,"innerMyInt.name"));
-  }
+    @Test
+    public void testGetPropertyValue() throws Exception {
+        MyInt myInt = new MyInt(1, "one");
+        myInt.setInnerMyInt(new MyInt(5, "five"));
+        Assert.assertEquals(5, ExitOperationUtils.getPropertyValue(myInt, "innerMyInt.value"));
+        Assert.assertEquals("five", ExitOperationUtils.getPropertyValue(myInt, "innerMyInt.name"));
+    }
 }

@@ -19,86 +19,119 @@
 package org.hibernate.shards.strategy.exit;
 
 import org.hibernate.criterion.AggregateProjection;
+import org.hibernate.criterion.Projection;
 import org.hibernate.shards.internal.ShardsMessageLogger;
+import org.hibernate.shards.util.Sets;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Maulik Shah
  */
 public class AggregateExitOperation implements ProjectionExitOperation {
 
-  public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, AggregateExitOperation.class.getName());
+    public static final ShardsMessageLogger LOG = Logger.getMessageLogger(ShardsMessageLogger.class, AggregateExitOperation.class.getName());
 
-  private final SupportedAggregations aggregate;
-  private final String fieldName;
+    private final Projection projection;
+    private final SupportedAggregations aggregate;
+    private final String fieldName;
 
-  private enum SupportedAggregations {
+    private enum SupportedAggregations {
 
-    SUM("sum"),
-    MIN("min"),
-    MAX("max");
+        SUM("sum"),
+        MIN("min"),
+        MAX("max"),
+        COUNT("count"),
+        DISTINCT_COUNT("distinct count");
 
-    private final String aggregate;
+        private final String aggregate;
 
-    private SupportedAggregations(String s) {
-      this.aggregate = s;
+        private SupportedAggregations(String s) {
+            this.aggregate = s;
+        }
+
+        public String getAggregate() {
+            return aggregate;
+        }
     }
 
-    public String getAggregate() {
-      return aggregate;
+    public AggregateExitOperation(final AggregateProjection projection) {
+        /**
+         * an aggregateProjection's toString returns
+         * min( ..., max( ..., sum( ..., or avg( ...
+         * we just care about the name of the function
+         * which happens to be before the first left parenthesis
+         */
+        this.projection = projection;
+        final String projectionAsString = projection.toString();
+        final String aggregateName = projectionAsString.substring(0, projectionAsString.indexOf("("));
+        this.fieldName = projectionAsString.substring(projectionAsString.indexOf("(") + 1, projectionAsString.indexOf(")"));
+        try {
+            this.aggregate = SupportedAggregations.valueOf(aggregateName.replace(" ", "_").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            LOG.useOfUnsupportedAggregate(aggregateName);
+            throw e;
+        }
     }
-  }
 
-  public AggregateExitOperation(AggregateProjection projection) {
-    /**
-     * an aggregateProjection's toString returns
-     * min( ..., max( ..., sum( ..., or avg( ...
-     * we just care about the name of the function
-     * which happens to be before the first left parenthesis
-     */
-    String projectionAsString = projection.toString();
-    String aggregateName = projectionAsString.substring(0,projectionAsString.indexOf("("));
-    this.fieldName = projectionAsString.substring(projectionAsString.indexOf("(")+1, projectionAsString.indexOf(")"));
-    try {
-      this.aggregate = SupportedAggregations.valueOf(aggregateName.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      LOG.useOfUnsupportedAggregate(aggregateName);
-      throw e;
+    public List<Object> apply(final List<Object> results) {
+        final List<Object> nonNullResults = ExitOperationUtils.getNonNullList(results);
+
+        switch (aggregate) {
+            case MAX:
+                if (nonNullResults.size() == 0) {
+                    return Collections.singletonList(null);
+                } else {
+                    return Collections.singletonList((Object) Collections.max(ExitOperationUtils.getComparableList(nonNullResults)));
+                }
+            case MIN:
+                if (nonNullResults.size() == 0) {
+                    return Collections.singletonList(null);
+                } else {
+                    return Collections.singletonList((Object) Collections.min(ExitOperationUtils.getComparableList(nonNullResults)));
+                }
+            case COUNT:
+                return Collections.<Object>singletonList(getSum(results));
+            case DISTINCT_COUNT:
+                return Collections.<Object>singletonList(getDistinctSum(results));
+            case SUM:
+                return Collections.<Object>singletonList(getSum(nonNullResults, fieldName));
+            default:
+                LOG.unsupportedAggregateProjection(aggregate.getAggregate());
+                throw new UnsupportedOperationException("Aggregation Projection is unsupported: " + aggregate);
+        }
     }
-  }
 
-  public List<Object> apply(List<Object> results) {
-
-    List<Object> nonNullResults = ExitOperationUtils.getNonNullList(results);
-
-    switch(aggregate) {
-      case MAX:
-        return Collections.singletonList((Object) Collections.max(ExitOperationUtils.getComparableList(nonNullResults)));
-      case MIN:
-        return Collections.singletonList((Object) Collections.min(ExitOperationUtils.getComparableList(nonNullResults)));
-      case SUM:
-        return Collections.<Object>singletonList(getSum(nonNullResults, fieldName));
-      default:
-        LOG.unsupportedAggregateProjection(aggregate.getAggregate());
-        throw new UnsupportedOperationException("Aggregation Projection is unsupported: "+ aggregate);
+    private BigDecimal getSum(final List<Object> results) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (final Object obj : results) {
+            Number num = (Number) obj;
+            sum = sum.add(new BigDecimal(num.toString()));
+        }
+        return sum;
     }
-  }
 
-  private BigDecimal getSum(List<Object> results, String fieldName) {
-    BigDecimal sum = new BigDecimal(0.0);
-    for (Object obj : results) {
-      Number num = getNumber(obj, fieldName);
-      sum = sum.add(new BigDecimal(num.toString()));
+    private int getDistinctSum(final List<Object> results) {
+        final Set<Object> uniqueResult = Sets.newHashSet(results);
+        return uniqueResult.size();
     }
-    return sum;
-  }
 
-  private Number getNumber(Object obj, String fieldName) {
-    return (Number) ExitOperationUtils.getPropertyValue(obj, fieldName);
-  }
+    private BigDecimal getSum(final List<Object> results, final String fieldName) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (final Object obj : results) {
+            final Number num = getNumber(obj, fieldName);
+            sum = sum.add(new BigDecimal(num.toString()));
+        }
+        return sum;
+    }
+
+    private Number getNumber(Object obj, String fieldName) {
+        return (Number) ExitOperationUtils.getPropertyValue(obj, fieldName);
+    }
 
 }

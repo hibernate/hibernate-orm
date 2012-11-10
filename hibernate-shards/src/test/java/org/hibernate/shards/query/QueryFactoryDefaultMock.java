@@ -19,13 +19,21 @@
 package org.hibernate.shards.query;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 /**
  * @author Maulik Shah
  */
 public class QueryFactoryDefaultMock implements QueryFactory {
-  public Query createQuery(Session session) {
-    throw new UnsupportedOperationException();
-  }
+
+    @Override
+    public Query createQuery(Session session) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SQLQuery createSQLQuery(Session session) {
+        throw new UnsupportedOperationException();
+    }
 }

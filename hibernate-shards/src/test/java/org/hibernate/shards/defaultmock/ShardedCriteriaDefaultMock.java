@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards.criteria;
+package org.hibernate.shards.defaultmock;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -29,6 +29,9 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
+import org.hibernate.shards.criteria.CriteriaFactory;
+import org.hibernate.shards.criteria.CriteriaId;
+import org.hibernate.shards.criteria.ShardedCriteria;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 

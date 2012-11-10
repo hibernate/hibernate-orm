@@ -38,98 +38,90 @@ import java.util.List;
  */
 public class PermutedIntegrationTests extends TestSuite {
 
-  public static final List<Class<? extends TestCase>> CLASSES = Collections.unmodifiableList(buildListOfPermutedClasses());
+    public static final List<Class<? extends TestCase>> CLASSES = Collections.unmodifiableList(buildListOfPermutedClasses());
 
-  private static List<Class<? extends TestCase>> buildListOfPermutedClasses() {
-    List<Class<? extends TestCase>> classes = new ArrayList<Class<? extends TestCase>>();
-    classes.add(BaseShardingIntegrationTestCasePermutedIntegrationTest.class);
-    classes.add(IdGeneratorPermutedIntegrationTest.class);
-    classes.add(ModelPermutedIntegrationTest.class);
-    classes.add(InterceptorBehaviorPermutedIntegrationTest.class);
-    classes.add(ModelCriteriaPermutedIntegrationTest.class);
-    classes.add(ModelQueryPermutedIntegrationTest.class);
-    classes.add(ConfigPermutedIntegrationTest.class);
-    classes.add(DbAccessPermutedIntegrationTest.class);
-    return classes;
-  }
-
-  public static Test suite() {
-    TestSuite suiteOfTestsNeedingPermutation = buildSuiteOfTestsNeedingPermutation();
-    TestSuite permutedSuite = new TestSuite("Permuted Integration Tests");
-    /**
-     * Build a separate test suite for each permutation.  We are permuting
-     * along type of id generation, shard access strategy, and number of shards
-     */
-    for(Permutation perm : buildPermutationList()) {
-      TestSuite permutationSuite = new TestSuite(perm.toString());
-      permutedSuite.addTest(permutationSuite);
-      addPermutations(suiteOfTestsNeedingPermutation, perm, permutationSuite);
+    private static List<Class<? extends TestCase>> buildListOfPermutedClasses() {
+        List<Class<? extends TestCase>> classes = new ArrayList<Class<? extends TestCase>>();
+        return classes;
     }
-    return permutedSuite;
-  }
 
-  private static TestSuite buildSuiteOfTestsNeedingPermutation() {
-    TestSuite suite = new TestSuite();
-    for(Class<? extends TestCase> testClass : CLASSES) {
-      suite.addTestSuite(testClass);
-    }
-    return suite;
-  }
-
-  private static final int MIN_SHARDS = 1;
-  private static final int MAX_SHARDS = 3;
-
-  private static List<Permutation> buildPermutationList() {
-    List<Permutation> list = Lists.newArrayList();
-    for(IdGenType idGenType : IdGenType.values()) {
-      for(ShardAccessStrategyType sast : ShardAccessStrategyType.values()) {
-        for(int i = MIN_SHARDS; i <= MAX_SHARDS; i++) {
-          list.add(new Permutation(idGenType, sast, i));
-          if (idGenType.getSupportsVirtualSharding()) {
-            list.add(new Permutation(idGenType, sast, i, 9, true));
-            list.add(new Permutation(idGenType, sast, i, i, true));
-          }
+    public static Test suite() {
+        TestSuite suiteOfTestsNeedingPermutation = buildSuiteOfTestsNeedingPermutation();
+        TestSuite permutedSuite = new TestSuite("Permuted Integration Tests");
+        /**
+         * Build a separate test suite for each permutation.  We are permuting
+         * along type of id generation, shard access strategy, and number of shards
+         */
+        for (Permutation perm : buildPermutationList()) {
+            TestSuite permutationSuite = new TestSuite(perm.toString());
+            permutedSuite.addTest(permutationSuite);
+            addPermutations(suiteOfTestsNeedingPermutation, perm, permutationSuite);
         }
-      }
+        return permutedSuite;
     }
-    return list;
-  }
 
-  private static void addPermutations(Test t, Permutation perm, TestSuite permutationSuite) {
-    if(t instanceof TestCase) {
-      addActualPermutation((TestCase)t, perm, permutationSuite);
-    } else if (t instanceof TestSuite) {
-      TestSuite ts = (TestSuite) t;
-      TestSuite subSuite = new TestSuite(ts.getName());
-      permutationSuite.addTest(subSuite);
-      for(Test test : asIterable(ts)) {
-        addPermutations(test, perm, subSuite);
-      }
-    } else {
-      throw new RuntimeException("wuzzat?");
+    private static TestSuite buildSuiteOfTestsNeedingPermutation() {
+        TestSuite suite = new TestSuite();
+        for (Class<? extends TestCase> testClass : CLASSES) {
+            suite.addTestSuite(testClass);
+        }
+        return suite;
     }
-  }
 
-  private static void addActualPermutation(
-      TestCase testCase,
-      Permutation perm,
-      TestSuite permutationSuite) {
-      permutationSuite.addTest(createTest(testCase, perm));
-  }
+    private static final int MIN_SHARDS = 1;
+    private static final int MAX_SHARDS = 3;
 
-  private static Test createTest(
-      TestCase prototype,
-      Permutation permutation) {
-    Test t = TestSuite.createTest(prototype.getClass(), prototype.getName());
-    ((HasPermutation)t).setPermutation(permutation);
-    return t;
-  }
-
-  private static Iterable<Test> asIterable(TestSuite ts) {
-    List<Test> list = new ArrayList<Test>();
-    for(Enumeration testEnum = ts.tests(); testEnum.hasMoreElements(); ) {
-      list.add((Test) testEnum.nextElement());
+    private static List<Permutation> buildPermutationList() {
+        List<Permutation> list = Lists.newArrayList();
+        for (IdGenType idGenType : IdGenType.values()) {
+            for (ShardAccessStrategyType sast : ShardAccessStrategyType.values()) {
+                for (int i = MIN_SHARDS; i <= MAX_SHARDS; i++) {
+                    list.add(new Permutation(idGenType, sast, i));
+                    if (idGenType.getSupportsVirtualSharding()) {
+                        list.add(new Permutation(idGenType, sast, i, 9, true));
+                        list.add(new Permutation(idGenType, sast, i, i, true));
+                    }
+                }
+            }
+        }
+        return list;
     }
-    return list;
-  }
+
+    private static void addPermutations(Test t, Permutation perm, TestSuite permutationSuite) {
+        if (t instanceof TestCase) {
+            addActualPermutation((TestCase) t, perm, permutationSuite);
+        } else if (t instanceof TestSuite) {
+            TestSuite ts = (TestSuite) t;
+            TestSuite subSuite = new TestSuite(ts.getName());
+            permutationSuite.addTest(subSuite);
+            for (Test test : asIterable(ts)) {
+                addPermutations(test, perm, subSuite);
+            }
+        } else {
+            throw new RuntimeException("wuzzat?");
+        }
+    }
+
+    private static void addActualPermutation(
+            TestCase testCase,
+            Permutation perm,
+            TestSuite permutationSuite) {
+        permutationSuite.addTest(createTest(testCase, perm));
+    }
+
+    private static Test createTest(
+            TestCase prototype,
+            Permutation permutation) {
+        Test t = TestSuite.createTest(prototype.getClass(), prototype.getName());
+        ((HasPermutation) t).setPermutation(permutation);
+        return t;
+    }
+
+    private static Iterable<Test> asIterable(TestSuite ts) {
+        List<Test> list = new ArrayList<Test>();
+        for (Enumeration testEnum = ts.tests(); testEnum.hasMoreElements(); ) {
+            list.add((Test) testEnum.nextElement());
+        }
+        return list;
+    }
 }

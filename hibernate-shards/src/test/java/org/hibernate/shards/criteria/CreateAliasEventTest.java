@@ -18,17 +18,19 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
 import org.hibernate.sql.JoinType;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class CreateAliasEventTest extends TestCase {
+public class CreateAliasEventTest {
 
+    @Test
     public void testOnOpenSession() {
         final CreateAliasEvent event = new CreateAliasEvent(null, null);
         final boolean[] called = {false};
@@ -40,9 +42,10 @@ public class CreateAliasEventTest extends TestCase {
             }
         };
         event.onEvent(crit);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
     }
 
+    @Test
     public void testOnOpenSessionWithJoinType() {
         final CreateAliasEvent event = new CreateAliasEvent(null, null, JoinType.INNER_JOIN);
         final boolean[] called = {false};
@@ -55,6 +58,6 @@ public class CreateAliasEventTest extends TestCase {
             }
         };
         event.onEvent(crit);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
     }
 }

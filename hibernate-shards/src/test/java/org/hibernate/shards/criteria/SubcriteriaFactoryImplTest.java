@@ -24,14 +24,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.sql.JoinType;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SubcriteriaFactoryImplTest extends TestCase {
+public class SubcriteriaFactoryImplTest {
 
     private static final Iterable<CriteriaEvent> NO_EVENTS = Lists.newArrayList();
 
+    @Test
     public void testOnOpenSessionAssocPath() {
         SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null);
         final boolean[] called = {false};
@@ -43,44 +46,45 @@ public class SubcriteriaFactoryImplTest extends TestCase {
                 return null;
             }
         };
+
         sfi.createSubcriteria(crit, NO_EVENTS);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
         called[0] = false;
 
         MyCriteriaEvent mce1 = new MyCriteriaEvent();
         MyCriteriaEvent mce2 = new MyCriteriaEvent();
         sfi.createSubcriteria(crit, Lists.<CriteriaEvent>newArrayList(mce1, mce2));
-        assertTrue(called[0]);
-        assertEquals(1, mce1.numOnEventCalls);
-        assertEquals(1, mce2.numOnEventCalls);
+        Assert.assertTrue(called[0]);
+        Assert.assertEquals(1, mce1.numOnEventCalls);
+        Assert.assertEquals(1, mce2.numOnEventCalls);
     }
 
+    @Test
     public void testOnOpenSessionAssocPathAndJoinType() {
-        SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, JoinType.INNER_JOIN);
+        final SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, JoinType.INNER_JOIN);
         final boolean[] called = {false};
-        Criteria crit = new CriteriaDefaultMock() {
+        final Criteria crit = new CriteriaDefaultMock() {
 
             @Override
-            public Criteria createCriteria(String associationPath, JoinType joinType)
-                    throws HibernateException {
+            public Criteria createCriteria(final String associationPath, final JoinType joinType) throws HibernateException {
                 called[0] = true;
                 return null;
             }
         };
         sfi.createSubcriteria(crit, NO_EVENTS);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
         called[0] = false;
 
         MyCriteriaEvent mce1 = new MyCriteriaEvent();
         MyCriteriaEvent mce2 = new MyCriteriaEvent();
         sfi.createSubcriteria(crit, Lists.<CriteriaEvent>newArrayList(mce1, mce2));
-        assertTrue(called[0]);
-        assertEquals(1, mce1.numOnEventCalls);
-        assertEquals(1, mce2.numOnEventCalls);
+        Assert.assertTrue(called[0]);
+        Assert.assertEquals(1, mce1.numOnEventCalls);
+        Assert.assertEquals(1, mce2.numOnEventCalls);
     }
 
     public void testOnOpenSessionAssocPathAndAlias() {
-        SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, (String) null);
+        final SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, (String) null);
         final boolean[] called = {false};
         Criteria crit = new CriteriaDefaultMock() {
             @Override
@@ -91,19 +95,19 @@ public class SubcriteriaFactoryImplTest extends TestCase {
             }
         };
         sfi.createSubcriteria(crit, NO_EVENTS);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
         called[0] = false;
 
         MyCriteriaEvent mce1 = new MyCriteriaEvent();
         MyCriteriaEvent mce2 = new MyCriteriaEvent();
         sfi.createSubcriteria(crit, Lists.<CriteriaEvent>newArrayList(mce1, mce2));
-        assertTrue(called[0]);
-        assertEquals(1, mce1.numOnEventCalls);
-        assertEquals(1, mce2.numOnEventCalls);
+        Assert.assertTrue(called[0]);
+        Assert.assertEquals(1, mce1.numOnEventCalls);
+        Assert.assertEquals(1, mce2.numOnEventCalls);
     }
 
     public void testOnOpenSessionAssocPathAndAliasAndJoinType() {
-        SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, null, JoinType.INNER_JOIN);
+        final SubcriteriaFactoryImpl sfi = new SubcriteriaFactoryImpl(null, null, JoinType.INNER_JOIN);
         final boolean[] called = {false};
         Criteria crit = new CriteriaDefaultMock() {
             @Override
@@ -114,15 +118,15 @@ public class SubcriteriaFactoryImplTest extends TestCase {
             }
         };
         sfi.createSubcriteria(crit, NO_EVENTS);
-        assertTrue(called[0]);
+        Assert.assertTrue(called[0]);
         called[0] = false;
 
         MyCriteriaEvent mce1 = new MyCriteriaEvent();
         MyCriteriaEvent mce2 = new MyCriteriaEvent();
         sfi.createSubcriteria(crit, Lists.<CriteriaEvent>newArrayList(mce1, mce2));
-        assertTrue(called[0]);
-        assertEquals(1, mce1.numOnEventCalls);
-        assertEquals(1, mce2.numOnEventCalls);
+        Assert.assertTrue(called[0]);
+        Assert.assertEquals(1, mce1.numOnEventCalls);
+        Assert.assertEquals(1, mce2.numOnEventCalls);
     }
 
     private static final class MyCriteriaEvent implements CriteriaEvent {

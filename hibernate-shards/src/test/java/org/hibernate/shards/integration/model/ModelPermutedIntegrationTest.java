@@ -46,6 +46,8 @@ import org.hibernate.shards.strategy.ShardStrategyFactoryDefaultMock;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Sets;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -67,32 +69,12 @@ import static org.hibernate.shards.integration.model.ModelDataFactory.window;
  */
 public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCase {
 
-  /*
-  @Override
-  protected int getNumDatabases() {
-    return 3;
-  }
-
-  @Override
-  protected int getNumShards() {
-    return 9;
-  }
-
-  @Override
-  protected boolean isVirtualShardingEnabled() {
-    return true;
-  }
-
-  @Override
-  protected IdGenType getIdGenType() {
-    return IdGenType.SIMPLE;
-  }
-  */
-
+    @Test
     public void testMapping() {
         // if we succeed, our model is ok
     }
 
+    @Test
     public void testBuildingLifecycle() {
         session.beginTransaction();
         Set<Building> buildings = Sets.newHashSet();
@@ -115,27 +97,27 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         for (Integer count : counts) {
             total += count;
         }
-        assertEquals(getNumShards() * 2, total);
+        Assert.assertEquals(getNumShards() * 2, total);
         session.beginTransaction();
         Map<ShardId, List<Serializable>> shards = Maps.newHashMap();
         for (Building b : buildings) {
             Building bReloaded = reloadAssertNotNull(b);
-            assertEquals(b.getName(), bReloaded.getName());
-            assertEquals(b.getFloors().size(), bReloaded.getFloors().size());
+            Assert.assertEquals(b.getName(), bReloaded.getName());
+            Assert.assertEquals(b.getFloors().size(), bReloaded.getFloors().size());
             for (int i = 0; i < b.getFloors().size(); i++) {
                 Floor bFloor = b.getFloors().get(i);
                 Floor bReloadedFloor = bReloaded.getFloors().get(i);
-                assertEquals(bFloor.getNumber(), bReloadedFloor.getNumber());
-                assertEquals(2, bReloadedFloor.getElevators().size());
+                Assert.assertEquals(bFloor.getNumber(), bReloadedFloor.getNumber());
+                Assert.assertEquals(2, bReloadedFloor.getElevators().size());
             }
-            assertNotNull(bReloaded.getFloors().get(0).getGoingUp());
-            assertNull(bReloaded.getFloors().get(0).getGoingDown());
-            assertNull(bReloaded.getFloors().get(1).getGoingUp());
-            assertNotNull(bReloaded.getFloors().get(1).getGoingDown());
+            Assert.assertNotNull(bReloaded.getFloors().get(0).getGoingUp());
+            Assert.assertNull(bReloaded.getFloors().get(0).getGoingDown());
+            Assert.assertNull(bReloaded.getFloors().get(1).getGoingUp());
+            Assert.assertNotNull(bReloaded.getFloors().get(1).getGoingDown());
 
-            assertEquals(b.getElevators().size(), bReloaded.getElevators().size());
+            Assert.assertEquals(b.getElevators().size(), bReloaded.getElevators().size());
             ShardId shardIdForObject = getShardIdForObject(bReloaded);
-            assertNotNull(shardIdForObject);
+            Assert.assertNotNull(shardIdForObject);
             assertBuildingSubObjectsOnSameShard(bReloaded);
             List<Serializable> idList = shards.get(shardIdForObject);
             if (idList == null) {
@@ -148,37 +130,38 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
                 newFloor.setNumber(newFloor.getNumber() + 33);
             }
         }
-        assertEquals(getNumShards(), shards.size());
+        Assert.assertEquals(getNumShards(), shards.size());
         for (List<Serializable> idList : shards.values()) {
-            assertEquals(2, idList.size());
+            Assert.assertEquals(2, idList.size());
         }
         commitAndResetSession();
         session.beginTransaction();
         for (Building b : buildings) {
             Building bReloaded = reloadAssertNotNull(b);
-            assertNotNull(bReloaded);
-            assertEquals(b.getName() + " updated", bReloaded.getName());
+            Assert.assertNotNull(bReloaded);
+            Assert.assertEquals(b.getName() + " updated", bReloaded.getName());
             for (int i = 0; i < b.getFloors().size(); i++) {
                 Floor bFloor = b.getFloors().get(i);
                 Floor bReloadedFloor = bReloaded.getFloors().get(i);
-                assertEquals(33 + bFloor.getNumber(), bReloadedFloor.getNumber());
+                Assert.assertEquals(33 + bFloor.getNumber(), bReloadedFloor.getNumber());
             }
             ShardId shardIdForObject = getShardIdForObject(bReloaded);
             // make sure the object resides on the same shard as before
-            assertTrue(shards.get(shardIdForObject).contains(b.getBuildingId()));
+            Assert.assertTrue(shards.get(shardIdForObject).contains(b.getBuildingId()));
             assertBuildingSubObjectsOnSameShard(bReloaded);
             // now let's get rid of the buildings
             session.delete(bReloaded);
         }
         commitAndResetSession();
         for (Building b : buildings) {
-            assertNull(reload(b));
+            Assert.assertNull(reload(b));
             for (Floor f : b.getFloors()) {
-                assertNull(reload(f));
+                Assert.assertNull(reload(f));
             }
         }
     }
 
+    @Test
     public void testSaveOrUpdateAttached() {
         session.beginTransaction();
         Building b = building("b");
@@ -190,9 +173,10 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.saveOrUpdate(b);
         commitAndResetSession();
         b = reload(b);
-        assertEquals("b2", b.getName());
+        Assert.assertEquals("b2", b.getName());
     }
 
+    @Test
     public void testSaveOrUpdateDetached() {
         session.beginTransaction();
         Building b = building("b");
@@ -205,9 +189,10 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.saveOrUpdate(transientB);
         commitAndResetSession();
         b = reload(b);
-        assertEquals("b2", b.getName());
+        Assert.assertEquals("b2", b.getName());
     }
 
+    @Test
     public void testSavingOneToManyChildViaCascade() {
         session.beginTransaction();
         Building b = building("awesome building");
@@ -217,8 +202,8 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         assertBuildingSubObjectsOnSameShard(b);
         assertOnSameShard(b, f);
         resetSession();
-        assertNotNull(reload(b));
-        assertNotNull(reload(f));
+        Assert.assertNotNull(reload(b));
+        Assert.assertNotNull(reload(f));
     }
 
     /**
@@ -226,6 +211,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
      * calling save on them individually (no cascading involved).  The key here
      * is that both objects need to end up in the same shard.
      */
+    @Test
     public void testSavingOneToManyChildSeparatelyInSameSession() {
         session.beginTransaction();
         Building b = building("awesome building");
@@ -242,6 +228,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
      * calling save on them individually in separate sessions(no cascading involved).  The key here
      * is that both objects need to end up in the same shard.
      */
+    @Test
     public void testSavingOneToManyChildSeparatelyInDifferentSessions() {
         session.beginTransaction();
         Building b = building("awesome building");
@@ -262,12 +249,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
      * support top-level saves before associating some other object with that
      * entity, you'll get an exception.
      */
+    @Test
     public void testSavingOneToOneChildWithoutAssociationFails() {
         session.beginTransaction();
         Escalator esc = escalator(null, null);
         try {
             session.save(esc);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good;
         }
@@ -278,6 +266,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
      * support top-level saves after associating some other object with that
      * entity, you'll be cool.
      */
+    @Test
     public void testSavingOneToOneChildWithAssociationSucceeds() {
         session.beginTransaction();
         Building b = building("hi");
@@ -291,6 +280,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.getTransaction().commit();
     }
 
+    @Test
     public void testUpdatingOneToOneWithObjectFromWrongShardFailsOnSave() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -308,7 +298,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
         resetSession();
         session.beginTransaction();
         f = reloadAssertNotNull(f);
@@ -317,13 +307,14 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         try {
             session.save(f2);
             session.getTransaction().commit();
-            fail("expected Hibernate Exception");
+            Assert.fail("expected Hibernate Exception");
         } catch (HibernateException he) {
             // good
         }
         session.getTransaction().rollback();
     }
 
+    @Test
     public void testUpdatingOneToOneWithObjectFromWrongShardFailsOnCommitWithUnfetchedTarget() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -341,23 +332,24 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
         resetSession();
         session.beginTransaction();
         f = reloadAssertNotNull(f);
         f2 = reloadAssertNotNull(f2);
         f2.setGoingUp(f.getGoingUp());
-        assertTrue(f.getGoingUp() instanceof HibernateProxy);
-        assertTrue(((HibernateProxy) f.getGoingUp()).getHibernateLazyInitializer().isUninitialized());
+        Assert.assertTrue(f.getGoingUp() instanceof HibernateProxy);
+        Assert.assertTrue(((HibernateProxy) f.getGoingUp()).getHibernateLazyInitializer().isUninitialized());
         // note that we don't touch the escalator itself so that it is still a proxy
         try {
             session.getTransaction().commit();
-            fail("expected Transaction Exception");
+            Assert.fail("expected Transaction Exception");
         } catch (TransactionException te) {
             // good
         }
     }
 
+    @Test
     public void testUpdatingOneToOneWithObjectFromWrongShardFailsOnCommitWithFetchedTarget() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -375,7 +367,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(f.getGoingUp())));
         resetSession();
         session.beginTransaction();
         f = reloadAssertNotNull(f);
@@ -386,12 +378,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         f.getGoingUp().getBottomFloor();
         try {
             session.getTransaction().commit();
-            fail("expected Transaction Exception");
+            Assert.fail("expected Transaction Exception");
         } catch (TransactionException tc) {
             // good
         }
     }
 
+    @Test
     public void testManyToOneCascade() {
         session.beginTransaction();
         Building b = building("b");
@@ -405,13 +398,14 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         f1 = reloadAssertNotNull(f1);
         f2 = reloadAssertNotNull(f2);
         e = reloadAssertNotNull(e);
-        assertEquals(2, b.getFloors().size());
-        assertNotNull(b.getFloors().get(0).getGoingUp());
-        assertNotNull(b.getFloors().get(1).getGoingDown());
+        Assert.assertEquals(2, b.getFloors().size());
+        Assert.assertNotNull(b.getFloors().get(0).getGoingUp());
+        Assert.assertNotNull(b.getFloors().get(1).getGoingDown());
         assertBuildingSubObjectsOnSameShard(b);
         assertOnSameShard(b, f1, f2, e);
     }
 
+    @Test
     public void testUpdatingOneToManyWithObjectFromWrongShardFailsOnSave() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -426,7 +420,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(f2)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(f2)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -435,12 +429,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         try {
             session.save(b);
             session.getTransaction().commit();
-            fail("expected Hibernate Exception");
+            Assert.fail("expected Hibernate Exception");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testUpdatingOneToManyWithObjectFromWrongShardFailsOnCommit() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -455,7 +450,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -464,12 +459,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         // note that we don't touch the floor itself so that it is still a proxy
         try {
             session.getTransaction().commit();
-            fail("expected Transaction Exception");
+            Assert.fail("expected Transaction Exception");
         } catch (TransactionException te) {
             // good
         }
     }
 
+    @Test
     public void testUpdatingManyToOneWithObjectFromWrongShardFailsOnSave() {
         // test only applies if num dbs > 1
         if (getNumDatabases() == 1) {
@@ -484,7 +480,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -493,13 +489,14 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         try {
             session.save(f2);
             session.getTransaction().commit();
-            fail("expected Hibernate Exception");
+            Assert.fail("expected Hibernate Exception");
         } catch (HibernateException he) {
             // good, Hibernate detects that we're attempting to associate a collection
             // with multiple sessions
         }
     }
 
+    @Test
     public void testUpdatingManyToOneWithObjectFromWrongShardFailsOnCommit() {
         // test only applies if num dbs > 1
         if (getNumShards() == 1) {
@@ -514,7 +511,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Floor f2 = floor(b2, 24);
         session.save(b2);
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(f2).equals(getShardIdForObject(b)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -523,12 +520,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         // note that we don't touch the floor itself so that it is still a proxy
         try {
             session.getTransaction().commit();
-            fail("expected Transaction Exception");
+            Assert.fail("expected Transaction Exception");
         } catch (TransactionException te) {
             // good
         }
     }
 
+    @Test
     public void testLockShard() {
         session.beginTransaction();
         session.lockShard();
@@ -540,6 +538,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         assertOnSameShard(b1, b2);
     }
 
+    @Test
     public void testPerson() {
         session.beginTransaction();
         Person p = person("max", null);
@@ -548,14 +547,15 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.getTransaction().commit();
         resetSession();
         p = reloadAssertNotNull(p);
-        assertEquals("max", p.getName());
+        Assert.assertEquals("max", p.getName());
         t = reloadAssertNotNull(t);
         assertOnSameShard(p, t);
-        assertTrue(t.getEmployees().contains(p));
+        Assert.assertTrue(t.getEmployees().contains(p));
         // calling through to getTenantId() because of some weird cglib magic
-        assertEquals(p.getEmployer().getTenantId(), t.getTenantId());
+        Assert.assertEquals(p.getEmployer().getTenantId(), t.getTenantId());
     }
 
+    @Test
     public void testTenant() {
         session.beginTransaction();
         Tenant t = tenant("whaptech", null, null);
@@ -566,13 +566,14 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.getTransaction().commit();
         resetSession();
         t = reloadAssertNotNull(t);
-        assertEquals("whaptech", t.getName());
+        Assert.assertEquals("whaptech", t.getName());
         b = reloadAssertNotNull(b);
         assertOnSameShard(b, t);
-        assertTrue(b.getTenants().contains(t));
-        assertTrue(t.getBuildings().contains(b));
+        Assert.assertTrue(b.getTenants().contains(t));
+        Assert.assertTrue(t.getBuildings().contains(b));
     }
 
+    @Test
     public void testElevator() {
         Building b = building("hi");
         floor(b, 33);
@@ -589,11 +590,12 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         resetSession();
 
         b = reloadAssertNotNull(session, b);
-        assertEquals(1, b.getElevators().size());
-        assertEquals(b.getElevators().get(0), b.getFloors().get(0).getElevators().get(0));
+        Assert.assertEquals(1, b.getElevators().size());
+        Assert.assertEquals(b.getElevators().get(0), b.getFloors().get(0).getElevators().get(0));
         resetSession();
     }
 
+    @Test
     public void testSavingManyToManyOnDifferentShardsFailsOnSave() {
         if (getNumDatabases() == 1) {
             return;
@@ -605,7 +607,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.save(b);
         Serializable bId = b.getBuildingId();
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(t)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(t)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -614,16 +616,17 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         try {
             session.save(b);
             session.getTransaction().commit();
-            fail("expected Hibernate Exception");
+            Assert.fail("expected Hibernate Exception");
         } catch (HibernateException he) {
             // good, Hibernate should recognize this as an attempt to associate
             // a collection with two open sessions
         }
         resetSession();
         b = (Building) session.get(Building.class, bId);
-        assertTrue(b.getTenants().isEmpty());
+        Assert.assertTrue(b.getTenants().isEmpty());
     }
 
+    @Test
     public void testSavingManyToManyOnDifferentShardsFailsOnCommit() {
         if (getNumDatabases() == 1) {
             return;
@@ -635,7 +638,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.save(b);
         Serializable bId = b.getBuildingId();
         session.getTransaction().commit();
-        assertFalse("Should have been on different shards!", getShardIdForObject(t).equals(getShardIdForObject(b)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(t).equals(getShardIdForObject(b)));
         resetSession();
         session.beginTransaction();
         b = reloadAssertNotNull(b);
@@ -643,15 +646,16 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         b.getTenants().add(t);
         try {
             session.getTransaction().commit();
-            fail("Expected Transaction Exception");
+            Assert.fail("Expected Transaction Exception");
         } catch (TransactionException te) {
             // good
         }
         resetSession();
         b = (Building) session.get(Building.class, bId);
-        assertTrue(b.getTenants().isEmpty());
+        Assert.assertTrue(b.getTenants().isEmpty());
     }
 
+    @Test
     public void testParticularShardIds() throws Exception {
         // store a couple of buildings on different shards
         openSession();
@@ -659,7 +663,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
             saveBuilding("building-" + i);
         }
         List<Building> buildings = list(session.createQuery("from Building"));
-        assertEquals(getNumShards(), buildings.size());
+        Assert.assertEquals(getNumShards(), buildings.size());
         resetSession();
 
         ShardedSessionFactory ssf = (ShardedSessionFactory) session.getSessionFactory();
@@ -673,17 +677,17 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         ShardedSessionFactory ssfWithParticularShards = ssf.getSessionFactory(shardIds, strategyFactoryMock);
 
         // need to make sure closing functionality is disabled.
-        assertTrue(ssfWithParticularShards instanceof SubsetShardedSessionFactoryImpl);
-        assertFalse(ssfWithParticularShards.isClosed());
+        Assert.assertTrue(ssfWithParticularShards instanceof SubsetShardedSessionFactoryImpl);
+        Assert.assertFalse(ssfWithParticularShards.isClosed());
         ssfWithParticularShards.close();
-        assertFalse(ssfWithParticularShards.isClosed());
+        Assert.assertFalse(ssfWithParticularShards.isClosed());
 
-        assertNotNull(ssfWithParticularShards);
+        Assert.assertNotNull(ssfWithParticularShards);
         // should not have kept track of this special factory
-        assertEquals(allFactories.size(), ssfWithParticularShards.getSessionFactories().size());
+        Assert.assertEquals(allFactories.size(), ssfWithParticularShards.getSessionFactories().size());
 
         // did we use the new strategies?
-        assertEquals(shardIds, strategyFactoryMock.shardIds);
+        Assert.assertEquals(shardIds, strategyFactoryMock.shardIds);
 
         // do we only search certain shards?
         // we should only get back the buildings that were on shard 0, i.e. a single building
@@ -691,7 +695,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         List<Building> buildingsFromDesiredShards = list(sessionWithParticularShards.createQuery("from Building"));
 
         if (!isVirtualShardingEnabled()) {
-            assertEquals(1, buildingsFromDesiredShards.size());
+            Assert.assertEquals(1, buildingsFromDesiredShards.size());
         }
 
         // clean up memory for this new unrecorded session
@@ -714,13 +718,14 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         return strategyFactoryMock;
     }
 
+    @Test
     public void testBadShardIds() throws Exception {
         ShardedSessionFactory ssf = (ShardedSessionFactory) session.getSessionFactory();
         // this shardId doesn't exist
         List<ShardId> shardIds = Lists.newArrayList(new ShardId((short) -1));
         try {
             ssf.getSessionFactory(shardIds, new MyShardStrategyFactory());
-            fail("ShardedSessionFactory accepted an invalid shardId");
+            Assert.fail("ShardedSessionFactory accepted an invalid shardId");
         } catch (IllegalStateException e) {
             // good
         }
@@ -739,7 +744,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         }
     }
 
-
+    @Test
     public void testBuildingWithWindowCascadeOnSave() {
         session.beginTransaction();
         Building b = building("b1");
@@ -750,7 +755,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.getTransaction().commit();
         resetSession();
         b = reload(b);
-        assertNotNull(b.getFloors().get(0).getOffices().get(0).getWindow());
+        Assert.assertNotNull(b.getFloors().get(0).getOffices().get(0).getWindow());
     }
 
     public void testBuildingWithWindowNoCascadeOnUpdate() {
@@ -766,9 +771,10 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         b.getFloors().get(0).getOffices().get(0).setWindow(window(false));
         session.getTransaction().commit();
         b = reload(b);
-        assertNotNull(b.getFloors().get(0).getOffices().get(0).getWindow());
+        Assert.assertNotNull(b.getFloors().get(0).getOffices().get(0).getWindow());
     }
 
+    @Test
     public void testBuildingWithWindowNoCascadeFailsOnSave() {
         // test only applies if num dbs > 1
         if (getNumDatabases() == 1) {
@@ -786,17 +792,18 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Window w = window(false);
         session.save(w);
         Office o = b.getFloors().get(0).getOffices().get(0);
-        assertFalse("Should have been on different shards!", getShardIdForObject(o).equals(getShardIdForObject(w)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(o).equals(getShardIdForObject(w)));
         o.setWindow(w);
         try {
             session.save(o);
             session.getTransaction().commit();
-            fail("expected Hibernate Exception");
+            Assert.fail("expected Hibernate Exception");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testBuildingWithWindowNoCascadeFailsOnCommit() {
         // test only applies if num dbs > 1
         if (getNumDatabases() == 1) {
@@ -813,11 +820,11 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         b = reload(b);
         Window w = window(false);
         session.save(w);
-        assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(w)));
+        Assert.assertFalse("Should have been on different shards!", getShardIdForObject(b).equals(getShardIdForObject(w)));
         b.getFloors().get(0).getOffices().get(0).setWindow(w);
         try {
             session.getTransaction().commit();
-            fail("expected Transaction Exception");
+            Assert.fail("expected Transaction Exception");
         } catch (TransactionException te) {
             // good
         }
@@ -825,7 +832,7 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
 
     private void assertOnSameShard(Object... objs) {
         for (int i = 0; i < objs.length - 1; i++) {
-            assertEquals(getShardIdForObject(objs[i]), getShardIdForObject(objs[i + 1]));
+            Assert.assertEquals(getShardIdForObject(objs[i]), getShardIdForObject(objs[i + 1]));
         }
     }
 
@@ -862,10 +869,11 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.update(b);
         commitAndResetSession();
         b = reload(b);
-        assertEquals("other name", b.getName());
+        Assert.assertEquals("other name", b.getName());
     }
 
     // calling update on a detached entity should actually result in a merge
+    @Test
     public void testUpdateOfDetachedEntity() {
         session.beginTransaction();
         Building b = building("b1");
@@ -876,20 +884,22 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.update(transientB);
         commitAndResetSession();
         b = (Building) session.get(Building.class, transientB.getBuildingId());
-        assertNotNull(b);
-        assertEquals("a different name", b.getName());
+        Assert.assertNotNull(b);
+        Assert.assertEquals("a different name", b.getName());
     }
 
+    @Test
     public void testLoad() {
         session.beginTransaction();
         Building b = building("b1");
         session.save(b);
         commitAndResetSession();
         Building loadedB = (Building) session.load(b.getClass(), b.getBuildingId());
-        assertNotNull(loadedB);
-        assertEquals("b1", loadedB.getName());
+        Assert.assertNotNull(loadedB);
+        Assert.assertEquals("b1", loadedB.getName());
     }
 
+    @Test
     public void testLoadIntoObject() {
         session.beginTransaction();
         Building b = building("b1");
@@ -897,10 +907,11 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         commitAndResetSession();
         Building loadedB = new Building();
         session.load(loadedB, b.getBuildingId());
-        assertNotNull(loadedB);
-        assertEquals("b1", loadedB.getName());
+        Assert.assertNotNull(loadedB);
+        Assert.assertEquals("b1", loadedB.getName());
     }
 
+    @Test
     public void testLoadNonexisting() {
         session.beginTransaction();
         Building b = building("b1");
@@ -913,23 +924,24 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         try {
             Building loadedB = (Building) session.load(Building.class, id);
             loadedB.getName();
-            fail();
+            Assert.fail();
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testMergeUnpersisted() {
         session.beginTransaction();
         Building b = building("b1");
         Building returnedB = (Building) session.merge(b);
         commitAndResetSession();
-        Building mergedB = (Building) session.get(Building.class,
-                returnedB.getBuildingId());
-        assertNotNull(mergedB);
-        assertEquals("b1", mergedB.getName());
+        Building mergedB = (Building) session.get(Building.class, returnedB.getBuildingId());
+        Assert.assertNotNull(mergedB);
+        Assert.assertEquals("b1", mergedB.getName());
     }
 
+    @Test
     public void testMergePersisted() {
         session.beginTransaction();
         Building b = building("b1");
@@ -940,14 +952,15 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.beginTransaction();
         b.setName("b2");
         session.merge(b);
-        assertFalse(session.contains(b));
+        Assert.assertFalse(session.contains(b));
         commitAndResetSession();
 
         Building mergedB = (Building) session.get(Building.class, b.getBuildingId());
-        assertNotNull(mergedB);
-        assertEquals("b2", mergedB.getName());
+        Assert.assertNotNull(mergedB);
+        Assert.assertEquals("b2", mergedB.getName());
     }
 
+    @Test
     public void testReplicate() {
         session.beginTransaction();
         Building idB = building("just need to get id");
@@ -964,10 +977,11 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.replicate(b, ReplicationMode.IGNORE);
         commitAndResetSession();
         Building replicatedB = (Building) session.get(Building.class, id);
-        assertNotNull(replicatedB);
-        assertEquals("b1", replicatedB.getName());
+        Assert.assertNotNull(replicatedB);
+        Assert.assertEquals("b1", replicatedB.getName());
     }
 
+    @Test
     public void testReplicatePersistedAndOverwrite() {
         session.beginTransaction();
         Building b1 = building("b1");
@@ -980,20 +994,22 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.replicate(b2, ReplicationMode.OVERWRITE);
         commitAndResetSession();
         Building replicatedB2 = (Building) session.get(Building.class, b1.getBuildingId());
-        assertNotNull(replicatedB2);
-        assertEquals("b2", replicatedB2.getName());
+        Assert.assertNotNull(replicatedB2);
+        Assert.assertEquals("b2", replicatedB2.getName());
     }
 
+    @Test
     public void testPersist() {
         session.beginTransaction();
         Building b = building("b1");
         session.persist(b);
         commitAndResetSession();
         Building returnedB = (Building) session.get(b.getClass(), b.getBuildingId());
-        assertNotNull(returnedB);
-        assertEquals("b1", returnedB.getName());
+        Assert.assertNotNull(returnedB);
+        Assert.assertEquals("b1", returnedB.getName());
     }
 
+    @Test
     public void testRefresh() {
         session.beginTransaction();
         Building b = building("b1");
@@ -1002,18 +1018,19 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         Building reloadedB = reload(b);
         reloadedB.setName("b2");
         commitAndResetSession();
-        assertEquals("b1", b.getName());
+        Assert.assertEquals("b1", b.getName());
         session.refresh(b);
-        assertEquals("b2", b.getName());
+        Assert.assertEquals("b2", b.getName());
     }
 
     // calling update on a nonexistent entity should result in an exception
+    @Test
     public void testUpdateOfNonexistentEntity() {
         session.beginTransaction();
         Building b = building("b1");
         try {
             session.update(b);
-            fail("expected HE");
+            Assert.fail("expected HE");
         } catch (HibernateException he) {
             // good
         }
@@ -1027,12 +1044,13 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.update(b);
         try {
             session.getTransaction().commit();
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
     }
 
+    @Test
     public void testDeleteOfAttachedEntity() {
         session.beginTransaction();
         Building b = building("b1");
@@ -1042,9 +1060,10 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.delete(b);
         commitAndResetSession();
         b = reload(b);
-        assertNull(b);
+        Assert.assertNull(b);
     }
 
+    @Test
     public void testDeleteOfDetachedEntity() {
         session.beginTransaction();
         Building b = building("b1");
@@ -1056,40 +1075,43 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         session.delete(detached);
         commitAndResetSession();
         b = reload(b);
-        assertNull(b);
+        Assert.assertNull(b);
     }
 
+    @Test
     public void testGetEntityName() {
         Building b = building("b1");
         try {
             session.getEntityName(b);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
         session.save(b);
-        assertEquals(Building.class.getName(), session.getEntityName(b));
+        Assert.assertEquals(Building.class.getName(), session.getEntityName(b));
     }
 
+    @Test
     public void testGetCurrentLockMode() {
         session.beginTransaction();
         Building b = building("b1");
         try {
             session.getCurrentLockMode(b);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
         session.save(b);
-        assertEquals(LockMode.WRITE, session.getCurrentLockMode(b));
+        Assert.assertEquals(LockMode.WRITE, session.getCurrentLockMode(b));
     }
 
+    @Test
     public void testLock() {
         session.beginTransaction();
         Building b = building("b1");
         try {
             session.buildLockRequest(LockOptions.READ).lock(b);
-            fail("expected he");
+            Assert.fail("expected he");
         } catch (HibernateException he) {
             // good
         }
@@ -1097,10 +1119,11 @@ public class ModelPermutedIntegrationTest extends BaseShardingIntegrationTestCas
         commitAndResetSession();
         b = reload(b);
         session.buildLockRequest(LockOptions.UPGRADE).lock(b);
-        assertEquals(LockOptions.UPGRADE, session.getCurrentLockMode(b));
+        Assert.assertEquals(LockOptions.UPGRADE, session.getCurrentLockMode(b));
     }
 
     // this is a really good way to shake out synchronization bugs
+    @Test
     public void xtestOverAndOver() throws Exception {
         final boolean[] go = {true};
         Runnable r = new Runnable() {

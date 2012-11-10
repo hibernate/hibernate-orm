@@ -16,28 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-package org.hibernate.shards;
+package org.hibernate.shards.criteria;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.hibernate.shards.integration.PermutedIntegrationTests;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.AggregateProjection;
+import org.hibernate.criterion.Projection;
 
 /**
- * This class is really just here for IDE users who want to run their tests
- * directly instead of through Ant.
+ * Event that allows a Projection to be lazily added to a Criteria.
  *
- * @author maxr@google.com (Max Ross)
+ * @author aviadl@sentrigo.com (Aviad Lichtenstadt)
+ * @see org.hibernate.Criteria#setProjection(org.hibernate.criterion.Projection)
  */
-public class AllTests extends TestSuite {
+class GeneralProjectionEvent implements CriteriaEvent {
 
+    // the Projection we're going to add when the event fires
+    private final Projection projection;
 
-  public static Test suite() {
-    TestSuite suite = new TestSuite();
-    for(Class<? extends TestCase> testClass : NonPermutedTests.CLASSES) {
-      suite.addTestSuite(testClass);
+    public GeneralProjectionEvent(Projection projection) {
+        this.projection = projection;
     }
-    suite.addTest(PermutedIntegrationTests.suite());
-    return suite;
-  }
+
+    @Override
+    public void onEvent(final Criteria crit) {
+        crit.setProjection(projection);
+    }
 }

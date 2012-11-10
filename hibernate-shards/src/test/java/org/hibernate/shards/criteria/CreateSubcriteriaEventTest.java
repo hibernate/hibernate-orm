@@ -18,32 +18,36 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.hibernate.shards.defaultmock.SubcriteriaFactoryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class CreateSubcriteriaEventTest extends TestCase {
-  public void testOnEvent() {
-    final Criteria[] calledWithCrit = {null};
-    final SubcriteriaFactory[] calledWithFactory = {null};
+public class CreateSubcriteriaEventTest {
 
-    ShardedSubcriteriaImpl.SubcriteriaRegistrar provider = new ShardedSubcriteriaImpl.SubcriteriaRegistrar() {
-      public void establishSubcriteria(
-          Criteria parentCriteria,
-          SubcriteriaFactory subcriteriaFactory) {
-        calledWithCrit[0] = parentCriteria;
-        calledWithFactory[0] = subcriteriaFactory;
-      }
-    };
+    @Test
+    public void testOnEvent() {
+        final Criteria[] calledWithCrit = {null};
+        final SubcriteriaFactory[] calledWithFactory = {null};
 
-    SubcriteriaFactory factory = new SubcriteriaFactoryDefaultMock();
-    CreateSubcriteriaEvent cse = new CreateSubcriteriaEvent(factory, provider);
-    Criteria crit = new CriteriaDefaultMock();
-    cse.onEvent(crit);
-    assertSame(crit, calledWithCrit[0]);
-    assertSame(factory, calledWithFactory[0]);
-  }
+        ShardedSubcriteriaImpl.SubcriteriaRegistrar provider = new ShardedSubcriteriaImpl.SubcriteriaRegistrar() {
+            public void establishSubcriteria(
+                    Criteria parentCriteria,
+                    SubcriteriaFactory subcriteriaFactory) {
+                calledWithCrit[0] = parentCriteria;
+                calledWithFactory[0] = subcriteriaFactory;
+            }
+        };
+
+        SubcriteriaFactory factory = new SubcriteriaFactoryDefaultMock();
+        CreateSubcriteriaEvent cse = new CreateSubcriteriaEvent(factory, provider);
+        Criteria crit = new CriteriaDefaultMock();
+        cse.onEvent(crit);
+        Assert.assertSame(crit, calledWithCrit[0]);
+        Assert.assertSame(factory, calledWithFactory[0]);
+    }
 }

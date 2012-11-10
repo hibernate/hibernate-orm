@@ -18,75 +18,79 @@
 
 package org.hibernate.shards.session;
 
-import junit.framework.TestCase;
 import org.hibernate.CallbackException;
 import org.hibernate.Interceptor;
-import org.hibernate.shards.ShardId;
 import org.hibernate.shards.defaultmock.InterceptorDefaultMock;
 import org.hibernate.type.Type;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.Serializable;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class CrossShardRelationshipDetectingInterceptorDecoratorTest extends TestCase {
+public class CrossShardRelationshipDetectingInterceptorDecoratorTest {
 
-  public void testOnFlushDirty() {
-    final boolean[] onFlushDirtyCalled = {false, false};
-    Interceptor interceptor = new InterceptorDefaultMock() {
-      @Override
-      public boolean onFlushDirty(Object entity, Serializable id,
-          Object[] currentState, Object[] previousState, String[] propertyNames,
-          Type[] types) throws CallbackException {
-        onFlushDirtyCalled[0] = true;
-        return true;
-      }
-    };
-    ShardId shardId = new ShardId(0);
-    ShardIdResolver resolver = new ShardIdResolverDefaultMock();
+    @Test
+    public void testOnFlushDirty() {
+        final boolean[] onFlushDirtyCalled = {false, false};
+        Interceptor interceptor = new InterceptorDefaultMock() {
+            @Override
+            public boolean onFlushDirty(Object entity, Serializable id,
+                                        Object[] currentState, Object[] previousState, String[] propertyNames,
+                                        Type[] types) throws CallbackException {
+                onFlushDirtyCalled[0] = true;
+                return true;
+            }
+        };
 
-    CrossShardRelationshipDetectingInterceptor crdi = new CrossShardRelationshipDetectingInterceptor(resolver) {
-      @Override
-      public boolean onFlushDirty(Object entity, Serializable id,
-          Object[] currentState, Object[] previousState, String[] propertyNames,
-          Type[] types) throws CallbackException {
-        onFlushDirtyCalled[1] = true;
-        return false;
-      }
-    };
-    CrossShardRelationshipDetectingInterceptorDecorator decorator =
-        new CrossShardRelationshipDetectingInterceptorDecorator(crdi, interceptor);
+        final ShardIdResolver resolver = new ShardIdResolverDefaultMock();
 
-    assertTrue(decorator.onFlushDirty(null, null, null, null, null, null));
-    assertTrue(onFlushDirtyCalled[0]);
-    assertTrue(onFlushDirtyCalled[1]);
-  }
+        CrossShardRelationshipDetectingInterceptor crdi = new CrossShardRelationshipDetectingInterceptor(resolver) {
+            @Override
+            public boolean onFlushDirty(Object entity, Serializable id,
+                                        Object[] currentState, Object[] previousState, String[] propertyNames,
+                                        Type[] types) throws CallbackException {
+                onFlushDirtyCalled[1] = true;
+                return false;
+            }
+        };
 
-  public void testOnCollectionUpdate() {
-    final boolean[] onCollectionUpdateCalled = {false, false};
-    Interceptor interceptor = new InterceptorDefaultMock() {
-      @Override
-      public void onCollectionUpdate(Object collection, Serializable key)
-          throws CallbackException {
-        onCollectionUpdateCalled[0] = true;
-      }
-    };
-    ShardId shardId = new ShardId(0);
-    ShardIdResolver resolver = new ShardIdResolverDefaultMock();
+        CrossShardRelationshipDetectingInterceptorDecorator decorator =
+                new CrossShardRelationshipDetectingInterceptorDecorator(crdi, interceptor);
 
-    CrossShardRelationshipDetectingInterceptor crdi = new CrossShardRelationshipDetectingInterceptor(resolver) {
-      @Override
-      public void onCollectionUpdate(Object collection, Serializable key)
-          throws CallbackException {
-        onCollectionUpdateCalled[1] = true;
-      }
-    };
-    CrossShardRelationshipDetectingInterceptorDecorator decorator =
-        new CrossShardRelationshipDetectingInterceptorDecorator(crdi, interceptor);
+        Assert.assertTrue(decorator.onFlushDirty(null, null, null, null, null, null));
+        Assert.assertTrue(onFlushDirtyCalled[0]);
+        Assert.assertTrue(onFlushDirtyCalled[1]);
+    }
 
-    decorator.onCollectionUpdate(null, null);
-    assertTrue(onCollectionUpdateCalled[0]);
-    assertTrue(onCollectionUpdateCalled[1]);
-  }
+    @Test
+    public void testOnCollectionUpdate() {
+        final boolean[] onCollectionUpdateCalled = {false, false};
+        Interceptor interceptor = new InterceptorDefaultMock() {
+            @Override
+            public void onCollectionUpdate(Object collection, Serializable key)
+                    throws CallbackException {
+                onCollectionUpdateCalled[0] = true;
+            }
+        };
+
+        final ShardIdResolver resolver = new ShardIdResolverDefaultMock();
+
+        CrossShardRelationshipDetectingInterceptor crdi = new CrossShardRelationshipDetectingInterceptor(resolver) {
+            @Override
+            public void onCollectionUpdate(Object collection, Serializable key)
+                    throws CallbackException {
+                onCollectionUpdateCalled[1] = true;
+            }
+        };
+
+        CrossShardRelationshipDetectingInterceptorDecorator decorator =
+                new CrossShardRelationshipDetectingInterceptorDecorator(crdi, interceptor);
+
+        decorator.onCollectionUpdate(null, null);
+        Assert.assertTrue(onCollectionUpdateCalled[0]);
+        Assert.assertTrue(onCollectionUpdateCalled[1]);
+    }
 }

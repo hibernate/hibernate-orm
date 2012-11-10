@@ -18,13 +18,11 @@
 
 package org.hibernate.shards;
 
-import junit.framework.TestCase;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
@@ -35,6 +33,9 @@ import org.hibernate.shards.session.ShardedSessionFactoryImpl;
 import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.ShardStrategyFactoryDefaultMock;
 import org.hibernate.shards.util.Lists;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,33 +43,30 @@ import java.util.List;
 /**
  * @author Maulik Shah
  */
-public class ShardedConfigurationTest extends TestCase {
+public class ShardedConfigurationTest {
 
     private MyShardStrategyFactory shardStrategyFactory;
     private ShardConfiguration shardConfig;
     private ShardedConfiguration shardedConfiguration;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
 
         shardStrategyFactory = new MyShardStrategyFactory();
         Configuration protoConfig = new Configuration();
         protoConfig.setProperty(Environment.DIALECT, HSQLDialect.class.getName());
-        shardConfig = new MyShardConfig("user", "url", "pwd", "sfname", "prefix", 33);
 
-        shardedConfiguration =
-                new ShardedConfiguration(
-                        protoConfig,
-                        Collections.singletonList(shardConfig),
-                        shardStrategyFactory);
+        shardConfig = new MyShardConfig("user", "url", "pwd", "sfname", "prefix", 33);
+        shardedConfiguration = new ShardedConfiguration(protoConfig, Collections.singletonList(shardConfig),
+                shardStrategyFactory);
     }
 
+    @Test
     public void testBuildShardedSessionFactoryPreconditions() throws Exception {
         List<ShardConfiguration> shardConfigs = Lists.newArrayList(shardConfig);
         try {
             new ShardedConfiguration(null, shardConfigs, shardStrategyFactory);
-            fail("Expected npe");
+            Assert.fail("Expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -76,7 +74,7 @@ public class ShardedConfigurationTest extends TestCase {
         Configuration config = new Configuration();
         try {
             new ShardedConfiguration(config, null, shardStrategyFactory);
-            fail("Expected npe");
+            Assert.fail("Expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -84,42 +82,45 @@ public class ShardedConfigurationTest extends TestCase {
         shardConfigs.clear();
         try {
             new ShardedConfiguration(config, shardConfigs, shardStrategyFactory);
-            fail("Expected iae");
+            Assert.fail("Expected iae");
         } catch (IllegalArgumentException iae) {
             // good
         }
     }
 
+    @Test
     public void testShardIdRequired() {
         ShardConfiguration config =
                 new MyShardConfig("user", "url", "pwd", "sfname", null, null);
         try {
             shardedConfiguration.populatePrototypeWithVariableProperties(config);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
     }
 
+    @Test
     public void testBuildShardedSessionFactory() {
         ShardedSessionFactoryImpl ssfi = (ShardedSessionFactoryImpl) shardedConfiguration.buildShardedSessionFactory();
-        assertNotNull(ssfi);
+        Assert.assertNotNull(ssfi);
         // make sure the session factory contained in the sharded session factory
         // has the number of session factories we expect
         List<SessionFactory> sfList = ssfi.getSessionFactories();
-        assertEquals(1, sfList.size());
+        Assert.assertEquals(1, sfList.size());
     }
 
+    @Test
     public void testRequiresShardLock() {
         Mappings mappings = null;
         Property property = new Property();
-        assertFalse(shardedConfiguration.doesNotSupportTopLevelSave(property));
+        Assert.assertFalse(shardedConfiguration.doesNotSupportTopLevelSave(property));
         ManyToOne mto = new ManyToOne(mappings, new Table());
         property.setValue(mto);
-        assertFalse(shardedConfiguration.doesNotSupportTopLevelSave(property));
+        Assert.assertFalse(shardedConfiguration.doesNotSupportTopLevelSave(property));
         OneToOne oto = new OneToOne(mappings, new Table(), new RootClass());
         property.setValue(oto);
-        assertTrue(shardedConfiguration.doesNotSupportTopLevelSave(property));
+        Assert.assertTrue(shardedConfiguration.doesNotSupportTopLevelSave(property));
     }
 
     private class MyShardStrategyFactory extends ShardStrategyFactoryDefaultMock {

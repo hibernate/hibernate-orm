@@ -30,47 +30,47 @@ import java.util.List;
  */
 public class OrderExitOperation implements ExitOperation {
 
-  private final Order order;
-  private final String propertyName;
+    private final Order order;
+    private final String propertyName;
 
-  public OrderExitOperation(Order order) {
-    Preconditions.checkState(order.toString().toLowerCase().endsWith("asc") ||
-                             order.toString().toLowerCase().endsWith("desc"));
+    public OrderExitOperation(final Order order) {
+        Preconditions.checkState(order.toString().toLowerCase().endsWith("asc") ||
+                order.toString().toLowerCase().endsWith("desc"));
 
-    this.order = order;
-    this.propertyName = getSortingProperty(order);
-  }
-
-  public List<Object> apply(List<Object> results) {
-    List<Object> nonNullList = ExitOperationUtils.getNonNullList(results);
-    Comparator<Object> comparator = new Comparator<Object>() {
-      public int compare(Object o1, Object o2) {
-        if (o1 == o2) {
-          return 0;
-        }
-        Comparable<Object> o1Value = ExitOperationUtils.getPropertyValue(o1, propertyName);
-        Comparable<Object> o2Value = ExitOperationUtils.getPropertyValue(o2, propertyName);
-        if (o1Value == null) {
-          return -1;
-        }
-        return o1Value.compareTo(o2Value);
-      }
-    };
-
-    Collections.sort(nonNullList, comparator);
-    if (order.toString().endsWith("desc")) {
-      Collections.reverse(nonNullList);
+        this.order = order;
+        this.propertyName = getSortingProperty(order);
     }
 
-    return nonNullList;
-  }
+    public List<Object> apply(final List<Object> results) {
+        final List<Object> nonNullList = ExitOperationUtils.getNonNullList(results);
+        final Comparator<Object> comparator = new Comparator<Object>() {
+            public int compare(Object o1, Object o2) {
+                if (o1 == o2) {
+                    return 0;
+                }
+                Comparable<Object> o1Value = ExitOperationUtils.getPropertyValue(o1, propertyName);
+                Comparable<Object> o2Value = ExitOperationUtils.getPropertyValue(o2, propertyName);
+                if (o1Value == null) {
+                    return -1;
+                }
+                return o1Value.compareTo(o2Value);
+            }
+        };
 
-  private static String getSortingProperty(Order order) {
-    /**
-     * This method relies on the format that Order is using:
-     * propertyName + ' ' + (ascending?"asc":"desc")
-     */
-    String str = order.toString();
-    return str.substring(0, str.indexOf(' '));
-  }
+        Collections.sort(nonNullList, comparator);
+        if (order.toString().endsWith("desc")) {
+            Collections.reverse(nonNullList);
+        }
+
+        return nonNullList;
+    }
+
+    public static String getSortingProperty(final Order order) {
+        /**
+         * This method relies on the format that Order is using:
+         * propertyName + ' ' + (ascending?"asc":"desc")
+         */
+        final String str = order.toString();
+        return str.substring(0, str.indexOf(' '));
+    }
 }

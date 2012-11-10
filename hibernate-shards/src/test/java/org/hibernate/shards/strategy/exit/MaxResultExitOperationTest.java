@@ -18,40 +18,42 @@
 
 package org.hibernate.shards.strategy.exit;
 
-
-import junit.framework.TestCase;
 import org.hibernate.shards.util.Lists;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.List;
 
 /**
  * @author Maulik Shah
  */
-public class MaxResultExitOperationTest extends TestCase {
+public class MaxResultExitOperationTest {
 
-  public void testApply() {
-    MaxResultsExitOperation exitOp = new MaxResultsExitOperation(3);
+    @Test
+    public void testApply() {
+        MaxResultsExitOperation exitOp = new MaxResultsExitOperation(3);
 
-    List<Object> list = Lists.<Object>newArrayList(1, 2, null, 3, 4, 5);
+        List<Object> list = Lists.<Object>newArrayList(1, 2, null, 3, 4, 5);
 
-    List<Object> objects = exitOp.apply(list);
-    assertEquals(3, objects.size());
-    assertNoNullElements(objects);
-    assertEquals(Lists.newArrayList(1, 2, 3), objects);
-  }
-
-  public void testApplyWithFewerElementsThanMaxResults() {
-    MaxResultsExitOperation exitOp = new MaxResultsExitOperation(8);
-    List<Object> list = Lists.<Object>newArrayList(1, 2, null, 3, 4, 5);
-    List<Object> objects = exitOp.apply(list);
-    assertEquals(5, objects.size());
-    assertNoNullElements(objects);
-    assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), objects);
-  }
-
-  private void assertNoNullElements(List<Object> objects) {
-    for(Object obj : objects) {
-      assertTrue(obj != null);
+        List<Object> objects = exitOp.apply(list);
+        Assert.assertEquals(3, objects.size());
+        assertNoNullElements(objects);
+        Assert.assertEquals(Lists.newArrayList(1, 2, 3), objects);
     }
-  }
+
+    @Test
+    public void testApplyWithFewerElementsThanMaxResults() {
+        MaxResultsExitOperation exitOp = new MaxResultsExitOperation(8);
+        List<Object> list = Lists.<Object>newArrayList(1, 2, null, 3, 4, 5);
+        List<Object> objects = exitOp.apply(list);
+        Assert.assertEquals(5, objects.size());
+        assertNoNullElements(objects);
+        Assert.assertEquals(Lists.newArrayList(1, 2, 3, 4, 5), objects);
+    }
+
+    private void assertNoNullElements(List<Object> objects) {
+        for (Object obj : objects) {
+            Assert.assertTrue(obj != null);
+        }
+    }
 }

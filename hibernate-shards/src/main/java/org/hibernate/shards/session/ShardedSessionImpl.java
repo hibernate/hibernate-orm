@@ -21,7 +21,6 @@ package org.hibernate.shards.session;
 import org.hibernate.*;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
@@ -58,6 +57,7 @@ import org.hibernate.shards.query.ExitOperationsQueryCollector;
 import org.hibernate.shards.query.NamedQueryFactoryImpl;
 import org.hibernate.shards.query.QueryId;
 import org.hibernate.shards.query.ShardedQueryImpl;
+import org.hibernate.shards.query.ShardedSQLQueryImpl;
 import org.hibernate.shards.stat.ShardedSessionStatistics;
 import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.exit.FirstNonNullResultExitStrategy;
@@ -173,6 +173,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
                 return "get(Class class, Serializable id)";
             }
         };
+
         return applyGetOperation(shardOp, new ShardResolutionStrategyDataImpl(clazz, id));
     }
 
@@ -347,13 +348,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
 
     @Override
     public boolean isOpen() {
-        // one open session means the sharded session is open
-        for (final Shard shard : shards) {
-            if (shard.getSession() != null && shard.getSession().isOpen()) {
-                return true;
-            }
-        }
-        return false;
+        return !closed;
     }
 
     @Override
@@ -567,40 +562,22 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
 
     @Override
     public void saveOrUpdate(final Object object) throws HibernateException {
-        applySaveOrUpdateOperation(SAVE_OR_UPDATE_SIMPLE, object);
+        applySaveOrUpdateOperation(new SimpleSaveOrUpdateOperation(), object);
     }
 
     @Override
     public void saveOrUpdate(final String entityName, final Object object) throws HibernateException {
-        final SaveOrUpdateOperation op = new SaveOrUpdateOperation() {
-            public void saveOrUpdate(Shard shard, Object object) {
-                shard.establishSession().saveOrUpdate(entityName, object);
-            }
-
-            public void merge(Shard shard, Object object) {
-                shard.establishSession().merge(entityName, object);
-            }
-        };
-        applySaveOrUpdateOperation(op, object);
+        applySaveOrUpdateOperation(new EntityNameSaveOrUpdateOperation(entityName), object);
     }
 
     @Override
-    public void update(Object object) throws HibernateException {
-        applyUpdateOperation(SIMPLE_UPDATE_OPERATION, object);
+    public void update(final Object object) throws HibernateException {
+        applyUpdateOperation(new SimpleUpdateOperation(), object);
     }
 
     @Override
     public void update(final String entityName, final Object object) throws HibernateException {
-        final UpdateOperation op = new UpdateOperation() {
-            public void update(Shard shard, Object object) {
-                shard.establishSession().update(entityName, object);
-            }
-
-            public void merge(Shard shard, Object object) {
-                shard.establishSession().merge(entityName, object);
-            }
-        };
-        applyUpdateOperation(op, object);
+        applyUpdateOperation(new EntityNameUpdateOperation(entityName), object);
     }
 
     @Override
@@ -649,20 +626,13 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         shardIdsToShards.get(shardId).establishSession().persist(entityName, object);
     }
 
-
     @Override
     public void delete(Object object) throws HibernateException {
-        applyDeleteOperation(SIMPLE_DELETE_OPERATION, object);
+        applyDeleteOperation(new SimpleDeleteOperation(), object);
     }
 
-    public void delete(final String entityName, final Object object)
-            throws HibernateException {
-        DeleteOperation op = new DeleteOperation() {
-            public void delete(Shard shard, Object object) {
-                shard.establishSession().delete(entityName, object);
-            }
-        };
-        applyDeleteOperation(op, object);
+    public void delete(final String entityName, final Object object) throws HibernateException {
+        applyDeleteOperation(new EntityNameDeleteOperation(entityName), object);
     }
 
     @Override
@@ -705,11 +675,7 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
 
     @Override
     public void refresh(final Object object) throws HibernateException {
-        final RefreshOperation op = new RefreshOperation() {
-            public void refresh(final Shard shard, final Object object) {
-                shard.establishSession().refresh(object);
-            }
-        };
+        final RefreshOperation op = new DefaultRefreshOperation();
         applyRefreshOperation(op, object);
     }
 
@@ -1010,7 +976,10 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
      */
     @Override
     public SQLQuery createSQLQuery(final String queryString) throws HibernateException {
-        throw new UnsupportedOperationException();
+        return new ShardedSQLQueryImpl(new QueryId(nextQueryId++),
+                shards,
+                new AdHocQueryFactoryImpl(queryString),
+                shardStrategy.getShardAccessStrategy());
     }
 
     /**
@@ -1207,7 +1176,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
 
     @Override
     public void doWork(final Work work) throws HibernateException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (final Shard shard : shards) {
+            shard.getSession().doWork(work);
+        }
     }
 
     @Override
@@ -1599,25 +1570,11 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         return Pair.of(decorator, pair.second);
     }
 
-    private static final UpdateOperation SIMPLE_UPDATE_OPERATION = new UpdateOperation() {
-        public void update(Shard shard, Object object) {
-            shard.establishSession().update(object);
-        }
-
-        public void merge(Shard shard, Object object) {
-            shard.establishSession().merge(object);
-        }
-    };
-
     @Override
     public <T> T execute(Callback<T> callback) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-
-    private interface RefreshOperation {
-        void refresh(Shard shard, Object object);
-    }
 
     private void applyRefreshOperation(RefreshOperation op, Object object) {
         ShardId shardId = getShardIdForObject(object);
@@ -1648,10 +1605,6 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         }
     }
 
-    interface SaveOrUpdateOperation {
-        void saveOrUpdate(Shard shard, Object object);
-        void merge(Shard shard, Object object);
-    }
 
     void applySaveOrUpdateOperation(final SaveOrUpdateOperation op, final Object object) {
         ShardId shardId = getShardIdForObject(object);
@@ -1688,13 +1641,9 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
     Serializable extractId(final Object object) {
         final ClassMetadata cmd = shardedSessionFactory.getClassMetadata(object.getClass());
         // I'm just guessing about the EntityMode
-        return cmd.getIdentifier(object);
+        return cmd.getIdentifier(object, this);
     }
 
-    private interface UpdateOperation {
-        void update(Shard shard, Object object);
-        void merge(Shard shard, Object object);
-    }
 
     private void applyUpdateOperation(final UpdateOperation op, final Object object) {
         ShardId shardId = getShardIdForObject(object);
@@ -1734,12 +1683,6 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         }
     }
 
-    private static final DeleteOperation SIMPLE_DELETE_OPERATION = new DeleteOperation() {
-        public void delete(final Shard shard, final Object object) {
-            shard.establishSession().delete(object);
-        }
-    };
-
     List<Shard> determineShardsObjectViaResolutionStrategy(final Object object) {
         final Serializable id = extractId(object);
         if (id == null) {
@@ -1748,10 +1691,6 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         final ShardResolutionStrategyData srsd = new ShardResolutionStrategyDataImpl(object.getClass(), id);
         final List<ShardId> shardIds = selectShardIdsFromShardResolutionStrategyData(srsd);
         return shardIdListToShardList(shardIds);
-    }
-
-    private interface DeleteOperation {
-        void delete(Shard shard, Object object);
     }
 
     private void applyDeleteOperation(DeleteOperation op, Object object) {
@@ -1787,13 +1726,115 @@ public class ShardedSessionImpl implements ShardedSession, ShardedSessionImpleme
         op.delete(shardIdsToShards.get(shardId), persistent);
     }
 
-    private static final SaveOrUpdateOperation SAVE_OR_UPDATE_SIMPLE = new SaveOrUpdateOperation() {
-        public void saveOrUpdate(Shard shard, Object object) {
-            shard.establishSession().saveOrUpdate(object);
+    private interface RefreshOperation {
+        void refresh(Shard shard, Object object);
+    }
+
+    private interface UpdateOperation {
+        void update(Shard shard, Object object);
+        void merge(Shard shard, Object object);
+    }
+
+    interface SaveOrUpdateOperation {
+        void saveOrUpdate(Shard shard, Object object);
+        void merge(Shard shard, Object object);
+    }
+
+    private interface DeleteOperation {
+        void delete(Shard shard, Object object);
+    }
+
+    private static class DefaultRefreshOperation implements RefreshOperation {
+
+        @Override
+        public void refresh(final Shard shard, final Object object) {
+            shard.establishSession().refresh(object);
+        }
+    }
+
+    private static class SimpleUpdateOperation implements UpdateOperation {
+
+        @Override
+        public void update(Shard shard, Object object) {
+            shard.establishSession().update(object);
         }
 
+        @Override
         public void merge(Shard shard, Object object) {
             shard.establishSession().merge(object);
         }
-    };
+    }
+
+    private static class EntityNameUpdateOperation implements UpdateOperation {
+
+        private final String entityName;
+
+        public EntityNameUpdateOperation(final String entityName) {
+            this.entityName = entityName;
+        }
+
+        @Override
+        public void update(final Shard shard, final Object object) {
+            shard.establishSession().update(entityName, object);
+        }
+
+        @Override
+        public void merge(final Shard shard, final Object object) {
+            shard.establishSession().merge(entityName, object);
+        }
+    }
+
+    private static class SimpleSaveOrUpdateOperation implements SaveOrUpdateOperation {
+
+        @Override
+        public void saveOrUpdate(final Shard shard, final Object object) {
+            shard.establishSession().update(object);
+        }
+
+        @Override
+        public void merge(final Shard shard, final Object object) {
+            shard.establishSession().merge(object);
+        }
+    }
+
+    private static class EntityNameSaveOrUpdateOperation implements SaveOrUpdateOperation {
+
+        private final String entityName;
+
+        public EntityNameSaveOrUpdateOperation(final String entityName) {
+            this.entityName = entityName;
+        }
+
+        @Override
+        public void saveOrUpdate(Shard shard, Object object) {
+            shard.establishSession().saveOrUpdate(entityName, object);
+        }
+
+        @Override
+        public void merge(Shard shard, Object object) {
+            shard.establishSession().merge(entityName, object);
+        }
+    }
+
+    private static class SimpleDeleteOperation implements DeleteOperation {
+
+        @Override
+        public void delete(final Shard shard, final Object object) {
+            shard.establishSession().delete(object);
+        }
+    }
+
+    private static class EntityNameDeleteOperation implements DeleteOperation {
+
+        private final String entityName;
+
+        public EntityNameDeleteOperation(final String entityName) {
+            this.entityName = entityName;
+        }
+
+        @Override
+        public void delete(Shard shard, Object object) {
+            shard.establishSession().delete(entityName, object);
+        }
+    }
 }

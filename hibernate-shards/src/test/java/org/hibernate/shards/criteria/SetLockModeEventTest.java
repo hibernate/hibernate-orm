@@ -18,40 +18,44 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SetLockModeEventTest extends TestCase {
-  public void testOnOpenSession() {
-    SetLockModeEvent event = new SetLockModeEvent(LockMode.NONE);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria setLockMode(LockMode lockMode) {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+public class SetLockModeEventTest {
 
-  public void testOnOpenSessionWithAlias() {
-    SetLockModeEvent event = new SetLockModeEvent(LockMode.NONE, null);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria setLockMode(String alias, LockMode lockMode) {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+    @Test
+    public void testOnOpenSession() {
+        SetLockModeEvent event = new SetLockModeEvent(LockMode.NONE);
+        final boolean[] called = {false};
+        Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria setLockMode(LockMode lockMode) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        Assert.assertTrue(called[0]);
+    }
+
+    @Test
+    public void testOnOpenSessionWithAlias() {
+        SetLockModeEvent event = new SetLockModeEvent(LockMode.NONE, null);
+        final boolean[] called = {false};
+        Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria setLockMode(String alias, LockMode lockMode) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        Assert.assertTrue(called[0]);
+    }
 }

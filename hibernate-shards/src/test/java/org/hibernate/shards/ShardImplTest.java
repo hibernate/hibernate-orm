@@ -18,23 +18,22 @@
 
 package org.hibernate.shards;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.shards.criteria.CriteriaEvent;
-import org.hibernate.shards.criteria.CriteriaEventDefaultMock;
 import org.hibernate.shards.criteria.CriteriaFactory;
 import org.hibernate.shards.criteria.CriteriaFactoryDefaultMock;
 import org.hibernate.shards.criteria.CriteriaId;
-import org.hibernate.shards.criteria.ShardedCriteriaDefaultMock;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.hibernate.shards.defaultmock.CriteriaEventDefaultMock;
 import org.hibernate.shards.defaultmock.InterceptorDefaultMock;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
 import org.hibernate.shards.defaultmock.SessionDefaultMock;
 import org.hibernate.shards.defaultmock.SessionFactoryDefaultMock;
+import org.hibernate.shards.defaultmock.ShardedCriteriaDefaultMock;
 import org.hibernate.shards.query.QueryEvent;
 import org.hibernate.shards.query.QueryEventDefaultMock;
 import org.hibernate.shards.query.QueryFactory;
@@ -44,40 +43,44 @@ import org.hibernate.shards.query.ShardedQueryDefaultMock;
 import org.hibernate.shards.session.OpenSessionEvent;
 import org.hibernate.shards.session.OpenSessionEventDefaultMock;
 import org.hibernate.shards.util.Sets;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class ShardImplTest extends TestCase {
+public class ShardImplTest {
 
+    @Test
     public void testAddOpenSessionEvent() {
         ShardImpl shard = new ShardImpl(new ShardId(1), new SessionFactoryDefaultMock());
         try {
             shard.addOpenSessionEvent(null);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
         OpenSessionEvent ose = new OpenSessionEventDefaultMock();
         shard.addOpenSessionEvent(ose);
-        assertNotNull(shard.getOpenSessionEvents());
-        assertEquals(1, shard.getOpenSessionEvents().size());
-        assertSame(ose, shard.getOpenSessionEvents().get(0));
+        Assert.assertNotNull(shard.getOpenSessionEvents());
+        Assert.assertEquals(1, shard.getOpenSessionEvents().size());
+        Assert.assertSame(ose, shard.getOpenSessionEvents().get(0));
 
         // now add another and make sure it is added to the end
         OpenSessionEvent anotherOse = new OpenSessionEventDefaultMock();
         shard.addOpenSessionEvent(anotherOse);
-        assertNotNull(shard.getOpenSessionEvents());
-        assertEquals(2, shard.getOpenSessionEvents().size());
-        assertSame(ose, shard.getOpenSessionEvents().get(0));
-        assertSame(anotherOse, shard.getOpenSessionEvents().get(1));
+        Assert.assertNotNull(shard.getOpenSessionEvents());
+        Assert.assertEquals(2, shard.getOpenSessionEvents().size());
+        Assert.assertSame(ose, shard.getOpenSessionEvents().get(0));
+        Assert.assertSame(anotherOse, shard.getOpenSessionEvents().get(1));
     }
 
+    @Test
     public void testAddCriteriaEvent() {
         ShardImpl shard = new ShardImpl(new ShardId(1), new SessionFactoryDefaultMock());
         try {
             shard.addCriteriaEvent(null, null);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -85,7 +88,7 @@ public class ShardImplTest extends TestCase {
         CriteriaId criteriaId = new CriteriaId(2);
         try {
             shard.addCriteriaEvent(criteriaId, null);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -93,58 +96,61 @@ public class ShardImplTest extends TestCase {
         CriteriaEvent ce = new CriteriaEventDefaultMock();
         try {
             shard.addCriteriaEvent(null, ce);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
 
         shard.addCriteriaEvent(criteriaId, ce);
-        assertNotNull(shard.getCriteriaEventMap());
-        assertEquals(1, shard.getCriteriaEventMap().size());
-        assertEquals(1, shard.getCriteriaEventMap().get(criteriaId).size());
-        assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
+        Assert.assertNotNull(shard.getCriteriaEventMap());
+        Assert.assertEquals(1, shard.getCriteriaEventMap().size());
+        Assert.assertEquals(1, shard.getCriteriaEventMap().get(criteriaId).size());
+        Assert.assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
 
         // now add another event to the same criteria
         CriteriaEvent anotherCe = new CriteriaEventDefaultMock();
         shard.addCriteriaEvent(criteriaId, anotherCe);
-        assertNotNull(shard.getCriteriaEventMap());
-        assertEquals(1, shard.getCriteriaEventMap().size());
-        assertEquals(2, shard.getCriteriaEventMap().get(criteriaId).size());
-        assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
-        assertSame(anotherCe, shard.getCriteriaEventMap().get(criteriaId).get(1));
+        Assert.assertNotNull(shard.getCriteriaEventMap());
+        Assert.assertEquals(1, shard.getCriteriaEventMap().size());
+        Assert.assertEquals(2, shard.getCriteriaEventMap().get(criteriaId).size());
+        Assert.assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
+        Assert.assertSame(anotherCe, shard.getCriteriaEventMap().get(criteriaId).get(1));
 
         // now add an event to a different criteria
         CriteriaId anotherCriteriaId = new CriteriaId(3);
         CriteriaEvent yetAnotherCe = new CriteriaEventDefaultMock();
         shard.addCriteriaEvent(anotherCriteriaId, yetAnotherCe);
-        assertNotNull(shard.getCriteriaEventMap());
-        assertEquals(2, shard.getCriteriaEventMap().size());
-        assertEquals(2, shard.getCriteriaEventMap().get(criteriaId).size());
-        assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
-        assertSame(anotherCe, shard.getCriteriaEventMap().get(criteriaId).get(1));
-        assertEquals(1, shard.getCriteriaEventMap().get(anotherCriteriaId).size());
-        assertSame(yetAnotherCe, shard.getCriteriaEventMap().get(anotherCriteriaId).get(0));
+        Assert.assertNotNull(shard.getCriteriaEventMap());
+        Assert.assertEquals(2, shard.getCriteriaEventMap().size());
+        Assert.assertEquals(2, shard.getCriteriaEventMap().get(criteriaId).size());
+        Assert.assertSame(ce, shard.getCriteriaEventMap().get(criteriaId).get(0));
+        Assert.assertSame(anotherCe, shard.getCriteriaEventMap().get(criteriaId).get(1));
+        Assert.assertEquals(1, shard.getCriteriaEventMap().get(anotherCriteriaId).size());
+        Assert.assertSame(yetAnotherCe, shard.getCriteriaEventMap().get(anotherCriteriaId).get(0));
     }
 
+    @Test
     public void testEstablishSessionNoEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
     }
 
+    @Test
     public void testEstablishSessionNoEventsWithInterceptor() {
-        MySessionFactory sf = new MySessionFactory();
-        Interceptor interceptor = new InterceptorDefaultMock();
-        ShardImpl shardImpl = new ShardImpl(Sets.newHashSet(new ShardId(1)), sf, interceptor);
+        final MySessionFactory sf = new MySessionFactory();
+        final Interceptor interceptor = new InterceptorDefaultMock();
+        final ShardImpl shardImpl = new ShardImpl(Sets.newHashSet(new ShardId(1)), sf, interceptor);
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionWithInterceptorCalls);
+        Assert.assertEquals(1, sf.numOpenSessionWithInterceptorCalls);
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionWithInterceptorCalls);
+        Assert.assertEquals(1, sf.numOpenSessionWithInterceptorCalls);
     }
 
+    @Test
     public void testEstablishSessionWithEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -153,17 +159,18 @@ public class ShardImplTest extends TestCase {
         shardImpl.addOpenSessionEvent(event1);
         shardImpl.addOpenSessionEvent(event2);
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertEquals(1, event1.numOnOpenSessionCalls);
-        assertEquals(1, event2.numOnOpenSessionCalls);
-        assertTrue(shardImpl.getOpenSessionEvents().isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(1, event1.numOnOpenSessionCalls);
+        Assert.assertEquals(1, event2.numOnOpenSessionCalls);
+        Assert.assertTrue(shardImpl.getOpenSessionEvents().isEmpty());
         shardImpl.establishSession();
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertEquals(1, event1.numOnOpenSessionCalls);
-        assertEquals(1, event2.numOnOpenSessionCalls);
-        assertTrue(shardImpl.getOpenSessionEvents().isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(1, event1.numOnOpenSessionCalls);
+        Assert.assertEquals(1, event2.numOnOpenSessionCalls);
+        Assert.assertTrue(shardImpl.getOpenSessionEvents().isEmpty());
     }
 
+    @Test
     public void testEstablishCriteriaNoEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -172,18 +179,19 @@ public class ShardImplTest extends TestCase {
         MyCriteriaFactory mcf = new MyCriteriaFactory(crit);
         MyShardedCriteria msc = new MyShardedCriteria(critId, mcf);
         shardImpl.establishCriteria(msc);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mcf.createCriteriaCalledWith);
-        assertEquals(1, shardImpl.getCriteriaMap().size());
-        assertSame(crit, shardImpl.getCriteriaMap().get(critId));
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mcf.createCriteriaCalledWith);
+        Assert.assertEquals(1, shardImpl.getCriteriaMap().size());
+        Assert.assertSame(crit, shardImpl.getCriteriaMap().get(critId));
 
         shardImpl.establishCriteria(msc);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mcf.createCriteriaCalledWith);
-        assertEquals(1, shardImpl.getCriteriaMap().size());
-        assertSame(crit, shardImpl.getCriteriaMap().get(critId));
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mcf.createCriteriaCalledWith);
+        Assert.assertEquals(1, shardImpl.getCriteriaMap().size());
+        Assert.assertSame(crit, shardImpl.getCriteriaMap().get(critId));
     }
 
+    @Test
     public void testEstablishCriteriaWithEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -196,24 +204,25 @@ public class ShardImplTest extends TestCase {
         MyCriteriaFactory mcf = new MyCriteriaFactory(crit);
         MyShardedCriteria msc = new MyShardedCriteria(critId, mcf);
         shardImpl.establishCriteria(msc);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mcf.createCriteriaCalledWith);
-        assertEquals(1, shardImpl.getCriteriaMap().size());
-        assertSame(crit, shardImpl.getCriteriaMap().get(critId));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getCriteriaEventMap().get(critId).isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mcf.createCriteriaCalledWith);
+        Assert.assertEquals(1, shardImpl.getCriteriaMap().size());
+        Assert.assertSame(crit, shardImpl.getCriteriaMap().get(critId));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getCriteriaEventMap().get(critId).isEmpty());
 
         shardImpl.establishCriteria(msc);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mcf.createCriteriaCalledWith);
-        assertEquals(1, shardImpl.getCriteriaMap().size());
-        assertSame(crit, shardImpl.getCriteriaMap().get(critId));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getCriteriaEventMap().get(critId).isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mcf.createCriteriaCalledWith);
+        Assert.assertEquals(1, shardImpl.getCriteriaMap().size());
+        Assert.assertSame(crit, shardImpl.getCriteriaMap().get(critId));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getCriteriaEventMap().get(critId).isEmpty());
     }
 
+    @Test
     public void testEstablishMultipleCriteria() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -236,39 +245,40 @@ public class ShardImplTest extends TestCase {
         shardImpl.establishCriteria(msc1);
         shardImpl.establishCriteria(msc2);
 
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertEquals(2, shardImpl.getCriteriaMap().size());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(2, shardImpl.getCriteriaMap().size());
 
-        assertNotNull(mcf1.createCriteriaCalledWith);
-        assertSame(crit1, shardImpl.getCriteriaMap().get(critId1));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getCriteriaEventMap().get(critId1).isEmpty());
+        Assert.assertNotNull(mcf1.createCriteriaCalledWith);
+        Assert.assertSame(crit1, shardImpl.getCriteriaMap().get(critId1));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getCriteriaEventMap().get(critId1).isEmpty());
 
-        assertNotNull(mcf2.createCriteriaCalledWith);
-        assertSame(crit2, shardImpl.getCriteriaMap().get(critId2));
-        assertNull(shardImpl.getCriteriaEventMap().get(critId2));
+        Assert.assertNotNull(mcf2.createCriteriaCalledWith);
+        Assert.assertSame(crit2, shardImpl.getCriteriaMap().get(critId2));
+        Assert.assertNull(shardImpl.getCriteriaEventMap().get(critId2));
 
         shardImpl.establishCriteria(msc1);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mcf1.createCriteriaCalledWith);
-        assertEquals(2, shardImpl.getCriteriaMap().size());
-        assertSame(crit1, shardImpl.getCriteriaMap().get(critId1));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mcf1.createCriteriaCalledWith);
+        Assert.assertEquals(2, shardImpl.getCriteriaMap().size());
+        Assert.assertSame(crit1, shardImpl.getCriteriaMap().get(critId1));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
 
-        assertNotNull(mcf2.createCriteriaCalledWith);
-        assertSame(crit2, shardImpl.getCriteriaMap().get(critId2));
-        assertNull(shardImpl.getCriteriaEventMap().get(critId2));
+        Assert.assertNotNull(mcf2.createCriteriaCalledWith);
+        Assert.assertSame(crit2, shardImpl.getCriteriaMap().get(critId2));
+        Assert.assertNull(shardImpl.getCriteriaEventMap().get(critId2));
 
-        assertTrue(shardImpl.getCriteriaEventMap().get(critId1).isEmpty());
+        Assert.assertTrue(shardImpl.getCriteriaEventMap().get(critId1).isEmpty());
     }
 
+    @Test
     public void testAddQueryEvent() throws Exception {
         ShardImpl shard = new ShardImpl(new ShardId(1), new SessionFactoryDefaultMock());
         try {
             shard.addQueryEvent(null, null);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -276,7 +286,7 @@ public class ShardImplTest extends TestCase {
         QueryId queryId = new QueryId(1);
         try {
             shard.addQueryEvent(queryId, null);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -284,39 +294,40 @@ public class ShardImplTest extends TestCase {
         QueryEvent qe = new QueryEventDefaultMock();
         try {
             shard.addQueryEvent(null, qe);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
 
         shard.addQueryEvent(queryId, qe);
-        assertNotNull(shard.getQueryEventMap());
-        assertEquals(1, shard.getQueryEventMap().size());
-        assertEquals(1, shard.getQueryEventMap().get(queryId).size());
-        assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
+        Assert.assertNotNull(shard.getQueryEventMap());
+        Assert.assertEquals(1, shard.getQueryEventMap().size());
+        Assert.assertEquals(1, shard.getQueryEventMap().get(queryId).size());
+        Assert.assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
 
         // now add another event to the same query
         QueryEvent anotherQe = new QueryEventDefaultMock();
         shard.addQueryEvent(queryId, anotherQe);
-        assertNotNull(shard.getQueryEventMap());
-        assertEquals(1, shard.getQueryEventMap().size());
-        assertEquals(2, shard.getQueryEventMap().get(queryId).size());
-        assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
-        assertSame(anotherQe, shard.getQueryEventMap().get(queryId).get(1));
+        Assert.assertNotNull(shard.getQueryEventMap());
+        Assert.assertEquals(1, shard.getQueryEventMap().size());
+        Assert.assertEquals(2, shard.getQueryEventMap().get(queryId).size());
+        Assert.assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
+        Assert.assertSame(anotherQe, shard.getQueryEventMap().get(queryId).get(1));
 
         // now add an event to a different query
         QueryId anotherQueryId = new QueryId(3);
         QueryEvent yetAnotherQe = new QueryEventDefaultMock();
         shard.addQueryEvent(anotherQueryId, yetAnotherQe);
-        assertNotNull(shard.getQueryEventMap());
-        assertEquals(2, shard.getQueryEventMap().size());
-        assertEquals(2, shard.getQueryEventMap().get(queryId).size());
-        assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
-        assertSame(anotherQe, shard.getQueryEventMap().get(queryId).get(1));
-        assertEquals(1, shard.getQueryEventMap().get(anotherQueryId).size());
-        assertSame(yetAnotherQe, shard.getQueryEventMap().get(anotherQueryId).get(0));
+        Assert.assertNotNull(shard.getQueryEventMap());
+        Assert.assertEquals(2, shard.getQueryEventMap().size());
+        Assert.assertEquals(2, shard.getQueryEventMap().get(queryId).size());
+        Assert.assertSame(qe, shard.getQueryEventMap().get(queryId).get(0));
+        Assert.assertSame(anotherQe, shard.getQueryEventMap().get(queryId).get(1));
+        Assert.assertEquals(1, shard.getQueryEventMap().get(anotherQueryId).size());
+        Assert.assertSame(yetAnotherQe, shard.getQueryEventMap().get(anotherQueryId).get(0));
     }
 
+    @Test
     public void testEstablishQueryNoEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -325,18 +336,19 @@ public class ShardImplTest extends TestCase {
         MyQueryFactory mqf = new MyQueryFactory(query);
         MyShardedQuery msq = new MyShardedQuery(critId, mqf);
         shardImpl.establishQuery(msq);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mqf.createQueryCalledWith);
-        assertEquals(1, shardImpl.getQueryMap().size());
-        assertSame(query, shardImpl.getQueryMap().get(critId));
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mqf.createQueryCalledWith);
+        Assert.assertEquals(1, shardImpl.getQueryMap().size());
+        Assert.assertSame(query, shardImpl.getQueryMap().get(critId));
 
         shardImpl.establishQuery(msq);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mqf.createQueryCalledWith);
-        assertEquals(1, shardImpl.getQueryMap().size());
-        assertSame(query, shardImpl.getQueryMap().get(critId));
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mqf.createQueryCalledWith);
+        Assert.assertEquals(1, shardImpl.getQueryMap().size());
+        Assert.assertSame(query, shardImpl.getQueryMap().get(critId));
     }
 
+    @Test
     public void testEstablishQueryWithEvents() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -349,24 +361,25 @@ public class ShardImplTest extends TestCase {
         MyQueryFactory mqf = new MyQueryFactory(query);
         MyShardedQuery msq = new MyShardedQuery(queryId, mqf);
         shardImpl.establishQuery(msq);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mqf.createQueryCalledWith);
-        assertEquals(1, shardImpl.getQueryMap().size());
-        assertSame(query, shardImpl.getQueryMap().get(queryId));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getQueryEventMap().get(queryId).isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mqf.createQueryCalledWith);
+        Assert.assertEquals(1, shardImpl.getQueryMap().size());
+        Assert.assertSame(query, shardImpl.getQueryMap().get(queryId));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getQueryEventMap().get(queryId).isEmpty());
 
         shardImpl.establishQuery(msq);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mqf.createQueryCalledWith);
-        assertEquals(1, shardImpl.getQueryMap().size());
-        assertSame(query, shardImpl.getQueryMap().get(queryId));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getQueryEventMap().get(queryId).isEmpty());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mqf.createQueryCalledWith);
+        Assert.assertEquals(1, shardImpl.getQueryMap().size());
+        Assert.assertSame(query, shardImpl.getQueryMap().get(queryId));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getQueryEventMap().get(queryId).isEmpty());
     }
 
+    @Test
     public void testEstablishMultipleQuery() {
         MySessionFactory sf = new MySessionFactory();
         ShardImpl shardImpl = new ShardImpl(new ShardId(1), sf);
@@ -389,32 +402,32 @@ public class ShardImplTest extends TestCase {
         shardImpl.establishQuery(msq1);
         shardImpl.establishQuery(msq2);
 
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertEquals(2, shardImpl.getQueryMap().size());
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertEquals(2, shardImpl.getQueryMap().size());
 
-        assertNotNull(mqf1.createQueryCalledWith);
-        assertSame(query1, shardImpl.getQueryMap().get(queryId1));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
-        assertTrue(shardImpl.getQueryEventMap().get(queryId1).isEmpty());
+        Assert.assertNotNull(mqf1.createQueryCalledWith);
+        Assert.assertSame(query1, shardImpl.getQueryMap().get(queryId1));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
+        Assert.assertTrue(shardImpl.getQueryEventMap().get(queryId1).isEmpty());
 
-        assertNotNull(mqf2.createQueryCalledWith);
-        assertSame(query2, shardImpl.getQueryMap().get(queryId2));
-        assertNull(shardImpl.getQueryEventMap().get(queryId2));
+        Assert.assertNotNull(mqf2.createQueryCalledWith);
+        Assert.assertSame(query2, shardImpl.getQueryMap().get(queryId2));
+        Assert.assertNull(shardImpl.getQueryEventMap().get(queryId2));
 
         shardImpl.establishQuery(msq1);
-        assertEquals(1, sf.numOpenSessionCalls);
-        assertNotNull(mqf1.createQueryCalledWith);
-        assertEquals(2, shardImpl.getQueryMap().size());
-        assertSame(query1, shardImpl.getQueryMap().get(queryId1));
-        assertEquals(1, event1.numOnEventCalls);
-        assertEquals(1, event2.numOnEventCalls);
+        Assert.assertEquals(1, sf.numOpenSessionCalls);
+        Assert.assertNotNull(mqf1.createQueryCalledWith);
+        Assert.assertEquals(2, shardImpl.getQueryMap().size());
+        Assert.assertSame(query1, shardImpl.getQueryMap().get(queryId1));
+        Assert.assertEquals(1, event1.numOnEventCalls);
+        Assert.assertEquals(1, event2.numOnEventCalls);
 
-        assertNotNull(mqf2.createQueryCalledWith);
-        assertSame(query2, shardImpl.getQueryMap().get(queryId2));
-        assertNull(shardImpl.getQueryEventMap().get(queryId2));
+        Assert.assertNotNull(mqf2.createQueryCalledWith);
+        Assert.assertSame(query2, shardImpl.getQueryMap().get(queryId2));
+        Assert.assertNull(shardImpl.getQueryEventMap().get(queryId2));
 
-        assertTrue(shardImpl.getQueryEventMap().get(queryId1).isEmpty());
+        Assert.assertTrue(shardImpl.getQueryEventMap().get(queryId1).isEmpty());
     }
 
     private static final class MyOpenSessionEvent extends OpenSessionEventDefaultMock {
@@ -435,15 +448,6 @@ public class ShardImplTest extends TestCase {
             numOpenSessionCalls++;
             return new SessionDefaultMock();
         }
-
-        /*
-        @Override
-        public org.hibernate.Session openSession(Interceptor interceptor)
-                throws HibernateException {
-            numOpenSessionWithInterceptorCalls++;
-            return new SessionDefaultMock();
-        }
-        */
     }
 
     private static final class MyShardedCriteria extends ShardedCriteriaDefaultMock {

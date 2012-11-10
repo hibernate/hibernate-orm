@@ -18,26 +18,28 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SetCommentEventTest extends TestCase {
+public class SetCommentEventTest {
 
-  public void testOnOpenSession() {
-    SetCommentEvent event = new SetCommentEvent(null);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria setComment(String comment) {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+    @Test
+    public void testOnOpenSession() {
+        SetCommentEvent event = new SetCommentEvent(null);
+        final boolean[] called = {false};
+        Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria setComment(String comment) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        Assert.assertTrue(called[0]);
+    }
 }

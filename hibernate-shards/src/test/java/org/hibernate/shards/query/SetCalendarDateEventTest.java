@@ -21,39 +21,43 @@ package org.hibernate.shards.query;
 import junit.framework.TestCase;
 import org.hibernate.Query;
 import org.hibernate.shards.defaultmock.QueryDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.Calendar;
 
 /**
  * @author Maulik Shah
  */
-public class SetCalendarDateEventTest extends TestCase {
+public class SetCalendarDateEventTest {
 
-   public void testSetCalendarDateEventPositionVal() {
-     SetCalendarDateEvent event = new SetCalendarDateEvent(-1, null);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setCalendarDate(int position, Calendar val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetCalendarDateEventPositionVal() {
+        SetCalendarDateEvent event = new SetCalendarDateEvent(-1, null);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setCalendarDate(int position, Calendar val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 
-   public void testSetCalendarDateEventNameVal() {
-     SetCalendarDateEvent event = new SetCalendarDateEvent(null, null);
-     final boolean[] called = {false};
-     Query query = new QueryDefaultMock() {
-       @Override
-       public Query setCalendarDate(String name, Calendar val) {
-         called[0] = true;
-         return null;
-       }
-     };
-     event.onEvent(query);
-     assertTrue(called[0]);
-   }
+    @Test
+    public void testSetCalendarDateEventNameVal() {
+        SetCalendarDateEvent event = new SetCalendarDateEvent(null, null);
+        final boolean[] called = {false};
+        Query query = new QueryDefaultMock() {
+            @Override
+            public Query setCalendarDate(String name, Calendar val) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(query);
+        Assert.assertTrue(called[0]);
+    }
 }

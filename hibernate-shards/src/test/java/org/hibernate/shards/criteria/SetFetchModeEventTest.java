@@ -18,28 +18,31 @@
 
 package org.hibernate.shards.criteria;
 
-import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.shards.defaultmock.CriteriaDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SetFetchModeEventTest extends TestCase {
-  public void testOnOpenSession() {
-    SetFetchModeEvent event = new SetFetchModeEvent(null, FetchMode.DEFAULT);
-    final boolean[] called = {false};
-    Criteria crit = new CriteriaDefaultMock() {
-      @Override
-      public Criteria setFetchMode(String associationPath, FetchMode mode)
-          throws HibernateException {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onEvent(crit);
-    assertTrue(called[0]);
-  }
+public class SetFetchModeEventTest {
+
+    @Test
+    public void testOnOpenSession() {
+        SetFetchModeEvent event = new SetFetchModeEvent(null, FetchMode.DEFAULT);
+        final boolean[] called = {false};
+        Criteria crit = new CriteriaDefaultMock() {
+            @Override
+            public Criteria setFetchMode(String associationPath, FetchMode mode)
+                    throws HibernateException {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onEvent(crit);
+        Assert.assertTrue(called[0]);
+    }
 }

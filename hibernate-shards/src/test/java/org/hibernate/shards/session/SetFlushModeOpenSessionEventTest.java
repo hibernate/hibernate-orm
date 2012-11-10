@@ -18,26 +18,28 @@
 
 package org.hibernate.shards.session;
 
-import junit.framework.TestCase;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.shards.defaultmock.SessionDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class SetFlushModeOpenSessionEventTest extends TestCase {
-  public void testOnOpenSession() {
-    SetFlushModeOpenSessionEvent event = new SetFlushModeOpenSessionEvent(FlushMode.ALWAYS);
-    final boolean[] called = {false};
-    Session session = new SessionDefaultMock() {
-      @Override
-      public void setFlushMode(FlushMode flushMode) {
-        called[0] = true;
-      }
-    };
-    event.onOpenSession(session);
-    assertTrue(called[0]);
-  }
+public class SetFlushModeOpenSessionEventTest {
 
+    @Test
+    public void testOnOpenSession() {
+        SetFlushModeOpenSessionEvent event = new SetFlushModeOpenSessionEvent(FlushMode.ALWAYS);
+        final boolean[] called = {false};
+        Session session = new SessionDefaultMock() {
+            @Override
+            public void setFlushMode(FlushMode flushMode) {
+                called[0] = true;
+            }
+        };
+        event.onOpenSession(session);
+        Assert.assertTrue(called[0]);
+    }
 }

@@ -18,7 +18,6 @@
 
 package org.hibernate.shards.strategy.exit;
 
-import junit.framework.TestCase;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.criterion.AvgProjection;
@@ -30,6 +29,9 @@ import org.hibernate.shards.defaultmock.EntityPersisterDefaultMock;
 import org.hibernate.shards.defaultmock.SessionFactoryDefaultMock;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.StringUtil;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,7 +41,7 @@ import java.util.List;
 /**
  * @author Maulik Shah
  */
-public class AggregateExitOperationTest extends TestCase {
+public class AggregateExitOperationTest {
 
     private List<Object> data;
 
@@ -60,8 +62,8 @@ public class AggregateExitOperationTest extends TestCase {
         }
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         data = Lists.newArrayList();
         for (int i = 0; i < 6; i++) {
             if (i == 4) {
@@ -72,16 +74,17 @@ public class AggregateExitOperationTest extends TestCase {
         }
     }
 
+    @Test
     public void testCtor() throws Exception {
         try {
             new AggregateExitOperation(new AvgProjection("foo"));
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // good
         }
         try {
             new AggregateExitOperation(new AvgProjection("foo"));
-            fail();
+            Assert.fail();
         } catch (IllegalArgumentException e) {
             // good
         }
@@ -90,25 +93,38 @@ public class AggregateExitOperationTest extends TestCase {
         new AggregateExitOperation(Projections.sum("foo"));
     }
 
+    @Test
     public void testSum() throws Exception {
         AggregateExitOperation exitOp = new AggregateExitOperation(Projections.sum("value"));
 
         List<Object> result = exitOp.apply(data);
-        assertEquals(new BigDecimal(11.0), result.get(0));
+        Assert.assertEquals(new BigDecimal(11.0), result.get(0));
     }
 
+    @Test
     public void testMax() throws Exception {
         AggregateExitOperation exitOp = new AggregateExitOperation(Projections.max("value"));
 
         List<Object> result = exitOp.apply(data);
-        assertEquals(5, ((MyInt) result.get(0)).getValue());
+        Assert.assertEquals(5, ((MyInt) result.get(0)).getValue());
     }
 
+    @Test
     public void testMin() throws Exception {
         AggregateExitOperation exitOp = new AggregateExitOperation(Projections.min("value"));
 
         List<Object> result = exitOp.apply(data);
-        assertEquals(0, ((MyInt) result.get(0)).getValue());
+        Assert.assertEquals(0, ((MyInt) result.get(0)).getValue());
+    }
+
+    @Test
+    public void testCount() throws Exception {
+        Assert.fail("not implemented");
+    }
+
+    @Test
+    public void testCountDistinct() throws Exception {
+        Assert.fail("not implemented");
     }
 
     static class SessionFactoryMock extends SessionFactoryDefaultMock {

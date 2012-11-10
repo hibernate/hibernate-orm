@@ -32,7 +32,7 @@ import java.util.Set;
  */
 public interface ShardedSessionFactoryImplementor extends ShardedSessionFactory, SessionFactoryImplementor {
 
-  Map<SessionFactoryImplementor, Set<ShardId>> getSessionFactoryShardIdMap();
+    Map<SessionFactoryImplementor, Set<ShardId>> getSessionFactoryShardIdMap();
 
-  boolean containsFactory(SessionFactoryImplementor factory);
+    boolean containsFactory(SessionFactoryImplementor factory);
 }

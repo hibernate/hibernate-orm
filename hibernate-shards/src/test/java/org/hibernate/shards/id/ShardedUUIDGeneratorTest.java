@@ -18,9 +18,11 @@
 
 package org.hibernate.shards.id;
 
-import junit.framework.TestCase;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.session.ShardedSessionImpl;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.Serializable;
 import java.util.Properties;
@@ -28,29 +30,31 @@ import java.util.Properties;
 /**
  * @author Tomislav Nad
  */
-public class ShardedUUIDGeneratorTest extends TestCase {
-  private ShardedUUIDGenerator gen;
+public class ShardedUUIDGeneratorTest {
 
-  @Override
-  protected void setUp() {
-    gen = new ShardedUUIDGenerator();
-  }
+    private ShardedUUIDGenerator gen;
 
-  public void testHexShardEncoding() throws Exception {
-    Properties prop = new Properties();
-    prop.setProperty("sharded-uuid-type", "STRING");
-    gen.configure(null, prop, null);
-    ShardedSessionImpl.setCurrentSubgraphShardId(new ShardId(13));
-    Serializable id = gen.generate(null, null);
-    assertEquals(new ShardId(13), gen.extractShardId(id));
-  }
+    @Before
+    protected void setUp() {
+        gen = new ShardedUUIDGenerator();
+    }
 
-  public void testIntegerShardEncoding() throws Exception {
-    Properties prop = new Properties();
-    gen.configure(null, prop, null);
-    ShardedSessionImpl.setCurrentSubgraphShardId(new ShardId(13));
-    Serializable id = gen.generate(null, null);
-    assertEquals(new ShardId(13), gen.extractShardId(id));
-  }
+    @Test
+    public void testHexShardEncoding() throws Exception {
+        Properties prop = new Properties();
+        prop.setProperty("sharded-uuid-type", "STRING");
+        gen.configure(null, prop, null);
+        ShardedSessionImpl.setCurrentSubgraphShardId(new ShardId(13));
+        Serializable id = gen.generate(null, null);
+        Assert.assertEquals(new ShardId(13), gen.extractShardId(id));
+    }
 
+    @Test
+    public void testIntegerShardEncoding() throws Exception {
+        Properties prop = new Properties();
+        gen.configure(null, prop, null);
+        ShardedSessionImpl.setCurrentSubgraphShardId(new ShardId(13));
+        Serializable id = gen.generate(null, null);
+        Assert.assertEquals(new ShardId(13), gen.extractShardId(id));
+    }
 }

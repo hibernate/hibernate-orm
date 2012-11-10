@@ -34,6 +34,9 @@ import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.shards.strategy.ShardStrategyFactoryDefaultMock;
 import org.hibernate.shards.util.Maps;
 import org.hibernate.shards.util.Sets;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import javax.naming.NamingException;
 import java.sql.Connection;
@@ -46,12 +49,12 @@ import java.util.Set;
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class ShardedSessionFactoryImplTest extends TestCase {
+public class ShardedSessionFactoryImplTest {
     private SessionFactoryImplementor sf;
     private ShardId shardId;
 
-    @Override
-    protected void setUp() {
+    @Before
+    public void setUp() {
         sf = new SessionFactoryDefaultMock() {
             @Override
             public Settings getSettings() {
@@ -83,20 +86,21 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         };
     }
 
+    @Test
     public void testCtors() {
         Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
         Set<Class<?>> crsl = Collections.emptySet();
         ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         try {
             new ShardedSessionFactoryImpl(null, shardStrategyFactory, crsl, false);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
 
         try {
             new ShardedSessionFactoryImpl(sfMap, null, crsl, false);
-            fail("expected iae");
+            Assert.fail("expected iae");
         } catch (IllegalArgumentException iae) {
             // good
         }
@@ -104,14 +108,14 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         sfMap.put(this.sf, Sets.newHashSet(shardId));
         try {
             new ShardedSessionFactoryImpl(sfMap, null, crsl, false);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
 
         try {
             new ShardedSessionFactoryImpl(sfMap, shardStrategyFactory, null, false);
-            fail("expected npe");
+            Assert.fail("expected npe");
         } catch (NullPointerException npe) {
             // good
         }
@@ -120,6 +124,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         ssfi.close();
     }
 
+    @Test
     public void testOpenSessionWithUserSuppliedConnection() {
         final ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         final Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
@@ -131,14 +136,14 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         try {
             try {
                 ssf.openSession();
-                fail("Expected uoe");
+                Assert.fail("Expected uoe");
             } catch (UnsupportedOperationException uoe) {
                 // good
             }
             Interceptor interceptor = null;
             try {
                 ssf.openSession(interceptor);
-                fail("Expected uoe");
+                Assert.fail("Expected uoe");
             } catch (UnsupportedOperationException uoe) {
                 // good
             }
@@ -147,6 +152,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testOpenStatelessSessionWithUserSuppliedConnection() {
         final ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         final Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
@@ -162,7 +168,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
             Connection conn = null;
             try {
                 ssf.openStatelessSession(conn);
-                fail("Expected uoe");
+                Assert.fail("Expected uoe");
             } catch (UnsupportedOperationException uoe) {
                 // good
             }
@@ -171,9 +177,10 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testIsClosed() {
-        ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
 
+        ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         SessionFactoryDefaultMock mock1 = new SessionFactoryDefaultMock() {
 
             @Override
@@ -210,7 +217,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
                         false);
 
         try {
-            assertFalse(ssf.isClosed());
+            Assert.assertFalse(ssf.isClosed());
         } finally {
             ssf.close();
         }
@@ -248,12 +255,13 @@ public class ShardedSessionFactoryImplTest extends TestCase {
                 false);
 
         try {
-            assertTrue(ssf.isClosed());
+            Assert.assertTrue(ssf.isClosed());
         } finally {
             ssf.close();
         }
     }
 
+    @Test
     public void testGetReference() throws NamingException {
         final ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         final Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
@@ -267,7 +275,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
 
         try {
             ssf.getReference();
-            fail("Expected uoe");
+            Assert.fail("Expected uoe");
         } catch (UnsupportedOperationException uoe) {
             // good
         } finally {
@@ -275,6 +283,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         }
     }
 
+    @Test
     public void testGetStatistics() {
         final ShardStrategyFactory shardStrategyFactory = buildStrategyFactoryDefaultMock();
         final Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
@@ -286,9 +295,10 @@ public class ShardedSessionFactoryImplTest extends TestCase {
                 Collections.<Class<?>>emptySet(),
                 false);
 
-        assertNotNull(ssf.getStatistics());
+        Assert.assertNotNull(ssf.getStatistics());
     }
 
+    @Test
     public void testFinalizeOnOpenSession() throws Throwable {
 
         final boolean[] closeCalled = {false};
@@ -314,9 +324,10 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         };
 
         ssf.finalize();
-        assertTrue(closeCalled[0]);
+        Assert.assertTrue(closeCalled[0]);
     }
 
+    @Test
     public void testFinalizeOnClosedSession() throws Throwable {
         final boolean[] closeCalled = {false};
 
@@ -342,9 +353,10 @@ public class ShardedSessionFactoryImplTest extends TestCase {
         };
 
         ssf.finalize();
-        assertFalse(closeCalled[0]);
+        Assert.assertFalse(closeCalled[0]);
     }
 
+    @Test
     public void testFailsWhenMultipleSessionFactoriesHaveSameShardId() {
         final Map<SessionFactoryImplementor, Set<ShardId>> sfMap = Maps.newHashMap();
         final Set<Class<?>> crsl = Collections.emptySet();
@@ -375,7 +387,7 @@ public class ShardedSessionFactoryImplTest extends TestCase {
 
         try {
             new ShardedSessionFactoryImpl(sfMap, shardStrategyFactory, crsl, false);
-            fail("expected hibernate exception");
+            Assert.fail("expected hibernate exception");
         } catch (HibernateException he) {
             // good
         }

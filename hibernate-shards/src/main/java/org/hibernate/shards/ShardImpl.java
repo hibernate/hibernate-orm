@@ -29,6 +29,7 @@ import org.hibernate.shards.criteria.ShardedCriteria;
 import org.hibernate.shards.query.QueryEvent;
 import org.hibernate.shards.query.QueryId;
 import org.hibernate.shards.query.ShardedQuery;
+import org.hibernate.shards.query.ShardedSQLQuery;
 import org.hibernate.shards.session.OpenSessionEvent;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
@@ -209,7 +210,11 @@ public class ShardImpl implements Shard {
         Query query = queryMap.get(queryId);
         if (query == null) {
             // Criteria does not yet exist so need to create it
-            query = shardedQuery.getQueryFactory().createQuery(establishSession());
+            if (shardedQuery instanceof ShardedSQLQuery) {
+                query = shardedQuery.getQueryFactory().createSQLQuery(establishSession());
+            } else {
+                query = shardedQuery.getQueryFactory().createQuery(establishSession());
+            }
             // add it to the map right away in case some of our events require it
             queryMap.put(queryId, query);
             // see if we have events that we need to apply to the Query
@@ -267,6 +272,11 @@ public class ShardImpl implements Shard {
     @SuppressWarnings("unchecked")
     public List<Object> list(final QueryId queryId) {
         return queryMap.get(queryId).list();
+    }
+
+    @Override
+    public int executeUpdate(QueryId queryId) {
+        return queryMap.get(queryId).executeUpdate();
     }
 
     @Override

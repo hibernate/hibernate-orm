@@ -18,6 +18,8 @@
 
 package org.hibernate.shards.integration;
 
+import org.junit.Test;
+
 /**
  * This test only exists to test the db setup/teardown functionality in the
  * base class.  Since we have multiple tests, a successful run here proves
@@ -29,9 +31,11 @@ package org.hibernate.shards.integration;
  */
 public class BaseShardingIntegrationTestCasePermutedIntegrationTest extends BaseShardingIntegrationTestCase {
 
-  public void testThatThing() {
-  }
+    @Test
+    public void testThatThing() {
+    }
 
-  public void testThatOtherThing() {
-  }
+    @Test
+    public void testThatOtherThing() {
+    }
 }

@@ -22,24 +22,26 @@ import junit.framework.TestCase;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.hibernate.shards.defaultmock.SessionDefaultMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author maxr@google.com (Max Ross)
  */
-public class EnableFilterOpenSessionEventTest extends TestCase {
+public class EnableFilterOpenSessionEventTest {
 
-  public void testOnOpenSession() {
-    EnableFilterOpenSessionEvent event = new EnableFilterOpenSessionEvent("yam");
-    final boolean[] called = {false};
-    Session session = new SessionDefaultMock() {
-      @Override
-      public Filter enableFilter(String filterName) {
-        called[0] = true;
-        return null;
-      }
-    };
-    event.onOpenSession(session);
-    assertTrue(called[0]);
-  }
-
+    @Test
+    public void testOnOpenSession() {
+        EnableFilterOpenSessionEvent event = new EnableFilterOpenSessionEvent("yam");
+        final boolean[] called = {false};
+        Session session = new SessionDefaultMock() {
+            @Override
+            public Filter enableFilter(String filterName) {
+                called[0] = true;
+                return null;
+            }
+        };
+        event.onOpenSession(session);
+        Assert.assertTrue(called[0]);
+    }
 }

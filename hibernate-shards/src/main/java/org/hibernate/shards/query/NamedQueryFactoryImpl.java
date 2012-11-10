@@ -19,6 +19,7 @@
 package org.hibernate.shards.query;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 /**
@@ -28,13 +29,19 @@ import org.hibernate.Session;
  */
 public class NamedQueryFactoryImpl implements QueryFactory {
 
-  private final String queryName;
+    private final String queryName;
 
-  public NamedQueryFactoryImpl(String queryName) {
-    this.queryName = queryName;
-  }
+    public NamedQueryFactoryImpl(String queryName) {
+        this.queryName = queryName;
+    }
 
-  public Query createQuery(Session session) {
-    return session.getNamedQuery(queryName);
-  }
+    @Override
+    public Query createQuery(final Session session) {
+        return session.getNamedQuery(queryName);
+    }
+
+    @Override
+    public SQLQuery createSQLQuery(final Session session) {
+        throw new UnsupportedOperationException("no such thing as named SQLQuery");
+    }
 }

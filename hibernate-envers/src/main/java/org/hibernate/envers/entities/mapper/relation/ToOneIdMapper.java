@@ -34,6 +34,7 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -95,10 +96,10 @@ public class ToOneIdMapper extends AbstractToOneMapper {
                 value = versionsReader.getFirstLevelCache().get(referencedEntityName, revision, entityId);
             } else {
                 EntityInfo referencedEntity = getEntityInfo(verCfg, referencedEntityName);
-
-                value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
-                        createProxy((Serializable)entityId, new ToOneDelegateSessionImplementor(versionsReader, referencedEntity.getEntityClass(),
-                                                                                                entityId, revision, verCfg));
+                value = ToOneEntityLoader.createProxyOrLoadImmediate(
+                        versionsReader, referencedEntity.getEntityClass(), referencedEntityName,
+                        entityId, revision, verCfg
+                );
             }
         }
 

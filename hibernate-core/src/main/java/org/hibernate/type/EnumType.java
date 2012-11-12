@@ -66,7 +66,7 @@ import org.hibernate.usertype.EnhancedUserType;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable {
+public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable, StringRepresentableType {
     private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
 
 	public static final String ENUM = "enumClass";
@@ -250,26 +250,26 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 	@Override
 	public String objectToSQLString(Object value) {
-		if(enumValueMapper==null){
+		if ( enumValueMapper == null ) {
 			guessTypeOfEnumValueMapper( sqlType );
 		}
 		return enumValueMapper.objectToSQLString( (Enum) value );
 	}
 
 	@Override
-	public String toXMLString(Object value) {
-		if(enumValueMapper==null){
+	public String toString(Object value) throws HibernateException {
+		if ( enumValueMapper == null ) {
 			guessTypeOfEnumValueMapper( sqlType );
 		}
-		return enumValueMapper.toXMLString( (Enum) value );
+		return enumValueMapper.toString( ( Enum) value );
 	}
 
 	@Override
-	public Object fromXMLString(String xmlValue) {
-		if(enumValueMapper==null){
+	public Object fromStringValue(String string) throws HibernateException {
+		if ( enumValueMapper == null ) {
 			guessTypeOfEnumValueMapper( sqlType );
 		}
-		return enumValueMapper.fromXMLString( xmlValue );
+		return enumValueMapper.fromString( string );
 	}
 
 	private static interface EnumValueMapper {
@@ -278,8 +278,8 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
 
 		public String objectToSQLString(Enum value);
-		public String toXMLString(Enum value);
-		public Enum fromXMLString(String xml);
+		public String toString(Enum value);
+		public Enum fromString(String xml);
 	}
 
 	public abstract class EnumValueMapperSupport implements EnumValueMapper {
@@ -356,16 +356,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 		@Override
 		public String objectToSQLString(Enum value) {
-			return toXMLString( value );
+			return toString( value );
 		}
 
 		@Override
-		public String toXMLString(Enum value) {
+		public String toString(Enum value) {
 			return Integer.toString( value.ordinal() );
 		}
 
 		@Override
-		public Enum fromXMLString(String xml) {
+		public Enum fromString(String xml) {
 			return fromOrdinal( Integer.parseInt( xml ) );
 		}
 
@@ -416,16 +416,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 		@Override
 		public String objectToSQLString(Enum value) {
-			return '\'' + toXMLString( value ) + '\'';
+			return '\'' + toString( value ) + '\'';
 		}
 
 		@Override
-		public String toXMLString(Enum value) {
+		public String toString(Enum value) {
 			return value.name();
 		}
 
 		@Override
-		public Enum fromXMLString(String xml) {
+		public Enum fromString(String xml) {
 			return fromName( xml );
 		}
 

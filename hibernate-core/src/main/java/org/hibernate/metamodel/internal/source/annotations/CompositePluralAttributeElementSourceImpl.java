@@ -23,6 +23,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.ValueHolder;
@@ -31,6 +32,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOv
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
+import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -45,7 +47,6 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	
 	private final AssociationAttribute associationAttribute;
 	private final RootEntityClass rootEntityClass;
-	private final Iterable<CascadeStyle> cascadeStyles;
 	
 	private List<AttributeSource> attributeSources
 			= new ArrayList<AttributeSource>();
@@ -56,7 +57,6 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 			Iterable<CascadeStyle> cascadeStyles ) {
 		this.associationAttribute = associationAttribute;
 		this.rootEntityClass = rootEntityClass;
-		this.cascadeStyles = cascadeStyles;
 		
 		buildAttributeSources();
 	}
@@ -84,6 +84,12 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
+		List<CascadeStyle> cascadeStyles = new ArrayList<CascadeStyle>();
+		for ( javax.persistence.CascadeType cascadeType : associationAttribute
+				.getCascadeTypes() ) {
+			cascadeStyles.add( CascadeType.getCascadeType( cascadeType )
+					.toCascadeStyle() );
+		}
 		return cascadeStyles;
 	}
 
@@ -105,13 +111,13 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public String getParentReferenceAttributeName() {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO: Is this correct?
+		return associationAttribute.getName();
 	}
 
 	@Override
 	public String getExplicitTuplizerClassName() {
-		// TODO Auto-generated method stub
+		// TODO ?
 		return null;
 	}
 	
@@ -122,9 +128,9 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;
 			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
-//			if ( attributeOverrides.containsKey( tmp ) ) {
-//				attributeOverride = attributeOverrides.get( tmp );
-//			}
+			if ( rootEntityClass.getAttributeOverrideMap().containsKey( tmp ) ) {
+				attributeOverride = rootEntityClass.getAttributeOverrideMap().get( tmp );
+			}
 			attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 			attributeSources.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
 		}
@@ -134,8 +140,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 					new ComponentAttributeSourceImpl(
 							embeddable,
 							getPath(),
-//							createAggregatedOverrideMap()
-							new HashMap<String, AttributeOverride>()
+							createAggregatedOverrideMap( embeddableClass, rootEntityClass.getAttributeOverrideMap() )
 					)
 			);
 		}
@@ -143,6 +148,24 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 			associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 			attributeSources.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 		}
+	}
+
+	private Map<String, AttributeOverride> createAggregatedOverrideMap(
+			EmbeddableClass embeddableClass,
+			Map<String, AttributeOverride> attributeOverrides) {
+		// add all overrides passed down to this instance - they override overrides ;-) which are defined further down
+		// the embeddable chain
+		Map<String, AttributeOverride> aggregatedOverrideMap = new HashMap<String, AttributeOverride>(
+				attributeOverrides
+		);
+
+		for ( Map.Entry<String, AttributeOverride> entry : embeddableClass.getAttributeOverrideMap().entrySet() ) {
+			String fullPath = getPath() + PATH_SEPARATOR + entry.getKey();
+			if ( !aggregatedOverrideMap.containsKey( fullPath ) ) {
+				aggregatedOverrideMap.put( fullPath, entry.getValue() );
+			}
+		}
+		return aggregatedOverrideMap;
 	}
 
 }

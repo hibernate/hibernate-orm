@@ -36,7 +36,12 @@ import org.hibernate.type.Type;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.  See Jira issues
+ * <a href="https://hibernate.onjira.com/browse/HHH-7782">HHH-7782</a> and
+ * <a href="https://hibernate.onjira.com/browse/HHH-7783">HHH-7783</a> for more information.
  */
+@Deprecated
 public class PersistentListElementHolder extends PersistentIndexedElementHolder {
 
 	public PersistentListElementHolder(SessionImplementor session, Element element) {

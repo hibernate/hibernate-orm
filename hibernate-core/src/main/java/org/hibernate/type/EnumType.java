@@ -313,7 +313,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		return enumValueMapper.fromXMLString( xmlValue );
 	}
 
-	private static interface EnumValueMapper {
+	private static interface EnumValueMapper extends Serializable {
 		public int getSqlType();
 		public Enum getValue(ResultSet rs, String[] names) throws SQLException;
 		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
@@ -345,7 +345,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 	}
 
-	private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper {
+	private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
 		private transient Enum[] enumsByOrdinal;
 
 		@Override
@@ -416,7 +416,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 	}
 
-	private class NamedEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper {
+	private class NamedEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
 		@Override
 		public int getSqlType() {
 			return Types.VARCHAR;

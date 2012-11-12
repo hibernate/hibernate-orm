@@ -261,12 +261,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	private void treatAsOrdinal() {
 		if ( enumValueMapper == null || ! OrdinalEnumValueMapper.class.isInstance( enumValueMapper ) ) {
 			enumValueMapper = new OrdinalEnumValueMapper();
+			sqlType = enumValueMapper.getSqlType();
 		}
 	}
 
 	private void treatAsNamed() {
 		if ( enumValueMapper == null || ! NamedEnumValueMapper.class.isInstance( enumValueMapper ) ) {
 			enumValueMapper = new NamedEnumValueMapper();
+			sqlType = enumValueMapper.getSqlType();
 		}
 	}
 

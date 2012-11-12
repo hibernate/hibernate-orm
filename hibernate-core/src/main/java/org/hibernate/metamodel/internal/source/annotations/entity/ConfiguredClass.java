@@ -501,8 +501,10 @@ public class ConfiguredClass {
 				associationAttributeMap.put( attributeName, attribute );
 				break;
 			}
-			case ELEMENT_COLLECTION_BASIC:
 			case ELEMENT_COLLECTION_EMBEDDABLE:
+				resolveEmbeddable( attributeName, referencedCollectionType, annotations );
+				// fall through
+			case ELEMENT_COLLECTION_BASIC:
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
 				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(

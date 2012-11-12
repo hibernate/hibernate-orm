@@ -2,6 +2,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
@@ -13,8 +14,9 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		implements IndexedPluralAttributeSource {
 	private final PluralAttributeIndexSource indexSource;
 
-	public IndexedPluralAttributeSourceImpl(PluralAssociationAttribute attribute) {
-		super( attribute );
+	public IndexedPluralAttributeSourceImpl(PluralAssociationAttribute attribute,
+			EntityClass entityClass ) {
+		super( attribute, entityClass );
 		if ( getNature() == org.hibernate.metamodel.spi.source.PluralAttributeSource.Nature.SET || getNature() == org.hibernate.metamodel.spi.source.PluralAttributeSource.Nature.MAP ) {
 			throw new MappingException(
 					"Set / Map could not be an indexed column",

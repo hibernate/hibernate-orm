@@ -30,9 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -44,6 +41,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -59,6 +57,8 @@ import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 /**
  * @author Hardy Ferentschik
@@ -238,13 +238,13 @@ public class EntitySourceImpl implements EntitySource {
 				case MANY_TO_MANY:
 				case ONE_TO_MANY:
 					AttributeSource source = ((PluralAssociationAttribute)associationAttribute).isIndexed() ?
-							new IndexedPluralAttributeSourceImpl((PluralAssociationAttribute)associationAttribute  )
-							:new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute );
+							new IndexedPluralAttributeSourceImpl((PluralAssociationAttribute) associationAttribute, entityClass )
+							:new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute, entityClass );
 					attributeList.add( source );
 					break;
 				case ELEMENT_COLLECTION_BASIC:
 				case ELEMENT_COLLECTION_EMBEDDABLE: {
-					source = new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute );
+					source = new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute, entityClass );
 					attributeList.add( source );
 					break;
 				}

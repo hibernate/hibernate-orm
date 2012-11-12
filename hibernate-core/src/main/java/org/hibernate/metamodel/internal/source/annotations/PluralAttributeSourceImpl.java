@@ -28,11 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -54,10 +55,14 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
+	private final EntityClass entityClass;
 
-	public PluralAttributeSourceImpl(final PluralAssociationAttribute associationAttribute) {
+	public PluralAttributeSourceImpl(
+			final PluralAssociationAttribute associationAttribute,
+			final EntityClass entityClass ) {
 		this.associationAttribute = associationAttribute;
 		this.nature = resolveAttributeNature();
+		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.elementSource = determineElementSource();
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
@@ -87,8 +92,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			case ONE_TO_MANY:
 				return new OneToManyPluralAttributeElementSourceImpl( associationAttribute );
 			case ELEMENT_COLLECTION_BASIC:
-			case ELEMENT_COLLECTION_EMBEDDABLE: {
 				return new BasicPluralAttributeElementSourceImpl( associationAttribute );
+			case ELEMENT_COLLECTION_EMBEDDABLE: {
+				// TODO: cascadeStyles?
+				return new CompositePluralAttributeElementSourceImpl(
+						associationAttribute, (RootEntityClass) entityClass, null );
 			}
 		}
 		throw new AssertionError( "Unexpected attribute nature for a association:" + associationAttribute.getNature() );

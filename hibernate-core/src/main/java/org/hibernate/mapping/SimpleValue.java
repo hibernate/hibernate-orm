@@ -370,7 +370,9 @@ public class SimpleValue implements KeyValue {
 
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = xProperty.getAnnotations();
+			final Annotation[] annotations = xProperty == null
+					? null
+					: xProperty.getAnnotations();
 
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
@@ -383,7 +385,8 @@ public class SimpleValue implements KeyValue {
 							table.getSchema(),
 							table.getName(),
 							Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
-							columnsNames )
+							columnsNames
+					)
 			);
 		}
 		catch ( ClassNotFoundException cnfe ) {

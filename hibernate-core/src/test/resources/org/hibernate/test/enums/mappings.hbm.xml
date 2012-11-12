@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="org.hibernate.test.enums.UnspecifiedEnumTypeEntity" table="ENUM_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="increment" />
+        </id>
+        <property name="enum1">
+            <type name="org.hibernate.type.EnumType">
+                <!--<param name="useNamed">true</param>-->
+                <param name="enumClass">org.hibernate.test.enums.UnspecifiedEnumTypeEntity$E1</param>
+            </type>
+        </property>
+        <property name="enum2">
+            <type name="org.hibernate.type.EnumType">
+                <!--<param name="useNamed">false</param>-->
+                <param name="enumClass">org.hibernate.test.enums.UnspecifiedEnumTypeEntity$E2</param>
+            </type>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -54,7 +54,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T>, ProcedureParameterExtractionAware<T> {
+		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T> {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -317,15 +317,6 @@ public abstract class AbstractStandardBasicType<T>
 	@SuppressWarnings({ "unchecked" })
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return javaTypeDescriptor.extractLoggableRepresentation( (T) value );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public final void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) {
-		node.setText( toString( (T) value ) );
-	}
-
-	public final Object fromXMLNode(Node xml, Mapping factory) {
-		return fromString( xml.getText() );
 	}
 
 	public final boolean isMutable() {

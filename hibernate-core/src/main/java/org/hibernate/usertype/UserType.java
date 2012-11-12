@@ -60,8 +60,13 @@ import org.hibernate.engine.spi.SessionImplementor;
  * incompatible changes to classes or interfaces in that
  * package.
  *
- * @see CompositeUserType for more complex cases
+ * @see CompositeUserType
  * @see org.hibernate.type.Type
+ * @see LoggableUserType
+ * @see ParameterizedType
+ * @see UserVersionType
+ * @see org.hibernate.type.StringRepresentableType
+ *
  * @author Gavin King
  */
 public interface UserType {

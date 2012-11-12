@@ -662,20 +662,6 @@ public abstract class CollectionType extends AbstractType implements Association
 	public boolean isXMLElement() {
 		return true;
 	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return xml;
-	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) 
-	throws HibernateException {
-		if ( !isEmbeddedInXML ) {
-			node.detach();
-		}
-		else {
-			replaceNode( node, (Element) value );
-		}
-	}
 	
 	/**
 	 * We always need to dirty check the collection because we sometimes 

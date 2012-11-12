@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -54,7 +52,7 @@ import org.hibernate.usertype.UserVersionType;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CustomType extends AbstractType implements IdentifierType, DiscriminatorType, VersionType, BasicType {
+public class CustomType extends AbstractType implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType {
 	private final UserType userType;
 	private final String name;
 	private final int[] types;
@@ -132,12 +130,12 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 
 	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
 			throws HibernateException {
-		return userType.assemble(cached, owner);
+		return userType.assemble( cached, owner );
 	}
 
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 			throws HibernateException {
-		return userType.disassemble(value);
+		return userType.disassemble( value );
 	}
 
 	public Object replace(
@@ -161,31 +159,13 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		userType.nullSafeSet( st, value, index, session );
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public String toXMLString(Object value, SessionFactoryImplementor factory) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( userType instanceof EnhancedUserType ) {
-			return ( (EnhancedUserType) userType ).toXMLString( value );
-		}
-		else {
-			return value.toString();
-		}
-	}
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public Object fromXMLString(String xml, Mapping factory) {
-		return ( (EnhancedUserType) userType ).fromXMLString(xml);
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
-		return userType.deepCopy(value);
+		return userType.deepCopy( value );
 	}
 
 	public boolean isMutable() {
@@ -193,7 +173,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	}
 
 	public Object stringToObject(String xml) {
-		return ( (EnhancedUserType) userType ).fromXMLString(xml);
+		return fromStringValue( xml );
 	}
 
 	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
@@ -212,17 +192,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		return ( (UserVersionType) userType ).seed( session );
 	}
 
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml.getText(), factory );
-	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
-		node.setText( toXMLString(value, factory) );
-	}
-
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
 		}
@@ -230,7 +200,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 			return ( ( LoggableUserType ) userType ).toLoggableString( value, factory );
 		}
 		else {
-			return toXMLString( value, factory );
+			return toString( value );
 		}
 	}
 
@@ -242,8 +212,39 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		return result;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
-			throws HibernateException {
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) {
 		return checkable[0] && isDirty(old, current, session);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public String toString(Object value) throws HibernateException {
+		if ( StringRepresentableType.class.isInstance( userType ) ) {
+			return ( (StringRepresentableType) userType ).toString( value );
+		}
+		else {
+			if ( value == null ) {
+				return null;
+			}
+			else {
+				return value.toString();
+			}
+		}
+	}
+
+	@Override
+	public Object fromStringValue(String string) throws HibernateException {
+		if ( StringRepresentableType.class.isInstance( userType ) ) {
+			return ( (StringRepresentableType) userType ).fromStringValue( string );
+		}
+		else {
+			throw new HibernateException(
+					String.format(
+							"Custom UserType class [%s] did not implement %s, cannot process #fromStringValue call",
+							name,
+							StringRepresentableType.class
+					)
+			);
+		}
 	}
 }

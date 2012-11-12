@@ -386,31 +386,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return isEmbeddedInXML;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		if ( !isEmbeddedInXML ) {
-			return getIdentifierType(factory).fromXMLNode(xml, factory);
-		}
-		else {
-			return xml;
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		if ( !isEmbeddedInXML ) {
-			getIdentifierType(factory).setToXMLNode(node, value, factory);
-		}
-		else {
-			Element elt = (Element) value;
-			replaceNode( node, new ElementWrapper(elt) );
-		}
-	}
-
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
 	throws MappingException {
 		if ( isReferenceToPrimaryKey() ) { //TODO: this is a bit arbitrary, expose a switch to the user?

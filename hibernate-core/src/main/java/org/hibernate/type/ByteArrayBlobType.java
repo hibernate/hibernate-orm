@@ -132,10 +132,6 @@ public class ByteArrayBlobType extends AbstractLobType {
 		}
 	}
 
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		node.setText( toString( value ) );
-	}
-
 	public String toString(Object val) {
 		byte[] bytes = unWrap( val );
 		StringBuilder buf = new StringBuilder( 2 * bytes.length );
@@ -149,11 +145,6 @@ public class ByteArrayBlobType extends AbstractLobType {
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return value == null ? "null" : toString( value );
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		String xmlText = xml.getText();
-		return xmlText == null || xmlText.length() == 0 ? null : fromString( xmlText );
 	}
 
 	private Object fromString(String xmlText) {

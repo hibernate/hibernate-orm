@@ -106,16 +106,8 @@ public class SerializableToBlobType extends AbstractLobType implements DynamicPa
 		}
 	}
 
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		type.setToXMLNode( node, value, factory );
-	}
-
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return type.toLoggableString( value, factory );
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return type.fromXMLNode( xml, factory );
 	}
 
 	public Object deepCopy(Object value, SessionFactoryImplementor factory)

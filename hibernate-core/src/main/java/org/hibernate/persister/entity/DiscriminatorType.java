@@ -154,13 +154,4 @@ public class DiscriminatorType extends AbstractType {
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return underlyingType.getColumnSpan( mapping );
 	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		// todo : ???
-		return null;
-	}
-
 }

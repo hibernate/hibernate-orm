@@ -48,7 +48,7 @@ import org.hibernate.metamodel.spi.relational.Size;
  * @deprecated Use the {@link AbstractStandardBasicType} approach instead
  */
 @Deprecated
-public abstract class NullableType extends AbstractType implements StringRepresentableType, XmlRepresentableType {
+public abstract class NullableType extends AbstractType implements StringRepresentableType {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NullableType.class.getName());
 
 	private final Size dictatedSize = new Size();
@@ -241,15 +241,6 @@ public abstract class NullableType extends AbstractType implements StringReprese
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return value == null ? "null" : toString(value);
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml.getText(), factory );
-	}
-
-	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
-		xml.setText( toXMLString(value, factory) );
 	}
 
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {

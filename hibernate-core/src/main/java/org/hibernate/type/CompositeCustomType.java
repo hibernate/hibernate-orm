@@ -287,15 +287,6 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return null;
 	}
 
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return xml;
-	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
-		replaceNode( node, (Element) value );
-	}
-
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if (value==null) return result;

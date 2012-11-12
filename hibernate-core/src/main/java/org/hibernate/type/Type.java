@@ -385,30 +385,6 @@ public interface Type extends Serializable {
 	throws HibernateException;
 
 	/**
-	 * A representation of the value to be embedded in an XML element.
-	 *
-	 * @param node The XML node to which to write the value
-	 * @param value The value to write
-	 * @param factory The session factory
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 */
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
-
-	/**
-	 * Parse the XML representation of an instance.
-	 *
-	 * @param xml The XML node from which to read the value
-	 * @param factory The session factory
-	 *
-	 * @return an instance of the {@link #getReturnedClass() mapped class}
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 */
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException;
-
-	/**
 	 * Returns the abbreviated name of the type.
 	 *
 	 * @return String the Hibernate type name

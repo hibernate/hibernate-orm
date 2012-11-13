@@ -31,6 +31,7 @@ import java.util.Set;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
@@ -76,6 +77,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	@Override
 	public PluralAttributeElementSource getElementSource() {
 		return elementSource;
+	}
+
+	@Override
+	public ValueHolder<Class<?>> getElementClassReference() {
+		// TODO: needed?
+		return null;
 	}
 
 	@Override

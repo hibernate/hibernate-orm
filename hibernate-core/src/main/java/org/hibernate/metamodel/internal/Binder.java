@@ -55,7 +55,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
-import org.hibernate.metamodel.internal.source.hbm.ArrayAttributeSource;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -2504,7 +2503,7 @@ public class Binder {
 
 	private Type resolvePluralType( 
 			PluralAttributeBinding pluralAttributeBinding,
-			PluralAttributeSource attributeSource,
+			PluralAttributeSource pluralAttributeSource,
 			PluralAttributeSource.Nature nature){
 		if ( pluralAttributeBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
 			return resolveCustomCollectionType( pluralAttributeBinding );
@@ -2519,9 +2518,7 @@ public class Binder {
 				case LIST:
 					return typeFactory.list( role, propertyRef, embedded );
 				case ARRAY:
-//					ArrayAttributeSource arraySource
-//							= (ArrayAttributeSource) attributeSource;
-//					return typeFactory.array( role, propertyRef, embedded, arraySource.getPluralAttributeElement().getCollectionType() );
+					return typeFactory.array( role, propertyRef, embedded, pluralAttributeSource.getElementClassReference().getValue() );
 				case MAP:
 					if ( pluralAttributeBinding.isSorted() ) {
 						return typeFactory.sortedMap( role, propertyRef, embedded, pluralAttributeBinding.getComparator() );

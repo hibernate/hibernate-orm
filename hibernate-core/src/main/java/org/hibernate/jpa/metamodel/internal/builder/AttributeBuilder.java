@@ -478,6 +478,7 @@ public class AttributeBuilder {
 
 			if ( pluralAttributeBinding.getAttribute().getNature() == org.hibernate.metamodel.spi.domain.PluralAttribute.Nature.ARRAY ) {
 				context.handleUnsupportedFeature( UnsupportedFeature.ARRAY );
+				return null;
 			}
 
 			// First, determine the type of the elements and use that to help determine the

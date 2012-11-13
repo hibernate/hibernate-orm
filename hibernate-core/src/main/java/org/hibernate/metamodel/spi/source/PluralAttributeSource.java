@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
@@ -41,6 +42,8 @@ public interface PluralAttributeSource
 	public PluralAttributeKeySource getKeySource();
 
 	public PluralAttributeElementSource getElementSource();
+
+	public ValueHolder<Class<?>> getElementClassReference();
 
 	public TableSpecificationSource getCollectionTableSpecificationSource();
 
@@ -79,7 +82,7 @@ public interface PluralAttributeSource
 		SET( Set.class ),
 		LIST( List.class ),
 		MAP( Map.class ),
-		ARRAY( null ); // TODO: ?
+		ARRAY( Object[].class );
 
 		private final Class<?> reportedJavaType;
 

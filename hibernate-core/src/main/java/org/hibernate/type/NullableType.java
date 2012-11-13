@@ -27,7 +27,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.dom4j.Node;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -207,15 +206,6 @@ public abstract class NullableType extends AbstractType implements StringReprese
 		return nullSafeGet( rs, name );
 	}
 
-	public final String toXMLString(Object value, SessionFactoryImplementor pc)
-	throws HibernateException {
-		return toString(value);
-	}
-
-	public final Object fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return xml==null || xml.length()==0 ? null : fromStringValue(xml);
-	}
-
 	public final int getColumnSpan(Mapping session) {
 		return 1;
 	}
@@ -236,7 +226,7 @@ public abstract class NullableType extends AbstractType implements StringReprese
 
 	@Override
 	public boolean isEqual(Object x, Object y) {
-		return EqualsHelper.equals(x, y);
+		return EqualsHelper.equals( x, y );
 	}
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {

@@ -122,17 +122,7 @@ public class MetaType extends AbstractType {
 	}
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		return toXMLString(value, factory);
-	}
-	
-	public String toXMLString(Object value, SessionFactoryImplementor factory)
-		throws HibernateException {
-		return (String) value; //value is the entity name
-	}
-
-	public Object fromXMLString(String xml, Mapping factory)
-		throws HibernateException {
-		return xml; //xml is the entity name
+		return value == null ? "<null>" : value.toString();
 	}
 
 	public String getName() {

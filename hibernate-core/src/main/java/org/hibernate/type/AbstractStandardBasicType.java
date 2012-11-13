@@ -30,8 +30,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -40,7 +38,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -77,14 +74,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	public T fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
-	}
-
-	public String toXMLString(T value, SessionFactoryImplementor factory) throws HibernateException {
-		return toString( value );
-	}
-
-	public T fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return StringHelper.isEmpty( xml ) ? null : fromStringValue( xml );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
@@ -303,7 +292,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, (T) value, index, options );
 	}
 
 	protected SqlTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
@@ -346,7 +335,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	public final Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
-		return nullSafeGet(rs, names, session, owner);
+		return nullSafeGet( rs, names, session, owner );
 	}
 
 	public final Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {

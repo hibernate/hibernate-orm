@@ -24,25 +24,33 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.Ref;
 import java.sql.Struct;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.mapping.Array;
+import org.hibernate.engine.jdbc.internal.JdbcTypeCodeNameMap;
 
 /**
  * Presents recommended {@literal JDCB typecode <-> Java Class} mappings.  Currently the recommendations
- * contained here come from the JDBC spec itself, as outlined at <a href="http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html#1034737"/>
+ * contained here come from the JDBC spec itself (as outlined at
+ * <a href="http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html#1034737"/>), plus a few
+ * "common sense" extras.
+ * <p/>
  * Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} contribute this information.
  *
  * @author Steve Ebersole
@@ -50,17 +58,58 @@ import org.hibernate.mapping.Array;
 public class JdbcTypeJavaClassMappings {
 	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
-	private static final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap = buildJdbcJavaClassMappings();
-	private static final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap = transpose( javaClassToJdbcTypeCodeMap );
-
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
 
-	private JdbcTypeJavaClassMappings() {
+	private final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap = new ConcurrentHashMap<Class, Integer>();
+	private final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap = new ConcurrentHashMap<Integer, Class>();
+
+	public JdbcTypeJavaClassMappings() {
+		// first build the baseline
+		addToBoth( Types.VARCHAR, String.class );
+		addToBoth( Types.BIT, Boolean.class );
+		addToBoth( Types.INTEGER, Integer.class );
+		addToBoth( Types.BIGINT, Long.class );
+		addToBoth( Types.REAL, Float.class );
+		addToBoth( Types.DOUBLE, Double.class );
+		addToBoth( Types.NUMERIC, BigDecimal.class );
+		addToBoth( Types.LONGVARBINARY, byte[].class );
+		addToBoth( Types.DATE, Date.class );
+		addToBoth( Types.TIME, Time.class );
+		addToBoth( Types.TIMESTAMP, Timestamp.class );
+		addToBoth( Types.BLOB, Blob.class );
+		addToBoth( Types.CLOB, Clob.class );
+		addToBoth( Types.NCLOB, NClob.class );
+		addToBoth( Types.ARRAY, Array.class );
+		addToBoth( Types.STRUCT, Struct.class );
+		addToBoth( Types.REF, Ref.class );
+		addToBoth( Types.JAVA_OBJECT, Class.class );
+
+		// now add additional typeCode->javaType mappings
+		jdbcTypeCodeToJavaClassMap.put( Types.NVARCHAR, String.class );
+		jdbcTypeCodeToJavaClassMap.put( Types.LONGVARCHAR, String.class );
+		jdbcTypeCodeToJavaClassMap.put( Types.LONGNVARCHAR, String.class );
+		jdbcTypeCodeToJavaClassMap.put( Types.CHAR, String.class );
+		jdbcTypeCodeToJavaClassMap.put( Types.NCHAR, String.class );
+		jdbcTypeCodeToJavaClassMap.put( Types.VARBINARY, byte[].class );
+		jdbcTypeCodeToJavaClassMap.put( Types.OTHER, Object.class );
+
+		// then add additional javaType->typeCode mappings
+		javaClassToJdbcTypeCodeMap.put( Character.class, Types.CHAR );
+		javaClassToJdbcTypeCodeMap.put( char[].class, Types.VARCHAR );
+		javaClassToJdbcTypeCodeMap.put( Character[].class, Types.VARCHAR );
+		javaClassToJdbcTypeCodeMap.put( Byte[].class, Types.LONGVARBINARY );
+		javaClassToJdbcTypeCodeMap.put( Date.class, Types.TIMESTAMP );
+		javaClassToJdbcTypeCodeMap.put( Calendar.class, Types.TIMESTAMP );
+	}
+
+	private void addToBoth(int typeCode, Class javaType ) {
+		jdbcTypeCodeToJavaClassMap.put( typeCode, javaType );
+		javaClassToJdbcTypeCodeMap.put( javaType, typeCode );
 	}
 
 	@SuppressWarnings("UnnecessaryUnboxing")
 	public int determineJdbcTypeCodeForJavaClass(Class cls) {
-		Integer typeCode = JdbcTypeJavaClassMappings.javaClassToJdbcTypeCodeMap.get( cls );
+		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
 			return typeCode.intValue();
 		}
@@ -86,49 +135,49 @@ public class JdbcTypeJavaClassMappings {
 		return Object.class;
 	}
 
+	public static void main(String... args) {
+		final JdbcTypeJavaClassMappings me = new JdbcTypeJavaClassMappings();
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		System.out.println( "jdbcTypeCode -> javaType mappings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		for ( Map.Entry<Integer, Class> entry : me.jdbcTypeCodeToJavaClassMap.entrySet() ) {
+			final Integer typeCode = entry.getKey();
+			System.out.println(
+					String.format(
+							"%s (%s) -> %s",
+							typeCode,
+							JdbcTypeCodeNameMap.INSTANCE.getJdbcTypeName( typeCode ),
+							getName( entry.getValue() )
+					)
+			);
+		}
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-	private static ConcurrentHashMap<Class, Integer> buildJdbcJavaClassMappings() {
-		ConcurrentHashMap<Class, Integer> jdbcJavaClassMappings = new ConcurrentHashMap<Class, Integer>();
+		System.out.println();
 
-		// these mappings are the ones outlined specifically in the spec
-		jdbcJavaClassMappings.put( String.class, Types.VARCHAR );
-		jdbcJavaClassMappings.put( BigDecimal.class, Types.NUMERIC );
-		jdbcJavaClassMappings.put( Boolean.class, Types.BIT );
-		jdbcJavaClassMappings.put( Integer.class, Types.INTEGER );
-		jdbcJavaClassMappings.put( Long.class, Types.BIGINT );
-		jdbcJavaClassMappings.put( Float.class, Types.REAL );
-		jdbcJavaClassMappings.put( Double.class, Types.DOUBLE );
-		jdbcJavaClassMappings.put( byte[].class, Types.LONGVARBINARY );
-		jdbcJavaClassMappings.put( Date.class, Types.DATE );
-		jdbcJavaClassMappings.put( Time.class, Types.TIME );
-		jdbcJavaClassMappings.put( Timestamp.class, Types.TIMESTAMP );
-		jdbcJavaClassMappings.put( Blob.class, Types.BLOB );
-		jdbcJavaClassMappings.put( Clob.class, Types.CLOB );
-		jdbcJavaClassMappings.put( Array.class, Types.ARRAY );
-		jdbcJavaClassMappings.put( Struct.class, Types.STRUCT );
-		jdbcJavaClassMappings.put( Ref.class, Types.REF );
-		jdbcJavaClassMappings.put( Class.class, Types.JAVA_OBJECT );
-
-		// additional "common sense" registrations
-		jdbcJavaClassMappings.put( Character.class, Types.CHAR );
-		jdbcJavaClassMappings.put( char[].class, Types.VARCHAR );
-		jdbcJavaClassMappings.put( Character[].class, Types.VARCHAR );
-		jdbcJavaClassMappings.put( Byte[].class, Types.LONGVARBINARY );
-		jdbcJavaClassMappings.put( Date.class, Types.TIMESTAMP );
-		jdbcJavaClassMappings.put( Calendar.class, Types.TIMESTAMP );
-
-		return jdbcJavaClassMappings;
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		System.out.println( "jdbcTypeCode -> javaType mappings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		for ( Map.Entry<Class, Integer> entry : me.javaClassToJdbcTypeCodeMap.entrySet() ) {
+			final Integer typeCode = entry.getValue();
+			System.out.println(
+					String.format(
+							"%s -> %s (%s)",
+							getName( entry.getKey() ),
+							typeCode,
+							JdbcTypeCodeNameMap.INSTANCE.getJdbcTypeName( typeCode )
+					)
+			);
+		}
+		System.out.println( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 	}
 
-	private static ConcurrentHashMap<Integer, Class> transpose(ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap) {
-		final ConcurrentHashMap<Integer, Class> transposed = new ConcurrentHashMap<Integer, Class>();
-
-		for ( Map.Entry<Class,Integer> entry : javaClassToJdbcTypeCodeMap.entrySet() ) {
-			transposed.put( entry.getValue(), entry.getKey() );
+	private static String getName(Class javaType) {
+		if ( ! javaType.isArray() ) {
+			return javaType.getName();
 		}
 
-		return transposed;
+		return javaType.getSimpleName();
 	}
 }

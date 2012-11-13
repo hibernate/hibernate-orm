@@ -342,15 +342,20 @@ public class EntityClass extends ConfiguredClass {
 		}
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
 
-		final AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.IMMUTABLE, ClassInfo.class );
+		final AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.IMMUTABLE,
+				ClassInfo.class
+		);
 		if ( hibernateImmutableAnnotation != null ) {
 			isImmutable = true;
 		}
-		else if (hibernateEntityAnnotation != null
-				&& hibernateEntityAnnotation.value( "mutable" ) != null){
+		else if ( hibernateEntityAnnotation != null
+				&& hibernateEntityAnnotation.value( "mutable" ) != null ) {
 
 			isImmutable = !hibernateEntityAnnotation.value( "mutable" ).asBoolean();
-		} else {
+		}
+		else {
 			isImmutable = false;
 		}
 

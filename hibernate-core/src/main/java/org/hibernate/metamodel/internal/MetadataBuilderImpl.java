@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.internal;
 
 import javax.persistence.SharedCacheMode;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
@@ -41,16 +43,23 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.CompositeCustomType;
+import org.hibernate.type.CustomType;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
 
 /**
+ * The implementation of the {@link MetadataBuilder} contract.
+ *
  * @author Steve Ebersole
  */
 public class MetadataBuilderImpl implements MetadataBuilder {
@@ -145,6 +154,24 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	@Override
+	public MetadataBuilder with(BasicType type) {
+		options.basicTypeRegistrations.add( type );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(UserType type, String[] keys) {
+		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(CompositeUserType type, String[] keys) {
+		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+		return this;
+	}
+
+	@Override
 	public Metadata build() {
 		return new MetadataImpl( sources, options );
 	}
@@ -165,6 +192,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private String defaultCatalogName;
 		private MultiTenancyStrategy multiTenancyStrategy;
 		public IndexView jandexView;
+		public List<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
 
 		public OptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -267,6 +295,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		@Override
 		public IndexView getJandexView() {
 			return jandexView;
+		}
+
+		@Override
+		public List<BasicType> getBasicTypeRegistrations() {
+			return basicTypeRegistrations;
 		}
 	}
 }

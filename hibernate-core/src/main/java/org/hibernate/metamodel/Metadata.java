@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.SharedCacheMode;
@@ -36,11 +37,15 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
+
 import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
@@ -65,6 +70,7 @@ public interface Metadata {
 		public String getDefaultCatalogName();
 		public MultiTenancyStrategy getMultiTenancyStrategy();
 		public IndexView getJandexView();
+		public List<BasicType> getBasicTypeRegistrations();
 	}
 
 	/**

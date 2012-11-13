@@ -234,6 +234,29 @@ public interface AttributeBindingContainer {
 			int base);
 
 	/**
+	 * Factory method for array attribute bindings.
+	 *
+	 *
+	 * @param attribute The attribute for which to make a binding.
+	 * @param nature The nature of the collection elements.
+	 * @param referencedAttributeBinding
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param metaAttributeContext
+	 * @param base
+	 *
+	 * @return The attribute binding instance.
+	 */
+	public ArrayBinding makeArrayAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementBinding.Nature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			MetaAttributeContext metaAttributeContext,
+			int base);
+
+	/**
 	 * Factory method for map attribute bindings.
 	 *
 	 *

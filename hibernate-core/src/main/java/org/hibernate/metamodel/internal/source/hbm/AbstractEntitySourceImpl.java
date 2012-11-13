@@ -34,6 +34,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
+import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
 import org.hibernate.jaxb.spi.hbm.JaxbComponentElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDynamicComponentElement;
@@ -62,6 +63,7 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 /**
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public abstract class AbstractEntitySourceImpl
 		extends AbstractHbmSourceNode
@@ -145,6 +147,7 @@ public abstract class AbstractEntitySourceImpl
 		);
 		processMapAttributes( attributeSources, element.getMap() );
 		processListAttributes( attributeSources, element.getList() );
+		processArrayAttributes( attributeSources, element.getArray() );
 		processSetAttributes( attributeSources, element.getSet() );
 		processIdBagAttributes( attributeSources, element.getIdbag() );
 		processBagAttributes( attributeSources, element.getBag() );
@@ -229,6 +232,17 @@ public abstract class AbstractEntitySourceImpl
 							element, this
 					)
 			);
+		}
+	}
+	protected void processArrayAttributes(List<AttributeSource> results,
+			List<JaxbArrayElement> propertyElements){
+		for ( JaxbArrayElement element : propertyElements ) {
+			results.add(
+					new ArrayAttributeSource(
+							sourceMappingDocument(),
+							element, this
+							)
+					);
 		}
 	}
 	protected void processListAttributes(List<AttributeSource> results,

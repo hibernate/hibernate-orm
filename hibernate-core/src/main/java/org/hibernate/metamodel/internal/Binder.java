@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,8 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -55,14 +55,15 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
+import org.hibernate.metamodel.internal.source.hbm.ArrayAttributeSource;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -84,6 +85,7 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -115,6 +117,8 @@ import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionContext;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionDelegate;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
@@ -150,11 +154,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
-
-import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
-import static org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
-import static org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionContext;
-import static org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionDelegate;
+import org.jboss.logging.Logger;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
@@ -651,7 +651,10 @@ public class Binder {
 		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.BASIC ) {
 			if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
 				bindBasicSetElementTablePrimaryKey( attributeBinding );
-			} else if ( pluralAttributeNature == PluralAttributeSource.Nature.LIST || pluralAttributeNature == PluralAttributeSource.Nature.MAP ) {
+			} else if (
+					pluralAttributeNature == PluralAttributeSource.Nature.LIST
+					|| pluralAttributeNature == PluralAttributeSource.Nature.MAP
+					|| pluralAttributeNature == PluralAttributeSource.Nature.ARRAY ) {
 				bindIndexedTablePrimaryKey( ( IndexedPluralAttributeBinding ) attributeBinding );
 			} else {
 				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
@@ -1084,6 +1087,25 @@ public class Binder {
 				base
 		);
 	}
+	
+	private AbstractPluralAttributeBinding bindArrayAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final PluralAttributeSource attributeSource,
+			PluralAttribute attribute ) {
+		if ( attribute == null ) {
+			attribute = attributeBindingContainer.getAttributeContainer().createArray( attributeSource.getName() );
+		}
+		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class.cast( attributeSource ).getIndexSource().base() : 0;
+		return attributeBindingContainer.makeArrayAttributeBinding(
+				attribute,
+				pluralAttributeElementNature( attributeSource ),
+				determinePluralAttributeKeyReferencedBinding( attributeBindingContainer, attributeSource ),
+				propertyAccessorName( attributeSource ),
+				attributeSource.isIncludedInOptimisticLocking(),
+				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
+				base
+		);
+	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -1449,6 +1471,13 @@ public class Binder {
 						attribute
 				);
 				break;
+			case ARRAY:
+				attributeBinding = bindArrayAttribute(
+						attributeBindingContainer,
+						attributeSource,
+						attribute
+				);
+				break;
 			default:
 				throw new NotYetImplementedException( nature.toString() );
 		}
@@ -1457,7 +1486,7 @@ public class Binder {
 		// (ex: Set vs. SortedSet).
 		bindSortingAndOrdering( attributeBinding, attributeSource );
 		
-		final Type resolvedType = resolvePluralType( attributeBinding, nature );
+		final Type resolvedType = resolvePluralType( attributeBinding, attributeSource, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = typeHelper.getReflectedCollectionJavaTypes( attributeBinding );
 		bindHibernateTypeDescriptor(
@@ -2473,7 +2502,10 @@ public class Binder {
 		);
 	}
 
-	private Type resolvePluralType( PluralAttributeBinding pluralAttributeBinding, PluralAttributeSource.Nature nature){
+	private Type resolvePluralType( 
+			PluralAttributeBinding pluralAttributeBinding,
+			PluralAttributeSource attributeSource,
+			PluralAttributeSource.Nature nature){
 		if ( pluralAttributeBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
 			return resolveCustomCollectionType( pluralAttributeBinding );
 		} else {
@@ -2486,6 +2518,10 @@ public class Binder {
 					return typeFactory.bag( role, propertyRef, embedded );
 				case LIST:
 					return typeFactory.list( role, propertyRef, embedded );
+				case ARRAY:
+//					ArrayAttributeSource arraySource
+//							= (ArrayAttributeSource) attributeSource;
+//					return typeFactory.array( role, propertyRef, embedded, arraySource.getPluralAttributeElement().getCollectionType() );
 				case MAP:
 					if ( pluralAttributeBinding.isSorted() ) {
 						return typeFactory.sortedMap( role, propertyRef, embedded, pluralAttributeBinding.getComparator() );

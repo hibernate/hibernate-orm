@@ -427,6 +427,26 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
+	public ArrayBinding makeArrayAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementBinding.Nature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			MetaAttributeContext metaAttributeContext,
+			int base) {
+		return compositeAttributeBindingContainer.makeArrayAttributeBinding(
+				attribute,
+				nature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				metaAttributeContext,
+				base
+		);
+	}
+
+	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature elementNature,

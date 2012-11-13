@@ -78,7 +78,8 @@ public interface PluralAttributeSource
 		ID_BAG( Collection.class ),
 		SET( Set.class ),
 		LIST( List.class ),
-		MAP( Map.class );
+		MAP( Map.class ),
+		ARRAY( null ); // TODO: ?
 
 		private final Class<?> reportedJavaType;
 

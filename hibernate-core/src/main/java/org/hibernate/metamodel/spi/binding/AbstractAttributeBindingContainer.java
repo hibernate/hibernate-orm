@@ -217,6 +217,29 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	}
 
 	@Override
+	public ArrayBinding makeArrayAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementBinding.Nature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			MetaAttributeContext metaAttributeContext,
+			int base) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.ARRAY );
+		final ArrayBinding binding = new ArrayBinding(
+				this,
+				attribute,
+				nature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				metaAttributeContext,
+				base );
+		registerAttributeBinding( binding );
+		return binding;
+	}
+
+	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature elementNature,

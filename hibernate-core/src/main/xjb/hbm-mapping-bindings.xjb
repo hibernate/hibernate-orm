@@ -89,6 +89,9 @@
         <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']">
             <inheritance:implements>org.hibernate.metamodel.spi.source.FilterParameterSource</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='array-element']">
+            <inheritance:implements>org.hibernate.jaxb.spi.hbm.PluralAttributeElement</inheritance:implements>
+        </jaxb:bindings>
 
 
         <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']//xsd:attribute[@name='name']">

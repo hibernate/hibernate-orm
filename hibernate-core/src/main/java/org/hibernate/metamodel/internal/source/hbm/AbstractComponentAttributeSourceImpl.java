@@ -161,8 +161,11 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbArrayElement attributeElement) {
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new ArrayAttributeSource(
+				sourceMappingDocument(),
+				attributeElement,
+				parentContainer
+		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbPrimitiveArrayElement attributeElement) {
 		// todo : implement

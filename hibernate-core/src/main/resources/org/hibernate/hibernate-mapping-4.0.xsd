@@ -449,6 +449,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             <xs:group ref="collection-elements-group"/>
             <xs:element name="loader" minOccurs="0" type="loader-element"/>
             <xs:group ref="sql-dml-all-element-group"/>
+            <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
         </xs:sequence>
         <xs:attributeGroup ref="table-information-group"/>
         <xs:attribute name="access" type="xs:string"/>
@@ -460,6 +461,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:attribute name="element-class" type="xs:string"/>
         <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
         <xs:attribute name="fetch" type="fetch-attribute-with-subselect"/>
+        <xs:attribute name="lazy" type="lazy-attribute-with-extra"/>
         <xs:attribute name="inverse" default="false" type="xs:boolean"/>
         <xs:attribute name="mutable" default="true" type="xs:boolean"/>
         <xs:attribute name="name" use="required" type="xs:string"/>

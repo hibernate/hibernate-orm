@@ -194,6 +194,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
+	public IndexedPluralAttribute createArray(String name) {
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.ARRAY );
+	}
+
+	@Override
 	public IndexedPluralAttribute createMap(String name) {
 		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.MAP );
 	}

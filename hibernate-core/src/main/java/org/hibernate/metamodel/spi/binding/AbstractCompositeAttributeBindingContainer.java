@@ -213,6 +213,29 @@ public abstract class AbstractCompositeAttributeBindingContainer
 	}
 
 	@Override
+	public ArrayBinding makeArrayAttributeBinding(
+			PluralAttribute attribute,
+			PluralAttributeElementBinding.Nature nature,
+			SingularAttributeBinding referencedAttributeBinding,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			MetaAttributeContext metaAttributeContext,
+			int base) {
+		if ( !isModifiable() ) {
+			throw new UnsupportedOperationException( "Attribute bindings are read-only and cannot be modified." );
+		}
+		return super.makeArrayAttributeBinding(
+				attribute,
+				nature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				metaAttributeContext,
+				base
+		);
+	}
+
+	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature elementNature,

@@ -71,6 +71,7 @@ public interface AttributeContainer extends Type {
 	public PluralAttribute createSet(String name);
 	public IndexedPluralAttribute createList(String name);
 	public IndexedPluralAttribute createMap(String name);
+	public IndexedPluralAttribute createArray(String name);
 
 	public SingularAttribute createSyntheticSingularAttribute(String name);
 	public SingularAttribute createSyntheticCompositeAttribute(String name, Hierarchical container);

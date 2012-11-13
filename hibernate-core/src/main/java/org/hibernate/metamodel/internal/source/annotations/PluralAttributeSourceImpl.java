@@ -251,6 +251,8 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		}
 		else if ( Set.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.SET;
+		} else if ( associationAttribute.getAttributeType().isArray() ) {
+			return PluralAttributeSource.Nature.ARRAY;
 		}
 		else {
 			return PluralAttributeSource.Nature.BAG;

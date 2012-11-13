@@ -29,6 +29,8 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.internal.JdbcTypeCodeNameMap;
+
 import org.junit.Assert;
 
 import static org.junit.Assert.fail;
@@ -66,37 +68,12 @@ public class ExtraAssertions {
 					"JDBC type codes did not match...\n" +
 							"Expected: %s (%s)\n" +
 							"Actual  : %s (%s)",
-					jdbcTypeCodeMap().get( expected ),
+					JdbcTypeCodeNameMap.INSTANCE.getJdbcTypeName( expected ),
 					expected,
-					jdbcTypeCodeMap().get( actual ),
+					JdbcTypeCodeNameMap.INSTANCE.getJdbcTypeName( actual ),
 					actual
 			);
 			fail( message );
 		}
-	}
-
-	private static Map<Integer,String> jdbcTypeCodeMap;
-
-	private static synchronized Map<Integer,String> jdbcTypeCodeMap() {
-		if ( jdbcTypeCodeMap == null ) {
-			jdbcTypeCodeMap = generateJdbcTypeCache();
-		}
-		return jdbcTypeCodeMap;
-	}
-
-	private static Map generateJdbcTypeCache() {
-		final Field[] fields = Types.class.getFields();
-		Map cache = new HashMap( (int)( fields.length * .75 ) + 1 );
-		for ( int i = 0; i < fields.length; i++ ) {
-			final Field field = fields[i];
-			if ( Modifier.isStatic( field.getModifiers() ) ) {
-				try {
-					cache.put( field.get( null ), field.getName() );
-				}
-				catch ( Throwable ignore ) {
-				}
-			}
-		}
-		return cache;
 	}
 }

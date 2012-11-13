@@ -43,7 +43,11 @@ public class TypeResolver implements Serializable {
 	private final TypeFactory typeFactory;
 
 	public TypeResolver() {
-		this(  new BasicTypeRegistry(), new TypeFactory() );
+		this(  new BasicTypeRegistry() );
+	}
+
+	public TypeResolver(BasicTypeRegistry basicTypeRegistry) {
+		this( basicTypeRegistry, new TypeFactory() );
 	}
 
 	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {

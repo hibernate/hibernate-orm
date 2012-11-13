@@ -82,6 +82,7 @@ import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeResolver;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -106,7 +107,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final ClassLoaderService classLoaderService;
 //	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
 
-	private TypeResolver typeResolver = new TypeResolver();
+	private final TypeResolver typeResolver;
 
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
@@ -180,9 +181,20 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		processTypeDefinitions( metadataSourceProcessors );
 
+
+		// build BasicTypeRegistry and TypeResolver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// 		ultimately this needs to change a little bit to account for HHH-7792
+		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
+		// todo : add concept of Dialect contributed types
+		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
 			contributor.contribute( this );
 		}
+		// add explicit application registered types
+		for ( org.hibernate.type.BasicType basicType : options.getBasicTypeRegistrations() ) {
+			basicTypeRegistry.register( basicType );
+		}
+		typeResolver = new TypeResolver( basicTypeRegistry );
 
 		processFilterDefinitions( metadataSourceProcessors );
 		processIdentifierGenerators( metadataSourceProcessors );

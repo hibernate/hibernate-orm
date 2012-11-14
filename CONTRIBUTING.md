@@ -39,7 +39,7 @@ appreciated btw), please use rebasing rather than merging.  Merging creates
 "merge commits" that really muck up the project timeline._
 
 ## Submit
-* Sign the [Contributor License Agreement](https://projects.puppetlabs.com/contributor_licenses/sign).
+* Sign the [Contributor License Agreement](https://cla.jboss.org/index.seam).
 * Push your changes to a topic branch in your fork of the repository.
 * Initiate a [pull request](http://help.github.com/send-pull-requests/)
 * Update the Jira issue, adding a comment inclusing a link to the created pull request

@@ -53,8 +53,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	
 	public CompositePluralAttributeElementSourceImpl(
 			AssociationAttribute associationAttribute,
-			RootEntityClass rootEntityClass,
-			Iterable<CascadeStyle> cascadeStyles ) {
+			RootEntityClass rootEntityClass ) {
 		this.associationAttribute = associationAttribute;
 		this.rootEntityClass = rootEntityClass;
 		

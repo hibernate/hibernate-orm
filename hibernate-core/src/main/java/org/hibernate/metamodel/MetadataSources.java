@@ -29,8 +29,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -520,9 +522,18 @@ public class MetadataSources {
 		// For backward compatibility, don't require @Embeddable
 		// classes to be explicitly identified.
 		// Automatically find them by checking the fields' types.
-		// TODO: There's got to be a better way to do this.  Should it be moved?
+		// TODO: There has to be a better way to do this.
 		for ( Field declaredField : clazz.getDeclaredFields() ) {
 			Class<?> fieldClass = declaredField.getType();
+			if ( fieldClass.isArray() ) {
+				fieldClass = fieldClass.getComponentType();
+			}
+			else if ( Collection.class.isAssignableFrom( fieldClass ) ) {
+				ParameterizedType listType = (ParameterizedType) declaredField.getGenericType();
+				fieldClass = (Class<?>) listType.getActualTypeArguments()[0];
+		    }
+			// TODO: Map
+			
 			if ( !fieldClass.isPrimitive() && fieldClass != Object.class ) {
 				try {
 					Index fieldIndex = JandexHelper.indexForClass(
@@ -530,7 +541,7 @@ public class MetadataSources {
 							fieldClass );
 					if ( !fieldIndex.getAnnotations(
 							JPADotNames.EMBEDDABLE ).isEmpty() ) {
-						indexClass( declaredField.getType(), indexer, processedClasses );
+						indexClass( fieldClass, indexer, processedClasses );
 					}
 				} catch ( Exception e ) {
 					// do nothing

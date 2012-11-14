@@ -528,7 +528,8 @@ public class MetadataSources {
 			if ( fieldClass.isArray() ) {
 				fieldClass = fieldClass.getComponentType();
 			}
-			else if ( Collection.class.isAssignableFrom( fieldClass ) ) {
+			else if ( Collection.class.isAssignableFrom( fieldClass )
+					&& declaredField.getGenericType() instanceof ParameterizedType ) {
 				ParameterizedType listType = (ParameterizedType) declaredField.getGenericType();
 				fieldClass = (Class<?>) listType.getActualTypeArguments()[0];
 		    }

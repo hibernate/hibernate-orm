@@ -940,7 +940,7 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = keyBinding.isInverse();
 		if ( isArray ) {
-			elementClass = collectionType.getReturnedClass();
+			elementClass = collectionType.getElementClass();
 		}
 		else {
 			// for non-arrays, we don't need to know the element class

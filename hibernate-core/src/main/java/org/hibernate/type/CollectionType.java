@@ -587,6 +587,9 @@ public abstract class CollectionType extends AbstractType implements Association
 	public final Type getElementType(SessionFactoryImplementor factory) throws MappingException {
 		return factory.getCollectionPersister( getRole() ).getElementType();
 	}
+	public Class getElementClass() {
+		return null;
+	}
 
 	public String toString() {
 		return getClass().getName() + '(' + getRole() + ')';

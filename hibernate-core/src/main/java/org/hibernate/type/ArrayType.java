@@ -53,6 +53,10 @@ public class ArrayType extends CollectionType {
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
 	}
 
+	public Class getElementClass() {
+		return elementClass;
+	}
+
 	public Class getReturnedClass() {
 		return arrayClass;
 	}

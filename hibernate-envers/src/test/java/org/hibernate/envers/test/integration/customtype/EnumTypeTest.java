@@ -1,0 +1,47 @@
+package org.hibernate.envers.test.integration.customtype;
+
+import java.util.List;
+import javax.persistence.EntityManager;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.entities.customtype.EnumTypeEntity;
+import org.hibernate.testing.TestForIssue;
+
+/**
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ */
+@TestForIssue( jiraKey = "HHH-7780" )
+public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { EnumTypeEntity.class };
+	}
+
+	@Test
+	@Priority(10)
+	public void initData() {
+		EntityManager em = getEntityManager();
+
+		em.getTransaction().begin();
+		EnumTypeEntity entity = new EnumTypeEntity( EnumTypeEntity.E1.X, EnumTypeEntity.E2.A );
+		em.persist( entity );
+		em.getTransaction().commit();
+
+		em.close();
+	}
+
+	@Test
+	public void testEnumRepresentation() {
+		EntityManager entityManager = getEntityManager();
+		List<Object[]> values = entityManager.createNativeQuery( "SELECT enum1, enum2 FROM EnumTypeEntity_AUD ORDER BY rev ASC" ).getResultList();
+		entityManager.close();
+
+		Assert.assertNotNull( values );
+		Assert.assertEquals( 1, values.size() );
+		Assert.assertArrayEquals( new Object[] { "X", 0 }, values.get( 0 ) );
+	}
+}

@@ -26,7 +26,6 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 
@@ -45,11 +44,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
-	}
-	
-	@Override
-	public boolean supportsNotNullUnique() {
-		return false;
 	}
 	
 	@Override

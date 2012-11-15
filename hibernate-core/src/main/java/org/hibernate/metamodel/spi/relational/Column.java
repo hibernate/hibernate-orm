@@ -25,7 +25,9 @@ package org.hibernate.metamodel.spi.relational;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.sql.Template;
 
 /**
  * Models a physical column
@@ -127,6 +129,25 @@ public class Column extends AbstractValue {
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
+
+	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
+		return hasCustomRead()
+				? Template.renderWhereStringTemplate( readFragment, dialect, functionRegistry )
+				: Template.TEMPLATE + '.' + getColumnName().getText( dialect );
+	}
+
+	public boolean hasCustomRead() {
+		return StringHelper.isNotEmpty( readFragment );
+	}
+
+	public String getReadExpr(Dialect dialect) {
+		return hasCustomRead() ? readFragment : getColumnName().getText( dialect );
+	}
+
+	public String getWriteExpr() {
+		return StringHelper.isNotEmpty( writeFragment ) ? writeFragment : "?";
+	}
+
 
 	public Size getSize() {
 		return size;

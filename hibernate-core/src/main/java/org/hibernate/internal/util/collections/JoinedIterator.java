@@ -36,33 +36,33 @@ import java.util.List;
  * invoke the Iterators in sequence until all Iterators are exhausted.
  *
  */
-public class JoinedIterator implements Iterator {
+public class JoinedIterator<T> implements Iterator<T> {
 
 	private static final Iterator[] ITERATORS = {};
 
 	// wrapped iterators
-	private Iterator[] iterators;
+	private Iterator<T>[] iterators;
 
 	// index of current iterator in the wrapped iterators array
 	private int currentIteratorIndex;
 
 	// the current iterator
-	private Iterator currentIterator;
+	private Iterator<T> currentIterator;
 
 	// the last used iterator
-	private Iterator lastUsedIterator;
+	private Iterator<T> lastUsedIterator;
 
-	public JoinedIterator(List iterators) {
-		this( (Iterator[]) iterators.toArray(ITERATORS) );
+	public JoinedIterator(List<Iterator<T>> iterators) {
+		this( iterators.toArray(ITERATORS) );
 	}
 
-	public JoinedIterator(Iterator[] iterators) {
+	public JoinedIterator(Iterator<T>[] iterators) {
 		if( iterators==null )
 			throw new NullPointerException("Unexpected NULL iterators argument");
 		this.iterators = iterators;
 	}
 
-	public JoinedIterator(Iterator first, Iterator second) {
+	public JoinedIterator(Iterator<T> first, Iterator<T> second) {
 		this( new Iterator[] { first, second } );
 	}
 
@@ -71,7 +71,7 @@ public class JoinedIterator implements Iterator {
 		return currentIterator.hasNext();
 	}
 
-	public Object next() {
+	public T next() {
 		updateCurrentIterator();
 		return currentIterator.next();
 	}

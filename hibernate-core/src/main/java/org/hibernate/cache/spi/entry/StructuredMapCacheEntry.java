@@ -31,31 +31,30 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * (De)structure the map type collection attribute that is being cached into 2LC.
+ *
  * @author Gavin King
  */
-public class StructuredMapCacheEntry implements CacheEntryStructure {
-
-	public Object structure(Object item) {
-		CollectionCacheEntry entry = (CollectionCacheEntry) item;
-		Serializable[] state = entry.getState();
-		Map map = new HashMap(state.length);
-		for ( int i=0; i<state.length; ) {
-			map.put( state[i++], state[i++] );
+public class StructuredMapCacheEntry implements CacheEntryStructure<CollectionCacheEntry, Map<Serializable,Serializable>> {
+	@Override
+	public Map<Serializable, Serializable> structure(CollectionCacheEntry entry) {
+		final Serializable[] states = entry.getState();
+		final Map<Serializable, Serializable> map = new HashMap<Serializable, Serializable>( states.length );
+		for ( final Serializable state : states ) {
+			map.put( state, state );
 		}
 		return map;
 	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		Map map = (Map) item;
-		Serializable[] state = new Serializable[ map.size()*2 ];
-		int i=0;
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			state[i++] = (Serializable) me.getKey();
-			state[i++] = (Serializable) me.getValue();
+
+	@Override
+	public CollectionCacheEntry destructure(Map<Serializable, Serializable> map, SessionFactoryImplementor factory) {
+		Serializable[] states = new Serializable[map.size() * 2];
+		int i = 0;
+		for ( final Serializable key : map.keySet() ) {
+			states[i++] = key;
+			states[i++] = map.get( key );
 		}
-		return new CollectionCacheEntry(state);
+		return new CollectionCacheEntry( states );
 	}
 
 }

@@ -33,36 +33,36 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Gavin King
  */
-public class StructuredCacheEntry implements CacheEntryStructure {
+public class StructuredCacheEntry implements CacheEntryStructure<CacheEntry, Map> {
 
-	private EntityPersister persister;
+	private final EntityPersister persister;
 
 	public StructuredCacheEntry(EntityPersister persister) {
 		this.persister = persister;
 	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		Map map = (Map) item;
-		boolean lazyPropertiesUnfetched = ( (Boolean) map.get("_lazyPropertiesUnfetched") ).booleanValue();
-		String subclass = (String) map.get("_subclass");
-		Object version = map.get("_version");
-		EntityPersister subclassPersister = factory.getEntityPersister(subclass);
+
+	@Override
+	public CacheEntry destructure(Map map, SessionFactoryImplementor factory) {
+		boolean lazyPropertiesUnfetched = ( (Boolean) map.get( "_lazyPropertiesUnfetched" ) ).booleanValue();
+		String subclass = (String) map.get( "_subclass" );
+		Object version = map.get( "_version" );
+		EntityPersister subclassPersister = factory.getEntityPersister( subclass );
 		String[] names = subclassPersister.getPropertyNames();
 		Serializable[] state = new Serializable[names.length];
-		for ( int i=0; i<names.length; i++ ) {
+		for ( int i = 0; i < names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
-		return new CacheEntry(state, subclass, lazyPropertiesUnfetched, version);
+		return new CacheEntry( state, subclass, lazyPropertiesUnfetched, version );
 	}
 
-	public Object structure(Object item) {
-		CacheEntry entry = (CacheEntry) item;
+	@Override
+	public Map structure(CacheEntry entry) {
 		String[] names = persister.getPropertyNames();
-		Map map = new HashMap(names.length+2);
+		Map map = new HashMap( names.length + 3 );
 		map.put( "_subclass", entry.getSubclass() );
 		map.put( "_version", entry.getVersion() );
 		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() );
-		for ( int i=0; i<names.length; i++ ) {
+		for ( int i = 0; i < names.length; i++ ) {
 			map.put( names[i], entry.getDisassembledState()[i] );
 		}
 		return map;

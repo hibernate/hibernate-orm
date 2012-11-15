@@ -26,9 +26,34 @@ package org.hibernate.cache.spi.entry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * {@link CacheEntry} structure, used for construct / deconstruct the cache entry to different format that store in the 2LC.
+ *
  * @author Gavin King
  */
-public interface CacheEntryStructure {
-	public Object structure(Object item);
-	public Object destructure(Object map, SessionFactoryImplementor factory);
+public interface CacheEntryStructure<S,T> {
+	/**
+	 * Convert the giving {@param source} to the target format of {@link T}.
+	 * <br>
+	 *     The generic type of {@link S} should be either of :
+	 *     <ul>
+	 *         <li>{@link CacheEntry}</li>
+	 *         <li>{@link CollectionCacheEntry}</li>
+	 *     </ul>
+	 * </br>
+	 *
+	 * This is called just before cache entry being stored into 2LC.
+	 *
+	 * @param source The raw cache entry.
+	 * @return The target type of value that being persisted into 2LC.
+	 */
+	public T structure(S source);
+
+	/**
+	 * Deconstruct the {@param target} that load from 2LC to its source type of {@link S}.
+	 *
+	 * @param target The item that load from the 2LC.
+	 * @param factory The SessionFactoryImplementor.
+	 * @return The source type of cache entry.
+	 */
+	public S destructure(T target, SessionFactoryImplementor factory);
 }

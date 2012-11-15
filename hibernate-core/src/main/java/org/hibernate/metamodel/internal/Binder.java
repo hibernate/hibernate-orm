@@ -54,6 +54,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
@@ -133,6 +134,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
@@ -158,7 +160,7 @@ import org.jboss.logging.Logger;
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
  * <p/>
- * The API consists of {@link #Binder(org.hibernate.metamodel.spi.MetadataImplementor, IdentifierGeneratorFactory)} and {@link #bindEntities(Iterable)}
+ * The API consists of {@link #Binder(org.hibernate.metamodel.spi.MetadataImplementor, IdentifierGeneratorFactory)} and {@link #bindEntityHierarchies}
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -270,7 +272,7 @@ public class Binder {
 
 	private AttributeBinding attributeBinding( final String entityName, final String attributeName ) {
 		// Check if binding has already been created
-		final EntityBinding entityBinding = entityBinding( entityName );
+		final EntityBinding entityBinding = findOrBindingEntityBinding( entityName );
 		final AttributeSource attributeSource = attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
 		bindAttribute( entityBinding, attributeSource );
 		return entityBinding.locateAttributeBinding( attributeName );
@@ -772,21 +774,100 @@ public class Binder {
 		typeHelper.bindJdbcDataType( resolvedType, value );
 	}
 
-	private EntityBinding bindEntities( final EntityHierarchy entityHierarchy ) {
+	private EntityBinding bindSubEntity(final EntitySource entitySource, final EntityBinding superEntityBinding) {
+		// Return existing binding if available
+		EntityBinding entityBinding = metadata.getEntityBinding( entitySource.getEntityName() );
+		if ( entityBinding != null ) {
+			return entityBinding;
+		}
+		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
+		bindingContexts.push( bindingContext );
+		try {
+			// Create new entity binding
+			entityBinding = createEntityBinding( entitySource, superEntityBinding );
+			entityBinding.setMutable( entityBinding.getHierarchyDetails().getRootEntityBinding().isMutable() );
+			bindPrimaryTable( entityBinding, entitySource );
+			bindSubEntityPrimaryKey( entityBinding, entitySource );
+			bindSecondaryTables( entityBinding, entitySource );
+			bindUniqueConstraints( entityBinding, entitySource );
+			bindAttributes( entityBinding, entitySource );
+			bindSubEntities( entityBinding, entitySource );
+			return entityBinding;
+		} finally {
+			bindingContexts.pop();
+		}
+	}
+
+	private void bindSubEntityPrimaryKey(final EntityBinding entityBinding, final EntitySource entitySource) {
+		final InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
+		final EntityBinding superEntityBinding = entityBinding.getSuperEntityBinding();
+		if ( superEntityBinding == null ) {
+			throw new AssertionFailure( "super entitybinding is null " );
+		}
+		if ( inheritanceType == InheritanceType.JOINED ) {
+			SubclassEntitySource subclassEntitySource = (SubclassEntitySource) entitySource;
+			ForeignKey fk = entityBinding.getPrimaryTable().createForeignKey(
+					superEntityBinding.getPrimaryTable(),
+					subclassEntitySource.getJoinedForeignKeyName()
+			);
+			final List<PrimaryKeyJoinColumnSource> primaryKeyJoinColumnSources = subclassEntitySource.getPrimaryKeyJoinColumnSources();
+			final boolean hasPrimaryKeyJoinColumns = CollectionHelper.isNotEmpty( primaryKeyJoinColumnSources );
+			final List<Column> superEntityBindingPrimaryKeyColumns = superEntityBinding.getPrimaryTable().getPrimaryKey().getColumns();
+
+			for ( int i = 0; i < superEntityBindingPrimaryKeyColumns.size(); i++ ) {
+				Column superEntityBindingPrimaryKeyColumn = superEntityBindingPrimaryKeyColumns.get( i );
+				PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource = hasPrimaryKeyJoinColumns && i < primaryKeyJoinColumnSources
+						.size() ? primaryKeyJoinColumnSources.get( i ) : null;
+				final String columnName;
+				if ( primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getColumnName() ) ) {
+					columnName = bindingContext().getNamingStrategy().columnName( primaryKeyJoinColumnSource.getColumnName() );
+				} else {
+					columnName =  superEntityBindingPrimaryKeyColumn.getColumnName().getText();
+				}
+				Column column = entityBinding.getPrimaryTable().locateOrCreateColumn( columnName );
+				column.setCheckCondition( superEntityBindingPrimaryKeyColumn.getCheckCondition() );
+				column.setComment( superEntityBindingPrimaryKeyColumn.getComment() );
+				column.setDefaultValue( superEntityBindingPrimaryKeyColumn.getDefaultValue() );
+				column.setIdentity( superEntityBindingPrimaryKeyColumn.isIdentity() );
+				column.setNullable( superEntityBindingPrimaryKeyColumn.isNullable() );
+				column.setReadFragment( superEntityBindingPrimaryKeyColumn.getReadFragment() );
+				column.setWriteFragment( superEntityBindingPrimaryKeyColumn.getWriteFragment() );
+				column.setUnique( superEntityBindingPrimaryKeyColumn.isUnique() );
+				final String sqlType;
+				if(primaryKeyJoinColumnSource!=null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getColumnDefinition() )){
+					sqlType = primaryKeyJoinColumnSource.getColumnDefinition();
+				} else {
+					sqlType = superEntityBindingPrimaryKeyColumn.getSqlType();
+				}
+				column.setSqlType( sqlType );
+				column.setSize( superEntityBindingPrimaryKeyColumn.getSize() );
+				column.setJdbcDataType( superEntityBindingPrimaryKeyColumn.getJdbcDataType() );
+				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( column );
+				//todo still need to figure out how to handle the referencedColumnName property
+				fk.addColumnMapping( column, superEntityBindingPrimaryKeyColumn );
+			}
+		}
+	}
+
+	/**
+	 * Binding a single entity hierarchy.
+	 *
+	 * @param entityHierarchy The entity hierarchy to be binded.
+	 *
+	 * @return The root {@link EntityBinding} of the entity hierarchy mapping.
+	 */
+	private EntityBinding bindEntityHierarchy(final EntityHierarchy entityHierarchy) {
 		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
 		// Return existing binding if available
 		EntityBinding rootEntityBinding = metadata.getEntityBinding( rootEntitySource.getEntityName() );
 		if ( rootEntityBinding != null ) {
 			return rootEntityBinding;
 		}
-		// Save inheritance type and entity mode that will apply to entire hierarchy
-		inheritanceTypes.push( entityHierarchy.getHierarchyInheritanceType() );
-		entityModes.push( rootEntitySource.getEntityMode() );
-		final LocalBindingContext bindingContext = rootEntitySource.getLocalBindingContext();
-		bindingContexts.push( bindingContext );
+		setupBindingContext( entityHierarchy, rootEntitySource );
 		try {
 			// Create root entity binding
 			rootEntityBinding = createEntityBinding( rootEntitySource, null );
+			bindPrimaryTable( rootEntityBinding, rootEntitySource );
 			// Create/Bind root-specific information
 			bindIdentifier( rootEntityBinding, rootEntitySource.getIdentifierSource() );
 			bindSecondaryTables( rootEntityBinding, rootEntitySource );
@@ -808,14 +889,30 @@ public class Binder {
 				bindSubEntities( rootEntityBinding, rootEntitySource );
 			}
 		} finally {
-			bindingContexts.pop();
-			inheritanceTypes.pop();
-			entityModes.pop();
+			cleanupBindingContext();
 		}
 		return rootEntityBinding;
 	}
 
-	public void bindEntities( final Iterable< EntityHierarchy > entityHierarchies ) {
+	private void cleanupBindingContext() {
+		bindingContexts.pop();
+		inheritanceTypes.pop();
+		entityModes.pop();
+	}
+
+	private void setupBindingContext(EntityHierarchy entityHierarchy, RootEntitySource rootEntitySource) {
+		// Save inheritance type and entity mode that will apply to entire hierarchy
+		inheritanceTypes.push( entityHierarchy.getHierarchyInheritanceType() );
+		entityModes.push( rootEntitySource.getEntityMode() );
+		bindingContexts.push( rootEntitySource.getLocalBindingContext() );
+	}
+
+	/**
+	 * The entry point of {@linkplain Binder} class, binds all the entity hierarchy one by one.
+	 *
+	 * @param entityHierarchies The entity hierarchies resolved from mappings
+	 */
+	public void bindEntityHierarchies(final Iterable<EntityHierarchy> entityHierarchies) {
 		entitySourcesByName.clear();
 		attributeSourcesByName.clear();
 		inheritanceTypes.clear();
@@ -829,29 +926,7 @@ public class Binder {
 		}
 		// Bind each entity hierarchy
 		for ( final EntityHierarchy entityHierarchy : entityHierarchies ) {
-			bindEntities( entityHierarchy );
-		}
-	}
-
-	private EntityBinding bindEntity( final EntitySource entitySource, final EntityBinding superEntityBinding ) {
-		// Return existing binding if available
-		EntityBinding entityBinding = metadata.getEntityBinding( entitySource.getEntityName() );
-		if ( entityBinding != null ) {
-			return entityBinding;
-		}
-		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
-		bindingContexts.push( bindingContext );
-		try {
-			// Create new entity binding
-			entityBinding = createEntityBinding( entitySource, superEntityBinding );
-			entityBinding.setMutable( entityBinding.getHierarchyDetails().getRootEntityBinding().isMutable() );
-			bindSecondaryTables( entityBinding, entitySource );
-			bindUniqueConstraints( entityBinding, entitySource );
-			bindAttributes( entityBinding, entitySource );
-			bindSubEntities( entityBinding, entitySource );
-			return entityBinding;
-		} finally {
-			bindingContexts.pop();
+			bindEntityHierarchy( entityHierarchy );
 		}
 	}
 
@@ -1122,7 +1197,7 @@ public class Binder {
 				bindingContext().qualifyClassName( attributeSource.getReferencedEntityName() != null
 						? attributeSource.getReferencedEntityName()
 						: referencedJavaTypeValue.getValue().getName() );
-		final EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
+		final EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
 		//now find the referenced attribute binding, either the referenced entity's id attribute or the referenced attribute
 		//todo referenced entityBinding null check?
 		// Foreign key...
@@ -1528,7 +1603,7 @@ public class Binder {
 						createAttributePath( attributeBinding )
 				) );
 			}
-			EntityBinding referencedEntityBinding = entityBinding( referencedEntityName );
+			EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
  			bindOneToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
 			bindOneToManyCollectionElement(
 					(OneToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
@@ -1563,21 +1638,37 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void bindPrimaryTable( final EntityBinding entityBinding, final EntitySource entitySource ) {
-		final TableSpecification table =  createTable(
-				entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
-
-			@Override
-			public String defaultName() {
-				String name = StringHelper.isNotEmpty( entityBinding.getJpaEntityName() ) ? entityBinding.getJpaEntityName() : entityBinding
-						.getEntity()
-						.getClassName();
-				return bindingContexts.peek().getNamingStrategy().classToTableName( name );
-			}
+	private void bindPrimaryTable(final EntityBinding entityBinding, final EntitySource entitySource) {
+		final EntityBinding superEntityBinding = entityBinding.getSuperEntityBinding();
+		final InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
+		final TableSpecification table;
+		final String tableName;
+		if ( superEntityBinding != null && inheritanceType == InheritanceType.SINGLE_TABLE ) {
+			table = superEntityBinding.getPrimaryTable();
+			tableName = superEntityBinding.getPrimaryTableName();
+			// Configure discriminator if present
+			final String discriminatorValue = entitySource.getDiscriminatorMatchValue() != null ?
+					entitySource.getDiscriminatorMatchValue()
+					: entitySource.getEntityName();
+			entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 		}
-		);
+		else {
+			table = createTable(
+					entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
+
+				@Override
+				public String defaultName() {
+					String name = StringHelper.isNotEmpty( entityBinding.getJpaEntityName() ) ? entityBinding.getJpaEntityName() : entityBinding
+							.getEntity()
+							.getClassName();
+					return bindingContexts.peek().getNamingStrategy().classToTableName( name );
+				}
+			}
+			);
+			tableName = table.getLogicalName().getText();
+		}
 		entityBinding.setPrimaryTable( table );
-		entityBinding.setPrimaryTableName( table.getLogicalName().getText() );
+		entityBinding.setPrimaryTableName( tableName );
 	}
 
 	private void bindSecondaryTables( final EntityBinding entityBinding, final EntitySource entitySource ) {
@@ -1727,7 +1818,7 @@ public class Binder {
 
 	private void bindSubEntities( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		for ( final SubclassEntitySource subEntitySource : entitySource.subclassEntitySources() ) {
-			bindEntity( subEntitySource, entityBinding );
+			bindSubEntity( subEntitySource, entityBinding );
 		}
 	}
 
@@ -1954,6 +2045,7 @@ public class Binder {
 				entityClassName,
 				bindingContext.makeClassReference( entityClassName ),
 				superEntityBinding == null ? null : superEntityBinding.getEntity() ) );
+
 		entityBinding.setEntityName( entitySource.getEntityName() );  
 		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );          //must before creating primary table
 		entityBinding.setDynamicUpdate( entitySource.isDynamicUpdate() );
@@ -1961,39 +2053,11 @@ public class Binder {
 		entityBinding.setBatchSize( entitySource.getBatchSize() );
 		entityBinding.setSelectBeforeUpdate( entitySource.isSelectBeforeUpdate() );
 		entityBinding.setAbstract( entitySource.isAbstract() );
-
 		entityBinding.setCustomLoaderName( entitySource.getCustomLoaderName() );
 		entityBinding.setCustomInsert( entitySource.getCustomSqlInsert() );
 		entityBinding.setCustomUpdate( entitySource.getCustomSqlUpdate() );
 		entityBinding.setCustomDelete( entitySource.getCustomSqlDelete() );
 		entityBinding.setJpaCallbackClasses( entitySource.getJpaCallbackClasses() );
-		// Create relational table
-		if ( superEntityBinding != null && inheritanceType == InheritanceType.SINGLE_TABLE ) {
-			entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
-			entityBinding.setPrimaryTableName( superEntityBinding.getPrimaryTableName() );
-			// Configure discriminator if present
-			final String discriminatorValue = entitySource.getDiscriminatorMatchValue();
-			if ( discriminatorValue != null ) {
-				entityBinding.setDiscriminatorMatchValue( discriminatorValue );
-			}
-			else {
-				entityBinding.setDiscriminatorMatchValue( entitySource.getEntityName() );
-			}
-		}
-		else {
-			bindPrimaryTable( entityBinding, entitySource );
-		}
-
-		if ( inheritanceType == InheritanceType.JOINED && superEntityBinding != null ) {
-			ForeignKey fk = entityBinding.getPrimaryTable().createForeignKey(
-					superEntityBinding.getPrimaryTable(),
-					( (SubclassEntitySource) entitySource ).getJoinedForeignKeyName()
-			);
-			// explicitly maps to target table pk
-			for ( Column column : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
-				fk.addColumn( column );
-			}
-		}
 
 		// todo: deal with joined and unioned subclass bindings
 		// todo: bind fetch profiles
@@ -2313,27 +2377,33 @@ public class Binder {
 				:referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ) );
 	}
 
-	private EntityBinding entityBinding( final String entityName ) {
+	/**
+	 *
+	 * @param entityName
+	 * @return
+	 */
+	private EntityBinding findOrBindingEntityBinding(final String entityName) {
 		// Check if binding has already been created
 		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
 		if ( entityBinding == null ) {
 			// Find appropriate source to create binding
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
-			if(entitySource == null) {
+			if ( entitySource == null ) {
 				String msg = log.missingEntitySource( entityName );
 				bindingContext().makeMappingException( msg );
 			}
 
 			// Get super entity binding (creating it if necessary using recursive call to this method)
-			final EntityBinding superEntityBinding =
-					SubclassEntitySource.class.isInstance( entitySource )
-							? entityBinding( ( ( SubclassEntitySource ) entitySource ).superclassEntitySource().getEntityName() )
-							: null;
-			// Create entity binding
-			entityBinding =
-					superEntityBinding == null
-							? bindEntities( entityHierarchiesByRootEntitySource.get( entitySource ) )
-							: bindEntity( entitySource, superEntityBinding );
+			if ( SubclassEntitySource.class.isInstance( entitySource ) ) {
+				String superEntityName = ( (SubclassEntitySource) entitySource ).superclassEntitySource()
+						.getEntityName();
+				EntityBinding superEntityBinding = findOrBindingEntityBinding( superEntityName );
+				entityBinding = bindSubEntity( entitySource, superEntityBinding );
+			}
+			else {
+				EntityHierarchy entityHierarchy = entityHierarchiesByRootEntitySource.get( entitySource );
+				entityBinding = bindEntityHierarchy( entityHierarchy );
+			}
 		}
 		return entityBinding;
 	}

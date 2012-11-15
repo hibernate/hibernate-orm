@@ -2140,7 +2140,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 	}
-
+	@Override
 	public int getSize(Serializable key, SessionImplementor session) {
 		try {
 			PreparedStatement st = session.getTransactionCoordinator()

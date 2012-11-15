@@ -507,8 +507,8 @@ public abstract class AbstractEntityPersister
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
 		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled() ?
-				(CacheEntryStructure) new StructuredCacheEntry(this) :
-				(CacheEntryStructure) new UnstructuredCacheEntry();
+				new StructuredCacheEntry(this) :
+				new UnstructuredCacheEntry();
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();

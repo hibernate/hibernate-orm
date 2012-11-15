@@ -53,6 +53,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.type.*;
@@ -517,20 +519,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		super( entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
 		// DISCRIMINATOR
 		if ( entityBinding.isPolymorphic() ) {
-			EntityDiscriminator discriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator();
-			discriminator.getRelationalValue();
-			Type discriminatorType = discriminator
-					.getExplicitHibernateTypeDescriptor()
-					.getResolvedTypeMapping();
-			try {
-				org.hibernate.type.DiscriminatorType dtype = (org.hibernate.type.DiscriminatorType) discriminatorType;
-				discriminatorValue = dtype.stringToObject( entityBinding.getDiscriminatorMatchValue() );
-				discriminatorSQLString = dtype.objectToSQLString( discriminatorValue, factory.getDialect() );
-			}
-			catch ( ClassCastException cce ) {
-				throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
-			}
-			catch ( Exception e ) {
+			try{
+				discriminatorValue = entityBinding.getSubEntityBindingId();
+				discriminatorSQLString = discriminatorValue.toString();
+			} catch ( Exception e ){
 				throw new MappingException( "Could not format discriminator value to SQL string", e );
 			}
 		}
@@ -546,27 +538,54 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		final int idColumnSpan = getIdentifierColumnSpan();
 
-		ArrayList tables = new ArrayList();
+		ArrayList<String> tables = new ArrayList<String>();
 		ArrayList keyColumns = new ArrayList();
 		ArrayList keyColumnReaders = new ArrayList();
 		ArrayList keyColumnReaderTemplates = new ArrayList();
 		ArrayList cascadeDeletes = new ArrayList();
-//		Iterator titer = persistentClass.getTableClosureIterator();
-//		Iterator kiter = persistentClass.getKeyClosureIterator();
+		Iterator<TableSpecification> titer = entityBinding.getTableClosureIterator();
+		while ( titer.hasNext() ){
+			TableSpecification table = titer.next();
+			String tableName = table.getLogicalName().getText(factory.getDialect());
+			tables.add( tableName );
+			String[] keyCols = new String[idColumnSpan];
+			String[] keyColReaders = new String[idColumnSpan];
+			String[] keyColReaderTemplates = new String[idColumnSpan];
+			PrimaryKey primaryKey= table.getPrimaryKey();
+			for ( int k = 0; k < idColumnSpan; k++ ) {
+				org.hibernate.metamodel.spi.relational.Column   column = primaryKey.getColumns().get( k );
+				keyCols[k] = column.getColumnName().getText(factory.getDialect());
+				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
+				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
+			}
+			keyColumns.add( keyCols );
+			keyColumnReaders.add( keyColReaders );
+			keyColumnReaderTemplates.add( keyColReaderTemplates );
+			cascadeDeletes.add( false && factory.getDialect().supportsCascadeDelete() ); //todo add @OnDelete support
+		}
 
-
+		//Span of the tables directly mapped by this entity and super-classes, if any
+		coreTableSpan = tables.size();
+		//todo secondary table
+		isNullableTable = new boolean[]{true};
+		naturalOrderTableNames = ArrayHelper.toStringArray( tables );
+		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray( keyColumns );
+		naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray( keyColumnReaders );
+		naturalOrderTableKeyColumnReaderTemplates = ArrayHelper.to2DStringArray( keyColumnReaderTemplates );
+		naturalOrderCascadeDeleteEnabled = ArrayHelper.toBooleanArray( cascadeDeletes );
+		ArrayList subtables = new ArrayList();
+		ArrayList isConcretes = new ArrayList();
+		ArrayList isDeferreds = new ArrayList();
+		ArrayList isLazies = new ArrayList();
+		keyColumns = new ArrayList();
+		//todo add sub class tables here
 		//----------------------------------------------
 
 		tableSpan = -1;
 		tableNames = null;
-		naturalOrderTableNames = null;
 		tableKeyColumns = null;
 		tableKeyColumnReaders = null;
 		tableKeyColumnReaderTemplates = null;
-		naturalOrderTableKeyColumns = null;
-		naturalOrderTableKeyColumnReaders = null;
-		naturalOrderTableKeyColumnReaderTemplates = null;
-		naturalOrderCascadeDeleteEnabled = null;
 		spaces = null;
 		subclassClosure = null;
 		subclassTableNameClosure = null;
@@ -584,8 +603,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		notNullColumnTableNumbers = null;
 		constraintOrderedTableNames = null;
 		constraintOrderedKeyColumnNames = null;
-		coreTableSpan = -1;
-		isNullableTable = null;
 		//-----------------------------
 		initLockers();
 		initSubclassPropertyAliasesMap( entityBinding );

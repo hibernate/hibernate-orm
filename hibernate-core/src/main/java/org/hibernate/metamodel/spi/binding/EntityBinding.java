@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,9 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.JoinedIterable;
+import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -102,7 +106,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
 	private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
-
+	private final int subEntityBindingId;
+	private int nextSubEntityBindingId = 0;
 	/**
 	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
 	 *
@@ -112,6 +117,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	public EntityBinding(InheritanceType inheritanceType, EntityMode entityMode) {
 		this.superEntityBinding = null;
 		this.hierarchyDetails = new HierarchyDetails( this, inheritanceType, entityMode );
+		this.subEntityBindingId = 0;
 	}
 
 	/**
@@ -123,6 +129,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		this.superEntityBinding = superEntityBinding;
 		this.superEntityBinding.subEntityBindings.add( this );
 		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
+		this.subEntityBindingId = superEntityBinding.nextSubEntityBindingId();
+	}
+
+	private int nextSubEntityBindingId(){
+		return ++nextSubEntityBindingId;
 	}
 
 	public HierarchyDetails getHierarchyDetails() {
@@ -131,6 +142,10 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 
 	public EntityBinding getSuperEntityBinding() {
 		return superEntityBinding;
+	}
+
+	public int getSubEntityBindingId() {
+		return subEntityBindingId;
 	}
 
 	public boolean isRoot() {
@@ -576,6 +591,21 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
 		}
 		return new JoinedIterable<AttributeBinding>( iterables );
+	}
+
+	public Iterator<TableSpecification> getTableClosureIterator() {
+		if ( superEntityBinding == null ) {
+			return new SingletonIterator<TableSpecification>( getPrimaryTable() );
+		}
+		else {
+			return new JoinedIterator<TableSpecification>(
+					superEntityBinding.getTableClosureIterator(),
+					new SingletonIterator<TableSpecification>( getPrimaryTable() )
+			);
+		}
+	}
+	public  Iterator getKeyClosureIterator(){
+		 return null;
 	}
 
 	public void setJpaCallbackClasses(List<JpaCallbackSource> jpaCallbackClasses) {

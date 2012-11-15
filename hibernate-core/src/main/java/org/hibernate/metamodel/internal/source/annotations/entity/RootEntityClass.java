@@ -32,9 +32,12 @@ import javax.persistence.DiscriminatorType;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
@@ -43,6 +46,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 
 /**
  * Represents an root entity configured via annotations/orm-xml.
@@ -51,6 +55,10 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
  * @author Brett Meyer
  */
 public class RootEntityClass extends EntityClass {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			RootEntityClass.class.getName()
+	);
 
 	private final IdType idType;
 	private final List<MappedSuperclass> mappedSuperclasses;
@@ -130,6 +138,14 @@ public class RootEntityClass extends EntityClass {
 
 	public boolean isDiscriminatorIncludedInSql() {
 		return isDiscriminatorIncludedInSql;
+	}
+
+	protected List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
+		List<PrimaryKeyJoinColumnSource> results = super.determinPrimaryKeyJoinColumns();
+		if ( CollectionHelper.isNotEmpty( results ) ) {
+			LOG.invalidPrimaryKeyJoinColumnAnnotation();
+		}
+		return null;
 	}
 
 	@Override

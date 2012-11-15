@@ -211,7 +211,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
-		binder.bindEntities( processor.extractEntityHierarchies() );
+		binder.bindEntityHierarchies( processor.extractEntityHierarchies() );
 	}
 
 
@@ -350,7 +350,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			binder.bindEntities( processor.extractEntityHierarchies() );
+			binder.bindEntityHierarchies( processor.extractEntityHierarchies() );
 		}
 	}
 

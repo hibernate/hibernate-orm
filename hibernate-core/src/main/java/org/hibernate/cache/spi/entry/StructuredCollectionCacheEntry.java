@@ -30,17 +30,19 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * For other plural attributes except map, this impl is used.
+ * </br>
+ * Internally, a list that contains all collection states is stored into 2LC.
+ *
  * @author Gavin King
  */
-public class StructuredCollectionCacheEntry implements CacheEntryStructure {
-
-	public Object structure(Object item) {
-		CollectionCacheEntry entry = (CollectionCacheEntry) item;
+public class StructuredCollectionCacheEntry implements CacheEntryStructure<CollectionCacheEntry, List<Serializable>> {
+	@Override
+	public List<Serializable> structure(CollectionCacheEntry entry) {
 		return Arrays.asList( entry.getState() );
 	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		List list = (List) item;
+	@Override
+	public CollectionCacheEntry destructure(List<Serializable> list, SessionFactoryImplementor factory) {
 		return new CollectionCacheEntry( list.toArray( new Serializable[list.size()] ) );
 	}
 

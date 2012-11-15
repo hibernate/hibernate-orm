@@ -473,7 +473,8 @@ public class AssociationAttribute extends MappedAttribute {
 		if ( joinTableAnnotation != null ) {
 			if ( JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE ) == null
 					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY ) == null
-					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) == null ) {
+					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) == null
+					&& JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE ) == null ) {
 				String msg = coreLogger.joinTableForNonAssociationAttribute(
 						getContext().getOrigin().getName(),
 						getName()

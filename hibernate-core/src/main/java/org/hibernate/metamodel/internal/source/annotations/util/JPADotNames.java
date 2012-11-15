@@ -153,9 +153,9 @@ public interface JPADotNames {
 	DotName GENERATED_VALUE = DotName.createSimple( GeneratedValue.class.getName() );
 	DotName ID = DotName.createSimple( Id.class.getName() );
 	DotName ID_CLASS = DotName.createSimple( IdClass.class.getName() );
+	DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
 	DotName INHERITANCE_TYPE = DotName.createSimple( InheritanceType.class.getName() );
 	DotName JOIN_COLUMN = DotName.createSimple( JoinColumn.class.getName() );
-	DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
 	DotName JOIN_COLUMNS = DotName.createSimple( JoinColumns.class.getName() );
 	DotName JOIN_TABLE = DotName.createSimple( JoinTable.class.getName() );
 	DotName LOB = DotName.createSimple( Lob.class.getName() );

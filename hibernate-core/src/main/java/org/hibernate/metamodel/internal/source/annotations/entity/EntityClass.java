@@ -262,7 +262,7 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
-	private List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
+	protected List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
 		if ( inheritanceType != InheritanceType.JOINED ) {
 			return null;
 		}

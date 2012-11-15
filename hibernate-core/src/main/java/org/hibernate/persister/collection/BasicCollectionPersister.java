@@ -186,16 +186,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		
 		return delete.toStatementString();
 	}
-
+	@Override
 	public boolean consumesEntityAlias() {
 		return false;
 	}
-
+	@Override
 	public boolean consumesCollectionAlias() {
 //		return !isOneToMany();
 		return true;
 	}
-
+	@Override
 	public boolean isOneToMany() {
 		return false;
 	}
@@ -210,8 +210,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	@Override
     protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session)
 			throws HibernateException {
-		
-		if ( ArrayHelper.isAllFalse(elementColumnIsSettable) ) return 0;
+
+		if ( ArrayHelper.isAllFalse( elementColumnIsSettable ) ) {
+			return 0;
+		}
 
 		try {
 			PreparedStatement st = null;
@@ -342,11 +344,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			throws MappingException {
 		return BatchingCollectionInitializer.createBatchingCollectionInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
-
+	@Override
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
 		return "";
 	}
-
+	@Override
 	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
 		return "";
 	}

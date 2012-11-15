@@ -75,7 +75,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassSpaces;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
-	private final Map subclassByDiscriminatorValue = new HashMap();
+	private final Map<Integer,String> subclassByDiscriminatorValue = new HashMap<Integer,String>();
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
@@ -185,7 +185,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			spaces[i] = (String) iter.next();
 		}
 		
-		HashSet subclassTables = new HashSet();
+		HashSet<String> subclassTables = new HashSet<String>();
 		iter = persistentClass.getSubclassTableClosureIterator();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
@@ -251,7 +251,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		super(entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
 		// TODO: implement!!! initializing final fields to null to make compiler happy.
 		subquery = null;
-		tableName = null;
+		tableName = entityBinding.getPrimaryTable().getQualifiedName( factory.getDialect() );
 		subclassClosure = null;
 		spaces = null;
 		subclassSpaces = null;

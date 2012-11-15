@@ -48,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-//@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 //	@Test
 //	public void testSimpleElement() throws Exception {

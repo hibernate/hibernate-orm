@@ -183,7 +183,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - no Session" );
+				throwLazyInitializationException( "could not initialize proxy - no Session" );
 			}
 		}
 		else if ( !session.isOpen() ) {
@@ -193,7 +193,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session was closed" );
+				throwLazyInitializationException( "could not initialize proxy - the owning Session was closed" );
 			}
 		}
 		else if ( !session.isConnected() ) {
@@ -203,7 +203,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
+				throwLazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
 			}
 		}
 

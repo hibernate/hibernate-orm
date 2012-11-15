@@ -81,8 +81,14 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public ValueHolder<Class<?>> getElementClassReference() {
-		// TODO: needed?
-		return null;
+		// needed for arrays
+		Class<?> attributeType = associationAttribute.getAttributeType();
+		if ( attributeType.isArray() ) {
+			return new ValueHolder<Class<?>>( attributeType.getComponentType() );
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override

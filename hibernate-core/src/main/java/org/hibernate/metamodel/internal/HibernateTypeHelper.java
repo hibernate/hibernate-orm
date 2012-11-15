@@ -488,6 +488,9 @@ public class HibernateTypeHelper {
 						elementJavaType = (Class<?>) types[1];
 					}
 				}
+				else if ( collectionType.isArray() ) {
+					elementJavaType = collectionType.getComponentType();
+				}
 				else {
 				}
 			}

@@ -7,7 +7,7 @@
 
         <id name="id" type="long"><generator class="native"/></id>
 
-        <property name="data" type="string" not-null="true"/>
+        <property name="data" column="`data`" type="string" not-null="true"/>
 
         <!--
              Associations
@@ -25,7 +25,7 @@
 
         <id name="id" type="long"><generator class="native"/></id>
 
-        <property name="data" type="string" not-null="true"/>
+        <property name="data" column="`data`" type="string" not-null="true"/>
 
         <!--
              Associations
@@ -47,7 +47,7 @@
 
         <id name="id" type="long"><generator class="native"/></id>
 
-        <property name="data" type="string" not-null="true"/>
+        <property name="data" column="`data`" type="string" not-null="true"/>
 
         <!--
             Associations

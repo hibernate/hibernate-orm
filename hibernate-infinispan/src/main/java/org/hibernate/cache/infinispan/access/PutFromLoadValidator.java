@@ -23,7 +23,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +37,9 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.infinispan.AdvancedCache;
+import org.infinispan.manager.EmbeddedCacheManager;
 
 /**
  * Encapsulates logic to allow a {@link TransactionalAccessDelegate} to determine
@@ -91,42 +93,19 @@ public class PutFromLoadValidator {
     */
    public static final long NAKED_PUT_INVALIDATION_PERIOD = TimeUnit.SECONDS.toMillis(20); 
 
-   /** Period (in ms) after which a pending put is placed in the over-age queue */
-   private static final long PENDING_PUT_OVERAGE_PERIOD = TimeUnit.SECONDS.toMillis(5);
-
-   /** Period (in ms) before which we stop trying to clean out pending puts */
-   private static final long PENDING_PUT_RECENT_PERIOD = TimeUnit.SECONDS.toMillis(2);
-
-   /** Period (in ms) after which a pending put is never expected to come in and should be cleaned */
-   private static final long MAX_PENDING_PUT_DELAY = TimeUnit.SECONDS.toMillis(2 * 60);
-
    /**
     * Used to determine whether the owner of a pending put is a thread or a transaction
     */
    private final TransactionManager transactionManager;
 
    private final long nakedPutInvalidationPeriod;
-   private final long pendingPutOveragePeriod;
-   private final long pendingPutRecentPeriod;
-   private final long maxPendingPutDelay;
 
    /**
     * Registry of expected, future, isPutValid calls. If a key+owner is registered in this map, it
     * is not a "naked put" and is allowed to proceed.
     */
-   private final ConcurrentMap<Object, PendingPutMap> pendingPuts = new ConcurrentHashMap<Object, PendingPutMap>();
-   /**
-    * List of pending puts. Used to ensure we don't leak memory via the pendingPuts map
-    */
-   private final List<WeakReference<PendingPut>> pendingQueue = new LinkedList<WeakReference<PendingPut>>();
-   /**
-    * Separate list of pending puts that haven't been resolved within PENDING_PUT_OVERAGE_PERIOD.
-    * Used to ensure we don't leak memory via the pendingPuts map. Tracked separately from more
-    * recent pending puts for efficiency reasons.
-    */
-   private final List<WeakReference<PendingPut>> overagePendingQueue = new LinkedList<WeakReference<PendingPut>>();
-   /** Lock controlling access to pending put queues */
-   private final Lock pendingLock = new ReentrantLock();
+   private final ConcurrentMap<Object, PendingPutMap> pendingPuts;
+
    private final ConcurrentMap<Object, Long> recentRemovals = new ConcurrentHashMap<Object, Long>();
    /**
     * List of recent removals. Used to ensure we don't leak memory via the recentRemovals map
@@ -148,27 +127,26 @@ public class PutFromLoadValidator {
 
    /**
     * Creates a new PutFromLoadValidator.
-    * 
-    * @param transactionManager
-    *           transaction manager to use to associate changes with a transaction; may be
-    *           <code>null</code>
     */
-   public PutFromLoadValidator(TransactionManager transactionManager) {
-      this(transactionManager, NAKED_PUT_INVALIDATION_PERIOD, PENDING_PUT_OVERAGE_PERIOD,
-               PENDING_PUT_RECENT_PERIOD, MAX_PENDING_PUT_DELAY);
+   public PutFromLoadValidator(AdvancedCache cache) {
+      this(cache, NAKED_PUT_INVALIDATION_PERIOD);
    }
 
    /**
     * Constructor variant for use by unit tests; allows control of various timeouts by the test.
     */
-   protected PutFromLoadValidator(TransactionManager transactionManager,
-            long nakedPutInvalidationPeriod, long pendingPutOveragePeriod,
-            long pendingPutRecentPeriod, long maxPendingPutDelay) {
-      this.transactionManager = transactionManager;
+   public PutFromLoadValidator(AdvancedCache cache,
+            long nakedPutInvalidationPeriod) {
+      this(cache.getCacheManager(), cache.getTransactionManager(),
+            nakedPutInvalidationPeriod);
+   }
+
+   public PutFromLoadValidator(EmbeddedCacheManager cacheManager,
+         TransactionManager tm, long nakedPutInvalidationPeriod) {
+      this.pendingPuts = cacheManager
+            .getCache(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
+      this.transactionManager = tm;
       this.nakedPutInvalidationPeriod = nakedPutInvalidationPeriod;
-      this.pendingPutOveragePeriod = pendingPutOveragePeriod;
-      this.pendingPutRecentPeriod = pendingPutRecentPeriod;
-      this.maxPendingPutDelay = maxPendingPutDelay;
    }
 
    // ----------------------------------------------------------------- Public
@@ -190,10 +168,6 @@ public class PutFromLoadValidator {
       boolean valid = false;
       boolean locked = false;
       long now = System.currentTimeMillis();
-
-      // Important: Do cleanup before we acquire any locks so we
-      // don't deadlock with invalidateRegion
-      cleanOutdatedPendingPuts(now, true);
 
       try {
          PendingPutMap pending = pendingPuts.get(key);
@@ -233,9 +207,6 @@ public class PutFromLoadValidator {
          }
       }
       catch (Throwable t) {
-
-         valid = false;
-
          if (locked) {
             PendingPutMap toRelease = pendingPuts.get(key);
             if (toRelease != null) {
@@ -283,7 +254,6 @@ public class PutFromLoadValidator {
     *         caller should treat as an exception condition)
     */
    public boolean invalidateKey(Object key) {
-
       boolean success = true;
 
       // Invalidate any pending puts
@@ -330,7 +300,7 @@ public class PutFromLoadValidator {
          Long cleaned = recentRemovals.get(toClean.key);
          if (cleaned != null && cleaned.equals(toClean.timestamp)) {
             cleaned = recentRemovals.remove(toClean.key);
-            if (cleaned != null && cleaned.equals(toClean.timestamp) == false) {
+            if (cleaned != null && !cleaned.equals(toClean.timestamp)) {
                // Oops; removed the wrong timestamp; restore it
                recentRemovals.putIfAbsent(toClean.key, cleaned);
             }
@@ -405,13 +375,14 @@ public class PutFromLoadValidator {
     * @param key key that will be used for subsequent cache put
     */
    public void registerPendingPut(Object key) {
-      PendingPut pendingPut = new PendingPut(key, getOwnerForPut());
+      PendingPut pendingPut = new PendingPut(getOwnerForPut());
       PendingPutMap pendingForKey = new PendingPutMap(pendingPut);
 
       for (;;) {
          PendingPutMap existing = pendingPuts.putIfAbsent(key, pendingForKey);
          if (existing != null) {
             if (existing.acquireLock(10, TimeUnit.SECONDS)) {
+
                try {
                   existing.put(pendingPut);
                   PendingPutMap doublecheck = pendingPuts.putIfAbsent(key, existing);
@@ -432,32 +403,9 @@ public class PutFromLoadValidator {
             break;
          }
       }
-
-      // Guard against memory leaks
-      preventOutdatedPendingPuts(pendingPut);
    }
 
    // -------------------------------------------------------------- Protected
-
-   /** Only for use by unit tests; may be removed at any time */
-   protected int getPendingPutQueueLength() {
-      pendingLock.lock();
-      try {
-         return pendingQueue.size();
-      } finally {
-         pendingLock.unlock();
-      }
-   }
-
-   /** Only for use by unit tests; may be removed at any time */
-   protected int getOveragePendingPutQueueLength() {
-      pendingLock.lock();
-      try {
-         return overagePendingQueue.size();
-      } finally {
-         pendingLock.unlock();
-      }
-   }
 
    /** Only for use by unit tests; may be removed at any time */
    protected int getRemovalQueueLength() {
@@ -482,119 +430,6 @@ public class PutFromLoadValidator {
       }
       return tx == null ? Thread.currentThread() : tx;
 
-   }
-
-   private void preventOutdatedPendingPuts(PendingPut pendingPut) {
-      pendingLock.lock();
-      try {
-         pendingQueue.add(new WeakReference<PendingPut>(pendingPut));
-         if (pendingQueue.size() > 1) {
-            cleanOutdatedPendingPuts(pendingPut.timestamp, false);
-         }
-      } finally {
-         pendingLock.unlock();
-      }
-   }
-
-   private void cleanOutdatedPendingPuts(long now, boolean lock) {
-
-      PendingPut toClean = null;
-      if (lock) {
-         pendingLock.lock();
-      }
-      try {
-         // Clean items out of the basic queue
-         long overaged = now - this.pendingPutOveragePeriod;
-         long recent = now - this.pendingPutRecentPeriod;
-
-         int pos = 0;
-         while (pendingQueue.size() > pos) {
-            WeakReference<PendingPut> ref = pendingQueue.get(pos);
-            PendingPut item = ref.get();
-            if (item == null || item.completed) {
-               pendingQueue.remove(pos);
-            } else if (item.timestamp < overaged) {
-               // Potential leak; move to the overaged queued
-               pendingQueue.remove(pos);
-               overagePendingQueue.add(ref);
-            } else if (item.timestamp >= recent) {
-               // Don't waste time on very recent items
-               break;
-            } else if (pos > 2) {
-               // Don't spend too much time getting nowhere
-               break;
-            } else {
-               // Move on to the next item
-               pos++;
-            }
-         }
-
-         // Process the overage queue until we find an item to clean
-         // or an incomplete item that hasn't aged out
-         long mustCleanTime = now - this.maxPendingPutDelay;
-
-         while (overagePendingQueue.size() > 0) {
-            WeakReference<PendingPut> ref = overagePendingQueue.get(0);
-            PendingPut item = ref.get();
-            if (item == null || item.completed) {
-               overagePendingQueue.remove(0);
-            } else {
-               if (item.timestamp < mustCleanTime) {
-                  overagePendingQueue.remove(0);
-                  toClean = item;
-               }
-               break;
-            }
-         }
-      } finally {
-         if (lock) {
-            pendingLock.unlock();
-         }
-      }
-
-      // We've found a pendingPut that never happened; clean it up
-      if (toClean != null) {
-         PendingPutMap map = pendingPuts.get(toClean.key);
-         if (map != null) {
-            if (map.acquireLock(100, TimeUnit.MILLISECONDS)) {
-               try {
-                  PendingPut cleaned = map.remove(toClean.owner);
-                  if (toClean.equals(cleaned) == false) {
-                     if (cleaned != null) {
-                        // Oops. Restore it.
-                        map.put(cleaned);
-                     }
-                  } else if (map.size() == 0) {
-                     pendingPuts.remove(toClean.key, map);
-                  }
-               }
-               finally {
-                  map.releaseLock();
-               }
-            } else {
-               // Something's gone wrong and the lock isn't being released.
-               // We removed toClean from the queue and need to restore it
-               // TODO this is pretty dodgy
-               restorePendingPut(toClean);
-            }
-         }
-      }
-
-   }
-
-   private void restorePendingPut(PendingPut toRestore) {
-      pendingLock.lock();
-      try {
-         // Give it a new lease on life so it's not out of order. We could
-         // scan the queue and put toRestore back at the front, but then
-         // we'll just immediately try removing it again; instead we
-         // let it cycle through the queue again
-         toRestore.refresh();
-         pendingQueue.add(new WeakReference<PendingPut>(toRestore));
-      }
-      finally {
-         pendingLock.unlock();
-      }
    }
 
    /**
@@ -677,18 +512,11 @@ public class PutFromLoadValidator {
    }
 
    private static class PendingPut {
-      private final Object key;
       private final Object owner;
-      private long timestamp = System.currentTimeMillis();
       private volatile boolean completed;
 
-      private PendingPut(Object key, Object owner) {
-         this.key = key;
+      private PendingPut(Object owner) {
          this.owner = owner;
-      }
-
-      private void refresh() {
-         timestamp = System.currentTimeMillis();
       }
    }
 

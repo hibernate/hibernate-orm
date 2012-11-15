@@ -24,6 +24,7 @@
  */
 package org.hibernate.internal.util.collections;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.type.Type;
@@ -372,10 +374,43 @@ public final class ArrayHelper {
 		}
         return true;
 	}
+
+	public static Serializable[] extractNonNull(Serializable[] array) {
+		final int nonNullCount = countNonNull( array );
+		final Serializable[] result = new Serializable[nonNullCount];
+		int i = 0;
+		for ( Serializable element : array ) {
+			if ( element != null ) {
+				result[i++] = element;
+			}
+		}
+		if ( i != nonNullCount ) {
+			throw new HibernateException( "Number of non-null elements varied between iterations" );
+		}
+		return result;
+	}
+
+	public static int countNonNull(Serializable[] array) {
+		int i = 0;
+		for ( Serializable element : array ) {
+			if ( element != null ) {
+				i++;
+			}
+		}
+		return i;
+	}
+
+	public static void main(String... args) {
+		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );
+
+		System.out.println( "Forward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		for ( int i = 0; i < batchSizes.length; i++ ) {
+			System.out.println( "[" + i + "] -> " + batchSizes[i] );
+		}
+
+		System.out.println( "Backward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+		for ( int i = batchSizes.length-1; i >= 0; i-- ) {
+			System.out.println( "[" + i + "] -> " + batchSizes[i] );
+		}
+	}
 }
-
-
-
-
-
-

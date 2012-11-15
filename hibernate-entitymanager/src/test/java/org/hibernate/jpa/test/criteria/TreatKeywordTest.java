@@ -76,7 +76,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		criteria.where(
 				builder.equal(
 						builder.treat( root, Human.class ).get( "name" ),
-						2
+						"2"
 				)
 		);
 		em.createQuery( criteria ).getResultList();

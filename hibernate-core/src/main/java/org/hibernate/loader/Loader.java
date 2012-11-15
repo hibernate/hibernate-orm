@@ -119,7 +119,7 @@ public abstract class Loader {
 	 *
 	 * @return The sql command this loader should use to get its {@link ResultSet}.
 	 */
-	protected abstract String getSQLString();
+	public abstract String getSQLString();
 
 	/**
 	 * An array of persisters of entity classes contained in each row of results;
@@ -256,7 +256,7 @@ public abstract class Loader {
 	 * persister from each row of the <tt>ResultSet</tt>. If an object is supplied, will attempt to
 	 * initialize that object. If a collection is supplied, attempt to initialize that collection.
 	 */
-	private List doQueryAndInitializeNonLazyCollections(
+	public List doQueryAndInitializeNonLazyCollections(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final boolean returnProxies) throws HibernateException, SQLException {
@@ -268,7 +268,7 @@ public abstract class Loader {
 		);
 	}
 
-	private List doQueryAndInitializeNonLazyCollections(
+	public List doQueryAndInitializeNonLazyCollections(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final boolean returnProxies,
@@ -381,12 +381,21 @@ public abstract class Loader {
 						hydratedObjects,
 						loadedKeys,
 						returnProxies
+				);
+				if ( ! keyToRead.equals( loadedKeys[0] ) ) {
+					throw new AssertionFailure(
+							String.format(
+									"Unexpected key read for row; expected [%s]; actual [%s]",
+									keyToRead,
+									loadedKeys[0] )
 					);
+				}
 				if ( result == null ) {
 					result = loaded;
 				}
 			}
-			while ( keyToRead.equals( loadedKeys[0] ) && resultSet.next() );
+			while ( resultSet.next() &&
+					isCurrentRowForSameEntity( keyToRead, 0, resultSet, session ) );
 		}
 		catch ( SQLException sqle ) {
 			throw factory.getSQLExceptionHelper().convert(
@@ -404,6 +413,17 @@ public abstract class Loader {
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
+	}
+
+	private boolean isCurrentRowForSameEntity(
+			final EntityKey keyToRead,
+			final int persisterIndex,
+			final ResultSet resultSet,
+			final SessionImplementor session) throws SQLException {
+		EntityKey currentRowKey = getKeyFromResultSet(
+				persisterIndex, getEntityPersisters()[persisterIndex], null, resultSet, session
+		);
+		return keyToRead.equals( currentRowKey );
 	}
 
 	/**
@@ -1017,7 +1037,16 @@ public abstract class Loader {
 				}
 			}
 		}
-
+		
+		// Until this entire method is refactored w/ polymorphism, postLoad was
+		// split off from initializeEntity.  It *must* occur after
+		// endCollectionLoad to ensure the collection is in the
+		// persistence context.
+		if ( hydratedObjects!=null ) {
+			for ( Object hydratedObject : hydratedObjects ) {
+				TwoPhaseLoad.postLoad( hydratedObject, session, post );
+			}
+		}
 	}
 
 	private void endCollectionLoad(
@@ -1693,8 +1722,17 @@ public abstract class Loader {
 			final QueryParameters queryParameters,
 			final boolean scroll,
 			final SessionImplementor session) throws SQLException {
+		return executeQueryStatement( getSQLString(), queryParameters, scroll, session );
+	}
+
+	protected ResultSet executeQueryStatement(
+			final String sqlStatement,
+			final QueryParameters queryParameters,
+			final boolean scroll,
+			final SessionImplementor session) throws SQLException {
+
 		// Processing query filters.
-		queryParameters.processFilters( getSQLString(), session );
+		queryParameters.processFilters( sqlStatement, session );
 
 		// Applying LIMIT clause.
 		final LimitHandler limitHandler = getLimitHandler(

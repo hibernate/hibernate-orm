@@ -1,6 +1,7 @@
 package org.hibernate.cache.infinispan;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,15 +10,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.transaction.TransactionManager;
+import java.util.concurrent.TimeUnit;
 
+import org.hibernate.cache.infinispan.timestamp.ClusteredTimestampsRegionImpl;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.infinispan.AdvancedCache;
-import org.infinispan.Cache;
 import org.infinispan.commands.module.ModuleCommandFactory;
-import org.infinispan.config.Configuration;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
+import org.infinispan.util.concurrent.IsolationLevel;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.util.FileLookupFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -34,8 +44,6 @@ import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -169,6 +177,11 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
     */
    public static final boolean DEF_USE_SYNCHRONIZATION = true;
 
+   /**
+    * Name of the pending puts cache.
+    */
+   public static final String PENDING_PUTS_CACHE_NAME = "pending-puts";
+
    private EmbeddedCacheManager manager;
 
    private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
@@ -177,16 +190,14 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 
    private org.infinispan.transaction.lookup.TransactionManagerLookup transactionManagerlookup;
 
-   private TransactionManager transactionManager;
-
    private List<String> regionNames = new ArrayList<String>();
    
    /** {@inheritDoc} */
    public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building collection cache region [" + regionName + "]");
       AdvancedCache cache = getCache(regionName, COLLECTION_KEY, properties);
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      CollectionRegionImpl region = new CollectionRegionImpl(cacheAdapter, regionName, metadata, transactionManager, this);
+      CollectionRegionImpl region = new CollectionRegionImpl(
+            cache, regionName, metadata, this);
       startRegion(region, regionName);
       return region;
    }
@@ -195,8 +206,8 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
    public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building entity cache region [" + regionName + "]");
       AdvancedCache cache = getCache(regionName, ENTITY_KEY, properties);
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      EntityRegionImpl region = new EntityRegionImpl(cacheAdapter, regionName, metadata, transactionManager, this);
+      EntityRegionImpl region = new EntityRegionImpl(
+            cache, regionName, metadata, this);
       startRegion(region, regionName);
       return region;
    }
@@ -204,19 +215,13 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Building natural id cache region [" + regionName + "]" );
+		if (log.isDebugEnabled()) {
+			log.debug("Building natural id cache region [" + regionName + "]");
 		}
-		AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties );
-		CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance( cache );
+		AdvancedCache cache = getCache(regionName, NATURAL_ID_KEY, properties);
 		NaturalIdRegionImpl region = new NaturalIdRegionImpl(
-				cacheAdapter,
-				regionName,
-				metadata,
-				transactionManager,
-				this
-		);
-		startRegion( region, regionName );
+				cache, regionName, metadata, this);
+		startRegion(region, regionName);
 		return region;
 	}
 	
@@ -232,8 +237,8 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
          cacheName = regionName;
 
       AdvancedCache cache = getCache(cacheName, QUERY_KEY, properties);
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
+      QueryResultsRegionImpl region = new QueryResultsRegionImpl(
+            cache, regionName, this);
       startRegion(region, regionName);
       return region;
    }
@@ -245,14 +250,17 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
             throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building timestamps cache region [" + regionName + "]");
       AdvancedCache cache = getCache(regionName, TIMESTAMPS_KEY, properties);
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      TimestampsRegionImpl region = createTimestampsRegion(cacheAdapter, regionName);
+      TimestampsRegionImpl region = createTimestampsRegion(cache, regionName);
       startRegion(region, regionName);
       return region;
    }
 
-   protected TimestampsRegionImpl createTimestampsRegion(CacheAdapter cacheAdapter, String regionName) {
-      return new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);
+   protected TimestampsRegionImpl createTimestampsRegion(
+         AdvancedCache cache, String regionName) {
+      if (Caches.isClustered(cache))
+         return new ClusteredTimestampsRegionImpl(cache, regionName, this);
+      else
+         return new TimestampsRegionImpl(cache, regionName, this);
    }
 
    /**
@@ -287,8 +295,6 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 		log.debug("Starting Infinispan region factory");
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( getServiceRegistry() );
-			transactionManager = transactionManagerlookup.getTransactionManager();
-			manager = createCacheManager();
 			initGenericDataTypeOverrides();
 			ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
 			Map settings = configurationService.getSettings();
@@ -298,7 +304,9 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 					dissectProperty(prefixLoc, key.toString(), settings);
 				}
 			}
+			manager = createCacheManager(settings);
 			defineGenericDataTypeCacheConfigurations( settings);
+	         definePendingPutsCache();
 		} catch (CacheException ce) {
 			throw ce;
 		} catch (Throwable t) {
@@ -312,6 +320,22 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
    @Override
    public void start(Settings settings, Properties properties) throws CacheException {
      	start();
+   }
+
+   private void definePendingPutsCache() {
+      ConfigurationBuilder builder = new ConfigurationBuilder();
+      // A local, lightweight cache for pending puts, which is
+      // non-transactional and has aggressive expiration settings.
+      // Locking is still required since the putFromLoad validator
+      // code uses conditional operations (i.e. putIfAbsent).
+      builder.clustering().cacheMode(CacheMode.LOCAL)
+         .transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
+         .expiration().maxIdle(TimeUnit.SECONDS.toMillis(60))
+         .storeAsBinary().enabled(false)
+         .locking().isolationLevel(IsolationLevel.READ_COMMITTED)
+         .jmxStatistics().disable();
+
+      manager.defineConfiguration(PENDING_PUTS_CACHE_NAME, builder.build());
    }
 
    protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(
@@ -332,7 +356,8 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 
    protected void stopCacheRegions() {
       log.debug("Clear region references");
-      getCacheCommandFactory(manager.getCache()).clearRegions(regionNames);
+      getCacheCommandFactory(manager.getCache().getAdvancedCache())
+            .clearRegions(regionNames);
       regionNames.clear();
    }
 
@@ -355,34 +380,37 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       return Collections.unmodifiableSet(definedConfigurations);
    }
 
-   protected EmbeddedCacheManager createCacheManager() throws CacheException {
-	   try {
-		   ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
-		   String configLoc = configurationService.getSetting(
-				   INFINISPAN_CONFIG_RESOURCE_PROP,
-				   StandardConverters.STRING, DEF_INFINISPAN_CONFIG_RESOURCE
-		   );
-		   EmbeddedCacheManager manager = new DefaultCacheManager( configLoc, false );
-		   Boolean globalStats = configurationService.getSetting(
-				   INFINISPAN_GLOBAL_STATISTICS_PROP,
-				   StandardConverters.BOOLEAN,
-				   false
-		   );
-		   if ( globalStats ) {
-			   manager.getGlobalConfiguration().fluent().globalJmxStatistics();
-		   }
-		   manager.start();
-		   return manager;
-	   }
-	   catch ( IOException e ) {
-		   throw new CacheException( "Unable to create default cache manager", e );
-	   }
+   protected EmbeddedCacheManager createCacheManager(Map properties) throws CacheException {
+      try {
+         String configLoc = ConfigurationHelper.getString(
+               INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
+         ClassLoader ctxClassLoader = Thread.currentThread().getContextClassLoader();
+         InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
+               configLoc, ctxClassLoader);
+         ParserRegistry parserRegistry = new ParserRegistry(ctxClassLoader);
+         ConfigurationBuilderHolder holder = parserRegistry.parse(is);
+
+         // Override global jmx statistics exposure
+         String globalStats = extractProperty(
+               INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
+         if (globalStats != null)
+            holder.getGlobalConfigurationBuilder().globalJmxStatistics()
+                  .enabled(Boolean.parseBoolean(globalStats));
+
+         return createCacheManager(holder);
+      } catch (IOException e) {
+         throw new CacheException("Unable to create default cache manager", e);
+      }
+   }
+
+   protected EmbeddedCacheManager createCacheManager(
+         ConfigurationBuilderHolder holder) {
+      return new DefaultCacheManager(holder, true);
    }
 
    private void startRegion(BaseRegion region, String regionName) {
       regionNames.add(regionName);
-      getCacheCommandFactory(region.getCacheAdapter().getCache())
-            .addRegion(regionName, region);
+      getCacheCommandFactory(region.getCache()).addRegion(regionName, region);
    }
 
    public void initGenericDataTypeOverrides() {
@@ -443,45 +471,59 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       return cfgOverride;
    }
 
-   private void defineGenericDataTypeCacheConfigurations(Map properties) throws CacheException {
+   private void defineGenericDataTypeCacheConfigurations(Map properties) {
       String[] defaultGenericDataTypes = new String[]{ENTITY_KEY, COLLECTION_KEY, TIMESTAMPS_KEY, QUERY_KEY};
       for (String type : defaultGenericDataTypes) {
          TypeOverrides override = overrideStatisticsIfPresent(typeOverrides.get(type), properties);
          String cacheName = override.getCacheName();
-         Configuration newCacheCfg = override.createInfinispanConfiguration();
+         ConfigurationBuilder builder = new ConfigurationBuilder();
+         // Read base configuration
+         applyConfiguration(cacheName, builder);
+
          // Apply overrides
-         Configuration cacheConfig = manager.defineConfiguration(cacheName, cacheName, newCacheCfg);
+         override.applyTo(builder);
          // Configure transaction manager
-         cacheConfig = configureTransactionManager(cacheConfig, cacheName, properties);
-         manager.defineConfiguration(cacheName, cacheName, cacheConfig);
+         configureTransactionManager(builder, cacheName, properties);
+         // Define configuration, validate and then apply
+         Configuration cfg = builder.build();
+         override.validateInfinispanConfiguration(cfg);
+         manager.defineConfiguration(cacheName, cfg);
          definedConfigurations.add(cacheName);
-         override.validateInfinispanConfiguration(cacheConfig);
       }
    }
 
    private AdvancedCache getCache(String regionName, String typeKey, Properties properties) {
       TypeOverrides regionOverride = typeOverrides.get(regionName);
       if (!definedConfigurations.contains(regionName)) {
-         String templateCacheName = null;
-         Configuration regionCacheCfg = null;
+         String templateCacheName;
+         Configuration regionCacheCfg;
+         ConfigurationBuilder builder = new ConfigurationBuilder();
          if (regionOverride != null) {
             if (log.isDebugEnabled()) log.debug("Cache region specific configuration exists: " + regionOverride);
-            regionOverride = overrideStatisticsIfPresent(regionOverride, properties);
-            regionCacheCfg = regionOverride.createInfinispanConfiguration();
             String cacheName = regionOverride.getCacheName();
             if (cacheName != null) // Region specific override with a given cache name
-               templateCacheName = cacheName; 
+               templateCacheName = cacheName;
             else // Region specific override without cache name, so template cache name is generic for data type.
-               templateCacheName = typeOverrides.get(typeKey).getCacheName(); 
+               templateCacheName = typeOverrides.get(typeKey).getCacheName();
+
+            // Read template configuration
+            applyConfiguration(templateCacheName, builder);
+
+            regionOverride = overrideStatisticsIfPresent(regionOverride, properties);
+            regionOverride.applyTo(builder);
+
          } else {
             // No region specific overrides, template cache name is generic for data type.
             templateCacheName = typeOverrides.get(typeKey).getCacheName();
-            regionCacheCfg = typeOverrides.get(typeKey).createInfinispanConfiguration();
+            // Read template configuration
+            builder.read(manager.getCacheConfiguration(templateCacheName));
+            // Apply overrides
+            typeOverrides.get(typeKey).applyTo(builder);
          }
          // Configure transaction manager
-         regionCacheCfg = configureTransactionManager(regionCacheCfg, templateCacheName, properties);
-         // Apply overrides
-         manager.defineConfiguration(regionName, templateCacheName, regionCacheCfg);
+         configureTransactionManager(builder, templateCacheName, properties);
+         // Define configuration
+         manager.defineConfiguration(regionName, builder.build());
          definedConfigurations.add(regionName);
       }
       AdvancedCache cache = manager.getCache(regionName).getAdvancedCache();
@@ -491,11 +533,20 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       return createCacheWrapper(cache);
    }
 
-   private CacheCommandFactory getCacheCommandFactory(Cache cache) {
-      GlobalComponentRegistry globalCr = cache.getAdvancedCache()
-            .getComponentRegistry().getGlobalComponentRegistry();
+   private void applyConfiguration(String cacheName, ConfigurationBuilder builder) {
+      Configuration cfg = manager.getCacheConfiguration(cacheName);
+      if (cfg != null)
+         builder.read(cfg);
+   }
+
+   private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
+      GlobalComponentRegistry globalCr = cache.getComponentRegistry()
+            .getGlobalComponentRegistry();
+
       Map<Byte, ModuleCommandFactory> factories =
-         (Map<Byte, ModuleCommandFactory>) globalCr.getComponent("org.infinispan.modules.command.factories");
+         (Map<Byte, ModuleCommandFactory>) globalCr
+               .getComponent("org.infinispan.modules.command.factories");
+
       for (ModuleCommandFactory factory : factories.values()) {
          if (factory instanceof CacheCommandFactory)
             return (CacheCommandFactory) factory;
@@ -507,28 +558,37 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
    }
 
    protected AdvancedCache createCacheWrapper(AdvancedCache cache) {
-      return new ClassLoaderAwareCache(cache, Thread.currentThread().getContextClassLoader());
+      if (Caches.isClustered(cache))
+         return new ClassLoaderAwareCache(cache,
+               Thread.currentThread().getContextClassLoader());
+
+      return cache;
    }
 
-   private Configuration configureTransactionManager(Configuration regionOverrides, String templateCacheName, Map properties) {
+   private void configureTransactionManager(ConfigurationBuilder builder,
+         String cacheName, Map properties) {
       // Get existing configuration to verify whether a tm was configured or not.
-      Configuration templateConfig = manager.defineConfiguration(templateCacheName, new Configuration());
-      if (templateConfig.isTransactionalCache()) {
-         String ispnTmLookupClassName = templateConfig.getTransactionManagerLookupClass();
+      Configuration baseCfg = manager.getCacheConfiguration(cacheName);
+      if (baseCfg != null && baseCfg.transaction().transactionMode().isTransactional()) {
+         String ispnTmLookupClassName = baseCfg.transaction().transactionManagerLookup().getClass().getName();
          String hbTmLookupClassName = org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup.class.getName();
-         if (ispnTmLookupClassName != null && !ispnTmLookupClassName.equals(hbTmLookupClassName)) {
+         if (GenericTransactionManagerLookup.class.getName().equals(ispnTmLookupClassName)) {
+            log.debug("Using default Infinispan transaction manager lookup " +
+                  "instance (GenericTransactionManagerLookup), overriding it " +
+                  "with Hibernate transaction manager lookup");
+            builder.transaction().transactionManagerLookup(transactionManagerlookup);
+         } else if (ispnTmLookupClassName != null && !ispnTmLookupClassName.equals(hbTmLookupClassName)) {
             log.debug("Infinispan is configured [" + ispnTmLookupClassName + "] with a different transaction manager lookup " +
                             "class than Hibernate [" + hbTmLookupClassName + "]");
          } else {
-            regionOverrides.fluent().transactionManagerLookup( transactionManagerlookup );
+            // Infinispan TM lookup class null, so apply Hibernate one directly
+            builder.transaction().transactionManagerLookup(transactionManagerlookup);
          }
 
          String useSyncProp = extractProperty(INFINISPAN_USE_SYNCHRONIZATION_PROP, properties);
          boolean useSync = useSyncProp == null ? DEF_USE_SYNCHRONIZATION : Boolean.parseBoolean(useSyncProp);
-         regionOverrides.fluent().transaction().useSynchronization(useSync);
+         builder.transaction().useSynchronization(useSync);
       }
-
-      return regionOverrides;
    }
 
    private TypeOverrides overrideStatisticsIfPresent(TypeOverrides override, Map properties) {

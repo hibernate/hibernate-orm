@@ -28,7 +28,8 @@ import java.io.StringReader;
 import java.sql.Clob;
 import java.util.Arrays;
 
-import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

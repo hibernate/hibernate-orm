@@ -830,6 +830,15 @@ public interface PersistenceContext {
 		 * of old values as no longer valid.
 		 */
 		public void cleanupFromSynchronizations();
+
+		/**
+		 * Called on {@link org.hibernate.Session#evict} to give a chance to clean up natural-id cross refs.
+		 *
+		 * @param object The entity instance.
+		 * @param persister The entity persister
+		 * @param identifier The entity identifier
+		 */
+		public void handleEviction(Object object, EntityPersister persister, Serializable identifier);
 	}
 
 	/**

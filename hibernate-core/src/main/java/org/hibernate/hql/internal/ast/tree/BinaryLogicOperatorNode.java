@@ -23,6 +23,8 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.Arrays;
+
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -191,9 +193,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	protected static String[] extractMutationTexts(Node operand, int count) {
 		if ( operand instanceof ParameterNode ) {
 			String[] rtn = new String[count];
-			for ( int i = 0; i < count; i++ ) {
-				rtn[i] = "?";
-			}
+			Arrays.fill( rtn, "?" );
 			return rtn;
 		}
 		else if ( operand.getType() == HqlSqlTokenTypes.VECTOR_EXPR ) {

@@ -137,7 +137,8 @@ public class XaTransactionImpl implements Transaction {
       if (synchronizations != null) {
          for (int i = 0; i < synchronizations.size(); i++) {
             Synchronization s = (Synchronization) synchronizations.get(i);
-            s.afterCompletion(status);
+            if (s != null)
+               s.afterCompletion(status);
          }
       }
 

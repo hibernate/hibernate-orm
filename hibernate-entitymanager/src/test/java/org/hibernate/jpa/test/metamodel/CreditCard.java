@@ -94,7 +94,7 @@ public class CreditCard implements java.io.Serializable {
 		number = v;
 	}
 
-	@Column(name = "TYPE")
+	@Column(name = "`TYPE`")
 	public String getType() {
 		return type;
 	}

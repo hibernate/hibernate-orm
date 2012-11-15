@@ -31,8 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -48,6 +46,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Represents state associated with the processing of a given {@link ResultSet}
@@ -253,7 +252,12 @@ public class CollectionLoadContext {
 		}
 		else {
 			ce.postInitialize( lce.getCollection() );
+//			if (ce.getLoadedPersister().getBatchSize() > 1) { // not the best place for doing this, moved into ce.postInitialize
+//				getLoadContext().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce); 
+//			}
 		}
+		
+
 
 		boolean addToCache = hasNoQueuedAdds && // there were no queued additions
 				persister.hasCache() &&             // and the role has a cache
@@ -266,7 +270,7 @@ public class CollectionLoadContext {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection fully initialized: %s",
-					MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory())
+					MessageHelper.collectionInfoString(persister, lce.getCollection(), lce.getKey(), session)
 			);
 		}
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
@@ -285,7 +289,7 @@ public class CollectionLoadContext {
 		final SessionFactoryImplementor factory = session.getFactory();
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Caching collection: %s", MessageHelper.collectionInfoString( persister, lce.getKey(), factory ) );
+			LOG.debugf( "Caching collection: %s", MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session ) );
 		}
 
 		if ( !session.getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( session ) ) {
@@ -318,7 +322,7 @@ public class CollectionLoadContext {
 				if ( collectionOwner == null ) {
 					throw new HibernateException(
 							"Unable to resolve owner of loading collection [" +
-									MessageHelper.collectionInfoString( persister, lce.getKey(), factory ) +
+									MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session ) +
 									"] for second level caching"
 					);
 				}

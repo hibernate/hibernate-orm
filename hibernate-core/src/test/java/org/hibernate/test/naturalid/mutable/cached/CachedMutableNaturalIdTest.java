@@ -43,7 +43,7 @@ import static org.junit.Assert.assertNull;
  * @author Guenther Demetz
  * @author Steve Ebersole
  */
-public class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
+public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {Another.class, AllCached.class};

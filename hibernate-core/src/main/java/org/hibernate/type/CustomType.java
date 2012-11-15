@@ -52,7 +52,10 @@ import org.hibernate.usertype.UserVersionType;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CustomType extends AbstractType implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType {
+public class CustomType
+		extends AbstractType
+		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType {
+
 	private final UserType userType;
 	private final String name;
 	private final int[] types;
@@ -144,7 +147,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 			SessionImplementor session,
 			Object owner,
 			Map copyCache) throws HibernateException {
-		return userType.replace(original, target, owner);
+		return userType.replace( original, target, owner );
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)

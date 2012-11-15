@@ -800,5 +800,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 			return null; 
 		}
+
+		@Override
+		public int getBatchSize() {
+			return 0;
+		}
 	}
 }

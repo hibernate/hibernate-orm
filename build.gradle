@@ -179,6 +179,10 @@ subprojects { subProject ->
                     systemProperty entry.key, entry.value
                 }
             }
+	}
+        test {
+            systemProperties['hibernate.test.validatefailureexpected'] = true
+            systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
             maxHeapSize = "1024m"
         }
 

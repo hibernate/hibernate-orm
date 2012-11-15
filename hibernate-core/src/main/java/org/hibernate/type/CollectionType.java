@@ -29,33 +29,38 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.dom4j.Element;
-import org.dom4j.Node;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.jboss.logging.Logger;
 
 /**
  * A type that handles Hibernate <tt>PersistentCollection</tt>s (including arrays).
@@ -63,6 +68,8 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
 
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -508,10 +515,90 @@ public abstract class CollectionType extends AbstractType implements Association
 				if ( ! ( ( PersistentCollection ) original ).isDirty() ) {
 					( ( PersistentCollection ) result ).clearDirty();
 				}
+
+				if ( elemType instanceof AssociationType ) {
+					preserveSnapshot( (PersistentCollection) original,
+							(PersistentCollection) result,
+							(AssociationType) elemType, owner, copyCache,
+							session );
+				}
 			}
 		}
 
 		return result;
+	}
+
+	private void preserveSnapshot(PersistentCollection original,
+			PersistentCollection result, AssociationType elemType,
+			Object owner, Map copyCache, SessionImplementor session) {
+		Serializable originalSnapshot = original.getStoredSnapshot();
+		Serializable resultSnapshot = result.getStoredSnapshot();
+		Serializable targetSnapshot;
+
+		if ( originalSnapshot instanceof List ) {
+			targetSnapshot = new ArrayList(
+					( (List) originalSnapshot ).size() );
+			for ( Object obj : (List) originalSnapshot ) {
+				( (List) targetSnapshot ).add( elemType.replace(
+						obj, null, session, owner, copyCache ) );
+			}
+
+		}
+		else if ( originalSnapshot instanceof Map ) {
+			if ( originalSnapshot instanceof SortedMap ) {
+				targetSnapshot = new TreeMap(
+						( (SortedMap) originalSnapshot ).comparator() );
+			}
+			else {
+				targetSnapshot = new HashMap(
+						CollectionHelper.determineProperSizing(
+								( (Map) originalSnapshot ).size() ),
+						CollectionHelper.LOAD_FACTOR );
+			}
+
+			for ( Map.Entry<Object, Object> entry : (
+					(Map<Object, Object>) originalSnapshot ).entrySet() ) {
+				Object key = entry.getKey();
+				Object value = entry.getValue();
+				Object resultSnapshotValue = ( resultSnapshot == null ) ? null
+						: ( (Map<Object, Object>) resultSnapshot ).get( key );
+
+				if ( key == value ) {
+					Object newValue = elemType.replace( value,
+							resultSnapshotValue, session, owner, copyCache );
+					( (Map) targetSnapshot ).put( newValue, newValue );
+
+				}
+				else {
+					Object newValue = elemType.replace( value,
+							resultSnapshotValue, session, owner, copyCache );
+					( (Map) targetSnapshot ).put( key, newValue );
+				}
+
+			}
+
+		}
+		else if ( originalSnapshot instanceof Object[] ) {
+			Object[] arr = (Object[]) originalSnapshot;
+			for ( int i = 0; i < arr.length; i++ ) {
+				arr[i] = elemType.replace(
+						arr[i], null, session, owner, copyCache );
+			}
+			targetSnapshot = originalSnapshot;
+
+		}
+		else {
+			// retain the same snapshot
+			targetSnapshot = resultSnapshot;
+
+		}
+
+		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry(
+				result );
+		if ( ce != null ) {
+			ce.resetStoredSnapshot( result, targetSnapshot );
+		}
+
 	}
 
 	/**
@@ -625,6 +712,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			if ( collection == null ) {
 				// create a new collection wrapper, to be initialized later
 				collection = instantiate( session, persister, key );
+				
 				collection.setOwner(owner);
 	
 				persistenceContext.addUninitializedCollection( persister, collection, key );
@@ -641,6 +729,12 @@ public abstract class CollectionType extends AbstractType implements Association
 					session.getPersistenceContext().addCollectionHolder( collection );
 				}
 				
+			}
+			
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Created collection wrapper: %s",
+						MessageHelper.collectionInfoString( persister, collection,
+								key, session ) );
 			}
 			
 		}

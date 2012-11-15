@@ -1,12 +1,19 @@
 package org.hibernate.test.annotations.filter.subclass.joined;
 
 import junit.framework.Assert;
-import org.junit.Test;
 
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.annotations.filter.subclass.SubClassTest;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.SkipForDialect;
+import org.junit.Test;
 
 @FailureExpectedWithNewMetamodel
+@SkipForDialect(
+        value = CUBRIDDialect.class,
+        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+)
 public class JoinedSubClassTest extends SubClassTest{
 
 	@Override

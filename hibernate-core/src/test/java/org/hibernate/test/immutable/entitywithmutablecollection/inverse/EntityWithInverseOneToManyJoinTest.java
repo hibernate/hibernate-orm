@@ -23,13 +23,20 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Gail Badner
  */
 @FailureExpectedWithNewMetamodel
+@SkipForDialect(
+        value = CUBRIDDialect.class,
+        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+)
 public class EntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
 	@Override
 	public String[] getMappings() {

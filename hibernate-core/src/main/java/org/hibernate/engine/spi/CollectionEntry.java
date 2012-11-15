@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -215,6 +216,9 @@ public final class CollectionEntry implements Serializable {
 				collection.getSnapshot( getLoadedPersister() ) :
 				null;
 		collection.setSnapshot(loadedKey, role, snapshot);
+		if (getLoadedPersister().getBatchSize() > 1) {
+			((AbstractPersistentCollection) collection).getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(this); 
+		}
 	}
 
 	/**
@@ -258,6 +262,20 @@ public final class CollectionEntry implements Serializable {
 
 	public Serializable getSnapshot() {
 		return snapshot;
+	}
+
+	/**
+	 * Reset the stored snapshot for both the persistent collection and this collection entry. 
+	 * Used during the merge of detached collections.
+	 * 
+	 * @param collection the persistentcollection to be updated
+	 * @param storedSnapshot the new stored snapshot
+	 */
+	public void resetStoredSnapshot(PersistentCollection collection, Serializable storedSnapshot) {
+		LOG.debugf("Reset storedSnapshot to %s for %s", storedSnapshot, this);
+		
+		snapshot = storedSnapshot;
+		collection.setSnapshot(loadedKey, role, snapshot);
 	}
 
 	private void setLoadedPersister(CollectionPersister persister) {

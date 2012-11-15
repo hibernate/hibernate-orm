@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -20,5 +21,6 @@ public class TvMagazin {
 	@EmbeddedId
 	public TvMagazinPk id;
 	@Temporal(TemporalType.TIME)
+    @Column(name="`time`")
 	Date time;
 }

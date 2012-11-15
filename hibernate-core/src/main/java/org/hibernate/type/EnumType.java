@@ -100,12 +100,42 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws SQLException {
 		if ( enumValueMapper == null ) {
-			guessTypeOfEnumValueMapper( rs.getMetaData().getColumnType( rs.findColumn( names[0] ) ) );
+			resolveEnumValueMapper( rs,  names[0] );
 		}
 		return enumValueMapper.getValue( rs, names );
 	}
 
-	private void guessTypeOfEnumValueMapper(int columnType) {
+	private void resolveEnumValueMapper(ResultSet rs, String name) {
+		if ( enumValueMapper == null ) {
+			try {
+				resolveEnumValueMapper( rs.getMetaData().getColumnType( rs.findColumn( name ) ) );
+			}
+			catch (Exception e) {
+				// because some drivers do not implement this
+				LOG.debugf(
+						"JDBC driver threw exception calling java.sql.ResultSetMetaData.getColumnType; " +
+								"using fallback determination [%s] : %s",
+						enumClass.getName(),
+						e.getMessage()
+				);
+				// peek at the result value to guess type (this is legacy behavior)
+				try {
+					Object value = rs.getObject( name );
+					if ( Number.class.isInstance( value ) ) {
+						treatAsOrdinal();
+					}
+					else {
+						treatAsNamed();
+					}
+				}
+				catch (SQLException ignore) {
+					treatAsOrdinal();
+				}
+			}
+		}
+	}
+
+	private void resolveEnumValueMapper(int columnType) {
 		// fallback for cases where not enough parameter/parameterization information was passed in
 		if ( isOrdinal( columnType ) ) {
 			treatAsOrdinal();
@@ -118,9 +148,27 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		if ( enumValueMapper == null ) {
-			guessTypeOfEnumValueMapper( st.getParameterMetaData().getParameterType( index ) );
+			resolveEnumValueMapper( st, index );
 		}
 		enumValueMapper.setValue( st, (Enum) value, index );
+	}
+
+	private void resolveEnumValueMapper(PreparedStatement st, int index) {
+		if ( enumValueMapper == null ) {
+			try {
+				resolveEnumValueMapper( st.getParameterMetaData().getParameterType( index ) );
+			}
+			catch (Exception e) {
+				// because some drivers do not implement this
+				LOG.debugf(
+						"JDBC driver threw exception calling java.sql.ParameterMetaData#getParameterType; " +
+								"falling back to ordinal-based enum mapping [%s] : %s",
+						enumClass.getName(),
+						e.getMessage()
+				);
+				treatAsOrdinal();
+			}
+		}
 	}
 
 	@Override
@@ -153,8 +201,8 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 
 		// IMPL NOTE : be protective about not setting enumValueMapper (i.e. calling treatAsNamed/treatAsOrdinal)
-		// in cases where we do not have enough information.  In such cases the `if` check in nullSafeGet/nullSafeSet
-		// will kick in to query against the JDBC metadata to make that determination.
+		// in cases where we do not have enough information.  In such cases we do additional checks
+		// as part of nullSafeGet/nullSafeSet to query against the JDBC metadata to make the determination.
 
 		if ( reader != null ) {
 			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
@@ -213,12 +261,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	private void treatAsOrdinal() {
 		if ( enumValueMapper == null || ! OrdinalEnumValueMapper.class.isInstance( enumValueMapper ) ) {
 			enumValueMapper = new OrdinalEnumValueMapper();
+			sqlType = enumValueMapper.getSqlType();
 		}
 	}
 
 	private void treatAsNamed() {
 		if ( enumValueMapper == null || ! NamedEnumValueMapper.class.isInstance( enumValueMapper ) ) {
 			enumValueMapper = new NamedEnumValueMapper();
+			sqlType = enumValueMapper.getSqlType();
 		}
 	}
 
@@ -250,29 +300,20 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 	@Override
 	public String objectToSQLString(Object value) {
-		if ( enumValueMapper == null ) {
-			guessTypeOfEnumValueMapper( sqlType );
-		}
 		return enumValueMapper.objectToSQLString( (Enum) value );
 	}
 
 	@Override
 	public String toString(Object value) throws HibernateException {
-		if ( enumValueMapper == null ) {
-			guessTypeOfEnumValueMapper( sqlType );
-		}
 		return enumValueMapper.toString( ( Enum) value );
 	}
 
 	@Override
 	public Object fromStringValue(String string) throws HibernateException {
-		if ( enumValueMapper == null ) {
-			guessTypeOfEnumValueMapper( sqlType );
-		}
 		return enumValueMapper.fromString( string );
 	}
 
-	private static interface EnumValueMapper {
+	private static interface EnumValueMapper extends Serializable {
 		public int getSqlType();
 		public Enum getValue(ResultSet rs, String[] names) throws SQLException;
 		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
@@ -291,20 +332,20 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 			if ( jdbcValue == null ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Binding null to parameter: {0}", index );
+					LOG.trace(String.format("Binding null to parameter: [%s]", index));
 				}
 				st.setNull( index, getSqlType() );
 				return;
 			}
 
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Binding '{0}' to parameter: '{1}", jdbcValue, index );
+				LOG.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue, index));
 			}
 			st.setObject( index, jdbcValue, EnumType.this.sqlType );
 		}
 	}
 
-	private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper {
+	private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
 		private transient Enum[] enumsByOrdinal;
 
 		@Override
@@ -317,14 +358,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 			final int ordinal = rs.getInt( names[0] );
 			if ( rs.wasNull() ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Returning null as column {0}", names[0] );
+					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromOrdinal( ordinal );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Returning '{0}' as column {1}", enumValue, names[0] );
+				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;
 		}
@@ -375,7 +416,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 	}
 
-	private class NamedEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper {
+	private class NamedEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
 		@Override
 		public int getSqlType() {
 			return Types.VARCHAR;
@@ -387,14 +428,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 			if ( rs.wasNull() ) {
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Returning null as column {0}", names[0] );
+					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromName( value );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Returning '{0}' as column {1}", enumValue, names[0] );
+				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;
 		}
@@ -433,6 +474,10 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		protected Object extractJdbcValue(Enum value) {
 			return value.name();
 		}
+	}
+
+	public boolean isOrdinal() {
+		return isOrdinal( sqlType );
 	}
 
 	private boolean isOrdinal(int paramType) {

@@ -53,7 +53,7 @@
 		<property name="endDate" column="ENDDATE" insert="false"/>
 		<property name="regionCode" column="REGIONCODE" update="false"/>
 	    <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
-			<column name="VALUE" sql-type="float"/>
+			<column name="AMOUNT" sql-type="float"/>
 			<column name="CURRENCY"/>			
 		</property>
 	</class>
@@ -191,7 +191,7 @@
 	<sql-query name="orgNamesAndOrgs">
 		<return-scalar column="thename" type="string"/>
 		<return alias="org" class="Organization"/>
-		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id}
+		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id} 
 		FROM ORGANIZATION org
 		ORDER BY thename
 	</sql-query>
@@ -199,10 +199,10 @@
 	<sql-query name="orgsAndOrgNames">
 		<return alias="org" class="Organization"/>
 		<return-scalar column="thename" type="string"/>
-		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id}
+		SELECT org.NAME AS thename, org.NAME AS {org.name}, org.ORGID AS {org.id} 
 		FROM ORGANIZATION org
 		ORDER BY thename
-	</sql-query>
+	</sql-query>	
 
 	<sql-query name="orgIdsAndOrgNames">
 		<return-scalar column="orgid" type="long"/>
@@ -225,11 +225,11 @@
 
 	<sql-query name="organizationEmploymentsExplicitAliases">
 		<load-collection alias="empcol" role="Organization.employments"/>
-		SELECT empcol.EMPLOYER as {empcol.key}, empcol.EMPID as {empcol.element}, {empcol.element.*}
+		SELECT empcol.EMPLOYER as {empcol.key}, empcol.EMPID as {empcol.element}, {empcol.element.*} 
 		FROM EMPLOYMENT empcol
 		WHERE EMPLOYER = :id
 		ORDER BY STARTDATE ASC, EMPLOYEE ASC
-	</sql-query>
+	</sql-query>	
 
 	<sql-query name="organizationreturnproperty">
 		<return alias="org" class="Organization">
@@ -238,15 +238,15 @@
 		</return>
 		<return-join alias="emp" property="org.employments">
 			<return-property name="key" column="EMPLOYER"/>
-			<return-property name="element" column="EMPID"/>
+			<return-property name="element" column="EMPID"/>			
 			<return-property name="element.employee" column="EMPLOYEE"/>
-			<return-property name="element.employer" column="EMPLOYER"/>
+			<return-property name="element.employer" column="EMPLOYER"/>			
 			<return-property name="element.startDate" column="XSTARTDATE"/>
-			<return-property name="element.endDate" column="ENDDATE"/>
-			<return-property name="element.regionCode" column="REGIONCODE"/>
-			<return-property name="element.employmentId" column="EMPID"/>
+			<return-property name="element.endDate" column="ENDDATE"/>			
+			<return-property name="element.regionCode" column="REGIONCODE"/>			
+			<return-property name="element.employmentId" column="EMPID"/>						
 			<return-property name="element.salary">
-                <return-column name="VALUE"/>
+                <return-column name="AMOUNT"/>
                 <return-column name="CURRENCY"/>
 			</return-property>
 		</return-join>
@@ -259,13 +259,13 @@
             emp.STARTDATE as xstartDate,
             emp.ENDDATE as endDate,
             emp.REGIONCODE as regionCode,
-            emp.VALUE as VALUE,
+            emp.AMOUNT as AMOUNT,
             emp.CURRENCY as CURRENCY
         FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
 	</sql-query>
 
-
+    
 	<sql-query name="organizationautodetect" resultset-ref="org-description">
 	<!--  equal to "organizationpropertyreturn" but since no {} nor return-property are used hibernate will fallback to use the columns directly from the mapping -->
 		<return alias="org" class="Organization"/>
@@ -279,7 +279,7 @@
             emp.STARTDATE as startDate,
             emp.ENDDATE as endDate,
             emp.REGIONCODE as regionCode,
-            emp.VALUE as VALUE,
+            emp.AMOUNT as AMOUNT,
             emp.CURRENCY as CURRENCY
 		FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER

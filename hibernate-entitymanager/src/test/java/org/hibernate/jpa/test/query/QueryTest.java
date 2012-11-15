@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -120,6 +121,43 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		assertNotNull( result );
 		assertEquals( 2, result.size() );
 		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH_7407" )
+	public void testMultipleParameterLists() throws Exception {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( item );
+		em.persist( item2 );
+		assertTrue( em.contains( item ) );
+		em.getTransaction().commit();
+
+		List<String> names = Arrays.asList( item.getName() );
+		Query q = em.createQuery( "select item from Item item where item.name in :names or item.name in :names2" );
+		q.setParameter( "names", names );
+		q.setParameter( "names2", names );
+		List result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 1, result.size() );
+
+		List<String> descrs = Arrays.asList( item.getDescr() );
+		q = em.createQuery( "select item from Item item where item.name in :names and ( item.descr is null or item.descr in :descrs )" );
+		q.setParameter( "names", names );
+		q.setParameter( "descrs", descrs );
+		result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 1, result.size() );
+
+		em.getTransaction().begin();
+		em.remove( em.getReference( Item.class, item.getName() ) );
+		em.remove( em.getReference( Item.class, item2.getName() ) );
+		em.getTransaction().commit();
+
 		em.close();
 	}
 

@@ -13,6 +13,7 @@ dependencies {
     testCompile( libraries.jnp_client )
     testCompile( libraries.jnp_server )
     testCompile( libraries.rhq )
+    testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 
 test {
@@ -22,8 +23,20 @@ test {
    systemProperties['jgroups.udp.enable_bundling'] = false
    systemProperties['jgroups.bind_addr'] = 'localhost'
    // Use Infinispan's test JGroups stack that uses TEST_PING
-   systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = 'stacks/tcp.xml'
-   //   systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
+   systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = '2lc-test-tcp.xml'
+   // systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
    enabled = true
 }
 
+task packageTests(type: Jar) {
+  from sourceSets.test.output
+  classifier = 'tests'
+}
+
+task sourcesTestJar(type: Jar, dependsOn:classes) {
+  from sourceSets.test.allSource
+  classifier = 'test-sources'
+}
+
+artifacts.archives packageTests
+artifacts.archives sourcesTestJar

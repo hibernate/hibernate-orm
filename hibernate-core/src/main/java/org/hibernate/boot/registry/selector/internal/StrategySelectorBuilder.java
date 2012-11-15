@@ -94,6 +94,9 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
+import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 
 /**
  * @author Steve Ebersole
@@ -131,6 +134,7 @@ public class StrategySelectorBuilder {
 		addDialects( strategySelector );
 		addJtaPlatforms( strategySelector );
 		addTransactionFactories( strategySelector );
+		addMultiTableBulkIdStrategies( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( AvailabilityAnnouncer announcer : classLoaderService.loadJavaServices( AvailabilityAnnouncer.class ) ) {
@@ -326,5 +330,18 @@ public class StrategySelectorBuilder {
 
 		strategySelector.registerStrategyImplementor( TransactionFactory.class, CMTTransactionFactory.SHORT_NAME, CMTTransactionFactory.class );
 		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.CMTTransactionFactory", CMTTransactionFactory.class );
+	}
+
+	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				MultiTableBulkIdStrategy.class,
+				PersistentTableBulkIdStrategy.SHORT_NAME,
+				PersistentTableBulkIdStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				MultiTableBulkIdStrategy.class,
+				TemporaryTableBulkIdStrategy.SHORT_NAME,
+				TemporaryTableBulkIdStrategy.class
+		);
 	}
 }

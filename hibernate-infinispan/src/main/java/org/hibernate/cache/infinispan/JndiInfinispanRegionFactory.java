@@ -21,12 +21,13 @@
  */
 package org.hibernate.cache.infinispan;
 
-import org.infinispan.manager.EmbeddedCacheManager;
+import java.util.Map;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.infinispan.manager.EmbeddedCacheManager;
 
 /**
  * A {@link org.hibernate.cache.spi.RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -42,7 +43,7 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
     */
    public static final String CACHE_MANAGER_RESOURCE_PROP = "hibernate.cache.infinispan.cachemanager";
 	@Override
-	protected EmbeddedCacheManager createCacheManager() throws CacheException {
+	protected EmbeddedCacheManager createCacheManager(Map properties) throws CacheException {
 		String name = getServiceRegistry().getService( ConfigurationService.class ).getSetting(
 				CACHE_MANAGER_RESOURCE_PROP,
 				StandardConverters.STRING

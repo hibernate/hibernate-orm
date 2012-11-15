@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.hql;
 
+import org.hibernate.dialect.CUBRIDDialect;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -142,6 +143,11 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
+    @SkipForDialect(
+            value = CUBRIDDialect.class,
+            comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                    "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+    )
 	public void testScrollingJoinFetchesSingleRowResultSet() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -295,6 +301,11 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
+    @SkipForDialect(
+            value = CUBRIDDialect.class,
+            comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                    "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+    )
 	public void testScrollingJoinFetchesReverse() {
 		TestData data = new TestData();
 		data.prepare();
@@ -324,6 +335,11 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
+    @SkipForDialect(
+            value = CUBRIDDialect.class,
+            comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
+                    "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
+    )
 	public void testScrollingJoinFetchesPositioning() {
 		TestData data = new TestData();
 		data.prepare();

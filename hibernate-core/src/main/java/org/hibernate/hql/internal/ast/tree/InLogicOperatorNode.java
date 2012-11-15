@@ -121,50 +121,70 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
                 || ( !ParameterNode.class.isInstance( getLeftHandOperand() ) ) ? null
                 : ( (ParameterNode) getLeftHandOperand() )
                         .getHqlParameterSpecification();
-        /**
-         * only one element in "in" cluster, e.g.
-         * <code> where (a,b) in ( (1,2) ) </code> this will be mutated to
-         * <code>where a=1 and b=2 </code>
-         */
+
+		final boolean negated = getType() == HqlSqlTokenTypes.NOT_IN;
+
         if ( rhsNode != null && rhsNode.getNextSibling() == null ) {
-            String[] rhsElementTexts = extractMutationTexts( rhsNode,
-                    rhsColumnSpan );
-            setType( HqlSqlTokenTypes.AND );
-            setText( "AND" );
-            ParameterSpecification rhsEmbeddedCompositeParameterSpecification = rhsNode == null
-                    || ( !ParameterNode.class.isInstance( rhsNode ) ) ? null
-                    : ( (ParameterNode) rhsNode )
-                            .getHqlParameterSpecification();
-            translate( lhsColumnSpan, HqlSqlTokenTypes.EQ, "=", lhsElementTexts,
+			/**
+			 * only one element in the vector grouping.
+			 * <code> where (a,b) in ( (1,2) ) </code> this will be mutated to
+			 * <code>where a=1 and b=2 </code>
+			 */
+			String[] rhsElementTexts = extractMutationTexts( rhsNode, rhsColumnSpan );
+            setType( negated ? HqlTokenTypes.OR : HqlSqlTokenTypes.AND );
+            setText( negated ? "or" : "and" );
+            ParameterSpecification rhsEmbeddedCompositeParameterSpecification =
+					rhsNode == null || ( !ParameterNode.class.isInstance( rhsNode ) )
+							? null
+							: ( (ParameterNode) rhsNode ).getHqlParameterSpecification();
+            translate(
+					lhsColumnSpan,
+					negated ? HqlSqlTokenTypes.NE : HqlSqlTokenTypes.EQ,
+					negated ? "<>" : "=",
+					lhsElementTexts,
                     rhsElementTexts,
                     lhsEmbeddedCompositeParameterSpecification,
-                    rhsEmbeddedCompositeParameterSpecification, this );
-        } else {
+                    rhsEmbeddedCompositeParameterSpecification,
+					this
+			);
+        }
+		else {
             List andElementsNodeList = new ArrayList();
             while ( rhsNode != null ) {
-                String[] rhsElementTexts = extractMutationTexts( rhsNode,
-                        rhsColumnSpan );
-                AST and = getASTFactory().create( HqlSqlTokenTypes.AND, "AND" );
-                ParameterSpecification rhsEmbeddedCompositeParameterSpecification = rhsNode == null
-                        || ( !ParameterNode.class.isInstance( rhsNode ) ) ? null
-                        : ( (ParameterNode) rhsNode )
-                                .getHqlParameterSpecification();
-                translate( lhsColumnSpan, HqlSqlTokenTypes.EQ, "=",
-                        lhsElementTexts, rhsElementTexts,
+                String[] rhsElementTexts = extractMutationTexts( rhsNode, rhsColumnSpan );
+                AST group = getASTFactory().create(
+						negated ? HqlSqlTokenTypes.OR : HqlSqlTokenTypes.AND,
+						negated ? "or" : "and"
+				);
+                ParameterSpecification rhsEmbeddedCompositeParameterSpecification =
+						rhsNode == null || ( !ParameterNode.class.isInstance( rhsNode ) )
+								? null
+								: ( (ParameterNode) rhsNode ).getHqlParameterSpecification();
+                translate(
+						lhsColumnSpan,
+						negated ? HqlSqlTokenTypes.NE : HqlSqlTokenTypes.EQ,
+						negated ? "<>" : "=",
+                        lhsElementTexts,
+						rhsElementTexts,
                         lhsEmbeddedCompositeParameterSpecification,
-                        rhsEmbeddedCompositeParameterSpecification, and );
-                andElementsNodeList.add( and );
+                        rhsEmbeddedCompositeParameterSpecification,
+						group
+				);
+                andElementsNodeList.add( group );
                 rhsNode = (Node) rhsNode.getNextSibling();
             }
-            setType( HqlSqlTokenTypes.OR );
-            setText( "OR" );
+            setType( negated ? HqlSqlTokenTypes.AND : HqlSqlTokenTypes.OR );
+            setText( negated ? "and" : "or" );
             AST curNode = this;
             for ( int i = andElementsNodeList.size() - 1; i > 1; i-- ) {
-                AST or = getASTFactory().create( HqlSqlTokenTypes.OR, "OR" );
-                curNode.setFirstChild( or );
-                curNode = or;
+                AST group = getASTFactory().create(
+						negated ? HqlSqlTokenTypes.AND : HqlSqlTokenTypes.OR,
+						negated ? "and" : "or"
+				);
+                curNode.setFirstChild( group );
+                curNode = group;
                 AST and = (AST) andElementsNodeList.get( i );
-                or.setNextSibling( and );
+                group.setNextSibling( and );
             }
             AST node0 = (AST) andElementsNodeList.get( 0 );
             AST node1 = (AST) andElementsNodeList.get( 1 );

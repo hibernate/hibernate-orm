@@ -23,15 +23,19 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -41,6 +45,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * treat them as immutable because we cannot properly check them for changes nor deep copy them.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 	public static final BlobTypeDescriptor INSTANCE = new BlobTypeDescriptor();
@@ -108,27 +113,43 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
-		if ( ! ( Blob.class.isAssignableFrom( type ) || BinaryStream.class.isAssignableFrom( type ) ) ) {
-			throw unknownUnwrap( type );
-		}
-
 		if ( value == null ) {
 			return null;
 		}
 
-		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			try {
-				return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+		try {
+			if ( BinaryStream.class.isAssignableFrom( type ) ) {
+				if ( BlobImplementer.class.isInstance( value ) ) {
+					// if the incoming Blob is a wrapper, just pass along its BinaryStream
+					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
+				}
+				else {
+					// otherwise we need to build a BinaryStream...
+					return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+				}
 			}
-			catch ( SQLException e ) {
-				throw new HibernateException( "Unable to access blob stream", e );
+			else if ( byte[].class.isAssignableFrom( type )) {
+				if ( BlobImplementer.class.isInstance( value ) ) {
+					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
+					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
+				}
+				else {
+					// otherwise extract the bytes from the stream manually
+					return (X) DataHelper.extractBytes( value.getBinaryStream() );
+				}
+			}
+			else if (Blob.class.isAssignableFrom( type )) {
+				final Blob blob =  WrappedBlob.class.isInstance( value )
+						? ( (WrappedBlob) value ).getWrappedBlob()
+						: value;
+				return (X) blob;
 			}
 		}
-
-		final Blob blob =  WrappedBlob.class.isInstance( value )
-				? ( (WrappedBlob) value ).getWrappedBlob()
-				: value;
-		return (X) blob;
+		catch ( SQLException e ) {
+			throw new HibernateException( "Unable to access blob stream", e );
+		}
+		
+		throw unknownUnwrap( type );
 	}
 
 	public <X> Blob wrap(X value, WrapperOptions options) {
@@ -136,10 +157,24 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 			return null;
 		}
 
-		if ( ! Blob.class.isAssignableFrom( value.getClass() ) ) {
-			throw unknownWrap( value.getClass() );
+		// Support multiple return types from
+		// org.hibernate.type.descriptor.sql.BlobTypeDescriptor
+		if ( Blob.class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().wrap( (Blob) value );
+		}
+		else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().createBlob( ( byte[] ) value);
+		}
+		else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
+			InputStream inputStream = ( InputStream ) value;
+			try {
+				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
+			}
+			catch ( IOException e ) {
+				throw unknownWrap( value.getClass() );
+			}
 		}
 
-		return options.getLobCreator().wrap( (Blob) value );
+		throw unknownWrap( value.getClass() );
 	}
 }

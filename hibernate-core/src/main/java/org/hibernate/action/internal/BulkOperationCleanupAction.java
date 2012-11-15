@@ -72,7 +72,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(SessionImplementor session, Queryable[] affectedQueryables) {
+	public BulkOperationCleanupAction(SessionImplementor session, Queryable... affectedQueryables) {
 		SessionFactoryImplementor factory = session.getFactory();
 		LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
 		for ( Queryable persister : affectedQueryables ) {

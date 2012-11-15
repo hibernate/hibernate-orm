@@ -92,6 +92,10 @@ public class StandardServiceRegistryBuilder {
 		return initiators;
 	}
 
+	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
+		return bootstrapServiceRegistry;
+	}
+
 	/**
 	 * Read settings from a {@link Properties} file.  Differs from {@link #configure()} and {@link #configure(String)}
 	 * in that here we read a {@link Properties} file while for {@link #configure} we read the XML variant.
@@ -222,6 +226,15 @@ public class StandardServiceRegistryBuilder {
 		for ( ServiceContributor serviceContributor : serviceContributors ) {
 			serviceContributor.contribute( this );
 		}
+	}
+
+	/**
+	 * Temporarily exposed since Configuration is still around and much code still uses Configuration.  This allows
+	 * code to configure the builder and access that to configure Configuration object (used from HEM atm).
+	 */
+	@Deprecated
+	public Map getSettings() {
+		return settings;
 	}
 
 	/**

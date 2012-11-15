@@ -38,12 +38,19 @@ import static org.junit.Assert.assertFalse;
  */
 public class BackrefTest extends BaseCoreFunctionalTestCase {
 	@Override
-	public String[] getMappings() {
+	protected String[] getMappings() {
 		return new String[] { "unidir/ParentChild.hbm.xml" };
+	}
+	
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		// No test needed at this time.  This was purely to test a
+		// validation issue from HHH-5836.
+		return new Class<?>[] { Parent1.class, Child1.class, Child2.class };
 	}
 
 	@Override
-	public String getCacheConcurrencyStrategy() {
+	protected String getCacheConcurrencyStrategy() {
 		return null;
 	}
 

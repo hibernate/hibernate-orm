@@ -56,7 +56,7 @@ public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testin
       preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
       System.setProperty(PREFER_IPV4STACK, "true");
       jgroupsCfgFile = System.getProperty(JGROUPS_CFG_FILE);
-      System.setProperty(JGROUPS_CFG_FILE, "stacks/tcp.xml");
+      System.setProperty(JGROUPS_CFG_FILE, "2lc-test-tcp.xml");
 
       testSupport.setUp();
    }

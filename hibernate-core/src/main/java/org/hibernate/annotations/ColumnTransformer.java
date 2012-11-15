@@ -34,7 +34,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * The write expression must contain exactly one '?' placeholder for the value. 
  *
  * For example: <code>read="decrypt(credit_card_num)" write="encrypt(?)"</code>
- *  
+ *
+ * @see ColumnTransformers
+ *
  * @author Emmanuel Bernard
  */
 @java.lang.annotation.Target({FIELD,METHOD})

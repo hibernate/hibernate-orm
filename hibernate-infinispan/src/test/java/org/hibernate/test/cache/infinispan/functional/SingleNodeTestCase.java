@@ -26,6 +26,9 @@ package org.hibernate.test.cache.infinispan.functional;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.junit.Before;
@@ -86,7 +89,7 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	protected Class<? extends RegionFactory> getCacheRegionFactory() {
-		return InfinispanRegionFactory.class;
+		return TestInfinispanRegionFactory.class;
 	}
 
 	protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
@@ -147,5 +150,18 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 			tm.rollback();
 		}
 	}
+
+   public static class TestInfinispanRegionFactory extends InfinispanRegionFactory {
+
+      public TestInfinispanRegionFactory() {
+         super(); // For reflection-based instantiation
+      }
+
+      @Override
+      protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
+         return TestCacheManagerFactory.createClusteredCacheManager(holder);
+      }
+
+   }
 
 }

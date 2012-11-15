@@ -30,7 +30,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a custom collection type for a persistent collection.
+ * Names a custom collection type for a persistent collection.  The collection can also name a @Type, which defines
+ * the Hibernate Type of the collection elements.
  *
  * @see org.hibernate.type.CollectionType
  * @see org.hibernate.usertype.UserCollectionType

@@ -26,15 +26,20 @@ package org.hibernate.type.descriptor.java;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.sql.Blob;
+import java.sql.SQLException;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for general {@link Serializable} handling.
  *
  * @author Steve Ebersole
+ * @author Brett meyer
  */
 public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
 
@@ -96,28 +101,32 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		}
-		if ( byte[].class.isAssignableFrom( type ) ) {
+		} else if ( byte[].class.isAssignableFrom( type ) ) {
 			return (X) toBytes( value );
-		}
-		if ( InputStream.class.isAssignableFrom( type ) ) {
+		} else if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( toBytes( value ) );
-		}
-		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+		} else if ( BinaryStream.class.isAssignableFrom( type ) ) {
 			return (X) new BinaryStreamImpl( toBytes( value ) );
+		} else if ( Blob.class.isAssignableFrom( type )) {
+			return (X) options.getLobCreator().createBlob( toBytes(value) );
 		}
+		
 		throw unknownUnwrap( type );
 	}
 
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		}
-		if ( byte[].class.isInstance( value ) ) {
+		} else if ( byte[].class.isInstance( value ) ) {
 			return fromBytes( (byte[]) value );
-		}
-		if ( InputStream.class.isInstance( value ) ) {
+		} else if ( InputStream.class.isInstance( value ) ) {
 			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
+		} else if ( Blob.class.isInstance( value )) {
+			try {
+				return fromBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
+			} catch ( SQLException e ) {
+				throw new HibernateException(e);
+			}
 		}
 		throw unknownWrap( value.getClass() );
 	}

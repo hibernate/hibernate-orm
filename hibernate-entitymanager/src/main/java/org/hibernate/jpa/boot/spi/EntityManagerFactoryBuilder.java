@@ -24,8 +24,7 @@
 package org.hibernate.jpa.boot.spi;
 
 import javax.persistence.EntityManagerFactory;
-
-import org.hibernate.cfg.Configuration;
+import javax.sql.DataSource;
 
 /**
  * Represents a 2-phase JPA bootstrap process for building a Hibernate EntityManagerFactory.
@@ -33,7 +32,7 @@ import org.hibernate.cfg.Configuration;
  * The first phase is the process of instantiating this builder.  During the first phase, loading of Class references
  * is highly discouraged.
  *
- * The second phase is building the EntityManagerFactory instance via {@link #buildEntityManagerFactory()}.
+ * The second phase is building the EntityManagerFactory instance via {@link #build}.
  *
  * If anything goes wrong during either phase and the bootstrap process needs to be aborted, {@link #cancel()} should
  * be called.
@@ -43,11 +42,31 @@ import org.hibernate.cfg.Configuration;
  */
 public interface EntityManagerFactoryBuilder {
 	/**
+	 * Allows passing in a Java EE ValidatorFactory (delayed from constructing the builder, AKA phase 2) to be used
+	 * in building the EntityManagerFactory
+	 *
+	 * @param validatorFactory The ValidatorFactory
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory);
+
+	/**
+	 * Allows passing in a DataSource (delayed from constructing the builder, AKA phase 2) to be used
+	 * in building the EntityManagerFactory
+	 *
+	 * @param dataSource The DataSource to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public EntityManagerFactoryBuilder withDataSource(DataSource dataSource);
+
+	/**
 	 * Build {@link EntityManagerFactory} instance
 	 *
 	 * @return The built {@link EntityManagerFactory}
 	 */
-	public EntityManagerFactory buildEntityManagerFactory();
+	public EntityManagerFactory build();
 
 	/**
 	 * Cancel the building processing.  This is used to signal the builder to release any resources in the case of

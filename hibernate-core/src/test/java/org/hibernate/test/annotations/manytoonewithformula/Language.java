@@ -30,11 +30,13 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Sharath Reddy
  */
 @Entity
+@Table(name="`Language`")
 public class Language implements Serializable {
 
 	private static final long serialVersionUID = 1L;

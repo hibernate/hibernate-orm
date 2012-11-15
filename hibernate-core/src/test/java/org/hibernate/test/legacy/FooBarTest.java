@@ -62,6 +62,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -82,6 +83,8 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -91,6 +94,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
@@ -3934,6 +3938,59 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-7603")
+	public void testLazyCollectionsTouchedDuringPreCommit() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		Qux q = new Qux();
+		s.save( q );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		q = ( Qux ) s.load( Qux.class, q.getKey() );
+		s.getTransaction().commit();
+
+		//clear the session
+		s.clear();
+
+		//now reload the proxy and delete it
+		s.beginTransaction();
+
+		final Qux qToDelete = ( Qux ) s.load( Qux.class, q.getKey() );
+
+		//register a pre commit process that will touch the collection and delete the entity
+		( ( EventSource ) s ).getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
+			@Override
+			public void doBeforeTransactionCompletion(SessionImplementor session) {
+				qToDelete.getFums().size();
+			}
+		} );
+
+		s.delete( qToDelete );
+		boolean ok = false;
+		try {
+			s.getTransaction().commit();
+		}
+		catch (LazyInitializationException e) {
+			ok = true;
+			s.getTransaction().rollback();
+		}
+		finally {
+			s.close();
+		}
+		assertTrue( "lazy collection should have blown in the before trans completion", ok );
+
+		s = openSession();
+		s.beginTransaction();
+		q = ( Qux ) s.load( Qux.class, q.getKey() );
+		s.delete( q );
+		s.getTransaction().commit();
+		s.close();
+	}
+	
 	@Test
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();

@@ -10,7 +10,7 @@
 		<id name="id" access="field" type="long">
 			<generator class="increment"/>
 		</id>
-		<discriminator column="TYPE" type="string" />
+		<discriminator column="`TYPE`" type="string" />
 		<property name="vin" type="string"/>
 		<property name="owner" type="string"/>
 

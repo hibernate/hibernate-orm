@@ -213,11 +213,13 @@ public class JpaIntegrator implements Integrator {
 		}
 	}
 
+	private static final String CDI_LISTENER_FACTORY_CLASS = "org.hibernate.jpa.event.internal.jpa.BeanManagerListenerFactory";
+
 	private ListenerFactory buildBeanManagerListenerFactory(Object beanManagerRef) {
 		try {
 			// specifically using our classloader here...
 			final Class beanManagerListenerFactoryClass = getClass().getClassLoader()
-					.loadClass( "org.hibernate.jpa.event.internal.jpa.BeanManagerListenerFactory" );
+					.loadClass( CDI_LISTENER_FACTORY_CLASS );
 			final Method beanManagerListenerFactoryBuilderMethod = beanManagerListenerFactoryClass.getMethod(
 					"fromBeanManagerReference",
 					Object.class
@@ -230,14 +232,14 @@ public class JpaIntegrator implements Integrator {
 				throw e.getTargetException();
 			}
 		}
-		catch (ReflectiveOperationException e) {
-			throw new HibernateException( "Could not access BeanManagerListenerFactory class to handle CDI extensions", e );
+		catch (ClassNotFoundException e) {
+			throw new HibernateException( "Could not locate BeanManagerListenerFactory class to handle CDI extensions", e );
 		}
-		catch (RuntimeException e) {
+		catch (HibernateException e) {
 			throw e;
 		}
 		catch (Throwable e) {
-			throw new HibernateException( "Problem calling BeanManagerListenerFactory class to handle CDI extensions", e );
+			throw new HibernateException( "Could not access BeanManagerListenerFactory class to handle CDI extensions", e );
 		}
 	}
 

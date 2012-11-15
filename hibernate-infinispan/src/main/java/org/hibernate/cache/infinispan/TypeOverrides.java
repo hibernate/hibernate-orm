@@ -25,7 +25,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-import org.infinispan.config.Configuration;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 
 import org.hibernate.cache.CacheException;
@@ -118,25 +119,23 @@ public class TypeOverrides {
       this.isExposeStatistics = isExposeStatistics;
    }
 
-   public Configuration createInfinispanConfiguration() {
-      Configuration cacheCfg = new Configuration();
+   public void applyTo(ConfigurationBuilder builder) {
       if (overridden.contains("evictionStrategy"))
-         cacheCfg.fluent().eviction().strategy(evictionStrategy);
+         builder.eviction().strategy(evictionStrategy);
       if (overridden.contains("evictionWakeUpInterval"))
-         cacheCfg.fluent().expiration().wakeUpInterval(evictionWakeUpInterval);
+         builder.expiration().wakeUpInterval(evictionWakeUpInterval);
       if (overridden.contains("evictionMaxEntries"))
-         cacheCfg.fluent().eviction().maxEntries(evictionMaxEntries);
+         builder.eviction().maxEntries(evictionMaxEntries);
       if (overridden.contains("expirationLifespan"))
-         cacheCfg.fluent().expiration().lifespan(expirationLifespan);
+         builder.expiration().lifespan(expirationLifespan);
       if (overridden.contains("expirationMaxIdle"))
-         cacheCfg.fluent().expiration().maxIdle(expirationMaxIdle);
+         builder.expiration().maxIdle(expirationMaxIdle);
       if (overridden.contains("isExposeStatistics") && isExposeStatistics)
-         cacheCfg.fluent().jmxStatistics();
-      return cacheCfg;
+         builder.jmxStatistics().enable();
    }
 
-   public void validateInfinispanConfiguration(Configuration configuration) throws CacheException {
-      // no-op
+   public void validateInfinispanConfiguration(Configuration cfg) throws CacheException {
+      // no-op, method overriden
    }
 
    @Override

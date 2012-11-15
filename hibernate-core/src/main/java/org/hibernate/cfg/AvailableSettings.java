@@ -269,7 +269,7 @@ public interface AvailableSettings {
 	public static final String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
-	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionContext} to use for
+	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionFactory} to use for
 	 * creating {@link org.hibernate.Transaction} instances
 	 */
 	public static final String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
@@ -643,4 +643,13 @@ public interface AvailableSettings {
 	// todo : add to Environment
 	String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
     public static final String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+
+	public static final String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+
+	/**
+	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
+	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
+	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
+	 */
+	public static final String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 }

@@ -31,16 +31,12 @@ import java.sql.Clob;
  * @author Steve Ebersole
  */
 public abstract class AbstractLobCreator implements LobCreator {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Blob wrap(Blob blob) {
 		return SerializableBlobProxy.generateProxy( blob );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Clob wrap(Clob clob) {
 		if ( SerializableNClobProxy.isNClob( clob ) ) {
 			return SerializableNClobProxy.generateProxy( clob );

@@ -52,6 +52,10 @@ public class CollectionLoader extends OuterJoinLoader implements CollectionIniti
 		this.collectionPersister = collectionPersister;
 	}
 
+	protected QueryableCollection collectionPersister() {
+		return collectionPersister;
+	}
+
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
 	}

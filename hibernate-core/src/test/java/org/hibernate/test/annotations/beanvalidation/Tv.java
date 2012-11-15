@@ -23,13 +23,13 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Column;
 import javax.validation.Valid;
 import javax.validation.constraints.Future;
 import javax.validation.constraints.Min;
@@ -82,6 +82,7 @@ public class Tv {
 	@Embeddable
 	public static class Recorder {
 		@NotNull
+        @Column(name = "`time`")
 		public BigDecimal time;
 	}
 }

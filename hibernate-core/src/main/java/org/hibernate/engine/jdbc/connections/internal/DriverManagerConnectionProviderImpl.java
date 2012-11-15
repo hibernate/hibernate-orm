@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.logging.Logger;
 
@@ -68,7 +69,7 @@ public class DriverManagerConnectionProviderImpl
 	private boolean autocommit;
 
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
-	private int checkedOut = 0;
+	private final AtomicInteger checkedOut = new AtomicInteger();
 
 	private boolean stopped;
 
@@ -93,7 +94,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	public void configure(Map configurationValues) {
-        LOG.usingHibernateBuiltInConnectionPool();
+		LOG.usingHibernateBuiltInConnectionPool();
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
 		if ( driverClassName == null ) {
@@ -127,18 +128,19 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ); // default pool size 20
-        LOG.hibernateConnectionPoolSize(poolSize);
+		LOG.hibernateConnectionPoolSize( poolSize );
 
 		autocommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-        LOG.autoCommitMode( autocommit );
+		LOG.autoCommitMode( autocommit );
 
 		isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
-        if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
+		if ( isolation != null )
+			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation.intValue() ) );
 
 		url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
-            String msg = LOG.jdbcUrlNotSpecified(AvailableSettings.URL);
-            LOG.error(msg);
+			String msg = LOG.jdbcUrlNotSpecified( AvailableSettings.URL );
+			LOG.error( msg );
 			throw new HibernateException( msg );
 		}
 
@@ -168,13 +170,14 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	public Connection getConnection() throws SQLException {
-		LOG.tracev( "Total checked-out connections: {0}", checkedOut );
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
 				int last = pool.size() - 1;
-				LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
+				if ( traceEnabled ) LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
 				Connection pooled = pool.remove( last );
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
@@ -182,14 +185,16 @@ public class DriverManagerConnectionProviderImpl
 				if ( pooled.getAutoCommit() != autocommit ) {
 					pooled.setAutoCommit( autocommit );
 				}
-				checkedOut++;
+				checkedOut.incrementAndGet();
 				return pooled;
 			}
 		}
 
 		// otherwise we open a new connection...
 
-		LOG.debug( "Opening new JDBC connection" );
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		if ( debugEnabled ) LOG.debug( "Opening new JDBC connection" );
+
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -198,23 +203,24 @@ public class DriverManagerConnectionProviderImpl
 			conn.setAutoCommit(autocommit);
 		}
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf( "Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation() );
 		}
 
-		checkedOut++;
+		checkedOut.incrementAndGet();
 		return conn;
 	}
 
 	public void closeConnection(Connection conn) throws SQLException {
-		checkedOut--;
+		checkedOut.decrementAndGet();
 
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		// add to the pool if the max size is not yet reached.
-		synchronized (pool) {
+		synchronized ( pool ) {
 			int currentSize = pool.size();
 			if ( currentSize < poolSize ) {
-				LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
-				pool.add(conn);
+				if ( traceEnabled ) LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
+				pool.add( conn );
 				return;
 			}
 		}

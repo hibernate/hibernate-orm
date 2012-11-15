@@ -27,6 +27,7 @@ public class TvProgramIdClass {
 	public Presenter presenter;
 
 	@Temporal( TemporalType.TIME )
+    @Column(name="`time`")
 	Date time;
 
 	@Column( name = "TXT", table = "TV_PROGRAM_IDCLASS" )

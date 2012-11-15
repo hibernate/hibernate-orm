@@ -54,7 +54,7 @@ class DatabaseAllocator {
             "postgresql82", "postgresql83", "postgresql84", "postgresql91",
             "mysql50", "mysql51","mysql55",
             "db2-91", "db2-97",
-            "mssql2005", "mssql2008R1", "mssql2008R2",
+            "mssql2005", "mssql2008R1", "mssql2008R2", "mssql2012",
             "sybase155", "sybase157"
     ];
 

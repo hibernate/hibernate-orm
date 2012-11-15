@@ -49,7 +49,7 @@ public class MetadataTools {
         if (useRevisionEntityWithNativeId) {
             generator_mapping.addAttribute("class", "native");
         } else {
-            generator_mapping.addAttribute("class", "org.hibernate.id.enhanced.SequenceStyleGenerator");
+            generator_mapping.addAttribute("class", "org.hibernate.envers.enhanced.OrderedSequenceGenerator");
             generator_mapping.addElement("param").addAttribute("name", "sequence_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "table_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "initial_value").setText("1");
@@ -256,7 +256,7 @@ public class MetadataTools {
         while (properties.hasNext()) {
             Element property = properties.next();
 
-            if ("property".equals(property.getName())) {
+            if ("property".equals(property.getName()) || "many-to-one".equals(property.getName())) {
                 Attribute nameAttr = property.attribute("name");
                 if (nameAttr != null) {
                     nameAttr.setText(prefix + nameAttr.getText());
@@ -265,11 +265,13 @@ public class MetadataTools {
                 changeNamesInColumnElement(property, columnNameIterator);
 
                 if (changeToKey) {
-                    property.setName("key-property");
+                    property.setName("key-" + property.getName());
                 }
 
-				Attribute insert = property.attribute("insert");
-				insert.setText(Boolean.toString(insertable));
+                if ("property".equals(property.getName())) {
+                    Attribute insert = property.attribute("insert");
+                    insert.setText(Boolean.toString(insertable));
+                }
             }
         }
     }

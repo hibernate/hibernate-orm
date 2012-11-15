@@ -22,7 +22,7 @@
             </many-to-one>
 
             <many-to-one name="customer" fetch="EAGER">
-                <join-column name="CI_CUSTOMERID" insertable="false"/>
+                <join-column name="CI_CUSTOMERID" insertable="false" nullable="false"/>
                 <cascade>
                     <cascade-merge/>
                 </cascade>

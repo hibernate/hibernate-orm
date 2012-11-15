@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -53,6 +51,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
+import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -123,8 +122,8 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "longvarchar" );
 		}
 		else {
-			registerColumnType( Types.BLOB, "blob" );
-			registerColumnType( Types.CLOB, "clob" );
+			registerColumnType( Types.BLOB, "blob($l)" );
+			registerColumnType( Types.CLOB, "clob($l)" );
 		}
 
 		// aggregate functions
@@ -244,7 +243,12 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public String getForUpdateString() {
-		return "";
+		if ( hsqldbVersion >= 20 ) {
+			return " for update";
+		}
+		else {
+			return "";
+		}
 	}
 
 	public boolean supportsUnique() {

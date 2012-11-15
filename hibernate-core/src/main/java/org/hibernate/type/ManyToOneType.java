@@ -169,7 +169,7 @@ public class ManyToOneType extends EntityType {
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
 			final EntityKey entityKey = session.generateEntityKey( id, persister );
-			if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
+			if ( entityKey.isBatchLoadable() && !session.getPersistenceContext().containsEntity( entityKey ) ) {
 				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}
 		}

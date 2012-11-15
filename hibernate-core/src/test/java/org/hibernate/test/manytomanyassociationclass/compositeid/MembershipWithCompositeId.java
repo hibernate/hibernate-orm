@@ -64,19 +64,34 @@ public class MembershipWithCompositeId extends Membership {
 			this.groupId = groupId;
 		}
 
-		public boolean equals(Object o) {
-			if ( o != null && o instanceof Id ) {
-				Id that = ( Id ) o;
-				return this.userId.equals( that.userId ) &&
-						this.groupId.equals( that.groupId );
-			}
-			else {
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
 				return false;
-			}
+			if (getClass() != obj.getClass())
+				return false;
+			Id other = (Id) obj;
+			if (userId == null) {
+				if (other.userId != null)
+					return false;
+			} else if (!userId.equals(other.userId))
+				return false;
+			if (groupId == null) {
+				if (other.groupId != null)
+					return false;
+			} else if (!groupId.equals(other.groupId))
+				return false;
+			return true;
 		}
 
 		public int hashCode() {
-			return userId.hashCode() + groupId.hashCode();
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((userId == null) ? 0 : userId.hashCode());
+			result = prime * result
+					+ ((groupId == null) ? 0 : groupId.hashCode());
+			return result;
 		}
 	}
 
@@ -89,11 +104,17 @@ public class MembershipWithCompositeId extends Membership {
 	}
 
 	public void setGroup(Group group) {
+		if (getId() == null) {
+			setId(new Id());
+		}
 		( (Id) getId() ).setGroupId( ( group == null ? null : group.getId() ) );
 		super.setGroup( group );
 	}
 
 	public void setUser(User user) {
+		if (getId() == null) {
+			setId(new Id());
+		}
 		( (Id) getId() ).setUserId( user == null ? null : user.getId() );
 		super.setUser( user );
 	}

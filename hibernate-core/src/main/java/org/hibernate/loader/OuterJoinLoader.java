@@ -75,7 +75,8 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return collectionSuffixes;
 	}
 
-	protected final String getSQLString() {
+	@Override
+	public final String getSQLString() {
 		return sql;
 	}
 

@@ -23,11 +23,16 @@
  */
 package org.hibernate.engine.jdbc;
 
-
 /**
  * Marker interface for non-contextually created {@link java.sql.Blob} instances..
  *
  * @author Steve Ebersole
  */
 public interface BlobImplementer {
+	/**
+	 * Gets access to the data underlying this BLOB.
+	 *
+	 * @return Access to the underlying data.
+	 */
+	public BinaryStream getUnderlyingStream();
 }

@@ -253,8 +253,8 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 						cb.function(
 								"substring",
 								String.class,
-								cb.literal( 1 ),
 								root.get( Customer_.name ),
+								cb.literal( 1 ),
 								cb.literal( 1 )
 						),
 						cb.literal( "a" )

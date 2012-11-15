@@ -2418,7 +2418,9 @@ public class Configuration implements Serializable {
 	}
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
-		sqlFunctions.put( functionName, function );
+		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
+		// just in case a user's customer dialect uses mixed cases.
+		sqlFunctions.put( functionName.toLowerCase(), function );
 	}
 
 	public TypeResolver getTypeResolver() {

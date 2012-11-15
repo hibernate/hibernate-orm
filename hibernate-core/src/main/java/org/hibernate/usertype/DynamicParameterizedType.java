@@ -45,6 +45,7 @@ public interface DynamicParameterizedType extends ParameterizedType {
 	public static final String ENTITY = "org.hibernate.type.ParameterType.entityClass";
 	public static final String PROPERTY = "org.hibernate.type.ParameterType.propertyName";
 	public static final String ACCESS_TYPE = "org.hibernate.type.ParameterType.accessType";
+	public static final String XPROPERTY = "org.hibernate.type.ParameterType.xproperty";
 
 	public static interface ParameterType {
 

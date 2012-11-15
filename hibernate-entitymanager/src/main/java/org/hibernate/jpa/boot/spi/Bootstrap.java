@@ -23,11 +23,11 @@
  */
 package org.hibernate.jpa.boot.spi;
 
-import javax.persistence.spi.PersistenceUnitInfo;
 import java.util.Map;
 
+import javax.persistence.spi.PersistenceUnitInfo;
+
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderUsingMetamodelImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 /**
@@ -73,20 +73,5 @@ public final class Bootstrap {
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
-	}
-
-	/**
-	 * Specifically builds and returns a EntityManagerFactoryBuilder that leverages the new metamodel codebase.
-	 * Eventually this will be the normal operation of {@link #getEntityManagerFactoryBuilder(PersistenceUnitDescriptor, Map)},
-	 * but for now due to the incompleteness of the metamodel codebase, this is not integrated as the main way to
-	 * build the EntityManagerFactoryBuilder.  This allows tests in the nor-core modules to keep running.
-	 *
-	 * @deprecated This is a temporary method until metamodel codebase is more complete
-	 */
-	@Deprecated
-	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilderUsingMetamodel(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration) {
-		return new EntityManagerFactoryBuilderUsingMetamodelImpl( persistenceUnitDescriptor, integration );
 	}
 }

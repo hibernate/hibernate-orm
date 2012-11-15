@@ -328,6 +328,36 @@ public class Table implements RelationalModel, Serializable {
 				&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+			+ ((catalog == null) ? 0 : isCatalogQuoted() ? catalog.hashCode() : catalog.toLowerCase().hashCode());
+		result = prime * result + ((name == null) ? 0 : isQuoted() ? name.hashCode() : name.toLowerCase().hashCode());
+		result = prime * result
+			+ ((schema == null) ? 0 : isSchemaQuoted() ? schema.hashCode() : schema.toLowerCase().hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof Table && equals((Table) object);
+	}
+
+	public boolean equals(Table table) {
+		if (null == table) {
+			return false;
+		}
+		if (this == table) {
+			return true;
+		}
+
+		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName())
+			&& ((schema == null && table.getSchema() != null) ? false : (schema == null) ? true : isSchemaQuoted() ? schema.equals(table.getSchema()) : schema.equalsIgnoreCase(table.getSchema()))
+			&& ((catalog == null && table.getCatalog() != null) ? false : (catalog == null) ? true : isCatalogQuoted() ? catalog.equals(table.getCatalog()) : catalog.equalsIgnoreCase(table.getCatalog()));
+	}
+	
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -394,7 +424,7 @@ public class Table implements RelationalModel, Serializable {
 
 				boolean useUniqueConstraint = column.isUnique() &&
 						dialect.supportsUnique() &&
-						( !column.isNullable() || dialect.supportsNotNullUnique() );
+						( column.isNullable() || dialect.supportsNotNullUnique() );
 				if ( useUniqueConstraint ) {
 					alter.append( " unique" );
 				}
@@ -495,7 +525,7 @@ public class Table implements RelationalModel, Serializable {
 			}
 
 			boolean useUniqueConstraint = col.isUnique() &&
-					( !col.isNullable() || dialect.supportsNotNullUnique() );
+					( col.isNullable() || dialect.supportsNotNullUnique() );
 			if ( useUniqueConstraint ) {
 				if ( dialect.supportsUnique() ) {
 					buf.append( " unique" );

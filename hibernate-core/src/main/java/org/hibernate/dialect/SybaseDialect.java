@@ -23,6 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
 
 /**
  * All Sybase dialects share an IN list size limit.
@@ -39,5 +44,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
+	}
+	
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+        return sqlCode == Types.BLOB ? BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 }

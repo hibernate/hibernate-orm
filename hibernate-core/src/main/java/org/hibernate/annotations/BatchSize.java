@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -31,13 +32,31 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Batch size for SQL loading
+ * Defines size for batch loading of collections or lazy entities.  For example...
+ * <blockquote><pre>
+ *     &#064;Entity
+ *     &#064;BatchSize(size=100)
+ *     class Product {
+ *         ...
+ *     }
+ * </pre></blockquote>
+ * will initialize up to 100 lazy Product entity proxies at a time.
+ *
+ * <blockquote><pre>
+ *     	&#064;OneToMany
+ *     	&#064;BatchSize(size = 5) /
+ *     	Set<Product> getProducts() { ... };
+ * </pre></blockquote>
+ * will initialize up to 5 lazy collections of products at a time
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface BatchSize {
-	/** Strictly positive integer */
+	/**
+	 * Strictly positive integer
+	 */
 	int size();
 }

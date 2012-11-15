@@ -768,14 +768,14 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	}
 
 	public void prepareTemporaryTables(Mapping mapping, Dialect dialect) {
+		temporaryIdTableName = dialect.generateTemporaryTableName( getTable().getName() );
 		if ( dialect.supportsTemporaryTables() ) {
-			temporaryIdTableName = dialect.generateTemporaryTableName( getTable().getName() );
 			Table table = new Table();
 			table.setName( temporaryIdTableName );
 			Iterator itr = getTable().getPrimaryKey().getColumnIterator();
 			while( itr.hasNext() ) {
 				Column column = (Column) itr.next();
-				table.addColumn( (Column) column.clone()  );
+				table.addColumn( column.clone()  );
 			}
 			temporaryIdTableDDL = table.sqlTemporaryTableCreateString( dialect, mapping );
 		}

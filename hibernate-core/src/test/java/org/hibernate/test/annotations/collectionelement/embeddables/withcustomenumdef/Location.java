@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.collectionelement.embeddables.withcustome
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Column;
 
 /**
  * @author Steve Ebersole
@@ -44,6 +45,7 @@ public class Location {
 
 	@Enumerated(EnumType.STRING)
 //	@Column(columnDefinition = "VARCHAR(32)")
+	@Column(name = "`type`")
 	private Type type;
 
 	public Location() {

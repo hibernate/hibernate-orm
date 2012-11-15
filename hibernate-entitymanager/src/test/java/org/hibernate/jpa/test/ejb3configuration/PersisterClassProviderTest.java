@@ -80,7 +80,7 @@ public class PersisterClassProviderTest {
 			EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 					new PersistenceUnitDescriptorAdapter(),
 					settings
-			).buildEntityManagerFactory();
+			).build();
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {

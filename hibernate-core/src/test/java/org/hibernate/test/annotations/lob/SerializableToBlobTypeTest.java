@@ -80,9 +80,6 @@ public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "explicitOverridingImplicit", persistedSerialize.explicitOverridingImplicit.value );
 
 		assertEquals( "defaultExplicitLob", persistedSerialize.explicitLob.defaultValue );
-		assertEquals( "EXPLICIT", persistedSerialize.explicit.defaultValue );
-		assertEquals( "IMPLICIT", persistedSerialize.implicit.defaultValue );
-		assertEquals( "EXPLICIT", persistedSerialize.explicitOverridingImplicit.defaultValue );
 
 		session.close();
 	}

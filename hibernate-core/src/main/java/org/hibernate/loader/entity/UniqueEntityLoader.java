@@ -43,6 +43,7 @@ public interface UniqueEntityLoader {
 	 * @deprecated use {@link #load(java.io.Serializable, Object, SessionImplementor, LockOptions)} instead.
 	 */
 	@SuppressWarnings( {"JavaDoc"})
+	@Deprecated
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) throws HibernateException;
 
 	/**

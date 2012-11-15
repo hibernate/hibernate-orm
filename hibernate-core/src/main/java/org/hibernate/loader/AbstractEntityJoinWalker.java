@@ -187,10 +187,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	public abstract String getComment();
 
 	@Override
-    protected boolean isDuplicateAssociation(
-		final String foreignKeyTable,
-		final String[] foreignKeyColumns
-	) {
+    protected boolean isDuplicateAssociation(final String foreignKeyTable, final String[] foreignKeyColumns) {
 		//disable a join back to this same association
 		final boolean isSameJoin =
 				persister.getTableName().equals( foreignKeyTable ) &&
@@ -201,11 +198,11 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 
 
 
-	protected final Loadable getPersister() {
+	public final Loadable getPersister() {
 		return persister;
 	}
 
-	protected final String getAlias() {
+	public final String getAlias() {
 		return alias;
 	}
 

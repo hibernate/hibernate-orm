@@ -47,7 +47,7 @@ public class SequenceIdRevisionEntity implements Serializable {
     @Id
     @GeneratedValue(generator = "RevisionNumberSequenceGenerator")
     @GenericGenerator(name = "RevisionNumberSequenceGenerator",
-                      strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+                      strategy = "org.hibernate.envers.enhanced.OrderedSequenceGenerator",
                       parameters = {@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
                                     @Parameter(name = "sequence_name", value = "REVISION_GENERATOR"),
                                     @Parameter(name = "initial_value", value = "1"),

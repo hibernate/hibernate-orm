@@ -1569,7 +1569,7 @@ public abstract class AbstractCollectionPersister
 
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Inserting collection: %s",
-						MessageHelper.collectionInfoString( this, id, getFactory() ) );
+						MessageHelper.collectionInfoString( this, collection, id, session ) );
 			}
 
 			try {
@@ -1662,7 +1662,7 @@ public abstract class AbstractCollectionPersister
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not insert collection: " +
-								MessageHelper.collectionInfoString( this, id, getFactory() ),
+								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLInsertRowString()
 						);
 			}
@@ -1682,7 +1682,7 @@ public abstract class AbstractCollectionPersister
 
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Deleting rows of collection: %s",
-						MessageHelper.collectionInfoString( this, id, getFactory() ) );
+						MessageHelper.collectionInfoString( this, collection, id, session ) );
 			}
 
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
@@ -1770,7 +1770,7 @@ public abstract class AbstractCollectionPersister
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not delete collection rows: " +
-								MessageHelper.collectionInfoString( this, id, getFactory() ),
+								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLDeleteRowString()
 						);
 			}
@@ -1789,7 +1789,7 @@ public abstract class AbstractCollectionPersister
 		if ( !isInverse && isRowInsertEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) LOG.debugf( "Inserting rows of collection: %s",
-					MessageHelper.collectionInfoString( this, id, getFactory() ) );
+					MessageHelper.collectionInfoString( this, collection, id, session ) );
 
 			try {
 				// insert all the new entries
@@ -1869,7 +1869,7 @@ public abstract class AbstractCollectionPersister
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not insert collection rows: " +
-								MessageHelper.collectionInfoString( this, id, getFactory() ),
+								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLInsertRowString()
 						);
 			}
@@ -2267,6 +2267,10 @@ public abstract class AbstractCollectionPersister
 		return initializer;
 	}
 
+	public int getBatchSize() {
+		return batchSize;
+	}
+
 	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
 		private final String rootAlias;
 
@@ -2287,4 +2291,5 @@ public abstract class AbstractCollectionPersister
 	}
 	
 	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
+
 }

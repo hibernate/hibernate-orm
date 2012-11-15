@@ -93,6 +93,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatefulPersistenceContext.class.getName() );
 
+   private static final boolean tracing = LOG.isTraceEnabled();
+
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
 	private static final int INIT_COLL_SIZE = 8;
@@ -893,6 +895,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Serializable id) {
 		CollectionEntry ce = new CollectionEntry(collection, persister, id, flushing);
 		addCollection(collection, ce, id);
+		if ( persister.getBatchSize() > 1 ) {
+			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
+		}
 	}
 
 	/**
@@ -902,6 +907,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection collection) {
 		CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
 		addCollection( collection, ce, collection.getKey() );
+		if ( persister.getBatchSize() > 1 ) {
+			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
+		}
 	}
 
 	/**
@@ -1003,7 +1011,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-			LOG.debug( "Initializing non-lazy collections" );
+         if (tracing)
+			   LOG.trace( "Initializing non-lazy collections" );
+
 			//do this work only at the very highest level of the load
 			loadCounter++; //don't let this method be called recursively
 			try {
@@ -1861,14 +1871,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				CachedNaturalIdValueSource source) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
-			if (naturalIdCacheAccessStrategy.get(naturalIdCacheKey, session.getTimestamp()) != null) {
-				return; // prevent identical re-cachings
-			}
 
 			final SessionFactoryImplementor factory = session.getFactory();
 
 			switch ( source ) {
 				case LOAD: {
+					if (naturalIdCacheAccessStrategy.get(naturalIdCacheKey, session.getTimestamp()) != null) {
+						return; // prevent identical re-cachings
+					}
 					final boolean put = naturalIdCacheAccessStrategy.putFromLoad(
 							naturalIdCacheKey,
 							id,
@@ -1915,6 +1925,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				}
 				case UPDATE: {
 					final NaturalIdCacheKey previousCacheKey = new NaturalIdCacheKey( previousNaturalIdValues, persister, session );
+					if (naturalIdCacheKey.equals(previousCacheKey)) {
+						return; // prevent identical re-caching, solves HHH-7309
+					}
 					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
 					naturalIdCacheAccessStrategy.remove( previousCacheKey );
 
@@ -2077,6 +2090,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void cleanupFromSynchronizations() {
 			naturalIdXrefDelegate.unStashInvalidNaturalIdReferences();
+		}
+
+		@Override
+		public void handleEviction(Object object, EntityPersister persister, Serializable identifier) {
+			naturalIdXrefDelegate.removeNaturalIdCrossReference(
+					persister,
+					identifier,
+					findCachedNaturalId( persister, identifier )
+			);
 		}
 	};
 

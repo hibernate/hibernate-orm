@@ -86,7 +86,7 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 				"Validator annotations are applied on tuner as it is @NotNull", false, column.isNullable()
 		);
 
-		column = SchemaUtil.getColumn( Tv.class, "time", metadata() );
+		column = SchemaUtil.getColumn( Tv.class, "`time`", metadata() );
 		assertEquals(
 				"Validator annotations were not applied on recorder", true, column.isNullable()
 		);

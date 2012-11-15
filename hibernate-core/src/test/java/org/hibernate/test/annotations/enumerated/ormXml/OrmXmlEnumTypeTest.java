@@ -29,6 +29,7 @@ import org.hibernate.type.Type;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 @TestForIssue( jiraKey = "HHH-7645" )
 public class OrmXmlEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override

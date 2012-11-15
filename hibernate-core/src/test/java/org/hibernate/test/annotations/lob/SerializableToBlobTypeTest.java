@@ -16,7 +16,6 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author Janario Oliveira
  */
-@FailureExpectedWithNewMetamodel // TypeDef w/o name
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTypeDefinition() {
@@ -47,6 +46,7 @@ public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 		assertEquals( ExplicitSerializableType.class.getName(), overrideType.getName() );
 	}
 
+	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testPersist() {
 		EntitySerialize entitySerialize = new EntitySerialize();

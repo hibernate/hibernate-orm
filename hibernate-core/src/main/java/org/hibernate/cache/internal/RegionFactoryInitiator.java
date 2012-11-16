@@ -53,7 +53,7 @@ public class RegionFactoryInitiator implements SessionFactoryServiceInitiator<Re
 	/**
 	 * Property name to use to configure the full qualified class name for the {@code RegionFactory}
 	 */
-	public static final String IMPL_NAME = "hibernate.cache.region.factory_class";
+	public static final String IMPL_NAME = AvailableSettings.CACHE_REGION_FACTORY;
 
 	@Override
 	public Class<RegionFactory> getServiceInitiated() {

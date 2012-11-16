@@ -26,6 +26,7 @@ package org.hibernate.test.cache.infinispan.util;
 import java.util.Properties;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -84,18 +85,17 @@ public class CacheTestUtil {
       }
    }
 
-   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
+   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry,
          Configuration cfg, CacheTestSupport testSupport) {
-	SessionFactoryImplementor sessionFactory =(SessionFactoryImplementor) cfg.buildSessionFactory( reg );  
-	InfinispanRegionFactory factory = startRegionFactory(reg, cfg);
-      testSupport.registerFactory(factory, sessionFactory);
-      return factory;
+	   SessionFactoryImplementor sessionFactory =(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+	   InfinispanRegionFactory factory =  (InfinispanRegionFactory) sessionFactory.getServiceRegistry().getService( RegionFactory.class );
+	   testSupport.registerFactory(factory, sessionFactory);
+	   return factory;
    }
 
    public static void stopRegionFactory(InfinispanRegionFactory factory,
          CacheTestSupport testSupport) {
-      factory.stop();
-      testSupport.unregisterFactory(factory);
+	   testSupport.unregisterFactory(factory).close();
    }
 
    /**

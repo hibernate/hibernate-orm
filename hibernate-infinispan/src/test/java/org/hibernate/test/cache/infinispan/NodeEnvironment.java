@@ -32,7 +32,9 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 /**
@@ -48,7 +50,7 @@ public class NodeEnvironment {
 
    private Map<String, EntityRegionImpl> entityRegionMap;
    private Map<String, CollectionRegionImpl> collectionRegionMap;
-
+	private SessionFactoryImplementor sessionFactory;
    public NodeEnvironment(Configuration configuration) {
       this.configuration = configuration;
    }
@@ -110,7 +112,9 @@ public class NodeEnvironment {
       serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
             .applySettings(configuration.getProperties())
             .build();
-      regionFactory = CacheTestUtil.startRegionFactory(serviceRegistry, configuration);
+	   sessionFactory = (SessionFactoryImplementor)configuration.buildSessionFactory( serviceRegistry );
+//      regionFactory = CacheTestUtil.startRegionFactory(serviceRegistry, configuration);
+	   regionFactory = (InfinispanRegionFactory)sessionFactory.getServiceRegistry().getService( RegionFactory.class );
    }
 
    public void release() throws Exception {
@@ -138,11 +142,14 @@ public class NodeEnvironment {
          }
       } finally {
          try {
-            if (regionFactory != null) {
-               // Currently the RegionFactory is shutdown by its registration
-               // with the CacheTestSetup from CacheTestUtil when built
-               regionFactory.stop();
-            }
+//            if (regionFactory != null) {
+//               // Currently the RegionFactory is shutdown by its registration
+//               // with the CacheTestSetup from CacheTestUtil when built
+//               regionFactory.stop();
+//            }
+			 if(sessionFactory!=null){
+				 sessionFactory.close();
+			 }
          } finally {
             if (serviceRegistry != null) {
                serviceRegistry.destroy();

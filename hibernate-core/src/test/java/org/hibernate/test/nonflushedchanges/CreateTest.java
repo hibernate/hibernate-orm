@@ -45,7 +45,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gavin King, Gail Badner (adapted this from "ops" tests version)
  */
-@FailureExpectedWithNewMetamodel
 public class CreateTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

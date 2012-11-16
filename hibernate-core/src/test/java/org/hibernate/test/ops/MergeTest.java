@@ -47,7 +47,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	public void testMergeStaleVersionFails() throws Exception {
@@ -84,6 +83,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		rebuildSessionFactory();
 		Session s = openSession();

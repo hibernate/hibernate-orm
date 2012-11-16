@@ -34,7 +34,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * These tests reproduce HHH-4992.
  */
-@FailureExpectedWithNewMetamodel
 public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends AbstractEntityWithOneToManyTest {
 	@Override
 	public String[] getMappings() {
@@ -89,5 +88,12 @@ public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends Abst
 	)
 	public void testRemoveOneToManyElementUsingMerge() {
 		super.testRemoveOneToManyElementUsingMerge();
+	}
+
+	@Test
+	@Override
+	@FailureExpectedWithNewMetamodel
+	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
+		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 }

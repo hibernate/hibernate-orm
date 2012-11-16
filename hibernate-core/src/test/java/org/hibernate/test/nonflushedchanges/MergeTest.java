@@ -28,7 +28,6 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
@@ -68,6 +67,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		rebuildSessionFactory();

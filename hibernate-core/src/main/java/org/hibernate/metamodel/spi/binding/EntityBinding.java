@@ -407,8 +407,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		return hasSubselectLoadableCollections;
 	}
 
-	/* package-protected */
-	void setSubselectLoadableCollections(boolean hasSubselectLoadableCollections) {
+	public void setSubselectLoadableCollections(boolean hasSubselectLoadableCollections) {
 		this.hasSubselectLoadableCollections = hasSubselectLoadableCollections;
 	}
 

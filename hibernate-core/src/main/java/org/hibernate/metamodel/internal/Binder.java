@@ -41,6 +41,7 @@ import org.hibernate.TruthValue;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -76,6 +77,7 @@ import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
+import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
@@ -83,6 +85,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.binding.SetBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
@@ -123,6 +126,7 @@ import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -386,7 +390,8 @@ public class Binder {
 						attributeBindingContainer,
 						attributeSource,
 						attribute,
-						attributeBindingContainer.getPrimaryTable() );
+						attributeBindingContainer.getPrimaryTable(),
+						false);
 		final BasicAttributeBinding attributeBinding =
 				attributeBindingContainer.makeBasicAttributeBinding(
 						attribute,
@@ -433,7 +438,9 @@ public class Binder {
 			);
 		}
 		attributeBinding.getPluralAttributeKeyBinding().setInverse( false );
-		TableSpecification collectionTable = createCollectionTable( attributeBinding, attributeSource );
+		TableSpecification collectionTable = createBasicCollectionTable(
+				attributeBinding, attributeSource.getCollectionTableSpecificationSource()
+		);
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableComment() ) ) {
 			collectionTable.addComment( attributeSource.getCollectionTableComment() );
 		}
@@ -454,10 +461,11 @@ public class Binder {
 				elementBinding.getPluralAttributeBinding().getContainer(),
 				relationalValueSourceContainer,
 				elementBinding.getPluralAttributeBinding().getAttribute(),
-				elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable() ) );
+				elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
+				false) );
 	}
 
-	private void bindBasicSetElementTablePrimaryKey(final PluralAttributeBinding attributeBinding) {
+	private void bindBasicSetCollectionTablePrimaryKey(final SetBinding attributeBinding) {
 		final BasicPluralAttributeElementBinding elementBinding =
 				( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding();
 		if ( elementBinding.getNature() != PluralAttributeElementBinding.Nature.BASIC ) {
@@ -466,21 +474,26 @@ public class Binder {
 					elementBinding.getNature() ) );
 		}
 		if ( hasAnyNonNullableColumns( elementBinding.getRelationalValueBindings() ) ) {
-			final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
-			final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
-			for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
-				primaryKey.addColumn( foreignKeyColumn );
-			}
-			for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
-				if ( elementValueBinding.getValue() instanceof Column && !elementValueBinding.isNullable() ) {
-					primaryKey.addColumn( ( Column ) elementValueBinding.getValue() );
-				}
-			}
+			bindSetCollectionTablePrimaryKey( attributeBinding );
 		}
 		else {
 			// for backward compatibility, allow a set with no not-null
 			// element columns, using all columns in the row locater SQL
 			// todo: create an implicit not null constraint on all cols?
+		}
+	}
+
+	private void bindSetCollectionTablePrimaryKey(final SetBinding attributeBinding) {
+		final PluralAttributeElementBinding elementBinding = attributeBinding.getPluralAttributeElementBinding();
+		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
+		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
+		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
+			primaryKey.addColumn( foreignKeyColumn );
+		}
+		for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
+			if ( elementValueBinding.getValue() instanceof Column && !elementValueBinding.isNullable() ) {
+				primaryKey.addColumn( ( Column ) elementValueBinding.getValue() );
+			}
 		}
 	}
 
@@ -554,7 +567,9 @@ public class Binder {
 				indexedAttributeBinding.getContainer(),
 				attributeSource,
 				indexedAttributeBinding.getAttribute(),
-				indexedAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable() ).get( 0 ).getValue() );
+				indexedAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable(),
+				attributeBinding.getPluralAttributeElementBinding().getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY )
+				.get( 0 ).getValue() );
 		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
 			if ( !Column.class.isInstance( indexBinding.getIndexRelationalValue() ) ) {
 				throw new NotYetImplementedException( "derived value as collection index is not supported yet." );
@@ -581,7 +596,13 @@ public class Binder {
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
 
 		List<RelationalValueBinding> sourceColumnBindings =
-				bindValues( attributeBindingContainer, keySource, attributeBinding.getAttribute(), collectionTable );
+				bindValues(
+						attributeBindingContainer,
+						keySource,
+						attributeBinding.getAttribute(),
+						collectionTable,
+						attributeBinding.getPluralAttributeElementBinding().getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
+				);
 		// Determine if the foreign key (source) column is updatable and also extract the columns out
 		// of the RelationalValueBindings.
 		boolean isInsertable = false;
@@ -642,8 +663,7 @@ public class Binder {
 
 	private void bindCollectionTablePrimaryKey(
 			final AbstractPluralAttributeBinding attributeBinding,
-			final PluralAttributeSource attributeSource,
-			final HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes ) {
+			final PluralAttributeSource attributeSource) {
 		PluralAttributeSource.Nature pluralAttributeNature = attributeSource.getNature();
 		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.ONE_TO_MANY
 				|| pluralAttributeNature == PluralAttributeSource.Nature.BAG ) {
@@ -651,14 +671,33 @@ public class Binder {
 		}
 		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.BASIC ) {
 			if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
-				bindBasicSetElementTablePrimaryKey( attributeBinding );
+				bindBasicSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
 			} else if (
 					pluralAttributeNature == PluralAttributeSource.Nature.LIST
 					|| pluralAttributeNature == PluralAttributeSource.Nature.MAP
 					|| pluralAttributeNature == PluralAttributeSource.Nature.ARRAY ) {
-				bindIndexedTablePrimaryKey( ( IndexedPluralAttributeBinding ) attributeBinding );
+				bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
 			} else {
-				throw new NotYetImplementedException( "Only Sets with basic elements are supported so far." );
+				throw new NotYetImplementedException(
+						String.format( "%s of basic elements is not supported yet.", pluralAttributeNature )
+				);
+			}
+		}
+		else if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
+			if ( ! attributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
+				if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
+					bindSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
+				}
+				else if (
+					pluralAttributeNature == PluralAttributeSource.Nature.LIST
+							|| pluralAttributeNature == PluralAttributeSource.Nature.MAP) {
+					bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
+				}
+				else {
+					throw new NotYetImplementedException(
+							String.format( "Many-to-many %s is not supported yet.", pluralAttributeNature )
+					);
+				}
 			}
 		}
 	}
@@ -1125,7 +1164,7 @@ public class Binder {
 		}
 	}
 
-	private void bindIndexedTablePrimaryKey( IndexedPluralAttributeBinding attributeBinding ) {
+	private void bindIndexedCollectionTablePrimaryKey(IndexedPluralAttributeBinding attributeBinding) {
 		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getPrimaryKey();
 		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
 		final PluralAttributeIndexBinding indexBinding = attributeBinding.getPluralAttributeIndexBinding();
@@ -1134,7 +1173,7 @@ public class Binder {
 		}
 		final Value value = indexBinding.getIndexRelationalValue();
 		if ( value instanceof Column ) {
-			primaryKey.addColumn( ( Column ) value );
+			primaryKey.addColumn( (Column) value );
 		}
 	}
 
@@ -1188,8 +1227,8 @@ public class Binder {
 		if( attribute == null ){
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
-		// TODO: figure out which table is used (could be secondary table...)
-		final TableSpecification table = attributeBindingContainer.getPrimaryTable();
+
+		final TableSpecification table = locateTableSpecificationForAttribute( attributeBindingContainer, attributeSource );
 
 		//find the referenced entitybinding
 		ValueHolder< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
@@ -1233,8 +1272,9 @@ public class Binder {
 								attributeBindingContainer.seekEntityBinding().getEntity().getName(),
 								table.getLogicalName().getText(),
 								referencedAttributeBinding
-						));
-
+						),
+						false
+				);
 
 		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
 		// now we have everything to create a ManyToOneAttributeBinding
@@ -1287,6 +1327,18 @@ public class Binder {
 
 
 		return attributeBinding;
+	}
+
+	private TableSpecification locateTableSpecificationForAttribute(
+			AttributeBindingContainer attributeBindingContainer,
+			SingularAttributeSource attributeSource) {
+		String tableName = null;
+		if ( ! attributeSource.relationalValueSources().isEmpty() ) {
+			 tableName = attributeSource.relationalValueSources().get( 0 ).getContainingTableName();
+		}
+		return tableName == null ?
+				attributeBindingContainer.getPrimaryTable() :
+				attributeBindingContainer.seekEntityBinding().locateTable( tableName );
 	}
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
@@ -1432,6 +1484,82 @@ public class Binder {
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
 	}
 
+	private void bindManyToManyCollectionElement(
+			final ManyToManyPluralAttributeElementBinding elementBinding,
+			final ManyToManyPluralAttributeElementSource elementSource,
+			final EntityBinding referencedEntityBinding,
+			final String defaultElementJavaTypeName) {
+
+		elementBinding.setRelationalValueBindings(
+				bindValues(
+						elementBinding.getPluralAttributeBinding().getContainer(),
+						elementSource,
+						elementBinding.getPluralAttributeBinding().getAttribute(),
+						elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
+						true
+				)
+		);
+
+		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() ) {
+			bindCollectionTableElementForeignKey( elementBinding, elementSource, referencedEntityBinding );
+		}
+
+		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
+		bindHibernateTypeDescriptor(
+				hibernateTypeDescriptor,
+				referencedEntityBinding.getEntity().getName(),
+				null,
+				defaultElementJavaTypeName
+		);
+
+		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+				referencedEntityBinding.getEntity().getName(),
+				elementSource.getReferencedEntityAttributeName(),
+				false,
+				false,
+				true,
+				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+				false
+		);
+		bindHibernateResolvedType( elementBinding.getHibernateTypeDescriptor(), resolvedElementType );
+		typeHelper.bindJdbcDataType(
+				resolvedElementType,
+				elementBinding.getRelationalValueBindings()
+		);
+		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
+		elementBinding.setManyToManyWhere( elementSource.getWhere() );
+		elementBinding.setManyToManyOrderBy( elementSource.getOrderBy() );
+		//TODO: initialize filters from elementSource
+	}
+
+	private void bindCollectionTableElementForeignKey(
+			ManyToManyPluralAttributeElementBinding elementBinding,
+			final ManyToManyPluralAttributeElementSource elementSource,
+			final EntityBinding referencedEntityBinding) {
+		List<Column> sourceColumns = new ArrayList<Column>( elementBinding.getRelationalValueBindings().size() );
+		for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
+			final Value value = relationalValueBinding.getValue();
+			// todo : currently formulas are not supported here... :(
+			if ( !Column.class.isInstance( value ) ) {
+				throw new NotYetImplementedException(
+						"Derived values are not supported when creating a foreign key that targets columns." );
+			}
+			sourceColumns.add( (Column) value );
+		}
+
+		List<Column> targetColumns =
+				determineForeignKeyTargetColumns(
+						referencedEntityBinding,
+						elementSource
+				);
+
+		final String foreignKeyName =
+				StringHelper.isEmpty( elementSource.getExplicitForeignKeyName() )
+						? null
+						: quotedIdentifier( elementSource.getExplicitForeignKeyName() );
+		bindForeignKey( foreignKeyName, sourceColumns, targetColumns );
+	}
+
 	// TODO: should this be moved to CascadeStyles as a static method?
 	// TODO: sources already factor in default cascade; should that be done here instead?
 	private CascadeStyle determineCascadeStyle(Iterable<CascadeStyle> cascadeStyles) {
@@ -1517,6 +1645,30 @@ public class Binder {
 
 	}
 
+	private void bindManyToManyCollectionKey(
+			final AbstractPluralAttributeBinding attributeBinding,
+			final PluralAttributeSource attributeSource,
+			final EntityBinding referencedEntityBinding) {
+		if ( attributeSource.getElementSource().getNature() != PluralAttributeElementSource.Nature.MANY_TO_MANY ) {
+			throw new AssertionFailure(
+					String.format(
+							"Expected many-to-many attribute binding; instead got {%s}",
+							attributeSource.getElementSource().getNature()
+					)
+			);
+		}
+		final boolean isInverse = attributeSource.isInverse();
+		final TableSpecification collectionTable = createManyToManyCollectionTable(
+				attributeBinding,
+				isInverse,
+				attributeSource.getCollectionTableSpecificationSource(),
+				referencedEntityBinding
+		);
+		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
+		keyBinding.setInverse( isInverse );
+		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
+	}
+
 	private AbstractPluralAttributeBinding bindPluralAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource ) {
@@ -1571,6 +1723,9 @@ public class Binder {
 		// Note: Collection types do not have a relational model
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
+		if ( attributeSource.getFetchStyle() == FetchStyle.SUBSELECT ) {
+			attributeBindingContainer.seekEntityBinding().setSubselectLoadableCollections( true );
+		}
 		attributeBinding.setCaching( attributeSource.getCaching() );
 		if ( StringHelper.isNotEmpty( attributeSource.getCustomPersisterClassName() ) ) {
 			attributeBinding.setExplicitPersisterClass( bindingContexts.peek().< CollectionPersister >locateClassByName(
@@ -1599,7 +1754,7 @@ public class Binder {
 							elementSource.getReferencedEntityName() :
 							defaultElementJavaTypeName;
 			if  ( referencedEntityName == null ) {
-				bindingContext().makeMappingException( String.format( "The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
+				throw bindingContext().makeMappingException( String.format( "The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
 						createAttributePath( attributeBinding )
 				) );
 			}
@@ -1608,6 +1763,28 @@ public class Binder {
 			bindOneToManyCollectionElement(
 					(OneToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
 					(OneToManyPluralAttributeElementSource) attributeSource.getElementSource(),
+					referencedEntityBinding,
+					defaultElementJavaTypeName
+			);
+		}
+		else if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.MANY_TO_MANY ) {
+			final ManyToManyPluralAttributeElementSource elementSource =
+					(ManyToManyPluralAttributeElementSource) attributeSource.getElementSource();
+			final String defaultElementJavaTypeName = defaultCollectionElementJavaTypeName( reflectedCollectionJavaTypes );
+			String referencedEntityName =
+					elementSource.getReferencedEntityName() != null ?
+							elementSource.getReferencedEntityName() :
+							defaultElementJavaTypeName;
+			if  ( referencedEntityName == null ) {
+				throw bindingContext().makeMappingException( String.format( "The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
+						createAttributePath( attributeBinding )
+				) );
+			}
+			EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
+			bindManyToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
+			bindManyToManyCollectionElement(
+					(ManyToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
+					(ManyToManyPluralAttributeElementSource) attributeSource.getElementSource(),
 					referencedEntityBinding,
 					defaultElementJavaTypeName
 			);
@@ -1621,9 +1798,12 @@ public class Binder {
 			);
 		}
 		else {
-			throw new NotYetImplementedException( String.format(
-					"Support for collection elements of type %s not yet implemented",
-					attributeSource.getElementSource().getNature() ) );
+			throw bindingContext().makeMappingException(
+					String.format(
+							"Unknown type of collection element: %s",
+							attributeSource.getElementSource().getNature()
+					)
+			);
 		}
 
 		if ( attributeSource instanceof IndexedPluralAttributeSource ) {
@@ -1633,7 +1813,7 @@ public class Binder {
 					defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes ) );
 		}
 
-		bindCollectionTablePrimaryKey( attributeBinding, attributeSource, reflectedCollectionJavaTypes );
+		bindCollectionTablePrimaryKey( attributeBinding, attributeSource );
 		metadata.addCollection( attributeBinding );
 		return attributeBinding;
 	}
@@ -1843,7 +2023,8 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final RelationalValueSourceContainer valueSourceContainer,
 			final Attribute attribute,
-			final TableSpecification defaultTable) {
+			final TableSpecification defaultTable,
+			final boolean forceNonNullable) {
 		final List<DefaultNamingStrategy> list = new ArrayList<DefaultNamingStrategy>( 1 );
 		list.add(
 				new DefaultNamingStrategy() {
@@ -1853,7 +2034,7 @@ public class Binder {
 					}
 				}
 		);
-		return bindValues( attributeBindingContainer, valueSourceContainer, attribute, defaultTable, list );
+		return bindValues( attributeBindingContainer, valueSourceContainer, attribute, defaultTable, list, forceNonNullable );
 	}
 
 	private List< RelationalValueBinding > bindValues(
@@ -1861,7 +2042,8 @@ public class Binder {
 			final RelationalValueSourceContainer valueSourceContainer,
 			final Attribute attribute,
 			final TableSpecification defaultTable,
-			final List<DefaultNamingStrategy> defaultNamingStrategyList) {
+			final List<DefaultNamingStrategy> defaultNamingStrategyList,
+			final boolean forceNonNullable) {
 		final List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
 		final NaturalIdMutability naturalIdMutability = SingularAttributeSource.class.isInstance(
 				valueSourceContainer
@@ -1869,13 +2051,14 @@ public class Binder {
 				: NaturalIdMutability.NOT_NATURAL_ID;
 		final boolean isNaturalId = naturalIdMutability != NaturalIdMutability.NOT_NATURAL_ID;
 		final boolean isImmutableNaturalId = isNaturalId && (naturalIdMutability == NaturalIdMutability.IMMUTABLE);
+		final boolean reallyForceNonNullable = forceNonNullable || isNaturalId;
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( DefaultNamingStrategy defaultNamingStrategy : defaultNamingStrategyList ) {
 				final String columnName =
 						quotedIdentifier( defaultNamingStrategy.defaultName() );
 				final Column column = defaultTable.locateOrCreateColumn( columnName );
-				column.setNullable( !isNaturalId && valueSourceContainer.areValuesNullableByDefault() );
+				column.setNullable( !reallyForceNonNullable && valueSourceContainer.areValuesNullableByDefault() );
 				if ( isNaturalId ) {
 					addUniqueConstraintForNaturalIdColumn( defaultTable, column );
 				}
@@ -1905,7 +2088,14 @@ public class Binder {
 							toBoolean(
 									columnSource.isIncludedInUpdate(),
 									valueSourceContainer.areValuesIncludedInUpdateByDefault() );
-					Column column = createColumn( table, columnSource, name, isNaturalId, valueSourceContainer.areValuesNullableByDefault(), true );
+					Column column = createColumn(
+							table,
+							columnSource,
+							name,
+							reallyForceNonNullable,
+							valueSourceContainer.areValuesNullableByDefault(),
+							true
+					);
 					if(isNaturalId){
 						addUniqueConstraintForNaturalIdColumn( table, column );
 					}
@@ -1962,9 +2152,9 @@ public class Binder {
 				.toString();
 	}
 
-	private TableSpecification createCollectionTable(
+	private TableSpecification createBasicCollectionTable(
 			final AbstractPluralAttributeBinding pluralAttributeBinding,
-			final PluralAttributeSource attributeSource ) {
+			final TableSpecificationSource tableSpecificationSource) {
 		final DefaultNamingStrategy defaultNamingStategy = new DefaultNamingStrategy() {
 
 			@Override
@@ -1977,13 +2167,52 @@ public class Binder {
 				return bindingContexts.peek().getNamingStrategy().collectionTableName(
 						owner.getEntity().getName(),
 						ownerTableLogicalName,
-						null, // todo: here
-						null, // todo: and here
+						null,
+						null,
 						createAttributePath( pluralAttributeBinding )
 				);
 			}
 		};
-		return createTable( attributeSource.getCollectionTableSpecificationSource(), defaultNamingStategy );
+		return createTable( tableSpecificationSource, defaultNamingStategy );
+	}
+
+	private TableSpecification createManyToManyCollectionTable(
+			final AbstractPluralAttributeBinding pluralAttributeBinding,
+			final boolean isInverse,
+			final TableSpecificationSource tableSpecificationSource,
+			final EntityBinding associatedEntityBinding) {
+		final DefaultNamingStrategy defaultNamingStategy = new DefaultNamingStrategy() {
+
+			@Override
+			public String defaultName() {
+				final EntityBinding ownerEntityBinding;
+				final EntityBinding inverseEntityBinding;
+				if ( isInverse ) {
+					ownerEntityBinding = associatedEntityBinding;
+					inverseEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
+				}
+				else {
+					ownerEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
+					inverseEntityBinding = associatedEntityBinding;
+				}
+				final String ownerTableLogicalName =
+						Table.class.isInstance( ownerEntityBinding.getPrimaryTable() )
+								? ( ( Table ) ownerEntityBinding.getPrimaryTable() ).getPhysicalName().getText()
+								: null;
+				final String inverseTableLogicalName =
+						Table.class.isInstance( inverseEntityBinding.getPrimaryTable() )
+								? ( ( Table ) inverseEntityBinding.getPrimaryTable() ).getPhysicalName().getText()
+								: null;
+				return bindingContexts.peek().getNamingStrategy().collectionTableName(
+						ownerEntityBinding.getEntity().getName(),
+						ownerTableLogicalName,
+						inverseEntityBinding.getEntity().getName(),
+						inverseTableLogicalName,
+						createAttributePath( pluralAttributeBinding )
+				);
+			}
+		};
+		return createTable( tableSpecificationSource, defaultNamingStategy );
 	}
 
 	private Column createColumn(
@@ -2168,7 +2397,7 @@ public class Binder {
 		TableSpecification tableSpec = null;
 		if ( tableSpecSource == null ) {
 			if ( defaultNamingStrategy == null ) {
-				bindingContext().makeMappingException( "An explicit name must be specified for the table" );
+				throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 			}
 			String tableName = defaultNamingStrategy.defaultName();
 			tableSpec = createTableSpecification( bindingContext, schema, tableName );
@@ -2178,7 +2407,7 @@ public class Binder {
 			String tableName = tableSource.getExplicitTableName();
 			if ( tableName == null ) {
 				if ( defaultNamingStrategy == null ) {
-					bindingContext().makeMappingException( "An explicit name must be specified for the table" );
+					throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 				}
 				tableName = defaultNamingStrategy.defaultName();
 			}
@@ -2353,11 +2582,11 @@ public class Binder {
 			referencedAttributeBinding = attributeBinding( entityBinding.getEntity().getName(), referencedAttributeName );
 		}
 		if ( referencedAttributeBinding == null ) {
-			bindingContext().makeMappingException( "Plural attribute key references an attribute binding that does not exist: "
+			throw bindingContext().makeMappingException( "Plural attribute key references an attribute binding that does not exist: "
 					+ referencedAttributeBinding );
 		}
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			bindingContext().makeMappingException( "Plural attribute key references a plural attribute; it must not be plural: "
+			throw bindingContext().makeMappingException( "Plural attribute key references a plural attribute; it must not be plural: "
 					+ referencedAttributeName );
 		}
 		return ( SingularAttributeBinding ) referencedAttributeBinding;

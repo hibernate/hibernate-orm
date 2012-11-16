@@ -29,7 +29,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class EntityWithNonInverseManyToManyUnidirTest extends AbstractEntityWithManyToManyTest {
 	@Override
 	public String[] getMappings() {

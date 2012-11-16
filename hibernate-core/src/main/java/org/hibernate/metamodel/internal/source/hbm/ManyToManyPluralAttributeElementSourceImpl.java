@@ -31,11 +31,13 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class ManyToManyPluralAttributeElementSourceImpl
 		extends AbstractHbmSourceNode
@@ -113,7 +115,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public List<RelationalValueSource> getValueSources() {
+	public List<RelationalValueSource> relationalValueSources() {
 		return valueSources;
 	}
 
@@ -125,6 +127,13 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	@Override
 	public String getExplicitForeignKeyName() {
 		return manyToManyElement.getForeignKey();
+	}
+
+	@Override
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		return manyToManyElement.getPropertyRef() == null
+				? null
+				: new JoinColumnResolutionDelegateImpl();
 	}
 
 	@Override
@@ -165,4 +174,32 @@ public class ManyToManyPluralAttributeElementSourceImpl
 			return "true".equals( value );
 		}
 	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return false;
+	}
+
+	public class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+		@Override
+		public String getReferencedAttributeName() {
+			return manyToManyElement.getPropertyRef();
+		}
+
+		@Override
+		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			return context.resolveRelationalValuesForAttribute( manyToManyElement.getPropertyRef() );
+		}
+	}
+
 }

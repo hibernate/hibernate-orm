@@ -29,14 +29,15 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface ManyToManyPluralAttributeElementSource extends PluralAttributeElementSource, CascadeStyleSource {
+public interface ManyToManyPluralAttributeElementSource
+		extends PluralAttributeElementSource, CascadeStyleSource, RelationalValueSourceContainer, ForeignKeyContributingSource {
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
 
 	public Collection<String> getReferencedColumnNames();
 
-	public List<RelationalValueSource> getValueSources(); // these describe the "outgoing" link
+	public List<RelationalValueSource> relationalValueSources(); // these describe the "outgoing" link
 
 	public boolean isNotFoundAnException();
 

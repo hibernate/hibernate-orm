@@ -32,6 +32,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.binding.CascadeType;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -68,7 +69,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
-	public List<RelationalValueSource> getValueSources() {
+	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
 		// todo
 		return valueSources;
@@ -94,6 +95,11 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
+	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public boolean isUnique() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
@@ -116,6 +122,21 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	@Override
 	public Nature getNature() {
 		return Nature.MANY_TO_MANY;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return false;
 	}
 }
 

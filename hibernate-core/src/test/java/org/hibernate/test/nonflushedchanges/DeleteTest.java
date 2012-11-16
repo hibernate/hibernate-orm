@@ -35,7 +35,6 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class DeleteTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

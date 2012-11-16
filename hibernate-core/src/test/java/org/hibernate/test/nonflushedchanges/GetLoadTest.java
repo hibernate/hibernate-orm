@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class GetLoadTest extends AbstractOperationTestCase {
 	@Override
 	public void configure(Configuration cfg) {

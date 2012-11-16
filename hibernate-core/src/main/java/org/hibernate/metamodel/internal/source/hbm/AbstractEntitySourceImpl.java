@@ -287,9 +287,9 @@ public abstract class AbstractEntitySourceImpl
 
 
 	private Set<SecondaryTableSource> buildSecondaryTables() {
-		if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
-			return Collections.emptySet();
-		}
+		//if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
+		//	return Collections.emptySet();
+		//}
 
 		final Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
 		for ( JaxbJoinElement joinElement :  ( (JoinElementSource) entityElement ).getJoin() ) {

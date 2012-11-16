@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class CreateTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

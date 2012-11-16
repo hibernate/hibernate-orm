@@ -44,7 +44,6 @@ import static org.junit.Assert.assertFalse;
  * @author Valotasios Yoryos
  */
 @TestForIssue( jiraKey = "HHH-5715" )
-@FailureExpectedWithNewMetamodel
 public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 	private static final int NUM_OF_USERS = 30;
 

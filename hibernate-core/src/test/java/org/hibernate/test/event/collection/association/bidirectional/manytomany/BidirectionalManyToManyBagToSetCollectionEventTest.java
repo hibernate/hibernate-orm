@@ -33,7 +33,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class BidirectionalManyToManyBagToSetCollectionEventTest extends AbstractAssociationCollectionEventTest {
 	@Override
 	public String[] getMappings() {

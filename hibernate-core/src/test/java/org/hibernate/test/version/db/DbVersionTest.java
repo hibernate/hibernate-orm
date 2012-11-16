@@ -39,7 +39,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class DbVersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

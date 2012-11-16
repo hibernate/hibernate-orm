@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {

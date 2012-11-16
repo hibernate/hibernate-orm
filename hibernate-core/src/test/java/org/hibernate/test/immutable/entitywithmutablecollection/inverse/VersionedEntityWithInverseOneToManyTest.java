@@ -23,17 +23,25 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
+import org.junit.Test;
+
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class VersionedEntityWithInverseOneToManyTest extends AbstractEntityWithOneToManyTest {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersioned.hbm.xml" };
+	}
+
+	@Test
+	@Override
+	@FailureExpectedWithNewMetamodel
+	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
+		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 
 	@Override

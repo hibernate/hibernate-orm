@@ -39,7 +39,7 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	// TODO: really should have value defined (which defines table), but may not know 
-	private Value value;
+	List<RelationalValueBinding> relationalValueBindings;
 
 	ManyToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
@@ -52,7 +52,11 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return relationalValueBindings;
+	}
+
+	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
+		this.relationalValueBindings = relationalValueBindings;
 	}
 
 	public String getManyToManyWhere() {
@@ -69,13 +73,5 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 
 	public void setManyToManyOrderBy(String manyToManyOrderBy) {
 		this.manyToManyOrderBy = manyToManyOrderBy;
-	}
-
-	public Value getValue() {
-		return value;
-	}
-
-	public void setValue(Value value) {
-		this.value = value;
 	}
 }

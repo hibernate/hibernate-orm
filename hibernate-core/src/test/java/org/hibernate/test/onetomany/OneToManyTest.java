@@ -37,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -46,11 +45,13 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	@Test
-    @SkipForDialect(
+	@SkipForDialect(
             value = CUBRIDDialect.class,
             comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                     "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
     )
+
+	@FailureExpectedWithNewMetamodel
 	public void testOneToManyLinkTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

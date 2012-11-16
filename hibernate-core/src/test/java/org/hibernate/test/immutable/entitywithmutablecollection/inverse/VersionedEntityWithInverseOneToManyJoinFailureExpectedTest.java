@@ -23,16 +23,21 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
+import org.junit.Test;
+
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
+import org.hibernate.testing.Skip;
 
 /**
  * @author Gail Badner
  */
+// There are overridden tests that are known to pass because one-to-many on a join table
+// is not built properly due to HHH-6391. These they are skipped for now.
+// When HHH-6391 is fixed, the skipped (overridden) tests should be removed.
 @FailureExpectedWithNewMetamodel
 @SkipForDialect(
         value = CUBRIDDialect.class,
@@ -93,5 +98,36 @@ public class VersionedEntityWithInverseOneToManyJoinFailureExpectedTest extends 
 	)
 	public void testRemoveOneToManyElementUsingMerge() {
 		super.testRemoveOneToManyElementUsingMerge();
+	}
+
+	@Test
+	@Override
+	@FailureExpectedWithNewMetamodel
+	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
+		super.testOneToManyCollectionOptimisticLockingWithUpdate();
+	}
+
+	// TODO: HHH-6391 is fixed, this (overridden) test should be removed.
+	@Test
+	@Override
+	@Skip( condition = Skip.AlwaysSkip.class,message = "skip until HHH-6391 is fixed.")
+	public void testDeleteOneToManyOrphan() {
+		super.testDeleteOneToManyOrphan();
+	}
+
+	// TODO: HHH-6391 is fixed, this (overridden) test should be removed.
+	@Test
+	@Override
+	@Skip( condition = Skip.AlwaysSkip.class,message = "skip until HHH-6391 is fixed.")
+	public void testRemoveOneToManyOrphanUsingMerge() {
+		super.testRemoveOneToManyOrphanUsingMerge();
+	}
+
+	// TODO: HHH-6391 is fixed, this (overridden) test should be removed.
+	@Test
+	@Override
+	@Skip( condition = Skip.AlwaysSkip.class,message = "skip until HHH-6391 is fixed.")
+	public void testRemoveOneToManyOrphanUsingUpdate() {
+		super.testRemoveOneToManyOrphanUsingUpdate();
 	}
 }

@@ -57,34 +57,6 @@ public class CacheTestUtil {
       return cfg;
    }
 
-   public static Configuration buildCustomQueryCacheConfiguration(String regionPrefix, String queryCacheName) {
-      Configuration cfg = buildConfiguration(regionPrefix, InfinispanRegionFactory.class, true, true);
-      cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, queryCacheName);
-      return cfg;
-   }
-
-   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
-         Configuration cfg){
-      try {
-         Settings settings = cfg.buildSettings(reg);
-         Properties properties = cfg.getProperties();
-
-         String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
-         Class clazz = Thread.currentThread()
-               .getContextClassLoader().loadClass(factoryType);
-         InfinispanRegionFactory regionFactory;
-         if (clazz == InfinispanRegionFactory.class) {
-            regionFactory = new SingleNodeTestCase.TestInfinispanRegionFactory();
-         } else {
-            regionFactory = (InfinispanRegionFactory) clazz.newInstance();
-         }
-         regionFactory.start(settings, properties);
-         return regionFactory;
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
    public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry,
          Configuration cfg, CacheTestSupport testSupport) {
 	   SessionFactoryImplementor sessionFactory =(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
@@ -93,12 +65,14 @@ public class CacheTestUtil {
 	   return factory;
    }
 
-   public static void stopRegionFactory(InfinispanRegionFactory factory,
-         CacheTestSupport testSupport) {
-	   testSupport.unregisterFactory(factory).close();
-   }
+	public static void stopRegionFactory(InfinispanRegionFactory factory,
+										 CacheTestSupport testSupport) {
+		if ( factory != null ) {
+			testSupport.unregisterFactory( factory ).close();
+		}
+	}
 
-   /**
+	/**
     * Prevent instantiation.
     */
    private CacheTestUtil() {

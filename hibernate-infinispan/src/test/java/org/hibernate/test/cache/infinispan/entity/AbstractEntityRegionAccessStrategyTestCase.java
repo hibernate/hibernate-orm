@@ -123,7 +123,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    protected static Configuration createConfiguration(String configName) {
       Configuration cfg = CacheTestUtil.buildConfiguration(
             REGION_PREFIX,
-            InfinispanRegionFactory.class,
+			  org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase.TestInfinispanRegionFactory.class,
             true,
             false
       );

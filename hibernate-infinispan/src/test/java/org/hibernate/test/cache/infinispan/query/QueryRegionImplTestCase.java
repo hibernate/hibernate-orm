@@ -106,7 +106,11 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 
 	@Override
 	protected Configuration createConfiguration() {
-		return CacheTestUtil.buildCustomQueryCacheConfiguration( "test", "replicated-query" );
+		Configuration cfg = super.createConfiguration();
+		cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP,  "replicated-query");
+
+//		return CacheTestUtil.buildCustomQueryCacheConfiguration( "test", "replicated-query" );
+		return cfg;
 	}
 
 	private void putDoesNotBlockGetTest() throws Exception {

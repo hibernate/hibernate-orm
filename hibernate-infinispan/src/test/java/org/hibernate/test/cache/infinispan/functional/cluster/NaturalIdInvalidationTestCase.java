@@ -44,7 +44,10 @@ public class NaturalIdInvalidationTestCase extends DualNodeTestCase {
    private static final long SLEEP_TIME = 50l;
    private static final Integer CUSTOMER_ID = new Integer( 1 );
    private static int test = 0;
-
+	@Override
+	public String[] getMappings() {
+		return new String[]{};
+	}
    @Override
    protected Class<?>[] getAnnotatedClasses() {
       return new Class[] {

@@ -136,6 +136,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
 		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
+		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "false" );
 	}
 
 	public class SecondNodeEnvironment {
@@ -173,6 +174,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			if ( sessionFactory != null ) {
 				try {
 					sessionFactory.close();
+					sessionFactory = null;
 				}
 				catch (Exception ignore) {
 				}
@@ -180,6 +182,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			if ( serviceRegistry != null ) {
 				try {
 					serviceRegistry.destroy();
+					serviceRegistry = null;
 				}
 				catch (Exception ignore) {
 				}

@@ -123,7 +123,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 	protected static Configuration createConfiguration(String configName) {
 		Configuration cfg = CacheTestUtil.buildConfiguration(
-				REGION_PREFIX, InfinispanRegionFactory.class, true, false
+				REGION_PREFIX, org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase.TestInfinispanRegionFactory.class, true, false
 		);
 		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, configName );
 		return cfg;

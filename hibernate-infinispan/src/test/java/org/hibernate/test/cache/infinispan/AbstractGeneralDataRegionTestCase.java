@@ -57,17 +57,22 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	protected static final String VALUE2 = "value2";
 
 	protected Configuration createConfiguration() {
-		return CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, false, true );
+		return CacheTestUtil.buildConfiguration(
+				"test",
+				org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase.TestInfinispanRegionFactory.class,
+				false,
+				true
+		);
 	}
 
 	@Override
 	protected void putInRegion(Region region, Object key, Object value) {
-		((GeneralDataRegion) region).put( key, value );
+		( (GeneralDataRegion) region ).put( key, value );
 	}
 
 	@Override
 	protected void removeFromRegion(Region region, Object key) {
-		((GeneralDataRegion) region).evict( key );
+		( (GeneralDataRegion) region ).evict( key );
 	}
 
 	@Test
@@ -77,63 +82,71 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 	private void evictOrRemoveTest() throws Exception {
 		Configuration cfg = createConfiguration();
-		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-				cfg,
-				getCacheTestSupport()
-		);
-		boolean invalidation = false;
+		InfinispanRegionFactory regionFactory = null;
+		InfinispanRegionFactory remoteRegionFactory = null;
+		try {
+			regionFactory = CacheTestUtil.startRegionFactory(
+					new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
+					cfg,
+					getCacheTestSupport()
+			);
+			boolean invalidation = false;
 
-		// Sleep a bit to avoid concurrent FLUSH problem
-		avoidConcurrentFlush();
+			// Sleep a bit to avoid concurrent FLUSH problem
+			avoidConcurrentFlush();
 
-		GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
-				regionFactory,
-				getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
-		);
+			GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+					regionFactory,
+					getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
+			);
 
-		cfg = createConfiguration();
-		regionFactory = CacheTestUtil.startRegionFactory(
-				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-				cfg,
-				getCacheTestSupport()
-		);
+			cfg = createConfiguration();
+			remoteRegionFactory = CacheTestUtil.startRegionFactory(
+					new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
+					cfg,
+					getCacheTestSupport()
+			);
 
-		GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
-				regionFactory,
-				getStandardRegionName( REGION_PREFIX ),
-				cfg.getProperties(),
-				null
-		);
+			GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+					remoteRegionFactory,
+					getStandardRegionName( REGION_PREFIX ),
+					cfg.getProperties(),
+					null
+			);
 
-		assertNull( "local is clean", localRegion.get( KEY ) );
-		assertNull( "remote is clean", remoteRegion.get( KEY ) );
+			assertNull( "local is clean", localRegion.get( KEY ) );
+			assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      regionPut(localRegion);
-      assertEquals( VALUE1, localRegion.get( KEY ) );
+			regionPut( localRegion );
+			assertEquals( VALUE1, localRegion.get( KEY ) );
 
-		// allow async propagation
-		sleep( 250 );
-		Object expected = invalidation ? null : VALUE1;
-		assertEquals( expected, remoteRegion.get( KEY ) );
+			// allow async propagation
+			sleep( 250 );
+			Object expected = invalidation ? null : VALUE1;
+			assertEquals( expected, remoteRegion.get( KEY ) );
 
-      regionEvict(localRegion);
+			regionEvict( localRegion );
 
-      // allow async propagation
-		sleep( 250 );
-		assertEquals( null, localRegion.get( KEY ) );
-		assertEquals( null, remoteRegion.get( KEY ) );
+			// allow async propagation
+			sleep( 250 );
+			assertEquals( null, localRegion.get( KEY ) );
+			assertEquals( null, remoteRegion.get( KEY ) );
+		}
+		finally {
+			CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
+			CacheTestUtil.stopRegionFactory( remoteRegionFactory, getCacheTestSupport() );
+		}
 	}
 
-   protected void regionEvict(GeneralDataRegion region) throws Exception {
-      region.evict(KEY);
-   }
+	protected void regionEvict(GeneralDataRegion region) throws Exception {
+		region.evict( KEY );
+	}
 
-   protected void regionPut(GeneralDataRegion region) throws Exception {
-      region.put(KEY, VALUE1);
-   }
+	protected void regionPut(GeneralDataRegion region) throws Exception {
+		region.put( KEY, VALUE1 );
+	}
 
-   protected abstract String getStandardRegionName(String regionPrefix);
+	protected abstract String getStandardRegionName(String regionPrefix);
 
 	/**
 	 * Test method for {@link QueryResultsRegion#evictAll()}.
@@ -170,7 +183,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				cfg,
 				getCacheTestSupport()
 		);
-      AdvancedCache remoteCache = getInfinispanCache( regionFactory );
+		AdvancedCache remoteCache = getInfinispanCache( regionFactory );
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -191,14 +204,14 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "local is clean", localRegion.get( KEY ) );
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      regionPut(localRegion);
-      assertEquals( VALUE1, localRegion.get( KEY ) );
+		regionPut( localRegion );
+		assertEquals( VALUE1, localRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );
 
-      regionPut(remoteRegion);
-      assertEquals( VALUE1, remoteRegion.get( KEY ) );
+		regionPut( remoteRegion );
+		assertEquals( VALUE1, remoteRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );
@@ -225,7 +238,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		try {
 			BatchModeTransactionManager.getInstance().rollback();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.error( e.getMessage(), e );
 		}
 	}

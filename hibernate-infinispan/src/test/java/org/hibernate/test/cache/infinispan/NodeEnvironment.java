@@ -50,7 +50,7 @@ public class NodeEnvironment {
 
    private Map<String, EntityRegionImpl> entityRegionMap;
    private Map<String, CollectionRegionImpl> collectionRegionMap;
-	private SessionFactoryImplementor sessionFactory;
+   private SessionFactoryImplementor sessionFactory;
    public NodeEnvironment(Configuration configuration) {
       this.configuration = configuration;
    }
@@ -113,7 +113,6 @@ public class NodeEnvironment {
             .applySettings(configuration.getProperties())
             .build();
 	   sessionFactory = (SessionFactoryImplementor)configuration.buildSessionFactory( serviceRegistry );
-//      regionFactory = CacheTestUtil.startRegionFactory(serviceRegistry, configuration);
 	   regionFactory = (InfinispanRegionFactory)sessionFactory.getServiceRegistry().getService( RegionFactory.class );
    }
 
@@ -142,11 +141,6 @@ public class NodeEnvironment {
          }
       } finally {
          try {
-//            if (regionFactory != null) {
-//               // Currently the RegionFactory is shutdown by its registration
-//               // with the CacheTestSetup from CacheTestUtil when built
-//               regionFactory.stop();
-//            }
 			 if(sessionFactory!=null){
 				 sessionFactory.close();
 			 }

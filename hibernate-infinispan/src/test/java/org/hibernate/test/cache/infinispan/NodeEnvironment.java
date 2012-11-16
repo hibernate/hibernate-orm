@@ -44,111 +44,116 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
  */
 public class NodeEnvironment {
 
-   private final Configuration configuration;
-   private StandardServiceRegistryImpl serviceRegistry;
-   private InfinispanRegionFactory regionFactory;
+	private final Configuration configuration;
+	private StandardServiceRegistryImpl serviceRegistry;
+	private InfinispanRegionFactory regionFactory;
 
-   private Map<String, EntityRegionImpl> entityRegionMap;
-   private Map<String, CollectionRegionImpl> collectionRegionMap;
-   private SessionFactoryImplementor sessionFactory;
-   public NodeEnvironment(Configuration configuration) {
-      this.configuration = configuration;
-   }
+	private Map<String, EntityRegionImpl> entityRegionMap;
+	private Map<String, CollectionRegionImpl> collectionRegionMap;
+	private SessionFactoryImplementor sessionFactory;
 
-   public Configuration getConfiguration() {
-      return configuration;
-   }
+	public NodeEnvironment(Configuration configuration) {
+		this.configuration = configuration;
+	}
 
-   public StandardServiceRegistryImpl getServiceRegistry() {
-      return serviceRegistry;
-   }
+	public Configuration getConfiguration() {
+		return configuration;
+	}
 
-   public EntityRegionImpl getEntityRegion(String name, CacheDataDescription cacheDataDescription) {
-      if (entityRegionMap == null) {
-         entityRegionMap = new HashMap<String, EntityRegionImpl>();
-         return buildAndStoreEntityRegion(name, cacheDataDescription);
-      }
-      EntityRegionImpl region = entityRegionMap.get(name);
-      if (region == null) {
-         region = buildAndStoreEntityRegion(name, cacheDataDescription);
-      }
-      return region;
-   }
+	public StandardServiceRegistryImpl getServiceRegistry() {
+		return serviceRegistry;
+	}
 
-   private EntityRegionImpl buildAndStoreEntityRegion(String name, CacheDataDescription cacheDataDescription) {
-      EntityRegionImpl region = (EntityRegionImpl) regionFactory.buildEntityRegion(
-            name,
-            configuration.getProperties(),
-            cacheDataDescription
-      );
-      entityRegionMap.put(name, region);
-      return region;
-   }
+	public EntityRegionImpl getEntityRegion(String name, CacheDataDescription cacheDataDescription) {
+		if ( entityRegionMap == null ) {
+			entityRegionMap = new HashMap<String, EntityRegionImpl>();
+			return buildAndStoreEntityRegion( name, cacheDataDescription );
+		}
+		EntityRegionImpl region = entityRegionMap.get( name );
+		if ( region == null ) {
+			region = buildAndStoreEntityRegion( name, cacheDataDescription );
+		}
+		return region;
+	}
 
-   public CollectionRegionImpl getCollectionRegion(String name, CacheDataDescription cacheDataDescription) {
-      if (collectionRegionMap == null) {
-         collectionRegionMap = new HashMap<String, CollectionRegionImpl>();
-         return buildAndStoreCollectionRegion(name, cacheDataDescription);
-      }
-      CollectionRegionImpl region = collectionRegionMap.get(name);
-      if (region == null) {
-         region = buildAndStoreCollectionRegion(name, cacheDataDescription);
-         collectionRegionMap.put(name, region);
-      }
-      return region;
-   }
+	private EntityRegionImpl buildAndStoreEntityRegion(String name, CacheDataDescription cacheDataDescription) {
+		EntityRegionImpl region = (EntityRegionImpl) regionFactory.buildEntityRegion(
+				name,
+				configuration.getProperties(),
+				cacheDataDescription
+		);
+		entityRegionMap.put( name, region );
+		return region;
+	}
 
-   private CollectionRegionImpl buildAndStoreCollectionRegion(String name, CacheDataDescription cacheDataDescription) {
-      CollectionRegionImpl region;
-      region = (CollectionRegionImpl) regionFactory.buildCollectionRegion(
-            name,
-            configuration.getProperties(),
-            cacheDataDescription
-      );
-      return region;
-   }
+	public CollectionRegionImpl getCollectionRegion(String name, CacheDataDescription cacheDataDescription) {
+		if ( collectionRegionMap == null ) {
+			collectionRegionMap = new HashMap<String, CollectionRegionImpl>();
+			return buildAndStoreCollectionRegion( name, cacheDataDescription );
+		}
+		CollectionRegionImpl region = collectionRegionMap.get( name );
+		if ( region == null ) {
+			region = buildAndStoreCollectionRegion( name, cacheDataDescription );
+			collectionRegionMap.put( name, region );
+		}
+		return region;
+	}
 
-   public void prepare() throws Exception {
-      serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-            .applySettings(configuration.getProperties())
-            .build();
-	   sessionFactory = (SessionFactoryImplementor)configuration.buildSessionFactory( serviceRegistry );
-	   regionFactory = (InfinispanRegionFactory)sessionFactory.getServiceRegistry().getService( RegionFactory.class );
-   }
+	private CollectionRegionImpl buildAndStoreCollectionRegion(String name, CacheDataDescription cacheDataDescription) {
+		CollectionRegionImpl region;
+		region = (CollectionRegionImpl) regionFactory.buildCollectionRegion(
+				name,
+				configuration.getProperties(),
+				cacheDataDescription
+		);
+		return region;
+	}
 
-   public void release() throws Exception {
-      try {
-         if (entityRegionMap != null) {
-            for (EntityRegionImpl region : entityRegionMap.values()) {
-               try {
-                  region.getCache().stop();
-               } catch (Exception e) {
-                  // Ignore...
-               }
-            }
-            entityRegionMap.clear();
-         }
-         if (collectionRegionMap != null) {
-            for (CollectionRegionImpl reg : collectionRegionMap.values()) {
-               try {
-                  reg.getCache().stop();
-               } catch (Exception e) {
-                  // Ignore...
-               }
+	public void prepare() throws Exception {
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
+				.applySettings( configuration.getProperties() )
+				.build();
+		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+		regionFactory = (InfinispanRegionFactory) sessionFactory.getServiceRegistry().getService( RegionFactory.class );
+	}
 
-            }
-            collectionRegionMap.clear();
-         }
-      } finally {
-         try {
-			 if(sessionFactory!=null){
-				 sessionFactory.close();
-			 }
-         } finally {
-            if (serviceRegistry != null) {
-               serviceRegistry.destroy();
-            }
-         }
-      }
-   }
+	public void release() throws Exception {
+		try {
+			if ( entityRegionMap != null ) {
+				for ( EntityRegionImpl region : entityRegionMap.values() ) {
+					try {
+						region.getCache().stop();
+					}
+					catch ( Exception e ) {
+						// Ignore...
+					}
+				}
+				entityRegionMap.clear();
+			}
+			if ( collectionRegionMap != null ) {
+				for ( CollectionRegionImpl reg : collectionRegionMap.values() ) {
+					try {
+						reg.getCache().stop();
+					}
+					catch ( Exception e ) {
+						// Ignore...
+					}
+
+				}
+				collectionRegionMap.clear();
+			}
+		}
+		finally {
+			try {
+				if ( sessionFactory != null ) {
+					sessionFactory.close();
+				}
+			}
+			finally {
+				if ( serviceRegistry != null ) {
+					serviceRegistry.destroy();
+				}
+			}
+		}
+	}
 }

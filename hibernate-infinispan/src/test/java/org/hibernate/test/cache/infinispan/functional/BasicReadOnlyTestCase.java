@@ -31,7 +31,7 @@ package org.hibernate.test.cache.infinispan.functional;
  */
 public class BasicReadOnlyTestCase extends AbstractFunctionalTestCase {
 
-   @Override
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return "read-only";
 	}

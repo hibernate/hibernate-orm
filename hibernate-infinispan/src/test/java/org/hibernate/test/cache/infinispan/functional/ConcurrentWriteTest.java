@@ -139,7 +139,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 					.createQuery( "from " + Customer.class.getName() )
 					.list();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 //         setRollbackOnly();
 //         fail("failed to query DB; exception=" + e);
@@ -152,7 +152,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 	@Test
 	public void testSingleUser() throws Exception {
 		// setup
-sessionFactory().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		Customer customer = createCustomer( 0 );
 		final Integer customerId = customer.getId();
 		getCustomerIDs().add( customerId );
@@ -219,7 +219,7 @@ sessionFactory().getStatistics().clear();
 			}
 			log.info( "All future gets checked" );
 		}
-		catch (Throwable t) {
+		catch ( Throwable t ) {
 			log.error( "Error running test", t );
 			throw t;
 		}
@@ -235,7 +235,7 @@ sessionFactory().getStatistics().clear();
 			session.createQuery( deleteContactHQL ).setFlushMode( FlushMode.AUTO ).executeUpdate();
 			session.createQuery( deleteCustomerHQL ).setFlushMode( FlushMode.AUTO ).executeUpdate();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -252,7 +252,7 @@ sessionFactory().getStatistics().clear();
 			customer.setContacts( new HashSet<Contact>() );
 			sessionFactory().getCurrentSession().persist( customer );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -266,6 +266,7 @@ sessionFactory().getStatistics().clear();
 	 * writes of Customer.contacts Collection cache node
 	 *
 	 * @return who cares
+	 *
 	 * @throws java.lang.Exception
 	 */
 	private void readEveryonesFirstContact() throws Exception {
@@ -285,7 +286,7 @@ sessionFactory().getStatistics().clear();
 				}
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -293,71 +294,79 @@ sessionFactory().getStatistics().clear();
 		}
 	}
 
-   /**
-    * -load existing Customer -get customer's contacts; return 1st one
-    * 
-    * @param customerId
-    * @return first Contact or null if customer has none
-    */
-   private Contact getFirstContact(Integer customerId) throws Exception {
-      assert customerId != null;
-      Contact firstContact = null;
-      beginTx();
-      try {
-         final Customer customer = (Customer) sessionFactory()
-				 .getCurrentSession()
-				 .load(Customer.class, customerId);
-         Set<Contact> contacts = customer.getContacts();
-         firstContact = contacts.isEmpty() ? null : contacts.iterator().next();
-         if (TERMINATE_ALL_USERS)
-            setRollbackOnlyTx();
-      } catch (Exception e) {
-         setRollbackOnlyTx(e);
-      } finally {
-         commitOrRollbackTx();
-      }
-      return firstContact;
-   }
+	/**
+	 * -load existing Customer -get customer's contacts; return 1st one
+	 *
+	 * @param customerId
+	 *
+	 * @return first Contact or null if customer has none
+	 */
+	private Contact getFirstContact(Integer customerId) throws Exception {
+		assert customerId != null;
+		Contact firstContact = null;
+		beginTx();
+		try {
+			final Customer customer = (Customer) sessionFactory()
+					.getCurrentSession()
+					.load( Customer.class, customerId );
+			Set<Contact> contacts = customer.getContacts();
+			firstContact = contacts.isEmpty() ? null : contacts.iterator().next();
+			if ( TERMINATE_ALL_USERS ) {
+				setRollbackOnlyTx();
+			}
+		}
+		catch ( Exception e ) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+		return firstContact;
+	}
 
-   /**
-    * -load existing Customer -create a new Contact and add to customer's contacts
-    *
-    * @param customerId
-    * @return added Contact
-    */
-   private Contact addContact(Integer customerId) throws Exception {
-      assert customerId != null;
-      Contact contact = null;
-      beginTx();
-      try {
-         final Customer customer = (Customer) sessionFactory()
-				 .getCurrentSession()
-				 .load(Customer.class, customerId);
-         contact = new Contact();
-         contact.setName("contact name");
-         contact.setTlf("wtf is tlf?");
-         contact.setCustomer(customer);
-         customer.getContacts().add(contact);
-         // assuming contact is persisted via cascade from customer
-         if (TERMINATE_ALL_USERS)
-            setRollbackOnlyTx();
-      } catch (Exception e) {
-         setRollbackOnlyTx(e);
-      } finally {
-         commitOrRollbackTx();
-      }
-      return contact;
-   }
+	/**
+	 * -load existing Customer -create a new Contact and add to customer's contacts
+	 *
+	 * @param customerId
+	 *
+	 * @return added Contact
+	 */
+	private Contact addContact(Integer customerId) throws Exception {
+		assert customerId != null;
+		Contact contact = null;
+		beginTx();
+		try {
+			final Customer customer = (Customer) sessionFactory()
+					.getCurrentSession()
+					.load( Customer.class, customerId );
+			contact = new Contact();
+			contact.setName( "contact name" );
+			contact.setTlf( "wtf is tlf?" );
+			contact.setCustomer( customer );
+			customer.getContacts().add( contact );
+			// assuming contact is persisted via cascade from customer
+			if ( TERMINATE_ALL_USERS ) {
+				setRollbackOnlyTx();
+			}
+		}
+		catch ( Exception e ) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+		return contact;
+	}
 
-   /**
-    * remove existing 'contact' from customer's list of contacts
-    *
-    * @param customerId
-    * @throws IllegalStateException
-    *            if customer does not own a contact
-    */
-   private void removeContact(Integer customerId) throws Exception {
-      assert customerId != null;
+	/**
+	 * remove existing 'contact' from customer's list of contacts
+	 *
+	 * @param customerId
+	 *
+	 * @throws IllegalStateException if customer does not own a contact
+	 */
+	private void removeContact(Integer customerId) throws Exception {
+		assert customerId != null;
 
 		beginTx();
 		try {
@@ -386,7 +395,7 @@ sessionFactory().getStatistics().clear();
 				setRollbackOnlyTx();
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -474,7 +483,7 @@ sessionFactory().getStatistics().clear();
 					}
 				}
 			}
-			catch (Throwable t) {
+			catch ( Throwable t ) {
 				TERMINATE_ALL_USERS = true;
 				log.error( "Error", t );
 				throw new Exception( t );
@@ -517,7 +526,7 @@ sessionFactory().getStatistics().clear();
 		public String toString() {
 			return super.toString() + "[customerId=" + getCustomerId() + " iterationsCompleted="
 					+ getCompletedIterations() + " completedAll=" + isSuccess() + " causeOfFailure="
-					+ (this.causeOfFailure != null ? getStackTrace( causeOfFailure ) : "") + "] ";
+					+ ( this.causeOfFailure != null ? getStackTrace( causeOfFailure ) : "" ) + "] ";
 		}
 	}
 
@@ -538,7 +547,7 @@ sessionFactory().getStatistics().clear();
 		try {
 			Thread.sleep( random.nextInt( THINK_TIME_MILLIS ) );
 		}
-		catch (InterruptedException ex) {
+		catch ( InterruptedException ex ) {
 			throw new RuntimeException( "sleep interrupted", ex );
 		}
 

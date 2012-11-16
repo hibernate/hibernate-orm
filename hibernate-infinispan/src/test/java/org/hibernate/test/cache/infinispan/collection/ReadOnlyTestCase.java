@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests READ_ONLY access when invalidation is used.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */

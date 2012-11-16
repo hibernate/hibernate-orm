@@ -13,10 +13,13 @@ import org.hibernate.cfg.SettingsFactory;
  * @since 3.5
  */
 public class JndiInfinispanRegionFactoryTestCase {
-   @Test
-   public void testConstruction() {
-      Properties p = new Properties();
-      p.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.infinispan.JndiInfinispanRegionFactory");
-      SettingsFactory.createRegionFactory(p, true);
-   }
+	@Test
+	public void testConstruction() {
+		Properties p = new Properties();
+		p.setProperty(
+				"hibernate.cache.region.factory_class",
+				"org.hibernate.cache.infinispan.JndiInfinispanRegionFactory"
+		);
+		SettingsFactory.createRegionFactory( p, true );
+	}
 }

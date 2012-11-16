@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.cache.infinispan.functional;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -32,11 +33,11 @@ import javax.persistence.NamedQuery;
 /**
  * @author Galder Zamarreño
  */
-@NamedQueries({@NamedQuery(name=Age.QUERY, query = "SELECT a FROM Age a")})
+@NamedQueries({ @NamedQuery(name = Age.QUERY, query = "SELECT a FROM Age a") })
 @Entity
 public class Age {
 
-   public static final String QUERY = "Age.findAll";
+	public static final String QUERY = "Age.findAll";
 
 	@Id
 	@GeneratedValue
@@ -51,11 +52,11 @@ public class Age {
 		this.id = id;
 	}
 
-   public Integer getAge() {
-      return age;
-   }
+	public Integer getAge() {
+		return age;
+	}
 
-   public void setAge(Integer age) {
-      this.age = age;
-   }
+	public void setAge(Integer age) {
+		this.age = age;
+	}
 }

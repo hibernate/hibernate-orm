@@ -59,31 +59,33 @@ import static org.junit.Assert.fail;
  */
 public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
-   @Override
-   protected Class<?>[] getAnnotatedClasses() {
-      return new Class[] {
-            Citizen.class, State.class,
-            NaturalIdOnManyToOne.class
-      };
-   }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				Citizen.class, State.class,
+				NaturalIdOnManyToOne.class
+		};
+	}
 
-   @After
-   public void cleanupData() throws Exception {
-      super.cleanupCache();
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = sessionFactory().openSession();
-            s.beginTransaction();
-            s.createQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
-            s.createQuery( "delete Citizen" ).executeUpdate();
-            s.createQuery( "delete State" ).executeUpdate();
-            s.getTransaction().commit();
-            s.close();
-            return null;
-         }
-      });
-   }
+	@After
+	public void cleanupData() throws Exception {
+		super.cleanupCache();
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = sessionFactory().openSession();
+				s.beginTransaction();
+				s.createQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
+				s.createQuery( "delete Citizen" ).executeUpdate();
+				s.createQuery( "delete State" ).executeUpdate();
+				s.getTransaction().commit();
+				s.close();
+				return null;
+			}
+		}
+		);
+	}
 
 	@Test
 	public void testCollectionCache() throws Exception {
@@ -94,46 +96,52 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		final Item another = new Item( "another", "Owned Item" );
 		item.addItem( another );
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            s.getTransaction().begin();
-            s.persist( item );
-            s.persist( another );
-            s.getTransaction().commit();
-            s.close();
-            return null;
-         }
-      });
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				s.getTransaction().begin();
+				s.persist( item );
+				s.persist( another );
+				s.getTransaction().commit();
+				s.close();
+				return null;
+			}
+		}
+		);
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Item loaded = (Item) s.load( Item.class, item.getId() );
-            assertEquals( 1, loaded.getItems().size() );
-            s.close();
-            return null;
-         }
-      });
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Item loaded = (Item) s.load( Item.class, item.getId() );
+				assertEquals( 1, loaded.getItems().size() );
+				s.close();
+				return null;
+			}
+		}
+		);
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
-            Item loadedWithCachedCollection = (Item) s.load( Item.class, item.getId() );
-            stats.logSummary();
-            assertEquals( item.getName(), loadedWithCachedCollection.getName() );
-            assertEquals( item.getItems().size(), loadedWithCachedCollection.getItems().size() );
-            assertEquals( 1, cStats.getHitCount() );
-            Map cacheEntries = cStats.getEntries();
-            assertEquals( 1, cacheEntries.size() );
-            s.close();
-            return null;
-         }
-      });
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+				Item loadedWithCachedCollection = (Item) s.load( Item.class, item.getId() );
+				stats.logSummary();
+				assertEquals( item.getName(), loadedWithCachedCollection.getName() );
+				assertEquals( item.getItems().size(), loadedWithCachedCollection.getItems().size() );
+				assertEquals( 1, cStats.getHitCount() );
+				Map cacheEntries = cStats.getEntries();
+				assertEquals( 1, cacheEntries.size() );
+				s.close();
+				return null;
+			}
+		}
+		);
 	}
 
 	@Test
@@ -156,7 +164,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			txn.commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -172,12 +180,12 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		try {
 			s = openSession();
 			txn = s.beginTransaction();
-			s.update(item);
+			s.update( item );
 			txn.commit();
-			fail("expected stale write to fail");
+			fail( "expected stale write to fail" );
 		}
-		catch (Exception e) {
-			setRollbackOnlyTxExpected(e);
+		catch ( Exception e ) {
+			setRollbackOnlyTxExpected( e );
 		}
 		finally {
 			commitOrRollbackTx();
@@ -185,7 +193,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 				try {
 					s.close();
 				}
-				catch (Throwable ignore) {
+				catch ( Throwable ignore ) {
 				}
 			}
 		}
@@ -195,8 +203,8 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
 		Object entry = slcs.getEntries().get( item.getId() );
 		Long cachedVersionValue;
-		cachedVersionValue = (Long) ((CacheEntry) entry).getVersion();
-		assertEquals(initialVersion.longValue(), cachedVersionValue.longValue());
+		cachedVersionValue = (Long) ( (CacheEntry) entry ).getVersion();
+		assertEquals( initialVersion.longValue(), cachedVersionValue.longValue() );
 
 		beginTx();
 		try {
@@ -208,7 +216,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			txn.commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -224,7 +232,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
 		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
 
-		assertEquals(0, slcs.getPutCount());
+		assertEquals( 0, slcs.getPutCount() );
 		assertEquals( 0, slcs.getElementCountInMemory() );
 		assertEquals( 0, slcs.getEntries().size() );
 
@@ -243,7 +251,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			t.commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -266,7 +274,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			t.commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -279,26 +287,26 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		Serializable[] ser = entry.getDisassembledState();
 		boolean foundFirstOne = false;
 		boolean foundSecondOne = false;
-		for(Serializable serializable : ser){
-			if("widget".equals( serializable )){
+		for ( Serializable serializable : ser ) {
+			if ( "widget".equals( serializable ) ) {
 				foundFirstOne = true;
 			}
-			if("A bog standard item".equals( serializable )){
+			if ( "A bog standard item".equals( serializable ) ) {
 				foundSecondOne = true;
 			}
 		}
-		Assert.assertTrue(foundFirstOne && foundSecondOne);
+		Assert.assertTrue( foundFirstOne && foundSecondOne );
 
 		beginTx();
 		try {
 			// cleanup
 			s = openSession();
 			t = s.beginTransaction();
-			s.delete(i);
+			s.delete( i );
 			t.commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -322,7 +330,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s.getTransaction().commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -340,7 +348,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s.createQuery( "from Item" ).setCacheable( true ).list();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -355,7 +363,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s.createQuery( "delete from Item" ).executeUpdate();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -379,7 +387,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s.getTransaction().commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -399,7 +407,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			assertEquals( 1, stats.getQueryCacheHitCount() );
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -412,7 +420,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			s.createQuery( "delete from Item" ).executeUpdate();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -420,197 +428,207 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		}
 	}
 
-   @Test
-   public void testNaturalIdCached() throws Exception {
-      saveSomeCitizens();
+	@Test
+	public void testNaturalIdCached() throws Exception {
+		saveSomeCitizens();
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Transaction tx = s.beginTransaction();
-            State france = BasicTransactionalTestCase.this.getState(s, "Ile de France");
-            Criteria criteria = s.createCriteria( Citizen.class );
-            criteria.add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", france ) );
-            criteria.setCacheable( true );
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				State france = BasicTransactionalTestCase.this.getState( s, "Ile de France" );
+				Criteria criteria = s.createCriteria( Citizen.class );
+				criteria.add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", france ) );
+				criteria.setCacheable( true );
 
-            BasicTransactionalTestCase.this.cleanupCache();
+				BasicTransactionalTestCase.this.cleanupCache();
 
-            Statistics stats = sessionFactory().getStatistics();
-            stats.setStatisticsEnabled( true );
-            stats.clear();
-            assertEquals(
-                  "Cache hits should be empty", 0, stats
-                  .getNaturalIdCacheHitCount()
-            );
+				Statistics stats = sessionFactory().getStatistics();
+				stats.setStatisticsEnabled( true );
+				stats.clear();
+				assertEquals(
+						"Cache hits should be empty", 0, stats
+						.getNaturalIdCacheHitCount()
+				);
 
-            // first query
-            List results = criteria.list();
-            assertEquals( 1, results.size() );
-            assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
-            assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-            assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
-            assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
+				// first query
+				List results = criteria.list();
+				assertEquals( 1, results.size() );
+				assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+				assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
+				assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
+				assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
-            // query a second time - result should be cached in session
-            criteria.list();
-            assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
-            assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-            assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
-            assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
+				// query a second time - result should be cached in session
+				criteria.list();
+				assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+				assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
+				assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
+				assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
-            // cleanup
-            tx.rollback();
-            s.close();
-            return null;
-         }
-      });
-   }
+				// cleanup
+				tx.rollback();
+				s.close();
+				return null;
+			}
+		}
+		);
+	}
 
-   @Test
-   public void testNaturalIdLoaderCached() throws Exception {
-      final Statistics stats = sessionFactory().getStatistics();
-      stats.setStatisticsEnabled( true );
-      stats.clear();
+	@Test
+	public void testNaturalIdLoaderCached() throws Exception {
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.setStatisticsEnabled( true );
+		stats.clear();
 
-      assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
-      assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-      assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
-      assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
+		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-      saveSomeCitizens();
+		saveSomeCitizens();
 
-      assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
-      assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-      assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
-      assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
+		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
+		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-      //Try NaturalIdLoadAccess after insert
-      final Citizen citizen = withTx(tm, new Callable<Citizen>() {
-         @Override
-         public Citizen call() throws Exception {
-            Session s = openSession();
-            Transaction tx = s.beginTransaction();
-            State france = BasicTransactionalTestCase.this.getState(s, "Ile de France");
-            NaturalIdLoadAccess naturalIdLoader = s.byNaturalId(Citizen.class);
-            naturalIdLoader.using("ssn", "1234").using("state", france);
+		//Try NaturalIdLoadAccess after insert
+		final Citizen citizen = withTx(
+				tm, new Callable<Citizen>() {
+			@Override
+			public Citizen call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				State france = BasicTransactionalTestCase.this.getState( s, "Ile de France" );
+				NaturalIdLoadAccess naturalIdLoader = s.byNaturalId( Citizen.class );
+				naturalIdLoader.using( "ssn", "1234" ).using( "state", france );
 
-            //Not clearing naturalId caches, should be warm from entity loading
-            stats.clear();
+				//Not clearing naturalId caches, should be warm from entity loading
+				stats.clear();
 
-            // first query
-            Citizen citizen = (Citizen) naturalIdLoader.load();
-            assertNotNull(citizen);
-            assertEquals("NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount());
-            assertEquals("NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount());
-            assertEquals("NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount());
-            assertEquals("NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount());
+				// first query
+				Citizen citizen = (Citizen) naturalIdLoader.load();
+				assertNotNull( citizen );
+				assertEquals( "NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount() );
+				assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
+				assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
+				assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-            // cleanup
-            tx.rollback();
-            s.close();
-            return citizen;
-         }
-      });
+				// cleanup
+				tx.rollback();
+				s.close();
+				return citizen;
+			}
+		}
+		);
 
-      // TODO: Clear caches manually via cache manager (it's faster!!)
-      this.cleanupCache();
-      Thread.sleep(PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD + TimeUnit.SECONDS.toMillis(1));
-      stats.setStatisticsEnabled( true );
-      stats.clear();
+		// TODO: Clear caches manually via cache manager (it's faster!!)
+		this.cleanupCache();
+		Thread.sleep( PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD + TimeUnit.SECONDS.toMillis( 1 ) );
+		stats.setStatisticsEnabled( true );
+		stats.clear();
 
-      //Try NaturalIdLoadAccess
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Transaction tx = s.beginTransaction();
+		//Try NaturalIdLoadAccess
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
 
-            // first query
-            Citizen loadedCitizen = (Citizen) s.get( Citizen.class, citizen.getId() );
-            assertNotNull( loadedCitizen );
-            assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
-            assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-            assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
-            assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
+				// first query
+				Citizen loadedCitizen = (Citizen) s.get( Citizen.class, citizen.getId() );
+				assertNotNull( loadedCitizen );
+				assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
+				assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
+				assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
+				assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-            // cleanup
-            tx.rollback();
-            s.close();
-            return null;
-         }
-      });
+				// cleanup
+				tx.rollback();
+				s.close();
+				return null;
+			}
+		}
+		);
 
-      // Try NaturalIdLoadAccess after load
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Transaction tx = s.beginTransaction();
-            State france = BasicTransactionalTestCase.this.getState(s, "Ile de France");
-            NaturalIdLoadAccess naturalIdLoader = s.byNaturalId(Citizen.class);
-            naturalIdLoader.using( "ssn", "1234" ).using( "state", france );
+		// Try NaturalIdLoadAccess after load
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				State france = BasicTransactionalTestCase.this.getState( s, "Ile de France" );
+				NaturalIdLoadAccess naturalIdLoader = s.byNaturalId( Citizen.class );
+				naturalIdLoader.using( "ssn", "1234" ).using( "state", france );
 
-            //Not clearing naturalId caches, should be warm from entity loading
-            stats.setStatisticsEnabled( true );
-            stats.clear();
+				//Not clearing naturalId caches, should be warm from entity loading
+				stats.setStatisticsEnabled( true );
+				stats.clear();
 
-            // first query
-            Citizen loadedCitizen = (Citizen) naturalIdLoader.load();
-            assertNotNull( loadedCitizen );
-            assertEquals( "NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount() );
-            assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
-            assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
-            assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
+				// first query
+				Citizen loadedCitizen = (Citizen) naturalIdLoader.load();
+				assertNotNull( loadedCitizen );
+				assertEquals( "NaturalId Cache Hits", 1, stats.getNaturalIdCacheHitCount() );
+				assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
+				assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
+				assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-            // cleanup
-            tx.rollback();
-            s.close();
-            return null;
-         }
-      });
+				// cleanup
+				tx.rollback();
+				s.close();
+				return null;
+			}
+		}
+		);
 
-   }
+	}
 
-   private void saveSomeCitizens() throws Exception {
-      final Citizen c1 = new Citizen();
-      c1.setFirstname( "Emmanuel" );
-      c1.setLastname( "Bernard" );
-      c1.setSsn( "1234" );
+	private void saveSomeCitizens() throws Exception {
+		final Citizen c1 = new Citizen();
+		c1.setFirstname( "Emmanuel" );
+		c1.setLastname( "Bernard" );
+		c1.setSsn( "1234" );
 
-      final State france = new State();
-      france.setName( "Ile de France" );
-      c1.setState( france );
+		final State france = new State();
+		france.setName( "Ile de France" );
+		c1.setState( france );
 
-      final Citizen c2 = new Citizen();
-      c2.setFirstname( "Gavin" );
-      c2.setLastname( "King" );
-      c2.setSsn( "000" );
-      final State australia = new State();
-      australia.setName( "Australia" );
-      c2.setState( australia );
+		final Citizen c2 = new Citizen();
+		c2.setFirstname( "Gavin" );
+		c2.setLastname( "King" );
+		c2.setSsn( "000" );
+		final State australia = new State();
+		australia.setName( "Australia" );
+		c2.setState( australia );
 
-      withTx(tm, new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            Session s = openSession();
-            Transaction tx = s.beginTransaction();
-            s.persist( australia );
-            s.persist( france );
-            s.persist( c1 );
-            s.persist( c2 );
-            tx.commit();
-            s.close();
-            return null;
-         }
-      });
-   }
+		withTx(
+				tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				s.persist( australia );
+				s.persist( france );
+				s.persist( c1 );
+				s.persist( c2 );
+				tx.commit();
+				s.close();
+				return null;
+			}
+		}
+		);
+	}
 
-   private State getState(Session s, String name) {
-      Criteria criteria = s.createCriteria( State.class );
-      criteria.add( Restrictions.eq("name", name) );
-      criteria.setCacheable(true);
-      return (State) criteria.list().get( 0 );
-   }
+	private State getState(Session s, String name) {
+		Criteria criteria = s.createCriteria( State.class );
+		criteria.add( Restrictions.eq( "name", name ) );
+		criteria.setCacheable( true );
+		return (State) criteria.list().get( 0 );
+	}
 
 }

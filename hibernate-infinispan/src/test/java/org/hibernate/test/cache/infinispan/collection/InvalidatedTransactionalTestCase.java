@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * InvalidatedTransactionalTestCase.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
@@ -35,8 +35,8 @@ public class InvalidatedTransactionalTestCase extends AbstractTransactionalAcces
 	@Test
 	@Override
 	public void testCacheConfiguration() {
-		assertTrue("Using Invalidation", isUsingInvalidation());
-		assertTrue("Synchronous mode", isSynchronous());
+		assertTrue( "Using Invalidation", isUsingInvalidation() );
+		assertTrue( "Synchronous mode", isSynchronous() );
 	}
 
 	@Override

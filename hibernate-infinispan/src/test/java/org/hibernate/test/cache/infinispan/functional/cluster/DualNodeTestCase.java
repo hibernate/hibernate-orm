@@ -115,7 +115,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 		try {
 			Thread.sleep( ms );
 		}
-		catch (InterruptedException e) {
+		catch ( InterruptedException e ) {
 			log.warn( "Interrupted during sleep", e );
 		}
 	}
@@ -150,7 +150,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			configuration.setProperty( NODE_ID_PROP, REMOTE );
 			configuration.setProperty( NODE_ID_FIELD, REMOTE );
 			configureSecondNode( configuration );
-			addMappings(configuration);
+			addMappings( configuration );
 			configuration.buildMappings();
 			applyCacheSettings( configuration );
 			afterConfigurationBuilt( configuration );
@@ -176,7 +176,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 					sessionFactory.close();
 					sessionFactory = null;
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 			}
 			if ( serviceRegistry != null ) {
@@ -184,7 +184,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 					serviceRegistry.destroy();
 					serviceRegistry = null;
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 			}
 		}

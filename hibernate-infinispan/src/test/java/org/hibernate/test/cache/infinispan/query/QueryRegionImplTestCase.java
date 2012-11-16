@@ -29,7 +29,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
+
 import org.hibernate.cache.infinispan.util.Caches;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
@@ -77,29 +79,33 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 		return regionPrefix + "/" + StandardQueryCache.class.getName();
 	}
 
-   @Override
-   protected void regionPut(final GeneralDataRegion region) throws Exception {
-      Caches.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            region.put(KEY, VALUE1);
-            return null;
-         }
-      });
-   }
+	@Override
+	protected void regionPut(final GeneralDataRegion region) throws Exception {
+		Caches.withinTx(
+				BatchModeTransactionManager.getInstance(), new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				region.put( KEY, VALUE1 );
+				return null;
+			}
+		}
+		);
+	}
 
-   @Override
-   protected void regionEvict(final GeneralDataRegion region) throws Exception {
-      Caches.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            region.evict(KEY);
-            return null;
-         }
-      });
-   }
+	@Override
+	protected void regionEvict(final GeneralDataRegion region) throws Exception {
+		Caches.withinTx(
+				BatchModeTransactionManager.getInstance(), new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				region.evict( KEY );
+				return null;
+			}
+		}
+		);
+	}
 
-   @Override
+	@Override
 	protected AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory) {
 		return regionFactory.getCacheManager().getCache( "local-query" ).getAdvancedCache();
 	}
@@ -107,7 +113,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 	@Override
 	protected Configuration createConfiguration() {
 		Configuration cfg = super.createConfiguration();
-		cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP,  "replicated-query");
+		cfg.setProperty( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query" );
 
 //		return CacheTestUtil.buildCustomQueryCacheConfiguration( "test", "replicated-query" );
 		return cfg;
@@ -146,11 +152,11 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 					assertTrue( VALUE2.equals( region.get( KEY ) ) == false );
 					BatchModeTransactionManager.getInstance().commit();
 				}
-				catch (AssertionFailedError e) {
+				catch ( AssertionFailedError e ) {
 					holder.a1 = e;
 					rollback();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					holder.e1 = e;
 					rollback();
 				}
@@ -173,7 +179,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 					BatchModeTransactionManager.getInstance().commit();
 					log.debug( "Transaction committed" );
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					holder.e2 = e;
 					rollback();
 				}
@@ -233,7 +239,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 		assertEquals( VALUE1, region.get( KEY ) );
 
 		// final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
-		final AdvancedCache jbc = getInfinispanCache(regionFactory);
+		final AdvancedCache jbc = getInfinispanCache( regionFactory );
 
 		final CountDownLatch blockerLatch = new CountDownLatch( 1 );
 		final CountDownLatch writerLatch = new CountDownLatch( 1 );
@@ -253,7 +259,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 					region.get( KEY );
 					BatchModeTransactionManager.getInstance().commit();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					holder.e1 = e;
 					rollback();
 				}
@@ -274,7 +280,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 					region.put( KEY, VALUE2 );
 					BatchModeTransactionManager.getInstance().commit();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					holder.e2 = e;
 					rollback();
 				}
@@ -345,7 +351,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 				try {
 					latch.await();
 				}
-				catch (InterruptedException e) {
+				catch ( InterruptedException e ) {
 					log.error( "Interrupted waiting for latch", e );
 				}
 			}

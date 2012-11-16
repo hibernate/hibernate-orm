@@ -46,103 +46,105 @@ public class CacheTestSupport {
 
 	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 
-    private Set<Cache> caches = new HashSet();
-    private Map<InfinispanRegionFactory, SessionFactoryImplementor> factories = new HashMap();
-    private Exception exception;
-    private String preferIPv4Stack;
+	private Set<Cache> caches = new HashSet();
+	private Map<InfinispanRegionFactory, SessionFactoryImplementor> factories = new HashMap();
+	private Exception exception;
+	private String preferIPv4Stack;
 
-    public void registerCache(Cache cache) {
-        caches.add(cache);
-    }
+	public void registerCache(Cache cache) {
+		caches.add( cache );
+	}
 
-    public void registerFactory(InfinispanRegionFactory regionFactory, SessionFactoryImplementor factory) {
-        factories.put( regionFactory, factory );
-    }
+	public void registerFactory(InfinispanRegionFactory regionFactory, SessionFactoryImplementor factory) {
+		factories.put( regionFactory, factory );
+	}
 
-    public void unregisterCache(Cache cache) {
-        caches.remove( cache );
-    }
+	public void unregisterCache(Cache cache) {
+		caches.remove( cache );
+	}
 
-    public SessionFactoryImplementor unregisterFactory(InfinispanRegionFactory regionFactory) {
-        return factories.remove( regionFactory );
-    }
+	public SessionFactoryImplementor unregisterFactory(InfinispanRegionFactory regionFactory) {
+		return factories.remove( regionFactory );
+	}
 
-    public void setUp() throws Exception {
-        // Try to ensure we use IPv4; otherwise cluster formation is very slow
-        preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
-        System.setProperty(PREFER_IPV4STACK, "true");
+	public void setUp() throws Exception {
+		// Try to ensure we use IPv4; otherwise cluster formation is very slow
+		preferIPv4Stack = System.getProperty( PREFER_IPV4STACK );
+		System.setProperty( PREFER_IPV4STACK, "true" );
 
-        cleanUp();
-        throwStoredException();
-    }
+		cleanUp();
+		throwStoredException();
+	}
 
-    public void tearDown() throws Exception {
-        if (preferIPv4Stack == null)
-            System.clearProperty(PREFER_IPV4STACK);
-        else
-            System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);
+	public void tearDown() throws Exception {
+		if ( preferIPv4Stack == null ) {
+			System.clearProperty( PREFER_IPV4STACK );
+		}
+		else {
+			System.setProperty( PREFER_IPV4STACK, preferIPv4Stack );
+		}
 
-        cleanUp();
-        throwStoredException();
-    }
+		cleanUp();
+		throwStoredException();
+	}
 
-    public void avoidConcurrentFlush() {
-       // JG 2.6.1 has a problem where calling flush more than once too quickly
-       // can result in several second delays
-       sleep( 100 );
-    }
+	public void avoidConcurrentFlush() {
+		// JG 2.6.1 has a problem where calling flush more than once too quickly
+		// can result in several second delays
+		sleep( 100 );
+	}
 
-    private void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        }
-        catch (InterruptedException e) {
-            log.warn("Interrupted during sleep", e);
-        }
-    }
+	private void sleep(long ms) {
+		try {
+			Thread.sleep( ms );
+		}
+		catch ( InterruptedException e ) {
+			log.warn( "Interrupted during sleep", e );
+		}
+	}
 
-    private void cleanUp() {
-        for (Iterator it = factories.values().iterator(); it.hasNext(); ) {
-            try {
-                ((SessionFactoryImplementor) it.next()).close();
-            }
-            catch (Exception e) {
-                storeException(e);
-            }
-            finally {
-                it.remove();
-            }
-        }
-        factories.clear();
+	private void cleanUp() {
+		for ( Iterator it = factories.values().iterator(); it.hasNext(); ) {
+			try {
+				( (SessionFactoryImplementor) it.next() ).close();
+			}
+			catch ( Exception e ) {
+				storeException( e );
+			}
+			finally {
+				it.remove();
+			}
+		}
+		factories.clear();
 
-        for (Iterator it = caches.iterator(); it.hasNext(); ) {
-            try {
-                Cache cache = (Cache) it.next();
-                cache.stop();
-            }
-            catch (Exception e) {
-                storeException(e);
-            }
-            finally {
-                it.remove();
-            }
-            avoidConcurrentFlush();
-        }
-        caches.clear();
-    }
+		for ( Iterator it = caches.iterator(); it.hasNext(); ) {
+			try {
+				Cache cache = (Cache) it.next();
+				cache.stop();
+			}
+			catch ( Exception e ) {
+				storeException( e );
+			}
+			finally {
+				it.remove();
+			}
+			avoidConcurrentFlush();
+		}
+		caches.clear();
+	}
 
-    private void storeException(Exception e) {
-        if (this.exception == null) {
-            this.exception = e;
-        }
-    }
+	private void storeException(Exception e) {
+		if ( this.exception == null ) {
+			this.exception = e;
+		}
+	}
 
-    private void throwStoredException() throws Exception {
-        if (exception != null) {
-            Exception toThrow = exception;
-            exception = null;
-            throw toThrow;
-        }
-    }
+	private void throwStoredException() throws Exception {
+		if ( exception != null ) {
+			Exception toThrow = exception;
+			exception = null;
+			throw toThrow;
+		}
+	}
 
 }

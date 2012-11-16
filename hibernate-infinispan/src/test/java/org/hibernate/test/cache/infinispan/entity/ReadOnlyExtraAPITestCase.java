@@ -20,6 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.entity;
+
 import org.hibernate.cache.spi.access.AccessType;
 
 import static org.junit.Assert.fail;
@@ -44,10 +45,11 @@ public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
 	public void testAfterUpdate() {
 		try {
 			getEntityAccessStrategy().afterUpdate(
-               KEY, VALUE2, 1, 2, new MockSoftLock());
+					KEY, VALUE2, 1, 2, new MockSoftLock()
+			);
 			fail( "Call to afterUpdate did not throw exception" );
 		}
-		catch (UnsupportedOperationException expected) {
+		catch ( UnsupportedOperationException expected ) {
 		}
 	}
 

@@ -39,49 +39,53 @@ import static org.junit.Assert.assertNull;
  */
 public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
 
-   @Override
-   protected AccessType getAccessType() {
-      return AccessType.READ_ONLY;
-   }
+	@Override
+	protected AccessType getAccessType() {
+		return AccessType.READ_ONLY;
+	}
 
-   @Test
-   @Override
-   public void testPutFromLoad() throws Exception {
-      putFromLoadTest(false);
-   }
+	@Test
+	@Override
+	public void testPutFromLoad() throws Exception {
+		putFromLoadTest( false );
+	}
 
-   @Test
-   @Override
-   public void testPutFromLoadMinimal() throws Exception {
-      putFromLoadTest(true);
-   }
+	@Test
+	@Override
+	public void testPutFromLoadMinimal() throws Exception {
+		putFromLoadTest( true );
+	}
 
-   private void putFromLoadTest(boolean minimal) throws Exception {
+	private void putFromLoadTest(boolean minimal) throws Exception {
 
-      final String KEY = KEY_BASE + testCount++;
+		final String KEY = KEY_BASE + testCount++;
 
-      long txTimestamp = System.currentTimeMillis();
-      BatchModeTransactionManager.getInstance().begin();
-      assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
-      if (minimal)
-         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1, true);
-      else
-         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1);
+		long txTimestamp = System.currentTimeMillis();
+		BatchModeTransactionManager.getInstance().begin();
+		assertNull( localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		if ( minimal ) {
+			localAccessStrategy.putFromLoad( KEY, VALUE1, txTimestamp, 1, true );
+		}
+		else {
+			localAccessStrategy.putFromLoad( KEY, VALUE1, txTimestamp, 1 );
+		}
 
-      sleep(250);
-      Object expected = isUsingInvalidation() ? null : VALUE1;
-      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+		sleep( 250 );
+		Object expected = isUsingInvalidation() ? null : VALUE1;
+		assertEquals( expected, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
-      BatchModeTransactionManager.getInstance().commit();
-      assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
-      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-   }
+		BatchModeTransactionManager.getInstance().commit();
+		assertEquals( VALUE1, localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertEquals( expected, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+	}
 
-   @Test(expected = UnsupportedOperationException.class)
-   @Override
-   public void testUpdate() throws Exception {
-      localAccessStrategy.update(KEY_BASE + testCount++,
-            VALUE2, 2, 1);
-   }
+	@Test(expected = UnsupportedOperationException.class)
+	@Override
+	public void testUpdate() throws Exception {
+		localAccessStrategy.update(
+				KEY_BASE + testCount++,
+				VALUE2, 2, 1
+		);
+	}
 
 }

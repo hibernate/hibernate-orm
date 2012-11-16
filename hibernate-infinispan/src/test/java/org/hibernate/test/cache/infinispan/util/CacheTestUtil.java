@@ -37,33 +37,34 @@ import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 
 /**
  * Utilities for cache testing.
- * 
+ *
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public class CacheTestUtil {
 
-   public static Configuration buildConfiguration(String regionPrefix,
-         Class regionFactory, boolean use2ndLevel, boolean useQueries) {
-      Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-      cfg.setProperty(Environment.USE_STRUCTURED_CACHE, "true");
-      cfg.setProperty( AvailableSettings.JTA_PLATFORM, BatchModeJtaPlatform.class.getName() );
+	public static Configuration buildConfiguration(String regionPrefix,
+												   Class regionFactory, boolean use2ndLevel, boolean useQueries) {
+		Configuration cfg = new Configuration();
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.USE_STRUCTURED_CACHE, "true" );
+		cfg.setProperty( AvailableSettings.JTA_PLATFORM, BatchModeJtaPlatform.class.getName() );
 
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY, regionFactory.getName());
-      cfg.setProperty(Environment.CACHE_REGION_PREFIX, regionPrefix);
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, String.valueOf(use2ndLevel));
-      cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(useQueries));
+		cfg.setProperty( Environment.CACHE_REGION_FACTORY, regionFactory.getName() );
+		cfg.setProperty( Environment.CACHE_REGION_PREFIX, regionPrefix );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, String.valueOf( use2ndLevel ) );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( useQueries ) );
 
-      return cfg;
-   }
+		return cfg;
+	}
 
-   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry,
-         Configuration cfg, CacheTestSupport testSupport) {
-	   SessionFactoryImplementor sessionFactory =(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-	   InfinispanRegionFactory factory =  (InfinispanRegionFactory) sessionFactory.getServiceRegistry().getService( RegionFactory.class );
-	   testSupport.registerFactory(factory, sessionFactory);
-	   return factory;
-   }
+	public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry,
+															 Configuration cfg, CacheTestSupport testSupport) {
+		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		InfinispanRegionFactory factory = (InfinispanRegionFactory) sessionFactory.getServiceRegistry()
+				.getService( RegionFactory.class );
+		testSupport.registerFactory( factory, sessionFactory );
+		return factory;
+	}
 
 	public static void stopRegionFactory(InfinispanRegionFactory factory,
 										 CacheTestSupport testSupport) {
@@ -73,9 +74,9 @@ public class CacheTestUtil {
 	}
 
 	/**
-    * Prevent instantiation.
-    */
-   private CacheTestUtil() {
-   }
+	 * Prevent instantiation.
+	 */
+	private CacheTestUtil() {
+	}
 
 }

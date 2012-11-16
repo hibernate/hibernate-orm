@@ -22,45 +22,46 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
+
 import java.io.Serializable;
 import java.util.Set;
 
 /**
  * Company customer
- * 
+ *
  * @author Emmanuel Bernard
  * @author Kabir Khan
  */
 public class Customer implements Serializable {
-   Integer id;
-   String name;
+	Integer id;
+	String name;
 
-   private transient Set<Contact> contacts;
+	private transient Set<Contact> contacts;
 
-   public Customer() {
-   }
+	public Customer() {
+	}
 
-   public Integer getId() {
-      return id;
-   }
+	public Integer getId() {
+		return id;
+	}
 
-   public void setId(Integer id) {
-      this.id = id;
-   }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-   public String getName() {
-      return name;
-   }
+	public String getName() {
+		return name;
+	}
 
-   public void setName(String string) {
-      name = string;
-   }
+	public void setName(String string) {
+		name = string;
+	}
 
-   public Set<Contact> getContacts() {
-      return contacts;
-   }
+	public Set<Contact> getContacts() {
+		return contacts;
+	}
 
-   public void setContacts(Set<Contact> contacts) {
-      this.contacts = contacts;
-   }
+	public void setContacts(Set<Contact> contacts) {
+		this.contacts = contacts;
+	}
 }

@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -47,38 +48,39 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * ClusterAwareRegionFactory.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class ClusterAwareRegionFactory extends AbstractRegionFactory {
-   
-   private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
-   private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
 
-   private final InfinispanRegionFactory delegate =
-         new SingleNodeTestCase.TestInfinispanRegionFactory();
-   private String cacheManagerName;
-   private boolean locallyAdded;
+	private static final Log log = LogFactory.getLog( ClusterAwareRegionFactory.class );
+	private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
 
-   public static EmbeddedCacheManager getCacheManager(String name) {
-      return cacheManagers.get(name);
-   }
-   
-   public static void addCacheManager(String name, EmbeddedCacheManager manager) {
-      cacheManagers.put(name, manager);
-   }
-   
-   public static void clearCacheManagers() {
-      for (EmbeddedCacheManager manager : cacheManagers.values()) {
-         try {
-            manager.stop();
-         } catch (Exception e) {
-            log.error("Exception cleaning up CacheManager " + manager, e);
-         }
-      }
-      cacheManagers.clear();      
-   }
+	private final InfinispanRegionFactory delegate =
+			new SingleNodeTestCase.TestInfinispanRegionFactory();
+	private String cacheManagerName;
+	private boolean locallyAdded;
+
+	public static EmbeddedCacheManager getCacheManager(String name) {
+		return cacheManagers.get( name );
+	}
+
+	public static void addCacheManager(String name, EmbeddedCacheManager manager) {
+		cacheManagers.put( name, manager );
+	}
+
+	public static void clearCacheManagers() {
+		for ( EmbeddedCacheManager manager : cacheManagers.values() ) {
+			try {
+				manager.stop();
+			}
+			catch ( Exception e ) {
+				log.error( "Exception cleaning up CacheManager " + manager, e );
+			}
+		}
+		cacheManagers.clear();
+	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -88,63 +90,66 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 	}
 
 	@InjectService
-	public void setConfigurationService(ConfigurationService configurationService){
+	public void setConfigurationService(ConfigurationService configurationService) {
 		cacheManagerName = configurationService.getSetting( DualNodeTestCase.NODE_ID_PROP, StandardConverters.STRING );
 	}
 
 	@Override
 	public void start() {
 
-		EmbeddedCacheManager existing = getCacheManager(cacheManagerName);
-		locallyAdded = (existing == null);
+		EmbeddedCacheManager existing = getCacheManager( cacheManagerName );
+		locallyAdded = ( existing == null );
 
-		if (locallyAdded) {
+		if ( locallyAdded ) {
 			delegate.start();
-			cacheManagers.put(cacheManagerName, delegate.getCacheManager());
-		} else {
+			cacheManagers.put( cacheManagerName, delegate.getCacheManager() );
+		}
+		else {
 			delegate.initGenericDataTypeOverrides();
-			delegate.setCacheManager(existing);
+			delegate.setCacheManager( existing );
 		}
 	}
 
 	public void start(Settings settings, Properties properties) throws CacheException {
-        start();
-   }
+		start();
+	}
 
-   public void stop() {
-      if (locallyAdded) cacheManagers.remove(cacheManagerName);     
-      delegate.stop();
-   }
+	public void stop() {
+		if ( locallyAdded ) {
+			cacheManagers.remove( cacheManagerName );
+		}
+		delegate.stop();
+	}
 
-   public CollectionRegion buildCollectionRegion(String regionName, Properties properties,
-            CacheDataDescription metadata) throws CacheException {
-      return delegate.buildCollectionRegion(regionName, properties, metadata);
-   }
+	public CollectionRegion buildCollectionRegion(String regionName, Properties properties,
+												  CacheDataDescription metadata) throws CacheException {
+		return delegate.buildCollectionRegion( regionName, properties, metadata );
+	}
 
-   public EntityRegion buildEntityRegion(String regionName, Properties properties,
-            CacheDataDescription metadata) throws CacheException {
-      return delegate.buildEntityRegion(regionName, properties, metadata);
-   }
-   
-   @Override
+	public EntityRegion buildEntityRegion(String regionName, Properties properties,
+										  CacheDataDescription metadata) throws CacheException {
+		return delegate.buildEntityRegion( regionName, properties, metadata );
+	}
+
+	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		return delegate.buildNaturalIdRegion( regionName, properties, metadata );
 	}
 
-   public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
-            throws CacheException {
-      return delegate.buildQueryResultsRegion(regionName, properties);
-   }
+	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
+			throws CacheException {
+		return delegate.buildQueryResultsRegion( regionName, properties );
+	}
 
-   public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
-            throws CacheException {
-      return delegate.buildTimestampsRegion(regionName, properties);
-   }
+	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
+			throws CacheException {
+		return delegate.buildTimestampsRegion( regionName, properties );
+	}
 
-   public boolean isMinimalPutsEnabledByDefault() {
-      return delegate.isMinimalPutsEnabledByDefault();
-   }
+	public boolean isMinimalPutsEnabledByDefault() {
+		return delegate.isMinimalPutsEnabledByDefault();
+	}
 
 	@Override
 	public AccessType getDefaultAccessType() {
@@ -152,6 +157,6 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 	}
 
 	public long nextTimestamp() {
-      return delegate.nextTimestamp();
-   }
+		return delegate.nextTimestamp();
+	}
 }

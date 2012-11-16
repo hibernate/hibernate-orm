@@ -37,13 +37,13 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
 /**
  * A {@link ConnectionProvider} implementation adding JTA-style transactionality around the returned
  * connections using the {@link DualNodeJtaTransactionManagerImpl}.
- * 
+ *
  * @author Brian Stansberry
  */
 public class DualNodeConnectionProviderImpl implements ConnectionProvider, Configurable {
-   private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
-   private String nodeId;
-   private boolean isTransactional;
+	private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
+	private String nodeId;
+	private boolean isTransactional;
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -52,7 +52,7 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( DualNodeConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
@@ -65,49 +65,50 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider, Confi
 		}
 	}
 
-   public static ConnectionProvider getActualConnectionProvider() {
-      return actualConnectionProvider;
-   }
+	public static ConnectionProvider getActualConnectionProvider() {
+		return actualConnectionProvider;
+	}
 
-   public void setNodeId(String nodeId) throws HibernateException {
-      if (nodeId == null) {
-         throw new HibernateException( "nodeId not configured" );
-	  }
-	  this.nodeId = nodeId;
-   }
+	public void setNodeId(String nodeId) throws HibernateException {
+		if ( nodeId == null ) {
+			throw new HibernateException( "nodeId not configured" );
+		}
+		this.nodeId = nodeId;
+	}
 
-   public Connection getConnection() throws SQLException {
-      DualNodeJtaTransactionImpl currentTransaction = DualNodeJtaTransactionManagerImpl
-               .getInstance(nodeId).getCurrentTransaction();
-      if (currentTransaction == null) {
-         isTransactional = false;
-         return actualConnectionProvider.getConnection();
-      } else {
-         isTransactional = true;
-         Connection connection = currentTransaction.getEnlistedConnection();
-         if (connection == null) {
-            connection = actualConnectionProvider.getConnection();
-            currentTransaction.enlistConnection(connection);
-         }
-         return connection;
-      }
-   }
+	public Connection getConnection() throws SQLException {
+		DualNodeJtaTransactionImpl currentTransaction = DualNodeJtaTransactionManagerImpl
+				.getInstance( nodeId ).getCurrentTransaction();
+		if ( currentTransaction == null ) {
+			isTransactional = false;
+			return actualConnectionProvider.getConnection();
+		}
+		else {
+			isTransactional = true;
+			Connection connection = currentTransaction.getEnlistedConnection();
+			if ( connection == null ) {
+				connection = actualConnectionProvider.getConnection();
+				currentTransaction.enlistConnection( connection );
+			}
+			return connection;
+		}
+	}
 
-   public void closeConnection(Connection conn) throws SQLException {
-      if (!isTransactional) {
-         conn.close();
-      }
-   }
+	public void closeConnection(Connection conn) throws SQLException {
+		if ( !isTransactional ) {
+			conn.close();
+		}
+	}
 
-   public void close() throws HibernateException {
-	   if ( actualConnectionProvider instanceof Stoppable ) {
-		   ( ( Stoppable ) actualConnectionProvider ).stop();
-	   }
-   }
+	public void close() throws HibernateException {
+		if ( actualConnectionProvider instanceof Stoppable ) {
+			( (Stoppable) actualConnectionProvider ).stop();
+		}
+	}
 
-   public boolean supportsAggressiveRelease() {
-      return true;
-   }
+	public boolean supportsAggressiveRelease() {
+		return true;
+	}
 
 	@Override
 	public void configure(Map configurationValues) {

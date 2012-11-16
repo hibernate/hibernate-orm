@@ -26,16 +26,16 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 
 /**
  * RepeatableSessionRefreshTest.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class RepeatableSessionRefreshTest extends SessionRefreshTestCase {
-   private static final String CACHE_CONFIG = "entity-repeatable";
+	private static final String CACHE_CONFIG = "entity-repeatable";
 
-   @Override
-   protected String getEntityCacheConfigName() {
-       return CACHE_CONFIG;
-   } 
+	@Override
+	protected String getEntityCacheConfigName() {
+		return CACHE_CONFIG;
+	}
 
 }

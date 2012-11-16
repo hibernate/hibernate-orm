@@ -47,114 +47,119 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 
-   private static final Log log = LogFactory.getLog(DualNodeJtaTransactionManagerImpl.class);
+	private static final Log log = LogFactory.getLog( DualNodeJtaTransactionManagerImpl.class );
 
-   private static final Hashtable INSTANCES = new Hashtable();
+	private static final Hashtable INSTANCES = new Hashtable();
 
-   private ThreadLocal currentTransaction = new ThreadLocal();
-   private String nodeId;
+	private ThreadLocal currentTransaction = new ThreadLocal();
+	private String nodeId;
 
-   public synchronized static DualNodeJtaTransactionManagerImpl getInstance(String nodeId) {
-      DualNodeJtaTransactionManagerImpl tm = (DualNodeJtaTransactionManagerImpl) INSTANCES
-               .get(nodeId);
-      if (tm == null) {
-         tm = new DualNodeJtaTransactionManagerImpl(nodeId);
-         INSTANCES.put(nodeId, tm);
-      }
-      return tm;
-   }
+	public synchronized static DualNodeJtaTransactionManagerImpl getInstance(String nodeId) {
+		DualNodeJtaTransactionManagerImpl tm = (DualNodeJtaTransactionManagerImpl) INSTANCES
+				.get( nodeId );
+		if ( tm == null ) {
+			tm = new DualNodeJtaTransactionManagerImpl( nodeId );
+			INSTANCES.put( nodeId, tm );
+		}
+		return tm;
+	}
 
-   public synchronized static void cleanupTransactions() {
-      for (java.util.Iterator it = INSTANCES.values().iterator(); it.hasNext();) {
-         TransactionManager tm = (TransactionManager) it.next();
-         try {
-            tm.suspend();
-         } catch (Exception e) {
-            log.error("Exception cleaning up TransactionManager " + tm);
-         }
-      }
-   }
+	public synchronized static void cleanupTransactions() {
+		for ( java.util.Iterator it = INSTANCES.values().iterator(); it.hasNext(); ) {
+			TransactionManager tm = (TransactionManager) it.next();
+			try {
+				tm.suspend();
+			}
+			catch ( Exception e ) {
+				log.error( "Exception cleaning up TransactionManager " + tm );
+			}
+		}
+	}
 
-   public synchronized static void cleanupTransactionManagers() {
-      INSTANCES.clear();
-   }
+	public synchronized static void cleanupTransactionManagers() {
+		INSTANCES.clear();
+	}
 
-   private DualNodeJtaTransactionManagerImpl(String nodeId) {
-      this.nodeId = nodeId;
-   }
+	private DualNodeJtaTransactionManagerImpl(String nodeId) {
+		this.nodeId = nodeId;
+	}
 
-   public int getStatus() throws SystemException {
-      Transaction tx = getCurrentTransaction();
-      return tx == null ? Status.STATUS_NO_TRANSACTION : tx.getStatus();
-   }
+	public int getStatus() throws SystemException {
+		Transaction tx = getCurrentTransaction();
+		return tx == null ? Status.STATUS_NO_TRANSACTION : tx.getStatus();
+	}
 
-   public Transaction getTransaction() throws SystemException {
-      return (Transaction) currentTransaction.get();
-   }
+	public Transaction getTransaction() throws SystemException {
+		return (Transaction) currentTransaction.get();
+	}
 
-   public DualNodeJtaTransactionImpl getCurrentTransaction() {
-      return (DualNodeJtaTransactionImpl) currentTransaction.get();
-   }
+	public DualNodeJtaTransactionImpl getCurrentTransaction() {
+		return (DualNodeJtaTransactionImpl) currentTransaction.get();
+	}
 
-   public void begin() throws NotSupportedException, SystemException {
-      currentTransaction.set(new DualNodeJtaTransactionImpl(this));
-   }
+	public void begin() throws NotSupportedException, SystemException {
+		currentTransaction.set( new DualNodeJtaTransactionImpl( this ) );
+	}
 
-   public Transaction suspend() throws SystemException {
-      DualNodeJtaTransactionImpl suspended = getCurrentTransaction();
-      log.trace(nodeId + ": Suspending " + suspended + " for thread "
-               + Thread.currentThread().getName());
-      currentTransaction.set(null);
-      return suspended;
-   }
+	public Transaction suspend() throws SystemException {
+		DualNodeJtaTransactionImpl suspended = getCurrentTransaction();
+		log.trace(
+				nodeId + ": Suspending " + suspended + " for thread "
+						+ Thread.currentThread().getName()
+		);
+		currentTransaction.set( null );
+		return suspended;
+	}
 
-   public void resume(Transaction transaction) throws InvalidTransactionException,
-            IllegalStateException, SystemException {
-      currentTransaction.set(transaction);
-      log.trace(nodeId + ": Resumed " + transaction + " for thread "
-               + Thread.currentThread().getName());
-   }
+	public void resume(Transaction transaction) throws InvalidTransactionException,
+			IllegalStateException, SystemException {
+		currentTransaction.set( transaction );
+		log.trace(
+				nodeId + ": Resumed " + transaction + " for thread "
+						+ Thread.currentThread().getName()
+		);
+	}
 
-   public void commit() throws RollbackException, HeuristicMixedException,
-            HeuristicRollbackException, SecurityException, IllegalStateException, SystemException {
-      Transaction tx = getCurrentTransaction();
-      if (tx == null) {
-         throw new IllegalStateException("no current transaction to commit");
-      }
-      tx.commit();
-   }
+	public void commit() throws RollbackException, HeuristicMixedException,
+			HeuristicRollbackException, SecurityException, IllegalStateException, SystemException {
+		Transaction tx = getCurrentTransaction();
+		if ( tx == null ) {
+			throw new IllegalStateException( "no current transaction to commit" );
+		}
+		tx.commit();
+	}
 
-   public void rollback() throws IllegalStateException, SecurityException, SystemException {
-      Transaction tx = getCurrentTransaction();
-      if (tx == null) {
-         throw new IllegalStateException("no current transaction");
-      }
-      tx.rollback();
-   }
+	public void rollback() throws IllegalStateException, SecurityException, SystemException {
+		Transaction tx = getCurrentTransaction();
+		if ( tx == null ) {
+			throw new IllegalStateException( "no current transaction" );
+		}
+		tx.rollback();
+	}
 
-   public void setRollbackOnly() throws IllegalStateException, SystemException {
-      Transaction tx = getCurrentTransaction();
-      if (tx == null) {
-         throw new IllegalStateException("no current transaction");
-      }
-      tx.setRollbackOnly();
-   }
+	public void setRollbackOnly() throws IllegalStateException, SystemException {
+		Transaction tx = getCurrentTransaction();
+		if ( tx == null ) {
+			throw new IllegalStateException( "no current transaction" );
+		}
+		tx.setRollbackOnly();
+	}
 
-   public void setTransactionTimeout(int i) throws SystemException {
-   }
+	public void setTransactionTimeout(int i) throws SystemException {
+	}
 
-   void endCurrent(DualNodeJtaTransactionImpl transaction) {
-      if (transaction == currentTransaction.get()) {
-         currentTransaction.set(null);
-      }
-   }
+	void endCurrent(DualNodeJtaTransactionImpl transaction) {
+		if ( transaction == currentTransaction.get() ) {
+			currentTransaction.set( null );
+		}
+	}
 
-   @Override
-public String toString() {
-      StringBuffer sb = new StringBuffer(getClass().getName());
-      sb.append("[nodeId=");
-      sb.append(nodeId);
-      sb.append("]");
-      return sb.toString();
-   }
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer( getClass().getName() );
+		sb.append( "[nodeId=" );
+		sb.append( nodeId );
+		sb.append( "]" );
+		return sb.toString();
+	}
 }

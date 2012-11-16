@@ -146,7 +146,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			assertEquals( 0, getValidKeyCount( localCollectionCache.keySet() ) );
 			assertEquals( 0, getValidKeyCount( localCustomerCache.keySet() ) );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.error( "Error", e );
 			throw e;
 		}
@@ -195,12 +195,12 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 
 			return ids;
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.error( "Caught exception creating customer", e );
 			try {
 				tm.rollback();
 			}
-			catch (Exception e1) {
+			catch ( Exception e1 ) {
 				log.error( "Exception rolling back txn", e1 );
 			}
 			throw e;
@@ -219,11 +219,11 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			tm.commit();
 			return customer;
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			try {
 				tm.rollback();
 			}
-			catch (Exception e1) {
+			catch ( Exception e1 ) {
 				log.error( "Exception rolling back txn", e1 );
 			}
 			throw e;
@@ -237,7 +237,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 		Customer customer = (Customer) session.get( Customer.class, id );
 		// Access all the contacts
 		for ( Iterator it = customer.getContacts().iterator(); it.hasNext(); ) {
-			((Contact) it.next()).getName();
+			( (Contact) it.next() ).getName();
 		}
 		return customer;
 	}
@@ -267,11 +267,11 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			tm.commit();
 			return ids;
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			try {
 				tm.rollback();
 			}
-			catch (Exception e1) {
+			catch ( Exception e1 ) {
 				log.error( "Exception rolling back txn", e1 );
 			}
 			throw e;
@@ -297,11 +297,11 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 
 			tm.commit();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			try {
 				tm.rollback();
 			}
-			catch (Exception e1) {
+			catch ( Exception e1 ) {
 				log.error( "Exception rolling back txn", e1 );
 			}
 			log.error( "Caught exception in cleanup", e );
@@ -337,7 +337,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	}
 
 	protected int getValidKeyCount(Set keys) {
-      return keys.size();
+		return keys.size();
 	}
 
 	@Listener

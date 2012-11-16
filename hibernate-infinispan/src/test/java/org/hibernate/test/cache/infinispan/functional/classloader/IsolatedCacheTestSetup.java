@@ -24,44 +24,45 @@ import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransac
 /**
  * A TestSetup that uses SelectedClassnameClassLoader to ensure that certain classes are not visible
  * to Infinispan or JGroups' classloader.
- * 
+ *
  * @author Galder Zamarreño
  */
 public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetup {
 
-   private String[] isolatedClasses;
-   private String cacheConfig;
+	private String[] isolatedClasses;
+	private String cacheConfig;
 
-   /**
-    * Create a new IsolatedCacheTestSetup.
-    */
-   public IsolatedCacheTestSetup(Test test, String[] isolatedClasses) {
-      super(test, null, null, isolatedClasses);
-      this.isolatedClasses = isolatedClasses;
-   }
+	/**
+	 * Create a new IsolatedCacheTestSetup.
+	 */
+	public IsolatedCacheTestSetup(Test test, String[] isolatedClasses) {
+		super( test, null, null, isolatedClasses );
+		this.isolatedClasses = isolatedClasses;
+	}
 
-   @Override
-   protected void setUp() throws Exception {
-      super.setUp();
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
 
-      // At this point the TCCL cannot see the isolatedClasses
-      // We want the caches to use this CL as their default classloader
-      ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		// At this point the TCCL cannot see the isolatedClasses
+		// We want the caches to use this CL as their default classloader
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-      // Now make the isolatedClasses visible to the test driver itself
-      SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(isolatedClasses, null, null, tccl);
-      Thread.currentThread().setContextClassLoader(visible);
-   }
+		// Now make the isolatedClasses visible to the test driver itself
+		SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader( isolatedClasses, null, null, tccl );
+		Thread.currentThread().setContextClassLoader( visible );
+	}
 
-   @Override
-   protected void tearDown() throws Exception {
-      try {
-         super.tearDown();
-      } finally {
-         ClusterAwareRegionFactory.clearCacheManagers();
-         DualNodeJtaTransactionManagerImpl.cleanupTransactions();
-         DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
-      }
-   }
+	@Override
+	protected void tearDown() throws Exception {
+		try {
+			super.tearDown();
+		}
+		finally {
+			ClusterAwareRegionFactory.clearCacheManagers();
+			DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+			DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
+		}
+	}
 
 }

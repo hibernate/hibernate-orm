@@ -53,7 +53,7 @@ public class XaConnectionProvider implements ConnectionProvider {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( XaConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
@@ -95,7 +95,7 @@ public class XaConnectionProvider implements ConnectionProvider {
 
 	public void close() throws HibernateException {
 		if ( actualConnectionProvider instanceof Stoppable ) {
-			((Stoppable) actualConnectionProvider).stop();
+			( (Stoppable) actualConnectionProvider ).stop();
 		}
 	}
 

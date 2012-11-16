@@ -32,7 +32,9 @@ import java.util.concurrent.TimeUnit;
 import javax.transaction.TransactionManager;
 
 import junit.framework.AssertionFailedError;
+
 import org.hibernate.cache.infinispan.util.Caches;
+
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
@@ -106,8 +108,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		localCollectionRegion = localEnvironment.getCollectionRegion( REGION_NAME, getCacheDataDescription() );
 		localAccessStrategy = localCollectionRegion.buildAccessStrategy( getAccessType() );
 
-		invalidation = Caches.isInvalidationCache(localCollectionRegion.getCache());
-		synchronous = Caches.isSynchronousCache(localCollectionRegion.getCache());
+		invalidation = Caches.isInvalidationCache( localCollectionRegion.getCache() );
+		synchronous = Caches.isSynchronousCache( localCollectionRegion.getCache() );
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -123,7 +125,10 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 	protected static Configuration createConfiguration(String configName) {
 		Configuration cfg = CacheTestUtil.buildConfiguration(
-				REGION_PREFIX, org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase.TestInfinispanRegionFactory.class, true, false
+				REGION_PREFIX,
+				org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase.TestInfinispanRegionFactory.class,
+				true,
+				false
 		);
 		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, configName );
 		return cfg;
@@ -163,71 +168,78 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 	public void testPutFromLoadRemoveDoesNotProduceStaleData() throws Exception {
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
-      final TransactionManager remoteTm = remoteCollectionRegion.getTransactionManager();
-      withCacheManager(new CacheManagerCallable(TestCacheManagerFactory.createLocalCacheManager(false)) {
-         @Override
-         public void call() {
-            PutFromLoadValidator validator = new PutFromLoadValidator(cm,
-                  remoteTm, 20000) {
-               @Override
-               public boolean acquirePutFromLoadLock(Object key) {
-                  boolean acquired = super.acquirePutFromLoadLock( key );
-                  try {
-                     removeLatch.countDown();
-                     pferLatch.await( 2, TimeUnit.SECONDS );
-                  }
-                  catch (InterruptedException e) {
-                     log.debug( "Interrupted" );
-                     Thread.currentThread().interrupt();
-                  }
-                  catch (Exception e) {
-                     log.error( "Error", e );
-                     throw new RuntimeException( "Error", e );
-                  }
-                  return acquired;
-               }
-            };
+		final TransactionManager remoteTm = remoteCollectionRegion.getTransactionManager();
+		withCacheManager(
+				new CacheManagerCallable( TestCacheManagerFactory.createLocalCacheManager( false ) ) {
+					@Override
+					public void call() {
+						PutFromLoadValidator validator = new PutFromLoadValidator(
+								cm,
+								remoteTm, 20000
+						) {
+							@Override
+							public boolean acquirePutFromLoadLock(Object key) {
+								boolean acquired = super.acquirePutFromLoadLock( key );
+								try {
+									removeLatch.countDown();
+									pferLatch.await( 2, TimeUnit.SECONDS );
+								}
+								catch ( InterruptedException e ) {
+									log.debug( "Interrupted" );
+									Thread.currentThread().interrupt();
+								}
+								catch ( Exception e ) {
+									log.error( "Error", e );
+									throw new RuntimeException( "Error", e );
+								}
+								return acquired;
+							}
+						};
 
-            final TransactionalAccessDelegate delegate =
-                  new TransactionalAccessDelegate(localCollectionRegion, validator);
-            final TransactionManager localTm = localCollectionRegion.getTransactionManager();
+						final TransactionalAccessDelegate delegate =
+								new TransactionalAccessDelegate( localCollectionRegion, validator );
+						final TransactionManager localTm = localCollectionRegion.getTransactionManager();
 
-            Callable<Void> pferCallable = new Callable<Void>() {
-               public Void call() throws Exception {
-                  delegate.putFromLoad( "k1", "v1", 0, null );
-                  return null;
-               }
-            };
+						Callable<Void> pferCallable = new Callable<Void>() {
+							public Void call() throws Exception {
+								delegate.putFromLoad( "k1", "v1", 0, null );
+								return null;
+							}
+						};
 
-            Callable<Void> removeCallable = new Callable<Void>() {
-               public Void call() throws Exception {
-                  removeLatch.await();
-                  Caches.withinTx(localTm, new Callable<Void>() {
-                     @Override
-                     public Void call() throws Exception {
-                        delegate.remove("k1");
-                        return null;
-                     }
-                  });
-                  pferLatch.countDown();
-                  return null;
-               }
-            };
+						Callable<Void> removeCallable = new Callable<Void>() {
+							public Void call() throws Exception {
+								removeLatch.await();
+								Caches.withinTx(
+										localTm, new Callable<Void>() {
+									@Override
+									public Void call() throws Exception {
+										delegate.remove( "k1" );
+										return null;
+									}
+								}
+								);
+								pferLatch.countDown();
+								return null;
+							}
+						};
 
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            Future<Void> pferFuture = executorService.submit( pferCallable );
-            Future<Void> removeFuture = executorService.submit( removeCallable );
+						ExecutorService executorService = Executors.newCachedThreadPool();
+						Future<Void> pferFuture = executorService.submit( pferCallable );
+						Future<Void> removeFuture = executorService.submit( removeCallable );
 
-            try {
-               pferFuture.get();
-               removeFuture.get();
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
+						try {
+							pferFuture.get();
+							removeFuture.get();
+						}
+						catch ( Exception e ) {
+							throw new RuntimeException( e );
+						}
 
-            assertFalse(localCollectionRegion.getCache().containsKey("k1"));
-         }
-      });
+						assertFalse( localCollectionRegion.getCache().containsKey( "k1" ) );
+					}
+				}
+		);
 	}
 
 	@Test
@@ -269,12 +281,12 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 					BatchModeTransactionManager.getInstance().commit();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					log.error( "node1 caught exception", e );
 					node1Exception = e;
 					rollback();
 				}
-				catch (AssertionFailedError e) {
+				catch ( AssertionFailedError e ) {
 					node1Failure = e;
 					rollback();
 				}
@@ -313,12 +325,12 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 					BatchModeTransactionManager.getInstance().commit();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					log.error( "node2 caught exception", e );
 					node2Exception = e;
 					rollback();
 				}
-				catch (AssertionFailedError e) {
+				catch ( AssertionFailedError e ) {
 					node2Failure = e;
 					rollback();
 				}
@@ -407,16 +419,20 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// Wait for async propagation
 		sleep( 250 );
 
-      Caches.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            if (evict)
-               localAccessStrategy.evict(KEY);
-            else
-               localAccessStrategy.remove(KEY);
-            return null;
-         }
-      });
+		Caches.withinTx(
+				localCollectionRegion.getTransactionManager(), new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				if ( evict ) {
+					localAccessStrategy.evict( KEY );
+				}
+				else {
+					localAccessStrategy.remove( KEY );
+				}
+				return null;
+			}
+		}
+		);
 
 		assertEquals( null, localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 
@@ -442,16 +458,20 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// Wait for async propagation
 		sleep( 250 );
 
-      Caches.withinTx(localCollectionRegion.getTransactionManager(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            if (evict)
-               localAccessStrategy.evictAll();
-            else
-               localAccessStrategy.removeAll();
-            return null;
-         }
-      });
+		Caches.withinTx(
+				localCollectionRegion.getTransactionManager(), new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				if ( evict ) {
+					localAccessStrategy.evictAll();
+				}
+				else {
+					localAccessStrategy.removeAll();
+				}
+				return null;
+			}
+		}
+		);
 
 		// This should re-establish the region root node
 		assertNull( localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
@@ -474,7 +494,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		sleep( 250 );
 
 		assertEquals(
-				"local is correct", (isUsingInvalidation() ? null : VALUE1), localAccessStrategy.get(
+				"local is correct", ( isUsingInvalidation() ? null : VALUE1 ), localAccessStrategy.get(
 				KEY, System
 				.currentTimeMillis()
 		)
@@ -486,7 +506,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		try {
 			BatchModeTransactionManager.getInstance().rollback();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.error( e.getMessage(), e );
 		}
 

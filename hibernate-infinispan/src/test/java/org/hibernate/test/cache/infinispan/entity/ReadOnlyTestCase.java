@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests READ_ONLY access when pessimistic locking and invalidation are used.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
@@ -42,6 +42,6 @@ public class ReadOnlyTestCase extends AbstractReadOnlyAccessTestCase {
 	@Test
 	@Override
 	public void testCacheConfiguration() {
-		assertTrue("Using Invalidation", isUsingInvalidation());
+		assertTrue( "Using Invalidation", isUsingInvalidation() );
 	}
 }

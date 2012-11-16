@@ -62,7 +62,7 @@ public class JtaPlatformImpl implements JtaPlatform {
 		try {
 			XaTransactionManagerImpl.getInstance().getTransaction().registerSynchronization( synchronization );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new TransactionException( "Could not obtain transaction from TM" );
 		}
 	}

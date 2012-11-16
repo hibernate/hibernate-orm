@@ -30,26 +30,27 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.internal.util.compare.ComparableComparator;
+
 import org.infinispan.AdvancedCache;
 
 /**
  * Base class for tests of Region implementations.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class AbstractRegionImplTestCase extends AbstractNonFunctionalTestCase {
 
-   protected abstract AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory);
+	protected abstract AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory);
 
-   protected abstract Region createRegion(InfinispanRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);
+	protected abstract Region createRegion(InfinispanRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);
 
-   protected abstract void putInRegion(Region region, Object key, Object value);
+	protected abstract void putInRegion(Region region, Object key, Object value);
 
-   protected abstract void removeFromRegion(Region region, Object key);
+	protected abstract void removeFromRegion(Region region, Object key);
 
-   protected CacheDataDescription getCacheDataDescription() {
-      return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE);
-   }
+	protected CacheDataDescription getCacheDataDescription() {
+		return new CacheDataDescriptionImpl( true, true, ComparableComparator.INSTANCE );
+	}
 
 }

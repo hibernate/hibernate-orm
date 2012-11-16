@@ -83,16 +83,18 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	protected Class<? extends RegionFactory> getCacheRegionFactory() {
 		return JndiInfinispanRegionFactory.class;
 	}
+
 	@Override
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-		 bindToJndi();
+		bindToJndi();
 	}
+
 	@Override
 	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 		bindToJndi();
 	}
 
-	private void bindToJndi(){
+	private void bindToJndi() {
 		if ( bindToJndi ) {
 			try {
 				// Create an in-memory jndi
@@ -109,7 +111,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 				Context ctx = new InitialContext( props );
 				bind( JNDI_NAME, manager, EmbeddedCacheManager.class, ctx );
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				throw new RuntimeException( "Failure to set up JNDI", e );
 			}
 		}
@@ -125,13 +127,14 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testRedeployment() throws Exception {
-		addEntityCheckCache(  );
+		addEntityCheckCache();
 		sessionFactory().close();
 		bindToJndi = false;
 
 		rebuildSessionFactory();
-		addEntityCheckCache(  );
-		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getServiceRegistry().getService( RegionFactory.class );
+		addEntityCheckCache();
+		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getServiceRegistry()
+				.getService( RegionFactory.class );
 		Cache cache = regionFactory.getCacheManager().getCache( "org.hibernate.test.cache.infinispan.functional.Item" );
 		assertEquals( ComponentStatus.RUNNING, cache.getStatus() );
 	}
@@ -146,7 +149,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 			s.getTransaction().commit();
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -155,7 +158,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 
 		beginTx();
 		try {
-			Session s =	sessionFactory().openSession();
+			Session s = sessionFactory().openSession();
 			Item found = (Item) s.load( Item.class, item.getId() );
 			Statistics stats = sessionFactory().getStatistics();
 			log.info( stats.toString() );
@@ -165,7 +168,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 			s.delete( found );
 			s.close();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			setRollbackOnlyTx( e );
 		}
 		finally {
@@ -181,6 +184,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	 * @param who Object to bind in JNDI
 	 * @param classType Class type under which should appear the bound object
 	 * @param ctx Naming context under which we bind the object
+	 *
 	 * @throws Exception Thrown if a naming exception occurs during binding
 	 */
 	private void bind(String jndiName, Object who, Class<?> classType, Context ctx) throws Exception {
@@ -192,7 +196,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 			try {
 				ctx = (Context) ctx.lookup( ctxName );
 			}
-			catch (NameNotFoundException e) {
+			catch ( NameNotFoundException e ) {
 				log.debug( "creating Subcontext " + ctxName );
 				ctx = ctx.createSubcontext( ctxName );
 			}

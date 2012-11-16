@@ -45,89 +45,95 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 	private static final Logger log = Logger.getLogger( AbstractTransactionalAccessTestCase.class );
 
 	@Override
-   protected AccessType getAccessType() {
-      return AccessType.TRANSACTIONAL;
-   }
+	protected AccessType getAccessType() {
+		return AccessType.TRANSACTIONAL;
+	}
 
-    public void testContestedPutFromLoad() throws Exception {
+	public void testContestedPutFromLoad() throws Exception {
 
-        final String KEY = KEY_BASE + testCount++;
+		final String KEY = KEY_BASE + testCount++;
 
-        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+		localAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
 
-        final CountDownLatch pferLatch = new CountDownLatch(1);
-        final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
-        final CountDownLatch commitLatch = new CountDownLatch(1);
-        final CountDownLatch completionLatch = new CountDownLatch(1);
+		final CountDownLatch pferLatch = new CountDownLatch( 1 );
+		final CountDownLatch pferCompletionLatch = new CountDownLatch( 1 );
+		final CountDownLatch commitLatch = new CountDownLatch( 1 );
+		final CountDownLatch completionLatch = new CountDownLatch( 1 );
 
-        Thread blocker = new Thread("Blocker") {
+		Thread blocker = new Thread( "Blocker" ) {
 
-            @Override
-            public void run() {
+			@Override
+			public void run() {
 
-                try {
-                    long txTimestamp = System.currentTimeMillis();
-                    BatchModeTransactionManager.getInstance().begin();
+				try {
+					long txTimestamp = System.currentTimeMillis();
+					BatchModeTransactionManager.getInstance().begin();
 
-                    assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(KEY, txTimestamp));
+					assertEquals( "Correct initial value", VALUE1, localAccessStrategy.get( KEY, txTimestamp ) );
 
-                    localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
+					localAccessStrategy.update( KEY, VALUE2, new Integer( 2 ), new Integer( 1 ) );
 
-                    pferLatch.countDown();
-                    commitLatch.await();
+					pferLatch.countDown();
+					commitLatch.await();
 
-                    BatchModeTransactionManager.getInstance().commit();
-                } catch (Exception e) {
-                    log.error("node1 caught exception", e);
-                    node1Exception = e;
-                    rollback();
-                } catch (AssertionFailedError e) {
-                    node1Failure = e;
-                    rollback();
-                } finally {
-                    completionLatch.countDown();
-                }
-            }
-        };
+					BatchModeTransactionManager.getInstance().commit();
+				}
+				catch ( Exception e ) {
+					log.error( "node1 caught exception", e );
+					node1Exception = e;
+					rollback();
+				}
+				catch ( AssertionFailedError e ) {
+					node1Failure = e;
+					rollback();
+				}
+				finally {
+					completionLatch.countDown();
+				}
+			}
+		};
 
-        Thread putter = new Thread("Putter") {
+		Thread putter = new Thread( "Putter" ) {
 
-            @Override
-            public void run() {
+			@Override
+			public void run() {
 
-                try {
-                    long txTimestamp = System.currentTimeMillis();
-                    BatchModeTransactionManager.getInstance().begin();
+				try {
+					long txTimestamp = System.currentTimeMillis();
+					BatchModeTransactionManager.getInstance().begin();
 
-                    localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
+					localAccessStrategy.putFromLoad( KEY, VALUE1, txTimestamp, new Integer( 1 ) );
 
-                    BatchModeTransactionManager.getInstance().commit();
-                } catch (Exception e) {
-                    log.error("node1 caught exception", e);
-                    node1Exception = e;
-                    rollback();
-                } catch (AssertionFailedError e) {
-                    node1Failure = e;
-                    rollback();
-                } finally {
-                    pferCompletionLatch.countDown();
-                }
-            }
-        };
+					BatchModeTransactionManager.getInstance().commit();
+				}
+				catch ( Exception e ) {
+					log.error( "node1 caught exception", e );
+					node1Exception = e;
+					rollback();
+				}
+				catch ( AssertionFailedError e ) {
+					node1Failure = e;
+					rollback();
+				}
+				finally {
+					pferCompletionLatch.countDown();
+				}
+			}
+		};
 
-        blocker.start();
-        assertTrue("Active tx has done an update", pferLatch.await(1, TimeUnit.SECONDS));
-        putter.start();
-        assertTrue("putFromLoadreturns promtly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
+		blocker.start();
+		assertTrue( "Active tx has done an update", pferLatch.await( 1, TimeUnit.SECONDS ) );
+		putter.start();
+		assertTrue( "putFromLoadreturns promtly", pferCompletionLatch.await( 10, TimeUnit.MILLISECONDS ) );
 
-        commitLatch.countDown();
+		commitLatch.countDown();
 
-        assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
+		assertTrue( "Threads completed", completionLatch.await( 1, TimeUnit.SECONDS ) );
 
-        assertThreadsRanCleanly();
+		assertThreadsRanCleanly();
 
-        long txTimestamp = System.currentTimeMillis();
-        assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
-    }
+		long txTimestamp = System.currentTimeMillis();
+		assertEquals( "Correct node1 value", VALUE2, localAccessStrategy.get( KEY, txTimestamp ) );
+	}
 
 }

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,48 +30,49 @@ import java.util.Set;
  * @author Gavin King
  */
 public class Item {
-    private Long id;
-    private String name;
-    private String description;
-    private Item owner;
-    private Set<Item> items = new HashSet<Item>();
+	private Long id;
+	private String name;
+	private String description;
+	private Item owner;
+	private Set<Item> items = new HashSet<Item>();
 
-    public Item() {}
-    
-    public Item( String name, String description ) {
+	public Item() {
+	}
+
+	public Item(String name, String description) {
 		this.name = name;
 		this.description = description;
 	}
 
 	public String getDescription() {
-        return description;
-    }
+		return description;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public Item getOwner() {
 		return owner;
 	}
 
-	public void setOwner( Item owner ) {
+	public void setOwner(Item owner) {
 		this.owner = owner;
 	}
 
@@ -78,11 +80,11 @@ public class Item {
 		return items;
 	}
 
-	public void setItems( Set<Item> items ) {
+	public void setItems(Set<Item> items) {
 		this.items = items;
 	}
-	
-	public void addItem( Item item ) {
+
+	public void addItem(Item item) {
 		item.setOwner( this );
 		getItems().add( item );
 	}

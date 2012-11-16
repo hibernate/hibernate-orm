@@ -71,7 +71,7 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 
 	@Override
 	public String[] getMappings() {
-		return new String[] {"cache/infinispan/functional/classloader/Account.hbm.xml"};
+		return new String[] { "cache/infinispan/functional/classloader/Account.hbm.xml" };
 	}
 
 	@Override

@@ -40,10 +40,10 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests for the "extra API" in EntityRegionAccessStrategy;.
  * <p>
- * By "extra API" we mean those methods that are superfluous to the 
+ * By "extra API" we mean those methods that are superfluous to the
  * function of the JBC integration, where the impl is a no-op or a static
  * false return value, UnsupportedOperationException, etc.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
@@ -65,11 +65,16 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 		avoidConcurrentFlush();
 
 		accessStrategy = environment.getEntityRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
-   }
+	}
 
 	protected Configuration createConfiguration() {
-		Configuration cfg = CacheTestUtil.buildConfiguration(REGION_PREFIX, InfinispanRegionFactory.class, true, false);
-		cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName());
+		Configuration cfg = CacheTestUtil.buildConfiguration(
+				REGION_PREFIX,
+				InfinispanRegionFactory.class,
+				true,
+				false
+		);
+		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName() );
 		return cfg;
 	}
 
@@ -93,7 +98,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void testLockItem() {
 		assertNull( getEntityAccessStrategy().lockItem( KEY, Integer.valueOf( 1 ) ) );
 	}
@@ -114,7 +119,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void testAfterInsert() {
 		assertFalse(
 				"afterInsert always returns false",
@@ -127,7 +132,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void testAfterUpdate() {
 		assertFalse(
 				"afterInsert always returns false",

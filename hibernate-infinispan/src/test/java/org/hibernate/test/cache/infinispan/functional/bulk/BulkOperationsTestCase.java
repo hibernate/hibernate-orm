@@ -28,6 +28,7 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+
 import org.junit.Test;
 
 import org.hibernate.FlushMode;
@@ -137,7 +138,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			for ( Integer id : jbContacts ) {
 				Contact contact = getContact( id );
 				assertNotNull( "JBoss contact " + id + " exists", contact );
-				String expected = ("Kabir".equals( contact.getName() )) ? "Updated" : "2222";
+				String expected = ( "Kabir".equals( contact.getName() ) ) ? "Updated" : "2222";
 				assertEquals( "JBoss contact " + id + " has correct TLF", expected, contact.getTlf() );
 			}
 
@@ -150,7 +151,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			for ( Integer id : jbContacts ) {
 				Contact contact = getContact( id );
 				assertNotNull( "JBoss contact " + id + " exists", contact );
-				String expected = ("Kabir".equals( contact.getName() )) ? "UpdatedAgain" : "2222";
+				String expected = ( "Kabir".equals( contact.getName() ) ) ? "UpdatedAgain" : "2222";
 				assertEquals( "JBoss contact " + id + " has correct TLF", expected, contact.getTlf() );
 			}
 
@@ -158,7 +159,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			assertNotNull( "Got updated contacts", updated );
 			assertEquals( "Updated contacts", 5, updated.size() );
 		}
-		catch (Throwable t) {
+		catch ( Throwable t ) {
 			cleanedUp = true;
 			cleanup( true );
 			throw t;
@@ -178,7 +179,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 				createCustomer( i );
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -205,7 +206,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			tm.commit();
 			return rowsAffected;
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -217,14 +218,14 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 				try {
 					tm.rollback();
 				}
-				catch (Exception ee) {
+				catch ( Exception ee ) {
 					// ignored
 				}
 			}
 		}
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	public List<Integer> getContactsByCustomer(String customerName) throws Exception {
 		String selectHQL = "select contact.id from Contact contact";
 		selectHQL += " where contact.customer.name = :cName";
@@ -238,7 +239,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 					.setParameter( "cName", customerName )
 					.list();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -252,7 +253,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	public List<Integer> getContactsByTLF(String tlf) throws Exception {
 		String selectHQL = "select contact.id from Contact contact";
 		selectHQL += " where contact.tlf = :cTLF";
@@ -265,7 +266,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 					.setParameter( "cTLF", tlf )
 					.list();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -290,7 +291,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 					.setParameter( "cName", name )
 					.executeUpdate();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -319,7 +320,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 					.setParameter( "cName", name )
 					.executeUpdate();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -339,7 +340,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			Session session = sessionFactory().getCurrentSession();
 			return (Contact) session.get( Contact.class, id );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -362,7 +363,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 			session.createQuery( deleteContactHQL ).setFlushMode( FlushMode.AUTO ).executeUpdate();
 			session.createQuery( deleteCustomerHQL ).setFlushMode( FlushMode.AUTO ).executeUpdate();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			tm.setRollbackOnly();
 			throw e;
 		}
@@ -375,7 +376,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 					try {
 						tm.rollback();
 					}
-					catch (Exception ee) {
+					catch ( Exception ee ) {
 						// ignored
 					}
 				}
@@ -387,7 +388,7 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 		System.out.println( "CREATE CUSTOMER " + id );
 		try {
 			Customer customer = new Customer();
-			customer.setName( (id % 2 == 0) ? "JBoss" : "Red Hat" );
+			customer.setName( ( id % 2 == 0 ) ? "JBoss" : "Red Hat" );
 			Set<Contact> contacts = new HashSet<Contact>();
 
 			Contact kabir = new Contact();

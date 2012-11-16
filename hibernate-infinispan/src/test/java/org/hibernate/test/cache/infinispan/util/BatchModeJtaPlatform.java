@@ -42,17 +42,17 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 public class BatchModeJtaPlatform implements JtaPlatform {
 	@Override
 	public TransactionManager retrieveTransactionManager() {
-        try {
-            return BatchModeTransactionManager.getInstance();
-        }
-        catch (Exception e) {
-            throw new HibernateException("Failed getting BatchModeTransactionManager", e);
-        }
+		try {
+			return BatchModeTransactionManager.getInstance();
+		}
+		catch ( Exception e ) {
+			throw new HibernateException( "Failed getting BatchModeTransactionManager", e );
+		}
 	}
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {
-        throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class BatchModeJtaPlatform implements JtaPlatform {
 		try {
 			retrieveTransactionManager().getTransaction().registerSynchronization( synchronization );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new TransactionException( "Could not obtain transaction from TM" );
 		}
 	}

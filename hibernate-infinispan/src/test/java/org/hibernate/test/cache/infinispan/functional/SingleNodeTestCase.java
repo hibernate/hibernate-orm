@@ -68,7 +68,7 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 				return jtaPlatformClass.newInstance().retrieveTransactionManager();
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.error( "Error", e );
 			throw new RuntimeException( e );
 		}
@@ -151,17 +151,17 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-   public static class TestInfinispanRegionFactory extends InfinispanRegionFactory {
+	public static class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 
-      public TestInfinispanRegionFactory() {
-         super(); // For reflection-based instantiation
-      }
+		public TestInfinispanRegionFactory() {
+			super(); // For reflection-based instantiation
+		}
 
-      @Override
-      protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
-         return TestCacheManagerFactory.createClusteredCacheManager(holder);
-      }
+		@Override
+		protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
+			return TestCacheManagerFactory.createClusteredCacheManager( holder );
+		}
 
-   }
+	}
 
 }

@@ -27,12 +27,12 @@ import org.hibernate.cache.spi.access.AccessType;
 
 /**
  * Base class for tests of TRANSACTIONAL access.
- * 
+ *
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public abstract class AbstractReadOnlyAccessTestCase extends AbstractCollectionRegionAccessStrategyTestCase {
-    @Override
-    protected AccessType getAccessType() {
-        return AccessType.READ_ONLY;
-    }
+	@Override
+	protected AccessType getAccessType() {
+		return AccessType.READ_ONLY;
+	}
 }

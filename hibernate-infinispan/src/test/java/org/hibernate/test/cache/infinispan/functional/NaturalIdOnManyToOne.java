@@ -12,19 +12,19 @@ import javax.persistence.ManyToOne;
 @NaturalIdCache
 /**
  * Test case for NaturalId annotation - ANN-750
- * 
+ *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 public class NaturalIdOnManyToOne {
 
-    @Id
-    @GeneratedValue
-    int id;
+	@Id
+	@GeneratedValue
+	int id;
 
-    @NaturalId
-    @ManyToOne
-    Citizen citizen;
+	@NaturalId
+	@ManyToOne
+	Citizen citizen;
 
 	public int getId() {
 		return id;

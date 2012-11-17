@@ -469,7 +469,7 @@ public class Binder {
 		final BasicPluralAttributeElementBinding elementBinding =
 				( BasicPluralAttributeElementBinding ) attributeBinding.getPluralAttributeElementBinding();
 		if ( elementBinding.getNature() != PluralAttributeElementBinding.Nature.BASIC ) {
-			bindingContext().makeMappingException( String.format(
+			throw bindingContext().makeMappingException( String.format(
 					"Expected a SetBinding with an element of nature Nature.BASIC; instead was %s",
 					elementBinding.getNature() ) );
 		}
@@ -1081,7 +1081,7 @@ public class Binder {
 			final String defaultJavaTypeName ) {
 		if ( explicitTypeName == null ) {
 			if ( hibernateTypeDescriptor.getJavaTypeName() != null ) {
-				bindingContext().makeMappingException( String.format(
+				throw bindingContext().makeMappingException( String.format(
 						"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
 						hibernateTypeDescriptor.getJavaTypeName(),
 						defaultJavaTypeName ) );
@@ -1091,7 +1091,7 @@ public class Binder {
 			// Check if user-specified name is of a User-Defined Type (UDT)
 			final TypeDefinition typeDef = metadata.getTypeDefinition( explicitTypeName );
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-				bindingContext().makeMappingException( String.format(
+				throw bindingContext().makeMappingException( String.format(
 						"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
 						hibernateTypeDescriptor.getExplicitTypeName(),
 						explicitTypeName ) );
@@ -1151,7 +1151,7 @@ public class Binder {
 		entityIdentifier.createIdentifierGenerator( identifierGeneratorFactory, properties );
 		if ( IdentityGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
 			if ( rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() != 1 ) {
-				bindingContext().makeMappingException( String.format(
+				throw bindingContext().makeMappingException( String.format(
 						"ID for %s is mapped as an identity with %d columns. IDs mapped as an identity can only have 1 column.",
 						rootEntityBinding.getEntity().getName(),
 						rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan()
@@ -1978,7 +1978,7 @@ public class Binder {
 				try {
 					attributeBinding.setComparator( comparatorClass.newInstance() );
 				} catch ( Exception error ) {
-					bindingContext().makeMappingException(
+					throw bindingContext().makeMappingException(
 							String.format(
 									"Unable to create comparator [%s] for attribute [%s]",
 									sortable.getComparatorName(),
@@ -2223,7 +2223,7 @@ public class Binder {
 			final boolean isNullableByDefault,
 			final boolean isDefaultAttributeName ) {
 		if ( columnSource.getName() == null && defaultName == null ) {
-			bindingContext().makeMappingException( "Cannot resolve name for column because no name was specified and default name is null." );
+			throw bindingContext().makeMappingException( "Cannot resolve name for column because no name was specified and default name is null." );
 		}
 		final String name;
 		if ( StringHelper.isNotEmpty( columnSource.getName() ) ) {
@@ -2619,7 +2619,7 @@ public class Binder {
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
 			if ( entitySource == null ) {
 				String msg = log.missingEntitySource( entityName );
-				bindingContext().makeMappingException( msg );
+				throw bindingContext().makeMappingException( msg );
 			}
 
 			// Get super entity binding (creating it if necessary using recursive call to this method)

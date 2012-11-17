@@ -320,10 +320,13 @@ public class AssociationAttribute extends MappedAttribute {
 			targetTypeName = targetEntityValue.asClass().name().toString();
 		}
 
-		if( StringHelper.isEmpty( targetTypeName ) && referencedAttributeType!=null ){
-			targetTypeName = referencedAttributeType.getName();
-		} else {
-			getContext().makeMappingException( "Can't find the target type for this collection attribute: "+ getRole() );
+		if( StringHelper.isEmpty( targetTypeName ) ) {
+			if ( referencedAttributeType != null )  {
+				targetTypeName = referencedAttributeType.getName();
+			}
+			else {
+				throw getContext().makeMappingException( "Can't find the target type for this collection attribute: "+ getRole() );
+			}
 		}
 
 		return targetTypeName;

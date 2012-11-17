@@ -399,8 +399,8 @@ public class HibernateTypeHelper {
 				resolvedHibernateType.isEntityType()
 						? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata )
 						: resolvedHibernateType;
-		if ( !ComponentType.class.isInstance( resolvedRelationalType ) ) {
-			binder.bindingContext().makeMappingException( "Column number mismatch" ); // todo refine the exception message
+		if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
+			throw binder.bindingContext().makeMappingException( "Column number mismatch" ); // todo refine the exception message
 		}
 		Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
 		for ( int i = 0; i < subTypes.length; i++ ) {

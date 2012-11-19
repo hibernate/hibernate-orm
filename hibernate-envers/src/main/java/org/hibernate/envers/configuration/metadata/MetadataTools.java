@@ -157,7 +157,7 @@ public class MetadataTools {
     }
 
     private static Element createEntityCommon(Document document, String type, AuditTableData auditTableData,
-                                              String discriminatorValue) {
+                                              String discriminatorValue, Boolean isAbstract) {
         Element hibernate_mapping = document.addElement("hibernate-mapping");
         hibernate_mapping.addAttribute("auto-import", "false");
 
@@ -183,16 +183,21 @@ public class MetadataTools {
             class_mapping.addAttribute("catalog", auditTableData.getCatalog());
         }
 
+        if (isAbstract != null) {
+            class_mapping.addAttribute("abstract", isAbstract.toString());
+        }
+
         return class_mapping;
     }
 
-    public static Element createEntity(Document document, AuditTableData auditTableData, String discriminatorValue) {
-        return createEntityCommon(document, "class", auditTableData, discriminatorValue);
+    public static Element createEntity(Document document, AuditTableData auditTableData, String discriminatorValue,
+                                       Boolean isAbstract) {
+        return createEntityCommon(document, "class", auditTableData, discriminatorValue, isAbstract);
     }
 
     public static Element createSubclassEntity(Document document, String subclassType, AuditTableData auditTableData,
-                                               String extendsEntityName, String discriminatorValue) {
-        Element class_mapping = createEntityCommon(document, subclassType, auditTableData, discriminatorValue);
+                                               String extendsEntityName, String discriminatorValue, Boolean isAbstract) {
+        Element class_mapping = createEntityCommon(document, subclassType, auditTableData, discriminatorValue, isAbstract);
 
         class_mapping.addAttribute("extends", extendsEntityName);
 

@@ -362,7 +362,7 @@ public final class AuditMetadataGenerator {
             PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
             IdMappingData idMapper) {
         Element class_mapping = MetadataTools.createEntity(xmlMappingData.getMainXmlMapping(), auditTableData,
-                pc.getDiscriminatorValue());
+                pc.getDiscriminatorValue(), pc.isAbstract());
         ExtendedPropertyMapper propertyMapper = new MultiPropertyMapper();
 
         // Checking if there is a discriminator column
@@ -387,7 +387,7 @@ public final class AuditMetadataGenerator {
             String inheritanceMappingType) {
         String extendsEntityName = verEntCfg.getAuditEntityName(pc.getSuperclass().getEntityName());
         Element class_mapping = MetadataTools.createSubclassEntity(xmlMappingData.getMainXmlMapping(),
-                inheritanceMappingType, auditTableData, extendsEntityName, pc.getDiscriminatorValue());
+                inheritanceMappingType, auditTableData, extendsEntityName, pc.getDiscriminatorValue(), pc.isAbstract());
 
         // The id and revision type is already mapped in the parent
 

@@ -690,7 +690,8 @@ public class Binder {
 				}
 				else if (
 					pluralAttributeNature == PluralAttributeSource.Nature.LIST
-							|| pluralAttributeNature == PluralAttributeSource.Nature.MAP) {
+							|| pluralAttributeNature == PluralAttributeSource.Nature.MAP
+							|| pluralAttributeNature == PluralAttributeSource.Nature.ARRAY) {
 					bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
 				}
 				else {

@@ -563,6 +563,21 @@ public class AttributeBuilder {
 		if ( type instanceof Class ) return null;
 		return (ParameterizedType) type;
 	}
+	
+	public static Class<?> determineDeclaredType( Member member ) {
+		final Class<?> declaredType;
+		// we can support method or field members here.  Is there really any other valid type?
+		if ( Field.class.isInstance( member ) ) {
+			declaredType = ( (Field) member ).getType();
+		}
+		else if ( Method.class.isInstance( member ) ) {
+			declaredType = ( (Method) member ).getReturnType();
+		}
+		else {
+			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
+		}
+		return declaredType;
+	}
 
 	public static PluralAttribute.CollectionType determineCollectionType(Class javaType) {
 		if ( java.util.List.class.isAssignableFrom( javaType ) ) {

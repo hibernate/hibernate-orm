@@ -53,18 +53,8 @@ public abstract class BaseAttributeMetadata<X,Y> implements AttributeMetadata<X,
 		this.ownerType = ownerType;
 		this.member = member;
 		this.persistentAttributeType = persistentAttributeType;
-		final Class declaredType;
-		// we can support method or field members here.  Is there really any other valid type?
-		if ( Field.class.isInstance( member ) ) {
-			declaredType = ( (Field) member ).getType();
-		}
-		else if ( Method.class.isInstance( member ) ) {
-			declaredType = ( (Method) member ).getReturnType();
-		}
-		else {
-			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
-		}
-		this.javaType = declaredType;
+		
+		this.javaType = (Class<Y>) AttributeBuilder.determineDeclaredType( member );
 	}
 
 	@Override

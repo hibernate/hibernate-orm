@@ -24,10 +24,16 @@
  */
 package org.hibernate.internal.util;
 
+import java.beans.Introspector;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -381,4 +387,87 @@ public final class ReflectHelper {
 		}
 	}
 
+	/**
+	 * Process bean properties getter by applying the JavaBean naming conventions.
+	 *
+	 * @param member the member for which to get the property name.
+	 *
+	 * @return The bean method name with the "is" or "get" prefix stripped off, {@code null}
+	 *         the method name id not according to the JavaBeans standard.
+	 */
+	public static String getPropertyName(Member member) {
+		String name = null;
+
+		if ( member instanceof Field ) {
+			name = member.getName();
+		}
+
+		if ( member instanceof Method ) {
+			String methodName = member.getName();
+			if ( methodName.startsWith( "is" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 2 ) );
+			}
+			else if ( methodName.startsWith( "has" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 3 ) );
+			}
+			else if ( methodName.startsWith( "get" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 3 ) );
+			}
+		}
+		return name;
+	}
+
+	public static boolean isProperty(Member m) {
+		if ( m instanceof Method ) {
+			Method method = (Method) m;
+			return !method.isSynthetic()
+					&& !method.isBridge()
+					&& !Modifier.isStatic( method.getModifiers() )
+					&& method.getParameterTypes().length == 0
+					&& ( method.getName().startsWith( "get" ) || method.getName().startsWith( "is" ) );
+		}
+		else {
+			return !Modifier.isTransient( m.getModifiers() ) && !m.isSynthetic();
+		}
+	}
+	
+	/**
+	 * Returns a Set of field types in the given class.  However, for Collection
+	 * and Map fields, the value and key types are returned instead of the
+	 * Iterable class itself.
+	 * 
+	 * @param clazz
+	 * @return Set<Class<?>>
+	 */
+	public static Set<Class<?>> getFieldTypes( Class<?> clazz ) {
+		Set<Class<?>> fieldTypes = new HashSet<Class<?>>();
+
+		for ( Field declaredField : clazz.getDeclaredFields() ) {
+			Class<?> fieldClass = declaredField.getType();
+			if ( fieldClass.isArray() ) {
+				fieldTypes.add( fieldClass.getComponentType() );
+			}
+			else if ( declaredField.getGenericType() instanceof ParameterizedType ) {
+				final java.lang.reflect.Type[] types
+						= ( (ParameterizedType) declaredField.getGenericType() )
+								.getActualTypeArguments();
+				if ( types != null ) {
+					// assumes we want to check values *and* map keys
+					for ( java.lang.reflect.Type type : types ) {
+						if ( type instanceof TypeVariable ) {
+							fieldTypes.add( (Class<?>) ( (TypeVariable) type )
+									.getGenericDeclaration() );
+						}
+						else {
+							fieldTypes.add( (Class<?>) type );
+						}
+					}
+				}
+			}
+			else {
+				fieldTypes.add( fieldClass );
+			}
+		}
+		return fieldTypes;
+	}
 }

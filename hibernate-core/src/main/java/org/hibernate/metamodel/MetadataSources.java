@@ -46,6 +46,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jaxb.internal.JaxbMappingProcessor;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
@@ -522,27 +523,15 @@ public class MetadataSources {
 		// For backward compatibility, don't require @Embeddable
 		// classes to be explicitly identified.
 		// Automatically find them by checking the fields' types.
-		// TODO: There has to be a better way to do this.
-		for ( Field declaredField : clazz.getDeclaredFields() ) {
-			Class<?> fieldClass = declaredField.getType();
-			if ( fieldClass.isArray() ) {
-				fieldClass = fieldClass.getComponentType();
-			}
-			else if ( Collection.class.isAssignableFrom( fieldClass )
-					&& declaredField.getGenericType() instanceof ParameterizedType ) {
-				ParameterizedType listType = (ParameterizedType) declaredField.getGenericType();
-				fieldClass = (Class<?>) listType.getActualTypeArguments()[0];
-		    }
-			// TODO: Map
-			
-			if ( !fieldClass.isPrimitive() && fieldClass != Object.class ) {
+		for ( Class<?> fieldType : ReflectHelper.getFieldTypes( clazz ) ) {		
+			if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
 				try {
 					Index fieldIndex = JandexHelper.indexForClass(
 							serviceRegistry.getService( ClassLoaderService.class ),
-							fieldClass );
+							fieldType );
 					if ( !fieldIndex.getAnnotations(
 							JPADotNames.EMBEDDABLE ).isEmpty() ) {
-						indexClass( fieldClass, indexer, processedClasses );
+						indexClass( fieldType, indexer, processedClasses );
 					}
 				} catch ( Exception e ) {
 					// do nothing

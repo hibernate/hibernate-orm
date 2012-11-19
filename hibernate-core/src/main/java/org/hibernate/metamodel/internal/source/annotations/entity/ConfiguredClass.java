@@ -44,6 +44,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
@@ -54,9 +55,9 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.ReflectionHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.validator.util.ReflectionHelper;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
@@ -304,7 +305,7 @@ public class ConfiguredClass {
 	}
 
 	private boolean isPersistentMember(Set<String> transientNames, Set<String> explicitlyConfiguredMemberNames, Member member) {
-		if ( !ReflectionHelper.isProperty( member ) ) {
+		if ( !ReflectHelper.isProperty( member ) ) {
 			return false;
 		}
 
@@ -393,7 +394,7 @@ public class ConfiguredClass {
 					);
 				}
 			}
-			if ( ReflectionHelper.isProperty( member ) ) {
+			if ( ReflectHelper.isProperty( member ) ) {
 				createMappedAttribute( member, resolvedMembers, accessType );
 				explicitAccessPropertyNames.add( ReflectionHelper.getPropertyName( member ) );
 			}

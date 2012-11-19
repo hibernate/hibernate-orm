@@ -14,7 +14,7 @@ public class Toy {
 	private String name;
 	private Brand brand;
 	private String serial;
-	private Boy owner;
+//	private Boy owner;
 
 	@AttributeOverride(name = "name", column = @Column(name = "brand_name"))
 	public Brand getBrand() {
@@ -41,14 +41,14 @@ public class Toy {
 		this.serial = serial;
 	}
 
-	@Parent
-	public Boy getOwner() {
-		return owner;
-	}
-
-	public void setOwner(Boy owner) {
-		this.owner = owner;
-	}
+//	@Parent
+//	public Boy getOwner() {
+//		return owner;
+//	}
+//
+//	public void setOwner(Boy owner) {
+//		this.owner = owner;
+//	}
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;

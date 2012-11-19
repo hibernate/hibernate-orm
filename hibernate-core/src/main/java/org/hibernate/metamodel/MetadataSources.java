@@ -511,7 +511,7 @@ public class MetadataSources {
 		
 		processedClasses.add( clazz );
 
-		ClassInfo indexed = indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer );
+		indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer );
 
 		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
 		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be

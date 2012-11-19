@@ -121,7 +121,14 @@ public class ConfiguredClass {
 	/**
 	 * The embedded classes for this entity
 	 */
-	private final Map<String, EmbeddableClass> embeddedClasses = new HashMap<String, EmbeddableClass>();
+	private final Map<String, EmbeddableClass> embeddedClasses
+			= new HashMap<String, EmbeddableClass>();
+
+	/**
+	 * The collection element embedded classes for this entity
+	 */
+	private final Map<String, EmbeddableClass> collectionEmbeddedClasses
+			= new HashMap<String, EmbeddableClass>();
 
 	/**
 	 * A map of all attribute overrides defined in this class. The override name is "normalised", meaning as if specified
@@ -208,6 +215,10 @@ public class ConfiguredClass {
 
 	public Map<String, EmbeddableClass> getEmbeddedClasses() {
 		return embeddedClasses;
+	}
+
+	public Map<String, EmbeddableClass> getCollectionEmbeddedClasses() {
+		return collectionEmbeddedClasses;
 	}
 
 	public Map<String, AttributeOverride> getAttributeOverrideMap() {
@@ -485,7 +496,8 @@ public class ConfiguredClass {
 							JandexHelper.getValue( targetAnnotation, "value", String.class )
 					);
 				}
-				resolveEmbeddable( attributeName, attributeType, annotations );
+				embeddedClasses.put( attributeName, resolveEmbeddable(
+						attributeName, attributeType, annotations ) );
 				break;
 			}
 			case ONE_TO_ONE:
@@ -502,7 +514,8 @@ public class ConfiguredClass {
 				break;
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE:
-				resolveEmbeddable( attributeName, referencedCollectionType, annotations );
+				collectionEmbeddedClasses.put( attributeName, resolveEmbeddable(
+						attributeName, referencedCollectionType, annotations ) );
 				// fall through
 			case ELEMENT_COLLECTION_BASIC:
 			case ONE_TO_MANY:
@@ -524,7 +537,7 @@ public class ConfiguredClass {
 		}
 	}
 
-	private void resolveEmbeddable(String attributeName, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
+	private EmbeddableClass resolveEmbeddable(String attributeName, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		final ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
 		if ( embeddableClassInfo == null ) {
 			final String msg = String.format(
@@ -560,7 +573,7 @@ public class ConfiguredClass {
 				naturalIdMutability,
 				localBindingContext
 		);
-		embeddedClasses.put( attributeName, hierarchy.getLeaf() );
+		return hierarchy.getLeaf();
 	}
 
 	/**

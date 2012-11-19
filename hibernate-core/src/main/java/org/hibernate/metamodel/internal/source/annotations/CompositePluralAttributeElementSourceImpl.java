@@ -21,6 +21,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	@Override
 	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
 		// HBM only
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -121,9 +122,10 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 	
 	private void buildAttributeSources() {
-		// TODO: Duplicates code in ComponentAttributeSourceImpl.
-		EmbeddableClass embeddableClass = rootEntityClass.getEmbeddedClasses()
+		EmbeddableClass embeddableClass = rootEntityClass
+				.getCollectionEmbeddedClasses()
 				.get( associationAttribute.getName() );
+		// TODO: Duplicates code in ComponentAttributeSourceImpl.
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;
 			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();

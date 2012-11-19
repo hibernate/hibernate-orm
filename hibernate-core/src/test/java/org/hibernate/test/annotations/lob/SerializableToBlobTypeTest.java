@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTypeDefinition() {
 		EntityBinding binding = getEntityBinding( EntitySerialize.class );
 		
@@ -46,7 +47,6 @@ public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 		assertEquals( ExplicitSerializableType.class.getName(), overrideType.getName() );
 	}
 
-	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testPersist() {
 		EntitySerialize entitySerialize = new EntitySerialize();

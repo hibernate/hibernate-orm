@@ -105,7 +105,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			session.getTransactionCoordinator()
 					.getTransaction()
 					.createIsolationDelegate()
-					.delegateWork( work, session.getFactory().getSettings().isDataDefinitionInTransactionSupported() );
+					.delegateWork( work, shouldTransactIsolatedTemporaryTableDDL( session ) );
 		}
 		else {
 			final Connection connection = session.getTransactionCoordinator()
@@ -127,7 +127,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				session.getTransactionCoordinator()
 						.getTransaction()
 						.createIsolationDelegate()
-						.delegateWork( work, session.getFactory().getSettings().isDataDefinitionInTransactionSupported() );
+						.delegateWork( work, shouldTransactIsolatedTemporaryTableDDL( session ) );
 			}
 			else {
 				final Connection connection = session.getTransactionCoordinator()
@@ -172,6 +172,13 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			return dialectVote.booleanValue();
 		}
 		return session.getFactory().getSettings().isDataDefinitionImplicitCommit();
+	}
+
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	protected boolean shouldTransactIsolatedTemporaryTableDDL(SessionImplementor session) {
+		// is there ever a time when it makes sense to do this?
+//		return session.getFactory().getSettings().isDataDefinitionInTransactionSupported();
+		return false;
 	}
 
 	private static class TemporaryTableCreationWork extends AbstractWork {

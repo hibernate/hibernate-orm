@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CollectionTable;
@@ -34,16 +35,16 @@ public class Boy {
 	private Integer id;
 	private String firstName;
 	private String lastName;
-//	private Set<String> nickNames = new HashSet<String>();
-//	private Set<String> hatedNames = new HashSet<String>();
-//	private Set<String> preferredNames = new HashSet<String>();
-//	private Map<String, Integer> scorePerNickName = new HashMap<String, Integer>();
-//	private Map<String, Integer> scorePerPreferredName = new HashMap<String, Integer>();
-//	private int[] favoriteNumbers;
+	private Set<String> nickNames = new HashSet<String>();
+	private Set<String> hatedNames = new HashSet<String>();
+	private Set<String> preferredNames = new HashSet<String>();
+	private Map<String, Integer> scorePerNickName = new HashMap<String, Integer>();
+	private Map<String, Integer> scorePerPreferredName = new HashMap<String, Integer>();
+	private int[] favoriteNumbers;
 	private Set<Toy> favoriteToys = new HashSet<Toy>();
-//	private Set<Character> characters = new HashSet<Character>();
-//	private Map<String, FavoriteFood> foods = new HashMap<String,FavoriteFood>();
-//	private Set<CountryAttitude> countryAttitudes = new HashSet<CountryAttitude>();
+	private Set<Character> characters = new HashSet<Character>();
+	private Map<String, FavoriteFood> foods = new HashMap<String,FavoriteFood>();
+	private Set<CountryAttitude> countryAttitudes = new HashSet<CountryAttitude>();
 
 	@Id
 	@GeneratedValue
@@ -71,70 +72,70 @@ public class Boy {
 		this.lastName = lastName;
 	}
 
-//	@ElementCollection
-//	public Set<String> getNickNames() {
-//		return nickNames;
-//	}
-//
-//	public void setNickNames(Set<String> nickName) {
-//		this.nickNames = nickName;
-//	}
-//
-//	@ElementCollection //default column names
-//	public Set<String> getHatedNames() {
-//		return hatedNames;
-//	}
-//
-//	public void setHatedNames(Set<String> hatedNames) {
-//		this.hatedNames = hatedNames;
-//	}
-//
-//	@ElementCollection //default column names
-//	@Column
-//	public Set<String> getPreferredNames() {
-//		return preferredNames;
-//	}
-//
-//	public void setPreferredNames(Set<String> preferredNames) {
-//		this.preferredNames = preferredNames;
-//	}
-//
-//	@ElementCollection	
-//	@MapKeyColumn(nullable=false)
-//	public Map<String, Integer> getScorePerPreferredName() {
-//		return scorePerPreferredName;
-//	}
-//
-//	public void setScorePerPreferredName(Map<String, Integer> scorePerPreferredName) {
-//		this.scorePerPreferredName = scorePerPreferredName;
-//	}
-//
-//	@ElementCollection
-//	@CollectionTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
-//	@Column(name = "score", nullable = false)
-//	@MapKeyColumn(nullable=false)
-//	public Map<String, Integer> getScorePerNickName() {
-//		return scorePerNickName;
-//	}
-//
-//	public void setScorePerNickName(Map<String, Integer> scorePerNickName) {
-//		this.scorePerNickName = scorePerNickName;
-//	}
-//
-//	@ElementCollection
-//	@CollectionTable(
-//			name = "BoyFavoriteNumbers",
-//			joinColumns = @JoinColumn(name = "BoyId")
-//	)
-//	@Column(name = "favoriteNumber", nullable = false)
-//	@OrderColumn(name = "nbr_index")
-//	public int[] getFavoriteNumbers() {
-//		return favoriteNumbers;
-//	}
-//
-//	public void setFavoriteNumbers(int[] favoriteNumbers) {
-//		this.favoriteNumbers = favoriteNumbers;
-//	}
+	@ElementCollection
+	public Set<String> getNickNames() {
+		return nickNames;
+	}
+
+	public void setNickNames(Set<String> nickName) {
+		this.nickNames = nickName;
+	}
+
+	@ElementCollection //default column names
+	public Set<String> getHatedNames() {
+		return hatedNames;
+	}
+
+	public void setHatedNames(Set<String> hatedNames) {
+		this.hatedNames = hatedNames;
+	}
+
+	@ElementCollection //default column names
+	@Column
+	public Set<String> getPreferredNames() {
+		return preferredNames;
+	}
+
+	public void setPreferredNames(Set<String> preferredNames) {
+		this.preferredNames = preferredNames;
+	}
+
+	@ElementCollection	
+	@MapKeyColumn(nullable=false)
+	public Map<String, Integer> getScorePerPreferredName() {
+		return scorePerPreferredName;
+	}
+
+	public void setScorePerPreferredName(Map<String, Integer> scorePerPreferredName) {
+		this.scorePerPreferredName = scorePerPreferredName;
+	}
+
+	@ElementCollection
+	@CollectionTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
+	@Column(name = "score", nullable = false)
+	@MapKeyColumn(nullable=false)
+	public Map<String, Integer> getScorePerNickName() {
+		return scorePerNickName;
+	}
+
+	public void setScorePerNickName(Map<String, Integer> scorePerNickName) {
+		this.scorePerNickName = scorePerNickName;
+	}
+
+	@ElementCollection
+	@CollectionTable(
+			name = "BoyFavoriteNumbers",
+			joinColumns = @JoinColumn(name = "BoyId")
+	)
+	@Column(name = "favoriteNumber", nullable = false)
+	@OrderColumn(name = "nbr_index")
+	public int[] getFavoriteNumbers() {
+		return favoriteNumbers;
+	}
+
+	public void setFavoriteNumbers(int[] favoriteNumbers) {
+		this.favoriteNumbers = favoriteNumbers;
+	}
 	@ElementCollection
 	@AttributeOverride(name = "element.serial", column = @Column(name = "serial_nbr"))
 	public Set<Toy> getFavoriteToys() {
@@ -145,36 +146,36 @@ public class Boy {
 		this.favoriteToys = favoriteToys;
 	}
 
-//	@ElementCollection
-//	@Enumerated(EnumType.STRING)
-//    @Column(name = "`characters`")
-//	public Set<Character> getCharacters() {
-//		return characters;
-//	}
-//
-//	public void setCharacters(Set<Character> characters) {
-//		this.characters = characters;
-//	}
-//
-//	@ElementCollection
-//	@Enumerated(EnumType.STRING)
-//	@MapKeyColumn(nullable=false)
-//	public Map<String, FavoriteFood> getFavoriteFood() {
-//		return foods;
-//	}
-//
-//	public void setFavoriteFood(Map<String, FavoriteFood>foods) {
-//		this.foods = foods;
-//	}
-//
-//	@ElementCollection(fetch = FetchType.EAGER)
-//	//@Where(clause = "b_likes=false")
-//	public Set<CountryAttitude> getCountryAttitudes() {
-//		return countryAttitudes;
-//	}
-//
-//	public void setCountryAttitudes(Set<CountryAttitude> countryAttitudes) {
-//		this.countryAttitudes = countryAttitudes;
-//	}
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+    @Column(name = "`characters`")
+	public Set<Character> getCharacters() {
+		return characters;
+	}
+
+	public void setCharacters(Set<Character> characters) {
+		this.characters = characters;
+	}
+
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+	@MapKeyColumn(nullable=false)
+	public Map<String, FavoriteFood> getFavoriteFood() {
+		return foods;
+	}
+
+	public void setFavoriteFood(Map<String, FavoriteFood>foods) {
+		this.foods = foods;
+	}
+
+	@ElementCollection(fetch = FetchType.EAGER)
+	//@Where(clause = "b_likes=false")
+	public Set<CountryAttitude> getCountryAttitudes() {
+		return countryAttitudes;
+	}
+
+	public void setCountryAttitudes(Set<CountryAttitude> countryAttitudes) {
+		this.countryAttitudes = countryAttitudes;
+	}
 }
 

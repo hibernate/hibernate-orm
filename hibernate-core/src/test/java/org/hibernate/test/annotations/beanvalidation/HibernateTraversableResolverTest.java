@@ -23,25 +23,23 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonLazyAssocFieldWithConstraintsFailureExpected() {

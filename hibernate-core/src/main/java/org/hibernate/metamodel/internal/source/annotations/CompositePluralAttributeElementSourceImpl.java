@@ -52,6 +52,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	private List<AttributeSource> attributeSources
 			= new ArrayList<AttributeSource>();
 	
+	private String parentReferenceAttributeName;
+	
 	public CompositePluralAttributeElementSourceImpl(
 			AssociationAttribute associationAttribute,
 			RootEntityClass rootEntityClass ) {
@@ -111,8 +113,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public String getParentReferenceAttributeName() {
-		// TODO: Is this correct?
-		return associationAttribute.getName();
+		return parentReferenceAttributeName;
 	}
 
 	@Override
@@ -125,6 +126,9 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 		EmbeddableClass embeddableClass = rootEntityClass
 				.getCollectionEmbeddedClasses()
 				.get( associationAttribute.getName() );
+		
+		parentReferenceAttributeName = embeddableClass.getParentReferencingAttributeName();
+		
 		// TODO: Duplicates code in ComponentAttributeSourceImpl.
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;

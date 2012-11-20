@@ -23,12 +23,14 @@
  */
 package org.hibernate.test.annotations.collectionelement;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
-import org.junit.Test;
 
 import org.hibernate.Filter;
 import org.hibernate.Query;
@@ -38,70 +40,67 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-//@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
-//	@Test
-//	public void testSimpleElement() throws Exception {
-//		assertEquals(
-//				"BoyFavoriteNumbers",
-//				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-//						.getCollectionTable().getName()
-//		);
-//		Session s = openSession();
-//		s.getTransaction().begin();
-//		Boy boy = new Boy();
-//		boy.setFirstName( "John" );
-//		boy.setLastName( "Doe" );
-//		boy.getNickNames().add( "Johnny" );
-//		boy.getNickNames().add( "Thing" );
-//		boy.getScorePerNickName().put( "Johnny", new Integer( 3 ) );
-//		boy.getScorePerNickName().put( "Thing", new Integer( 5 ) );
-//		int[] favNbrs = new int[4];
-//		for (int index = 0; index < favNbrs.length - 1; index++) {
-//			favNbrs[index] = index * 3;
-//		}
-//		boy.setFavoriteNumbers( favNbrs );
-//		boy.getCharacters().add( Character.GENTLE );
-//		boy.getCharacters().add( Character.CRAFTY );
-//
-//		HashMap<String,FavoriteFood> foods = new HashMap<String,FavoriteFood>();
-//		foods.put( "breakfast", FavoriteFood.PIZZA);
-//		foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN);
-//		foods.put( "dinner", FavoriteFood.SUSHI);
-//		boy.setFavoriteFood(foods);
-//		s.persist( boy );
-//		s.getTransaction().commit();
-//		s.clear();
-//		Transaction tx = s.beginTransaction();
-//		boy = (Boy) s.get( Boy.class, boy.getId() );
-//		assertNotNull( boy.getNickNames() );
-//		assertTrue( boy.getNickNames().contains( "Thing" ) );
-//		assertNotNull( boy.getScorePerNickName() );
-//		assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
-//		assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
-//		assertNotNull( boy.getFavoriteNumbers() );
-//		assertEquals( 3, boy.getFavoriteNumbers()[1] );
-//		assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
-//		assertTrue( boy.getFavoriteFood().get("dinner").equals(FavoriteFood.SUSHI));
-//		assertTrue( boy.getFavoriteFood().get("lunch").equals(FavoriteFood.KUNGPAOCHICKEN));
-//		assertTrue( boy.getFavoriteFood().get("breakfast").equals(FavoriteFood.PIZZA));
-//		List result = s.createQuery( "select boy from Boy boy join boy.nickNames names where names = :name" )
-//				.setParameter( "name", "Thing" ).list();
-//		assertEquals( 1, result.size() );
-//		s.delete( boy );
-//		tx.commit();
-//		s.close();
-//	}
+	@Test
+	public void testSimpleElement() throws Exception {
+		assertEquals(
+				"BoyFavoriteNumbers",
+				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+						.getCollectionTable().getName()
+		);
+		Session s = openSession();
+		s.getTransaction().begin();
+		Boy boy = new Boy();
+		boy.setFirstName( "John" );
+		boy.setLastName( "Doe" );
+		boy.getNickNames().add( "Johnny" );
+		boy.getNickNames().add( "Thing" );
+		boy.getScorePerNickName().put( "Johnny", new Integer( 3 ) );
+		boy.getScorePerNickName().put( "Thing", new Integer( 5 ) );
+		int[] favNbrs = new int[4];
+		for (int index = 0; index < favNbrs.length - 1; index++) {
+			favNbrs[index] = index * 3;
+		}
+		boy.setFavoriteNumbers( favNbrs );
+		boy.getCharacters().add( Character.GENTLE );
+		boy.getCharacters().add( Character.CRAFTY );
+
+		HashMap<String,FavoriteFood> foods = new HashMap<String,FavoriteFood>();
+		foods.put( "breakfast", FavoriteFood.PIZZA);
+		foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN);
+		foods.put( "dinner", FavoriteFood.SUSHI);
+		boy.setFavoriteFood(foods);
+		s.persist( boy );
+		s.getTransaction().commit();
+		s.clear();
+		Transaction tx = s.beginTransaction();
+		boy = (Boy) s.get( Boy.class, boy.getId() );
+		assertNotNull( boy.getNickNames() );
+		assertTrue( boy.getNickNames().contains( "Thing" ) );
+		assertNotNull( boy.getScorePerNickName() );
+		assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
+		assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
+		assertNotNull( boy.getFavoriteNumbers() );
+		assertEquals( 3, boy.getFavoriteNumbers()[1] );
+		assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+		assertTrue( boy.getFavoriteFood().get("dinner").equals(FavoriteFood.SUSHI));
+		assertTrue( boy.getFavoriteFood().get("lunch").equals(FavoriteFood.KUNGPAOCHICKEN));
+		assertTrue( boy.getFavoriteFood().get("breakfast").equals(FavoriteFood.PIZZA));
+		List result = s.createQuery( "select boy from Boy boy join boy.nickNames names where names = :name" )
+				.setParameter( "name", "Thing" ).list();
+		assertEquals( 1, result.size() );
+		s.delete( boy );
+		tx.commit();
+		s.close();
+	}
 
 	@Test
 	public void testCompositeElement() throws Exception {
@@ -123,166 +122,166 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		boy = (Boy) s.get( Boy.class, boy.getId() );
 		assertNotNull( boy.getFavoriteToys() );
 		assertTrue( boy.getFavoriteToys().contains( toy ) );
-//		assertEquals( "@Parent is failing", boy, boy.getFavoriteToys().iterator().next().getOwner() );
+		assertEquals( "@Parent is failing", boy, boy.getFavoriteToys().iterator().next().getOwner() );
 		s.delete( boy );
 		tx.commit();
 		s.close();
 	}
 
-//	@Test
-//	public void testAttributedJoin() throws Exception {
-//		Session s = openSession();
-//		s.getTransaction().begin();
-//		Country country = new Country();
-//		country.setName( "Australia" );
-//		s.persist( country );
-//
-//		Boy boy = new Boy();
-//		boy.setFirstName( "John" );
-//		boy.setLastName( "Doe" );
-//		CountryAttitude attitude = new CountryAttitude();
-//		// TODO: doesn't work
-//		attitude.setBoy( boy );
-//		attitude.setCountry( country );
-//		attitude.setLikes( true );
-//		boy.getCountryAttitudes().add( attitude );
-//		s.persist( boy );
-//		s.getTransaction().commit();
-//		s.clear();
-//
-//		Transaction tx = s.beginTransaction();
-//		boy = (Boy) s.get( Boy.class, boy.getId() );
-//		assertTrue( boy.getCountryAttitudes().contains( attitude ) );
-//		s.delete( boy );
-//		s.delete( s.get( Country.class, country.getId() ) );
-//		tx.commit();
-//		s.close();
-//	}
-//
-//	@Test
-//	public void testLazyCollectionofElements() throws Exception {
-//		assertEquals(
-//				"BoyFavoriteNumbers",
-//				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-//						.getCollectionTable().getName()
-//		);
-//		Session s = openSession();
-//		s.getTransaction().begin();
-//		Boy boy = new Boy();
-//		boy.setFirstName( "John" );
-//		boy.setLastName( "Doe" );
-//		boy.getNickNames().add( "Johnny" );
-//		boy.getNickNames().add( "Thing" );
-//		boy.getScorePerNickName().put( "Johnny", new Integer( 3 ) );
-//		boy.getScorePerNickName().put( "Thing", new Integer( 5 ) );
-//		int[] favNbrs = new int[4];
-//		for (int index = 0; index < favNbrs.length - 1; index++) {
-//			favNbrs[index] = index * 3;
-//		}
-//		boy.setFavoriteNumbers( favNbrs );
-//		boy.getCharacters().add( Character.GENTLE );
-//		boy.getCharacters().add( Character.CRAFTY );
-//		s.persist( boy );
-//		s.getTransaction().commit();
-//		s.clear();
-//		Transaction tx = s.beginTransaction();
-//		boy = (Boy) s.get( Boy.class, boy.getId() );
-//		assertNotNull( boy.getNickNames() );
-//		assertTrue( boy.getNickNames().contains( "Thing" ) );
-//		assertNotNull( boy.getScorePerNickName() );
-//		assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
-//		assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
-//		assertNotNull( boy.getFavoriteNumbers() );
-//		assertEquals( 3, boy.getFavoriteNumbers()[1] );
-//		assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
-//		List result = s.createQuery( "select boy from Boy boy join boy.nickNames names where names = :name" )
-//				.setParameter( "name", "Thing" ).list();
-//		assertEquals( 1, result.size() );
-//		s.delete( boy );
-//		tx.commit();
-//		s.close();
-//	}
-//
-//	@Test
-//	public void testFetchEagerAndFilter() throws Exception {
-//		Session s = openSession();
-//		Transaction tx = s.beginTransaction();
-//
-//		TestCourse test = new TestCourse();
-//
-//		LocalizedString title = new LocalizedString( "title in english" );
-//		title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
-//		test.setTitle( title );
-//		s.save( test );
-//
-//		s.flush();
-//		s.clear();
-//
-//		Filter filter = s.enableFilter( "selectedLocale" );
-//		filter.setParameter( "param", "fr" );
-//
-//		Query q = s.createQuery( "from TestCourse t" );
-//		List l = q.list();
-//		assertEquals( 1, l.size() );
-//
-//		TestCourse t = (TestCourse) s.get( TestCourse.class, test.getTestCourseId() );
-//		assertEquals( 1, t.getTitle().getVariations().size() );
-//
-//		tx.rollback();
-//
-//		s.close();
-//	}
-//
-//	@Test
-//	public void testMapKeyType() throws Exception {
-//		Matrix m = new Matrix();
-//		m.getMvalues().put( 1, 1.1f );
-//		Session s = openSession();
-//		Transaction tx = s.beginTransaction();
-//		s.persist( m );
-//		s.flush();
-//		s.clear();
-//		m = (Matrix) s.get( Matrix.class, m.getId() );
-//		assertEquals( 1.1f, m.getMvalues().get( 1 ), 0.01f );
-//		tx.rollback();
-//		s.close();
-//	}
-//
-//	@Test
-//	public void testDefaultValueColumnForBasic() throws Exception {
-//		isCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
-//		isCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
-//		isCollectionColumnPresent( Boy.class.getName(), "nickNames" );
-//		isCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
-//	}
-//
-//	@Test
-//	public void testDefaultFKNameForElementCollection() throws Exception {
-//		isCollectionColumnPresent( Boy.class.getName(), "Boy_id" );
-//	}
-//
-//	private void isCollectionColumnPresent(String collectionOwner, String columnName) {
-//		// TODO: Is this correct?  Cannot test due to ManyToOne issues.
-//		Iterator<PluralAttributeBinding> bindings = getCollectionBindings();
-//		boolean hasDefault = false;
-//		while ( bindings.hasNext() ) {
-//			PluralAttributeBinding binding = bindings.next();
-//			if ( binding.getAttribute().getName().equals( columnName )
-//					&& binding.getAttribute().getAttributeContainer().getClassName().equals( collectionOwner ) ) {
-//				hasDefault = true;
-//				break;
-//			}
-//		}
-//		assertTrue( "Could not find " + columnName, hasDefault );
-//	}
+	@Test
+	public void testAttributedJoin() throws Exception {
+		Session s = openSession();
+		s.getTransaction().begin();
+		Country country = new Country();
+		country.setName( "Australia" );
+		s.persist( country );
+
+		Boy boy = new Boy();
+		boy.setFirstName( "John" );
+		boy.setLastName( "Doe" );
+		CountryAttitude attitude = new CountryAttitude();
+		// TODO: doesn't work
+		attitude.setBoy( boy );
+		attitude.setCountry( country );
+		attitude.setLikes( true );
+		boy.getCountryAttitudes().add( attitude );
+		s.persist( boy );
+		s.getTransaction().commit();
+		s.clear();
+
+		Transaction tx = s.beginTransaction();
+		boy = (Boy) s.get( Boy.class, boy.getId() );
+		assertTrue( boy.getCountryAttitudes().contains( attitude ) );
+		s.delete( boy );
+		s.delete( s.get( Country.class, country.getId() ) );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	public void testLazyCollectionofElements() throws Exception {
+		assertEquals(
+				"BoyFavoriteNumbers",
+				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+						.getCollectionTable().getName()
+		);
+		Session s = openSession();
+		s.getTransaction().begin();
+		Boy boy = new Boy();
+		boy.setFirstName( "John" );
+		boy.setLastName( "Doe" );
+		boy.getNickNames().add( "Johnny" );
+		boy.getNickNames().add( "Thing" );
+		boy.getScorePerNickName().put( "Johnny", new Integer( 3 ) );
+		boy.getScorePerNickName().put( "Thing", new Integer( 5 ) );
+		int[] favNbrs = new int[4];
+		for (int index = 0; index < favNbrs.length - 1; index++) {
+			favNbrs[index] = index * 3;
+		}
+		boy.setFavoriteNumbers( favNbrs );
+		boy.getCharacters().add( Character.GENTLE );
+		boy.getCharacters().add( Character.CRAFTY );
+		s.persist( boy );
+		s.getTransaction().commit();
+		s.clear();
+		Transaction tx = s.beginTransaction();
+		boy = (Boy) s.get( Boy.class, boy.getId() );
+		assertNotNull( boy.getNickNames() );
+		assertTrue( boy.getNickNames().contains( "Thing" ) );
+		assertNotNull( boy.getScorePerNickName() );
+		assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
+		assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
+		assertNotNull( boy.getFavoriteNumbers() );
+		assertEquals( 3, boy.getFavoriteNumbers()[1] );
+		assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+		List result = s.createQuery( "select boy from Boy boy join boy.nickNames names where names = :name" )
+				.setParameter( "name", "Thing" ).list();
+		assertEquals( 1, result.size() );
+		s.delete( boy );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	public void testFetchEagerAndFilter() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+		TestCourse test = new TestCourse();
+
+		LocalizedString title = new LocalizedString( "title in english" );
+		title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
+		test.setTitle( title );
+		s.save( test );
+
+		s.flush();
+		s.clear();
+
+		Filter filter = s.enableFilter( "selectedLocale" );
+		filter.setParameter( "param", "fr" );
+
+		Query q = s.createQuery( "from TestCourse t" );
+		List l = q.list();
+		assertEquals( 1, l.size() );
+
+		TestCourse t = (TestCourse) s.get( TestCourse.class, test.getTestCourseId() );
+		assertEquals( 1, t.getTitle().getVariations().size() );
+
+		tx.rollback();
+
+		s.close();
+	}
+
+	@Test
+	public void testMapKeyType() throws Exception {
+		Matrix m = new Matrix();
+		m.getMvalues().put( 1, 1.1f );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.persist( m );
+		s.flush();
+		s.clear();
+		m = (Matrix) s.get( Matrix.class, m.getId() );
+		assertEquals( 1.1f, m.getMvalues().get( 1 ), 0.01f );
+		tx.rollback();
+		s.close();
+	}
+
+	@Test
+	public void testDefaultValueColumnForBasic() throws Exception {
+		isCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "nickNames" );
+		isCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
+	}
+
+	@Test
+	public void testDefaultFKNameForElementCollection() throws Exception {
+		isCollectionColumnPresent( Boy.class.getName(), "Boy_id" );
+	}
+
+	private void isCollectionColumnPresent(String collectionOwner, String columnName) {
+		// TODO: Is this correct?  Cannot test due to ManyToOne issues.
+		Iterator<PluralAttributeBinding> bindings = getCollectionBindings();
+		boolean hasDefault = false;
+		while ( bindings.hasNext() ) {
+			PluralAttributeBinding binding = bindings.next();
+			if ( binding.getAttribute().getName().equals( columnName )
+					&& binding.getAttribute().getAttributeContainer().getClassName().equals( collectionOwner ) ) {
+				hasDefault = true;
+				break;
+			}
+		}
+		assertTrue( "Could not find " + columnName, hasDefault );
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
-				Boy.class/*,
+				Boy.class,
 				Country.class,
 				TestCourse.class,
-				Matrix.class*/
+				Matrix.class
 		};
 	}
 }

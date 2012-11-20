@@ -53,6 +53,7 @@ import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
+import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -242,12 +243,13 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 	@Override
     protected boolean canApplyLockModes() {
-		return org.hibernate.internal.QueryImpl.class.isInstance( query );
+		return org.hibernate.internal.QueryImpl.class.isInstance( query )
+				|| SQLQueryImpl.class.isInstance( query );
 	}
 
 	@Override
 	protected void applyAliasSpecificLockMode(String alias, LockMode lockMode) {
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		query.getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
 	/**
@@ -631,18 +633,16 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
 		}
 		this.jpaLockMode = lockModeType;
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setLockMode(
-				LockModeTypeHelper.getLockMode( lockModeType )
-		);
-		if ( getHints()!=null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
-			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT )) );
+		query.getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		if ( getHints() != null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
+			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT ) ) );
 		}
 		return this;
 	}
 
 	@Override
 	protected void applyLockTimeout(int timeout) {
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setTimeOut( timeout );
+		query.getLockOptions().setTimeOut( timeout );
 	}
 
 	@Override

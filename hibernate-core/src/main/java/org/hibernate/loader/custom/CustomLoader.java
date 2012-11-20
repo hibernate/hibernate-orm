@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +39,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -50,6 +56,7 @@ import org.hibernate.loader.Loader;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CollectionType;
@@ -329,6 +336,35 @@ public class CustomLoader extends Loader {
 
 	public List list(SessionImplementor session, QueryParameters queryParameters) throws HibernateException {
 		return list( session, queryParameters, querySpaces, resultTypes );
+	}
+
+	@Override
+	protected String applyLocks(
+			String sql,
+			QueryParameters parameters,
+			Dialect dialect,
+			List<AfterLoadAction> afterLoadActions) throws QueryException {
+		final LockOptions lockOptions = parameters.getLockOptions();
+		if ( lockOptions == null ||
+				( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
+			return sql;
+		}
+
+		// user is request locking, lets see if we can apply locking directly to the SQL...
+
+		// 		some dialects wont allow locking with paging...
+		afterLoadActions.add(
+				new AfterLoadAction() {
+					private final LockOptions originalLockOptions = lockOptions.makeCopy();
+					@Override
+					public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+						( (Session) session ).buildLockRequest( originalLockOptions ).lock( persister.getEntityName(), entity );
+					}
+				}
+		);
+		parameters.getLockOptions().setLockMode( LockMode.READ );
+
+		return sql;
 	}
 
 	public ScrollableResults scroll(

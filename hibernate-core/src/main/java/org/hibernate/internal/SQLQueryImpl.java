@@ -68,6 +68,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	private Collection<String> querySpaces;
 
 	private final boolean callable;
+	private final LockOptions lockOptions = new LockOptions();
 
 	/**
 	 * Constructs a SQLQueryImpl given a sql query defined in the mappings.
@@ -245,8 +246,8 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 	@Override
     public LockOptions getLockOptions() {
-		//we never need to apply locks to the SQL
-		return null;
+		//we never need to apply locks to the SQL, however the native-sql loader handles this specially
+		return lockOptions;
 	}
 
 	public SQLQuery addScalar(final String columnAlias, final Type type) {

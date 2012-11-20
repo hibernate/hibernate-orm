@@ -2399,4 +2399,8 @@ public abstract class Dialect implements ConversionContext {
 	public boolean forceLobAsLastValue() {
 		return false;
 	}
+
+	public boolean supportsLockingAndPaging() {
+		return true;
+	}
 }

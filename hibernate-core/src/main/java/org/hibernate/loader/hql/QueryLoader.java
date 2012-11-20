@@ -23,10 +23,12 @@
  */
 package org.hibernate.loader.hql;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -37,8 +39,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -307,15 +313,34 @@ public class QueryLoader extends BasicLoader {
 		return lockModesArray;
 	}
 
-	protected String applyLocks(String sql, LockOptions lockOptions, Dialect dialect) throws QueryException {
+	@Override
+	protected String applyLocks(
+			String sql,
+			QueryParameters parameters,
+			Dialect dialect,
+			List<AfterLoadAction> afterLoadActions) throws QueryException {
 		// can't cache this stuff either (per-invocation)
 		// we are given a map of user-alias -> lock mode
 		// create a new map of sql-alias -> lock mode
+
+		final LockOptions lockOptions = parameters.getLockOptions();
 
 		if ( lockOptions == null ||
 			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
 			return sql;
 		}
+
+
+		// user is request locking, lets see if we can apply locking directly to the SQL...
+
+		// 		some dialects wont allow locking with paging...
+		if ( shouldDelayLockingDueToPaging( sql, parameters, dialect, afterLoadActions ) ) {
+			return sql;
+		}
+
+		//		there are other conditions we might want to add here, such as checking the result types etc
+		//		but those are better served after we have redone the SQL generation to use ASTs.
+
 
 		// we need both the set of locks and the columns to reference in locks
 		// as the ultimate output of this section...
@@ -490,7 +515,7 @@ public class QueryLoader extends BasicLoader {
 			if ( queryParameters.isCallable() ) {
 				throw new QueryException("iterate() not supported for callable statements");
 			}
-			final ResultSet rs = executeQueryStatement( queryParameters, false, session );
+			final ResultSet rs = executeQueryStatement( queryParameters, false, Collections.<AfterLoadAction>emptyList(), session );
 			final PreparedStatement st = (PreparedStatement) rs.getStatement();
 			final Iterator result = new IteratorImpl(
 					rs,

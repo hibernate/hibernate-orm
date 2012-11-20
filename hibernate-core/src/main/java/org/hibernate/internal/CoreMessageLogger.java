@@ -1583,4 +1583,12 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 443
 	)
 	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Encountered request which combined locking and paging, however dialect reports that database does " +
+					"not support that combination.  Results will be locked after initial query executes",
+			id = 444
+	)
+	void delayedLockingDueToPaging();
 }

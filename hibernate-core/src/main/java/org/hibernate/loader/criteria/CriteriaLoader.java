@@ -36,14 +36,19 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.OuterJoinLoader;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
@@ -190,11 +195,54 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return querySpaces;
 	}
 
-	protected String applyLocks(String sqlSelectString, LockOptions lockOptions, Dialect dialect) throws QueryException {
+	@Override
+	protected String applyLocks(
+			String sql,
+			QueryParameters parameters,
+			Dialect dialect,
+			List<AfterLoadAction> afterLoadActions) throws QueryException {
+		final LockOptions lockOptions = parameters.getLockOptions();
 		if ( lockOptions == null ||
 			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
-			return sqlSelectString;
+			return sql;
 		}
+
+		// user is request locking, lets see if we can apply locking directly to the SQL...
+
+		// 		some dialects wont allow locking with paging...
+		final RowSelection rowSelection = parameters.getRowSelection();
+		final LimitHandler limitHandler = dialect.buildLimitHandler( sql, rowSelection );
+		if ( LimitHelper.useLimit( limitHandler, rowSelection ) ) {
+			// user has requested a combination of paging and locking.  See if the dialect supports that
+			// (ahem, Oracle...)
+			if ( ! dialect.supportsLockingAndPaging() ) {
+				LOG.delayedLockingDueToPaging();
+
+				// this one is kind of ugly.  currently we do not track the needed alias-to-entity
+				// mapping into the "hydratedEntities" which drives these callbacks
+				// so for now apply the root lock mode to all.  The root lock mode is listed in
+				// the alias specific map under the alias "this_"...
+				final LockOptions lockOptionsToUse = new LockOptions();
+				lockOptionsToUse.setLockMode( lockOptions.getEffectiveLockMode( "this_" ) );
+				lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
+				lockOptionsToUse.setScope( lockOptions.getScope() );
+
+				afterLoadActions.add(
+						new AfterLoadAction() {
+							@Override
+							public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+								( (Session) session ).buildLockRequest( lockOptionsToUse )
+										.lock( persister.getEntityName(), entity );
+							}
+						}
+				);
+				parameters.setLockOptions( new LockOptions() );
+				return sql;
+			}
+		}
+
+		//		there are other conditions we might want to add here, such as checking the result types etc
+		//		but those are better served after we have redone the SQL generation to use ASTs.
 
 		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
 		locks.setScope( lockOptions.getScope());
@@ -213,7 +261,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 				}
 			}
 		}
-		return dialect.applyLocksToSql( sqlSelectString, locks, keyColumnNames );
+		return dialect.applyLocksToSql( sql, locks, keyColumnNames );
 	}
 
 	protected LockMode[] getLockModes(LockOptions lockOptions) {

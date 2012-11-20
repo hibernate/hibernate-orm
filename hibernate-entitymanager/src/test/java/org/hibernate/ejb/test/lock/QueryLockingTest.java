@@ -83,6 +83,32 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void testNativeSql() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		QueryImpl query = em.createNativeQuery( "select * from lockable l" ).unwrap( QueryImpl.class );
+
+		org.hibernate.internal.SQLQueryImpl hibernateQuery = (org.hibernate.internal.SQLQueryImpl) query.getHibernateQuery();
+//		assertEquals( LockMode.NONE, hibernateQuery.getLockOptions().getLockMode() );
+//		assertNull( hibernateQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
+//		assertEquals( LockMode.NONE, hibernateQuery.getLockOptions().getEffectiveLockMode( "l" ) );
+
+		// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
+		query.setLockMode( LockModeType.READ );
+		assertEquals( LockMode.OPTIMISTIC, hibernateQuery.getLockOptions().getLockMode() );
+		assertNull( hibernateQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
+		assertEquals( LockMode.OPTIMISTIC, hibernateQuery.getLockOptions().getEffectiveLockMode( "l" ) );
+
+		query.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.PESSIMISTIC_WRITE );
+		assertEquals( LockMode.OPTIMISTIC, hibernateQuery.getLockOptions().getLockMode() );
+		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
+		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getEffectiveLockMode( "l" ) );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
 	public void testPessimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

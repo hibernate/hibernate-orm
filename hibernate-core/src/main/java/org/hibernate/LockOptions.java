@@ -254,4 +254,10 @@ public class LockOptions implements Serializable {
 		}
 		return dest;
 	}
+
+	public LockOptions makeCopy() {
+		LockOptions copy = new LockOptions();
+		copy( this, copy );
+		return copy;
+	}
 }

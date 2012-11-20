@@ -57,7 +57,6 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.validator.util.ReflectionHelper;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
@@ -323,7 +322,7 @@ public class ConfiguredClass {
 			return false;
 		}
 
-		if ( explicitlyConfiguredMemberNames.contains( ReflectionHelper.getPropertyName( member ) ) ) {
+		if ( explicitlyConfiguredMemberNames.contains( ReflectHelper.getPropertyName( member ) ) ) {
 			return false;
 		}
 
@@ -396,7 +395,7 @@ public class ConfiguredClass {
 			}
 			if ( ReflectHelper.isProperty( member ) ) {
 				createMappedAttribute( member, resolvedMembers, accessType );
-				explicitAccessPropertyNames.add( ReflectionHelper.getPropertyName( member ) );
+				explicitAccessPropertyNames.add( ReflectHelper.getPropertyName( member ) );
 			}
 		}
 		return explicitAccessPropertyNames;
@@ -437,7 +436,7 @@ public class ConfiguredClass {
 	}
 
 	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
-		final String attributeName = ReflectionHelper.getPropertyName( member );
+		final String attributeName = ReflectHelper.getPropertyName( member );
 		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
 				.getMemberMethods();
 		ResolvedMember resolvedMember = findResolvedMember( member.getName(), resolvedMembers );
@@ -581,7 +580,7 @@ public class ConfiguredClass {
 	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
 	 *
 	 * @param annotations the annotations defined on the persistent attribute
-	 * @param type the attribute's type
+	 * @param attributeType the attribute's type
 	 * @param referencedCollectionType the type of the collection element in case the attribute is collection valued
 	 *
 	 * @return an instance of the {@code AttributeType} enum

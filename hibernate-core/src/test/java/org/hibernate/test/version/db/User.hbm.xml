@@ -17,7 +17,7 @@
         </id>
         <timestamp name="timestamp" column="ts" source="db"/>
         <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
-        <property name="username" column="user_name" type="string" unique="true"/>
+        <property name="username" column="user_name" type="string" unique="true" not-null="true"/>
         <set name="groups" table="db_vers_user_group" batch-size="9" inverse="true" optimistic-lock="true" lazy="true" cascade="none" >
             <key column="user_id"/>
             <many-to-many column="group_id" class="Group" lazy="false" fetch="join" />
@@ -34,7 +34,7 @@
         </id>
         <timestamp name="timestamp" column="ts" source="db"/>
         <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
-        <property name="name" column="name" type="string" unique="true"/>
+        <property name="name" column="name" type="string" unique="true" not-null="true"/>
         <set name="users" table="db_vers_user_group" batch-size="9" inverse="false" lazy="true" cascade="none" >
             <key column="group_id"/>
             <many-to-many column="user_id" class="User" lazy="false" fetch="join" />
@@ -47,7 +47,7 @@
         </id>
         <timestamp name="timestamp" column="ts" source="db"/>
         <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
-        <property name="name" column="name" type="string" unique="true"/>
+        <property name="name" column="name" type="string" unique="true" not-null="true"/>
         <property name="context" column="ctx" type="string"/>
         <property name="access" column="priv" type="string"/>
 	</class>

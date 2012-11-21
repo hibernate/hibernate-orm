@@ -6,7 +6,13 @@
 <hibernate-mapping package="org.hibernate.test.hqlfetchscroll">
 	
 	<class name="Parent" table="Parents">
-		<id name="name"/>
+		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+        require identifier columns in order to support scrollable results. -->
+		<id name="id">
+		    <generator class="identity"/>
+		</id>
+		
+		<property name="name"/>
 		
 		<set name="children" cascade="all-delete-orphan" lazy="false">
 			<key column="parent_id"/>
@@ -16,7 +22,13 @@
 	</class>
 	
 	<class name="Child" table="chlidren">
-		<id name="name"/>
+		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+        require identifier columns in order to support scrollable results. -->
+        <id name="id">
+            <generator class="identity"/>
+        </id>
+        
+        <property name="name"/>
 	</class>
 	
 

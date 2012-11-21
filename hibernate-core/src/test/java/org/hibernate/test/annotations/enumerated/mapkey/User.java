@@ -30,6 +30,8 @@ import javax.persistence.FetchType;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 @Entity
+@Table( name = "USER_TABLE" )
 public class User {
 	@javax.persistence.Id
 	@javax.persistence.GeneratedValue(generator = "system-uuid")

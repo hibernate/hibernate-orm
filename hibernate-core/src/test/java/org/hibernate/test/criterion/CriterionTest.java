@@ -29,6 +29,7 @@ import org.hibernate.IrrelevantEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LikeExpression;
@@ -42,6 +43,7 @@ import org.hibernate.type.Type;
 
 import org.junit.Test;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -49,12 +51,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class CriterionTest extends BaseUnitTestCase {
+public class CriterionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIlikeRendering() {
 		SessionFactory sf = new Configuration()
 				.addAnnotatedClass( IrrelevantEntity.class )
 				.setProperty( AvailableSettings.DIALECT, IlikeSupportingDialect.class.getName() )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
 		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator( 
@@ -73,6 +76,7 @@ public class CriterionTest extends BaseUnitTestCase {
 		SessionFactory sf = new Configuration()
 				.addAnnotatedClass( IrrelevantEntity.class )
 				.setProperty( AvailableSettings.DIALECT, NonIlikeSupportingDialect.class.getName() )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
 		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator(

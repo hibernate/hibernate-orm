@@ -23,10 +23,14 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -34,8 +38,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -86,7 +88,6 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -96,9 +97,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
-
-import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
-import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -119,7 +118,6 @@ public class EntityBinder {
 	private Boolean insertableDiscriminator;
 	private boolean dynamicInsert;
 	private boolean dynamicUpdate;
-	private boolean explicitHibernateEntityAnnotation;
 	private OptimisticLockType optimisticLockType;
 	private PolymorphismType polymorphismType;
 	private boolean selectBeforeUpdate;
@@ -152,7 +150,6 @@ public class EntityBinder {
 
 	public EntityBinder(
 			Entity ejb3Ann,
-			org.hibernate.annotations.Entity hibAnn,
 			XClass annotatedClass,
 			PersistentClass persistentClass,
 			Mappings mappings) {
@@ -160,50 +157,44 @@ public class EntityBinder {
 		this.persistentClass = persistentClass;
 		this.annotatedClass = annotatedClass;
 		bindEjb3Annotation( ejb3Ann );
-		bindHibernateAnnotation( hibAnn );
+		bindHibernateAnnotation();
 	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
-	private void bindHibernateAnnotation(org.hibernate.annotations.Entity hibAnn) {
+	private void bindHibernateAnnotation() {
 		{
 			final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotation( DynamicInsert.class );
 			this.dynamicInsert = dynamicInsertAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicInsert() )
+					? false
 					: dynamicInsertAnn.value();
 		}
 
 		{
 			final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotation( DynamicUpdate.class );
 			this.dynamicUpdate = dynamicUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicUpdate() )
+					? false
 					: dynamicUpdateAnn.value();
 		}
 
 		{
 			final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotation( SelectBeforeUpdate.class );
 			this.selectBeforeUpdate = selectBeforeUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.selectBeforeUpdate() )
+					? false
 					: selectBeforeUpdateAnn.value();
 		}
 
 		{
 			final OptimisticLocking optimisticLockingAnn = annotatedClass.getAnnotation( OptimisticLocking.class );
 			this.optimisticLockType = optimisticLockingAnn == null
-					? ( hibAnn == null ? OptimisticLockType.VERSION : hibAnn.optimisticLock() )
+					? OptimisticLockType.VERSION
 					: optimisticLockingAnn.type();
 		}
 
 		{
 			final Polymorphism polymorphismAnn = annotatedClass.getAnnotation( Polymorphism.class );
 			this.polymorphismType = polymorphismAnn == null
-					? ( hibAnn == null ? PolymorphismType.IMPLICIT : hibAnn.polymorphism() )
+					? PolymorphismType.IMPLICIT
 					: polymorphismAnn.type();
-		}
-
-		if ( hibAnn != null ) {
-			// used later in bind for logging
-			explicitHibernateEntityAnnotation = true;
-			//persister handled in bind
 		}
 	}
 
@@ -257,13 +248,6 @@ public class EntityBinder {
 			if ( annotatedClass.isAnnotationPresent( Immutable.class ) ) {
 				mutable = false;
 			}
-			else {
-				org.hibernate.annotations.Entity entityAnn =
-						annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-				if ( entityAnn != null ) {
-					mutable = entityAnn.mutable();
-				}
-			}
 			rootClass.setMutable( mutable );
 			rootClass.setExplicitPolymorphism( isExplicitPolymorphism( polymorphismType ) );
 			if ( StringHelper.isNotEmpty( where ) ) rootClass.setWhere( where );
@@ -282,9 +266,6 @@ public class EntityBinder {
 			}
 		}
 		else {
-            if (explicitHibernateEntityAnnotation) {
-				LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
-			}
             if (annotatedClass.isAnnotationPresent(Immutable.class)) {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
 			}
@@ -299,14 +280,9 @@ public class EntityBinder {
 			persister = persisterAnn.impl();
 		}
 		else {
-			org.hibernate.annotations.Entity entityAnn = annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-			if ( entityAnn != null && !BinderHelper.isEmptyAnnotationValue( entityAnn.persister() ) ) {
-				try {
-					persister = ReflectHelper.classForName( entityAnn.persister() );
-				}
-				catch (ClassNotFoundException cnfe) {
-					throw new AnnotationException( "Could not find persister class: " + persister );
-				}
+			Persister perAnn = annotatedClass.getAnnotation( Persister.class );
+			if ( perAnn != null ) {
+				persister = perAnn.impl();
 			}
 		}
 		if ( persister != null ) {

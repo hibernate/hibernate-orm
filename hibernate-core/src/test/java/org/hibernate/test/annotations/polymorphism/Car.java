@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
+import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 
 /**
@@ -14,7 +15,7 @@ import org.hibernate.annotations.PolymorphismType;
  */
 @Entity
 @Inheritance(strategy= InheritanceType.TABLE_PER_CLASS)
-@org.hibernate.annotations.Entity(polymorphism = PolymorphismType.EXPLICIT)
+@Polymorphism( type = PolymorphismType.EXPLICIT )
 public class Car extends MovingThing {
 	private Integer id;
 	private String model;

@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
-import org.jboss.jandex.DotName;
-
 import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
@@ -41,7 +39,6 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.Entity;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
@@ -107,6 +104,7 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.jboss.jandex.DotName;
 
 /**
  * Defines the dot names for the Hibernate specific mapping annotations.
@@ -130,7 +128,6 @@ public interface HibernateDotNames {
 	DotName DISCRIMINATOR_OPTIONS = DotName.createSimple( DiscriminatorOptions.class.getName() );
 	DotName DYNAMIC_INSERT = DotName.createSimple( DynamicInsert.class.getName() );
 	DotName DYNAMIC_UPDATE = DotName.createSimple( DynamicUpdate.class.getName() );
-	DotName ENTITY = DotName.createSimple( Entity.class.getName() );
 	DotName FETCH = DotName.createSimple( Fetch.class.getName() );
 	DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
 	DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );

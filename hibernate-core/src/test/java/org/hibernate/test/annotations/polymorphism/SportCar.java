@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.polymorphism;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 
 /**
@@ -10,6 +11,6 @@ import org.hibernate.annotations.PolymorphismType;
  */
 @Entity
 @Table(name = "sport_car")
-@org.hibernate.annotations.Entity(polymorphism = PolymorphismType.EXPLICIT) //raise a warn
+@Polymorphism( type = PolymorphismType.EXPLICIT ) //raise a warn
 public class SportCar extends Car {
 }

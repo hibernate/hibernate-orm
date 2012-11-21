@@ -38,8 +38,7 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Type;
 
 /**
- * Mapping following lines of {@link Forest}, but using the replacements for the now deprecated
- * {@link org.hibernate.annotations.Entity} annotation.
+ * Mapping following lines of {@link Forest}.
  *
  * @author Steve Ebersole
  */

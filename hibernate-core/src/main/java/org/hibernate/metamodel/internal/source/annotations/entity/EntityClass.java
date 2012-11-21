@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AccessType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PostLoad;
@@ -40,14 +41,6 @@ import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.Type;
-import org.jboss.jandex.Type.Kind;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
@@ -68,6 +61,13 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
+import org.jboss.jandex.Type.Kind;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/orm-xml.
@@ -305,18 +305,11 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	private void processHibernateEntitySpecificAnnotations() {
-		final AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.ENTITY
-		);
-
 		// see HHH-6400
 		PolymorphismType polymorphism = PolymorphismType.IMPLICIT;
 		final AnnotationInstance polymorphismAnnotation = JandexHelper.getSingleAnnotation( getClassInfo(), HibernateDotNames.POLYMORPHISM );
 		if ( polymorphismAnnotation != null && polymorphismAnnotation.value( "type" ) != null ) {
 			polymorphism = PolymorphismType.valueOf( polymorphismAnnotation.value( "type" ).asEnum() );
-		}
-		else if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "polymorphism" ) != null ) {
-			polymorphism = PolymorphismType.valueOf( hibernateEntityAnnotation.value( "polymorphism" ).asEnum() );
 		}
 		isExplicitPolymorphism = polymorphism == PolymorphismType.EXPLICIT;
 
@@ -334,12 +327,6 @@ public class EntityClass extends ConfiguredClass {
 					OptimisticLockType.class
 			);
 		}
-		else if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
-			optimisticLockType = OptimisticLockType.valueOf(
-					hibernateEntityAnnotation.value( "optimisticLock" )
-							.asEnum()
-			);
-		}
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
 
 		final AnnotationInstance hibernateImmutableAnnotation = JandexHelper.getSingleAnnotation(
@@ -349,11 +336,6 @@ public class EntityClass extends ConfiguredClass {
 		);
 		if ( hibernateImmutableAnnotation != null ) {
 			isImmutable = true;
-		}
-		else if ( hibernateEntityAnnotation != null
-				&& hibernateEntityAnnotation.value( "mutable" ) != null ) {
-
-			isImmutable = !hibernateEntityAnnotation.value( "mutable" ).asBoolean();
 		}
 		else {
 			isImmutable = false;
@@ -383,12 +365,6 @@ public class EntityClass extends ConfiguredClass {
 		if ( dynamicInsertAnnotation != null ) {
 			isDynamicInsert = JandexHelper.getValue( dynamicInsertAnnotation, "value", Boolean.class );
 		}
-		else {
-			isDynamicInsert =
-					hibernateEntityAnnotation != null
-							&& hibernateEntityAnnotation.value( "dynamicInsert" ) != null
-							&& hibernateEntityAnnotation.value( "dynamicInsert" ).asBoolean();
-		}
 
 		// see HHH-6398
 		final AnnotationInstance dynamicUpdateAnnotation = JandexHelper.getSingleAnnotation(
@@ -397,12 +373,6 @@ public class EntityClass extends ConfiguredClass {
 		);
 		if ( dynamicUpdateAnnotation != null ) {
 			isDynamicUpdate = JandexHelper.getValue( dynamicUpdateAnnotation, "value", Boolean.class );
-		}
-		else {
-			isDynamicUpdate =
-					hibernateEntityAnnotation != null
-							&& hibernateEntityAnnotation.value( "dynamicUpdate" ) != null
-							&& hibernateEntityAnnotation.value( "dynamicUpdate" ).asBoolean();
 		}
 
 
@@ -414,30 +384,13 @@ public class EntityClass extends ConfiguredClass {
 		if ( selectBeforeUpdateAnnotation != null ) {
 			isSelectBeforeUpdate = JandexHelper.getValue( selectBeforeUpdateAnnotation, "value", Boolean.class );
 		}
-		else {
-			isSelectBeforeUpdate =
-					hibernateEntityAnnotation != null
-							&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ) != null
-							&& hibernateEntityAnnotation.value( "selectBeforeUpdate" ).asBoolean();
-		}
 
 		// Custom persister
-		final String entityPersisterClass;
+		String entityPersisterClass = null;
 		final AnnotationInstance persisterAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), HibernateDotNames.PERSISTER
 		);
-		if ( persisterAnnotation == null || persisterAnnotation.value( "impl" ) == null ) {
-			if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "persister" ) != null ) {
-				entityPersisterClass = hibernateEntityAnnotation.value( "persister" ).asString();
-			}
-			else {
-				entityPersisterClass = null;
-			}
-		}
-		else {
-			if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "persister" ) != null ) {
-				// todo : error?
-			}
+		if ( persisterAnnotation != null && persisterAnnotation.value( "impl" ) != null ) {
 			entityPersisterClass = persisterAnnotation.value( "impl" ).asString();
 		}
 		this.customPersister = entityPersisterClass;

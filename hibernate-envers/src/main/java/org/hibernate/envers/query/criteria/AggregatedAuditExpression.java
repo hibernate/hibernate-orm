@@ -59,13 +59,15 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
         CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
 
+        // Make sure our conditions are ANDed together even if the parent Parameters have a different connective
+        Parameters subParams = parameters.addSubParameters(Parameters.AND);
         // This will be the aggregated query, containing all the specified conditions
         QueryBuilder subQb = qb.newSubQueryBuilder();
 
         // Adding all specified conditions both to the main query, as well as to the
         // aggregated one.
         for (AuditCriterion versionsCriteria : criterions) {
-            versionsCriteria.addToQuery(auditCfg, entityName, qb, parameters);
+            versionsCriteria.addToQuery(auditCfg, entityName, qb, subParams);
             versionsCriteria.addToQuery(auditCfg, entityName, subQb, subQb.getRootParameters());
         }
 
@@ -79,6 +81,6 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
         }
 
         // Adding the constrain on the result of the aggregated criteria
-        parameters.addWhere(propertyName, "=", subQb);
+        subParams.addWhere(propertyName, "=", subQb);
     }
 }

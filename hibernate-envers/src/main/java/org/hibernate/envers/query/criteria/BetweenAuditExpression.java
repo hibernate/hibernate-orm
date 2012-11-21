@@ -44,7 +44,9 @@ public class BetweenAuditExpression implements AuditCriterion {
     public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         String propertyName = propertyNameGetter.get(auditCfg);
         CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
-        parameters.addWhereWithParam(propertyName, ">=", lo);
-        parameters.addWhereWithParam(propertyName, "<=", hi);
+        
+        Parameters subParams = parameters.addSubParameters(Parameters.AND);
+        subParams.addWhereWithParam(propertyName, ">=", lo);
+        subParams.addWhereWithParam(propertyName, "<=", hi);
     }
 }

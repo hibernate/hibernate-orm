@@ -1,0 +1,136 @@
+<!--
+ * Copyright (C) 2007 Google Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+-->
+
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.shards.model">
+
+  <class name="Building" table="Building">
+    <id name="buildingId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <bag name="floors" lazy="true" table="Floor" inverse="true" order-by="floorId asc" cascade="all">
+      <key column="buildingId"/>
+      <one-to-many class="Floor"/>
+    </bag>
+    <bag name="tenants" lazy="true" table="BuildingTenant" order-by="tenantId asc">
+      <key column="buildingId"/>
+      <many-to-many class="Tenant" column="tenantId"/>
+    </bag>
+    <bag name="elevators" lazy="true" table="Elevator" inverse="true" order-by="elevatorId asc" cascade="all">
+      <key column="buildingId"/>
+      <one-to-many class="Elevator"/>
+    </bag>
+  </class>
+
+  <class name="Elevator">
+    <id name="elevatorId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <many-to-one name="building" column="buildingId" not-null="true" class="Building"/>
+    <bag name="floors" lazy="true" table="FloorElevator" order-by="floorId asc">
+      <key column="elevatorId"/>
+      <many-to-many class="Floor" column="floorId"/>
+    </bag>
+  </class>
+
+  <class name="Escalator">
+    <id name="escalatorId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <one-to-one name="bottomFloor" property-ref="goingUp"/>
+    <one-to-one name="topFloor" property-ref="goingUp"/>
+  </class>
+
+  <class name="Tenant">
+    <id name="tenantId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <bag name="buildings" lazy="true" table="BuildingTenant" order-by="buildingId asc">
+      <key column="tenantId"/>
+      <many-to-many class="Building" column="buildingId"/>
+    </bag>
+    <bag name="employees" lazy="true" table="Person" inverse="true" order-by="personId asc" cascade="save-update">
+      <key column="tenantId"/>
+      <one-to-many class="Person"/>
+    </bag>
+  </class>
+
+  <class name="Person">
+    <id name="personId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <many-to-one name="employer" column="tenantId" not-null="false" class="Tenant"/>
+    <many-to-one name="office" column="officeId" not-null="false" class="Office"/>
+  </class>
+
+  <class name="Office">
+    <id name="officeId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="label" not-null="true"/>
+    <many-to-one name="floor" column="floorId" not-null="false" class="Floor"/>
+    <bag name="people" lazy="true" table="Person" inverse="true" order-by="personId asc" cascade="save-update">
+      <key column="officeId"/>
+      <one-to-many class="Person"/>
+    </bag>
+    <many-to-one name="window" column="windowId" unique="true" not-null="false" cascade="all"/>
+  </class>
+
+  <class name="Window">
+    <id name="windowId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="opens" not-null="true"/>
+  </class>
+
+  <class name="Floor">
+    <id name="floorId" type="big_integer">
+      <generator class="org.hibernate.shards.id.UUIDBigIntGenerator"/>
+    </id>
+    <property name="number" not-null="true"/>
+    <property name="squareFeet" not-null="false"/>
+    <many-to-one name="goingUp" column="upEscalatorId" unique="true" not-null="false" class="Escalator" cascade="all"/>
+    <many-to-one name="goingDown" column="downEscalatorId" unique="true" not-null="false" class="Escalator" cascade="all"/>
+    <many-to-one name="building" column="buildingId" not-null="true" class="Building"/>
+    <bag name="offices" lazy="true" table="Office" inverse="true" order-by="officeId asc" cascade="all">
+      <key column="floorId"/>
+      <one-to-many class="Office"/>
+    </bag>
+    <bag name="elevators" lazy="true" table="FloorElevator" order-by="elevatorId asc">
+      <key column="floorId"/>
+      <many-to-many class="Elevator" column="elevatorId"/>
+    </bag>
+  </class>
+
+  <class name="IdIsBaseType" table="IdIsBaseType">
+    <id name="idIsBaseTypeId" type="long">
+      <generator class="org.hibernate.shards.id.ShardedTableHiLoGenerator"/>
+    </id>
+    <property name="value" not-null="true"/>
+  </class>
+
+  <query name="SelectFloorsHigherThan">
+    <![CDATA[from Floor as f where f.number >= :lowestFloor]]>
+  </query>
+
+</hibernate-mapping>

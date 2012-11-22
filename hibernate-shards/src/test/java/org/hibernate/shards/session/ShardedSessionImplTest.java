@@ -1,0 +1,708 @@
+/**
+ * Copyright (C) 2007 Google Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+ */
+
+package org.hibernate.shards.session;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.shards.Shard;
+import org.hibernate.shards.ShardId;
+import org.hibernate.shards.ShardImpl;
+import org.hibernate.shards.defaultmock.ClassMetadataDefaultMock;
+import org.hibernate.shards.defaultmock.InterceptorDefaultMock;
+import org.hibernate.shards.defaultmock.SessionFactoryDefaultMock;
+import org.hibernate.shards.defaultmock.ShardDefaultMock;
+import org.hibernate.shards.defaultmock.ShardedSessionFactoryDefaultMock;
+import org.hibernate.shards.defaultmock.TypeDefaultMock;
+import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
+import org.hibernate.shards.strategy.ShardStrategy;
+import org.hibernate.shards.strategy.ShardStrategyDefaultMock;
+import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
+import org.hibernate.shards.strategy.selection.ShardSelectionStrategyDefaultMock;
+import org.hibernate.shards.util.Lists;
+import org.hibernate.shards.util.Maps;
+import org.hibernate.shards.util.Pair;
+import org.hibernate.shards.util.Sets;
+import org.hibernate.type.Type;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.io.Serializable;
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * @author maxr@google.com (Max Ross)
+ */
+public class ShardedSessionImplTest {
+
+    private static class MyShardedSessionImpl extends ShardedSessionImpl {
+
+        public MyShardedSessionImpl() {
+            super(
+                    new ShardedSessionFactoryDefaultMock() {
+                        @Override
+                        public Map<SessionFactoryImplementor, Set<ShardId>> getSessionFactoryShardIdMap() {
+                            return Collections.emptyMap();
+                        }
+                    },
+                    new ShardStrategyDefaultMock(),
+                    Collections.<Class<?>>emptySet(),
+                    true);
+        }
+    }
+
+    @Test
+    public void testApplySaveOrUpdateOperation() {
+        final List<ShardId> shardIdToReturn = Lists.newArrayList(new ShardId(0));
+        final List<Shard> shardListToReturn = Lists.<Shard>newArrayList(new ShardDefaultMock());
+        final Serializable[] idToReturn = {null};
+        final boolean[] saveCalled = {false};
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdToReturn.get(0);
+            }
+
+            List<Shard> determineShardsObjectViaResolutionStrategy(Object object) {
+                return shardListToReturn;
+            }
+
+            Serializable extractId(Object object) {
+                return idToReturn[0];
+            }
+
+            public Serializable save(String entityName, Object object)
+                    throws HibernateException {
+                saveCalled[0] = true;
+                return null;
+            }
+        };
+
+        final boolean[] saveOrUpdateCalled = {false};
+        final boolean[] mergeCalled = {false};
+
+        ShardedSessionImpl.SaveOrUpdateOperation op = new ShardedSessionImpl.SaveOrUpdateOperation() {
+
+            @Override
+            public void saveOrUpdate(Shard shard, Object object) {
+                saveOrUpdateCalled[0] = true;
+            }
+
+            @Override
+            public void merge(Shard shard, Object object) {
+                mergeCalled[0] = true;
+            }
+        };
+
+        ssi.applySaveOrUpdateOperation(op, null);
+        Assert.assertTrue(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
+        shardIdToReturn.set(0, null);
+        saveOrUpdateCalled[0] = false;
+
+        ssi.applySaveOrUpdateOperation(op, null);
+        Assert.assertTrue(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
+        shardIdToReturn.set(0, null);
+        saveOrUpdateCalled[0] = false;
+
+        shardListToReturn.add(new ShardDefaultMock());
+        ssi.applySaveOrUpdateOperation(op, null);
+        Assert.assertFalse(saveOrUpdateCalled[0]);
+        Assert.assertFalse(mergeCalled[0]);
+        Assert.assertTrue(saveCalled[0]);
+
+        //TODO(maxr) write test for when we call merge()
+    }
+
+    @Test
+    public void testClose() {
+        ShardedSessionImpl ssi = new MyShardedSessionImpl();
+        ssi.close();
+    }
+
+    @Test
+    public void testShardLock() {
+        final ShardId shardIdToReturn = new ShardId(0);
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            private boolean called = false;
+
+            @Override
+            ShardId getShardIdOfRelatedObject(Object obj) {
+                if (called) {
+                    throw new UnsupportedOperationException();
+                }
+                called = true;
+                return shardIdToReturn;
+            }
+        };
+        ssi.lockShard();
+        Object obj = new Object();
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(obj));
+    }
+
+    @Test
+    public void testLackingShardLock() {
+        ShardedSessionFactoryImplementor ssf = new ShardedSessionFactoryDefaultMock() {
+            @Override
+            public Map<SessionFactoryImplementor, Set<ShardId>> getSessionFactoryShardIdMap() {
+                return Collections.emptyMap();
+            }
+        };
+
+        final ShardId shardIdToReturn = new ShardId(33);
+        final ShardSelectionStrategy shardSelectionStrategy = new ShardSelectionStrategyDefaultMock() {
+            @Override
+            public ShardId selectShardIdForNewObject(Object obj) {
+                return shardIdToReturn;
+            }
+        };
+        ShardStrategy shardStrategy = new ShardStrategyDefaultMock() {
+            @Override
+            public ShardSelectionStrategy getShardSelectionStrategy() {
+                return shardSelectionStrategy;
+            }
+        };
+        Set<Class<?>> classesRequiringShardLocks =
+                Sets.<Class<?>>newHashSet(Integer.class, String.class);
+        ShardedSessionImpl ssi =
+                new ShardedSessionImpl(ssf, shardStrategy, classesRequiringShardLocks, true) {
+                    @Override
+                    ShardId getShardIdOfRelatedObject(Object obj) {
+                        return null;
+                    }
+                };
+        Assert.assertSame(shardIdToReturn, ssi.selectShardIdForNewObject(new Object()));
+        try {
+            ssi.selectShardIdForNewObject(3);
+            Assert.fail("expected he");
+        } catch (HibernateException he) {
+            // good
+        }
+        try {
+            ssi.selectShardIdForNewObject("three");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithNullAssociation() {
+        // the mapping has an association, but the value for that association is null
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, false), new MyType(true, false)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{null, null};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+
+        // test an association
+        Assert.assertNull(ssi.getShardIdOfRelatedObject(obj));
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithAssociation() {
+        // the mapping has an assocation and the association is not null
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, false), new MyType(true, false)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{"yam", "jam"};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+
+        // test an association
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithBadAssociation() {
+        // the mapping has an association that is not null, and the shard id
+        // for that assocation does not match
+        final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
+        final ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, false), new MyType(true, false)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{"yam", "jam"};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+        // test a bad association (objects split across multiple shards)
+        try {
+            ssi.getShardIdOfRelatedObject(obj);
+            Assert.fail("expecte he");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithNullCollection() {
+        final ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(false, false), new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{null, null};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+
+        // test a collection
+        Assert.assertNull(ssi.getShardIdOfRelatedObject(obj));
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithCollection() {
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(false, false), new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{null, Collections.singletonList("yam")};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+
+        // test a collection
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithBadCollection() {
+        final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{Lists.newArrayList("jam", "yam")};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+        // test a bad association (objects split across multiple shards)
+        try {
+            ssi.getShardIdOfRelatedObject(obj);
+            Assert.fail("expecte he");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithBadCollections() {
+        final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, true), new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{Collections.singletonList("jam"), Collections.singletonList("yam")};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+        // test a bad association (objects split across multiple shards)
+        try {
+            ssi.getShardIdOfRelatedObject(obj);
+            Assert.fail("expecte he");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithAssociationAndCollection() {
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(33)};
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, false), new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{"jam", Collections.singletonList("yam")};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+
+        // test a collection
+        Assert.assertEquals(new ShardId(33), ssi.getShardIdOfRelatedObject(obj));
+    }
+
+    @Test
+    public void testGetShardIdOfRelatedObjectWithBadAssociationCollection() {
+        final ShardId[] shardIdForObjectToReturn = {new ShardId(33), new ShardId(34)};
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            int shardIdForObjectToReturnIndex = 0;
+
+            @Override
+            ClassMetadata getClassMetadata(Class<?> clazz) {
+                return new ClassMetadataDefaultMock() {
+                    @Override
+                    public Type[] getPropertyTypes() {
+                        return new Type[]{new MyType(true, false), new MyType(true, true)};
+                    }
+
+                    @Override
+                    public Object[] getPropertyValues(Object entity) {
+                        return new Object[]{"yam", Collections.singletonList("jam")};
+                    }
+                };
+            }
+
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdForObjectToReturn[shardIdForObjectToReturnIndex++];
+            }
+        };
+
+        Object obj = new Object();
+        // test a bad association (objects split across multiple shards)
+        try {
+            ssi.getShardIdOfRelatedObject(obj);
+            Assert.fail("expecte he");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testCheckForConflictingShardId() {
+        final ShardId[] shardIdToReturn = new ShardId[1];
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            @Override
+            public ShardId getShardIdForObject(Object obj) {
+                return shardIdToReturn[0];
+            }
+        };
+        Object obj = new Object();
+        Assert.assertNull(ssi.checkForConflictingShardId(null, Object.class, obj));
+        ShardId shardId = new ShardId(0);
+        shardIdToReturn[0] = shardId;
+        Assert.assertSame(shardId, ssi.checkForConflictingShardId(null, Object.class, obj));
+        Assert.assertSame(shardId, ssi.checkForConflictingShardId(shardId, Object.class, obj));
+        ShardId anotherShardId = new ShardId(1);
+        try {
+            ssi.checkForConflictingShardId(anotherShardId, Object.class, obj);
+            Assert.fail("expected he");
+        } catch (HibernateException he) {
+            // good
+        }
+    }
+
+    @Test
+    public void testBuildShardListFromSessionFactoryShardIdMap() {
+
+        final Map<SessionFactoryImplementor, Set<ShardId>> sessionFactoryShardIdMap = Maps.newHashMap();
+        final ShardIdResolver resolver = new ShardIdResolverDefaultMock();
+
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, null).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, null).isEmpty());
+
+        final Interceptor interceptor = new InterceptorDefaultMock();
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, interceptor).isEmpty());
+        Assert.assertTrue(ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, interceptor).isEmpty());
+
+        sessionFactoryShardIdMap.put(new SessionFactoryDefaultMock(), Sets.newHashSet(new ShardId(0)));
+        sessionFactoryShardIdMap.put(new SessionFactoryDefaultMock(), Sets.newHashSet(new ShardId(1)));
+
+        List<Shard> shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, null);
+        Assert.assertEquals(2, shards.size());
+        for (final Shard shard : shards) {
+            Assert.assertNull(((ShardImpl) shard).getInterceptor());
+        }
+
+        shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, false, resolver, interceptor);
+        Assert.assertEquals(2, shards.size());
+        for (Shard shard : shards) {
+            Assert.assertSame(interceptor, ((ShardImpl) shard).getInterceptor());
+        }
+
+        shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, null);
+        Assert.assertEquals(2, shards.size());
+        for (final Shard shard : shards) {
+            Assert.assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptor);
+        }
+
+        shards = ShardedSessionImpl.buildShardListFromSessionFactoryShardIdMap(sessionFactoryShardIdMap, true, resolver, interceptor);
+        Assert.assertEquals(2, shards.size());
+        for (final Shard shard : shards) {
+            Assert.assertTrue(((ShardImpl) shard).getInterceptor() instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        }
+    }
+
+    @Test
+    public void testFinalizeOnOpenSession() throws Throwable {
+        final boolean[] closeCalled = {false};
+        ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            @Override
+            public Connection close() throws HibernateException {
+                closeCalled[0] = true;
+                return super.close();
+            }
+        };
+        ssi.finalize();
+        Assert.assertTrue(closeCalled[0]);
+    }
+
+    @Test
+    public void testFinalizeOnClosedSession() throws Throwable {
+        final boolean[] closeCalled = {false};
+        final ShardedSessionImpl ssi = new MyShardedSessionImpl() {
+            @Override
+            public Connection close() throws HibernateException {
+                closeCalled[0] = true;
+                return super.close();
+            }
+        };
+        ssi.close();
+        Assert.assertTrue(closeCalled[0]);
+        closeCalled[0] = false;
+        ssi.finalize();
+        Assert.assertFalse(closeCalled[0]);
+    }
+
+    @Test
+    public void testNonStatefulInterceptorWrapping() {
+        final CrossShardRelationshipDetectingInterceptor csrdi =
+                new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
+        final Interceptor stateless = new InterceptorDefaultMock();
+        final Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, stateless);
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        final CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(stateless, csrdid.getDelegate());
+        Assert.assertNull(result.second);
+    }
+
+    private static class Factory extends InterceptorDefaultMock implements StatefulInterceptorFactory {
+
+        private final Interceptor interceptorToReturn;
+
+        public Factory(Interceptor interceptorToReturn) {
+            this.interceptorToReturn = interceptorToReturn;
+        }
+
+        public Interceptor newInstance() {
+            return interceptorToReturn;
+        }
+    }
+
+    @Test
+    public void testStatefulInterceptorWrapping() {
+        CrossShardRelationshipDetectingInterceptor csrdi =
+                new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
+        Interceptor interceptorToReturn = new InterceptorDefaultMock();
+        Interceptor factory = new Factory(interceptorToReturn);
+        Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, factory);
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(interceptorToReturn, csrdid.getDelegate());
+        Assert.assertNull(result.second);
+    }
+
+    @Test
+    public void testStatefulInterceptorWrappingWithRequiresSession() {
+        CrossShardRelationshipDetectingInterceptor csrdi =
+                new CrossShardRelationshipDetectingInterceptor(new ShardIdResolverDefaultMock());
+        class RequiresSessionInterceptor extends InterceptorDefaultMock implements RequiresSession {
+            Session setSessionCalledWith;
+
+            public void setSession(Session session) {
+                this.setSessionCalledWith = session;
+            }
+        }
+        Interceptor interceptorToReturn = new RequiresSessionInterceptor();
+        Interceptor factory = new Factory(interceptorToReturn);
+        Pair<Interceptor, OpenSessionEvent> result = ShardedSessionImpl.decorateInterceptor(csrdi, factory);
+        Assert.assertTrue(result.first instanceof CrossShardRelationshipDetectingInterceptorDecorator);
+        Assert.assertSame(csrdi, ((CrossShardRelationshipDetectingInterceptorDecorator) result.first).getCrossShardRelationshipDetectingInterceptor());
+        CrossShardRelationshipDetectingInterceptorDecorator csrdid = (CrossShardRelationshipDetectingInterceptorDecorator) result.first;
+        Assert.assertSame(csrdi, csrdid.getCrossShardRelationshipDetectingInterceptor());
+        Assert.assertSame(interceptorToReturn, csrdid.getDelegate());
+        Assert.assertNotNull(result.second);
+    }
+
+    private static final class MyType extends TypeDefaultMock {
+        private final boolean isAssociation;
+        private final boolean isCollection;
+
+        public MyType(boolean association, boolean collection) {
+            isAssociation = association;
+            isCollection = collection;
+        }
+
+        @Override
+        public boolean isAssociationType() {
+            return isAssociation;
+        }
+
+        @Override
+        public boolean isCollectionType() {
+            return isCollection;
+        }
+    }
+}

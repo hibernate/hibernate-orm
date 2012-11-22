@@ -1,0 +1,15 @@
+apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
+
+dependencies {
+    provided( libraries.validation )
+    compile project( ':hibernate-core' )
+
+    testCompile( libraries.validator ) {
+        // for test runtime
+        transitive = true
+    }
+    testCompile project( ':hibernate-testing' )
+    testCompile( libraries.hsqldb )
+    testCompile( libraries.mockito )
+    testRuntime( libraries.javassist )
+}

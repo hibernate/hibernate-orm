@@ -34,8 +34,8 @@ public class NullablePrimaryKeyTest {
 			for (String s : schema) {
                 log.debug(s);
 			}
-			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0), " +
-					"person_id numeric(19,0) not null, primary key (person_id))";
+			String expectedMappingTableSql = "create table personAddress (person_id numeric(19,0) not null, " +
+					"address_id numeric(19,0), primary key (person_id))";
             Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, schema[2] );
 		} catch (Exception e) {
 			Assert.fail(e.getMessage());

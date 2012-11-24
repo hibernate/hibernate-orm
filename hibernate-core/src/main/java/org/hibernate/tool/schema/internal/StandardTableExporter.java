@@ -70,17 +70,13 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 
 		boolean isFirst = true;
-		for ( Value simpleValue : table.values() ) {
-			if ( ! Column.class.isInstance( simpleValue ) ) {
-				continue;
-			}
+		for ( Column col : table.sortedColumns() ) {
 			if ( isFirst ) {
 				isFirst = false;
 			}
 			else {
 				buf.append( ", " );
 			}
-			Column col = ( Column ) simpleValue;
 			String colName = col.getColumnName().getText( dialect );
 
 			buf.append( colName ).append( ' ' );

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -457,7 +458,7 @@ public class Table implements RelationalModel, Serializable {
 				.append( ' ' )
 				.append( name )
 				.append( " (" );
-		Iterator itr = getColumnIterator();
+		Iterator itr = getSortedColumnIterator();
 		while ( itr.hasNext() ) {
 			final Column column = (Column) itr.next();
 			buffer.append( column.getQuotedName( dialect ) ).append( ' ' );
@@ -491,7 +492,7 @@ public class Table implements RelationalModel, Serializable {
 			pkname = ( (Column) getPrimaryKey().getColumnIterator().next() ).getQuotedName( dialect );
 		}
 
-		Iterator iter = getColumnIterator();
+		Iterator iter = getSortedColumnIterator();
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -589,6 +590,33 @@ public class Table implements RelationalModel, Serializable {
 		}
 
 		return buf.append( dialect.getTableTypeString() ).toString();
+	}
+
+	/**
+	 * @return Sorted column list so that primary key appears first, followed by foreign keys and other properties.
+	 * Within each group columns are not sorted in any way.
+	 */
+	private Iterator<Column> getSortedColumnIterator() {
+		final LinkedHashSet<Column> sortedColumns = new LinkedHashSet<Column>();
+		// Adding primary key columns.
+		if ( hasPrimaryKey() ) {
+			sortedColumns.addAll( getPrimaryKey().getColumns() );
+		}
+		// Adding foreign key columns.
+		Iterator iter = getForeignKeyIterator();
+		while ( iter.hasNext() ) {
+			ForeignKey fk = (ForeignKey) iter.next();
+			sortedColumns.addAll( fk.getColumns() );
+		}
+		// Adding other columns.
+		iter = getColumnIterator();
+		while ( iter.hasNext() ) {
+			final Column column = (Column) iter.next();
+			if ( ! sortedColumns.contains( column ) ) {
+				sortedColumns.add( column );
+			}
+		}
+		return sortedColumns.iterator();
 	}
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {

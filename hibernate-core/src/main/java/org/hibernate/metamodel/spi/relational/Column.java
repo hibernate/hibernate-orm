@@ -27,6 +27,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.sql.Template;
 
 /**
@@ -224,5 +225,27 @@ public class Column extends AbstractValue {
 			}
 		}
 		return alias + suffix;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( ! ( o instanceof Column ) ) {
+			return false;
+		}
+
+		final Column that = (Column) o;
+
+		return EqualsHelper.equals( this.columnName, that.columnName )
+				&& EqualsHelper.equals( this.getTable(), that.getTable() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = columnName != null ? columnName.hashCode() : 0;
+		result = 31 * result + ( getTable() != null ? getTable().hashCode() : 0 );
+		return result;
 	}
 }

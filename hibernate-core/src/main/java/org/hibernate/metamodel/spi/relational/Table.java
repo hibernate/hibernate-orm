@@ -26,11 +26,13 @@ package org.hibernate.metamodel.spi.relational;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -185,6 +187,30 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return "Table{name=" + exportIdentifier + '}';
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( ! ( o instanceof Table ) ) {
+			return false;
+		}
+
+		final Table that = (Table) o;
+
+		return EqualsHelper.equals( this.database, that.database )
+				&& EqualsHelper.equals( this.logicalName, that.logicalName )
+				&& EqualsHelper.equals( this.physicalName, that.physicalName );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = database != null ? database.hashCode() : 0;
+		result = 31 * result + ( physicalName != null ? physicalName.hashCode() : 0 );
+		result = 31 * result + ( logicalName != null ? logicalName.hashCode() : 0 );
+		return result;
+	}
+
 	public String[] sqlAlterStrings(TableInformation tableInformation, JdbcEnvironment jdbcEnvironment) {
 		final Dialect dialect = jdbcEnvironment.getDialect();
 		final String baseAlterCommand = new StringBuilder( "alter table " )
@@ -250,5 +276,29 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		}
 
 		return commands.toArray( new String[ commands.size() ] );
+	}
+
+	/**
+	 * @return Sorted column list so that primary key appears first, followed by foreign keys and other properties.
+	 * Within each group columns are not sorted in any way.
+	 */
+	public Iterable<Column> sortedColumns() {
+		final Set<Column> sortedColumns = new LinkedHashSet<Column>();
+		// Adding primary key columns.
+		sortedColumns.addAll( getPrimaryKey().getColumns() );
+		// Adding foreign key columns.
+		for ( ForeignKey fk : getForeignKeys() ) {
+			sortedColumns.addAll( fk.getColumns() );
+		}
+		// Adding other columns.
+		for ( Value value : values() ) {
+			if ( value instanceof Column ) {
+				final Column column = (Column) value;
+				if ( ! sortedColumns.contains( column ) ) {
+					sortedColumns.add( column );
+				}
+			}
+		}
+		return sortedColumns;
 	}
 }

@@ -280,19 +280,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
 		try {
-			boolean mucked = false;
-			// IMPL NOTE : the mucking with max results here is attempting to help the user from shooting themselves
-			//		in the foot in the case where they have a large query by limiting the query results to 2 max
-			//    SQLQuery cannot be safely paginated, leaving the user's choice here.
-			if ( getSpecifiedMaxResults() != 1 &&
-					! ( SQLQuery.class.isAssignableFrom( query.getClass() ) ) ) {
-				mucked = true;
-				query.setMaxResults( 2 ); //avoid OOME if the list is huge
-			}
-			List<X> result = query.list();
-			if ( mucked ) {
-				query.setMaxResults( getSpecifiedMaxResults() );
-			}
+			final List<X> result = query.list();
 
 			if ( result.size() == 0 ) {
 				NoResultException nre = new NoResultException( "No entity found for query" );
@@ -300,7 +288,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				throw nre;
 			}
 			else if ( result.size() > 1 ) {
-				Set<X> uniqueResult = new HashSet<X>(result);
+				final Set<X> uniqueResult = new HashSet<X>(result);
 				if ( uniqueResult.size() > 1 ) {
 					NonUniqueResultException nure = new NonUniqueResultException( "result returns more than one elements" );
 					getEntityManager().handlePersistenceException( nure );
@@ -309,7 +297,6 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				else {
 					return uniqueResult.iterator().next();
 				}
-
 			}
 			else {
 				return result.get( 0 );

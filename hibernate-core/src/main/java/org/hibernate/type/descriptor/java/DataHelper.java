@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import org.jboss.logging.Logger;
 
@@ -275,7 +276,12 @@ public class DataHelper {
 	public static String extractString(final Clob value) {
 		try {
 			Reader characterStream = value.getCharacterStream();
-			long length = value.length();
+			long length;
+                        try {
+                          length = value.length();
+                        } catch (SQLFeatureNotSupportedException unsupEx) {
+                          length = BUFFER_SIZE;
+                        }
 			if ( length > Integer.MAX_VALUE ) {
 				return extractString( characterStream, Integer.MAX_VALUE );
 			}

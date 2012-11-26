@@ -88,6 +88,7 @@ public class BatchFetchQueue {
 	 */
 	public void clear() {
 		batchLoadableEntityKeys.clear();
+		batchLoadableCollections.clear();
 		subselectsByEntityKey.clear();
 	}
 

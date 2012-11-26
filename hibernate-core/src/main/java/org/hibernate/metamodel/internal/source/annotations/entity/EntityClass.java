@@ -388,7 +388,7 @@ public class EntityClass extends ConfiguredClass {
 		// Custom persister
 		String entityPersisterClass = null;
 		final AnnotationInstance persisterAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.PERSISTER
+				getClassInfo(), HibernateDotNames.PERSISTER, ClassInfo.class
 		);
 		if ( persisterAnnotation != null && persisterAnnotation.value( "impl" ) != null ) {
 			entityPersisterClass = persisterAnnotation.value( "impl" ).asString();

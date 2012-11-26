@@ -23,12 +23,13 @@
  */
 package org.hibernate.test.annotations.persister;
 
+import java.util.Iterator;
+
 import org.junit.Test;
 
-import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,14 +37,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Shawn Clowater
  */
-@FailureExpectedWithNewMetamodel
 public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityEntityPersisterAndPersisterSpecified() throws Exception {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified
 		Class<? extends EntityPersister> clazz = getEntityBinding( Deck.class ).getCustomEntityPersisterClass();
 		assertEquals( "Incorrect Persister class for " + Deck.class.getName(),
-				EntityPersister.class, clazz );
+				org.hibernate.test.annotations.persister.EntityPersister.class, clazz );
 	}
 
 	@Test
@@ -56,11 +56,20 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCollectionPersisterSpecified() throws Exception {
-		// TODO: use getCollectionBindings()
-		//tests the persister specified by the @Persister annotation on a collection
-		Collection collection = configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
-		assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,
-				collection.getCollectionPersisterClass() );
+		String expectedRole = Deck.class.getName() + ".cards";
+		Iterator<PluralAttributeBinding> collectionBindings = getCollectionBindings();
+		while ( collectionBindings.hasNext() ) {
+			PluralAttributeBinding attributeBinding = collectionBindings.next();
+			String role = attributeBinding.getAttribute().getRole();
+			//tests the persister specified by the @Persister annotation on a collection
+			if ( expectedRole.equals( role ) ) {
+				assertEquals(
+						"Incorrect Persister class for collection " + role, CollectionPersister.class,
+						attributeBinding.getExplicitPersisterClass()
+				);
+				break;
+			}
+		}
 	}
 
 	@Override

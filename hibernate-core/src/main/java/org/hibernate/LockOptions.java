@@ -65,7 +65,7 @@ public class LockOptions implements Serializable {
 
 	private LockMode lockMode = LockMode.NONE;
 	private int timeout = WAIT_FOREVER;
-	private Map aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
+	private Map<String, LockMode> aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
 
 	public LockOptions() {
 	}
@@ -114,7 +114,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( aliasSpecificLockModes == null ) {
-			aliasSpecificLockModes = new HashMap();
+			aliasSpecificLockModes = new HashMap<String, LockMode>();
 		}
 		aliasSpecificLockModes.put( alias, lockMode );
 		return this;
@@ -135,7 +135,7 @@ public class LockOptions implements Serializable {
 		if ( aliasSpecificLockModes == null ) {
 			return null;
 		}
-		return (LockMode) aliasSpecificLockModes.get( alias );
+		return aliasSpecificLockModes.get( alias );
 	}
 
 	/**
@@ -176,9 +176,9 @@ public class LockOptions implements Serializable {
 	 *
 	 * @return Iterator for accessing the Map.Entry's
 	 */
-	public Iterator getAliasLockIterator() {
+	public Iterator<Map.Entry<String, LockMode>> getAliasLockIterator() {
 		if ( aliasSpecificLockModes == null ) {
-			return Collections.emptyList().iterator();
+			return Collections.<String, LockMode>emptyMap().entrySet().iterator();
 		}
 		return aliasSpecificLockModes.entrySet().iterator();
 	}
@@ -256,7 +256,7 @@ public class LockOptions implements Serializable {
 		dest.setScope(from.getScope());
 		dest.setTimeOut(from.getTimeOut());
 		if ( from.aliasSpecificLockModes != null ) {
-			dest.aliasSpecificLockModes = new HashMap( from.aliasSpecificLockModes );
+			dest.aliasSpecificLockModes = new HashMap<String, LockMode>( from.aliasSpecificLockModes );
 		}
 		return dest;
 	}

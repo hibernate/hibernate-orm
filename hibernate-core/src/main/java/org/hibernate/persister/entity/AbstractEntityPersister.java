@@ -87,6 +87,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
@@ -199,6 +200,7 @@ public abstract class AbstractEntityPersister
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
 	private final int[] lazyPropertyNumbers;
+
 	private final Type[] lazyPropertyTypes;
 	private final String[][] lazyPropertyColumnAliases;
 
@@ -266,7 +268,7 @@ public abstract class AbstractEntityPersister
 	protected ExecuteUpdateResultCheckStyle[] deleteResultCheckStyles;
 
 	private InsertGeneratedIdentifierDelegate identityDelegate;
-
+	private LazyPropertyInitializer lazyPropertyInitializerDelegater = new LazyPropertyInitializerImpl( this );
 	private boolean[] tableHasColumns;
 
 	private final String loaderName;
@@ -1204,147 +1206,11 @@ public abstract class AbstractEntityPersister
 				ArrayHelper.toIntArray( formulaNumbers ) );
 
 	}
-
+	@Override
 	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session)
 			throws HibernateException {
+		return lazyPropertyInitializerDelegater.initializeLazyProperty( fieldName, entity, session );
 
-		final Serializable id = session.getContextEntityIdentifier( entity );
-
-		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
-		if ( entry == null ) {
-			throw new HibernateException( "entity is not associated with the session: " + id );
-		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Initializing lazy properties of: {0}, field access: {1}", MessageHelper.infoString( this, id, getFactory() ), fieldName );
-		}
-
-		if ( hasCache() ) {
-			CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
-			Object ce = getCacheAccessStrategy().get( cacheKey, session.getTimestamp() );
-			if (ce!=null) {
-				CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
-				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
-					//note early exit here:
-					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				}
-			}
-		}
-
-		return initializeLazyPropertiesFromDatastore( fieldName, entity, session, id, entry );
-
-	}
-
-	private Object initializeLazyPropertiesFromDatastore(
-			final String fieldName,
-			final Object entity,
-			final SessionImplementor session,
-			final Serializable id,
-			final EntityEntry entry) {
-
-		if ( !hasLazyProperties() ) {
-			throw new AssertionFailure( "no lazy properties" );
-		}
-
-		LOG.trace( "Initializing lazy properties from datastore" );
-
-		try {
-
-			Object result = null;
-			PreparedStatement ps = null;
-			try {
-				final String lazySelect = getSQLLazySelectString();
-				ResultSet rs = null;
-				try {
-					if ( lazySelect != null ) {
-						// null sql means that the only lazy properties
-						// are shared PK one-to-one associations which are
-						// handled differently in the Type#nullSafeGet code...
-						ps = session.getTransactionCoordinator()
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( lazySelect );
-						getIdentifierType().nullSafeSet( ps, id, 1, session );
-						rs = ps.executeQuery();
-						rs.next();
-					}
-					final Object[] snapshot = entry.getLoadedState();
-					for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-						Object propValue = lazyPropertyTypes[j].nullSafeGet( rs, lazyPropertyColumnAliases[j], session, entity );
-						if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
-							result = propValue;
-						}
-					}
-				}
-				finally {
-					if ( rs != null ) {
-						rs.close();
-					}
-				}
-			}
-			finally {
-				if ( ps != null ) {
-					ps.close();
-				}
-			}
-
-			LOG.trace( "Done initializing lazy properties" );
-
-			return result;
-
-		}
-		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not initialize lazy properties: " +
-					MessageHelper.infoString( this, id, getFactory() ),
-					getSQLLazySelectString()
-				);
-		}
-	}
-
-	private Object initializeLazyPropertiesFromCache(
-			final String fieldName,
-			final Object entity,
-			final SessionImplementor session,
-			final EntityEntry entry,
-			final CacheEntry cacheEntry
-	) {
-
-		LOG.trace( "Initializing lazy properties from second-level cache" );
-
-		Object result = null;
-		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
-		final Object[] snapshot = entry.getLoadedState();
-		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-			final Object propValue = lazyPropertyTypes[j].assemble(
-					disassembledValues[ lazyPropertyNumbers[j] ],
-					session,
-					entity
-				);
-			if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
-				result = propValue;
-			}
-		}
-
-		LOG.trace( "Done initializing lazy properties" );
-
-		return result;
-	}
-
-	private boolean initializeLazyProperty(
-			final String fieldName,
-			final Object entity,
-			final SessionImplementor session,
-			final Object[] snapshot,
-			final int j,
-			final Object propValue) {
-		setPropertyValue( entity, lazyPropertyNumbers[j], propValue );
-		if ( snapshot != null ) {
-			// object have been loaded with setReadOnly(true); HHH-2236
-			snapshot[ lazyPropertyNumbers[j] ] = lazyPropertyTypes[j].deepCopy( propValue, factory );
-		}
-		return fieldName.equals( lazyPropertyNames[j] );
 	}
 
 	public boolean isBatchable() {
@@ -3014,15 +2880,23 @@ public abstract class AbstractEntityPersister
 		return identityDelegate.performInsert( sql, session, binder );
 	}
 
+	private ValueHolder<String> identitySelectStringValue = new ValueHolder<String>(
+			new ValueHolder.DeferredInitializer<String>() {
+				@Override
+				public String initialize() {
+					return getFactory().getDialect().getIdentitySelectString(
+							getTableName( 0 ),
+							getKeyColumns( 0 )[0],
+							getIdentifierType().sqlTypes( getFactory() )[0]
+					);
+				}
+			}
+	);
+	@Override
 	public String getIdentitySelectString() {
-		//TODO: cache this in an instvar
-		return getFactory().getDialect().getIdentitySelectString(
-				getTableName(0),
-				getKeyColumns(0)[0],
-				getIdentifierType().sqlTypes( getFactory() )[0]
-		);
+		return identitySelectStringValue.getValue();
 	}
-
+	@Override
 	public String getSelectByUniqueKeyString(String propertyName) {
 		return new SimpleSelect( getFactory().getDialect() )
 			.setTableName( getTableName(0) )
@@ -5024,5 +4898,21 @@ public abstract class AbstractEntityPersister
 	public int determineTableNumberForColumn(String columnName) {
 		return 0;
 	}
-	
+
+
+	Type[] getLazyPropertyTypes() {
+		return lazyPropertyTypes;
+	}
+
+	int[] getLazyPropertyNumbers() {
+		return lazyPropertyNumbers;
+	}
+
+	String[] getLazyPropertyNames() {
+		return lazyPropertyNames;
+	}
+
+	String[][] getLazyPropertyColumnAliases() {
+		return lazyPropertyColumnAliases;
+	}
 }

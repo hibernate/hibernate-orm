@@ -5,6 +5,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.persister.collection.OneToManyPersister;
 
 /**
@@ -15,5 +16,10 @@ public class CollectionPersister extends OneToManyPersister {
 	public CollectionPersister(Collection collection, CollectionRegionAccessStrategy cache,
 							   SessionFactoryImplementor factory) throws MappingException, CacheException {
 		super( collection, cache,  factory );
+	}
+
+	public CollectionPersister(AbstractPluralAttributeBinding collection, CollectionRegionAccessStrategy cacheAccessStrategy, SessionFactoryImplementor factory)
+			throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, factory );
 	}
 }

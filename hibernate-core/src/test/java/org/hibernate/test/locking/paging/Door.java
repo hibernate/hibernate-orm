@@ -25,11 +25,13 @@ package org.hibernate.test.locking.paging;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table( name = "door" )
 public class Door {
 	private Integer id;
 	private String name;

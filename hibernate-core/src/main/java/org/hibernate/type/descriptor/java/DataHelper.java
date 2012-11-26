@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import org.jboss.logging.Logger;
 
@@ -268,23 +269,38 @@ public class DataHelper {
 	/**
 	 * Extract the contents of the given Clob as a string.
 	 *
-	 * @param reader The reader for the content
+	 * @param value The clob to to be extracted from
 	 *
 	 * @return The content as string
 	 */
 	public static String extractString(final Clob value) {
 		try {
-			Reader characterStream = value.getCharacterStream();
-			long length = value.length();
-			if ( length > Integer.MAX_VALUE ) {
-				return extractString( characterStream, Integer.MAX_VALUE );
-			}
-			else {
-				return extractString( characterStream, (int) length );
-			}
+			final Reader characterStream = value.getCharacterStream();
+			final long length = determineLengthForBufferSizing( value );
+			return length > Integer.MAX_VALUE
+					? extractString( characterStream, Integer.MAX_VALUE )
+					: extractString( characterStream, (int) length );
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access lob stream", e );
+		}
+	}
+
+	/**
+	 * Determine a buffer size for reading the underlying character stream.
+	 *
+	 * @param value The Clob value
+	 *
+	 * @return The appropriate buffer size ({@link java.sql.Clob#length()} by default.
+	 *
+	 * @throws SQLException
+	 */
+	private static long determineLengthForBufferSizing(Clob value) throws SQLException {
+		try {
+			return value.length();
+		}
+		catch ( SQLFeatureNotSupportedException e ) {
+			return BUFFER_SIZE;
 		}
 	}
 
@@ -295,7 +311,7 @@ public class DataHelper {
 	 * @param lengthHint the expected size of the full value
 	 * @return the buffer size
 	 */
-	private static final int getSuggestedBufferSize(final int lengthHint) {
+	private static int getSuggestedBufferSize(final int lengthHint) {
 		return Math.max( 1, Math.min( lengthHint , BUFFER_SIZE ) );
 	}
 }

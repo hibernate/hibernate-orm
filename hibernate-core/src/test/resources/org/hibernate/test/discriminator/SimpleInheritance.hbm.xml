@@ -42,11 +42,9 @@
 			discriminator-value="E">
 				<property name="title" length="20"/>
 				<property name="salary" />
-            <!-- commented out until HHH-6551 is fixed
-			<subclass name="PartTimeEmployee" discriminator-value="M">
+            <subclass name="PartTimeEmployee" discriminator-value="M">
 				<property name="percent"/>
 			</subclass>
-			-->
    		</subclass>
 		
 		<subclass name="Customer" 

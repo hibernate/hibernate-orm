@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
@@ -173,6 +172,10 @@ public class HierarchyBuilder {
 			container.add( subclassEntitySource );
 			final String subEntityName = subclassEntitySource.getEntityName();
 			subEntityContainerMap.put( subEntityName, subclassEntitySource );
+			
+			// Re-run the sub element to handle, as an example, subclasses
+			// within a subclass.
+			processSubElements(subElement, container);
 		}
 	}
 

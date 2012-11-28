@@ -39,6 +39,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel // Sub elements in the subclass within a subclass not working properly
 @SkipForDialect( SybaseASE15Dialect.class )
 public class MixedTest extends BaseCoreFunctionalTestCase {
 	@Override

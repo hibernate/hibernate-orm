@@ -182,6 +182,10 @@ public class QueryBuilder {
         return aliasList;
     }
 
+	public String getRootAlias() {
+		return alias;
+	}
+
     private List<String> getFromList() {
         List<String> fromList = new ArrayList<String>();
         for (Pair<String, String> from : froms) {

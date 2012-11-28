@@ -81,7 +81,7 @@ public class EntityClass extends ConfiguredClass {
 
 	private final String explicitEntityName;
 	private final String customLoaderQueryName;
-	private final List<String> synchronizedTableNames;
+	private final String[] synchronizedTableNames;
 	private final int batchSize;
 
 	private boolean isImmutable;
@@ -215,7 +215,7 @@ public class EntityClass extends ConfiguredClass {
 		return customDelete;
 	}
 
-	public List<String> getSynchronizedTableNames() {
+	public String[] getSynchronizedTableNames() {
 		return synchronizedTableNames;
 	}
 
@@ -495,16 +495,15 @@ public class EntityClass extends ConfiguredClass {
 		return customLoader;
 	}
 
-	private List<String> determineSynchronizedTableNames() {
+	private String[] determineSynchronizedTableNames() {
 		final AnnotationInstance synchronizeAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), HibernateDotNames.SYNCHRONIZE
 		);
 		if ( synchronizeAnnotation != null ) {
-			final String[] tableNames = synchronizeAnnotation.value().asStringArray();
-			return Arrays.asList( tableNames );
+			return synchronizeAnnotation.value().asStringArray();
 		}
 		else {
-			return Collections.emptyList();
+			return StringHelper.EMPTY_STRINGS;
 		}
 	}
 

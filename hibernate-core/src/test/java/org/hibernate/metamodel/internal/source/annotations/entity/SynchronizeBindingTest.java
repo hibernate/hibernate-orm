@@ -47,17 +47,26 @@ public class SynchronizeBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = TestEntityWithSynchronizeAnnotation.class)
 	public void testSynchronizeAnnotation() {
 		EntityBinding binding = getEntityBinding( TestEntityWithSynchronizeAnnotation.class );
-		Set<String> synchronizedTableNames = binding.getSynchronizedTableNames();
-		assertEquals( "Wrong number of synced tables", 2, synchronizedTableNames.size() );
-		assertTrue( "Table name missing", synchronizedTableNames.contains( "Foo" ) );
-		assertTrue( "Table name missing", synchronizedTableNames.contains( "Bar" ) );
+		String [] synchronizedTableNames = binding.getSynchronizedTableNames();
+		assertEquals( "Wrong number of synced tables", 2, synchronizedTableNames.length );
+		assertTrue( "Table name missing", contains( synchronizedTableNames, "Foo" ) );
+		assertTrue( "Table name missing", contains( synchronizedTableNames, "Bar" ) );
+	}
+
+	private boolean contains(String[] arrays, String key) {
+		for ( String s : arrays ) {
+			if ( key.equals( s ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Test
 	@Resources(annotatedClasses = TestEntity.class)
 	public void testNoSynchronizeAnnotation() {
 		EntityBinding binding = getEntityBinding( TestEntity.class );
-		assertTrue( "There should be no cache binding", binding.getSynchronizedTableNames().size() == 0 );
+		assertTrue( "There should be no cache binding", binding.getSynchronizedTableNames().length == 0 );
 	}
 
 	@Entity

@@ -32,6 +32,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
@@ -119,8 +120,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertFalse( entitySource.getSecondaryTables().iterator().hasNext() );
 		assertTrue(
-				entitySource.getSynchronizedTableNames() == null
-						|| entitySource.getSynchronizedTableNames().isEmpty()
+				ArrayHelper.isEmpty( entitySource.getSynchronizedTableNames() )
 		);
 
 		IdentifierSource identifierSource = entitySource.getIdentifierSource();

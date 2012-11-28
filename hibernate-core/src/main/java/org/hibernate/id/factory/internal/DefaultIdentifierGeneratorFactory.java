@@ -88,7 +88,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );
 	}
-
+	@Override
 	public void register(String strategy, Class generatorClass) {
 		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = generatorStrategyToClassNameMap.put( strategy, generatorClass );

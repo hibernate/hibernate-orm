@@ -41,6 +41,8 @@ public interface ValueContainer {
 	 */
 	public List<Value> values();
 
+	public boolean hasValue(Value value);
+
 	/**
 	 * Get a qualifier which can be used to qualify {@link Value values} belonging to this container in
 	 * their logging.

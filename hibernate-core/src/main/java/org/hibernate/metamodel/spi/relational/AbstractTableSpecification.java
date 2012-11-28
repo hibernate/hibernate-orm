@@ -72,11 +72,20 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	public Column locateColumn(String name) {
 		final Identifier identifier = Identifier.toIdentifier( name );
 		if ( valueMap.containsKey( identifier ) ) {
-			return (Column) valueMap.get( identifier );
+			Value value = valueMap.get( identifier );
+			return Column.class.isInstance( value ) ? Column.class.cast( value ) : null;
 		}
 		return null;
 	}
 
+	@Override
+	public boolean hasValue(Value value) {
+		//shortcut
+		if ( this != value.getTable() ) {
+			return false;
+		}
+		return valueMap.containsValue( value );
+	}
 
 	@Override
 	public Column createColumn(String name) {
@@ -95,7 +104,10 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	public DerivedValue locateOrCreateDerivedValue(String fragment) {
 		final Identifier identifier = Identifier.toIdentifier( fragment );
 		if ( valueMap.containsKey( identifier ) ) {
-			return (DerivedValue) valueMap.get( identifier );
+			Value value = valueMap.get( identifier );
+			if ( DerivedValue.class.isInstance( value ) ) {
+				return DerivedValue.class.cast( value );
+			}
 		}
 		final DerivedValue value = new DerivedValue( this, valueList.size(), fragment );
 		valueMap.put( identifier, value );

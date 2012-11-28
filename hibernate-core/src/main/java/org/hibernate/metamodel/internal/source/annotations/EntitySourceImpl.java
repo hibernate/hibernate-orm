@@ -195,7 +195,7 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public List<String> getSynchronizedTableNames() {
+	public String[] getSynchronizedTableNames() {
 		return entityClass.getSynchronizedTableNames();
 	}
 

@@ -284,6 +284,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	 */
 	public Iterable<Column> sortedColumns() {
 		final Set<Column> sortedColumns = new LinkedHashSet<Column>();
+
 		// Adding primary key columns.
 		sortedColumns.addAll( getPrimaryKey().getColumns() );
 		// Adding foreign key columns.

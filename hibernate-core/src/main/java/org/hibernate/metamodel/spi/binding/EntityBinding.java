@@ -34,7 +34,9 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -102,7 +104,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	private CustomSQL customUpdate;
 	private CustomSQL customDelete;
 
-	private Set<String> synchronizedTableNames = new HashSet<String>();
+	private String[] synchronizedTableNames = StringHelper.EMPTY_STRINGS;
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
 	private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
@@ -435,12 +437,12 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		this.isAbstract = isAbstract;
 	}
 
-	public Set<String> getSynchronizedTableNames() {
+	public String[] getSynchronizedTableNames() {
 		return synchronizedTableNames;
 	}
 
-	public void addSynchronizedTableNames(java.util.Collection<String> synchronizedTableNames) {
-		this.synchronizedTableNames.addAll( synchronizedTableNames );
+	public void addSynchronizedTableNames(String [] synchronizedTableNames) {
+		this.synchronizedTableNames = ArrayHelper.join( this.synchronizedTableNames, synchronizedTableNames );
 	}
 
 	public String getEntityName() {

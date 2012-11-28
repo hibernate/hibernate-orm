@@ -504,7 +504,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		spaces = ArrayHelper.join(
 				qualifiedTableNames,
-				ArrayHelper.toStringArray( entityBinding.getSynchronizedTableNames() )
+				entityBinding.getSynchronizedTableNames()
 		);
 
 		final boolean lazyAvailable = isInstrumented();

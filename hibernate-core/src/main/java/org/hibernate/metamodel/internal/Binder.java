@@ -854,15 +854,17 @@ public class Binder {
 			final boolean hasPrimaryKeyJoinColumns = CollectionHelper.isNotEmpty( primaryKeyJoinColumnSources );
 			final List<Column> superEntityBindingPrimaryKeyColumns = superEntityBinding.getPrimaryTable().getPrimaryKey().getColumns();
 
-			for ( int i = 0; i < superEntityBindingPrimaryKeyColumns.size(); i++ ) {
+			for ( int i = 0, size = superEntityBindingPrimaryKeyColumns.size(); i < size; i++ ) {
 				Column superEntityBindingPrimaryKeyColumn = superEntityBindingPrimaryKeyColumns.get( i );
 				PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource = hasPrimaryKeyJoinColumns && i < primaryKeyJoinColumnSources
 						.size() ? primaryKeyJoinColumnSources.get( i ) : null;
 				final String columnName;
 				if ( primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getColumnName() ) ) {
-					columnName = bindingContext().getNamingStrategy().columnName( primaryKeyJoinColumnSource.getColumnName() );
-				} else {
-					columnName =  superEntityBindingPrimaryKeyColumn.getColumnName().getText();
+					columnName = bindingContext().getNamingStrategy()
+							.columnName( primaryKeyJoinColumnSource.getColumnName() );
+				}
+				else {
+					columnName = superEntityBindingPrimaryKeyColumn.getColumnName().getText();
 				}
 				Column column = entityBinding.getPrimaryTable().locateOrCreateColumn( columnName );
 				column.setCheckCondition( superEntityBindingPrimaryKeyColumn.getCheckCondition() );
@@ -873,12 +875,10 @@ public class Binder {
 				column.setReadFragment( superEntityBindingPrimaryKeyColumn.getReadFragment() );
 				column.setWriteFragment( superEntityBindingPrimaryKeyColumn.getWriteFragment() );
 				column.setUnique( superEntityBindingPrimaryKeyColumn.isUnique() );
-				final String sqlType;
-				if(primaryKeyJoinColumnSource!=null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getColumnDefinition() )){
-					sqlType = primaryKeyJoinColumnSource.getColumnDefinition();
-				} else {
-					sqlType = superEntityBindingPrimaryKeyColumn.getSqlType();
-				}
+				final String sqlType = getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(
+						superEntityBindingPrimaryKeyColumn,
+						primaryKeyJoinColumnSource
+				);
 				column.setSqlType( sqlType );
 				column.setSize( superEntityBindingPrimaryKeyColumn.getSize() );
 				column.setJdbcDataType( superEntityBindingPrimaryKeyColumn.getJdbcDataType() );
@@ -887,6 +887,14 @@ public class Binder {
 				fk.addColumnMapping( column, superEntityBindingPrimaryKeyColumn );
 			}
 		}
+	}
+
+	private String getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(Column superEntityBindingPrimaryKeyColumn, PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource) {
+		final boolean isColumnDefOverrided = primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty(
+				primaryKeyJoinColumnSource.getColumnDefinition()
+		);
+		return isColumnDefOverrided ? primaryKeyJoinColumnSource.getColumnDefinition() : superEntityBindingPrimaryKeyColumn
+				.getSqlType();
 	}
 
 	/**

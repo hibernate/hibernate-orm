@@ -184,9 +184,9 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	/**
 	 * Obtain any additional table names on which to synchronize (auto flushing) this entity.
 	 *
-	 * @return Additional synchronized table names.
+	 * @return Additional synchronized table names or 0 sized String array, never return null.
 	 */
-	public List<String> getSynchronizedTableNames();
+	public String[] getSynchronizedTableNames();
 
 	/**
 	 * Get the actual discriminator value in case of a single table inheritance

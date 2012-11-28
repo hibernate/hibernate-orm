@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
@@ -444,12 +445,18 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	public List<String> getSynchronizedTableNames() {
-		List<String> tableNames = new ArrayList<String>();
-		for ( JaxbSynchronizeElement synchronizeElement : entityElement.getSynchronize() ) {
-			tableNames.add( synchronizeElement.getTable() );
+	public String[] getSynchronizedTableNames() {
+		if ( CollectionHelper.isEmpty( entityElement.getSynchronize() ) ) {
+			return StringHelper.EMPTY_STRINGS;
 		}
-		return tableNames;
+		else {
+			final int size = entityElement.getSynchronize().size();
+			final String[] synchronizedTableNames = new String[size];
+			for ( int i = 0; i < size; i++ ) {
+				synchronizedTableNames[i] = entityElement.getSynchronize().get( i ).getTable();
+			}
+			return synchronizedTableNames;
+		}
 	}
 
 	@Override

@@ -347,6 +347,14 @@ public final class ArrayHelper {
         return true;
 	}
 
+	public static boolean isEmpty(final Object[] arrays) {
+		return arrays == null || arrays.length == 0;
+	}
+
+	public static boolean isNotEmpty(final Object[] arrays) {
+		return !isEmpty( arrays );
+	}
+
 	/**
 	 * Compare 2 arrays only at the first level
 	 */

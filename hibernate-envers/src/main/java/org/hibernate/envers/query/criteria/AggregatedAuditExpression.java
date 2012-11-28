@@ -32,10 +32,13 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
     private PropertyNameGetter propertyNameGetter;
     private AggregatedMode mode;
+	// Correlate subquery with outer query by entity id.
+	private boolean correlate = false;
     private List<AuditCriterion> criterions;
 
     public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
@@ -80,7 +83,26 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
                 subQb.addProjection("max", propertyName, false);
         }
 
+		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.
+		if ( correlate ) {
+			final String originalIdPropertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
+			auditCfg.getEntCfg().get( entityName ).getIdMapper().addIdsEqualToQuery(
+					subQb.getRootParameters(),
+					subQb.getRootAlias() + "." + originalIdPropertyName,
+					qb.getRootAlias() + "." + originalIdPropertyName
+			);
+		}
+
         // Adding the constrain on the result of the aggregated criteria
         subParams.addWhere(propertyName, "=", subQb);
     }
+
+	/**
+	 * Correlates aggregated subquery with the main query by entity id.
+	 * @return this (for method chaining).
+	 */
+	public AggregatedAuditExpression correlateSubquery() {
+		correlate = true;
+		return this;
+	}
 }

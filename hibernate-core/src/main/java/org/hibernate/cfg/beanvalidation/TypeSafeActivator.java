@@ -42,6 +42,7 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -58,6 +59,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -254,6 +256,9 @@ class TypeSafeActivator {
 
 		for ( EntityBinding binding : bindings ) {
 			final String className = binding.getEntity().getClassName();
+			if ( binding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ){
+				continue;
+			}
 			Class<?> clazz;
 			try {
 				clazz = classLoaderService.classForName( className );

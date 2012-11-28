@@ -382,15 +382,18 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = entityBinding.isVersioned();
 
-		boolean hasPojoRepresentation = false;
-		Class<?> mappedClass = null;
+		boolean hasPojoRepresentation = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
 		Class<?> proxyInterfaceClass = null;
-		if ( entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
-			hasPojoRepresentation = true;
+		Class<?> mappedClass = null;
+		if ( hasPojoRepresentation ) {
 			mappedClass = entityBinding.getEntity().getClassReference();
 			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
+			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
-		instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
+		else {
+			instrumentationMetadata = new NonPojoInstrumentationMetadata( entityBinding.getEntity().getName() );
+		}
+
 
 		boolean hasLazy = false;
 

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -109,8 +110,12 @@ public class HibernateTypeHelper {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding
 				.getHibernateTypeDescriptor();
 
-		final Class<?> attributeJavaType = determineJavaType( 
-				attributeBinding.getAttribute() );
+		final Class<?> attributeJavaType = attributeBinding.getContainer()
+				.seekEntityBinding()
+				.getHierarchyDetails()
+				.getEntityMode() == EntityMode.POJO ? determineJavaType(
+				attributeBinding.getAttribute()
+		) : null;
 		if ( attributeJavaType != null ) {
 			attributeBinding.getAttribute().resolveType( makeJavaType( 
 					attributeJavaType.getName() ) );
@@ -308,6 +313,9 @@ public class HibernateTypeHelper {
 			Type resolvedHibernateType) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		final SingularAttribute singularAttribute = SingularAttribute.class.cast( attributeBinding.getAttribute() );
+		if ( hibernateTypeDescriptor.getResolvedTypeMapping() != null && hibernateTypeDescriptor.getJavaTypeName() == null ) {
+			hibernateTypeDescriptor.setJavaTypeName( resolvedHibernateType.getReturnedClass().getName() );
+		}
 		if ( ! singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getJavaTypeName() != null ) {
 			singularAttribute.resolveType( makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		}

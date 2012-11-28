@@ -439,6 +439,12 @@ public class PropertyFactory {
 	}
 
 	private static Getter getGetterOrNull(AttributeBinding mappingProperty) {
+		if ( mappingProperty.getContainer()
+				.seekEntityBinding()
+				.getHierarchyDetails()
+				.getEntityMode() != EntityMode.POJO ) {
+			return null;
+		}
 		try {
 			return getGetter( mappingProperty );
 		}

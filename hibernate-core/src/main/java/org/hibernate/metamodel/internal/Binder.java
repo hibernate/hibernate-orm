@@ -1848,8 +1848,7 @@ public class Binder {
 				@Override
 				public String defaultName() {
 					String name = StringHelper.isNotEmpty( entityBinding.getJpaEntityName() ) ? entityBinding.getJpaEntityName() : entityBinding
-							.getEntity()
-							.getClassName();
+							.getEntity().getName();
 					return bindingContexts.peek().getNamingStrategy().classToTableName( name );
 				}
 			}

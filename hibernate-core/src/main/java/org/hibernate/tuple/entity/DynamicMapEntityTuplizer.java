@@ -70,7 +70,14 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	public EntityMode getEntityMode() {
 		return EntityMode.MAP;
 	}
-
+	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
+		if ( mappedProperty.isBackRef() ) {
+			return PropertyAccessorFactory.getPropertyAccessor( "map" ); //todo use getPropertyAccessorName instead of hardcode
+		}
+		else {
+			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
+		}
+	}
 	private PropertyAccessor buildPropertyAccessor(Property mappedProperty) {
 		if ( mappedProperty.isBackRef() ) {
 			return mappedProperty.getPropertyAccessor(null);
@@ -134,7 +141,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	 */
 	@Override
 	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return PropertyFactory.getGetter( mappedProperty );
+		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getAttribute().getName() );
 	}
 
 	/**
@@ -142,7 +149,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	 */
 	@Override
 	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		return PropertyFactory.getSetter( mappedProperty );
+		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getAttribute().getName() );
 	}
 
 	/**

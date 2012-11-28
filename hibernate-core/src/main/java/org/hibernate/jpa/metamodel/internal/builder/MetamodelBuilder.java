@@ -35,6 +35,7 @@ import javax.persistence.metamodel.Type;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.metamodel.internal.AbstractIdentifiableType;
@@ -93,7 +94,9 @@ public class MetamodelBuilder {
 	}
 
 	public void add(EntityBinding entityBinding) {
- 		locateOrBuildEntityType( entityBinding );
+		if ( entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO ) {
+			locateOrBuildEntityType( entityBinding );
+		}
 		entityBindingList.add( entityBinding );
 	}
 

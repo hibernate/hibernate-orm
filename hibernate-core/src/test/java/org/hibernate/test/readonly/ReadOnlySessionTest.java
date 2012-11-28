@@ -37,7 +37,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,7 +47,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {

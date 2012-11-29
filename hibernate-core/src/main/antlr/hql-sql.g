@@ -348,8 +348,17 @@ orderClause
 	;
 
 orderExprs
-	: orderExpr ( ASCENDING | DESCENDING )? (orderExprs)?
+	: orderExpr ( ASCENDING | DESCENDING )? ( nullOrdering )? (orderExprs)?
 	;
+
+nullOrdering
+    : NULLS nullPrecedence
+    ;
+
+nullPrecedence
+    : FIRST
+    | LAST
+    ;
 
 orderExpr
 	: { isOrderExpressionResultVariableRef( _t ) }? resultVariableRef

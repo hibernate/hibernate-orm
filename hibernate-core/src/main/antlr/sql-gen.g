@@ -154,7 +154,7 @@ whereClauseExpr
 
 orderExprs
 	// TODO: remove goofy space before the comma when we don't have to regression test anymore.
-	: ( expr ) (dir:orderDirection { out(" "); out(dir); })? ( {out(", "); } orderExprs)?
+	: ( expr ) (dir:orderDirection { out(" "); out(dir); })? (nullOrdering)? ( {out(", "); } orderExprs )?
 	;
 
 groupExprs
@@ -166,6 +166,15 @@ orderDirection
 	: ASCENDING
 	| DESCENDING
 	;
+
+nullOrdering
+    : nls:NULLS fl:nullPrecedence { out(" "); out(nls); out(" "); out(fl); }
+    ;
+
+nullPrecedence
+    : FIRST
+    | LAST
+    ;
 
 whereExpr
 	// Expect the filter subtree, followed by the theta join subtree, followed by the HQL condition subtree.

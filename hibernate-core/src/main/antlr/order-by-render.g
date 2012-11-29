@@ -63,7 +63,7 @@ orderByFragment
 
 sortSpecification
     : #(
-        SORT_SPEC sortKeySpecification (collationSpecification)? (orderingSpecification)?
+        SORT_SPEC sortKeySpecification (collationSpecification)? (orderingSpecification)? (nullOrdering)?
     )
     ;
 
@@ -88,5 +88,12 @@ orderingSpecification
     : o:ORDER_SPEC {
         out( " " );
         out( #o );
+    }
+    ;
+
+nullOrdering
+    : n:NULL_ORDER {
+        out( " nulls " );
+        out( #n );
     }
     ;

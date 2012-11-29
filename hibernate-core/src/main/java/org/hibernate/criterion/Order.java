@@ -34,19 +34,39 @@ import org.hibernate.type.Type;
 /**
  * Represents an order imposed upon a <tt>Criteria</tt> result set
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class Order implements Serializable {
+	public static enum NullPrecedence {
+		FIRST("nulls first"), LAST("nulls last");
+
+		private final String sqlClause;
+
+		private NullPrecedence(String sqlClause) {
+			this.sqlClause = sqlClause;
+		}
+
+		public String getSqlClause() {
+			return sqlClause;
+		}
+	}
 
 	private boolean ascending;
 	private boolean ignoreCase;
 	private String propertyName;
+	private NullPrecedence nullPrecedence;
 	
 	public String toString() {
-		return propertyName + ' ' + (ascending?"asc":"desc");
+		return propertyName + ' ' + ( ascending ? "asc" : "desc" ) + ( nullPrecedence != null ? ' ' + nullPrecedence.getSqlClause() : "" );
 	}
 	
 	public Order ignoreCase() {
 		ignoreCase = true;
+		return this;
+	}
+
+	public Order nulls(NullPrecedence nullPrecedence) {
+		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
 
@@ -77,6 +97,9 @@ public class Order implements Serializable {
 			fragment.append( columns[i] );
 			if (lower) fragment.append(')');
 			fragment.append( ascending ? " asc" : " desc" );
+			if ( nullPrecedence != null ) {
+				fragment.append( " " ).append( nullPrecedence.getSqlClause() );
+			}
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
 		return fragment.toString();

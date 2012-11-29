@@ -78,6 +78,9 @@ tokens
 	UPDATE="update";
 	VERSIONED="versioned";
 	WHERE="where";
+	NULLS="nulls";
+	FIRST="first";
+	LAST="last";
 
 	// -- SQL tokens --
 	// These aren't part of HQL, but the SQL fragment parser uses the HQL lexer, so they need to be declared here.
@@ -439,13 +442,22 @@ orderByClause
 	;
 
 orderElement
-	: expression ( ascendingOrDescending )?
+	: expression ( ascendingOrDescending )? ( nullOrdering )?
 	;
 
 ascendingOrDescending
 	: ( "asc" | "ascending" )	{ #ascendingOrDescending.setType(ASCENDING); }
 	| ( "desc" | "descending") 	{ #ascendingOrDescending.setType(DESCENDING); }
 	;
+
+nullOrdering
+    : NULLS nullPrecedence
+    ;
+
+nullPrecedence
+    : FIRST { #nullPrecedence.setType(FIRST); }
+    | LAST { #nullPrecedence.setType(LAST); }
+    ;
 
 //## havingClause:
 //##     HAVING logicalExpression;

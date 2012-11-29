@@ -2321,7 +2321,7 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
-	public boolean supportsLockingAndPaging() {
-		return true;
+	public boolean useFollowOnLocking() {
+		return false;
 	}
 }

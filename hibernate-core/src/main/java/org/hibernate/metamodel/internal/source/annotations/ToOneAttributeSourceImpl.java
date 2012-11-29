@@ -59,6 +59,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		this.associationAttribute = associationAttribute;
 		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
 				associationAttribute.getCascadeTypes(),
+				associationAttribute.getHibernateCascadeTypes(),
 				associationAttribute.getContext()
 		);
 	}

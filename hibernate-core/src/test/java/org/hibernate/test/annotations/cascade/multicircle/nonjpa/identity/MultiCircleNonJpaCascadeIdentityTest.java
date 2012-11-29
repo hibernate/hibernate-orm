@@ -24,15 +24,14 @@
 package org.hibernate.test.annotations.cascade.multicircle.nonjpa.identity;
 
 import junit.framework.Assert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * This test uses a complicated model that requires Hibernate to delay
@@ -83,7 +82,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * c, e, d, b, g, f.
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@FailureExpectedWithNewMetamodel
 public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTestCase {
 	private B b;
 	private C c;

@@ -17,7 +17,11 @@ public class ManyToAnyPluralAttributeElementSourceImpl implements ManyToAnyPlura
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return EnumConversionHelper.cascadeTypeToCascadeStyleSet( attribute.getCascadeTypes(), attribute.getContext() );
+
+		return EnumConversionHelper.cascadeTypeToCascadeStyleSet(
+				attribute.getCascadeTypes(),
+				attribute.getHibernateCascadeTypes(),
+				attribute.getContext() );
 	}
 
 	@Override

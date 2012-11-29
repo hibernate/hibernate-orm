@@ -34,7 +34,6 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -71,6 +70,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		
 		cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
 				associationAttribute.getCascadeTypes(),
+				associationAttribute.getHibernateCascadeTypes(),
 				associationAttribute.getContext() );
 	}
 

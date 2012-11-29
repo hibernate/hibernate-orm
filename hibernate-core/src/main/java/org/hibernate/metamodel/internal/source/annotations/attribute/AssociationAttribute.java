@@ -58,6 +58,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
  * Represents an association attribute.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class AssociationAttribute extends MappedAttribute {
 	private static final CoreMessageLogger coreLogger = Logger.getMessageLogger(
@@ -69,6 +70,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final String referencedEntityType;
 	private final String mappedBy;
 	private final Set<CascadeType> cascadeTypes;
+	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
 	private final boolean isOptional;
 	private final boolean isLazy;
 	private final boolean isUnWrapProxy;
@@ -122,6 +124,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.isUnWrapProxy = determinIsUnwrapProxy();
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
+		this.hibernateCascadeTypes = determineHibernateCascadeTypes( annotations );
 		this.joinColumnValues = determineJoinColumnAnnotations( annotations );
 
 		this.fetchStyle = determineFetchStyle();
@@ -145,6 +148,10 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public Set<CascadeType> getCascadeTypes() {
 		return cascadeTypes;
+	}
+
+	public Set<org.hibernate.annotations.CascadeType> getHibernateCascadeTypes() {
+		return hibernateCascadeTypes;
 	}
 
 	public boolean isOrphanRemoval() {
@@ -349,6 +356,26 @@ public class AssociationAttribute extends MappedAttribute {
 			String[] cascades = cascadeValue.asEnumArray();
 			for ( String s : cascades ) {
 				cascadeTypes.add( Enum.valueOf( CascadeType.class, s ) );
+			}
+		}
+		return cascadeTypes;
+	}
+
+	private Set<org.hibernate.annotations.CascadeType> determineHibernateCascadeTypes(
+			Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance cascadeAnnotation = JandexHelper
+				.getSingleAnnotation(
+						annotations, HibernateDotNames.CASCADE );
+		Set<org.hibernate.annotations.CascadeType> cascadeTypes
+				= new HashSet<org.hibernate.annotations.CascadeType>();
+		if ( cascadeAnnotation != null ) {
+			AnnotationValue cascadeValue = cascadeAnnotation.value();
+			if ( cascadeValue != null ) {
+				String[] cascades = cascadeValue.asEnumArray();
+				for ( String s : cascades ) {
+					cascadeTypes.add( Enum.valueOf(
+							org.hibernate.annotations.CascadeType.class, s ) );
+				}
 			}
 		}
 		return cascadeTypes;

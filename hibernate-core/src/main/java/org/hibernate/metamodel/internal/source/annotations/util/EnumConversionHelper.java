@@ -42,6 +42,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingC
  * Helper class which converts between different enum types.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class EnumConversionHelper {
 	private EnumConversionHelper() {
@@ -92,6 +93,45 @@ public class EnumConversionHelper {
 			}
 		}
 	}
+	
+	public static CascadeStyle cascadeTypeToCascadeStyle(
+			org.hibernate.annotations.CascadeType cascadeType) {
+		switch ( cascadeType ) {
+			case ALL: {
+				return CascadeStyles.ALL;
+			}
+			case PERSIST: {
+				return CascadeStyles.PERSIST;
+			}
+			case MERGE: {
+				return CascadeStyles.MERGE;
+			}
+			case REMOVE: {
+				return CascadeStyles.DELETE;
+			}
+			case REFRESH: {
+				return CascadeStyles.REFRESH;
+			}
+			case DETACH: {
+				return CascadeStyles.EVICT;
+			}
+			case DELETE: {
+				return CascadeStyles.DELETE;
+			}
+			case SAVE_UPDATE: {
+				return CascadeStyles.UPDATE;
+			}
+			case REPLICATE: {
+				return CascadeStyles.REPLICATE;
+			}
+			case LOCK: {
+				return CascadeStyles.LOCK;
+			}
+			default: {
+				throw new AssertionFailure( "Unknown cascade type" );
+			}
+		}
+	}
 
 	public static FetchMode annotationFetchModeToHibernateFetchMode(org.hibernate.annotations.FetchMode annotationFetchMode) {
 		switch ( annotationFetchMode ) {
@@ -129,18 +169,25 @@ public class EnumConversionHelper {
 		}
 	}
 
-	public static Set<CascadeStyle> cascadeTypeToCascadeStyleSet(Set<CascadeType> cascadeTypes, EntityBindingContext context) {
-		if ( CollectionHelper.isEmpty( cascadeTypes ) ) {
-			final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
+	public static Set<CascadeStyle> cascadeTypeToCascadeStyleSet(
+			Set<CascadeType> cascadeTypes,
+			Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes,
+			EntityBindingContext context) {
+		Set<CascadeStyle> cascadeStyleSet = new HashSet<CascadeStyle>();
+		if ( CollectionHelper.isEmpty( cascadeTypes )
+				&& CollectionHelper.isEmpty( hibernateCascadeTypes ) ) {
 			String cascades = context.getMappingDefaults().getCascadeStyle();
 			for ( String cascade : StringHelper.split( ",", cascades ) ) {
-				cascadeStyles.add( CascadeStyles.getCascadeStyle( cascade ) );
+				cascadeStyleSet.add( CascadeStyles.getCascadeStyle( cascade ) );
 			}
-			return cascadeStyles;
 		}
-		Set<CascadeStyle> cascadeStyleSet = new HashSet<CascadeStyle>();
-		for ( CascadeType cascadeType : cascadeTypes ) {
-			cascadeStyleSet.add( cascadeTypeToCascadeStyle( cascadeType ) );
+		else {
+			for ( CascadeType cascadeType : cascadeTypes ) {
+				cascadeStyleSet.add( cascadeTypeToCascadeStyle( cascadeType ) );
+			}
+			for ( org.hibernate.annotations.CascadeType cascadeType : hibernateCascadeTypes ) {
+				cascadeStyleSet.add( cascadeTypeToCascadeStyle( cascadeType ) );
+			}
 		}
 		return cascadeStyleSet;
 	}

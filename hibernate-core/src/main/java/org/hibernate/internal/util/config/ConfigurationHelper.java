@@ -25,6 +25,7 @@ package org.hibernate.internal.util.config;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -79,6 +80,30 @@ public final class ConfigurationHelper {
 	public static String getString(String name, Map values, String defaultValue) {
 		final String value = getString( name, values );
 		return value == null ? defaultValue : value;
+	}
+
+	/**
+	 * Get the config value as a {@link String}.
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config parameters.
+	 * @param defaultValue The default value to use if not found.
+	 * @param otherSupportedValues List of other supported values. Does not need to contain the default one.
+	 *
+	 * @return The value.
+	 *
+	 * @throws ConfigurationException Unsupported value provided.
+	 *
+	 */
+	public static String getString(String name, Map values, String defaultValue, String ... otherSupportedValues) {
+		final String value = getString( name, values, defaultValue );
+		if ( !defaultValue.equals( value ) && ArrayHelper.indexOf( otherSupportedValues, value ) == -1 ) {
+			throw new ConfigurationException(
+					"Unsupported configuration [name=" + name + ", value=" + value + "]. " +
+							"Choose value between: '" + defaultValue + "', '" + StringHelper.join( "', '", otherSupportedValues ) + "'."
+			);
+		}
+		return value;
 	}
 
 	/**

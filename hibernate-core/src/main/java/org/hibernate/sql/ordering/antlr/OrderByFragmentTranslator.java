@@ -75,7 +75,7 @@ public class OrderByFragmentTranslator {
 		}
 
 		// Render the parsed tree to text.
-		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer();
+		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer( context.getSessionFactory() );
 		try {
 			renderer.orderByFragment( parser.getAST() );
 		}

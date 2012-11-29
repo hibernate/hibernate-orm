@@ -31,19 +31,47 @@ import java.util.List;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.CascadeType;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+	
 	private final PluralAssociationAttribute associationAttribute;
+	private final List<RelationalValueSource> relationalValueSources
+			= new ArrayList<RelationalValueSource>();
+	private final Collection<String> referencedColumnNames
+			= new HashSet<String>();
+	private final Iterable<CascadeStyle> cascadeStyles;
 
-	public ManyToManyPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
+	public ManyToManyPluralAttributeElementSourceImpl(
+			PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
+		
+		for ( Column column : associationAttribute.getJoinColumnValues() ) {
+			relationalValueSources.add( new ColumnSourceImpl( 
+					associationAttribute, null, column ) );
+		}
+		
+		for ( Column column : associationAttribute.getJoinColumnValues() ) {
+			if ( column.getReferencedColumnName() != null ) {
+				referencedColumnNames.add( column.getReferencedColumnName() );
+			}
+		}
+		
+		cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
+				associationAttribute.getCascadeTypes(),
+				associationAttribute.getContext() );
 	}
 
 	@Override
@@ -59,28 +87,16 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public Collection<String> getReferencedColumnNames() {
-		HashSet<String> referencedColumnNames = new HashSet<String>();
-		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			if ( column.getReferencedColumnName() != null ) {
-				referencedColumnNames.add( column.getReferencedColumnName() );
-			}
-		}
 		return referencedColumnNames;
 	}
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		// todo
-		return valueSources;
+		return relationalValueSources;
 	}
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		List<CascadeStyle> cascadeStyles = new ArrayList<CascadeStyle>();
-		for ( javax.persistence.CascadeType cascadeType : associationAttribute.getCascadeTypes() ) {
-			cascadeStyles.add( CascadeType.getCascadeType( cascadeType ).toCascadeStyle() );
-		}
 		return cascadeStyles;
 	}
 
@@ -96,7 +112,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return associationAttribute.getJoinColumnValues()
+				.isEmpty() ? null : new AnnotationJoinColumnResolutionDelegate();
 	}
 
 	@Override
@@ -137,6 +154,55 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return false;
+	}
+
+	// TODO: Taken from and in duplicate of ToOneAttributeSourceImpl.  Look into
+	// abstracting some of this out.
+	public class AnnotationJoinColumnResolutionDelegate
+			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
+		private final String logicalJoinTableName;
+
+		public AnnotationJoinColumnResolutionDelegate() {
+			logicalJoinTableName = resolveLogicalJoinTableName();
+		}
+
+		@Override
+		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			final List<Value> values = new ArrayList<Value>();
+			for ( Column column : associationAttribute.getJoinColumnValues() ) {
+				if ( column.getReferencedColumnName() == null ) {
+					return context.resolveRelationalValuesForAttribute( null );
+				}
+				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
+						column.getReferencedColumnName(),
+						logicalJoinTableName,
+						null,
+						null
+				);
+				values.add( resolvedColumn );
+			}
+			return values;
+		}
+
+		@Override
+		public String getReferencedAttributeName() {
+			// in annotations we are not referencing attribute but column names via @JoinColumn(s)
+			return null;
+		}
+
+		private String resolveLogicalJoinTableName() {
+			final AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+					associationAttribute.annotations(),
+					JPADotNames.JOIN_TABLE
+			);
+
+			if ( joinTableAnnotation != null ) {
+				return JandexHelper.getValue( joinTableAnnotation, "name", String.class );
+			}
+
+			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...
+			return null;
+		}
 	}
 }
 

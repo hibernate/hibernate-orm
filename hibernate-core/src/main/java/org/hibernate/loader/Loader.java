@@ -249,30 +249,23 @@ public abstract class Loader {
 		public void afterLoad(SessionImplementor session, Object entity, Loadable persister);
 	}
 
-	protected boolean shouldDelayLockingDueToPaging(
-			String sql,
+	protected boolean shouldUseFollowOnLocking(
 			QueryParameters parameters,
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) {
-		final LockOptions lockOptions = parameters.getLockOptions();
-		final RowSelection rowSelection = parameters.getRowSelection();
-		final LimitHandler limitHandler = dialect.buildLimitHandler( sql, rowSelection );
-		if ( LimitHelper.useLimit( limitHandler, rowSelection ) ) {
-			// user has requested a combination of paging and locking.  See if the dialect supports that
-			// (ahem, Oracle...)
-			if ( ! dialect.supportsLockingAndPaging() ) {
-				LOG.delayedLockingDueToPaging();
-				afterLoadActions.add(
-						new AfterLoadAction() {
-							private final LockOptions originalLockOptions = lockOptions.makeCopy();
-							@Override
-							public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-								( (Session) session ).buildLockRequest( originalLockOptions ).lock( persister.getEntityName(), entity );
-							}
+		if ( dialect.useFollowOnLocking() ) {
+			LOG.usingFollowOnLocking();
+			final LockOptions lockOptions = parameters.getLockOptions();
+			afterLoadActions.add(
+					new AfterLoadAction() {
+						private final LockOptions originalLockOptions = lockOptions.makeCopy();
+						@Override
+						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+							( (Session) session ).buildLockRequest( originalLockOptions ).lock( persister.getEntityName(), entity );
 						}
-				);
-				parameters.setLockOptions( new LockOptions() );
-			}
+					}
+			);
+			parameters.setLockOptions( new LockOptions() );
 			return true;
 		}
 		return false;

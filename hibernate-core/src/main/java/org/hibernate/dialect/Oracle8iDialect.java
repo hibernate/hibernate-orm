@@ -578,7 +578,7 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockingAndPaging() {
-		return false;
+	public boolean useFollowOnLocking() {
+		return true;
 	}
 }

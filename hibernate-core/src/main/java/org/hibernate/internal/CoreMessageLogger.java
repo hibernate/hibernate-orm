@@ -1586,9 +1586,9 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Encountered request which combined locking and paging, however dialect reports that database does " +
-					"not support that combination.  Results will be locked after initial query executes",
+			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
+					"separate select; results will be locked after initial query executes",
 			id = 444
 	)
-	void delayedLockingDueToPaging();
+	void usingFollowOnLocking();
 }

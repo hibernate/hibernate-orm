@@ -45,6 +45,7 @@ import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.loading.internal.CollectionLoadContext;
@@ -1587,8 +1588,17 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
-					"separate select; results will be locked after initial query executes",
+					"separate select (follow-on locking); results will be locked after initial query executes",
 			id = 444
 	)
 	void usingFollowOnLocking();
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
+					"all acquired locks will be [%s]",
+			id = 445
+	)
+	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
+
 }

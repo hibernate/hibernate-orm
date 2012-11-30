@@ -207,8 +207,9 @@ public class CriteriaLoader extends OuterJoinLoader {
 		if ( dialect.useFollowOnLocking() ) {
 			// Dialect prefers to perform locking in a separate step
 			LOG.usingFollowOnLocking();
-			final LockOptions lockOptionsToUse = new LockOptions();
-			lockOptionsToUse.setLockMode( lockOptions.getEffectiveLockMode( "this_" ) );
+
+			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+			final LockOptions lockOptionsToUse = new LockOptions( lockMode );
 			lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
 			lockOptionsToUse.setScope( lockOptions.getScope() );
 
@@ -243,6 +244,19 @@ public class CriteriaLoader extends OuterJoinLoader {
 			}
 		}
 		return dialect.applyLocksToSql( sql, locks, keyColumnNames );
+	}
+
+
+
+	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {
+		final LockMode lockModeToUse = lockOptions.findGreatestLockMode();
+
+		if ( lockOptions.getAliasLockCount() > 1 ) {
+			// > 1 here because criteria always uses alias map for the root lock mode (under 'this_')
+			LOG.aliasSpecificLockingWithFollowOnLocking( lockModeToUse );
+		}
+
+		return lockModeToUse;
 	}
 
 	protected LockMode[] getLockModes(LockOptions lockOptions) {

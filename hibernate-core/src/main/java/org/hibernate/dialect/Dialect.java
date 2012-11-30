@@ -2400,6 +2400,14 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
+	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 */
 	public boolean useFollowOnLocking() {
 		return false;
 	}

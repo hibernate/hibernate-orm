@@ -49,6 +49,7 @@ public class LockOptions implements Serializable {
 	 * UPGRADE represents LockMode.UPGRADE (will wait forever for lock and
 	 * scope of false meaning only entity is locked)
 	 */
+	@SuppressWarnings("deprecation")
 	public static final LockOptions UPGRADE = new LockOptions(LockMode.UPGRADE);
 
 	/**
@@ -65,7 +66,9 @@ public class LockOptions implements Serializable {
 
 	private LockMode lockMode = LockMode.NONE;
 	private int timeout = WAIT_FOREVER;
-	private Map aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
+
+	//initialize lazily as LockOptions is frequently created without needing this
+	private Map<String,LockMode> aliasSpecificLockModes = null;
 
 	public LockOptions() {
 	}
@@ -114,7 +117,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( aliasSpecificLockModes == null ) {
-			aliasSpecificLockModes = new HashMap();
+			aliasSpecificLockModes = new HashMap<String,LockMode>();
 		}
 		aliasSpecificLockModes.put( alias, lockMode );
 		return this;
@@ -135,7 +138,7 @@ public class LockOptions implements Serializable {
 		if ( aliasSpecificLockModes == null ) {
 			return null;
 		}
-		return (LockMode) aliasSpecificLockModes.get( alias );
+		return aliasSpecificLockModes.get( alias );
 	}
 
 	/**
@@ -157,6 +160,11 @@ public class LockOptions implements Serializable {
 			lockMode = this.lockMode;
 		}
 		return lockMode == null ? LockMode.NONE : lockMode;
+	}
+
+	public boolean hasAliasSpecificLockModes() {
+		return aliasSpecificLockModes != null
+				&& ! aliasSpecificLockModes.isEmpty();
 	}
 
 	/**
@@ -181,6 +189,30 @@ public class LockOptions implements Serializable {
 			return Collections.emptyList().iterator();
 		}
 		return aliasSpecificLockModes.entrySet().iterator();
+	}
+
+	/**
+	 * Currently needed for follow-on locking
+	 *
+	 * @return The greatest of all requested lock modes.
+	 */
+	public LockMode findGreatestLockMode() {
+		LockMode lockModeToUse = getLockMode();
+		if ( lockModeToUse == null ) {
+			lockModeToUse = LockMode.NONE;
+		}
+
+		if ( aliasSpecificLockModes == null ) {
+			return lockModeToUse;
+		}
+
+		for ( LockMode lockMode : aliasSpecificLockModes.values() ) {
+			if ( lockMode.greaterThan( lockModeToUse ) ) {
+				lockModeToUse = lockMode;
+			}
+		}
+
+		return lockModeToUse;
 	}
 
 	/**
@@ -245,19 +277,20 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Shallow copy From to Dest
+	 * Perform a shallow copy
 	 *
-	 * @param from is copied from
-	 * @param dest is copied to
-	 * @return dest
+	 * @param source Source for the copy (copied from)
+	 * @param destination Destination for the copy (copied to)
+	 *
+	 * @return destination
 	 */
-	public static LockOptions copy(LockOptions from, LockOptions dest) {
-		dest.setLockMode(from.getLockMode());
-		dest.setScope(from.getScope());
-		dest.setTimeOut(from.getTimeOut());
-		if ( from.aliasSpecificLockModes != null ) {
-			dest.aliasSpecificLockModes = new HashMap( from.aliasSpecificLockModes );
+	public static LockOptions copy(LockOptions source, LockOptions destination) {
+		destination.setLockMode( source.getLockMode() );
+		destination.setScope( source.getScope() );
+		destination.setTimeOut( source.getTimeOut() );
+		if ( source.aliasSpecificLockModes != null ) {
+			destination.aliasSpecificLockModes = new HashMap<String,LockMode>( source.aliasSpecificLockModes );
 		}
-		return dest;
+		return destination;
 	}
 }
